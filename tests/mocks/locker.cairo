@@ -5,56 +5,93 @@ use serde::Serde;
 
 #[derive(Copy, Drop, Serde)]
 enum Action {
-    NoOp: (),
     AssertLockerId: felt252,
     UpdatePosition: (PoolKey, i129, i129, i129),
     Swap: (PoolKey, i129, bool, u256)
 }
 
+#[derive(Copy, Drop, Serde)]
+enum ActionResult {
+    AssertLockerId: (),
+    UpdatePosition: (i129, i129),
+    Swap: (i129, i129)
+}
+
+#[abi]
+trait ICoreLocker {
+    #[external]
+    fn call(action: Action) -> ActionResult;
+}
+
 #[contract]
 mod CoreLocker {
-    use super::Action;
+    use super::{Action, ActionResult};
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
     use parlay::core::{IParlayDispatcher, IParlayDispatcherTrait};
+    use tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
+    struct Storage {
+        core: ContractAddress
+    }
+
+    #[constructor]
+    fn constructor(_core: ContractAddress) {
+        core::write(_core);
+    }
+
     #[external]
-    fn call_core(core_address: ContractAddress, action: Action) -> Array<felt252> {
+    fn call(action: Action) -> ActionResult {
         let mut arr: Array<felt252> = Default::default();
         Serde::<Action>::serialize(@action, ref arr);
-        IParlayDispatcher { contract_address: core_address }.lock(arr)
+
+        let result = IParlayDispatcher { contract_address: core::read() }.lock(arr);
+
+        let mut result_data = result.span();
+        let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(ref result_data)
+            .expect('DESERIALIZE_RESULT_FAILED');
+
+        action_result
     }
 
     #[external]
     fn locked(id: felt252, data: Array<felt252>) -> Array<felt252> {
-        let core = get_caller_address();
+        let caller = get_caller_address();
+        assert(caller == core::read(), 'UNAUTHORIZED_CALLBACK');
+
         let mut action_data = data.span();
         let mut action: Action = Serde::<Action>::deserialize(ref action_data)
             .expect('DESERIALIZE_FAILED');
 
-        match action {
-            Action::NoOp(_) => {},
+        let result = match action {
             Action::AssertLockerId(locker_id) => {
                 assert(locker_id == id, 'INVALID_LOCKER_ID');
+                ActionResult::AssertLockerId(())
             },
             Action::UpdatePosition((
                 pool_key, tick_lower, tick_upper, liquidity_delta
             )) => {
                 let (amount0_delta, amount1_delta) = IParlayDispatcher {
-                    contract_address: core
+                    contract_address: caller
                 }.update_position(pool_key, tick_lower, tick_upper, liquidity_delta);
+
+                ActionResult::UpdatePosition((amount0_delta, amount1_delta))
             },
             Action::Swap((
                 pool_key, amount, is_token1, sqrt_ratio_limit
             )) => {
                 let (amount0_delta, amount1_delta) = IParlayDispatcher {
-                    contract_address: core
+                    contract_address: caller
                 }.swap(pool_key, amount, is_token1, sqrt_ratio_limit);
-            }
-        }
 
-        Default::default()
+                ActionResult::Swap((amount0_delta, amount1_delta))
+            }
+        };
+
+        let mut arr: Array<felt252> = Default::default();
+        Serde::<ActionResult>::serialize(@result, ref arr);
+        arr
     }
 }

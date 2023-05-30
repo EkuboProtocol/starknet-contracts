@@ -11,30 +11,84 @@ use parlay::types::i129::i129;
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
+use tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use tests::mocks::locker::{
+    CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait
+};
 
 mod helper {
-    use super::{contract_address_const, ContractAddress, PoolKey};
+    use super::{
+        contract_address_const, ContractAddress, PoolKey, Parlay, IParlayDispatcher,
+        IParlayDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, MockERC20,
+        IMockERC20Dispatcher
+    };
     use starknet::{deploy_syscall, ClassHash};
-    use tests::mocks::mock_erc20::MockERC20;
     use array::{Array, ArrayTrait};
     use traits::{Into, TryInto};
     use option::{Option, OptionTrait};
     use starknet::class_hash::Felt252TryIntoClassHash;
     use result::{Result, ResultTrait};
+    use parlay::math::utils::ContractAddressOrder;
 
-    fn deploy_mock_token() -> ContractAddress {
+    fn deploy_mock_token() -> IMockERC20Dispatcher {
         let constructor_calldata: Array<felt252> = Default::default();
         let (token_address, _) = deploy_syscall(
             MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_calldata.span(), true
         )
-            .unwrap();
-        return token_address;
+            .expect('token deploy failed');
+        return IMockERC20Dispatcher { contract_address: token_address };
     }
 
     fn fake_pool_key(fee: u128) -> PoolKey {
         PoolKey {
             token0: contract_address_const::<1>(), token1: contract_address_const::<2>(), fee
         }
+    }
+
+    #[derive(Copy, Drop)]
+    struct SetupPoolResult {
+        token0: IMockERC20Dispatcher,
+        token1: IMockERC20Dispatcher,
+        pool_key: PoolKey,
+        core: IParlayDispatcher,
+        locker: ICoreLockerDispatcher
+    }
+
+    fn setup_pool(owner: ContractAddress, fee: u128, initial_tick: i129) -> SetupPoolResult {
+        let mut token0 = deploy_mock_token();
+        let mut token1 = deploy_mock_token();
+        if (token0.contract_address > token1.contract_address) {
+            let temp = token1;
+            token1 = token0;
+            token0 = temp;
+        }
+
+        let pool_key: PoolKey = PoolKey {
+            token0: token0.contract_address, token1: token1.contract_address, fee
+        };
+
+        let mut core_constructor_args: Array<felt252> = Default::default();
+        core_constructor_args.append(owner.into());
+
+        let (core_address, _) = deploy_syscall(
+            Parlay::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
+        )
+            .expect('core deploy failed');
+
+        let core = IParlayDispatcher { contract_address: core_address };
+
+        core.initialize_pool(pool_key, initial_tick);
+
+        let mut locker_constructor_args: Array<felt252> = Default::default();
+        locker_constructor_args.append(core_address.into());
+        let (locker_address, _) = deploy_syscall(
+            CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, locker_constructor_args.span(), true
+        )
+            .expect('locker deploy failed');
+
+        let locker = ICoreLockerDispatcher { contract_address: locker_address };
+
+        SetupPoolResult { token0, token1, pool_key, core, locker }
     }
 }
 
@@ -313,8 +367,53 @@ mod initialized_ticks_tests {
     }
 }
 
-mod modify_position {
+
+mod locks {
+    use super::helper::setup_pool;
+    use super::{
+        contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
+        ICoreLockerDispatcherTrait, i129
+    };
+
+
+    const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
+
     #[test]
-    #[available_gas(5000000)]
-    fn test_create_position() {}
+    #[available_gas(50000000)]
+    fn test_assert_locker_id_call() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        setup.locker.call(Action::AssertLockerId(0));
+    }
+    #[test]
+    #[available_gas(50000000)]
+    #[should_panic(
+        expected: (
+            'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_assert_locker_id_call_wrong() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        setup.locker.call(Action::AssertLockerId(1));
+    }
+
+    #[test]
+    #[available_gas(50000000)]
+    fn test_create_position() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, i129 {
+                            mag: 10, sign: true
+                            }, i129 {
+                            mag: 10, sign: false
+                            }, i129 {
+                            mag: 0, sign: false
+                        }
+                    )
+                )
+            );
+    }
 }
