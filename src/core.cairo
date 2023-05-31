@@ -277,6 +277,7 @@ mod Parlay {
             Pool {
                 sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
                 tick: initial_tick,
+                root_tick: Default::default(),
                 liquidity: Default::default(),
                 fee_growth_global_token0: Default::default(),
                 fee_growth_global_token1: Default::default(),
@@ -288,13 +289,13 @@ mod Parlay {
 
 
     #[internal]
-    fn remove_initialized_tick(pool_key: PoolKey, index: i129) {
+    fn remove_initialized_tick(pool_key: PoolKey, root_tick: i129, index: i129) {
         // index 0 can never be removed nor inserted, it is always the root of the tree
-        if (index == i129 { mag: 0, sign: false }) {
+        if (index == Default::default()) {
             return ();
         }
 
-        let mut at_tick = Default::default();
+        let mut at_tick = root_tick;
         let mut parent: Option<(TickTreeNode, i129)> = Option::None(());
         let mut node = initialized_ticks::read((pool_key, at_tick));
 
@@ -305,22 +306,20 @@ mod Parlay {
 
             parent = Option::Some((node, at_tick));
 
-            // if the unwrap fails, the node does not exist
-            if (index < at_tick) {
-                at_tick = node.left.expect('TICK_NOT_FOUND');
-            } else {
-                at_tick = node.right.expect('TICK_NOT_FOUND');
-            };
-
+            // if the unwrap fails, the index does not exist in the tree
+            at_tick =
+                if (index < at_tick) {
+                    node.left.expect('TICK_NOT_FOUND')
+                } else {
+                    node.right.expect('TICK_NOT_FOUND')
+                };
             node = initialized_ticks::read((pool_key, at_tick));
         };
 
-        // first delete the node for the index
-        initialized_ticks::write((pool_key, index), Default::default());
-
         if (node.left.is_some() & node.right.is_some()) {
-            // find in order sucessor from right subtree (i.e. min value on right side) and replace this node in the parent with it
-            assert(false, 'todo');
+            // finds in order sucessor from right subtree (i.e. minimum value on right side)
+            let next = next_initialized_tick(pool_key, node.right.unwrap(), index).unwrap();
+            let next_node = ticks::read((pool_key, next));
         } else {
             match parent {
                 Option::Some((
@@ -344,11 +343,14 @@ mod Parlay {
                 }
             }
         }
+
+        // finally, delete the node for the index
+        initialized_ticks::write((pool_key, index), Default::default());
     }
 
     #[internal]
-    fn insert_initialized_tick(pool_key: PoolKey, index: i129) {
-        let mut at_tick = Default::default();
+    fn insert_initialized_tick(pool_key: PoolKey, root_tick: i129, index: i129) {
+        let mut at_tick = root_tick;
         let mut node = initialized_ticks::read((pool_key, at_tick));
 
         loop {
@@ -390,8 +392,8 @@ mod Parlay {
 
     // Returns the next tick from a given starting tick, i.e. the tick in the set of initialized ticks that is greater than the current tick
     #[internal]
-    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129> {
-        let mut at_tick = Default::default();
+    fn next_initialized_tick(pool_key: PoolKey, root_tick: i129, from: i129) -> Option<i129> {
+        let mut at_tick = root_tick;
         let mut best_answer: Option<i129> = Option::None(());
         let mut node = initialized_ticks::read((pool_key, at_tick));
 
@@ -432,11 +434,10 @@ mod Parlay {
         }
     }
 
-    use debug::PrintTrait;
     // Returns the previous tick from a given starting tick, i.e. the tick in the set of initialized ticks that is less than or equal to the current tick
     #[internal]
-    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129> {
-        let mut at_tick = Default::default();
+    fn prev_initialized_tick(pool_key: PoolKey, root_tick: i129, from: i129) -> Option<i129> {
+        let mut at_tick = root_tick;
         let mut node = initialized_ticks::read((pool_key, at_tick));
         let mut best_answer: Option<i129> = Option::None(());
 
@@ -478,16 +479,16 @@ mod Parlay {
     }
 
     #[internal]
-    fn update_tick(pool_key: PoolKey, index: i129, liquidity_delta: i129) {
+    fn update_tick(pool_key: PoolKey, root_tick: i129, index: i129, liquidity_delta: i129) {
         let tick = ticks::read((pool_key, index));
 
         let next_liquidity_net = add_delta(tick.liquidity_net, liquidity_delta);
 
         if ((next_liquidity_net == 0) ^ (tick.liquidity_net == 0)) {
             if (next_liquidity_net == 0) {
-                remove_initialized_tick(pool_key, index);
+                remove_initialized_tick(pool_key, root_tick, index);
             } else {
-                insert_initialized_tick(pool_key, index);
+                insert_initialized_tick(pool_key, root_tick, index);
             }
         }
 
@@ -615,6 +616,7 @@ mod Parlay {
                 pool_key,
                 Pool {
                     sqrt_ratio: pool.sqrt_ratio,
+                    root_tick: pool.root_tick,
                     tick: pool.tick,
                     liquidity: pool_liquidity_next,
                     fee_growth_global_token0: pool.fee_growth_global_token0,
@@ -634,8 +636,8 @@ mod Parlay {
         );
 
         // update each tick
-        update_tick(pool_key, params.tick_lower, params.liquidity_delta);
-        update_tick(pool_key, params.tick_upper, params.liquidity_delta);
+        update_tick(pool_key, Default::default(), params.tick_lower, params.liquidity_delta);
+        update_tick(pool_key, Default::default(), params.tick_upper, params.liquidity_delta);
 
         // and finally account the computed deltas
         account_delta(id, pool_key.token0, amount0_delta);
@@ -678,7 +680,7 @@ mod Parlay {
             }
 
             let (next_tick, is_initialized) = if (increasing) {
-                match (prev_initialized_tick(pool_key, tick)) {
+                match (prev_initialized_tick(pool_key, pool.root_tick, tick)) {
                     Option::Some(tick) => (tick, true),
                     Option::None(_) => if (increasing) {
                         (max_tick(), false)
@@ -687,7 +689,7 @@ mod Parlay {
                     }
                 }
             } else {
-                match (next_initialized_tick(pool_key, tick)) {
+                match (next_initialized_tick(pool_key, pool.root_tick, tick)) {
                     Option::Some(tick) => (tick, true),
                     Option::None(_) => if (increasing) {
                         (max_tick(), false)
