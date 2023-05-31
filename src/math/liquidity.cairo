@@ -15,7 +15,7 @@ fn liquidity_delta_to_amount_delta(
     let ratio_upper = tick_to_sqrt_ratio(tick_upper);
 
     // we always add one to the delta so that we never give more tokens than is owed or receive less than is needed
-    // there may be a case where it underflows preventing withdrawal, but that's ok because that would mean zero loss
+    // there may be a case where the addition overflows preventing withdrawal, but the user can always do partial withdrawals
     let ONE = i129 { mag: 1, sign: false };
     let ZERO = i129 { mag: 0, sign: false };
 

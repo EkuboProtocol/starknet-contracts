@@ -8,6 +8,7 @@ use integer::BoundedInt;
 use traits::Into;
 use parlay::types::keys::PoolKey;
 use parlay::types::i129::i129;
+use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
@@ -376,7 +377,7 @@ mod locks {
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio
     };
 
 
@@ -495,6 +496,39 @@ mod locks {
             },
             ActionResult::Swap(_) => {
                 assert(false, 'unexpected result')
+            }
+        }
+    }
+
+    #[test]
+    #[available_gas(50000000)]
+    fn test_swap_0_amount() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+
+        let result = setup
+            .locker
+            .call(
+                Action::Swap(
+                    (
+                        setup.pool_key, SwapParameters {
+                            amount: Default::default(), // input 0 token0, price decreasing
+                            is_token1: false,
+                            sqrt_ratio_limit: min_sqrt_ratio(),
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match result {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::Swap(delta) => {
+                assert(delta.amount0_delta == Default::default(), 'amount0_delta');
+                assert(delta.amount1_delta == Default::default(), 'amount1_delta');
             }
         }
     }

@@ -87,8 +87,11 @@ mod Parlay {
         ContractAddress, SwapParameters, UpdatePositionParameters, Delta
     };
 
-    use parlay::math::ticks::{tick_to_sqrt_ratio, min_tick, max_tick};
+    use parlay::math::ticks::{
+        tick_to_sqrt_ratio, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio
+    };
     use parlay::math::liquidity::liquidity_delta_to_amount_delta;
+    use parlay::math::swap::{swap_result, is_price_increasing};
     use parlay::math::fee::{compute_fee, accumulate_fee_amount};
     use parlay::math::muldiv::muldiv;
     use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder};
@@ -643,10 +646,72 @@ mod Parlay {
         Delta { amount0_delta, amount1_delta }
     }
 
+    #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta {
         let id = require_locker();
 
-        assert(false, 'NOT_IMPLEMENTED');
+        let pool = pools::read(pool_key);
+
+        // pool must be initialized
+        assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+
+        let increasing = is_price_increasing(params.amount.sign, params.is_token1);
+
+        // check the limit is not in the wrong direction and is within the price bounds
+        assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'DIRECTION');
+        assert(
+            (params.sqrt_ratio_limit >= min_sqrt_ratio())
+                & params.sqrt_ratio_limit < max_sqrt_ratio(),
+            'LIMIT'
+        );
+
+        let mut delta: Delta = Default::default();
+        let mut tick = pool.tick;
+        let mut amount = params.amount;
+        let mut sqrt_ratio = pool.sqrt_ratio;
+        let mut liquidity = pool.liquidity;
+        let mut calculated_amount: u128 = Default::default();
+
+        loop {
+            if (amount == Default::default()) {
+                break ();
+            }
+
+            let (next_tick, is_initialized) = if (increasing) {
+                match (prev_initialized_tick(pool_key, tick)) {
+                    Option::Some(tick) => (tick, true),
+                    Option::None(_) => if (increasing) {
+                        (max_tick(), false)
+                    } else {
+                        (min_tick(), false)
+                    }
+                }
+            } else {
+                match (next_initialized_tick(pool_key, tick)) {
+                    Option::Some(tick) => (tick, true),
+                    Option::None(_) => if (increasing) {
+                        (max_tick(), false)
+                    } else {
+                        (min_tick(), false)
+                    }
+                }
+            };
+
+            let sqrt_ratio_limit = tick_to_sqrt_ratio(next_tick);
+
+            let swap_result = swap_result(
+                sqrt_ratio: sqrt_ratio,
+                liquidity: liquidity,
+                sqrt_ratio_limit: sqrt_ratio_limit,
+                amount: amount,
+                is_token1: params.is_token1,
+                fee: pool_key.fee
+            );
+
+            amount -= swap_result.consumed_amount;
+            sqrt_ratio = swap_result.sqrt_ratio_next;
+            calculated_amount += swap_result.calculated_amount;
+        };
 
         Default::default()
     }
