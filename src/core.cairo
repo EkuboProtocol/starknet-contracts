@@ -320,6 +320,9 @@ mod Parlay {
             // finds in order sucessor from right subtree (i.e. minimum value on right side)
             let next = next_initialized_tick(pool_key, node.right.unwrap(), index).unwrap();
             let next_node = ticks::read((pool_key, next));
+            // this next_node can have a right but cannot have a left
+            // the next will take the children of the current, and the right will become the child of the parent
+            assert(false, 'TODO');
         } else {
             match parent {
                 Option::Some((
@@ -339,7 +342,7 @@ mod Parlay {
                     );
                 },
                 Option::None(_) => {
-                    assert(false, 'ERROR');
+                    assert(false, 'TODO');
                 }
             }
         }

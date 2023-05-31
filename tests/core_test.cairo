@@ -164,6 +164,40 @@ mod initialize_pool_tests {
 mod initialized_ticks_tests {
     use super::helper::{fake_pool_key};
     use super::{Option, OptionTrait, PoolKey, Parlay, i129};
+    use debug::PrintTrait;
+    use array::ArrayTrait;
+
+    // debug utility for printing the tree
+    fn print_tree(pool_key: PoolKey) {
+        let pool = Parlay::pools::read(pool_key);
+        print_subtree(pool_key, pool.root_tick);
+    }
+
+    fn print_subtree(pool_key: PoolKey, root: i129) {
+        let mut current = root;
+        let mut queue: Array<i129> = Default::default();
+        queue.append(current);
+
+        // todo: make this more readable. currently it's a bfs, but not very easy to read
+        loop {
+            if (queue.len() == 0) {
+                break ();
+            }
+
+            current = queue.pop_front().unwrap();
+            let node = Parlay::initialized_ticks::read((pool_key, current));
+
+            current.print();
+
+            if (node.left.is_some()) {
+                queue.append(node.left.unwrap());
+            };
+
+            if (node.right.is_some()) {
+                queue.append(node.right.unwrap());
+            };
+        }
+    }
 
     #[test]
     #[available_gas(500000000)]
