@@ -423,6 +423,35 @@ mod locks {
 
     #[test]
     #[available_gas(50000000)]
+    #[should_panic(
+        expected: (
+            'u256_sub Overflow', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_small_amount_liquidity_add_no_tokens() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+
+        setup
+            .locker
+            .call(
+                Action::UpdatePosition( 
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 100, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+    }
+
+    #[test]
+    #[available_gas(50000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
 
@@ -444,7 +473,7 @@ mod locks {
                                 }, tick_upper: i129 {
                                 mag: 10, sign: false
                                 }, liquidity_delta: i129 {
-                                mag: 0, sign: false
+                                mag: 100, sign: false
                             }
                         }, contract_address_const::<42>()
                     )

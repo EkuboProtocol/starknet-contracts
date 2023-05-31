@@ -70,7 +70,7 @@ mod CoreLocker {
                 contract_address: token
             }.transfer(core, u256 { low: delta.mag, high: 0 });
             // then call pay
-            IParlayDispatcher { contract_address: core }.deposit(token);
+            assert(IParlayDispatcher { contract_address: core }.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
         } else if (delta < Default::default()) {
             // withdraw to recipient
             IParlayDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);

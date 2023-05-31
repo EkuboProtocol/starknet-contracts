@@ -245,11 +245,12 @@ mod Parlay {
 
         let reserve = reserves::read(token_address);
         // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
-        assert(balance >= reserve, 'UNEXPECTED_BALANCE_LT_RESERVE');
+        assert(balance >= reserve, 'BALANCE_LT_RESERVE');
         let delta = balance - reserve;
         // the delta is limited to u128
         assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
-        account_delta(id, token_address, i129 { mag: delta.low, sign: false });
+        
+        account_delta(id, token_address, i129 { mag: delta.low, sign: true });
 
         reserves::write(token_address, balance);
 
@@ -643,7 +644,7 @@ mod Parlay {
         let id = require_locker();
 
         assert(false, 'NOT_IMPLEMENTED');
-        
+
         Default::default()
     }
 }
