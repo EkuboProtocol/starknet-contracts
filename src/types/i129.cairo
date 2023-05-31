@@ -274,18 +274,18 @@ fn i129_gt(a: i129, b: i129) -> bool {
 }
 
 #[inline(always)]
+fn i129_ge(a: i129, b: i129) -> bool {
+    (i129_eq(a, b) | i129_gt(a, b))
+}
+
+#[inline(always)]
 fn i129_lt(a: i129, b: i129) -> bool {
-    return !i129_gt(a, b);
+    return !i129_ge(a, b);
 }
 
 #[inline(always)]
 fn i129_le(a: i129, b: i129) -> bool {
-    (a == b | i129_lt(a, b))
-}
-
-#[inline(always)]
-fn i129_ge(a: i129, b: i129) -> bool {
-    (a == b | i129_gt(a, b))
+    !i129_gt(a, b)
 }
 
 #[inline(always)]

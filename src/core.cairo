@@ -286,7 +286,6 @@ mod Parlay {
         PoolInitialized(pool_key, initial_tick);
     }
 
-
     // Remove the initialized tick
     #[internal]
     fn remove_initialized_tick(
@@ -294,74 +293,60 @@ mod Parlay {
     ) -> Option<i129> {
         assert(root_tick.is_some(), 'TICK_NOT_FOUND');
 
-        let mut at_tick = root_tick.unwrap();
-        let mut parent: Option<(TickTreeNode, i129)> = Option::None(());
-        let mut node = initialized_ticks::read((pool_key, at_tick));
+        let value = root_tick.unwrap();
+        let node = initialized_ticks::read((pool_key, value));
 
-        loop {
-            if (at_tick == index) {
-                break ();
+        if (index < value) {
+            let left = remove_initialized_tick(pool_key, node.left, index);
+            if (left != node.left) {
+                initialized_ticks::write(
+                    (pool_key, value), TickTreeNode { red: false, left, right: node.right }
+                );
             }
-
-            parent = Option::Some((node, at_tick));
-
-            // if the unwrap fails, the index does not exist in the tree
-            at_tick =
-                if (index < at_tick) {
-                    node.left.expect('TICK_NOT_FOUND')
-                } else {
-                    node.right.expect('TICK_NOT_FOUND')
+            root_tick
+        } else if (index > value) {
+            let right = remove_initialized_tick(pool_key, node.right, index);
+            if (right != node.right) {
+                initialized_ticks::write(
+                    (pool_key, value), TickTreeNode { red: false, left: node.left, right }
+                );
+            }
+            root_tick
+        } else {
+            let next_root = if (node.left.is_none()) {
+                node.right
+            } else if (node.right.is_none()) {
+                node.left
+            } else {
+                // find the in-order successor
+                let mut successor = node.right.unwrap();
+                let mut successor_node = initialized_ticks::read((pool_key, successor));
+                loop {
+                    match successor_node.left {
+                        Option::Some(left) => {
+                            successor = left;
+                            successor_node = initialized_ticks::read((pool_key, left));
+                        },
+                        Option::None(_) => {
+                            break ();
+                        }
+                    };
                 };
-            node = initialized_ticks::read((pool_key, at_tick));
-        };
 
-        if (node.left.is_some() & node.right.is_some()) {
-            // first find the in-order successor
-            let mut successor = node.right.unwrap();
-            let mut successor_node = initialized_ticks::read((pool_key, successor));
-            loop {
-                match successor_node.left {
-                    Option::Some(successor_left) => {
-                        successor = successor_left;
-                        successor_node = initialized_ticks::read((pool_key, successor));
-                    },
-                    Option::None(_) => {
-                        break ();
-                    }
-                };
+                let right = remove_initialized_tick(pool_key, node.right, successor);
+
+                initialized_ticks::write(
+                    (pool_key, successor), TickTreeNode { red: false, left: node.left, right }
+                );
+
+                Option::Some(successor)
             };
 
-            // this next_node can have a right but cannot have a left
-            // the next will take the children of the current, and the right will become the child of the parent
-            assert(false, 'TODO');
-        } else {
-            match parent {
-                Option::Some((
-                    parent_node, parent_tick
-                )) => {
-                    initialized_ticks::write(
-                        (pool_key, parent_tick),
-                        if index < parent_tick {
-                            TickTreeNode {
-                                red: parent_node.red, left: node.left, right: parent_node.right
-                            }
-                        } else {
-                            TickTreeNode {
-                                red: parent_node.red, left: parent_node.left, right: node.right
-                            }
-                        }
-                    );
-                },
-                Option::None(_) => {
-                    assert(false, 'TODO');
-                }
-            }
+            // delete the node (todo: do we actually ever need to clear this storage if it's never referenced from the root?)
+            initialized_ticks::write((pool_key, value), Default::default());
+
+            next_root
         }
-
-        // finally, delete the node for the index
-        initialized_ticks::write((pool_key, index), Default::default());
-
-        root_tick
     }
 
     #[internal]

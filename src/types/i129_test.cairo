@@ -108,6 +108,19 @@ fn test_gt() {
     assert((i129 { mag: 1, sign: false } > i129 { mag: 0, sign: true }) == true, '1 > -0');
     assert((i129 { mag: 1, sign: true } > i129 { mag: 0, sign: true }) == false, '-1 > -0');
     assert((i129 { mag: 1, sign: true } > i129 { mag: 0, sign: false }) == false, '-1 > 0');
+    assert((i129 { mag: 1, sign: false } > i129 { mag:1, sign: false }) == false, '1 > 1');
+}
+
+#[test]
+fn test_lt() {
+    assert((i129 { mag: 0, sign: false } < i129 { mag: 0, sign: true }) == false, '0 < -0');
+    assert((i129 { mag: 0, sign: false } < i129 { mag: 1, sign: true }) == false, '0 < -1');
+    assert((i129 { mag: 1, sign: false } < i129 { mag: 1, sign: false }) == false, '1 < 1');
+
+    assert((i129 { mag: 1, sign: true } < i129 { mag: 0, sign: false }) == true, '-1 < 0');
+    assert((i129 { mag: 1, sign: true } < i129 { mag: 0, sign: true }) == true, '-1 < -0');
+    assert((i129 { mag: 0, sign: false } < i129 { mag: 1, sign: false }) == true, '0 < 1');
+    assert((i129 { mag: 1, sign: false } < i129 { mag: 2, sign: false }) == true, '1 < 2');
 }
 
 #[test]
