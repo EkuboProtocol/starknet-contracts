@@ -14,6 +14,32 @@ trait IERC20 {
     fn balance_of(account: ContractAddress) -> u256;
 }
 
+#[derive(Copy, Drop, Serde)]
+struct UpdatePositionParameters {
+    tick_lower: i129,
+    tick_upper: i129,
+    liquidity_delta: i129,
+}
+
+#[derive(Copy, Drop, Serde)]
+struct SwapParameters {
+    amount: i129,
+    is_token1: bool,
+    sqrt_ratio_limit: u256,
+}
+
+#[derive(Copy, Drop, Serde)]
+struct Delta {
+    amount0_delta: i129,
+    amount1_delta: i129,
+}
+
+impl DefaultDelta of Default<Delta> {
+    fn default() -> Delta {
+        Delta { amount0_delta: Default::default(), amount1_delta: Default::default(),  }
+    }
+}
+
 #[abi]
 trait IParlay {
     #[view]
@@ -47,22 +73,18 @@ trait IParlay {
     fn initialize_pool(pool_key: PoolKey, initial_tick: i129);
 
     #[external]
-    fn update_position(
-        pool_key: PoolKey, tick_lower: i129, tick_upper: i129, liquidity_delta: i129
-    ) -> (i129, i129);
+    fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta;
 
     #[external]
-    fn swap(
-        pool_key: PoolKey, amount: i129, is_token1: bool, sqrt_ratio_limit: u256
-    ) -> (i129, i129);
+    fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta;
 }
 
 #[contract]
 mod Parlay {
-    use super::ILockerDispatcher;
-    use super::ILockerDispatcherTrait;
-    use super::IERC20Dispatcher;
-    use super::IERC20DispatcherTrait;
+    use super::{
+        IERC20Dispatcher, IERC20DispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait,
+        ContractAddress, SwapParameters, UpdatePositionParameters, Delta
+    };
 
     use parlay::math::ticks::{tick_to_sqrt_ratio, min_tick, max_tick};
     use parlay::math::liquidity::liquidity_delta_to_amount_delta;
@@ -73,12 +95,8 @@ mod Parlay {
     use parlay::types::storage::{Tick, Position, Pool, TickTreeNode};
     use parlay::types::keys::{PositionKey, PoolKey};
 
-    use starknet::contract_address_const;
-    use starknet::get_caller_address;
-    use starknet::get_contract_address;
-    use starknet::ContractAddress;
+    use starknet::{contract_address_const, get_caller_address, get_contract_address};
 
-    use traits::Into;
     use option::{Option, OptionTrait};
 
     struct Storage {
@@ -479,14 +497,12 @@ mod Parlay {
 
 
     #[external]
-    fn update_position(
-        pool_key: PoolKey, tick_lower: i129, tick_upper: i129, liquidity_delta: i129
-    ) -> (i129, i129) {
+    fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta {
         let id = require_locker();
 
-        assert(tick_lower < tick_upper, 'ORDER');
-        assert(tick_lower >= min_tick(), 'MIN');
-        assert(tick_upper <= max_tick(), 'MAX');
+        assert(params.tick_lower < params.tick_upper, 'ORDER');
+        assert(params.tick_lower >= min_tick(), 'MIN');
+        assert(params.tick_upper <= max_tick(), 'MAX');
 
         let pool = pools::read(pool_key);
 
@@ -495,11 +511,11 @@ mod Parlay {
 
         // first compute the amount deltas due to the liquidity delta
         let (mut amount0_delta, mut amount1_delta) = liquidity_delta_to_amount_delta(
-            pool.sqrt_ratio, liquidity_delta, tick_lower, tick_upper
+            pool.sqrt_ratio, params.liquidity_delta, params.tick_lower, params.tick_upper
         );
 
         // first, account the withdrawal protocol fee, because it's based on the deltas
-        if (liquidity_delta.sign) {
+        if (params.liquidity_delta.sign) {
             let amount0_fee = compute_fee(amount0_delta.mag, pool_key.fee);
             let amount1_fee = compute_fee(amount1_delta.mag, pool_key.fee);
 
@@ -518,8 +534,10 @@ mod Parlay {
 
         // now we need to compute the fee growth inside the tick range, and the next pool liquidity
         let mut pool_liquidity_next: u128 = pool.liquidity;
-        let (fee_growth_inside_token0, fee_growth_inside_token1) = if (pool.tick < tick_lower) {
-            let tick_lower_state = ticks::read((pool_key, tick_lower));
+        let (fee_growth_inside_token0, fee_growth_inside_token1) = if (pool
+            .tick < params
+            .tick_lower) {
+            let tick_lower_state = ticks::read((pool_key, params.tick_lower));
             (
                 unsafe_sub(
                     pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
@@ -528,11 +546,11 @@ mod Parlay {
                     pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
                 )
             )
-        } else if (pool.tick < tick_upper) {
-            let tick_lower_state = ticks::read((pool_key, tick_lower));
-            let tick_upper_state = ticks::read((pool_key, tick_upper));
+        } else if (pool.tick < params.tick_upper) {
+            let tick_lower_state = ticks::read((pool_key, params.tick_lower));
+            let tick_upper_state = ticks::read((pool_key, params.tick_upper));
 
-            pool_liquidity_next = add_delta(pool_liquidity_next, liquidity_delta);
+            pool_liquidity_next = add_delta(pool_liquidity_next, params.liquidity_delta);
 
             (
                 unsafe_sub(
@@ -549,7 +567,7 @@ mod Parlay {
                 )
             )
         } else {
-            let tick_upper_state = ticks::read((pool_key, tick_upper));
+            let tick_upper_state = ticks::read((pool_key, params.tick_upper));
             (
                 unsafe_sub(
                     pool.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
@@ -562,7 +580,9 @@ mod Parlay {
 
         // here we are accumulating fees owed to the position based on its current liquidity
         let position_key = PositionKey {
-            owner: get_caller_address(), tick_lower: tick_lower, tick_upper: tick_upper
+            owner: get_caller_address(),
+            tick_lower: params.tick_lower,
+            tick_upper: params.tick_upper
         };
         let position: Position = positions::read((pool_key, position_key));
 
@@ -600,30 +620,30 @@ mod Parlay {
         positions::write(
             (pool_key, position_key),
             Position {
-                liquidity: add_delta(position.liquidity, liquidity_delta),
+                liquidity: add_delta(position.liquidity, params.liquidity_delta),
                 fee_growth_inside_last_token0: fee_growth_inside_token0,
                 fee_growth_inside_last_token1: fee_growth_inside_token1
             }
         );
 
         // update each tick
-        update_tick(pool_key, tick_lower, liquidity_delta);
-        update_tick(pool_key, tick_upper, liquidity_delta);
+        update_tick(pool_key,  params.tick_lower, params.liquidity_delta);
+        update_tick(pool_key,  params.tick_upper, params.liquidity_delta);
 
         // and finally account the computed deltas
         account_delta(id, pool_key.token0, amount0_delta);
         account_delta(id, pool_key.token1, amount1_delta);
 
-        PositionUpdated(pool_key, position_key, liquidity_delta);
+        PositionUpdated(pool_key, position_key,  params.liquidity_delta);
 
-        (amount0_delta, amount1_delta)
+        Delta { amount0_delta, amount1_delta }
     }
 
-    fn swap(
-        pool_key: PoolKey, amount: i129, is_token1: bool, sqrt_ratio_limit: u256
-    ) -> (i129, i129) {
+    fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta {
         let id = require_locker();
 
-        (Default::default(), Default::default())
+        assert(false, 'NOT_IMPLEMENTED');
+        
+        Default::default()
     }
 }

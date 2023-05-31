@@ -13,7 +13,8 @@ use option::OptionTrait;
 use option::Option;
 use tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use tests::mocks::locker::{
-    CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait
+    CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+    UpdatePositionParameters, SwapParameters
 };
 
 mod helper {
@@ -372,7 +373,7 @@ mod locks {
     use super::helper::setup_pool;
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129
+        ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters
     };
 
 
@@ -405,12 +406,14 @@ mod locks {
             .call(
                 Action::UpdatePosition(
                     (
-                        setup.pool_key, i129 {
-                            mag: 10, sign: true
-                            }, i129 {
-                            mag: 10, sign: false
-                            }, i129 {
-                            mag: 0, sign: false
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 0, sign: false
+                            }
                         }
                     )
                 )

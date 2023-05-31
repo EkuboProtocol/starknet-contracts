@@ -2,19 +2,21 @@ use parlay::types::keys::{PoolKey, PositionKey};
 use parlay::types::i129::i129;
 use starknet::ContractAddress;
 use serde::Serde;
+use parlay::core::{UpdatePositionParameters, SwapParameters, Delta};
+
 
 #[derive(Copy, Drop, Serde)]
 enum Action {
     AssertLockerId: felt252,
-    UpdatePosition: (PoolKey, i129, i129, i129),
-    Swap: (PoolKey, i129, bool, u256)
+    UpdatePosition: (PoolKey, UpdatePositionParameters),
+    Swap: (PoolKey, SwapParameters)
 }
 
 #[derive(Copy, Drop, Serde)]
 enum ActionResult {
     AssertLockerId: (),
-    UpdatePosition: (i129, i129),
-    Swap: (i129, i129)
+    UpdatePosition: Delta,
+    Swap: Delta
 }
 
 #[abi]
@@ -25,7 +27,7 @@ trait ICoreLocker {
 
 #[contract]
 mod CoreLocker {
-    use super::{Action, ActionResult};
+    use super::{Action, ActionResult, Delta};
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
@@ -71,22 +73,20 @@ mod CoreLocker {
                 ActionResult::AssertLockerId(())
             },
             Action::UpdatePosition((
-                pool_key, tick_lower, tick_upper, liquidity_delta
+                pool_key, params
             )) => {
-                let (amount0_delta, amount1_delta) = IParlayDispatcher {
+                let delta = IParlayDispatcher {
                     contract_address: caller
-                }.update_position(pool_key, tick_lower, tick_upper, liquidity_delta);
+                }.update_position(pool_key, params);
 
-                ActionResult::UpdatePosition((amount0_delta, amount1_delta))
+                ActionResult::UpdatePosition(delta)
             },
             Action::Swap((
-                pool_key, amount, is_token1, sqrt_ratio_limit
+                pool_key, params
             )) => {
-                let (amount0_delta, amount1_delta) = IParlayDispatcher {
-                    contract_address: caller
-                }.swap(pool_key, amount, is_token1, sqrt_ratio_limit);
+                let delta = IParlayDispatcher { contract_address: caller }.swap(pool_key, params);
 
-                ActionResult::Swap((amount0_delta, amount1_delta))
+                ActionResult::Swap(delta)
             }
         };
 
