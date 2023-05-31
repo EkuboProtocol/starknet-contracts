@@ -6,6 +6,10 @@ use parlay::math::ticks::tick_to_sqrt_ratio;
 fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, tick_lower: i129, tick_upper: i129
 ) -> (i129, i129) {
+    if (liquidity_delta == Default::default()) {
+        return (Default::default(), Default::default());
+    }
+    
     let ratio_lower = tick_to_sqrt_ratio(tick_lower);
     let ratio_upper = tick_to_sqrt_ratio(tick_upper);
 

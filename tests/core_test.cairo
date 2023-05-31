@@ -373,7 +373,8 @@ mod locks {
     use super::helper::setup_pool;
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters
+        ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait
     };
 
 
@@ -399,7 +400,7 @@ mod locks {
 
     #[test]
     #[available_gas(50000000)]
-    fn test_create_position() {
+    fn test_zero_liquidity_add() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
         setup
             .locker
@@ -414,7 +415,38 @@ mod locks {
                                 }, liquidity_delta: i129 {
                                 mag: 0, sign: false
                             }
-                        }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+    }
+
+    #[test]
+    #[available_gas(50000000)]
+    fn test_small_amount_liquidity_add() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 0, sign: false
+                            }
+                        }, contract_address_const::<42>()
                     )
                 )
             );

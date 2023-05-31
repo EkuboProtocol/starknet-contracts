@@ -2,14 +2,16 @@ use parlay::types::keys::{PoolKey, PositionKey};
 use parlay::types::i129::i129;
 use starknet::ContractAddress;
 use serde::Serde;
-use parlay::core::{UpdatePositionParameters, SwapParameters, Delta};
+use parlay::core::{
+    UpdatePositionParameters, SwapParameters, Delta, IERC20Dispatcher, IERC20DispatcherTrait
+};
 
 
 #[derive(Copy, Drop, Serde)]
 enum Action {
     AssertLockerId: felt252,
-    UpdatePosition: (PoolKey, UpdatePositionParameters),
-    Swap: (PoolKey, SwapParameters)
+    UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
+    Swap: (PoolKey, SwapParameters, ContractAddress)
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -27,7 +29,7 @@ trait ICoreLocker {
 
 #[contract]
 mod CoreLocker {
-    use super::{Action, ActionResult, Delta};
+    use super::{Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, i129};
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
@@ -58,6 +60,23 @@ mod CoreLocker {
         action_result
     }
 
+    #[internal]
+    fn handle_delta(
+        core: ContractAddress, token: ContractAddress, delta: i129, recipient: ContractAddress
+    ) {
+        if (delta > Default::default()) {
+            // transfer the token from self (assumes we have the balance)
+            IERC20Dispatcher {
+                contract_address: token
+            }.transfer(core, u256 { low: delta.mag, high: 0 });
+            // then call pay
+            IParlayDispatcher { contract_address: core }.deposit(token);
+        } else if (delta < Default::default()) {
+            // withdraw to recipient
+            IParlayDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+        }
+    }
+
     #[external]
     fn locked(id: felt252, data: Array<felt252>) -> Array<felt252> {
         let caller = get_caller_address();
@@ -70,21 +89,28 @@ mod CoreLocker {
         let result = match action {
             Action::AssertLockerId(locker_id) => {
                 assert(locker_id == id, 'INVALID_LOCKER_ID');
+
                 ActionResult::AssertLockerId(())
             },
             Action::UpdatePosition((
-                pool_key, params
+                pool_key, params, recipient
             )) => {
                 let delta = IParlayDispatcher {
                     contract_address: caller
                 }.update_position(pool_key, params);
 
+                handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+
                 ActionResult::UpdatePosition(delta)
             },
             Action::Swap((
-                pool_key, params
+                pool_key, params, recipient
             )) => {
                 let delta = IParlayDispatcher { contract_address: caller }.swap(pool_key, params);
+
+                handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
                 ActionResult::Swap(delta)
             }
