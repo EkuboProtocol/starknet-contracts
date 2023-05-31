@@ -94,13 +94,12 @@ mod Parlay {
     use parlay::math::swap::{swap_result, is_price_increasing};
     use parlay::math::fee::{compute_fee, accumulate_fee_amount};
     use parlay::math::muldiv::muldiv;
-    use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder};
+    use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use parlay::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use parlay::types::storage::{Tick, Position, Pool, TickTreeNode};
     use parlay::types::keys::{PositionKey, PoolKey};
 
     use starknet::{contract_address_const, get_caller_address, get_contract_address};
-
     use option::{Option, OptionTrait};
 
     struct Storage {
@@ -300,7 +299,7 @@ mod Parlay {
             let left = remove_initialized_tick(pool_key, node.left, index);
             if (left != node.left) {
                 initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { red: false, left, right: node.right }
+                    (pool_key, value), TickTreeNode { height: 0, left, right: node.right }
                 );
             }
             root_tick
@@ -308,7 +307,7 @@ mod Parlay {
             let right = remove_initialized_tick(pool_key, node.right, index);
             if (right != node.right) {
                 initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { red: false, left: node.left, right }
+                    (pool_key, value), TickTreeNode { height: 0, left: node.left, right }
                 );
             }
             root_tick
@@ -336,7 +335,7 @@ mod Parlay {
                 let right = remove_initialized_tick(pool_key, node.right, successor);
 
                 initialized_ticks::write(
-                    (pool_key, successor), TickTreeNode { red: false, left: node.left, right }
+                    (pool_key, successor), TickTreeNode { height: 0, left: node.left, right }
                 );
 
                 Option::Some(successor)
@@ -355,53 +354,93 @@ mod Parlay {
     ) -> Option<i129> {
         match root_tick {
             Option::Some(value) => {
-                let mut at_tick = value;
-                let mut node = initialized_ticks::read((pool_key, at_tick));
+                assert(index != value, 'ALREADY_EXISTS');
 
-                loop {
-                    assert(at_tick != index, 'ALREADY_EXISTS');
+                let node = initialized_ticks::read((pool_key, value));
+                if (index < value) {
+                    match node.left {
+                        Option::Some(left) => {
+                            let new_left = insert_initialized_tick(pool_key, node.left, index);
 
-                    if (index < at_tick) {
-                        match node.left {
-                            Option::Some(left_tick) => {
-                                at_tick = left_tick;
-                                node = initialized_ticks::read((pool_key, at_tick));
-                            },
-                            Option::None(_) => {
-                                initialized_ticks::write(
-                                    (pool_key, at_tick),
-                                    TickTreeNode {
-                                        red: false, left: Option::Some(index), right: node.right
-                                    }
-                                );
-                                break ();
-                            }
+                            let left_height = initialized_ticks::read((pool_key, new_left?)).height;
+                            let right_height = match node.right {
+                                Option::Some(right) => initialized_ticks::read((pool_key, right))
+                                    .height,
+                                Option::None(_) => 0
+                            };
+
+                            initialized_ticks::write(
+                                (pool_key, value),
+                                TickTreeNode {
+                                    height: 1 + u128_max(left_height, right_height),
+                                    left: new_left,
+                                    right: node.right
+                                }
+                            );
+
+                            Option::Some(value)
+                        },
+                        Option::None(_) => {
+                            initialized_ticks::write(
+                                (pool_key, value),
+                                TickTreeNode {
+                                    height: if node.right.is_some() {
+                                        node.height
+                                    } else {
+                                        node.height + 1
+                                    },
+                                    left: Option::Some(index),
+                                    right: node.right
+                                }
+                            );
+
+                            Option::Some(value)
                         }
-                    } else {
-                        match node.right {
-                            Option::Some(right_tick) => {
-                                at_tick = right_tick;
-                                node = initialized_ticks::read((pool_key, at_tick));
-                            },
-                            Option::None(_) => {
-                                initialized_ticks::write(
-                                    (pool_key, at_tick),
-                                    TickTreeNode {
-                                        red: false, left: node.left, right: Option::Some(index)
-                                    }
-                                );
-                                break ();
-                            }
-                        }
-                    };
-                };
+                    }
+                } else {
+                    match node.right {
+                        Option::Some(right) => {
+                            let new_right = insert_initialized_tick(pool_key, node.right, index);
 
-                Option::Some(value)
+                            let left_height = match node.left {
+                                Option::Some(left) => initialized_ticks::read((pool_key, left))
+                                    .height,
+                                Option::None(_) => 0
+                            };
+                            let right_height = initialized_ticks::read((pool_key, new_right?))
+                                .height;
+
+                            initialized_ticks::write(
+                                (pool_key, value),
+                                TickTreeNode {
+                                    height: 1 + u128_max(left_height, right_height),
+                                    left: node.left,
+                                    right: new_right
+                                }
+                            );
+
+                            Option::Some(value)
+                        },
+                        Option::None(_) => {
+                            initialized_ticks::write(
+                                (pool_key, value),
+                                TickTreeNode {
+                                    height: if node.left.is_some() {
+                                        node.height
+                                    } else {
+                                        node.height + 1
+                                    },
+                                    left: node.left,
+                                    right: Option::Some(index)
+                                }
+                            );
+                            Option::Some(value)
+                        }
+                    }
+                }
             },
-            Option::None(_) => {
-                // we don't have to write anything to the tick tree nodes because the default value is fine
-                Option::Some(index)
-            }
+            // no root tick implies the inserted index is the root
+            Option::None(_) => Option::Some(index)
         }
     }
 

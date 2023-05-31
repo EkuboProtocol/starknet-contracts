@@ -1,5 +1,4 @@
-use parlay::types::i129::{i129, Felt252IntoI129};
-use parlay::math::ticks::{min_tick, max_tick};
+use parlay::types::i129::{i129, Felt252IntoI129, i129OptionPartialEq};
 use starknet::ContractAddress;
 use core::starknet::storage_access::{
     StorageAccess, SyscallResult, storage_address_from_base_and_offset, StorageBaseAddress,
@@ -48,7 +47,7 @@ struct Tick {
 
 #[derive(Copy, Drop)]
 struct TickTreeNode {
-    red: bool,
+    height: u128,
     left: Option<i129>,
     right: Option<i129>
 }
@@ -356,40 +355,53 @@ impl TickStorageAccess of StorageAccess<Tick> {
 mod tick_tree_node_internal {
     use super::i129;
 
-    #[inline(always)]
-    fn to_tick(x: u128) -> Option<i129> {
-        if (x == 0x800000000000) {
+    const PRESENT_BIT: u128 = 0x80000000;
+    const SIGN_BIT: u128 = 0x40000000;
+
+    fn to_tick(mut x: u128) -> Option<i129> {
+        if (x < PRESENT_BIT) {
             Option::None(())
         } else {
-            if (x >= 0x400000000000) {
-                Option::Some(i129 { mag: x - 0x400000000000, sign: true })
+            let y = x - PRESENT_BIT;
+            if (y >= SIGN_BIT) {
+                Option::Some(i129 { mag: y - SIGN_BIT, sign: true })
             } else {
-                Option::Some(i129 { mag: x, sign: false })
+                Option::Some(i129 { mag: y, sign: false })
             }
         }
     }
 
-    #[inline(always)]
-    fn to_u48(tick: Option<i129>) -> u128 {
+    fn to_u32(tick: Option<i129>) -> u128 {
         match tick {
             Option::Some(x) => {
+                assert(x.mag < 0x40000000, 'OVERFLOW');
                 if (x.sign) {
-                    x.mag + 0x400000000000
+                    x.mag + SIGN_BIT + PRESENT_BIT
                 } else {
-                    x.mag
+                    x.mag + PRESENT_BIT
                 }
             },
             Option::None(_) => {
-                0x800000000000
+                0
             }
         }
     }
 }
 
 
+impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
+    fn eq(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
+        ((lhs.height == rhs.height) & (lhs.left == rhs.left) & (lhs.right == rhs.right))
+    }
+    fn ne(lhs: TickTreeNode, rhs: TickTreeNode) -> bool { 
+        !PartialEq::<TickTreeNode>::eq(lhs, rhs)
+    }
+}
+
+
 impl TickTreeNodeDefault of Default<TickTreeNode> {
     fn default() -> TickTreeNode {
-        TickTreeNode { red: false, left: Option::None(()), right: Option::None(()) }
+        TickTreeNode { height: 0, left: Option::None(()), right: Option::None(()) }
     }
 }
 
@@ -408,21 +420,18 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
         }
 
         let mut parsed: u128 = packed_result.try_into().unwrap();
-        let red =
-            parsed >= 0x80000000000000000000000000000000; // most significant bit is set implies red
-        if (red) {
-            parsed -= 0x80000000000000000000000000000000;
-        }
 
-        let (upper, lower) = u128_safe_divmod(
-            parsed, u128_as_non_zero(0x1000000000000)
-        ); // 48 bits each. we assume no extra info in upper bits
+        let (height, left_right) = u128_safe_divmod(
+            parsed, u128_as_non_zero(0x10000000000000000) // 2**64
+        );
+
+        let (left, right) = u128_safe_divmod(left_right, u128_as_non_zero(0x100000000));
 
         SyscallResult::Ok(
             TickTreeNode {
-                red,
-                left: tick_tree_node_internal::to_tick(upper),
-                right: tick_tree_node_internal::to_tick(lower)
+                height,
+                left: tick_tree_node_internal::to_tick(left),
+                right: tick_tree_node_internal::to_tick(right)
             }
         )
     }
@@ -430,29 +439,40 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
     fn write_at_offset_internal(
         address_domain: u32, base: starknet::StorageBaseAddress, offset: u8, value: TickTreeNode
     ) -> starknet::SyscallResult<()> {
-        if (value.left.is_some()) {
-            assert(value.left.unwrap() >= min_tick(), 'LEFT');
-        }
-        if (value.right.is_some()) {
-            assert(value.right.unwrap() <= max_tick(), 'RIGHT');
-        }
-        if (value.left.is_some() & value.right.is_some()) {
-            assert(value.left.unwrap() < value.right.unwrap(), 'ORDER');
+        // validation of the tree node being written to storage
+        match value.left {
+            Option::Some(left_value) => {
+                assert(left_value.mag < 0x40000000, 'LEFT');
+                match value.right {
+                    Option::Some(right_value) => {
+                        assert(left_value < right_value, 'ORDER');
+                    },
+                    Option::None(_) => {}
+                }
+            },
+            Option::None(_) => {
+                match value.right {
+                    Option::Some(right_value) => {
+                        assert(right_value.mag < 0x40000000, 'RIGHT');
+                    },
+                    Option::None(_) => {
+                        // if there are no children, height must be 0
+                        assert(value.height == 0, 'HEIGHT');
+                    },
+                }
+            }
         }
 
-        let red_bit = if value.red {
-            0x80000000000000000000000000000000
-        } else {
-            0x0
-        };
+        // must fit within 32 bits so we don't lose information
+        assert(value.height < 0x100000000, 'MAX_HEIGHT');
 
         StorageAccess::<u128>::write_at_offset_internal(
             address_domain,
             base,
             offset,
-            red_bit
-                + (tick_tree_node_internal::to_u48(value.left) * 0x1000000000000)
-                + tick_tree_node_internal::to_u48(value.right)
+            (value.height * 0x10000000000000000)
+                + (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
+                + tick_tree_node_internal::to_u32(value.right)
         )
     }
 

@@ -293,7 +293,6 @@ fn i129_neg(x: i129) -> i129 {
     i129_new(x.mag, !x.sign)
 }
 
-
 #[inline(always)]
 fn i129_max(a: i129, b: i129) -> i129 {
     if (a > b) {
