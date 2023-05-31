@@ -14,7 +14,7 @@ struct Pool {
     // the current ratio, up to 192 bits
     sqrt_ratio: u256,
     // the root tick of the initialized ticks tree
-    root_tick: i129,
+    root_tick: Option<i129>,
     // the current tick, up to 32 bits
     tick: i129,
     // the current liquidity, i.e. between tick_prev and tick_next
@@ -53,6 +53,29 @@ struct TickTreeNode {
     right: Option<i129>
 }
 
+const NOT_PRESENT: felt252 = 0x200000000000000000000000000000000; // 2**129
+impl OptionalI129IntoFelt252 of Into<Option<i129>, felt252> {
+    fn into(self: Option<i129>) -> felt252 {
+        match self {
+            Option::Some(value) => {
+                value.into()
+            },
+            Option::None(_) => {
+                NOT_PRESENT
+            }
+        }
+    }
+}
+impl Felt252IntoOptionalI129 of Into<felt252, Option<i129>> {
+    fn into(self: felt252) -> Option<i129> {
+        if (self == NOT_PRESENT) {
+            Option::None(())
+        } else {
+            Option::Some(self.into())
+        }
+    }
+}
+
 impl PoolStorageAccess of StorageAccess<Pool> {
     fn read_at_offset_internal(
         address_domain: u32, base: StorageBaseAddress, offset: u8
@@ -70,7 +93,7 @@ impl PoolStorageAccess of StorageAccess<Pool> {
                 .expect('PSQRTH')
         };
 
-        let root_tick: i129 = storage_read_syscall(
+        let root_tick: Option<i129> = storage_read_syscall(
             address_domain, storage_address_from_base_and_offset(base, offset + 2_u8)
         )?
             .into();
@@ -276,7 +299,7 @@ impl PoolDefault of Default<Pool> {
     fn default() -> Pool {
         Pool {
             sqrt_ratio: Default::default(),
-            root_tick: Default::default(),
+            root_tick: Option::None(()),
             tick: Default::default(),
             liquidity: Default::default(),
             fee_growth_global_token0: Default::default(),

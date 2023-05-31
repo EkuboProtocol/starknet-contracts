@@ -135,6 +135,7 @@ mod initialize_pool_tests {
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
         );
+        assert(pool.root_tick == Option::None(()), 'root_tick');
         assert(pool.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(pool.liquidity == 0, 'tick');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fggt0');
@@ -173,29 +174,37 @@ mod initialized_ticks_tests {
         print_subtree(pool_key, pool.root_tick);
     }
 
-    fn print_subtree(pool_key: PoolKey, root: i129) {
-        let mut current = root;
-        let mut queue: Array<i129> = Default::default();
-        queue.append(current);
+    fn print_subtree(pool_key: PoolKey, root: Option<i129>) {
+        match root {
+            Option::Some(root_tick) => {
+                let mut queue: Array<i129> = Default::default();
+                queue.append(root_tick);
 
-        // todo: make this more readable. currently it's a bfs, but not very easy to read
-        loop {
-            if (queue.len() == 0) {
-                break ();
+                // todo: make this more readable. currently it's a bfs, but not very easy to read
+                loop {
+                    let current = queue.pop_front();
+                    match (current) {
+                        Option::Some(current_tick) => {
+                            current_tick.print();
+                            let node = Parlay::initialized_ticks::read((pool_key, current_tick));
+
+                            if (node.left.is_some()) {
+                                queue.append(node.left.unwrap());
+                            };
+
+                            if (node.right.is_some()) {
+                                queue.append(node.right.unwrap());
+                            };
+                        },
+                        Option::None(_) => {
+                            break ();
+                        }
+                    };
+                }
+            },
+            Option::None(_) => {
+                'empty tree'.print();
             }
-
-            current = queue.pop_front().unwrap();
-            let node = Parlay::initialized_ticks::read((pool_key, current));
-
-            current.print();
-
-            if (node.left.is_some()) {
-                queue.append(node.left.unwrap());
-            };
-
-            if (node.right.is_some()) {
-                queue.append(node.right.unwrap());
-            };
         }
     }
 
@@ -203,60 +212,51 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next() {
         let pool_key = fake_pool_key(0);
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 100, sign: true }
+        let mut root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 100, sign: true }
         );
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 50, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 10, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 5, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: false });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 5, sign: false });
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 10, sign: false }
-        );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 50, sign: false }
-        );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 100, sign: false }
-        );
-
-        let mut node = Parlay::initialized_ticks::read((pool_key, i129 { mag: 0, sign: false }));
-        assert(node.left.is_some(), '0.left');
-        assert(node.right.is_some(), '0.right');
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: false });
 
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: true }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('>-42') == i129 {
                 mag: 10, sign: true
             },
             'next tick of -42'
         );
         assert(
-            Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: true }
-            )
+            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('<=-42') == i129 {
                 mag: 50, sign: true
             },
             'prev tick of -42'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('>42') == i129 {
                 mag: 50, sign: false
             },
             'next tick of 42'
         );
         assert(
-            Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: false }
-            )
+            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('<=42') == i129 {
                 mag: 10, sign: false
             },
@@ -268,60 +268,51 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next_reverse_order_insert() {
         let pool_key = fake_pool_key(0);
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 100, sign: false }
+        let mut root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 100, sign: false }
         );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 50, sign: false }
-        );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 10, sign: false }
-        );
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 5, sign: false });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: false });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 5, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 10, sign: true });
-        Parlay::insert_initialized_tick(pool_key, Default::default(), i129 { mag: 50, sign: true });
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 100, sign: true }
-        );
-
-        let mut node = Parlay::initialized_ticks::read((pool_key, i129 { mag: 0, sign: false }));
-        assert(node.left.is_some(), '0.left');
-        assert(node.right.is_some(), '0.right');
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: true });
 
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: true }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('>-42') == i129 {
                 mag: 10, sign: true
             },
             'next tick of -42'
         );
         assert(
-            Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: true }
-            )
+            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('<=-42') == i129 {
                 mag: 50, sign: true
             },
             'prev tick of -42'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('>42') == i129 {
                 mag: 50, sign: false
             },
             'next tick of 42'
         );
         assert(
-            Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 42, sign: false }
-            )
+            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('<=42') == i129 {
                 mag: 10, sign: false
             },
@@ -330,139 +321,121 @@ mod initialized_ticks_tests {
     }
 
     #[test]
-    #[available_gas(5000000)]
+    #[available_gas(50000000)]
     #[should_panic(expected: ('ALREADY_EXISTS', ))]
     fn test_insert_fails_if_already_exists() {
         let pool_key = fake_pool_key(0);
 
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: true }
+        let root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: true }
-        );
+        Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true });
     }
 
     // test that removing a tick that does not exist in the tree fails
     #[test]
-    #[available_gas(5000000)]
+    #[available_gas(50000000)]
     #[should_panic(expected: ('TICK_NOT_FOUND', ))]
     fn test_remove_fails_if_does_not_exist() {
         Parlay::remove_initialized_tick(
-            fake_pool_key(0), Default::default(), i129 { mag: 1000, sign: true }
+            fake_pool_key(0), Option::None(()), i129 { mag: 1000, sign: true }
         );
     }
 
     #[test]
-    #[available_gas(5000000)]
+    #[available_gas(50000000)]
     fn test_insert_initialized_tick_next_initialized_tick() {
         let pool_key = fake_pool_key(0);
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: true }
+
+        let mut root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: false }
-        );
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
 
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1001, sign: true }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
                 .expect('-1001') == i129 {
                 mag: 1000, sign: true
             },
             'next tick of -1001'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1000, sign: true }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
                 .expect('-1000') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: false
             },
             'next tick of -1000'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 999, sign: true }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
                 .expect('-999') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: false
             },
             'next tick of -999'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: true })
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
                 .expect('-1') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: false
             },
             'next tick of -1'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 0, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
                 .expect('0') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 0'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
                 .expect('1') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 1'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 999, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
                 .expect('999') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 999'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1000, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
                 .is_none(),
             'next tick of 1000'
         );
         assert(
-            Parlay::next_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1001, sign: false }
-            )
+            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
                 .is_none(),
             'next tick of 1001'
         );
     }
 
     #[test]
-    #[available_gas(5000000)]
+    #[available_gas(50000000)]
     fn test_insert_initialized_tick_prev_initialized_tick() {
         let pool_key = fake_pool_key(0);
 
-        Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: true }
+        let mut root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
         Parlay::insert_initialized_tick(
-            pool_key, Default::default(), i129 { mag: 1000, sign: false }
+            pool_key, root_tick, i129 { mag: 1000, sign: false }
         );
 
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1001, sign: true }
+                pool_key, root_tick, i129 { mag: 1001, sign: true }
             )
                 .is_none(),
             'prev tick of -1001'
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1000, sign: true }
+                pool_key, root_tick, i129 { mag: 1000, sign: true }
             )
                 .expect('-1000') == i129 {
                 mag: 1000, sign: true
@@ -471,7 +444,7 @@ mod initialized_ticks_tests {
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 999, sign: true }
+                pool_key, root_tick, i129 { mag: 999, sign: true }
             )
                 .expect('-999') == i129 {
                 mag: 1000, sign: true
@@ -479,7 +452,7 @@ mod initialized_ticks_tests {
             'prev tick of -999'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, Default::default(), i129 { mag: 1, sign: true })
+            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
                 .expect('-1') == i129 {
                 mag: 1000, sign: true
             },
@@ -487,34 +460,34 @@ mod initialized_ticks_tests {
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 0, sign: false }
+                pool_key, root_tick, i129 { mag: 0, sign: false }
             )
                 .expect('0') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: true
             },
             'prev tick of 0'
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1, sign: false }
+                pool_key, root_tick, i129 { mag: 1, sign: false }
             )
                 .expect('1') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: true
             },
             'prev tick of 1'
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 999, sign: false }
+                pool_key, root_tick, i129 { mag: 999, sign: false }
             )
                 .expect('999') == i129 {
-                mag: 0, sign: false
+                mag: 1000, sign: true
             },
             'prev tick of 999'
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1000, sign: false }
+                pool_key, root_tick, i129 { mag: 1000, sign: false }
             )
                 .expect('1000') == i129 {
                 mag: 1000, sign: false
@@ -523,7 +496,7 @@ mod initialized_ticks_tests {
         );
         assert(
             Parlay::prev_initialized_tick(
-                pool_key, Default::default(), i129 { mag: 1001, sign: false }
+                pool_key, root_tick, i129 { mag: 1001, sign: false }
             )
                 .expect('1000') == i129 {
                 mag: 1000, sign: false
@@ -548,13 +521,13 @@ mod locks {
     const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
         setup.locker.call(Action::AssertLockerId(0));
     }
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
@@ -566,7 +539,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
         setup
@@ -587,7 +560,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'u256_sub Overflow',
@@ -621,7 +594,7 @@ mod locks {
 
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
 
@@ -665,7 +638,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
+    #[available_gas(500000000)]
     fn test_swap_0_amount() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
 

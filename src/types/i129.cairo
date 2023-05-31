@@ -17,6 +17,7 @@ struct i129 {
     sign: bool,
 }
 
+
 #[inline(always)]
 fn i129_new(mag: u128, sign: bool) -> i129 {
     i129 { mag, sign: sign & (mag != 0) }
@@ -165,7 +166,37 @@ impl i129PartialEq of PartialEq<i129> {
     }
 
     fn ne(lhs: i129, rhs: i129) -> bool {
-        i129_ne(lhs, rhs)
+        !i129_eq(lhs, rhs)
+    }
+}
+
+
+fn i129_option_eq(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+    match lhs {
+        Option::Some(lhs_value) => {
+            match rhs {
+                Option::Some(rhs_value) => {
+                    lhs_value == rhs_value
+                },
+                Option::None(_) => false
+            }
+        },
+        Option::None(_) => {
+            match rhs {
+                Option::Some(_) => false,
+                Option::None(_) => true
+            }
+        }
+    }
+}
+
+impl i129OptionPartialEq of PartialEq<Option<i129>> {
+    fn eq(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+        i129_option_eq(lhs, rhs)
+    }
+
+    fn ne(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+        !i129_option_eq(lhs, rhs)
     }
 }
 
@@ -226,10 +257,6 @@ fn i129_eq(a: i129, b: i129) -> bool {
     (a.mag == b.mag) & ((a.sign == b.sign) | (a.mag == 0))
 }
 
-#[inline(always)]
-fn i129_ne(a: i129, b: i129) -> bool {
-    !i129_eq(a, b)
-}
 
 fn i129_gt(a: i129, b: i129) -> bool {
     if (a.sign & !b.sign) {

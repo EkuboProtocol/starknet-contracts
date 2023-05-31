@@ -95,7 +95,7 @@ mod Parlay {
     use parlay::math::fee::{compute_fee, accumulate_fee_amount};
     use parlay::math::muldiv::muldiv;
     use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder};
-    use parlay::types::i129::{i129, i129_min, i129_max};
+    use parlay::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use parlay::types::storage::{Tick, Position, Pool, TickTreeNode};
     use parlay::types::keys::{PositionKey, PoolKey};
 
@@ -269,7 +269,6 @@ mod Parlay {
         assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
 
         let pool = pools::read(pool_key);
-
         assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
 
         pools::write(
@@ -277,7 +276,7 @@ mod Parlay {
             Pool {
                 sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
                 tick: initial_tick,
-                root_tick: Default::default(),
+                root_tick: Option::None(()),
                 liquidity: Default::default(),
                 fee_growth_global_token0: Default::default(),
                 fee_growth_global_token1: Default::default(),
@@ -288,14 +287,14 @@ mod Parlay {
     }
 
 
+    // Remove the initialized tick
     #[internal]
-    fn remove_initialized_tick(pool_key: PoolKey, root_tick: i129, index: i129) {
-        // index 0 can never be removed nor inserted, it is always the root of the tree
-        if (index == Default::default()) {
-            return ();
-        }
+    fn remove_initialized_tick(
+        pool_key: PoolKey, root_tick: Option<i129>, index: i129
+    ) -> Option<i129> {
+        assert(root_tick.is_some(), 'TICK_NOT_FOUND');
 
-        let mut at_tick = root_tick;
+        let mut at_tick = root_tick.unwrap();
         let mut parent: Option<(TickTreeNode, i129)> = Option::None(());
         let mut node = initialized_ticks::read((pool_key, at_tick));
 
@@ -317,9 +316,21 @@ mod Parlay {
         };
 
         if (node.left.is_some() & node.right.is_some()) {
-            // finds in order sucessor from right subtree (i.e. minimum value on right side)
-            let next = next_initialized_tick(pool_key, node.right.unwrap(), index).unwrap();
-            let next_node = ticks::read((pool_key, next));
+            // first find the in-order successor
+            let mut successor = node.right.unwrap();
+            let mut successor_node = initialized_ticks::read((pool_key, successor));
+            loop {
+                match successor_node.left {
+                    Option::Some(successor_left) => {
+                        successor = successor_left;
+                        successor_node = initialized_ticks::read((pool_key, successor));
+                    },
+                    Option::None(_) => {
+                        break ();
+                    }
+                };
+            };
+
             // this next_node can have a right but cannot have a left
             // the next will take the children of the current, and the right will become the child of the parent
             assert(false, 'TODO');
@@ -349,54 +360,72 @@ mod Parlay {
 
         // finally, delete the node for the index
         initialized_ticks::write((pool_key, index), Default::default());
+
+        root_tick
     }
 
     #[internal]
-    fn insert_initialized_tick(pool_key: PoolKey, root_tick: i129, index: i129) {
-        let mut at_tick = root_tick;
-        let mut node = initialized_ticks::read((pool_key, at_tick));
+    fn insert_initialized_tick(
+        pool_key: PoolKey, root_tick: Option<i129>, index: i129
+    ) -> Option<i129> {
+        match root_tick {
+            Option::Some(value) => {
+                let mut at_tick = value;
+                let mut node = initialized_ticks::read((pool_key, at_tick));
 
-        loop {
-            assert(at_tick != index, 'ALREADY_EXISTS');
+                loop {
+                    assert(at_tick != index, 'ALREADY_EXISTS');
 
-            if (index < at_tick) {
-                match node.left {
-                    Option::Some(left_tick) => {
-                        at_tick = left_tick;
-                        node = initialized_ticks::read((pool_key, at_tick));
-                    },
-                    Option::None(_) => {
-                        initialized_ticks::write(
-                            (pool_key, at_tick),
-                            TickTreeNode {
-                                red: false, left: Option::Some(index), right: node.right
+                    if (index < at_tick) {
+                        match node.left {
+                            Option::Some(left_tick) => {
+                                at_tick = left_tick;
+                                node = initialized_ticks::read((pool_key, at_tick));
+                            },
+                            Option::None(_) => {
+                                initialized_ticks::write(
+                                    (pool_key, at_tick),
+                                    TickTreeNode {
+                                        red: false, left: Option::Some(index), right: node.right
+                                    }
+                                );
+                                break ();
                             }
-                        );
-                        break ();
-                    }
-                }
-            } else {
-                match node.right {
-                    Option::Some(right_tick) => {
-                        at_tick = right_tick;
-                        node = initialized_ticks::read((pool_key, at_tick));
-                    },
-                    Option::None(_) => {
-                        initialized_ticks::write(
-                            (pool_key, at_tick),
-                            TickTreeNode { red: false, left: node.left, right: Option::Some(index) }
-                        );
-                        break ();
-                    }
-                }
-            };
-        };
+                        }
+                    } else {
+                        match node.right {
+                            Option::Some(right_tick) => {
+                                at_tick = right_tick;
+                                node = initialized_ticks::read((pool_key, at_tick));
+                            },
+                            Option::None(_) => {
+                                initialized_ticks::write(
+                                    (pool_key, at_tick),
+                                    TickTreeNode {
+                                        red: false, left: node.left, right: Option::Some(index)
+                                    }
+                                );
+                                break ();
+                            }
+                        }
+                    };
+                };
+
+                Option::Some(value)
+            },
+            Option::None(_) => {
+                // we don't have to write anything to the tick tree nodes because the default value is fine
+                Option::Some(index)
+            }
+        }
     }
 
     // Returns the next tick from a given starting tick, i.e. the tick in the set of initialized ticks that is greater than the current tick
     #[internal]
-    fn next_initialized_tick(pool_key: PoolKey, root_tick: i129, from: i129) -> Option<i129> {
-        let mut at_tick = root_tick;
+    fn next_initialized_tick(
+        pool_key: PoolKey, root_tick: Option<i129>, from: i129
+    ) -> Option<i129> {
+        let mut at_tick = root_tick?;
         let mut best_answer: Option<i129> = Option::None(());
         let mut node = initialized_ticks::read((pool_key, at_tick));
 
@@ -439,8 +468,10 @@ mod Parlay {
 
     // Returns the previous tick from a given starting tick, i.e. the tick in the set of initialized ticks that is less than or equal to the current tick
     #[internal]
-    fn prev_initialized_tick(pool_key: PoolKey, root_tick: i129, from: i129) -> Option<i129> {
-        let mut at_tick = root_tick;
+    fn prev_initialized_tick(
+        pool_key: PoolKey, root_tick: Option<i129>, from: i129
+    ) -> Option<i129> {
+        let mut at_tick = root_tick?;
         let mut node = initialized_ticks::read((pool_key, at_tick));
         let mut best_answer: Option<i129> = Option::None(());
 
@@ -482,16 +513,20 @@ mod Parlay {
     }
 
     #[internal]
-    fn update_tick(pool_key: PoolKey, root_tick: i129, index: i129, liquidity_delta: i129) {
+    fn update_tick(
+        pool_key: PoolKey, root_tick: Option<i129>, index: i129, liquidity_delta: i129
+    ) -> Option<i129> {
         let tick = ticks::read((pool_key, index));
 
         let next_liquidity_net = add_delta(tick.liquidity_net, liquidity_delta);
 
+        let mut next_root: Option<i129> = root_tick;
+
         if ((next_liquidity_net == 0) ^ (tick.liquidity_net == 0)) {
             if (next_liquidity_net == 0) {
-                remove_initialized_tick(pool_key, root_tick, index);
+                next_root = remove_initialized_tick(pool_key, root_tick, index);
             } else {
-                insert_initialized_tick(pool_key, root_tick, index);
+                next_root = insert_initialized_tick(pool_key, root_tick, index);
             }
         }
 
@@ -504,6 +539,8 @@ mod Parlay {
                 fee_growth_outside_token1: tick.fee_growth_outside_token1
             }
         );
+
+        next_root
     }
 
 
@@ -613,21 +650,6 @@ mod Parlay {
         amount0_delta += i129 { mag: amount0_fees, sign: true };
         amount1_delta += i129 { mag: amount1_fees, sign: true };
 
-        // update pool liquidity if it changed
-        if (pool_liquidity_next != pool.liquidity) {
-            pools::write(
-                pool_key,
-                Pool {
-                    sqrt_ratio: pool.sqrt_ratio,
-                    root_tick: pool.root_tick,
-                    tick: pool.tick,
-                    liquidity: pool_liquidity_next,
-                    fee_growth_global_token0: pool.fee_growth_global_token0,
-                    fee_growth_global_token1: pool.fee_growth_global_token1
-                }
-            );
-        }
-
         // update the position
         positions::write(
             (pool_key, position_key),
@@ -638,9 +660,26 @@ mod Parlay {
             }
         );
 
-        // update each tick
-        update_tick(pool_key, Default::default(), params.tick_lower, params.liquidity_delta);
-        update_tick(pool_key, Default::default(), params.tick_upper, params.liquidity_delta);
+        // update each tick, and recompute the root tick if necessary
+        let mut root_tick = update_tick(
+            pool_key, pool.root_tick, params.tick_lower, params.liquidity_delta
+        );
+        root_tick = update_tick(pool_key, root_tick, params.tick_upper, params.liquidity_delta);
+
+        // update pool liquidity if it changed
+        if ((pool_liquidity_next != pool.liquidity) | (root_tick != pool.root_tick)) {
+            pools::write(
+                pool_key,
+                Pool {
+                    sqrt_ratio: pool.sqrt_ratio,
+                    root_tick: root_tick,
+                    tick: pool.tick,
+                    liquidity: pool_liquidity_next,
+                    fee_growth_global_token0: pool.fee_growth_global_token0,
+                    fee_growth_global_token1: pool.fee_growth_global_token1
+                }
+            );
+        }
 
         // and finally account the computed deltas
         account_delta(id, pool_key.token0, amount0_delta);
