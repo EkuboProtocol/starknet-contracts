@@ -6,14 +6,15 @@ use parlay::math::ticks::tick_to_sqrt_ratio;
 fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, tick_lower: i129, tick_upper: i129
 ) -> (i129, i129) {
+    // handle the 0 case so we do not return 1 for 0 liquidity delta
     if (liquidity_delta == Default::default()) {
         return (Default::default(), Default::default());
     }
-    
+
     let ratio_lower = tick_to_sqrt_ratio(tick_lower);
     let ratio_upper = tick_to_sqrt_ratio(tick_upper);
 
-    // if liquidity is being added, we round up by adding one, otherwise we round down by subtracting one
+    // we always add one to the delta so that we never give more tokens than is owed or receive less than is needed
     // there may be a case where it underflows preventing withdrawal, but that's ok because that would mean zero loss
     let ONE = i129 { mag: 1, sign: false };
     let ZERO = i129 { mag: 0, sign: false };

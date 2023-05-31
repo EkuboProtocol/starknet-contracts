@@ -370,6 +370,8 @@ mod initialized_ticks_tests {
 
 
 mod locks {
+    use debug::PrintTrait;
+
     use super::helper::setup_pool;
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
@@ -412,9 +414,7 @@ mod locks {
                                 mag: 10, sign: true
                                 }, tick_upper: i129 {
                                 mag: 10, sign: false
-                                }, liquidity_delta: i129 {
-                                mag: 0, sign: false
-                            }
+                            }, liquidity_delta: Default::default()
                         }, contract_address_const::<42>()
                     )
                 )
@@ -425,42 +425,15 @@ mod locks {
     #[available_gas(50000000)]
     #[should_panic(
         expected: (
-            'u256_sub Overflow', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+            'u256_sub Overflow',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
         )
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
         let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
-
-        setup
-            .locker
-            .call(
-                Action::UpdatePosition( 
-                    (
-                        setup.pool_key, UpdatePositionParameters {
-                            tick_lower: i129 {
-                                mag: 10, sign: true
-                                }, tick_upper: i129 {
-                                mag: 10, sign: false
-                                }, liquidity_delta: i129 {
-                                mag: 100, sign: false
-                            }
-                        }, contract_address_const::<42>()
-                    )
-                )
-            );
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_small_amount_liquidity_add() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
-
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
         setup
             .locker
@@ -479,5 +452,50 @@ mod locks {
                     )
                 )
             );
+    }
+
+
+    #[test]
+    #[available_gas(50000000)]
+    fn test_small_amount_liquidity_add() {
+        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        let result = setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 10000000, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match result {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(delta) => {
+                assert(delta.amount0_delta == i129 { mag: 51, sign: false }, 'amount0_delta');
+                assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount1_delta');
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected result')
+            }
+        }
     }
 }

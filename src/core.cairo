@@ -28,6 +28,7 @@ struct SwapParameters {
     sqrt_ratio_limit: u256,
 }
 
+// from the perspective of the core contract, the change in balances
 #[derive(Copy, Drop, Serde)]
 struct Delta {
     amount0_delta: i129,
@@ -111,6 +112,8 @@ mod Parlay {
         locker_addresses: LegacyMap<felt252, ContractAddress>,
         nonzero_delta_counts: LegacyMap::<felt252, felt252>,
         // locker_id, token_address => delta
+        // delta is from the perspective of the core contract, thus:
+        // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
         deltas: LegacyMap::<(felt252, ContractAddress), i129>,
         // the persistent state of all the pools is stored in these structs
         pools: LegacyMap::<PoolKey, Pool>,
@@ -224,15 +227,15 @@ mod Parlay {
         let id = require_locker();
 
         let res = reserves::read(token_address);
-        assert(res.low >= amount, 'INSUFFICIENT_RESERVES');
+        assert(res >= u256 { low: amount, high: 0 }, 'INSUFFICIENT_RESERVES');
         reserves::write(token_address, res - u256 { high: 0, low: amount });
 
         // tracks the delta for the given token address
-        account_delta(id, token_address, i129 { mag: amount, sign: true });
+        account_delta(id, token_address, i129 { mag: amount, sign: false });
 
         IERC20Dispatcher {
             contract_address: token_address
-        }.transfer(recipient, u256 { high: 0, low: amount });
+        }.transfer(recipient, u256 { low: amount, high: 0 });
     }
 
     #[external]
@@ -249,7 +252,7 @@ mod Parlay {
         let delta = balance - reserve;
         // the delta is limited to u128
         assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
-        
+
         account_delta(id, token_address, i129 { mag: delta.low, sign: true });
 
         reserves::write(token_address, balance);
@@ -628,14 +631,14 @@ mod Parlay {
         );
 
         // update each tick
-        update_tick(pool_key,  params.tick_lower, params.liquidity_delta);
-        update_tick(pool_key,  params.tick_upper, params.liquidity_delta);
+        update_tick(pool_key, params.tick_lower, params.liquidity_delta);
+        update_tick(pool_key, params.tick_upper, params.liquidity_delta);
 
         // and finally account the computed deltas
         account_delta(id, pool_key.token0, amount0_delta);
         account_delta(id, pool_key.token1, amount1_delta);
 
-        PositionUpdated(pool_key, position_key,  params.liquidity_delta);
+        PositionUpdated(pool_key, position_key, params.liquidity_delta);
 
         Delta { amount0_delta, amount1_delta }
     }
