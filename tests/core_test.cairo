@@ -226,6 +226,42 @@ mod initialized_ticks_tests {
         assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
     }
 
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_insert_balanced_bigger_tree() {
+        let pool_key = fake_pool_key(0);
+        let mut root_tick = Parlay::insert_initialized_tick(
+            pool_key, Option::None(()), i129 { mag: 0, sign: false }
+        );
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: false });
+        root_tick =
+            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+
+        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
+
+        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        assert(root_node.left == Option::Some(i129 { mag: 2, sign: true }), 'root.left is -2');
+        assert(root_node.right == Option::Some(i129 { mag: 2, sign: false }), 'root.right is 2');
+
+        let left_node = Parlay::initialized_ticks::read((pool_key, root_node.left.unwrap()));
+        assert(left_node.left == Option::Some(i129 { mag: 3, sign: true }), 'left.left is -3');
+        assert(left_node.right == Option::Some(i129 { mag: 1, sign: true }), 'left.right is -1');
+
+        let right_node = Parlay::initialized_ticks::read((pool_key, root_node.right.unwrap()));
+        assert(right_node.left == Option::Some(i129 { mag: 1, sign: false }), 'left.left is 1');
+        assert(right_node.right == Option::Some(i129 { mag: 3, sign: false }), 'left.right is 3');
+    }
+
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_left() {
