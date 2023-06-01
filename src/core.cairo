@@ -285,6 +285,20 @@ mod Parlay {
         PoolInitialized(pool_key, initial_tick);
     }
 
+    #[internal]
+    fn compute_height(pool_key: PoolKey, left: Option<i129>, right: Option<i129>) -> u128 {
+        let left_height = match (left) {
+            Option::Some(value) => 1 + initialized_ticks::read((pool_key, value)).height,
+            Option::None(_) => 0
+        };
+        let right_height = match (right) {
+            Option::Some(value) => 1 + initialized_ticks::read((pool_key, value)).height,
+            Option::None(_) => 0
+        };
+
+        u128_max(left_height, right_height)
+    }
+
     // Remove the initialized tick
     #[internal]
     fn remove_initialized_tick(
@@ -297,19 +311,25 @@ mod Parlay {
 
         if (index < value) {
             let left = remove_initialized_tick(pool_key, node.left, index);
-            if (left != node.left) {
-                initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { height: 0, left, right: node.right }
-                );
-            }
+
+            initialized_ticks::write(
+                (pool_key, value),
+                TickTreeNode {
+                    height: compute_height(pool_key, left, node.right), left, right: node.right
+                }
+            );
+
             root_tick
         } else if (index > value) {
             let right = remove_initialized_tick(pool_key, node.right, index);
-            if (right != node.right) {
-                initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { height: 0, left: node.left, right }
-                );
-            }
+
+            initialized_ticks::write(
+                (pool_key, value),
+                TickTreeNode {
+                    height: compute_height(pool_key, node.left, right), left: node.left, right
+                }
+            );
+
             root_tick
         } else {
             let next_root = if (node.left.is_none()) {
@@ -335,7 +355,10 @@ mod Parlay {
                 let right = remove_initialized_tick(pool_key, node.right, successor);
 
                 initialized_ticks::write(
-                    (pool_key, successor), TickTreeNode { height: 0, left: node.left, right }
+                    (pool_key, successor),
+                    TickTreeNode {
+                        height: compute_height(pool_key, node.left, right), left: node.left, right
+                    }
                 );
 
                 Option::Some(successor)
@@ -362,17 +385,10 @@ mod Parlay {
                         Option::Some(left) => {
                             let new_left = insert_initialized_tick(pool_key, node.left, index);
 
-                            let left_height = initialized_ticks::read((pool_key, new_left?)).height;
-                            let right_height = match node.right {
-                                Option::Some(right) => initialized_ticks::read((pool_key, right))
-                                    .height,
-                                Option::None(_) => 0
-                            };
-
                             initialized_ticks::write(
                                 (pool_key, value),
                                 TickTreeNode {
-                                    height: 1 + u128_max(left_height, right_height),
+                                    height: compute_height(pool_key, new_left, node.right),
                                     left: new_left,
                                     right: node.right
                                 }
@@ -402,18 +418,10 @@ mod Parlay {
                         Option::Some(right) => {
                             let new_right = insert_initialized_tick(pool_key, node.right, index);
 
-                            let left_height = match node.left {
-                                Option::Some(left) => initialized_ticks::read((pool_key, left))
-                                    .height,
-                                Option::None(_) => 0
-                            };
-                            let right_height = initialized_ticks::read((pool_key, new_right?))
-                                .height;
-
                             initialized_ticks::write(
                                 (pool_key, value),
                                 TickTreeNode {
-                                    height: 1 + u128_max(left_height, right_height),
+                                    height: compute_height(pool_key, node.left, new_right),
                                     left: node.left,
                                     right: new_right
                                 }
