@@ -457,7 +457,8 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
                     },
                     Option::None(_) => {
                         // if there are no children (is leaf node), node must be black
-                        assert(!value.red, 'RED_LEAF');
+                        // todo: we insert with red first and then fix violation
+                        // assert(!value.red, 'RED_LEAF');
                     },
                 }
             }

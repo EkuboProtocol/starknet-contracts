@@ -345,66 +345,110 @@ mod Parlay {
         }
     }
 
+
+// function LeftRotate(tree, node)
+//     right_child = node.right
+//     node.right = right_child.left
+//     right_child.left = node
+//     if node == tree.root
+//         tree.root = right_child
+//     else if node == node.parent.left
+//         node.parent.left = right_child
+//     else
+//         node.parent.right = right_child
+//     right_child.parent = node.parent
+//     node.parent = right_child
+
+// function RightRotate(tree, node)
+//     left_child = node.left
+//     node.left = left_child.right
+//     left_child.right = node
+//     if node == tree.root
+//         tree.root = left_child
+//     else if node == node.parent.right
+//         node.parent.right = left_child
+//     else
+//         node.parent.left = left_child
+//     left_child.parent = node.parent
+//     node.parent = left_child
+
+
     // Insert an initialized tick and return the new root node of the tree
     #[internal]
     fn insert_initialized_tick(
         pool_key: PoolKey, root_tick: Option<i129>, index: i129
     ) -> Option<i129> {
-        match root_tick {
+        let mut current: (i129, TickTreeNode) = match (root_tick) {
             Option::Some(value) => {
-                assert(index != value, 'ALREADY_EXISTS');
+                (value, initialized_ticks::read((pool_key, value)))
+            },
+            Option::None(_) => {
+                // the root tick is always black, so no write is needed, just return the index as the new root
+                return Option::Some(index);
+            }
+        };
 
-                let node = initialized_ticks::read((pool_key, value));
-                if (index < value) {
-                    match node.left {
-                        Option::Some(left) => {
-                            let new_left = insert_initialized_tick(pool_key, node.left, index);
+        let mut parent: Option<(i129, TickTreeNode)> = Option::None(());
+        let mut grandparent: Option<(i129, TickTreeNode)> = Option::None(());
 
-                            initialized_ticks::write(
-                                (pool_key, value),
-                                TickTreeNode { red: node.red, left: new_left, right: node.right }
-                            );
+        return loop {
+            let (value, node) = current;
+            assert(index != value, 'ALREADY_EXISTS');
 
-                            Option::Some(value)
-                        },
-                        Option::None(_) => {
-                            initialized_ticks::write(
-                                (pool_key, value),
-                                TickTreeNode {
-                                    red: node.red, left: Option::Some(index), right: node.right
-                                }
-                            );
+            if (index < value) {
+                match node.left {
+                    Option::Some(left) => {
+                        grandparent = parent;
+                        parent = Option::Some(current);
+                        current = (left, initialized_ticks::read((pool_key, left)));
+                    },
+                    Option::None(_) => {
+                        initialized_ticks::write(
+                            (pool_key, value),
+                            TickTreeNode {
+                                red: node.red, left: Option::Some(index), right: node.right
+                            }
+                        );
 
-                            Option::Some(value)
-                        }
-                    }
-                } else {
-                    match node.right {
-                        Option::Some(right) => {
-                            let new_right = insert_initialized_tick(pool_key, node.right, index);
+                        initialized_ticks::write(
+                            (pool_key, index),
+                            TickTreeNode {
+                                red: true, left: Option::None(()), right: Option::None(())
+                            }
+                        );
 
-                            initialized_ticks::write(
-                                (pool_key, value),
-                                TickTreeNode { red: node.red, left: node.left, right: new_right }
-                            );
-
-                            Option::Some(value)
-                        },
-                        Option::None(_) => {
-                            initialized_ticks::write(
-                                (pool_key, value),
-                                TickTreeNode {
-                                    red: node.red, left: node.left, right: Option::Some(index)
-                                }
-                            );
-                            Option::Some(value)
-                        }
+                        break root_tick;
                     }
                 }
-            },
-            // no root tick implies the inserted index is the root
-            Option::None(_) => Option::Some(index)
-        }
+            } else {
+                match node.right {
+                    Option::Some(right) => {
+                        grandparent = parent;
+                        parent = Option::Some(current);
+                        current = (right, initialized_ticks::read((pool_key, right)));
+                    },
+                    Option::None(_) => {
+                        initialized_ticks::write(
+                            (pool_key, value),
+                            TickTreeNode {
+                                red: node.red, left: node.left, right: Option::Some(index)
+                            }
+                        );
+
+                        initialized_ticks::write(
+                            (pool_key, index),
+                            TickTreeNode {
+                                red: true, left: Option::None(()), right: Option::None(())
+                            }
+                        );
+
+                        // todo: rebalance
+
+                        break root_tick;
+                    }
+                }
+            };
+        };
     }
 
     // Returns the next tick from a given starting tick, i.e. the tick in the set of initialized ticks that is greater than the current tick
@@ -624,13 +668,15 @@ mod Parlay {
         let amount0_fees = muldiv(
             unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
             u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 },false
+            u256 { low: 0, high: 1 },
+            false
         )
             .low;
         let amount1_fees = muldiv(
             unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
             u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 },false
+            u256 { low: 0, high: 1 },
+            false
         )
             .low;
 
