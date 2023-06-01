@@ -285,6 +285,117 @@ mod Parlay {
         PoolInitialized(pool_key, initial_tick);
     }
 
+    // Rebalance a tree starting from the given root
+    #[internal]
+    fn rebalance(pool_key: PoolKey, root_tick: i129) -> i129 {
+        let root_node = initialized_ticks::read((pool_key, root_tick));
+        let left = root_node.left;
+        let right = root_node.right;
+
+        let left_tick_height = match (left) {
+            Option::Some(value) => initialized_ticks::read((pool_key, value)).height,
+            Option::None(_) => 0_u128
+        };
+        let right_tick_height = match (right) {
+            Option::Some(value) => initialized_ticks::read((pool_key, value)).height,
+            Option::None(_) => 0_u128
+        };
+
+        let height_diff = i129 {
+            mag: left_tick_height, sign: false
+            } - i129 {
+            mag: right_tick_height, sign: false
+        };
+
+        if (height_diff.mag < 2) {
+            // tree is balanced
+            return root_tick;
+        }
+
+        if (height_diff.sign) {
+            // right subtree is too high
+            return root_tick;
+        } else {
+            // left subtree is too high
+            let left_node = initialized_ticks::read((pool_key, root_node.left.unwrap()));
+
+            let left_left_node = match (left_node.left) {
+                Option::Some(value) => initialized_ticks::read((pool_key, value)),
+                Option::None(_) => Default::default()
+            };
+            let left_right_node = match (left_node.right) {
+                Option::Some(value) => initialized_ticks::read((pool_key, value)),
+                Option::None(_) => Default::default()
+            };
+
+            return if (left_left_node.height >= left_right_node.height) {
+                // left-left case
+                let new_root_tick = root_node.left.unwrap();
+                let new_left_tick = left_left_node.left;
+                let new_right_tick = Option::Some(root_tick);
+
+                let new_root_tick_height = left_left_node.height + 1;
+                let new_left_tick_height = left_left_node.height;
+                let new_right_tick_height = root_node.height;
+
+                initialized_ticks::write(
+                    (pool_key, new_root_tick),
+                    TickTreeNode {
+                        height: new_root_tick_height, left: new_left_tick, right: new_right_tick
+                    }
+                );
+                initialized_ticks::write(
+                    (pool_key, new_left_tick.unwrap()),
+                    TickTreeNode {
+                        height: new_left_tick_height, left: left_node.left, right: left_node.right
+                    }
+                );
+                initialized_ticks::write(
+                    (pool_key, root_tick),
+                    TickTreeNode {
+                        height: new_right_tick_height,
+                        left: root_node.right,
+                        right: Option::None(())
+                    }
+                );
+
+                new_root_tick
+            } else {
+                // left-right case
+                let new_root_tick = left_node.right.unwrap();
+                let new_left_tick = root_node.left;
+                let new_right_tick = Option::Some(root_tick);
+
+                let new_root_tick_height = left_right_node.height + 1;
+                let new_left_tick_height = left_node.height;
+                let new_right_tick_height = root_node.height;
+
+                initialized_ticks::write(
+                    (pool_key, new_root_tick),
+                    TickTreeNode {
+                        height: new_root_tick_height, left: new_left_tick, right: new_right_tick
+                    }
+                );
+                initialized_ticks::write(
+                    (pool_key, new_left_tick.unwrap()),
+                    TickTreeNode {
+                        height: new_left_tick_height, left: root_node.left, right: left_node.right
+                    }
+                );
+                initialized_ticks::write(
+                    (pool_key, root_tick),
+                    TickTreeNode {
+                        height: new_right_tick_height,
+                        left: root_node.right,
+                        right: Option::None(())
+                    }
+                );
+
+                new_root_tick
+            };
+        }
+    }
+
     #[internal]
     fn compute_height(pool_key: PoolKey, left: Option<i129>, right: Option<i129>) -> u128 {
         let left_height = match (left) {
@@ -299,7 +410,7 @@ mod Parlay {
         u128_max(left_height, right_height)
     }
 
-    // Remove the initialized tick
+    // Remove the initialized tick and return the new root node of the tree
     #[internal]
     fn remove_initialized_tick(
         pool_key: PoolKey, root_tick: Option<i129>, index: i129
@@ -364,13 +475,11 @@ mod Parlay {
                 Option::Some(successor)
             };
 
-            // delete the node (todo: do we actually ever need to clear this storage if it's never referenced from the root?)
-            initialized_ticks::write((pool_key, value), Default::default());
-
             next_root
         }
     }
 
+    // Insert an initialized tick and return the new root node of the tree
     #[internal]
     fn insert_initialized_tick(
         pool_key: PoolKey, root_tick: Option<i129>, index: i129
