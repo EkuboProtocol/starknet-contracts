@@ -222,7 +222,6 @@ mod initialized_ticks_tests {
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.height == 1, 'height is 1');
         assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
         assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
 
@@ -264,17 +263,17 @@ mod initialized_ticks_tests {
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.height == 2, 'root.height is 2');
+        assert(root_node.red == false, 'root.red is false');
         assert(root_node.left == Option::Some(i129 { mag: 2, sign: true }), 'root.left is -2');
         assert(root_node.right == Option::Some(i129 { mag: 2, sign: false }), 'root.right is 2');
 
         let left_node = Parlay::initialized_ticks::read((pool_key, root_node.left.unwrap()));
-        assert(left_node.height == 1, 'left.height is 2');
+        assert(left_node.red == false, 'left.red is false');
         assert(left_node.left == Option::Some(i129 { mag: 3, sign: true }), 'left.left is -3');
         assert(left_node.right == Option::Some(i129 { mag: 1, sign: true }), 'left.right is -1');
 
         let right_node = Parlay::initialized_ticks::read((pool_key, root_node.right.unwrap()));
-        assert(right_node.height == 1, 'right.height is 2');
+        assert(right_node.red == false, 'right.red is false');
         assert(right_node.left == Option::Some(i129 { mag: 1, sign: false }), 'left.left is 1');
         assert(right_node.right == Option::Some(i129 { mag: 3, sign: false }), 'left.right is 3');
 
@@ -308,7 +307,7 @@ mod initialized_ticks_tests {
     // this test should be updated when the rebalancing is implemented
     #[test]
     #[available_gas(500000000)]
-    fn test_insert_sorted_ticks_tree_height_and_removes() {
+    fn test_insert_sorted_ticks_and_removes() {
         let pool_key = fake_pool_key(0);
         let mut root: Option<i129> = Option::None(());
         let mut next: i129 = i129 { mag: 0, sign: false };
@@ -321,8 +320,7 @@ mod initialized_ticks_tests {
         };
 
         assert(
-            Parlay::initialized_ticks::read((pool_key, root.unwrap())).height == 30,
-            'root height is 30'
+            Parlay::initialized_ticks::read((pool_key, root.unwrap())).red == false, 'root is black'
         );
 
         // remove some from the middle
@@ -338,7 +336,6 @@ mod initialized_ticks_tests {
         {
             assert(root == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
             let root_node = Parlay::initialized_ticks::read((pool_key, root.unwrap()));
-            assert(root_node.height == 25, 'height is 25');
             assert(root_node.left == Option::None(()), 'left is none');
             assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
         }
@@ -356,14 +353,8 @@ mod initialized_ticks_tests {
         {
             assert(root == Option::Some(i129 { mag: 5, sign: false }), 'root tick is 5');
             let root_node = Parlay::initialized_ticks::read((pool_key, root.unwrap()));
-            assert(root_node.height == 20, 'height is 20');
             assert(root_node.left == Option::None(()), 'left is none');
             assert(root_node.right == Option::Some(i129 { mag: 11, sign: false }), 'right is 15');
-
-            assert(
-                Parlay::initialized_ticks::read((pool_key, root_node.right.unwrap())).height == 19,
-                'right.height is 19'
-            );
         }
     }
 

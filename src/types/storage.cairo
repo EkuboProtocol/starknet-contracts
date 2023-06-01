@@ -47,7 +47,7 @@ struct Tick {
 
 #[derive(Copy, Drop)]
 struct TickTreeNode {
-    height: u128,
+    red: bool,
     left: Option<i129>,
     right: Option<i129>
 }
@@ -391,9 +391,9 @@ mod tick_tree_node_internal {
 
 impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
     fn eq(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
-        ((lhs.height == rhs.height) & (lhs.left == rhs.left) & (lhs.right == rhs.right))
+        ((lhs.red == rhs.red) & (lhs.left == rhs.left) & (lhs.right == rhs.right))
     }
-    fn ne(lhs: TickTreeNode, rhs: TickTreeNode) -> bool { 
+    fn ne(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
         !PartialEq::<TickTreeNode>::eq(lhs, rhs)
     }
 }
@@ -401,7 +401,7 @@ impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
 
 impl TickTreeNodeDefault of Default<TickTreeNode> {
     fn default() -> TickTreeNode {
-        TickTreeNode { height: 0, left: Option::None(()), right: Option::None(()) }
+        TickTreeNode { red: false, left: Option::None(()), right: Option::None(()) }
     }
 }
 
@@ -421,7 +421,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
 
         let mut parsed: u128 = packed_result.try_into().unwrap();
 
-        let (height, left_right) = u128_safe_divmod(
+        let (red_flag, left_right) = u128_safe_divmod(
             parsed, u128_as_non_zero(0x10000000000000000) // 2**64
         );
 
@@ -429,7 +429,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
 
         SyscallResult::Ok(
             TickTreeNode {
-                height,
+                red: red_flag == 1,
                 left: tick_tree_node_internal::to_tick(left),
                 right: tick_tree_node_internal::to_tick(right)
             }
@@ -456,21 +456,22 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
                         assert(right_value.mag < 0x40000000, 'RIGHT');
                     },
                     Option::None(_) => {
-                        // if there are no children, height must be 0
-                        assert(value.height == 0, 'HEIGHT');
+                        // if there are no children (is leaf node), node must be black
+                        assert(!value.red, 'RED_LEAF');
                     },
                 }
             }
         }
 
-        // must fit within 32 bits so we don't lose information
-        assert(value.height < 0x100000000, 'MAX_HEIGHT');
-
         StorageAccess::<u128>::write_at_offset_internal(
             address_domain,
             base,
             offset,
-            (value.height * 0x10000000000000000)
+            (if value.red {
+                0x10000000000000000
+            } else {
+                0
+            })
                 + (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
                 + tick_tree_node_internal::to_u32(value.right)
         )

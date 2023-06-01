@@ -25,9 +25,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
 
         // we know denominator is non-zero because amount.mag is non-zero
         let (quotient, remainder) = u256_safe_divmod(numerator1, u256_as_non_zero(denominator));
-        return if (remainder != u256 {
-            low: 0, high: 0
-        }) {
+        return if (remainder != u256 { low: 0, high: 0 }) {
             quotient + u256 { low: 1, high: 0 }
         } else {
             quotient
@@ -50,9 +48,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
     // because quotient is rounded down, this price movement is also rounded towards sqrt_ratio
     if (amount.sign) {
         // adding amount1, taking out amount0
-        return if (remainder != u256 {
-            low: 0, high: 0
-        }) {
+        return if (remainder != u256 { low: 0, high: 0 }) {
             sqrt_ratio - quotient
         } else {
             sqrt_ratio - quotient - u256 { low: 1, high: 0 }
