@@ -1,6 +1,4 @@
-use debug::PrintTrait;
-use parlay::math::muldiv::muldiv;
-
+use parlay::math::muldiv::{div, muldiv};
 
 #[test]
 #[should_panic(expected: ('MULDIV_OVERFLOW_OR_DBZ', ))]
@@ -119,5 +117,36 @@ fn test_muldiv_up_overflow_with_rounding() {
         u256 { low: 51446759824697641887992017603606601689, high: 1272069018404338518389130 },
         u256 { low: 2, high: 0 },
         true
+    );
+}
+
+
+#[test]
+fn test_div() {
+    assert(
+        div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, false) == u256 { low: 0, high: 0 },
+        'floor(0/2)'
+    );
+    assert(
+        div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, true) == u256 { low: 0, high: 0 },
+        'ceil(0/2)'
+    );
+
+    assert(
+        div(u256 { low: 1, high: 0 }, u256 { low: 2, high: 0 }, false) == u256 { low: 0, high: 0 },
+        'floor(1/2)'
+    );
+    assert(
+        div(u256 { low: 1, high: 0 }, u256 { low: 2, high: 0 }, true) == u256 { low: 1, high: 0 },
+        'ceil(1/2)'
+    );
+
+    assert(
+        div(u256 { low: 2, high: 0 }, u256 { low: 2, high: 0 }, false) == u256 { low: 1, high: 0 },
+        'floor(2/2)'
+    );
+    assert(
+        div(u256 { low: 2, high: 0 }, u256 { low: 2, high: 0 }, true) == u256 { low: 1, high: 0 },
+        'ceil(2/2)'
     );
 }

@@ -1,5 +1,5 @@
 use parlay::types::i129::i129;
-use parlay::math::muldiv::muldiv;
+use parlay::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
 
 // Compute the next ratio from a delta amount0, rounded towards starting price for input, and away from starting price for output
@@ -77,14 +77,10 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     let numerator2 = sqrt_ratio_upper - sqrt_ratio_lower;
 
     let result_0 = muldiv(numerator1, numerator2, sqrt_ratio_upper, round_up);
-    let (mut quotient, remainder) = u256_safe_divmod(result_0, u256_as_non_zero(sqrt_ratio_lower));
-    if (round_up & (remainder != u256 { low: 0, high: 0 })) {
-        quotient += u256 { low: 1, high: 0 };
-    }
+    let result = div(result_0, sqrt_ratio_lower, round_up);
+    assert(result.high == 0, 'OVERFLOW_AMOUNT0_DELTA');
 
-    assert(quotient.high == 0, 'OVERFLOW_AMOUNT0_DELTA');
-
-    return quotient.low;
+    return result.low;
 }
 
 // Compute the difference in amount of token1 between two ratios, rounded down
