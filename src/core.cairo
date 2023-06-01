@@ -299,7 +299,7 @@ mod Parlay {
             let left = remove_initialized_tick(pool_key, node.left, index);
 
             initialized_ticks::write(
-                (pool_key, value), TickTreeNode { red: false, left, right: node.right }
+                (pool_key, value), TickTreeNode { red: node.red, left, right: node.right }
             );
 
             root_tick
@@ -307,7 +307,7 @@ mod Parlay {
             let right = remove_initialized_tick(pool_key, node.right, index);
 
             initialized_ticks::write(
-                (pool_key, value), TickTreeNode { red: false, left: node.left, right }
+                (pool_key, value), TickTreeNode { red: node.red, left: node.left, right }
             );
 
             root_tick
@@ -335,7 +335,7 @@ mod Parlay {
                 let right = remove_initialized_tick(pool_key, node.right, successor);
 
                 initialized_ticks::write(
-                    (pool_key, successor), TickTreeNode { red: false, left: node.left, right }
+                    (pool_key, successor), TickTreeNode { red: node.red, left: node.left, right }
                 );
 
                 Option::Some(successor)
@@ -362,7 +362,7 @@ mod Parlay {
 
                             initialized_ticks::write(
                                 (pool_key, value),
-                                TickTreeNode { red: false, left: new_left, right: node.right }
+                                TickTreeNode { red: node.red, left: new_left, right: node.right }
                             );
 
                             Option::Some(value)
@@ -371,7 +371,7 @@ mod Parlay {
                             initialized_ticks::write(
                                 (pool_key, value),
                                 TickTreeNode {
-                                    red: false, left: Option::Some(index), right: node.right
+                                    red: node.red, left: Option::Some(index), right: node.right
                                 }
                             );
 
@@ -385,7 +385,7 @@ mod Parlay {
 
                             initialized_ticks::write(
                                 (pool_key, value),
-                                TickTreeNode { red: false, left: node.left, right: new_right }
+                                TickTreeNode { red: node.red, left: node.left, right: new_right }
                             );
 
                             Option::Some(value)
@@ -394,7 +394,7 @@ mod Parlay {
                             initialized_ticks::write(
                                 (pool_key, value),
                                 TickTreeNode {
-                                    red: false, left: node.left, right: Option::Some(index)
+                                    red: node.red, left: node.left, right: Option::Some(index)
                                 }
                             );
                             Option::Some(value)

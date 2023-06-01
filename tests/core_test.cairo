@@ -165,48 +165,86 @@ mod initialize_pool_tests {
 mod initialized_ticks_tests {
     use super::helper::{fake_pool_key};
     use super::{Option, OptionTrait, PoolKey, Parlay, i129};
-    use debug::PrintTrait;
-    use array::ArrayTrait;
+    use parlay::math::utils::{u128_max};
 
-    // debug utility for printing the tree
-    fn print_tree(pool_key: PoolKey) {
-        let pool = Parlay::pools::read(pool_key);
-        print_subtree(pool_key, pool.root_tick);
-    }
 
-    fn print_subtree(pool_key: PoolKey, root: Option<i129>) {
+    fn check_red_black_tree_valid(pool_key: PoolKey, root: Option<i129>) {
         match root {
             Option::Some(root_tick) => {
-                let mut queue: Array<i129> = Default::default();
-                queue.append(root_tick);
+                let root_node = Parlay::initialized_ticks::read((pool_key, root_tick));
+                assert(root_node.red == false, 'root is black');
 
-                // todo: make this more readable. currently it's a bfs, but not very easy to read
-                loop {
-                    let current = queue.pop_front();
-                    match (current) {
-                        Option::Some(current_tick) => {
-                            current_tick.print();
-                            let node = Parlay::initialized_ticks::read((pool_key, current_tick));
-
-                            if (node.left.is_some()) {
-                                queue.append(node.left.unwrap());
-                            };
-
-                            if (node.right.is_some()) {
-                                queue.append(node.right.unwrap());
-                            };
-                        },
-                        Option::None(_) => {
-                            break ();
-                        }
-                    };
-                }
+                // Ensure root to leaf contains the same number of black nodes in all paths
+                let black_count = compute_black_height(pool_key, root);
+                check_paths_black_nodes(pool_key, root, 0, black_count);
             },
-            Option::None(_) => {
-                'empty tree'.print();
-            }
+            Option::None(_) => {},
         }
     }
+
+    fn check_paths_black_nodes(
+        pool_key: PoolKey, node: Option<i129>, mut path_black_count: u128, black_count: u128
+    ) {
+        match node {
+            Option::Some(node_tick) => {
+                let node = Parlay::initialized_ticks::read((pool_key, node_tick));
+
+                // Increment path_black_count if current node is black
+                if node.red == false {
+                    path_black_count += 1;
+                }
+
+                // Check red node has black children
+                if node.red == true {
+                    match node.left {
+                        Option::Some(left_tick) => {
+                            let left_node = Parlay::initialized_ticks::read((pool_key, left_tick));
+                            assert(left_node.red == false, 'red node.left == red');
+                        },
+                        Option::None(_) => {},
+                    }
+                    match node.right {
+                        Option::Some(right_tick) => {
+                            let right_node = Parlay::initialized_ticks::read(
+                                (pool_key, right_tick)
+                            );
+                            assert(right_node.red == false, 'red node.right == red');
+                        },
+                        Option::None(_) => {},
+                    }
+                }
+
+                // Check paths black nodes
+                check_paths_black_nodes(pool_key, node.left, path_black_count, black_count);
+                check_paths_black_nodes(pool_key, node.right, path_black_count, black_count);
+            },
+            Option::None(_) => {
+                // All paths from root to leaf have the same black node count
+                assert(path_black_count == black_count, 'black height==');
+            },
+        }
+    }
+
+    // counts the black height in a red-black tree from a given node
+    fn compute_black_height(pool_key: PoolKey, node: Option<i129>) -> u128 {
+        match node {
+            Option::Some(node_tick) => {
+                let node = Parlay::initialized_ticks::read((pool_key, node_tick));
+                let black_count = if node.red == false {
+                    1
+                } else {
+                    0
+                };
+                return black_count
+                    + u128_max(
+                        compute_black_height(pool_key, node.left),
+                        compute_black_height(pool_key, node.right)
+                    );
+            },
+            Option::None(_) => 0,
+        }
+    }
+
 
     #[test]
     #[available_gas(500000000)]
