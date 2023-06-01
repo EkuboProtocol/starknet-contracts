@@ -23,12 +23,14 @@ fn test_next_sqrt_ratio_from_amount0_sub_price_goes_up() {
     assert(next_ratio == u256 { low: 3402823703237621667009962744418, high: 1 }, 'price');
 }
 
+
 #[test]
 fn test_amount0_delta_price_down() {
     let delta = amount0_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
         u256 { high: 1, low: 0 },
-        1000000
+        1000000,
+        false
     );
     assert(delta == 1000, 'delta');
 }
@@ -38,9 +40,33 @@ fn test_amount0_delta_price_up() {
     let delta = amount0_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
         u256 { high: 1, low: 0 },
-        1000000
+        1000000,
+        false
     );
     assert(delta == 999, 'delta');
+}
+
+
+#[test]
+fn test_amount0_delta_price_down_round_up() {
+    let delta = amount0_delta(
+        u256 { low: 339942424496442021441932674757011200255, high: 0 },
+        u256 { high: 1, low: 0 },
+        1000000,
+        true
+    );
+    assert(delta == 1001, 'delta');
+}
+
+#[test]
+fn test_amount0_delta_price_up_round_up() {
+    let delta = amount0_delta(
+        u256 { low: 340622989910849312776150758189957120, high: 1 },
+        u256 { high: 1, low: 0 },
+        1000000,
+        true
+    );
+    assert(delta == 1000, 'delta');
 }
 
 #[test]
@@ -66,7 +92,8 @@ fn test_amount1_delta_price_down() {
     let delta = amount1_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
         u256 { high: 1, low: 0 },
-        1000000
+        1000000,
+        false
     );
     assert(delta == 999, 'delta');
 }
@@ -76,7 +103,30 @@ fn test_amount1_delta_price_up() {
     let delta = amount1_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
         u256 { high: 1, low: 0 },
-        1000000
+        1000000,
+        false
     );
     assert(delta == 1001, 'delta');
+}
+
+#[test]
+fn test_amount1_delta_price_down_round_up() {
+    let delta = amount1_delta(
+        u256 { low: 339942424496442021441932674757011200255, high: 0 },
+        u256 { high: 1, low: 0 },
+        1000000,
+        true
+    );
+    assert(delta ==1000, 'delta');
+}
+
+#[test]
+fn test_amount1_delta_price_up_round_up() {
+    let delta = amount1_delta(
+        u256 { low: 340622989910849312776150758189957120, high: 1 },
+        u256 { high: 1, low: 0 },
+        1000000,
+        true
+    );
+    assert(delta == 1002, 'delta');
 }

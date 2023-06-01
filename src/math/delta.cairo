@@ -1,5 +1,5 @@
 use parlay::types::i129::i129;
-use parlay::math::muldiv::{muldiv, muldiv_up};
+use parlay::math::muldiv::muldiv;
 use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
 
 // Compute the next ratio from a delta amount0, rounded towards starting price for input, and away from starting price for output
@@ -18,7 +18,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
 
         let denominator = numerator1 - product;
 
-        return muldiv_up(numerator1, sqrt_ratio, denominator);
+        return muldiv(numerator1, sqrt_ratio, denominator, true);
     } else {
         // adding amount0, taking out amount1, price is less than sqrt_ratio and should round up
         let denominator = (numerator1 / sqrt_ratio) + u256 { high: 0, low: amount.mag };
@@ -60,7 +60,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
 }
 
 // Compute the difference in amount of token0 between two ratios, rounded down
-fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128) -> u128 {
+fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)
     } else {
@@ -76,15 +76,19 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128) -> u12
     let numerator1 = u256 { low: 0, high: liquidity };
     let numerator2 = sqrt_ratio_upper - sqrt_ratio_lower;
 
-    let result = (muldiv(numerator1, numerator2, sqrt_ratio_upper) / sqrt_ratio_lower);
+    let result_0 = muldiv(numerator1, numerator2, sqrt_ratio_upper, round_up);
+    let (mut quotient, remainder) = u256_safe_divmod(result_0, u256_as_non_zero(sqrt_ratio_lower));
+    if (round_up & (remainder != u256 { low: 0, high: 0 })) {
+        quotient += u256 { low: 1, high: 0 };
+    }
 
-    assert(result.high == 0, 'OVERFLOW_AMOUNT0_DELTA');
+    assert(quotient.high == 0, 'OVERFLOW_AMOUNT0_DELTA');
 
-    return result.low;
+    return quotient.low;
 }
 
 // Compute the difference in amount of token1 between two ratios, rounded down
-fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128) -> u128 {
+fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)
     } else {
@@ -100,7 +104,8 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128) -> u12
     let result = muldiv(
         u256 { low: liquidity, high: 0 },
         sqrt_ratio_upper - sqrt_ratio_lower,
-        u256 { high: 1, low: 0 }
+        u256 { high: 1, low: 0 },
+        round_up
     );
     assert(result.high == 0, 'OVERFLOW');
 

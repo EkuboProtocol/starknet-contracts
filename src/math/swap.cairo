@@ -81,16 +81,16 @@ fn swap_result(
         let (consumed_amount, calculated_amount) = if (is_token1) {
             (
                 i129 {
-                    mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity) + 1,
+                    mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
                     sign: amount.sign
-                }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity)
+                }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
             )
         } else {
             (
                 i129 {
-                    mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity) + 1,
+                    mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
                     sign: amount.sign
-                }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity)
+                }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
             )
         };
 
@@ -114,9 +114,9 @@ fn swap_result(
 
     // rounds down
     let calculated_amount = if (is_token1) {
-        amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity)
+        amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
     } else {
-        amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity)
+        amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
     };
 
     // otherwise, the consumed amount is the input amount, we just computed the next ratio and fee

@@ -624,13 +624,13 @@ mod Parlay {
         let amount0_fees = muldiv(
             unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
             u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 }
+            u256 { low: 0, high: 1 },false
         )
             .low;
         let amount1_fees = muldiv(
             unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
             u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 }
+            u256 { low: 0, high: 1 },false
         )
             .low;
 
