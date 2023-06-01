@@ -304,6 +304,29 @@ mod initialized_ticks_tests {
         );
     }
 
+
+    // this test should be updated when the rebalancing is implemented
+    #[test]
+    #[available_gas(500000000)]
+    fn test_insert_sorted_ticks_tree_height() {
+        let pool_key = fake_pool_key(0);
+        let mut root: Option<i129> = Option::None(());
+        let mut next: i129 = i129 { mag: 0, sign: false };
+        loop {
+            if (next > i129 { mag: 30, sign: false }) {
+                break ();
+            }
+            root = Parlay::insert_initialized_tick(pool_key, root, next);
+            next = next + i129 { mag: 1, sign: false };
+        };
+
+        assert(root == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
+        let root_node = Parlay::initialized_ticks::read((pool_key, root.unwrap()));
+        assert(root_node.height == 30, 'height is 30');
+        assert(root_node.left == Option::None(()), 'left is none');
+        assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
+    }
+
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_left() {
