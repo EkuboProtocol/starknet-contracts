@@ -317,7 +317,9 @@ mod Parlay {
     }
 
     #[internal]
-    fn rewrite_tree(pool_key: PoolKey, ticks: Span<(i129, TickTreeNode)>) -> Option<i129> {
+    fn rewrite_tree(
+        pool_key: PoolKey, parent_override: Option<i129>, ticks: Span<(i129, TickTreeNode)>
+    ) -> Option<i129> {
         let len: usize = ticks.len();
         if (len == 0) {
             Option::None(())
@@ -327,14 +329,19 @@ mod Parlay {
 
             let (left, right) = if len > 1 {
                 (
-                    rewrite_tree(pool_key, ticks.slice(0, mid)),
-                    rewrite_tree(pool_key, ticks.slice(mid + 1, len - mid - 1))
+                    rewrite_tree(pool_key, Option::Some(tick), ticks.slice(0, mid)),
+                    rewrite_tree(pool_key, Option::Some(tick), ticks.slice(mid + 1, len - mid - 1))
                 )
             } else {
                 (Option::None(()), Option::None(()))
             };
 
-            initialized_ticks::write((pool_key, tick), TickTreeNode { left, right });
+            let parent = match parent_override {
+                Option::Some(parent_tick) => Option::Some(parent_tick),
+                Option::None(_) => node.parent
+            };
+
+            initialized_ticks::write((pool_key, tick), TickTreeNode { parent, left, right });
             Option::Some(tick)
         }
     }
@@ -345,29 +352,49 @@ mod Parlay {
         let mut in_order_ticks: Array<(i129, TickTreeNode)> = Default::default();
         append_in_order_sorted_ticks(ref in_order_ticks, pool_key, at_tick);
 
-        let pool = pools::read(pool_key);
-        assert(pool.root_tick.is_some(), 'NO_TICKS');
+        let node = initialized_ticks::read((pool_key, at_tick));
 
-        if (pool.root_tick.unwrap() == at_tick) {
-            let new_root_tick = rewrite_tree(pool_key, in_order_ticks.span());
+        match node.parent {
+            Option::Some(parent_tick) => {
+                let is_left = at_tick < parent_tick;
+                let parent_node = initialized_ticks::read((pool_key, parent_tick));
+                let root = rewrite_tree(pool_key, node.parent, in_order_ticks.span());
 
-            if (pool.root_tick != new_root_tick) {
-                pools::write(
-                    pool_key,
-                    Pool {
-                        sqrt_ratio: pool.sqrt_ratio,
-                        tick: pool.tick,
-                        root_tick: new_root_tick,
-                        liquidity: pool.liquidity,
-                        fee_growth_global_token0: pool.fee_growth_global_token0,
-                        fee_growth_global_token1: pool.fee_growth_global_token1,
+                initialized_ticks::write(
+                    (pool_key, parent_tick),
+                    if is_left {
+                        TickTreeNode {
+                            parent: parent_node.parent, left: root, right: parent_node.right
+                        }
+                    } else {
+                        TickTreeNode { parent: parent_node.parent, left: root, right: root }
                     }
                 );
-            }
 
-            new_root_tick.unwrap()
-        } else {
-            rewrite_tree(pool_key, in_order_ticks.span()).unwrap()
+                root.unwrap()
+            },
+            Option::None(_) => {
+                let pool = pools::read(pool_key);
+                assert(pool.root_tick == Option::Some(at_tick), 'INVALID_TICK');
+
+                let new_root_tick = rewrite_tree(pool_key, Option::None(()), in_order_ticks.span());
+
+                if (pool.root_tick != new_root_tick) {
+                    pools::write(
+                        pool_key,
+                        Pool {
+                            sqrt_ratio: pool.sqrt_ratio,
+                            tick: pool.tick,
+                            root_tick: new_root_tick,
+                            liquidity: pool.liquidity,
+                            fee_growth_global_token0: pool.fee_growth_global_token0,
+                            fee_growth_global_token1: pool.fee_growth_global_token1,
+                        }
+                    );
+                }
+
+                new_root_tick.unwrap()
+            }
         }
     }
 
@@ -386,7 +413,7 @@ mod Parlay {
 
             if (left != node.left) {
                 initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { left, right: node.right }
+                    (pool_key, value), TickTreeNode { parent: node.parent, left, right: node.right }
                 );
             }
 
@@ -396,15 +423,43 @@ mod Parlay {
 
             if (right != node.right) {
                 initialized_ticks::write(
-                    (pool_key, value), TickTreeNode { left: node.left, right }
+                    (pool_key, value), TickTreeNode { parent: node.parent, left: node.left, right }
                 );
             }
 
             root_tick
         } else {
             let next_root = if (node.left.is_none()) {
+                match node.right {
+                    Option::Some(value) => {
+                        let right_node = initialized_ticks::read((pool_key, value));
+                        // update the parent to this node's parent
+                        initialized_ticks::write(
+                            (pool_key, value),
+                            TickTreeNode {
+                                parent: node.parent, left: right_node.left, right: right_node.right
+                            }
+                        );
+                    },
+                    Option::None(_) => {},
+                };
+
                 node.right
             } else if (node.right.is_none()) {
+                match node.left {
+                    Option::Some(value) => {
+                        let left_node = initialized_ticks::read((pool_key, value));
+                        // update the parent to this node's parent
+                        initialized_ticks::write(
+                            (pool_key, value),
+                            TickTreeNode {
+                                parent: node.parent, left: left_node.left, right: left_node.right
+                            }
+                        );
+                    },
+                    Option::None(_) => {},
+                };
+
                 node.left
             } else {
                 // find the in-order successor
@@ -425,11 +480,14 @@ mod Parlay {
                 let right = remove_initialized_tick(pool_key, node.right, successor);
 
                 initialized_ticks::write(
-                    (pool_key, successor), TickTreeNode { left: node.left, right }
+                    (pool_key, successor),
+                    TickTreeNode { parent: node.parent, left: node.left, right }
                 );
 
                 Option::Some(successor)
             };
+
+            initialized_ticks::write((pool_key, index), Default::default());
 
             next_root
         }
@@ -463,12 +521,20 @@ mod Parlay {
                     Option::None(_) => {
                         initialized_ticks::write(
                             (pool_key, value),
-                            TickTreeNode { left: Option::Some(index), right: node.right }
+                            TickTreeNode {
+                                parent: node.parent,
+                                left: Option::Some(index),
+                                right: node.right
+                            }
                         );
 
                         initialized_ticks::write(
                             (pool_key, index),
-                            TickTreeNode { left: Option::None(()), right: Option::None(()) }
+                            TickTreeNode {
+                                parent: Option::Some(value),
+                                left: Option::None(()),
+                                right: Option::None(())
+                            }
                         );
 
                         break root_tick;
@@ -482,12 +548,18 @@ mod Parlay {
                     Option::None(_) => {
                         initialized_ticks::write(
                             (pool_key, value),
-                            TickTreeNode { left: node.left, right: Option::Some(index) }
+                            TickTreeNode {
+                                parent: node.parent, left: node.left, right: Option::Some(index)
+                            }
                         );
 
                         initialized_ticks::write(
                             (pool_key, index),
-                            TickTreeNode { left: Option::None(()), right: Option::None(()) }
+                            TickTreeNode {
+                                parent: Option::Some(value),
+                                left: Option::None(()),
+                                right: Option::None(())
+                            }
                         );
 
                         break root_tick;
@@ -619,7 +691,6 @@ mod Parlay {
 
         next_root
     }
-
 
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta {

@@ -7,6 +7,7 @@ use integer::u256_from_felt252;
 use integer::BoundedInt;
 use traits::Into;
 use parlay::types::keys::PoolKey;
+use parlay::types::storage::{Pool};
 use parlay::types::i129::i129;
 use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use array::{ArrayTrait};
@@ -224,7 +225,7 @@ mod initialize_pool_tests {
 
 mod initialized_ticks_tests {
     use super::helper::{fake_pool_key};
-    use super::{Option, OptionTrait, PoolKey, Parlay, i129};
+    use super::{Option, OptionTrait, PoolKey, Pool, Parlay, i129};
     use parlay::math::utils::{u128_max};
 
     fn max_height(pool_key: PoolKey, from_tick: Option<i129>) -> u128 {
@@ -261,6 +262,22 @@ mod initialized_ticks_tests {
         if (tick.is_none()) {
             return ();
         }
+    }
+
+    fn rebalance_tree(pool_key: PoolKey, root: i129) -> Option<i129> {
+        let pool = Parlay::pools::read(pool_key);
+        Parlay::pools::write(
+            pool_key,
+            Pool {
+                sqrt_ratio: pool.sqrt_ratio,
+                root_tick: Option::Some(root),
+                tick: pool.tick,
+                liquidity: pool.liquidity,
+                fee_growth_global_token0: pool.fee_growth_global_token0,
+                fee_growth_global_token1: pool.fee_growth_global_token1,
+            }
+        );
+        Option::Some(Parlay::rebalance_tree(pool_key, root))
     }
 
     fn is_tree_balanced(pool_key: PoolKey, at_tick: Option<i129>) -> bool {
@@ -421,7 +438,7 @@ mod initialized_ticks_tests {
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
         check_tree_correctness(pool_key, root);
 
-        root = Option::Some(Parlay::rebalance_tree(pool_key, root.unwrap()));
+        root = rebalance_tree(pool_key, root.unwrap());
         assert(is_tree_balanced(pool_key, root), 'tree is balanced');
         check_tree_correctness(pool_key, root);
     }
@@ -558,7 +575,7 @@ mod initialized_ticks_tests {
             'prev tick of 42'
         );
 
-        root_tick = Option::Some(Parlay::rebalance_tree(pool_key, root_tick.unwrap()));
+        root_tick = rebalance_tree(pool_key, root_tick.unwrap());
         assert(is_tree_balanced(pool_key, root_tick), 'tree not balanced');
         check_tree_correctness(pool_key, root_tick);
     }
@@ -621,7 +638,7 @@ mod initialized_ticks_tests {
             'prev tick of 42'
         );
 
-        root_tick = Option::Some(Parlay::rebalance_tree(pool_key, root_tick.unwrap()));
+        root_tick = rebalance_tree(pool_key, root_tick.unwrap());
         assert(is_tree_balanced(pool_key, root_tick), 'tree not balanced');
         check_tree_correctness(pool_key, root_tick);
     }
