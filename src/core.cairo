@@ -90,7 +90,7 @@ mod Parlay {
 
     use array::{ArrayTrait, SpanTrait};
     use parlay::math::ticks::{
-        tick_to_sqrt_ratio, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
+        tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
     };
     use parlay::math::liquidity::liquidity_delta_to_amount_delta;
@@ -675,7 +675,11 @@ mod Parlay {
 
     #[internal]
     fn update_tick(
-        pool_key: PoolKey, root_tick: Option<i129>, index: i129, liquidity_delta: i129
+        pool_key: PoolKey,
+        root_tick: Option<i129>,
+        index: i129,
+        liquidity_delta: i129,
+        is_upper: bool
     ) -> Option<i129> {
         let tick = ticks::read((pool_key, index));
 
@@ -694,7 +698,11 @@ mod Parlay {
         ticks::write(
             (pool_key, index),
             Tick {
-                liquidity_delta: tick.liquidity_delta + liquidity_delta,
+                liquidity_delta: if is_upper {
+                    tick.liquidity_delta + liquidity_delta
+                } else {
+                    tick.liquidity_delta - liquidity_delta
+                },
                 liquidity_net: next_liquidity_net,
                 fee_growth_outside_token0: tick.fee_growth_outside_token0,
                 fee_growth_outside_token1: tick.fee_growth_outside_token1
@@ -829,9 +837,10 @@ mod Parlay {
 
         // update each tick, and recompute the root tick if necessary
         let mut root_tick = update_tick(
-            pool_key, pool.root_tick, params.tick_lower, params.liquidity_delta
+            pool_key, pool.root_tick, params.tick_lower, params.liquidity_delta, false
         );
-        root_tick = update_tick(pool_key, root_tick, params.tick_upper, params.liquidity_delta);
+        root_tick =
+            update_tick(pool_key, root_tick, params.tick_upper, params.liquidity_delta, true);
 
         // update pool liquidity if it changed
         if ((pool_liquidity_next != pool.liquidity) | (root_tick != pool.root_tick)) {
@@ -872,19 +881,27 @@ mod Parlay {
         assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'DIRECTION');
         assert(
             (params.sqrt_ratio_limit >= min_sqrt_ratio())
-                & params.sqrt_ratio_limit < max_sqrt_ratio(),
+                & params.sqrt_ratio_limit <= max_sqrt_ratio(),
             'LIMIT'
         );
 
-        let mut delta: Delta = Default::default();
         let mut tick = pool.tick;
-        let mut amount = params.amount;
+        let mut amount_remaining = params.amount;
         let mut sqrt_ratio = pool.sqrt_ratio;
         let mut liquidity = pool.liquidity;
         let mut calculated_amount: u128 = Default::default();
+        let mut fee_growth_global = if params.is_token1 {
+            pool.fee_growth_global_token1
+        } else {
+            pool.fee_growth_global_token0
+        };
 
         loop {
-            if (amount == Default::default()) {
+            if (amount_remaining == Default::default()) {
+                break ();
+            }
+
+            if (sqrt_ratio == params.sqrt_ratio_limit) {
                 break ();
             }
 
@@ -908,22 +925,106 @@ mod Parlay {
                 }
             };
 
-            let sqrt_ratio_limit = tick_to_sqrt_ratio(next_tick);
+            let step_sqrt_ratio_limit = tick_to_sqrt_ratio(next_tick);
 
             let swap_result = swap_result(
-                sqrt_ratio: sqrt_ratio,
-                liquidity: liquidity,
-                sqrt_ratio_limit: sqrt_ratio_limit,
-                amount: amount,
+                sqrt_ratio,
+                liquidity,
+                sqrt_ratio_limit: step_sqrt_ratio_limit,
+                amount: amount_remaining,
                 is_token1: params.is_token1,
                 fee: pool_key.fee
             );
 
-            amount -= swap_result.consumed_amount;
+            amount_remaining -= swap_result.consumed_amount;
             sqrt_ratio = swap_result.sqrt_ratio_next;
             calculated_amount += swap_result.calculated_amount;
+
+            fee_growth_global += u256 {
+                low: 0, high: swap_result.fee_amount
+                } / u256 {
+                low: liquidity, high: 0
+            };
+
+            if (sqrt_ratio == step_sqrt_ratio_limit) {
+                tick = next_tick;
+                if (is_initialized) {
+                    let tick_data = ticks::read((pool_key, next_tick));
+                    // update our working liquidity
+                    if (increasing) {
+                        liquidity = add_delta(liquidity, tick_data.liquidity_delta);
+                    } else {
+                        liquidity = add_delta(liquidity, -tick_data.liquidity_delta);
+                    }
+
+                    let (fee_growth_outside_token0, fee_growth_outside_token1) = if (params
+                        .is_token1) {
+                        (
+                            unsafe_sub(
+                                pool.fee_growth_global_token0, tick_data.fee_growth_outside_token0
+                            ),
+                            unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token1)
+                        )
+                    } else {
+                        (
+                            unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token0),
+                            unsafe_sub(
+                                pool.fee_growth_global_token1, tick_data.fee_growth_outside_token1
+                            )
+                        )
+                    };
+                    // update the tick fee state
+                    ticks::write(
+                        (pool_key, next_tick),
+                        Tick {
+                            liquidity_delta: tick_data.liquidity_delta,
+                            liquidity_net: tick_data.liquidity_net,
+                            fee_growth_outside_token0,
+                            fee_growth_outside_token1
+                        }
+                    );
+                }
+            } else {
+                tick = sqrt_ratio_to_tick(sqrt_ratio);
+            };
         };
 
-        Default::default()
+        let (amount0_delta, amount1_delta) = if (params.amount.sign) {
+            // exact input of token1, calculated amount is token0 and negative
+            if (params.is_token1) {
+                (i129 { mag: calculated_amount, sign: true }, params.amount - amount_remaining)
+            } else {
+                // exact input token0, calculated amount is token1 and negative
+                (params.amount - amount_remaining, i129 { mag: calculated_amount, sign: true })
+            }
+        } else {
+            // exact output of token1, calculated amount is token0 and positive
+            if (params.is_token1) {
+                (i129 { mag: calculated_amount, sign: false }, params.amount - amount_remaining)
+            } else {
+                // exact output token0, calculated amount is token1 and positive
+                (params.amount - amount_remaining, i129 { mag: calculated_amount, sign: false })
+            }
+        };
+
+        let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params.is_token1 {
+            (pool.fee_growth_global_token0, fee_growth_global)
+        } else {
+            (fee_growth_global, pool.fee_growth_global_token1)
+        };
+
+        pools::write(
+            pool_key,
+            Pool {
+                sqrt_ratio,
+                tick,
+                root_tick: pool.root_tick,
+                liquidity,
+                fee_growth_global_token0: fee_growth_global_token0_next,
+                fee_growth_global_token1: fee_growth_global_token1_next,
+            }
+        );
+
+        Delta { amount0_delta, amount1_delta }
     }
 }
