@@ -47,7 +47,6 @@ struct Tick {
 
 #[derive(Copy, Drop)]
 struct TickTreeNode {
-    parent: Option<i129>,
     left: Option<i129>,
     right: Option<i129>
 }
@@ -401,7 +400,7 @@ impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
 
 impl TickTreeNodeDefault of Default<TickTreeNode> {
     fn default() -> TickTreeNode {
-        TickTreeNode { parent: Option::None(()), left: Option::None(()), right: Option::None(()) }
+        TickTreeNode { left: Option::None(()), right: Option::None(()) }
     }
 }
 
@@ -421,15 +420,11 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
 
         let mut parsed: u128 = packed_result.try_into().unwrap();
 
-        let (parent, left_right) = u128_safe_divmod(
-            parsed, u128_as_non_zero(0x10000000000000000) // 2**64
+        let (left, right) = u128_safe_divmod(parsed, u128_as_non_zero(0x100000000) // 2**32
         );
-
-        let (left, right) = u128_safe_divmod(left_right, u128_as_non_zero(0x100000000));
 
         SyscallResult::Ok(
             TickTreeNode {
-                parent: tick_tree_node_internal::to_tick(parent),
                 left: tick_tree_node_internal::to_tick(left),
                 right: tick_tree_node_internal::to_tick(right)
             }
@@ -464,8 +459,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
             address_domain,
             base,
             offset,
-            (tick_tree_node_internal::to_u32(value.parent) * 0x10000000000000000)
-                + (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
+            (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
                 + tick_tree_node_internal::to_u32(value.right)
         )
     }
