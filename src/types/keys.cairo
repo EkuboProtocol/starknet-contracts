@@ -10,12 +10,17 @@ struct PoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
     fee: u128,
+    tick_spacing: u128
 }
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
     fn hash(state: felt252, value: PoolKey) -> felt252 {
         pedersen(
-            state, pedersen(pedersen(value.token0.into(), value.token1.into()), value.fee.into())
+            state,
+            pedersen(
+                pedersen(value.token0.into(), value.token1.into()),
+                pedersen(value.fee.into(), value.tick_spacing.into())
+            ),
         )
     }
 }

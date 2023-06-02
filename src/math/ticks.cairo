@@ -4,7 +4,7 @@ use integer::u128_wide_mul;
 mod constants {
     const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
-    // used to translate the most significant bit into a guess
+// doubling of sqrt ratio => quadrupling of price
     const TICKS_IN_DOUBLE_SQRT_RATIO: u128 = 1386295;
 
     const MAX_SQRT_RATIO_HIGH: u128 = 18446739710271796309;

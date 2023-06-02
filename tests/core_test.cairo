@@ -41,9 +41,12 @@ mod helper {
         return IMockERC20Dispatcher { contract_address: token_address };
     }
 
-    fn fake_pool_key(fee: u128) -> PoolKey {
+    fn fake_pool_key() -> PoolKey {
         PoolKey {
-            token0: contract_address_const::<1>(), token1: contract_address_const::<2>(), fee
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1
         }
     }
 
@@ -56,7 +59,9 @@ mod helper {
         locker: ICoreLockerDispatcher
     }
 
-    fn setup_pool(owner: ContractAddress, fee: u128, initial_tick: i129) -> SetupPoolResult {
+    fn setup_pool(
+        owner: ContractAddress, fee: u128, tick_spacing: u128, initial_tick: i129
+    ) -> SetupPoolResult {
         let mut token0 = deploy_mock_token();
         let mut token1 = deploy_mock_token();
         if (token0.contract_address > token1.contract_address) {
@@ -66,7 +71,7 @@ mod helper {
         }
 
         let pool_key: PoolKey = PoolKey {
-            token0: token0.contract_address, token1: token1.contract_address, fee
+            token0: token0.contract_address, token1: token1.contract_address, fee, tick_spacing
         };
 
         let mut core_constructor_args: Array<felt252> = Default::default();
@@ -129,8 +134,8 @@ mod initialize_pool_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
-        Parlay::initialize_pool(fake_pool_key(0), i129 { mag: 1000, sign: true });
-        let pool = Parlay::get_pool(fake_pool_key(0));
+        Parlay::initialize_pool(fake_pool_key(), i129 { mag: 1000, sign: true });
+        let pool = Parlay::get_pool(fake_pool_key());
         assert(
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
@@ -145,9 +150,64 @@ mod initialize_pool_tests {
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', ))]
-    fn test_initialize_pool_fails_token_order() {
+    fn test_initialize_pool_fails_token_order_same_token() {
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(), token1: contract_address_const::<1>(), fee: 0, 
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<1>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
+        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    }
+
+    #[test]
+    #[available_gas(3000000)]
+    #[should_panic(expected: ('TOKEN_ORDER', ))]
+    fn test_initialize_pool_fails_token_order_wrong_order() {
+        let pool_key = PoolKey {
+            token0: contract_address_const::<2>(),
+            token1: contract_address_const::<1>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
+        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    }
+
+    #[test]
+    #[available_gas(3000000)]
+    #[should_panic(expected: ('TOKEN_ZERO', ))]
+    fn test_initialize_pool_fails_token_order_zero_token() {
+        let pool_key = PoolKey {
+            token0: contract_address_const::<0>(),
+            token1: contract_address_const::<1>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
+        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    }
+
+    #[test]
+    #[available_gas(3000000)]
+    #[should_panic(expected: ('TICK_SPACING', ))]
+    fn test_initialize_pool_fails_zero_tick_spacing() {
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 0,
+        };
+        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    }
+
+    #[test]
+    #[available_gas(3000000)]
+    #[should_panic(expected: ('TICK_SPACING', ))]
+    fn test_initialize_pool_fails_max_tick_spacing() {
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1386295,
         };
         Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
@@ -156,7 +216,7 @@ mod initialize_pool_tests {
     #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', ))]
     fn test_initialize_pool_fails_already_initialized() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         Parlay::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         Parlay::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
     }
@@ -225,7 +285,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -259,7 +319,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_bigger_tree() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -323,7 +383,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_sorted_ticks_and_removes() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root: Option<i129> = Option::None(());
         let mut next: i129 = i129 { mag: 0, sign: false };
         loop {
@@ -369,7 +429,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_left() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -395,7 +455,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_right() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -419,7 +479,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_root() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -443,7 +503,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: true }
         );
@@ -506,7 +566,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next_reverse_order_insert() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: false }
         );
@@ -570,7 +630,7 @@ mod initialized_ticks_tests {
     #[available_gas(50000000)]
     #[should_panic(expected: ('ALREADY_EXISTS', ))]
     fn test_insert_fails_if_already_exists() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
 
         let root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -584,14 +644,14 @@ mod initialized_ticks_tests {
     #[should_panic(expected: ('TICK_NOT_FOUND', ))]
     fn test_remove_fails_if_does_not_exist() {
         Parlay::remove_initialized_tick(
-            fake_pool_key(0), Option::None(()), i129 { mag: 1000, sign: true }
+            fake_pool_key(), Option::None(()), i129 { mag: 1000, sign: true }
         );
     }
 
     #[test]
     #[available_gas(50000000)]
     fn test_insert_initialized_tick_next_initialized_tick() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
 
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -663,7 +723,7 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(50000000)]
     fn test_insert_initialized_tick_prev_initialized_tick() {
-        let pool_key = fake_pool_key(0);
+        let pool_key = fake_pool_key();
 
         let mut root_tick = Parlay::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -751,7 +811,9 @@ mod locks {
     #[test]
     #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
         setup.locker.call(Action::AssertLockerId(0));
     }
     #[test]
@@ -762,14 +824,18 @@ mod locks {
         )
     )]
     fn test_assert_locker_id_call_wrong() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
         setup.locker.call(Action::AssertLockerId(1));
     }
 
     #[test]
     #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
         setup
             .locker
             .call(
@@ -791,7 +857,78 @@ mod locks {
     #[available_gas(500000000)]
     #[should_panic(
         expected: (
-            'u256_sub Overflow',
+            'TICK_SPACING',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+        );
+
+        setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 12, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 100, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(
+        expected: (
+            'TICK_SPACING',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+        );
+
+        setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 12, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 100, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+    }
+
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(
+        expected: (
+            'TICK_SPACING',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
@@ -799,7 +936,9 @@ mod locks {
         )
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+        );
 
         setup
             .locker
@@ -824,7 +963,9 @@ mod locks {
     #[test]
     #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
 
         setup
             .token0
@@ -868,7 +1009,9 @@ mod locks {
     #[test]
     #[available_gas(500000000)]
     fn test_swap_0_amount() {
-        let setup = setup_pool(contract_address_const::<1>(), FEE_ONE_PERCENT, Default::default());
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
 
         let result = setup
             .locker

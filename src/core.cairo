@@ -90,7 +90,8 @@ mod Parlay {
 
     use array::{ArrayTrait, SpanTrait};
     use parlay::math::ticks::{
-        tick_to_sqrt_ratio, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio
+        tick_to_sqrt_ratio, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
+        constants as tick_constants
     };
     use parlay::math::liquidity::liquidity_delta_to_amount_delta;
     use parlay::math::swap::{swap_result, is_price_increasing};
@@ -264,10 +265,18 @@ mod Parlay {
         delta.low
     }
 
+    const MAX_TICK_SPACING: u128 = 16384;
+
     #[external]
     fn initialize_pool(pool_key: PoolKey, initial_tick: i129) {
         // token0 is always l.t. token1
         assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
+        assert(pool_key.token0 != contract_address_const::<0>(), 'TOKEN_ZERO');
+        assert(
+            (pool_key.tick_spacing != Default::default())
+                & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
+            'TICK_SPACING'
+        );
 
         let pool = pools::read(pool_key);
         assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
@@ -619,6 +628,11 @@ mod Parlay {
         assert(params.tick_lower < params.tick_upper, 'ORDER');
         assert(params.tick_lower >= min_tick(), 'MIN');
         assert(params.tick_upper <= max_tick(), 'MAX');
+        assert(
+            ((params.tick_lower.mag % pool_key.tick_spacing) == 0)
+                & ((params.tick_upper.mag % pool_key.tick_spacing) == 0),
+            'TICK_SPACING'
+        );
 
         let pool = pools::read(pool_key);
 

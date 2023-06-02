@@ -10,11 +10,14 @@ fn test_pool_key_hash() {
     let hash = LegacyHash::<PoolKey>::hash(
         0,
         PoolKey {
-            token0: contract_address_const::<1>(), token1: contract_address_const::<2>(), fee: 0
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1
         }
     );
     assert(
-        hash == 2757657549542566174702412856786580735427995385478903620917979722923085594620, 'id'
+        hash == 481493888082425488287062412298769332468812900917176967306025147877406114702, 'id'
     );
 }
 
