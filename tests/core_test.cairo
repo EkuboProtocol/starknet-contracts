@@ -167,85 +167,34 @@ mod initialized_ticks_tests {
     use super::{Option, OptionTrait, PoolKey, Parlay, i129};
     use parlay::math::utils::{u128_max};
 
-
-    fn check_red_black_tree_valid(pool_key: PoolKey, root: Option<i129>) {
-        return ();
-    // match root {
-    //     Option::Some(root_tick) => {
-    //         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick));
-    //         assert(root_node.red == false, 'root is black');
-
-    //         // Ensure root to leaf contains the same number of black nodes in all paths
-    //         let black_count = compute_black_height(pool_key, root);
-    //         check_paths_black_nodes(pool_key, root, 0, black_count);
-    //     },
-    //     Option::None(_) => {},
-    // }
-    }
-
-    fn check_paths_black_nodes(
-        pool_key: PoolKey, node: Option<i129>, mut path_black_count: u128, black_count: u128
-    ) {
-        match node {
-            Option::Some(node_tick) => {
-                let node = Parlay::initialized_ticks::read((pool_key, node_tick));
-
-                // Increment path_black_count if current node is black
-                if node.red == false {
-                    path_black_count += 1;
-                }
-
-                // Check red node has black children
-                if node.red == true {
-                    match node.left {
-                        Option::Some(left_tick) => {
-                            let left_node = Parlay::initialized_ticks::read((pool_key, left_tick));
-                            assert(left_node.red == false, 'red node.left == red');
-                        },
-                        Option::None(_) => {},
-                    }
-                    match node.right {
-                        Option::Some(right_tick) => {
-                            let right_node = Parlay::initialized_ticks::read(
-                                (pool_key, right_tick)
-                            );
-                            assert(right_node.red == false, 'red node.right == red');
-                        },
-                        Option::None(_) => {},
-                    }
-                }
-
-                // Check paths black nodes
-                check_paths_black_nodes(pool_key, node.left, path_black_count, black_count);
-                check_paths_black_nodes(pool_key, node.right, path_black_count, black_count);
+    fn max_height(pool_key: PoolKey, from_tick: Option<i129>) -> u128 {
+        match (from_tick) {
+            Option::Some(value) => {
+                let node = Parlay::initialized_ticks::read((pool_key, value));
+                u128_max(max_height(pool_key, node.left), max_height(pool_key, node.right)) + 1
             },
-            Option::None(_) => {
-                // All paths from root to leaf have the same black node count
-                assert(path_black_count == black_count, 'black height==');
-            },
+            Option::None(_) => 0
         }
     }
 
-    // counts the black height in a red-black tree from a given node
-    fn compute_black_height(pool_key: PoolKey, node: Option<i129>) -> u128 {
-        match node {
-            Option::Some(node_tick) => {
-                let node = Parlay::initialized_ticks::read((pool_key, node_tick));
-                let black_count = if node.red == false {
-                    1
+    fn is_tree_balanced(pool_key: PoolKey, at_tick: Option<i129>) -> bool {
+        match at_tick {
+            Option::Some(value) => {
+                let node = Parlay::initialized_ticks::read((pool_key, value));
+                let left_height = max_height(pool_key, node.left);
+                let right_height = max_height(pool_key, node.right);
+                let diff = if (left_height < right_height) {
+                    right_height - left_height
                 } else {
-                    0
+                    left_height - right_height
                 };
-                return black_count
-                    + u128_max(
-                        compute_black_height(pool_key, node.left),
-                        compute_black_height(pool_key, node.right)
-                    );
+                diff <= 1
+                    & is_tree_balanced(pool_key, node.left)
+                    & is_tree_balanced(pool_key, node.right)
             },
-            Option::None(_) => 0,
+            Option::None(_) => true,
         }
     }
-
 
     #[test]
     #[available_gas(500000000)]
@@ -259,7 +208,7 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
-        check_red_black_tree_valid(pool_key, root_tick);
+        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -279,7 +228,6 @@ mod initialized_ticks_tests {
             'right is default'
         );
     }
-
 
     #[test]
     #[available_gas(500000000)]
@@ -301,22 +249,18 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
-        check_red_black_tree_valid(pool_key, root_tick);
-
+        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.red == false, 'root.red is false');
         assert(root_node.left == Option::Some(i129 { mag: 2, sign: true }), 'root.left is -2');
         assert(root_node.right == Option::Some(i129 { mag: 2, sign: false }), 'root.right is 2');
 
         let left_node = Parlay::initialized_ticks::read((pool_key, root_node.left.unwrap()));
-        assert(left_node.red == false, 'left.red is false');
         assert(left_node.left == Option::Some(i129 { mag: 3, sign: true }), 'left.left is -3');
         assert(left_node.right == Option::Some(i129 { mag: 1, sign: true }), 'left.right is -1');
 
         let right_node = Parlay::initialized_ticks::read((pool_key, root_node.right.unwrap()));
-        assert(right_node.red == false, 'right.red is false');
         assert(right_node.left == Option::Some(i129 { mag: 1, sign: false }), 'left.left is 1');
         assert(right_node.right == Option::Some(i129 { mag: 3, sign: false }), 'left.right is 3');
 
@@ -362,7 +306,7 @@ mod initialized_ticks_tests {
             next = next + i129 { mag: 1, sign: false };
         };
 
-        check_red_black_tree_valid(pool_key, root);
+        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
 
         // remove some from the middle
         next = i129 { mag: 10, sign: false };
@@ -373,8 +317,7 @@ mod initialized_ticks_tests {
             root = Parlay::remove_initialized_tick(pool_key, root, next);
             next = next - i129 { mag: 1, sign: false };
         };
-
-        check_red_black_tree_valid(pool_key, root);
+        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
 
         // remove the root node 5 times
         next = i129 { mag: 0, sign: false };
@@ -385,8 +328,10 @@ mod initialized_ticks_tests {
             root = Parlay::remove_initialized_tick(pool_key, root, root.unwrap());
             next = next + i129 { mag: 1, sign: false };
         };
+        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
 
-        check_red_black_tree_valid(pool_key, root);
+        root = Option::Some(Parlay::rebalance_tree(pool_key, root.unwrap()));
+        assert(is_tree_balanced(pool_key, root), 'tree is balanced');
     }
 
     #[test]
@@ -403,12 +348,8 @@ mod initialized_ticks_tests {
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
-        check_red_black_tree_valid(pool_key, root_tick);
-
         root_tick =
             Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-
-        check_red_black_tree_valid(pool_key, root_tick);
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -429,12 +370,8 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
-        check_red_black_tree_valid(pool_key, root_tick);
-
         root_tick =
             Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        check_red_black_tree_valid(pool_key, root_tick);
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -455,12 +392,8 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
-        check_red_black_tree_valid(pool_key, root_tick);
-
         root_tick =
             Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false });
-
-        check_red_black_tree_valid(pool_key, root_tick);
 
         assert(root_tick == Option::Some(i129 { mag: 1, sign: false }), 'root tick is 1');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -494,8 +427,6 @@ mod initialized_ticks_tests {
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: false });
-
-        check_red_black_tree_valid(pool_key, root_tick);
 
         assert(
             Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
@@ -553,8 +484,6 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: true });
 
-        check_red_black_tree_valid(pool_key, root_tick);
-
         assert(
             Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('>-42') == i129 {
@@ -583,6 +512,8 @@ mod initialized_ticks_tests {
             },
             'prev tick of 42'
         );
+
+        root_tick = Option::Some(Parlay::rebalance_tree(pool_key, root_tick.unwrap()));
     }
 
     #[test]

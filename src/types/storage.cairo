@@ -47,7 +47,7 @@ struct Tick {
 
 #[derive(Copy, Drop)]
 struct TickTreeNode {
-    red: bool,
+    parent: Option<i129>,
     left: Option<i129>,
     right: Option<i129>
 }
@@ -391,7 +391,7 @@ mod tick_tree_node_internal {
 
 impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
     fn eq(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
-        ((lhs.red == rhs.red) & (lhs.left == rhs.left) & (lhs.right == rhs.right))
+        (lhs.left == rhs.left) & (lhs.right == rhs.right)
     }
     fn ne(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
         !PartialEq::<TickTreeNode>::eq(lhs, rhs)
@@ -401,7 +401,7 @@ impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
 
 impl TickTreeNodeDefault of Default<TickTreeNode> {
     fn default() -> TickTreeNode {
-        TickTreeNode { red: false, left: Option::None(()), right: Option::None(()) }
+        TickTreeNode { parent: Option::None(()), left: Option::None(()), right: Option::None(()) }
     }
 }
 
@@ -421,7 +421,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
 
         let mut parsed: u128 = packed_result.try_into().unwrap();
 
-        let (red_flag, left_right) = u128_safe_divmod(
+        let (parent, left_right) = u128_safe_divmod(
             parsed, u128_as_non_zero(0x10000000000000000) // 2**64
         );
 
@@ -429,7 +429,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
 
         SyscallResult::Ok(
             TickTreeNode {
-                red: red_flag == 1,
+                parent: tick_tree_node_internal::to_tick(parent),
                 left: tick_tree_node_internal::to_tick(left),
                 right: tick_tree_node_internal::to_tick(right)
             }
@@ -455,11 +455,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
                     Option::Some(right_value) => {
                         assert(right_value.mag < 0x40000000, 'RIGHT');
                     },
-                    Option::None(_) => {
-                        // if there are no children (is leaf node), node must be black
-                        // todo: we insert with red first and then fix violation
-                        // assert(!value.red, 'RED_LEAF');
-                    },
+                    Option::None(_) => {},
                 }
             }
         }
@@ -468,11 +464,7 @@ impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
             address_domain,
             base,
             offset,
-            (if value.red {
-                0x10000000000000000
-            } else {
-                0
-            })
+            (tick_tree_node_internal::to_u32(value.parent) * 0x10000000000000000)
                 + (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
                 + tick_tree_node_internal::to_u32(value.right)
         )
