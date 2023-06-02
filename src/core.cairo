@@ -989,22 +989,18 @@ mod Parlay {
             };
         };
 
-        let (amount0_delta, amount1_delta) = if (params.amount.sign) {
-            // exact input of token1, calculated amount is token0 and negative
-            if (params.is_token1) {
-                (i129 { mag: calculated_amount, sign: true }, params.amount - amount_remaining)
-            } else {
-                // exact input token0, calculated amount is token1 and negative
-                (params.amount - amount_remaining, i129 { mag: calculated_amount, sign: true })
-            }
+        let (amount0_delta, amount1_delta) = if (params.is_token1) {
+            (
+                i129 {
+                    mag: calculated_amount, sign: params.amount.sign
+                }, params.amount - amount_remaining
+            )
         } else {
-            // exact output of token1, calculated amount is token0 and positive
-            if (params.is_token1) {
-                (i129 { mag: calculated_amount, sign: false }, params.amount - amount_remaining)
-            } else {
-                // exact output token0, calculated amount is token1 and positive
-                (params.amount - amount_remaining, i129 { mag: calculated_amount, sign: false })
-            }
+            (
+                params.amount - amount_remaining, i129 {
+                    mag: calculated_amount, sign: params.amount.sign
+                }
+            )
         };
 
         let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params.is_token1 {
