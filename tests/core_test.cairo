@@ -177,6 +177,33 @@ mod initialized_ticks_tests {
         }
     }
 
+    fn check_tree_correctness(pool_key: PoolKey, tick: Option<i129>, parent: Option<i129>) {
+        match tick {
+            Option::Some(value) => {
+                let node = Parlay::initialized_ticks::read((pool_key, value));
+                assert(node.parent == parent, 'parent');
+                match node.left {
+                    Option::Some(left) => {
+                        assert(left < value, 'left < current');
+                    },
+                    Option::None(_) => {}
+                }
+                match node.right {
+                    Option::Some(right) => {
+                        assert(right > value, 'right > current');
+                    },
+                    Option::None(_) => {}
+                }
+                check_tree_correctness(pool_key, node.left, tick);
+                check_tree_correctness(pool_key, node.right, tick);
+            },
+            Option::None(_) => {}
+        }
+        if (tick.is_none()) {
+            return ();
+        }
+    }
+
     fn is_tree_balanced(pool_key: PoolKey, at_tick: Option<i129>) -> bool {
         match at_tick {
             Option::Some(value) => {
@@ -209,6 +236,7 @@ mod initialized_ticks_tests {
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
+        check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -250,6 +278,7 @@ mod initialized_ticks_tests {
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
+        check_tree_correctness(pool_key, root_tick, Option::None(()));
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
@@ -307,6 +336,7 @@ mod initialized_ticks_tests {
         };
 
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
+        check_tree_correctness(pool_key, root, Option::None(()));
 
         // remove some from the middle
         next = i129 { mag: 10, sign: false };
@@ -318,6 +348,7 @@ mod initialized_ticks_tests {
             next = next - i129 { mag: 1, sign: false };
         };
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
+        check_tree_correctness(pool_key, root, Option::None(()));
 
         // remove the root node 5 times
         next = i129 { mag: 0, sign: false };
@@ -329,9 +360,11 @@ mod initialized_ticks_tests {
             next = next + i129 { mag: 1, sign: false };
         };
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
+        check_tree_correctness(pool_key, root, Option::None(()));
 
         root = Option::Some(Parlay::rebalance_tree(pool_key, root.unwrap()));
         assert(is_tree_balanced(pool_key, root), 'tree is balanced');
+        check_tree_correctness(pool_key, root, Option::None(()));
     }
 
     #[test]
@@ -346,10 +379,13 @@ mod initialized_ticks_tests {
         root_tick =
             Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
+        check_tree_correctness(pool_key, root_tick, Option::None(()));
+
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
         root_tick =
             Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+        check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
