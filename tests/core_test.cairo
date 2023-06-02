@@ -242,7 +242,7 @@ mod initialized_ticks_tests {
         match tick {
             Option::Some(value) => {
                 let node = Parlay::initialized_ticks::read((pool_key, value));
-                // assert(parent == node.parent, 'parent');
+                assert(parent == node.parent, 'parent');
                 match node.left {
                     Option::Some(left) => {
                         assert(left < value, 'left < current');
@@ -513,6 +513,7 @@ mod initialized_ticks_tests {
 
         assert(root_tick == Option::Some(i129 { mag: 1, sign: false }), 'root tick is 1');
         let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        assert(root_node.parent == Option::None(()), 'parent is none');
         assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
         assert(root_node.right == Option::None(()), 'right is empty');
     }
@@ -577,7 +578,7 @@ mod initialized_ticks_tests {
         );
 
         root_tick = rebalance_tree(pool_key, root_tick.unwrap());
-        assert(is_tree_balanced(pool_key, root_tick), 'tree not balanced');
+        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
     }
 

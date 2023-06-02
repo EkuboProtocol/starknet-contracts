@@ -318,7 +318,7 @@ mod Parlay {
 
     #[internal]
     fn rewrite_tree(
-        pool_key: PoolKey, parent_override: Option<i129>, ticks: Span<(i129, TickTreeNode)>
+        pool_key: PoolKey, parent: Option<i129>, ticks: Span<(i129, TickTreeNode)>
     ) -> Option<i129> {
         let len: usize = ticks.len();
         if (len == 0) {
@@ -334,11 +334,6 @@ mod Parlay {
                 )
             } else {
                 (Option::None(()), Option::None(()))
-            };
-
-            let parent = match parent_override {
-                Option::Some(parent_tick) => Option::Some(parent_tick),
-                Option::None(_) => node.parent
             };
 
             initialized_ticks::write((pool_key, tick), TickTreeNode { parent, left, right });
@@ -357,6 +352,7 @@ mod Parlay {
         match node.parent {
             Option::Some(parent_tick) => {
                 let is_left = at_tick < parent_tick;
+
                 let parent_node = initialized_ticks::read((pool_key, parent_tick));
                 let root = rewrite_tree(pool_key, node.parent, in_order_ticks.span());
 
@@ -367,7 +363,9 @@ mod Parlay {
                             parent: parent_node.parent, left: root, right: parent_node.right
                         }
                     } else {
-                        TickTreeNode { parent: parent_node.parent, left: root, right: root }
+                        TickTreeNode {
+                            parent: parent_node.parent, left: parent_node.left, right: root
+                        }
                     }
                 );
 
@@ -375,7 +373,7 @@ mod Parlay {
             },
             Option::None(_) => {
                 let pool = pools::read(pool_key);
-                assert(pool.root_tick == Option::Some(at_tick), 'INVALID_TICK');
+                assert(pool.root_tick == Option::Some(at_tick), 'INVALID_ROOT');
 
                 let new_root_tick = rewrite_tree(pool_key, Option::None(()), in_order_ticks.span());
 
@@ -431,11 +429,11 @@ mod Parlay {
         } else {
             let next_root = if (node.left.is_none()) {
                 match node.right {
-                    Option::Some(value) => {
-                        let right_node = initialized_ticks::read((pool_key, value));
+                    Option::Some(right_value) => {
+                        let right_node = initialized_ticks::read((pool_key, right_value));
                         // update the parent to this node's parent
                         initialized_ticks::write(
-                            (pool_key, value),
+                            (pool_key, right_value),
                             TickTreeNode {
                                 parent: node.parent, left: right_node.left, right: right_node.right
                             }
@@ -447,11 +445,11 @@ mod Parlay {
                 node.right
             } else if (node.right.is_none()) {
                 match node.left {
-                    Option::Some(value) => {
-                        let left_node = initialized_ticks::read((pool_key, value));
+                    Option::Some(left_value) => {
+                        let left_node = initialized_ticks::read((pool_key, left_value));
                         // update the parent to this node's parent
                         initialized_ticks::write(
-                            (pool_key, value),
+                            (pool_key, left_value),
                             TickTreeNode {
                                 parent: node.parent, left: left_node.left, right: left_node.right
                             }
@@ -483,6 +481,22 @@ mod Parlay {
                     (pool_key, successor),
                     TickTreeNode { parent: node.parent, left: node.left, right }
                 );
+
+                match node.left {
+                    Option::Some(left_value) => {
+                        let left_node = initialized_ticks::read((pool_key, left_value));
+
+                        initialized_ticks::write(
+                            (pool_key, left_value),
+                            TickTreeNode {
+                                parent: Option::Some(successor),
+                                left: left_node.left,
+                                right: left_node.right
+                            }
+                        );
+                    },
+                    Option::None(_) => {}
+                }
 
                 Option::Some(successor)
             };
@@ -522,9 +536,7 @@ mod Parlay {
                         initialized_ticks::write(
                             (pool_key, value),
                             TickTreeNode {
-                                parent: node.parent,
-                                left: Option::Some(index),
-                                right: node.right
+                                parent: node.parent, left: Option::Some(index), right: node.right
                             }
                         );
 
