@@ -878,11 +878,11 @@ mod Parlay {
         let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
         // check the limit is not in the wrong direction and is within the price bounds
-        assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'DIRECTION');
+        assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
         assert(
             (params.sqrt_ratio_limit >= min_sqrt_ratio())
                 & params.sqrt_ratio_limit <= max_sqrt_ratio(),
-            'LIMIT'
+            'LIMIT_MAG'
         );
 
         let mut tick = pool.tick;
@@ -906,26 +906,32 @@ mod Parlay {
             }
 
             let (next_tick, is_initialized) = if (increasing) {
-                match (prev_initialized_tick(pool_key, pool.root_tick, tick)) {
-                    Option::Some(tick) => (tick, true),
-                    Option::None(_) => if (increasing) {
-                        (max_tick(), false)
-                    } else {
-                        (min_tick(), false)
-                    }
-                }
-            } else {
                 match (next_initialized_tick(pool_key, pool.root_tick, tick)) {
                     Option::Some(tick) => (tick, true),
-                    Option::None(_) => if (increasing) {
-                        (max_tick(), false)
-                    } else {
-                        (min_tick(), false)
-                    }
+                    Option::None(_) => (max_tick(), false)
+                }
+            } else {
+                match (prev_initialized_tick(pool_key, pool.root_tick, tick)) {
+                    Option::Some(tick) => (tick, true),
+                    Option::None(_) => (min_tick(), false)
                 }
             };
 
-            let step_sqrt_ratio_limit = tick_to_sqrt_ratio(next_tick);
+            let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
+
+            let step_sqrt_ratio_limit = if (increasing) {
+                if (params.sqrt_ratio_limit < next_tick_sqrt_ratio) {
+                    params.sqrt_ratio_limit
+                } else {
+                    next_tick_sqrt_ratio
+                }
+            } else {
+                if (params.sqrt_ratio_limit > next_tick_sqrt_ratio) {
+                    params.sqrt_ratio_limit
+                } else {
+                    next_tick_sqrt_ratio
+                }
+            };
 
             let swap_result = swap_result(
                 sqrt_ratio,
@@ -940,17 +946,25 @@ mod Parlay {
             sqrt_ratio = swap_result.sqrt_ratio_next;
             calculated_amount += swap_result.calculated_amount;
 
-            fee_growth_global += u256 {
-                low: 0, high: swap_result.fee_amount
-                } / u256 {
-                low: liquidity, high: 0
-            };
+            if (liquidity != 0) {
+                fee_growth_global += u256 {
+                    low: 0, high: swap_result.fee_amount
+                    } / u256 {
+                    low: liquidity, high: 0
+                };
+            }
 
-            if (sqrt_ratio == step_sqrt_ratio_limit) {
-                tick = next_tick;
+            if (sqrt_ratio == next_tick_sqrt_ratio) {
+                // we are crossing the tick, so the tick is changed to the next tick
+                tick =
+                    if (increasing) {
+                        next_tick
+                    } else {
+                        next_tick - i129 { mag: 1, sign: false }
+                    };
                 if (is_initialized) {
                     let tick_data = ticks::read((pool_key, next_tick));
-                    // update our working liquidity
+                    // update our working liquidity based on the direction we are crossing the tick
                     if (increasing) {
                         liquidity = add_delta(liquidity, tick_data.liquidity_delta);
                     } else {
@@ -992,13 +1006,13 @@ mod Parlay {
         let (amount0_delta, amount1_delta) = if (params.is_token1) {
             (
                 i129 {
-                    mag: calculated_amount, sign: params.amount.sign
+                    mag: calculated_amount, sign: !params.amount.sign
                 }, params.amount - amount_remaining
             )
         } else {
             (
                 params.amount - amount_remaining, i129 {
-                    mag: calculated_amount, sign: params.amount.sign
+                    mag: calculated_amount, sign: !params.amount.sign
                 }
             )
         };
@@ -1020,6 +1034,9 @@ mod Parlay {
                 fee_growth_global_token1: fee_growth_global_token1_next,
             }
         );
+
+        account_delta(id, pool_key.token0, amount0_delta);
+        account_delta(id, pool_key.token1, amount1_delta);
 
         Delta { amount0_delta, amount1_delta }
     }

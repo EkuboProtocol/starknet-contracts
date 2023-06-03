@@ -2,6 +2,7 @@ use parlay::types::i129::i129;
 use parlay::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
 
+use debug::PrintTrait;
 // Compute the next ratio from a delta amount0, rounded towards starting price for input, and away from starting price for output
 fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129) -> u256 {
     if (amount.mag == 0) {
