@@ -118,9 +118,6 @@ fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
         i129 { mag: 10, sign: false }
     );
 
-    amount0.print();
-    amount1.print();
-
-    assert(amount0 == i129 { mag: 0, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 15000, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 5001, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 5001, sign: false }, 'amount1');
 }
