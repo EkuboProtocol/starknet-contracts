@@ -22,8 +22,9 @@ use tests::mocks::locker::{
 mod helper {
     use super::{
         contract_address_const, ContractAddress, PoolKey, Parlay, IParlayDispatcher,
-        IParlayDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, MockERC20,
-        IMockERC20Dispatcher
+        IParlayDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+        MockERC20, IMockERC20Dispatcher, Action, ActionResult, UpdatePositionParameters,
+        SwapParameters, IMockERC20DispatcherTrait, Delta
     };
     use starknet::{deploy_syscall, ClassHash};
     use array::{Array, ArrayTrait};
@@ -97,6 +98,153 @@ mod helper {
         let locker = ICoreLockerDispatcher { contract_address: locker_address };
 
         SetupPoolResult { token0, token1, pool_key, core, locker }
+    }
+
+
+    #[derive(Drop, Copy)]
+    struct Balances {
+        token0_balance_core: u256,
+        token1_balance_core: u256,
+        token0_balance_recipient: u256,
+        token1_balance_recipient: u256,
+        token0_balance_locker: u256,
+        token1_balance_locker: u256,
+    }
+    fn get_balances(_setup: SetupPoolResult, recipient: ContractAddress) -> Balances {
+        let token0_balance_core = _setup.token0.balance_of(_setup.core.contract_address);
+        let token1_balance_core = _setup.token1.balance_of(_setup.core.contract_address);
+        let token0_balance_recipient = _setup.token0.balance_of(recipient);
+        let token1_balance_recipient = _setup.token1.balance_of(recipient);
+        let token0_balance_locker = _setup.token0.balance_of(_setup.locker.contract_address);
+        let token1_balance_locker = _setup.token1.balance_of(_setup.locker.contract_address);
+        Balances {
+            token0_balance_core,
+            token1_balance_core,
+            token0_balance_recipient,
+            token1_balance_recipient,
+            token0_balance_locker,
+            token1_balance_locker,
+        }
+    }
+
+    fn diff(x: u256, y: u256) -> i129 {
+        let (lower, upper) = if x < y {
+            (x, y)
+        } else {
+            (y, x)
+        };
+        let diff = upper - lower;
+        assert(diff.high == 0, 'diff_overflow');
+        i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
+    }
+
+    fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
+        assert(
+            diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0_delta,
+            'token0_balance_core'
+        );
+        assert(
+            diff(after.token1_balance_core, before.token1_balance_core) == delta.amount1_delta,
+            'token1_balance_core'
+        );
+
+        if (delta.amount0_delta.sign) {
+            assert(
+                diff(after.token0_balance_recipient, before.token0_balance_recipient) == -delta
+                    .amount0_delta,
+                'token0_balance_recipient'
+            );
+        } else {
+            assert(
+                diff(after.token0_balance_locker, before.token0_balance_locker) == -delta
+                    .amount0_delta,
+                'token0_balance_locker'
+            );
+        }
+        if (delta.amount1_delta.sign) {
+            assert(
+                diff(after.token1_balance_recipient, before.token1_balance_recipient) == -delta
+                    .amount1_delta,
+                'token1_balance_recipient'
+            );
+        } else {
+            assert(
+                diff(after.token1_balance_locker, before.token1_balance_locker) == -delta
+                    .amount1_delta,
+                'token1_balance_locker'
+            );
+        }
+    }
+
+    fn update_position(
+        setup: SetupPoolResult,
+        tick_lower: i129,
+        tick_upper: i129,
+        liquidity_delta: i129,
+        recipient: ContractAddress
+    ) -> Delta {
+        let before: Balances = get_balances(setup, recipient);
+        match setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower, tick_upper, liquidity_delta
+                        }, recipient
+                    )
+                )
+            ) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected');
+                Default::default()
+            },
+            ActionResult::UpdatePosition(delta) => {
+                let after: Balances = get_balances(setup, recipient);
+                assert_balances_delta(before, after, delta);
+                delta
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected');
+                Default::default()
+            },
+        }
+    }
+
+    fn swap(
+        setup: SetupPoolResult,
+        amount: i129,
+        is_token1: bool,
+        sqrt_ratio_limit: u256,
+        recipient: ContractAddress
+    ) -> Delta {
+        let before: Balances = get_balances(setup, recipient);
+
+        match setup
+            .locker
+            .call(
+                Action::Swap(
+                    (
+                        setup.pool_key, SwapParameters {
+                            amount, is_token1, sqrt_ratio_limit, 
+                        }, recipient
+                    )
+                )
+            ) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected');
+                Default::default()
+            },
+            ActionResult::UpdatePosition(_) => {
+                assert(false, 'unexpected');
+                Default::default()
+            },
+            ActionResult::Swap(delta) => {
+                let after: Balances = get_balances(setup, recipient);
+                assert_balances_delta(before, after, delta);
+                delta
+            },
+        }
     }
 }
 
@@ -817,7 +965,7 @@ mod initialized_ticks_tests {
 mod locks {
     use debug::PrintTrait;
 
-    use super::helper::{setup_pool, SetupPoolResult};
+    use super::helper::{setup_pool, swap, update_position, SetupPoolResult};
     use parlay::types::i129::{i129OptionPartialEq};
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
@@ -849,152 +997,6 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
         setup.locker.call(Action::AssertLockerId(1));
-    }
-
-    #[derive(Drop, Copy)]
-    struct Balances {
-        token0_balance_core: u256,
-        token1_balance_core: u256,
-        token0_balance_recipient: u256,
-        token1_balance_recipient: u256,
-        token0_balance_locker: u256,
-        token1_balance_locker: u256,
-    }
-    fn get_balances(_setup: SetupPoolResult, recipient: ContractAddress) -> Balances {
-        let token0_balance_core = _setup.token0.balance_of(_setup.core.contract_address);
-        let token1_balance_core = _setup.token1.balance_of(_setup.core.contract_address);
-        let token0_balance_recipient = _setup.token0.balance_of(recipient);
-        let token1_balance_recipient = _setup.token1.balance_of(recipient);
-        let token0_balance_locker = _setup.token0.balance_of(_setup.locker.contract_address);
-        let token1_balance_locker = _setup.token1.balance_of(_setup.locker.contract_address);
-        Balances {
-            token0_balance_core,
-            token1_balance_core,
-            token0_balance_recipient,
-            token1_balance_recipient,
-            token0_balance_locker,
-            token1_balance_locker,
-        }
-    }
-
-    fn diff(x: u256, y: u256) -> i129 {
-        let (lower, upper) = if x < y {
-            (x, y)
-        } else {
-            (y, x)
-        };
-        let diff = upper - lower;
-        assert(diff.high == 0, 'diff_overflow');
-        i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
-    }
-
-    fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
-        assert(
-            diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0_delta,
-            'token0_balance_core'
-        );
-        assert(
-            diff(after.token1_balance_core, before.token1_balance_core) == delta.amount1_delta,
-            'token1_balance_core'
-        );
-
-        if (delta.amount0_delta.sign) {
-            assert(
-                diff(after.token0_balance_recipient, before.token0_balance_recipient) == -delta
-                    .amount0_delta,
-                'token0_balance_recipient'
-            );
-        } else {
-            assert(
-                diff(after.token0_balance_locker, before.token0_balance_locker) == -delta
-                    .amount0_delta,
-                'token0_balance_locker'
-            );
-        }
-        if (delta.amount1_delta.sign) {
-            assert(
-                diff(after.token1_balance_recipient, before.token1_balance_recipient) == -delta
-                    .amount1_delta,
-                'token1_balance_recipient'
-            );
-        } else {
-            assert(
-                diff(after.token1_balance_locker, before.token1_balance_locker) == -delta
-                    .amount1_delta,
-                'token1_balance_locker'
-            );
-        }
-    }
-
-    fn update_position(
-        setup: SetupPoolResult,
-        tick_lower: i129,
-        tick_upper: i129,
-        liquidity_delta: i129,
-        recipient: ContractAddress
-    ) -> Delta {
-        let before: Balances = get_balances(setup, recipient);
-        match setup
-            .locker
-            .call(
-                Action::UpdatePosition(
-                    (
-                        setup.pool_key, UpdatePositionParameters {
-                            tick_lower, tick_upper, liquidity_delta
-                        }, recipient
-                    )
-                )
-            ) {
-            ActionResult::AssertLockerId(_) => {
-                assert(false, 'unexpected');
-                Default::default()
-            },
-            ActionResult::UpdatePosition(delta) => {
-                let after: Balances = get_balances(setup, recipient);
-                assert_balances_delta(before, after, delta);
-                delta
-            },
-            ActionResult::Swap(_) => {
-                assert(false, 'unexpected');
-                Default::default()
-            },
-        }
-    }
-
-    fn swap(
-        setup: SetupPoolResult,
-        amount: i129,
-        is_token1: bool,
-        sqrt_ratio_limit: u256,
-        recipient: ContractAddress
-    ) -> Delta {
-        let before: Balances = get_balances(setup, recipient);
-
-        match setup
-            .locker
-            .call(
-                Action::Swap(
-                    (
-                        setup.pool_key, SwapParameters {
-                            amount, is_token1, sqrt_ratio_limit, 
-                        }, recipient
-                    )
-                )
-            ) {
-            ActionResult::AssertLockerId(_) => {
-                assert(false, 'unexpected');
-                Default::default()
-            },
-            ActionResult::UpdatePosition(_) => {
-                assert(false, 'unexpected');
-                Default::default()
-            },
-            ActionResult::Swap(delta) => {
-                let after: Balances = get_balances(setup, recipient);
-                assert_balances_delta(before, after, delta);
-                delta
-            },
-        }
     }
 
     #[test]
@@ -1383,7 +1385,7 @@ mod locks {
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>()
         );
-        
+
         assert(delta.amount0_delta == i129 { mag: 49, sign: true }, 'amount1_delta');
         assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount0_delta');
 
