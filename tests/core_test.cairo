@@ -1155,7 +1155,7 @@ mod locks {
 
     #[test]
     #[available_gas(30000000)]
-    fn test_swap_token1_exact_input_against_small_liquidity() {
+    fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
@@ -1167,7 +1167,7 @@ mod locks {
             .token1
             .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
-        setup
+        let update_position_result = setup
             .locker
             .call(
                 Action::UpdatePosition(
@@ -1178,12 +1178,29 @@ mod locks {
                                 }, tick_upper: i129 {
                                 mag: 10, sign: false
                                 }, liquidity_delta: i129 {
-                                mag: 10000000, sign: false
+                                mag: 1000000000, sign: false
                             }
                         }, contract_address_const::<42>()
                     )
                 )
             );
+
+        match update_position_result {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(delta) => {
+                assert(
+                    delta.amount0_delta > i129 { mag: 1000, sign: false }, 'amount0_delta > 1000'
+                );
+                assert(
+                    delta.amount1_delta > i129 { mag: 1000, sign: false }, 'amount1_delta > 1000'
+                );
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected result')
+            },
+        }
 
         let result = setup
             .locker
@@ -1207,18 +1224,270 @@ mod locks {
                 assert(false, 'unexpected result')
             },
             ActionResult::Swap(delta) => {
-                assert(delta.amount0_delta == i129 { mag: 1000, sign: false }, 'amount0_delta');
-                let pool = setup.core.get_pool(setup.pool_key);
-                pool.sqrt_ratio.print();
-                delta.amount1_delta.print();
-                assert(delta.amount1_delta == i129 { mag: 987, sign: true }, 'amount1_delta');
+                assert(
+                    delta.amount0_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000'
+                );
+                assert(delta.amount1_delta == i129 { mag: 989, sign: true }, 'amount1_delta==989');
 
-                assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
-                assert(pool.root_tick == Option::None(()), 'root tick is none');
+                let pool = setup.core.get_pool(setup.pool_key);
+                assert(
+                    pool.sqrt_ratio == u256 {
+                        low: 340282030041728722151939677011487970083, high: 0
+                    },
+                    'price lower'
+                );
+                assert(
+                    pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10'
+                );
+                assert(pool.liquidity == 1000000000, 'liquidity is original');
+                assert(
+                    pool.fee_growth_global_token0 == u256 {
+                        low: 3402823669209384634633746074317, high: 0
+                    },
+                    'fgg0 == 0'
+                );
+                assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+            },
+        }
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        let update_position_result = setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 10000000, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match setup
+            .locker
+            .call(
+                Action::Swap(
+                    (
+                        setup.pool_key, SwapParameters {
+                            amount: i129 {
+                                mag: 1000, sign: false
+                            }, is_token1: false, sqrt_ratio_limit: min_sqrt_ratio(),
+                        }, contract_address_const::<42>()
+                    )
+                )
+            ) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::Swap(delta) => {
+                assert(delta.amount0_delta == i129 { mag: 51, sign: false }, 'amount0_delta==1000');
+                assert(delta.amount1_delta == i129 { mag: 49, sign: true }, 'amount1_delta==987');
+
+                let pool = setup.core.get_pool(setup.pool_key);
+                assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price min');
+                assert(
+                    pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10'
+                );
+                assert(pool.liquidity == 0, 'liquidity is 0');
+                assert(
+                    pool.fee_growth_global_token0 == u256 {
+                        low: 34028236692093846346337460743176, high: 0
+                    },
+                    'fgg0 == 0'
+                );
+                assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+            },
+        }
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        let update_position_result = setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 1000000000, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match update_position_result {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(delta) => {
+                assert(
+                    delta.amount0_delta > i129 { mag: 1000, sign: false }, 'amount0_delta > 1000'
+                );
+                assert(
+                    delta.amount1_delta > i129 { mag: 1000, sign: false }, 'amount1_delta > 1000'
+                );
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected result')
+            },
+        }
+
+        let result = setup
+            .locker
+            .call(
+                Action::Swap(
+                    (
+                        setup.pool_key, SwapParameters {
+                            amount: i129 {
+                                mag: 1000, sign: false
+                            }, is_token1: true, sqrt_ratio_limit: max_sqrt_ratio(),
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match result {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::Swap(delta) => {
+                assert(
+                    delta.amount1_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000'
+                );
+                assert(delta.amount0_delta == i129 { mag: 989, sign: true }, 'amount1_delta==989');
+
+                let pool = setup.core.get_pool(setup.pool_key);
+                assert(
+                    pool.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
+                    'price lower'
+                );
+                assert(
+                    pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10'
+                );
+                assert(pool.liquidity == 1000000000, 'liquidity is original');
+                assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+                assert(
+                    pool.fee_growth_global_token1 == u256 {
+                        low: 3402823669209384634633746074317, high: 0
+                    },
+                    'fgg1 != 0'
+                );
+            },
+        }
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        let update_position_result = setup
+            .locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        setup.pool_key, UpdatePositionParameters {
+                            tick_lower: i129 {
+                                mag: 10, sign: true
+                                }, tick_upper: i129 {
+                                mag: 10, sign: false
+                                }, liquidity_delta: i129 {
+                                mag: 10000000, sign: false
+                            }
+                        }, contract_address_const::<42>()
+                    )
+                )
+            );
+
+        match setup
+            .locker
+            .call(
+                Action::Swap(
+                    (
+                        setup.pool_key, SwapParameters {
+                            amount: i129 {
+                                mag: 1000, sign: false
+                            }, is_token1: true, sqrt_ratio_limit: max_sqrt_ratio(),
+                        }, contract_address_const::<42>()
+                    )
+                )
+            ) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::UpdatePosition(_) => {
+                assert(false, 'unexpected result')
+            },
+            ActionResult::Swap(delta) => {
+                assert(delta.amount0_delta == i129 { mag: 49, sign: true }, 'amount1_delta');
+                assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount0_delta');
+
+                let pool = setup.core.get_pool(setup.pool_key);
+                assert(pool.sqrt_ratio == max_sqrt_ratio(), 'ratio after');
+                assert(
+                    pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10'
+                );
                 assert(pool.liquidity == 0, 'liquidity is 0');
                 assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-                assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
-            }
+                assert(
+                    pool.fee_growth_global_token1 == u256 {
+                        low: 34028236692093846346337460743176, high: 0
+                    },
+                    'fgg1 != 0'
+                );
+            },
         }
     }
 }

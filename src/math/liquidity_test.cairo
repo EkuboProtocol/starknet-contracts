@@ -1,5 +1,7 @@
 use parlay::math::liquidity::liquidity_delta_to_amount_delta;
-use parlay::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants};
+use parlay::math::ticks::{
+    min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
+};
 use parlay::types::i129::{i129};
 use debug::PrintTrait;
 
@@ -101,6 +103,23 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
         i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true },
         i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false }
     );
+
+    assert(amount0 == i129 { mag: 0, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 15000, sign: false }, 'amount1');
+}
+
+#[test]
+#[available_gas(15000000)]
+fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
+    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        i129 { mag: 1000000000, sign: false },
+        i129 { mag: 10, sign: true },
+        i129 { mag: 10, sign: false }
+    );
+
+    amount0.print();
+    amount1.print();
 
     assert(amount0 == i129 { mag: 0, sign: false }, 'amount0');
     assert(amount1 == i129 { mag: 15000, sign: false }, 'amount1');

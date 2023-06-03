@@ -56,6 +56,9 @@ trait IParlay {
     #[view]
     fn get_position(pool_key: PoolKey, position_key: PositionKey) -> Position;
 
+    #[view]
+    fn get_reserves(token: ContractAddress) -> u256;
+
     #[external]
     fn set_owner(new_owner: ContractAddress);
 
@@ -152,6 +155,11 @@ mod Parlay {
     #[view]
     fn get_pool(pool_key: PoolKey) -> Pool {
         pools::read(pool_key)
+    }
+
+    #[view]
+    fn get_reserves(token: ContractAddress) -> u256 {
+        reserves::read(token)
     }
 
     #[view]
@@ -699,9 +707,9 @@ mod Parlay {
             (pool_key, index),
             Tick {
                 liquidity_delta: if is_upper {
-                    tick.liquidity_delta + liquidity_delta
-                } else {
                     tick.liquidity_delta - liquidity_delta
+                } else {
+                    tick.liquidity_delta + liquidity_delta
                 },
                 liquidity_net: next_liquidity_net,
                 fee_growth_outside_token0: tick.fee_growth_outside_token0,
@@ -987,6 +995,7 @@ mod Parlay {
                             )
                         )
                     };
+
                     // update the tick fee state
                     ticks::write(
                         (pool_key, next_tick),

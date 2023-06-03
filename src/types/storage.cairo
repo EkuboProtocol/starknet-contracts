@@ -332,16 +332,45 @@ impl TickStorageAccess of StorageAccess<Tick> {
     fn read_at_offset_internal(
         address_domain: u32, base: StorageBaseAddress, offset: u8
     ) -> SyscallResult<Tick> {
-        // todo: obviously read and write ticks
-        SyscallResult::Ok(Default::default())
+        let liquidity_delta: i129 = StorageAccess::<i129>::read_at_offset_internal(
+            address_domain, base, offset
+        )?;
+        let liquidity_net: u128 = StorageAccess::<u128>::read_at_offset_internal(
+            address_domain, base, offset + 1
+        )?;
+        let fee_growth_outside_token0: u256 = StorageAccess::<u256>::read_at_offset_internal(
+            address_domain, base, offset + 3
+        )?;
+        let fee_growth_outside_token1: u256 = StorageAccess::<u256>::read_at_offset_internal(
+            address_domain, base, offset + 5
+        )?;
+
+        SyscallResult::Ok(
+            Tick {
+                liquidity_delta, liquidity_net, fee_growth_outside_token0, fee_growth_outside_token1
+            }
+        )
     }
     fn write_at_offset_internal(
         address_domain: u32, base: starknet::StorageBaseAddress, offset: u8, value: Tick
     ) -> starknet::SyscallResult<()> {
+        StorageAccess::<i129>::write_at_offset_internal(
+            address_domain, base, offset, value.liquidity_delta
+        )?;
+        StorageAccess::<u128>::write_at_offset_internal(
+            address_domain, base, offset + 1, value.liquidity_net
+        )?;
+        StorageAccess::<u256>::write_at_offset_internal(
+            address_domain, base, offset + 3, value.fee_growth_outside_token0
+        )?;
+        StorageAccess::<u256>::write_at_offset_internal(
+            address_domain, base, offset + 5, value.fee_growth_outside_token1
+        )?;
+
         SyscallResult::Ok(())
     }
     fn size_internal(value: Tick) -> u8 {
-        4_u8
+        6_u8
     }
     fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<Tick> {
         StorageAccess::<Tick>::read_at_offset_internal(address_domain, base, 0_u8)
