@@ -9,7 +9,7 @@ use traits::Into;
 use parlay::types::keys::PoolKey;
 use parlay::types::storage::{Pool};
 use parlay::types::i129::i129;
-use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
@@ -970,8 +970,8 @@ mod locks {
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio,
-        IParlayDispatcherTrait, ContractAddress, Delta
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
+        max_tick, IParlayDispatcherTrait, ContractAddress, Delta
     };
 
 
@@ -1120,6 +1120,132 @@ mod locks {
     }
 
     #[test]
+    #[available_gas(500000000)]
+    fn test_larger_amount_liquidity_add() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        let delta = update_position(
+            setup,
+            tick_lower: i129 { mag: 10, sign: true },
+            tick_upper: i129 { mag: 10, sign: false },
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(delta.amount0_delta == i129 { mag: 5001, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 5001, sign: false }, 'amount1_delta');
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_full_range_liquidity_add() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+
+        let delta = update_position(
+            setup,
+            tick_lower: min_tick(),
+            tick_upper: max_tick(),
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(
+            delta.amount0_delta == i129 { mag: 18446739710271796308434404910, sign: false },
+            'amount0_delta'
+        );
+        assert(
+            delta.amount1_delta == i129 { mag: 18446739710271796308434404910, sign: false },
+            'amount1_delta'
+        );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_full_range_liquidity_add_and_half_burn() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+
+        update_position(
+            setup,
+            tick_lower: min_tick(),
+            tick_upper: max_tick(),
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = update_position(
+            setup,
+            tick_lower: min_tick(),
+            tick_upper: max_tick(),
+            liquidity_delta: i129 { mag: 500000000, sign: true },
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(
+            delta.amount0_delta == i129 { mag: 9131136156584539172675030429, sign: true },
+            'amount0_delta'
+        );
+        assert(
+            delta.amount1_delta == i129 { mag: 9131136156584539172675030429, sign: true },
+            'amount1_delta'
+        );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_full_range_liquidity_add_and_full_burn() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+
+        update_position(
+            setup,
+            tick_lower: min_tick(),
+            tick_upper: max_tick(),
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = update_position(
+            setup,
+            tick_lower: min_tick(),
+            tick_upper: max_tick(),
+            liquidity_delta: i129 { mag: 1000000000, sign: true },
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(
+            delta.amount0_delta == i129 { mag: 18262272313169078345350060859, sign: true },
+            'amount0_delta'
+        );
+        assert(
+            delta.amount1_delta == i129 { mag: 18262272313169078345350060859, sign: true },
+            'amount1_delta'
+        );
+    }
+
+    #[test]
     #[available_gas(8000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
@@ -1212,21 +1338,12 @@ mod locks {
             .token1
             .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
-        let update_position_delta = update_position(
+        update_position(
             setup,
             tick_lower: i129 { mag: 10, sign: true },
             tick_upper: i129 { mag: 10, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
-        );
-
-        assert(
-            update_position_delta.amount0_delta > i129 { mag: 1000, sign: false },
-            'amount0_delta > 1000'
-        );
-        assert(
-            update_position_delta.amount1_delta > i129 { mag: 1000, sign: false },
-            'amount1_delta > 1000'
         );
 
         let delta = swap(
@@ -1268,7 +1385,7 @@ mod locks {
             .token1
             .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
-        let update_position_delta = update_position(
+        update_position(
             setup,
             tick_lower: i129 { mag: 10, sign: true },
             tick_upper: i129 { mag: 10, sign: false },
@@ -1314,21 +1431,12 @@ mod locks {
             .token1
             .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
-        let update_position_delta = update_position(
+        update_position(
             setup,
             tick_lower: i129 { mag: 10, sign: true },
             tick_upper: i129 { mag: 10, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
-        );
-
-        assert(
-            update_position_delta.amount0_delta > i129 { mag: 1000, sign: false },
-            'amount0_delta > 1000'
-        );
-        assert(
-            update_position_delta.amount1_delta > i129 { mag: 1000, sign: false },
-            'amount1_delta > 1000'
         );
 
         let delta = swap(
@@ -1370,7 +1478,7 @@ mod locks {
             .token1
             .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
 
-        let update_position_delta = update_position(
+        update_position(
             setup,
             tick_lower: i129 { mag: 10, sign: true },
             tick_upper: i129 { mag: 10, sign: false },
