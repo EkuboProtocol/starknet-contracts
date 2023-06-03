@@ -1,6 +1,6 @@
-use parlay::math::fee::{compute_fee, amount_with_fee, accumulate_fee_amount};
+use ekubo::math::fee::{compute_fee, amount_with_fee, accumulate_fee_amount};
 use debug::PrintTrait;
-use parlay::types::i129::i129;
+use ekubo::types::i129::i129;
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
 const FIFTY_PERCENT_FEE: u128 = 0x80000000000000000000000000000000;

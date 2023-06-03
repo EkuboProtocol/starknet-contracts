@@ -1,8 +1,8 @@
 use core::array::SpanTrait;
 use starknet::ContractAddress;
-use parlay::types::storage::{Tick, Position, Pool, TickTreeNode};
-use parlay::types::keys::{PositionKey, PoolKey};
-use parlay::types::i129::{i129};
+use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
+use ekubo::types::keys::{PositionKey, PoolKey};
+use ekubo::types::i129::{i129};
 
 #[abi]
 trait ILocker {
@@ -85,25 +85,25 @@ trait IParlay {
 }
 
 #[contract]
-mod Parlay {
+mod Ekubo {
     use super::{
         IERC20Dispatcher, IERC20DispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait,
         ContractAddress, SwapParameters, UpdatePositionParameters, Delta
     };
 
     use array::{ArrayTrait, SpanTrait};
-    use parlay::math::ticks::{
+    use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
     };
-    use parlay::math::liquidity::liquidity_delta_to_amount_delta;
-    use parlay::math::swap::{swap_result, is_price_increasing};
-    use parlay::math::fee::{compute_fee, accumulate_fee_amount};
-    use parlay::math::muldiv::muldiv;
-    use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
-    use parlay::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
-    use parlay::types::storage::{Tick, Position, Pool, TickTreeNode};
-    use parlay::types::keys::{PositionKey, PoolKey};
+    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
+    use ekubo::math::swap::{swap_result, is_price_increasing};
+    use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
+    use ekubo::math::muldiv::muldiv;
+    use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
+    use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
+    use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
+    use ekubo::types::keys::{PositionKey, PoolKey};
 
     use starknet::{contract_address_const, get_caller_address, get_contract_address};
     use option::{Option, OptionTrait};

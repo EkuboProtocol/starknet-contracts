@@ -1,7 +1,7 @@
-use parlay::types::i129::i129;
+use ekubo::types::i129::i129;
 use debug::PrintTrait;
 
-use parlay::math::delta::{
+use ekubo::math::delta::{
     next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1, amount0_delta, amount1_delta
 };
 

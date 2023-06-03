@@ -1,4 +1,4 @@
-use parlay::types::i129::{i129, Felt252IntoI129, U128IntoI129};
+use ekubo::types::i129::{i129, Felt252IntoI129, U128IntoI129};
 use traits::{Into, TryInto};
 use option::{Option, OptionTrait};
 

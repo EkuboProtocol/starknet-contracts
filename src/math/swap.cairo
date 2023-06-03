@@ -1,8 +1,8 @@
-use parlay::types::i129::{i129};
-use parlay::math::delta::{
+use ekubo::types::i129::{i129};
+use ekubo::math::delta::{
     next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1, amount0_delta, amount1_delta
 };
-use parlay::math::fee::{compute_fee, amount_with_fee};
+use ekubo::math::fee::{compute_fee, amount_with_fee};
 use traits::Into;
 
 // consumed_amount is how much of the amount was used in this step

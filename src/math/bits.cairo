@@ -1,4 +1,4 @@
-use parlay::math::exp2::exp2;
+use ekubo::math::exp2::exp2;
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**msb(ratio)
 fn msb(x: u256) -> u8 {

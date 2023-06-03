@@ -1,6 +1,6 @@
-use parlay::math::delta::{amount0_delta, amount1_delta};
-use parlay::types::i129::i129;
-use parlay::math::ticks::tick_to_sqrt_ratio;
+use ekubo::math::delta::{amount0_delta, amount1_delta};
+use ekubo::types::i129::i129;
+use ekubo::math::ticks::tick_to_sqrt_ratio;
 
 // Returns the token0, token1 delta owed for a given change in liquidity
 fn liquidity_delta_to_amount_delta(

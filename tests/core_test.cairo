@@ -1,4 +1,4 @@
-use parlay::core::{Parlay, IParlayDispatcher, IParlayDispatcherTrait, Delta};
+use ekubo::core::{Ekubo, IParlayDispatcher, IParlayDispatcherTrait, Delta};
 use starknet::contract_address_const;
 use starknet::ContractAddress;
 use starknet::testing::{set_caller_address, set_contract_address};
@@ -6,10 +6,10 @@ use integer::u256;
 use integer::u256_from_felt252;
 use integer::BoundedInt;
 use traits::Into;
-use parlay::types::keys::PoolKey;
-use parlay::types::storage::{Pool};
-use parlay::types::i129::i129;
-use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
+use ekubo::types::keys::PoolKey;
+use ekubo::types::storage::{Pool};
+use ekubo::types::i129::i129;
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
@@ -21,7 +21,7 @@ use tests::mocks::locker::{
 
 mod helper {
     use super::{
-        contract_address_const, ContractAddress, PoolKey, Parlay, IParlayDispatcher,
+        contract_address_const, ContractAddress, PoolKey, Ekubo, IParlayDispatcher,
         IParlayDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
         MockERC20, IMockERC20Dispatcher, Action, ActionResult, UpdatePositionParameters,
         SwapParameters, IMockERC20DispatcherTrait, Delta
@@ -32,7 +32,7 @@ mod helper {
     use option::{Option, OptionTrait};
     use starknet::class_hash::Felt252TryIntoClassHash;
     use result::{Result, ResultTrait};
-    use parlay::math::utils::ContractAddressOrder;
+    use ekubo::math::utils::ContractAddressOrder;
 
     fn deploy_mock_token() -> IMockERC20Dispatcher {
         let constructor_calldata: Array<felt252> = Default::default();
@@ -80,7 +80,7 @@ mod helper {
         core_constructor_args.append(owner.into());
 
         let (core_address, _) = deploy_syscall(
-            Parlay::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
+            Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
         )
             .expect('core deploy failed');
 
@@ -249,23 +249,23 @@ mod helper {
 }
 
 mod owner_tests {
-    use super::{PoolKey, Parlay, i129, contract_address_const, set_caller_address};
+    use super::{PoolKey, Ekubo, i129, contract_address_const, set_caller_address};
     #[test]
     #[available_gas(2000000)]
     fn test_constructor_sets_owner() {
-        assert(Parlay::get_owner() == contract_address_const::<0>(), 'not set');
-        Parlay::constructor(contract_address_const::<1>());
-        let owner_read = Parlay::get_owner();
+        assert(Ekubo::get_owner() == contract_address_const::<0>(), 'not set');
+        Ekubo::constructor(contract_address_const::<1>());
+        let owner_read = Ekubo::get_owner();
         assert(owner_read == contract_address_const::<1>(), 'owner');
     }
 
     #[test]
     #[available_gas(2000000)]
     fn test_owner_can_be_changed_by_owner() {
-        Parlay::constructor(contract_address_const::<1>());
+        Ekubo::constructor(contract_address_const::<1>());
         set_caller_address(contract_address_const::<1>());
-        Parlay::set_owner(contract_address_const::<42>());
-        assert(Parlay::get_owner() == contract_address_const::<42>(), 'owner');
+        Ekubo::set_owner(contract_address_const::<42>());
+        assert(Ekubo::get_owner() == contract_address_const::<42>(), 'owner');
     }
 
     #[test]
@@ -273,18 +273,18 @@ mod owner_tests {
     #[should_panic(expected: ('OWNER_ONLY', ))]
     fn test_owner_cannot_be_changed_by_caller() {
         set_caller_address(contract_address_const::<1>());
-        Parlay::set_owner(contract_address_const::<42>());
+        Ekubo::set_owner(contract_address_const::<42>());
     }
 }
 
 mod initialize_pool_tests {
     use super::helper::{fake_pool_key};
-    use super::{PoolKey, Parlay, i129, contract_address_const};
+    use super::{PoolKey, Ekubo, i129, contract_address_const};
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
-        Parlay::initialize_pool(fake_pool_key(), i129 { mag: 1000, sign: true });
-        let pool = Parlay::get_pool(fake_pool_key());
+        Ekubo::initialize_pool(fake_pool_key(), i129 { mag: 1000, sign: true });
+        let pool = Ekubo::get_pool(fake_pool_key());
         assert(
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
@@ -306,7 +306,7 @@ mod initialize_pool_tests {
             fee: 0,
             tick_spacing: 1,
         };
-        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod initialize_pool_tests {
             fee: 0,
             tick_spacing: 1,
         };
-        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
@@ -332,7 +332,7 @@ mod initialize_pool_tests {
             fee: 0,
             tick_spacing: 1,
         };
-        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
@@ -345,7 +345,7 @@ mod initialize_pool_tests {
             fee: 0,
             tick_spacing: 0,
         };
-        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
@@ -358,7 +358,7 @@ mod initialize_pool_tests {
             fee: 0,
             tick_spacing: 1386295,
         };
-        Parlay::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
@@ -366,20 +366,20 @@ mod initialize_pool_tests {
     #[should_panic(expected: ('ALREADY_INITIALIZED', ))]
     fn test_initialize_pool_fails_already_initialized() {
         let pool_key = fake_pool_key();
-        Parlay::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
-        Parlay::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        Ekubo::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
     }
 }
 
 mod initialized_ticks_tests {
     use super::helper::{fake_pool_key};
-    use super::{Option, OptionTrait, PoolKey, Pool, Parlay, i129};
-    use parlay::math::utils::{u128_max};
+    use super::{Option, OptionTrait, PoolKey, Pool, Ekubo, i129};
+    use ekubo::math::utils::{u128_max};
 
     fn max_height(pool_key: PoolKey, from_tick: Option<i129>) -> u128 {
         match (from_tick) {
             Option::Some(value) => {
-                let node = Parlay::initialized_ticks::read((pool_key, value));
+                let node = Ekubo::initialized_ticks::read((pool_key, value));
                 u128_max(max_height(pool_key, node.left), max_height(pool_key, node.right)) + 1
             },
             Option::None(_) => 0
@@ -389,7 +389,7 @@ mod initialized_ticks_tests {
     fn check_tree_correctness(pool_key: PoolKey, tick: Option<i129>, parent: Option<i129>) {
         match tick {
             Option::Some(value) => {
-                let node = Parlay::initialized_ticks::read((pool_key, value));
+                let node = Ekubo::initialized_ticks::read((pool_key, value));
                 assert(parent == node.parent, 'parent');
                 match node.left {
                     Option::Some(left) => {
@@ -414,8 +414,8 @@ mod initialized_ticks_tests {
     }
 
     fn rebalance_tree(pool_key: PoolKey, root: i129) -> Option<i129> {
-        let pool = Parlay::pools::read(pool_key);
-        Parlay::pools::write(
+        let pool = Ekubo::pools::read(pool_key);
+        Ekubo::pools::write(
             pool_key,
             Pool {
                 sqrt_ratio: pool.sqrt_ratio,
@@ -426,13 +426,13 @@ mod initialized_ticks_tests {
                 fee_growth_global_token1: pool.fee_growth_global_token1,
             }
         );
-        Option::Some(Parlay::rebalance_tree(pool_key, root))
+        Option::Some(Ekubo::rebalance_tree(pool_key, root))
     }
 
     fn is_tree_balanced(pool_key: PoolKey, at_tick: Option<i129>) -> bool {
         match at_tick {
             Option::Some(value) => {
-                let node = Parlay::initialized_ticks::read((pool_key, value));
+                let node = Ekubo::initialized_ticks::read((pool_key, value));
                 let left_height = max_height(pool_key, node.left);
                 let right_height = max_height(pool_key, node.right);
                 let diff = if (left_height < right_height) {
@@ -452,30 +452,30 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_balanced() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        let root_node = Ekubo::initialized_ticks::read((pool_key, root_tick.unwrap()));
         assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
         assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
 
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 1, sign: true })
             ) == Default::default(),
             'left is default'
         );
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 1, sign: false })
             ) == Default::default(),
             'right is default'
@@ -486,58 +486,58 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_balanced_bigger_tree() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
-        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        let root_node = Ekubo::initialized_ticks::read((pool_key, root_tick.unwrap()));
         assert(root_node.left == Option::Some(i129 { mag: 2, sign: true }), 'root.left is -2');
         assert(root_node.right == Option::Some(i129 { mag: 2, sign: false }), 'root.right is 2');
 
-        let left_node = Parlay::initialized_ticks::read((pool_key, root_node.left.unwrap()));
+        let left_node = Ekubo::initialized_ticks::read((pool_key, root_node.left.unwrap()));
         assert(left_node.left == Option::Some(i129 { mag: 3, sign: true }), 'left.left is -3');
         assert(left_node.right == Option::Some(i129 { mag: 1, sign: true }), 'left.right is -1');
 
-        let right_node = Parlay::initialized_ticks::read((pool_key, root_node.right.unwrap()));
+        let right_node = Ekubo::initialized_ticks::read((pool_key, root_node.right.unwrap()));
         assert(right_node.left == Option::Some(i129 { mag: 1, sign: false }), 'left.left is 1');
         assert(right_node.right == Option::Some(i129 { mag: 3, sign: false }), 'left.right is 3');
 
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 3, sign: true })
             ) == Default::default(),
             'leaf -3 is default'
         );
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 1, sign: true })
             ) == Default::default(),
             'leaf -1 is default'
         );
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 1, sign: false })
             ) == Default::default(),
             'leaf 1 is default'
         );
         assert(
-            Parlay::initialized_ticks::read(
+            Ekubo::initialized_ticks::read(
                 (pool_key, i129 { mag: 3, sign: false })
             ) == Default::default(),
             'leaf 3 is default'
@@ -556,7 +556,7 @@ mod initialized_ticks_tests {
             if (next > i129 { mag: 30, sign: false }) {
                 break ();
             }
-            root = Parlay::insert_initialized_tick(pool_key, root, next);
+            root = Ekubo::insert_initialized_tick(pool_key, root, next);
             next = next + i129 { mag: 1, sign: false };
         };
 
@@ -569,7 +569,7 @@ mod initialized_ticks_tests {
             if (next < i129 { mag: 6, sign: false }) {
                 break ();
             }
-            root = Parlay::remove_initialized_tick(pool_key, root, next);
+            root = Ekubo::remove_initialized_tick(pool_key, root, next);
             next = next - i129 { mag: 1, sign: false };
         };
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
@@ -581,7 +581,7 @@ mod initialized_ticks_tests {
             if (next > i129 { mag: 4, sign: false }) {
                 break ();
             }
-            root = Parlay::remove_initialized_tick(pool_key, root, root.unwrap());
+            root = Ekubo::remove_initialized_tick(pool_key, root, root.unwrap());
             next = next + i129 { mag: 1, sign: false };
         };
         assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
@@ -596,23 +596,23 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_left() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
 
         root_tick =
-            Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        let root_node = Ekubo::initialized_ticks::read((pool_key, root_tick.unwrap()));
         assert(root_node.left == Option::None(()), 'left is gone');
         assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
     }
@@ -622,21 +622,21 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_right() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         root_tick =
-            Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        let root_node = Ekubo::initialized_ticks::read((pool_key, root_tick.unwrap()));
         assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
         assert(root_node.right == Option::None(()), 'right is gone');
     }
@@ -646,21 +646,21 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_root() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
 
         root_tick =
-            Parlay::remove_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false });
+            Ekubo::remove_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false });
         assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(root_tick == Option::Some(i129 { mag: 1, sign: false }), 'root tick is 1');
-        let root_node = Parlay::initialized_ticks::read((pool_key, root_tick.unwrap()));
+        let root_node = Ekubo::initialized_ticks::read((pool_key, root_tick.unwrap()));
         assert(root_node.parent == Option::None(()), 'parent is none');
         assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
         assert(root_node.right == Option::None(()), 'right is empty');
@@ -671,54 +671,54 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: true }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: false });
 
         assert(!is_tree_balanced(pool_key, root_tick), 'tree not balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('>-42') == i129 {
                 mag: 10, sign: true
             },
             'next tick of -42'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('<=-42') == i129 {
                 mag: 50, sign: true
             },
             'prev tick of -42'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('>42') == i129 {
                 mag: 50, sign: false
             },
             'next tick of 42'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('<=42') == i129 {
                 mag: 10, sign: false
             },
@@ -734,54 +734,54 @@ mod initialized_ticks_tests {
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next_reverse_order_insert() {
         let pool_key = fake_pool_key();
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: false }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: true });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: true });
 
         assert(!is_tree_balanced(pool_key, root_tick), 'tree not balanced');
         check_tree_correctness(pool_key, root_tick, Option::None(()));
 
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('>-42') == i129 {
                 mag: 10, sign: true
             },
             'next tick of -42'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
                 .expect('<=-42') == i129 {
                 mag: 50, sign: true
             },
             'prev tick of -42'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('>42') == i129 {
                 mag: 50, sign: false
             },
             'next tick of 42'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
                 .expect('<=42') == i129 {
                 mag: 10, sign: false
             },
@@ -799,10 +799,10 @@ mod initialized_ticks_tests {
     fn test_insert_fails_if_already_exists() {
         let pool_key = fake_pool_key();
 
-        let root_tick = Parlay::insert_initialized_tick(
+        let root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
-        Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true });
+        Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true });
     }
 
     // test that removing a tick that does not exist in the tree fails
@@ -810,7 +810,7 @@ mod initialized_ticks_tests {
     #[available_gas(50000000)]
     #[should_panic(expected: ('TICK_NOT_FOUND', ))]
     fn test_remove_fails_if_does_not_exist() {
-        Parlay::remove_initialized_tick(
+        Ekubo::remove_initialized_tick(
             fake_pool_key(), Option::None(()), i129 { mag: 1000, sign: true }
         );
     }
@@ -820,68 +820,68 @@ mod initialized_ticks_tests {
     fn test_insert_initialized_tick_next_initialized_tick() {
         let pool_key = fake_pool_key();
 
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
         root_tick =
-            Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
+            Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
 
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
                 .expect('-1001') == i129 {
                 mag: 1000, sign: true
             },
             'next tick of -1001'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
                 .expect('-1000') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of -1000'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
                 .expect('-999') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of -999'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
                 .expect('-1') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of -1'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
                 .expect('0') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 0'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
                 .expect('1') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 1'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
                 .expect('999') == i129 {
                 mag: 1000, sign: false
             },
             'next tick of 999'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
                 .is_none(),
             'next tick of 1000'
         );
         assert(
-            Parlay::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
+            Ekubo::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
                 .is_none(),
             'next tick of 1001'
         );
@@ -892,67 +892,67 @@ mod initialized_ticks_tests {
     fn test_insert_initialized_tick_prev_initialized_tick() {
         let pool_key = fake_pool_key();
 
-        let mut root_tick = Parlay::insert_initialized_tick(
+        let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
         );
-        Parlay::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
+        Ekubo::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
 
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
                 .is_none(),
             'prev tick of -1001'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
                 .expect('-1000') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of -1000'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
                 .expect('-999') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of -999'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
                 .expect('-1') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of -1'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
                 .expect('0') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of 0'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
                 .expect('1') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of 1'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
                 .expect('999') == i129 {
                 mag: 1000, sign: true
             },
             'prev tick of 999'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
                 .expect('1000') == i129 {
                 mag: 1000, sign: false
             },
             'prev tick of 1000'
         );
         assert(
-            Parlay::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
+            Ekubo::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
                 .expect('1000') == i129 {
                 mag: 1000, sign: false
             },
@@ -966,7 +966,7 @@ mod locks {
     use debug::PrintTrait;
 
     use super::helper::{setup_pool, swap, update_position, SetupPoolResult};
-    use parlay::types::i129::{i129OptionPartialEq};
+    use ekubo::types::i129::{i129OptionPartialEq};
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,

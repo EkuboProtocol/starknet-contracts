@@ -15,10 +15,10 @@ echo "$json_output" > "$temp_file"
 echo "[crate_roots]" > cairo_project.toml
 
 # Process the JSON output and create the cairo_project.toml file using jq
-jq -r '.packages[] | select(.name != "core" and .name != "parlay") | .name + " = \"" + .root + "/src\""' "$temp_file" >> cairo_project.toml
+jq -r '.packages[] | select(.name != "core" and .name != "ekubo") | .name + " = \"" + .root + "/src\""' "$temp_file" >> cairo_project.toml
 
 # Add kakarot and tests to the cairo_project.toml
-echo 'parlay = "src"' >> cairo_project.toml
+echo 'ekubo = "src"' >> cairo_project.toml
 echo 'tests = "tests"' >> cairo_project.toml
 
 # Remove the temporary file

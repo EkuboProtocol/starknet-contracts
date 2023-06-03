@@ -1,8 +1,8 @@
-use parlay::math::liquidity::liquidity_delta_to_amount_delta;
-use parlay::math::ticks::{
+use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
+use ekubo::math::ticks::{
     min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
 };
-use parlay::types::i129::{i129};
+use ekubo::types::i129::{i129};
 use debug::PrintTrait;
 
 #[test]

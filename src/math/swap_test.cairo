@@ -1,7 +1,7 @@
-use parlay::math::swap::{swap_result, is_price_increasing, SwapResult};
-use parlay::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-use parlay::types::i129::i129;
-use parlay::math::exp2::exp2;
+use ekubo::math::swap::{swap_result, is_price_increasing, SwapResult};
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use ekubo::types::i129::i129;
+use ekubo::math::exp2::exp2;
 use debug::PrintTrait;
 
 

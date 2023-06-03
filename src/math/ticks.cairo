@@ -1,4 +1,4 @@
-use parlay::types::i129::i129;
+use ekubo::types::i129::i129;
 use integer::u128_wide_mul;
 
 mod constants {
@@ -15,11 +15,11 @@ mod constants {
 }
 
 mod internal {
-    use parlay::math::bits::{msb, shr};
+    use ekubo::math::bits::{msb, shr};
     use integer::downcast;
     use option::{OptionTrait, Option};
     use core::traits::{Into, TryInto};
-    use parlay::types::i129::{i129, i129_min, i129_max};
+    use ekubo::types::i129::{i129, i129_min, i129_max};
     use integer::u256_overflow_mul;
 
 

@@ -1,5 +1,5 @@
-use parlay::types::i129::i129;
-use parlay::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
+use ekubo::types::i129::i129;
+use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
 use starknet::{contract_address_const};
 
 #[test]

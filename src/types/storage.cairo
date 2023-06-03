@@ -1,4 +1,4 @@
-use parlay::types::i129::{i129, Felt252IntoI129, i129OptionPartialEq};
+use ekubo::types::i129::{i129, Felt252IntoI129, i129OptionPartialEq};
 use starknet::ContractAddress;
 use core::starknet::storage_access::{
     StorageAccess, SyscallResult, storage_address_from_base_and_offset, StorageBaseAddress,

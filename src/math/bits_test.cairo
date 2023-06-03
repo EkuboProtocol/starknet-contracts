@@ -1,4 +1,4 @@
-use parlay::math::bits::{msb, shr};
+use ekubo::math::bits::{msb, shr};
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO', ))]

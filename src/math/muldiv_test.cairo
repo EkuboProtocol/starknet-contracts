@@ -1,4 +1,4 @@
-use parlay::math::muldiv::{div, muldiv};
+use ekubo::math::muldiv::{div, muldiv};
 
 #[test]
 #[should_panic(expected: ('MULDIV_OVERFLOW_OR_DBZ', ))]

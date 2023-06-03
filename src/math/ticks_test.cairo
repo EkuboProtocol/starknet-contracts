@@ -1,9 +1,9 @@
-use parlay::types::i129::i129;
-use parlay::math::ticks::{
+use ekubo::types::i129::i129;
+use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
     constants
 };
-use parlay::math::exp2::exp2;
+use ekubo::math::exp2::exp2;
 
 #[test]
 fn zero_tick() {

@@ -1,4 +1,4 @@
-use parlay::types::i129::i129;
+use ekubo::types::i129::i129;
 use starknet::ContractAddress;
 use hash::pedersen;
 use option::{Option, OptionTrait};

@@ -1,5 +1,5 @@
-use parlay::types::i129::i129;
-use parlay::math::muldiv::{muldiv, div};
+use ekubo::types::i129::i129;
+use ekubo::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
 
 use debug::PrintTrait;

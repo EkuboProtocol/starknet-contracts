@@ -1,8 +1,8 @@
-use parlay::types::keys::{PoolKey, PositionKey};
-use parlay::types::i129::i129;
+use ekubo::types::keys::{PoolKey, PositionKey};
+use ekubo::types::i129::i129;
 use starknet::ContractAddress;
 use serde::Serde;
-use parlay::core::{
+use ekubo::core::{
     UpdatePositionParameters, SwapParameters, Delta, IERC20Dispatcher, IERC20DispatcherTrait
 };
 
@@ -33,7 +33,7 @@ mod CoreLocker {
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
-    use parlay::core::{IParlayDispatcher, IParlayDispatcherTrait};
+    use ekubo::core::{IParlayDispatcher, IParlayDispatcherTrait};
     use tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
