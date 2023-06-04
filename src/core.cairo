@@ -43,7 +43,7 @@ impl DefaultDelta of Default<Delta> {
 }
 
 #[abi]
-trait IParlay {
+trait IEkubo {
     #[view]
     fn get_owner() -> ContractAddress;
 
@@ -79,6 +79,9 @@ trait IParlay {
 
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta;
+
+    #[view]
+    fn quote(pool_key: PoolKey, params: SwapParameters) -> Delta;
 
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta;

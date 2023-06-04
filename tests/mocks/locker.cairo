@@ -33,7 +33,7 @@ mod CoreLocker {
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
-    use ekubo::core::{IParlayDispatcher, IParlayDispatcherTrait};
+    use ekubo::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
     use tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
@@ -51,7 +51,7 @@ mod CoreLocker {
         let mut arr: Array<felt252> = Default::default();
         Serde::<Action>::serialize(@action, ref arr);
 
-        let result = IParlayDispatcher { contract_address: core::read() }.lock(arr);
+        let result = IEkuboDispatcher { contract_address: core::read() }.lock(arr);
 
         let mut result_data = result.span();
         let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(ref result_data)
@@ -70,10 +70,10 @@ mod CoreLocker {
                 contract_address: token
             }.transfer(core, u256 { low: delta.mag, high: 0 });
             // then call pay
-            assert(IParlayDispatcher { contract_address: core }.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
+            assert(IEkuboDispatcher { contract_address: core }.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
         } else if (delta < Default::default()) {
             // withdraw to recipient
-            IParlayDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+            IEkuboDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
         }
     }
 
@@ -95,7 +95,7 @@ mod CoreLocker {
             Action::UpdatePosition((
                 pool_key, params, recipient
             )) => {
-                let delta = IParlayDispatcher {
+                let delta = IEkuboDispatcher {
                     contract_address: caller
                 }.update_position(pool_key, params);
 
@@ -107,7 +107,7 @@ mod CoreLocker {
             Action::Swap((
                 pool_key, params, recipient
             )) => {
-                let delta = IParlayDispatcher { contract_address: caller }.swap(pool_key, params);
+                let delta = IEkuboDispatcher { contract_address: caller }.swap(pool_key, params);
 
                 handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
                 handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);

@@ -1,4 +1,4 @@
-use ekubo::core::{Ekubo, IParlayDispatcher, IParlayDispatcherTrait, Delta};
+use ekubo::core::{Ekubo, IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
 use starknet::contract_address_const;
 use starknet::ContractAddress;
 use starknet::testing::{set_caller_address, set_contract_address};
@@ -21,8 +21,8 @@ use tests::mocks::locker::{
 
 mod helper {
     use super::{
-        contract_address_const, ContractAddress, PoolKey, Ekubo, IParlayDispatcher,
-        IParlayDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+        contract_address_const, ContractAddress, PoolKey, Ekubo, IEkuboDispatcher,
+        IEkuboDispatcherTrait, i129, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
         MockERC20, IMockERC20Dispatcher, Action, ActionResult, UpdatePositionParameters,
         SwapParameters, IMockERC20DispatcherTrait, Delta
     };
@@ -57,7 +57,7 @@ mod helper {
         token0: IMockERC20Dispatcher,
         token1: IMockERC20Dispatcher,
         pool_key: PoolKey,
-        core: IParlayDispatcher,
+        core: IEkuboDispatcher,
         locker: ICoreLockerDispatcher
     }
 
@@ -84,7 +84,7 @@ mod helper {
         )
             .expect('core deploy failed');
 
-        let core = IParlayDispatcher { contract_address: core_address };
+        let core = IEkuboDispatcher { contract_address: core_address };
 
         core.initialize_pool(pool_key, initial_tick);
 
@@ -971,7 +971,7 @@ mod locks {
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, IParlayDispatcherTrait, ContractAddress, Delta
+        max_tick, IEkuboDispatcherTrait, ContractAddress, Delta
     };
 
 
