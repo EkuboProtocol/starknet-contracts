@@ -80,9 +80,6 @@ trait IEkubo {
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta;
 
-    #[view]
-    fn quote(pool_key: PoolKey, params: SwapParameters) -> Delta;
-
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta;
 }
