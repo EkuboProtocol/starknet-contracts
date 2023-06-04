@@ -1094,7 +1094,7 @@ mod locks {
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
     }
-    
+
     #[test]
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_no_liquidity() {
@@ -1104,7 +1104,7 @@ mod locks {
 
         let delta = swap(
             setup,
-            amount: i129 { mag: 1, sign:true },
+            amount: i129 { mag: 1, sign: true },
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
@@ -1130,7 +1130,7 @@ mod locks {
 
         let delta = swap(
             setup,
-            amount: i129 { mag: 1, sign: true},
+            amount: i129 { mag: 1, sign: true },
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
@@ -1196,6 +1196,53 @@ mod locks {
 
     #[test]
     #[available_gas(30000000)]
+    fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        update_position(
+            setup,
+            tick_lower: i129 { mag: 10, sign: true },
+            tick_upper: i129 { mag: 10, sign: false },
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1000, sign: true },
+            is_token1: false,
+            sqrt_ratio_limit: max_sqrt_ratio(),
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(delta.amount0_delta == i129 { mag: 1000, sign: true }, 'amount0_delta==1000');
+        assert(delta.amount1_delta == i129 { mag: 1010, sign: false }, 'amount1_delta==989');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(
+            pool.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
+            'price lower'
+        );
+        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
+        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(
+            pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
+            'fgg0 == 0'
+        );
+        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+    }
+
+    #[test]
+    #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
@@ -1229,6 +1276,52 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price min');
+        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(
+            pool.fee_growth_global_token0 == u256 {
+                low: 34028236692093846346337460743176, high: 0
+            },
+            'fgg0 != 0'
+        );
+        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        update_position(
+            setup,
+            tick_lower: i129 { mag: 10, sign: true },
+            tick_upper: i129 { mag: 10, sign: false },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1000, sign: true },
+            is_token1: false,
+            sqrt_ratio_limit: max_sqrt_ratio(),
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(delta.amount0_delta == i129 { mag: 50, sign: true }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 50, sign: false }, 'amount1_delta');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price min');
         assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(
@@ -1289,6 +1382,53 @@ mod locks {
 
     #[test]
     #[available_gas(30000000)]
+    fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        update_position(
+            setup,
+            tick_lower: i129 { mag: 10, sign: true },
+            tick_upper: i129 { mag: 10, sign: false },
+            liquidity_delta: i129 { mag: 1000000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1000, sign: true },
+            is_token1: true,
+            sqrt_ratio_limit: min_sqrt_ratio(),
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(delta.amount1_delta == i129 { mag: 1000, sign: true }, 'amount0_delta');
+        assert(delta.amount0_delta == i129 { mag: 1010, sign: false }, 'amount1_delta');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(
+            pool.sqrt_ratio == u256 { low: 340282023235747873315526509423414705371, high: 0 },
+            'price'
+        );
+        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
+        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(
+            pool.fee_growth_global_token1 == u256 { low: 3402823669209384634633746074317, high: 0 },
+            'fgg1 != 0'
+        );
+    }
+
+    #[test]
+    #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
@@ -1317,11 +1457,57 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 49, sign: true }, 'amount1_delta');
-        assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount0_delta');
+        assert(delta.amount0_delta == i129 { mag: 49, sign: true }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == max_sqrt_ratio(), 'ratio after');
+        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(
+            pool.fee_growth_global_token1 == u256 {
+                low: 34028236692093846346337460743176, high: 0
+            },
+            'fgg1 != 0'
+        );
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+
+        update_position(
+            setup,
+            tick_lower: i129 { mag: 10, sign: true },
+            tick_upper: i129 { mag: 10, sign: false },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1000, sign: true },
+            is_token1: true,
+            sqrt_ratio_limit: min_sqrt_ratio(),
+            recipient: contract_address_const::<42>()
+        );
+
+        assert(delta.amount0_delta == i129 { mag: 50, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 50, sign: true }, 'amount1_delta');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(pool.sqrt_ratio == min_sqrt_ratio(), 'ratio after');
         assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
