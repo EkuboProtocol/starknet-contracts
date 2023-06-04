@@ -1094,7 +1094,58 @@ mod locks {
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
     }
+    
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token0_exact_output_no_liquidity() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
 
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1, sign:true },
+            is_token1: false,
+            sqrt_ratio_limit: max_sqrt_ratio(),
+            recipient: contract_address_const::<42>(),
+        );
+
+        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
+        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
+        assert(pool.root_tick == Option::None(()), 'root tick is none');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_swap_token1_exact_output_no_liquidity() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 1, sign: true},
+            is_token1: true,
+            sqrt_ratio_limit: min_sqrt_ratio(),
+            recipient: contract_address_const::<42>(),
+        );
+
+        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
+        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price is min');
+        assert(pool.root_tick == Option::None(()), 'root tick is none');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+    }
 
     #[test]
     #[available_gas(30000000)]
