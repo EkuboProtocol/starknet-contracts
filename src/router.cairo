@@ -63,10 +63,10 @@ struct SwapStep {
 // A step in a plan that executes inside a lock
 #[derive(Drop, Serde)]
 enum PlanStep {
-    swap: SwapStep,
-    merge: MergeStep,
-    split: SplitStep,
-    send: SendStep
+    Swap: SwapStep,
+    Merge: MergeStep,
+    Split: SplitStep,
+    Send: SendStep
 }
 
 // A plan is a list of steps that can be executed within the context of a single lock.
@@ -127,12 +127,14 @@ mod Router {
     use super::{
         ContractAddress, Serde, PoolKey, i129, IEkuboDispatcher, IEkuboDispatcherTrait,
         CallbackData, GetExecutionPlanParams, Plan, ArrayTrait, Option, OptionTrait,
-        IERC20Dispatcher, IERC20DispatcherTrait, ExecuteResult, get_caller_address, StepBalancesKey
+        IERC20Dispatcher, IERC20DispatcherTrait, ExecuteResult, get_caller_address, StepBalancesKey,
+        PlanStep
     };
 
     struct Storage {
         core: ContractAddress,
-        balances: LegacyMap<StepBalancesKey, u128>
+        balances: LegacyMap<StepBalancesKey, u128>,
+        nonzero_count: u128
     }
 
     #[constructor]
@@ -181,6 +183,23 @@ mod Router {
                 arr
             },
             CallbackData::Execute(plan) => {
+                let mut i: usize = 0;
+                loop {
+                    if (i >= plan.steps.len()) {
+                        break ();
+                    }
+                    let step = plan.steps.at(i);
+
+                    match step {
+                        PlanStep::Swap(params) => {},
+                        PlanStep::Merge(params) => {},
+                        PlanStep::Split(params) => {},
+                        PlanStep::Send(params) => {},
+                    };
+
+                    i = i + 1;
+                };
+
                 let mut arr: Array<felt252> = Default::default();
                 // Serde::<ExecuteResult>::serialize(@result, ref arr);
                 arr

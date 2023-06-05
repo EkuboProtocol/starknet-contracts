@@ -738,9 +738,13 @@ mod Ekubo {
         // pool must be initialized
         assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
 
+        let (sqrt_ratio_lower, sqrt_ratio_upper) = (
+            tick_to_sqrt_ratio(params.tick_lower), tick_to_sqrt_ratio(params.tick_upper)
+        );
+
         // first compute the amount deltas due to the liquidity delta
         let (mut amount0_delta, mut amount1_delta) = liquidity_delta_to_amount_delta(
-            pool.sqrt_ratio, params.liquidity_delta, params.tick_lower, params.tick_upper
+            pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
         );
 
         // first, account the withdrawal protocol fee, because it's based on the deltas
