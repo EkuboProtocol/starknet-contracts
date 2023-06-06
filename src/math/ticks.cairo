@@ -74,7 +74,7 @@ mod internal {
         r = by_2_127(r * r);
         let mut f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x8000000000000000;
+            log_2 = log_2 + 0x8000000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -82,7 +82,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x4000000000000000;
+            log_2 = log_2 + 0x4000000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -90,7 +90,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x2000000000000000;
+            log_2 = log_2 + 0x2000000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -98,7 +98,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x1000000000000000;
+            log_2 = log_2 + 0x1000000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -106,7 +106,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x800000000000000;
+            log_2 = log_2 + 0x800000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -114,7 +114,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x400000000000000;
+            log_2 = log_2 + 0x400000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -122,7 +122,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x200000000000000;
+            log_2 = log_2 + 0x200000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -130,7 +130,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x100000000000000;
+            log_2 = log_2 + 0x100000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -138,7 +138,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x80000000000000;
+            log_2 = log_2 + 0x80000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -146,7 +146,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x40000000000000;
+            log_2 = log_2 + 0x40000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -154,7 +154,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x20000000000000;
+            log_2 = log_2 + 0x20000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -162,7 +162,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x10000000000000;
+            log_2 = log_2 + 0x10000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -170,7 +170,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x8000000000000;
+            log_2 = log_2 + 0x8000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -178,7 +178,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x4000000000000;
+            log_2 = log_2 + 0x4000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -186,7 +186,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x2000000000000;
+            log_2 = log_2 + 0x2000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -194,7 +194,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x1000000000000;
+            log_2 = log_2 + 0x1000000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -202,7 +202,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x800000000000;
+            log_2 = log_2 + 0x800000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -210,7 +210,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x400000000000;
+            log_2 = log_2 + 0x400000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -218,7 +218,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x200000000000;
+            log_2 = log_2 + 0x200000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -226,7 +226,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x100000000000;
+            log_2 = log_2 + 0x100000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -234,7 +234,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x80000000000;
+            log_2 = log_2 + 0x80000000000;
         }
         r = shr(downcast(f).unwrap(), r);
 
@@ -242,7 +242,7 @@ mod internal {
         r = by_2_127(r * r);
         f = r.high;
         if f > 0 {
-            log_2 = log_2 +  0x40000000000;
+            log_2 = log_2 + 0x40000000000;
         }
 
         (log_2, false)
