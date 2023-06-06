@@ -1,7 +1,7 @@
 use ekubo::types::i129::i129;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
-    constants
+    constants, internal as ticks_internal
 };
 use ekubo::math::exp2::exp2;
 
@@ -137,6 +137,14 @@ fn tick_magnitude_exceeds_min() {
 #[should_panic(expected: ('TICK_MAGNITUDE', ))]
 fn tick_magnitude_exceeds_max() {
     tick_to_sqrt_ratio(max_tick() + i129 { mag: 1, sign: false });
+}
+
+#[test]
+#[available_gas(1600000)]
+fn test_log2_2_128() {
+    let (log2, sign) = ticks_internal::log2(u256 { high: 1, low: 0 });
+    assert(log2 == 0, 'log2(2**128).mag');
+    assert(sign == false, 'log2(2**128).sign');
 }
 
 #[test]

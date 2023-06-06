@@ -103,7 +103,6 @@ struct StepBalancesKey {
     token: ContractAddress
 }
 
-
 impl StepBalancesKeyHash of LegacyHash<StepBalancesKey> {
     fn hash(state: felt252, value: StepBalancesKey) -> felt252 {
         pedersen(state, pedersen(value.id, value.token.into()))

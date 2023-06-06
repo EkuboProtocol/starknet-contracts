@@ -4,7 +4,7 @@ use integer::u128_wide_mul;
 mod constants {
     const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
-// doubling of sqrt ratio => quadrupling of price
+    // doubling of sqrt ratio => quadrupling of price
     const TICKS_IN_DOUBLE_SQRT_RATIO: u128 = 1386295;
 
     const MAX_SQRT_RATIO_HIGH: u128 = 18446739710271796309;
@@ -20,7 +20,7 @@ mod internal {
     use option::{OptionTrait, Option};
     use core::traits::{Into, TryInto};
     use ekubo::types::i129::{i129, i129_min, i129_max};
-    use integer::u256_overflow_mul;
+    use integer::{u256_overflow_mul, u128_wide_mul};
 
 
     // Each step in the approximation performs a multiplication and a shift
@@ -43,6 +43,11 @@ mod internal {
         }
     }
 
+    fn unsafe_mul(x: u128, y: u128) -> u128 {
+        let (_, low) = u128_wide_mul(x, y);
+        return low;
+    }
+
     fn log2(x: u256) -> (u128, bool) {
         // negative result, compute log 2 of reciprocal
         if (x.high == 0) {
@@ -61,134 +66,134 @@ mod internal {
 
         // 63
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x8000000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        let mut f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x8000000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 62
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x4000000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x4000000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 61
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x2000000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x2000000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 60
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x1000000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x1000000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 59
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x800000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x800000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 58
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x400000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x400000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 57
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x200000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x200000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 56
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x100000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x100000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 55
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x80000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x80000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 54
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x40000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x40000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 53
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x20000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x20000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 52
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x10000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x10000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 51
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x8000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x8000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 50
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x4000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x4000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 49
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x2000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x2000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 48
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x1000000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x1000000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 47
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x800000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x800000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 46
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x400000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x400000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 45
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x200000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x200000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 44
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x100000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x100000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 43
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x80000000000, high: 0 }).low;
-        r = shr(downcast(f.low).unwrap(), r);
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x80000000000);
+        r = shr(downcast(f).unwrap(), r);
 
         // 42
         r = (r * r) / u256 { low: 0x80000000000000000000000000000000, high: 0 };
-        let f = (r / u256 { low: 0, high: 0x1 });
-        log_2 = log_2 | (f * u256 { low: 0x40000000000, high: 0 }).low;
+        f = r.high;
+        log_2 = log_2 | unsafe_mul(f, 0x40000000000);
 
         (log_2, false)
     }
@@ -337,12 +342,14 @@ fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
             i129 {
                 mag: (tick_mag_x128 + error + u256 {
                     low: 0xffffffffffffffffffffffffffffffff, high: 0
-                }).high,
+                })
+                    .high,
                 sign
                 }, i129 {
                 mag: (internal::max(tick_mag_x128, error) - error + u256 {
                     low: 0xffffffffffffffffffffffffffffffff, high: 0
-                }).high,
+                })
+                    .high,
                 sign
             }
         )
@@ -355,7 +362,6 @@ fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
             }
         )
     };
-
 
     if (tick_low == tick_high) {
         return tick_low;

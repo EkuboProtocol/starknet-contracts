@@ -42,6 +42,7 @@ fn msb(x: u256) -> u8 {
 }
 
 // Computes x>>n
+#[inline(always)]
 fn shr(n: u8, x: u256) -> u256 {
     x / exp2(n)
 }
