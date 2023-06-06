@@ -20,7 +20,7 @@ mod internal {
     use option::{OptionTrait, Option};
     use core::traits::{Into, TryInto};
     use ekubo::types::i129::{i129, i129_min, i129_max};
-    use integer::{u256_overflow_mul, u128_wide_mul};
+    use integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
 
 
     // Each step in the approximation performs a multiplication and a shift
@@ -49,9 +49,15 @@ mod internal {
         return low;
     }
 
+    use debug::PrintTrait;
     #[inline(always)]
     fn by_2_127(x: u256) -> u256 {
-        x / u256 { low: 0x80000000000000000000000000000000, high: 0 }
+        let (sum, overflow) = u256_overflowing_add(x, x);
+        u256 { low: sum.high, high: if overflow {
+            1
+        } else {
+            0
+        } }
     }
 
     fn log2(x: u256) -> (u128, bool) {

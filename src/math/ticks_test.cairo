@@ -140,12 +140,47 @@ fn tick_magnitude_exceeds_max() {
 }
 
 #[test]
-#[available_gas(1300000)]
+#[available_gas(1200000)]
 fn test_log2_2_128() {
     let (log2, sign) = ticks_internal::log2(u256 { high: 1, low: 0 });
     assert(log2 == 0, 'log2(2**128).mag');
     assert(sign == false, 'log2(2**128).sign');
 }
+
+#[test]
+fn test_internal_div_by_2_127() {
+    assert(
+        ticks_internal::by_2_127(u256 { high: 1, low: 0 }) == u256 { low: 2, high: 0 },
+        '2n**128n/2n**127n'
+    );
+    assert(
+        ticks_internal::by_2_127(
+            u256 { high: 0, low: 0x80000000000000000000000000000000 }
+        ) == u256 {
+            low: 1, high: 0
+        },
+        '2n**127n/2n**127n'
+    );
+    assert(
+        ticks_internal::by_2_127(
+            u256 { high: 0, low: 0x40000000000000000000000000000000 }
+        ) == u256 {
+            low: 0, high: 0
+        },
+        '2n**126n/2n**127n'
+    );
+    assert(
+        ticks_internal::by_2_127(
+            u256 {
+                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
+            }
+        ) == u256 {
+            low: 0xffffffffffffffffffffffffffffffff, high: 0x01
+        },
+        'max/2n**127n'
+    );
+}
+
 
 #[test]
 #[available_gas(7000000)]
