@@ -28,7 +28,7 @@ mod internal {
     #[inline(always)]
     fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
         let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
-        return res / u256 { high: 1, low: 0 };
+        return u256 { low: res.high, high: 0 };
     }
 
     // 56234808244317829948461091929465028608 = 0x3ffffffffff (the remaining log2 bits) * 25572630076711825471857579 (the conversion rate);
