@@ -5,9 +5,8 @@ description = "An AMM protocol built in Cairo featuring concentrated liquidity"
 homepage = "https://github.com/ekubo"
 cairo-version = "1.1.0"
 
-[scripts]
-compile = "starknet-compile --allowed-libfuncs-list-name experimental_v0.1.0 ."
-test = "./scripts/generate_cairo_project.sh && cairo-test . --starknet"
+[dependencies]
+starknet = ">=1.1.0"
 
 [[target.starknet-contract]]
 

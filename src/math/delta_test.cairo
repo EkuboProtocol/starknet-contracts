@@ -117,7 +117,7 @@ fn test_amount1_delta_price_down_round_up() {
         1000000,
         true
     );
-    assert(delta ==1000, 'delta');
+    assert(delta == 1000, 'delta');
 }
 
 #[test]

@@ -5,3 +5,5 @@ mod router;
 
 #[cfg(tests)]
 mod core_test;
+mod tests;
+

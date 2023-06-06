@@ -83,28 +83,11 @@ impl i129LegacyHash of LegacyHash<i129> {
 
 impl i129StorageAccess of StorageAccess<i129> {
     fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<i129> {
-        StorageAccess::<i129>::read_at_offset_internal(address_domain, base, 0_u8)
-    }
-    fn write(address_domain: u32, base: StorageBaseAddress, value: i129) -> SyscallResult<()> {
-        StorageAccess::<i129>::write_at_offset_internal(address_domain, base, 0_u8, value)
-    }
-    fn read_at_offset_internal(
-        address_domain: u32, base: StorageBaseAddress, offset: u8
-    ) -> SyscallResult<i129> {
-        let x: felt252 = StorageAccess::<felt252>::read_at_offset_internal(
-            address_domain, base, offset
-        )?;
+        let x: felt252 = StorageAccess::<felt252>::read(address_domain, base)?;
         Result::Ok(x.into())
     }
-    fn write_at_offset_internal(
-        address_domain: u32, base: starknet::StorageBaseAddress, offset: u8, value: i129
-    ) -> starknet::SyscallResult<()> {
-        StorageAccess::<felt252>::write_at_offset_internal(
-            address_domain, base, offset, value.into()
-        )
-    }
-    fn size_internal(value: i129) -> u8 {
-        1_u8
+    fn write(address_domain: u32, base: StorageBaseAddress, value: i129) -> SyscallResult<()> {
+        StorageAccess::<felt252>::write(address_domain, base, value.into())
     }
 }
 

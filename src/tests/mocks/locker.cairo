@@ -1,6 +1,7 @@
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::i129;
 use starknet::ContractAddress;
+use array::ArrayTrait;
 use serde::Serde;
 use ekubo::core::{
     UpdatePositionParameters, SwapParameters, Delta, IERC20Dispatcher, IERC20DispatcherTrait
@@ -34,7 +35,7 @@ mod CoreLocker {
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
     use ekubo::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
-    use tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
     struct Storage {
@@ -48,7 +49,7 @@ mod CoreLocker {
 
     #[external]
     fn call(action: Action) -> ActionResult {
-        let mut arr: Array<felt252> = Default::default();
+        let mut arr: Array<felt252> = ArrayTrait::new();
         Serde::<Action>::serialize(@action, ref arr);
 
         let result = IEkuboDispatcher { contract_address: core::read() }.lock(arr);
@@ -70,7 +71,10 @@ mod CoreLocker {
                 contract_address: token
             }.transfer(core, u256 { low: delta.mag, high: 0 });
             // then call pay
-            assert(IEkuboDispatcher { contract_address: core }.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
+            assert(
+                IEkuboDispatcher { contract_address: core }.deposit(token) == delta.mag,
+                'DEPOSIT_FAILED'
+            );
         } else if (delta < Default::default()) {
             // withdraw to recipient
             IEkuboDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
@@ -116,7 +120,7 @@ mod CoreLocker {
             }
         };
 
-        let mut arr: Array<felt252> = Default::default();
+        let mut arr: Array<felt252> = ArrayTrait::new();
         Serde::<ActionResult>::serialize(@result, ref arr);
         arr
     }

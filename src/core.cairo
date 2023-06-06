@@ -352,7 +352,7 @@ mod Ekubo {
     // Rebalances a pool's initialized ticks binary search tree rooted at a given tick, allowing for more efficient swaps
     #[external]
     fn rebalance_tree(pool_key: PoolKey, at_tick: i129) -> i129 {
-        let mut in_order_ticks: Array<(i129, TickTreeNode)> = Default::default();
+        let mut in_order_ticks: Array<(i129, TickTreeNode)> = ArrayTrait::new();
         append_in_order_sorted_ticks(ref in_order_ticks, pool_key, at_tick);
 
         let node = initialized_ticks::read((pool_key, at_tick));

@@ -143,7 +143,7 @@ mod Router {
 
     #[external]
     fn get_execution_plan(params: GetExecutionPlanParams) -> Plan {
-        let mut arr: Array<felt252> = Default::default();
+        let mut arr: Array<felt252> = ArrayTrait::new();
         Serde::<CallbackData>::serialize(@CallbackData::GetExecutionPlan(params), ref arr);
 
         let result = IEkuboDispatcher { contract_address: core::read() }.lock(arr);
@@ -154,7 +154,7 @@ mod Router {
 
     #[external]
     fn execute(plan: Plan) {
-        let mut arr: Array<felt252> = Default::default();
+        let mut arr: Array<felt252> = ArrayTrait::new();
         Serde::<Plan>::serialize(@plan, ref arr);
 
         let result = IEkuboDispatcher { contract_address: core::read() }.lock(arr);
@@ -177,7 +177,7 @@ mod Router {
 
         match callback_data {
             CallbackData::GetExecutionPlan(params) => {
-                let mut arr: Array<felt252> = Default::default();
+                let mut arr: Array<felt252> = ArrayTrait::new();
                 // Serde::<Plan>::serialize(@result, ref arr);
                 arr
             },
@@ -199,7 +199,7 @@ mod Router {
                     i = i + 1;
                 };
 
-                let mut arr: Array<felt252> = Default::default();
+                let mut arr: Array<felt252> = ArrayTrait::new();
                 // Serde::<ExecuteResult>::serialize(@result, ref arr);
                 arr
             },

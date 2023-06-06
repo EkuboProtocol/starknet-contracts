@@ -13,12 +13,11 @@ use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
-use tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 
-use tests::helper::{fake_pool_key, setup_pool, swap, update_position, SetupPoolResult};
+use ekubo::tests::helper::{FEE_ONE_PERCENT, setup_pool, swap, update_position, SetupPoolResult};
 
-
-use tests::mocks::locker::{
+use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
@@ -53,12 +52,18 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use super::{fake_pool_key, PoolKey, Ekubo, i129, contract_address_const};
+    use super::{PoolKey, Ekubo, i129, contract_address_const};
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
-        Ekubo::initialize_pool(fake_pool_key(), i129 { mag: 1000, sign: true });
-        let pool = Ekubo::get_pool(fake_pool_key());
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
+        Ekubo::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        let pool = Ekubo::get_pool(pool_key);
         assert(
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
@@ -139,14 +144,19 @@ mod initialize_pool_tests {
     #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', ))]
     fn test_initialize_pool_fails_already_initialized() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         Ekubo::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         Ekubo::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
     }
 }
 
 mod initialized_ticks_tests {
-    use super::{fake_pool_key, Option, OptionTrait, PoolKey, Pool, Ekubo, i129};
+    use super::{Option, OptionTrait, PoolKey, Pool, Ekubo, i129, contract_address_const};
     use ekubo::math::utils::{u128_max};
 
     fn max_height(pool_key: PoolKey, from_tick: Option<i129>) -> u128 {
@@ -224,7 +234,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -258,7 +273,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_bigger_tree() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -322,7 +342,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(5000000000)]
     fn test_insert_sorted_ticks_and_removes() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root: Option<i129> = Option::None(());
         let mut next: i129 = i129 { mag: 0, sign: false };
         loop {
@@ -368,7 +393,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_left() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -394,7 +424,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_right() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -418,7 +453,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_balanced_remove_root() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 0, sign: false }
         );
@@ -443,7 +483,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: true }
         );
@@ -506,7 +551,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(500000000)]
     fn test_insert_many_ticks_prev_next_reverse_order_insert() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 100, sign: false }
         );
@@ -570,7 +620,12 @@ mod initialized_ticks_tests {
     #[available_gas(50000000)]
     #[should_panic(expected: ('ALREADY_EXISTS', ))]
     fn test_insert_fails_if_already_exists() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
 
         let root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -584,14 +639,26 @@ mod initialized_ticks_tests {
     #[should_panic(expected: ('TICK_NOT_FOUND', ))]
     fn test_remove_fails_if_does_not_exist() {
         Ekubo::remove_initialized_tick(
-            fake_pool_key(), Option::None(()), i129 { mag: 1000, sign: true }
+            PoolKey {
+                token0: contract_address_const::<1>(),
+                token1: contract_address_const::<2>(),
+                fee: 0,
+                tick_spacing: 1,
+            },
+            Option::None(()),
+            i129 { mag: 1000, sign: true }
         );
     }
 
     #[test]
     #[available_gas(50000000)]
     fn test_insert_initialized_tick_next_initialized_tick() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
 
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -663,7 +730,12 @@ mod initialized_ticks_tests {
     #[test]
     #[available_gas(50000000)]
     fn test_insert_initialized_tick_prev_initialized_tick() {
-        let pool_key = fake_pool_key();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1,
+        };
 
         let mut root_tick = Ekubo::insert_initialized_tick(
             pool_key, Option::None(()), i129 { mag: 1000, sign: true }
@@ -737,7 +809,7 @@ mod initialized_ticks_tests {
 mod locks {
     use debug::PrintTrait;
 
-    use super::{setup_pool, swap, update_position, SetupPoolResult};
+    use super::{setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult};
     use ekubo::types::i129::{i129OptionPartialEq};
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
@@ -745,9 +817,6 @@ mod locks {
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, IEkuboDispatcherTrait, ContractAddress, Delta
     };
-
-
-    const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
     #[test]
     #[available_gas(500000000)]

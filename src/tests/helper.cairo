@@ -6,11 +6,11 @@ use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Ekubo, IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
 use integer::{u256, u256_from_felt252, BoundedInt};
 use result::{Result, ResultTrait};
-use traits::{Into,TryInto};
+use traits::{Into, TryInto};
 use array::{Array, ArrayTrait};
 use option::{Option, OptionTrait};
-use tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use tests::mocks::locker::{
+use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
@@ -18,22 +18,16 @@ use starknet::testing::{set_caller_address, set_contract_address};
 use starknet::{deploy_syscall, ClassHash, contract_address_const, ContractAddress};
 use starknet::class_hash::Felt252TryIntoClassHash;
 
+const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
+
+
 fn deploy_mock_token() -> IMockERC20Dispatcher {
-    let constructor_calldata: Array<felt252> = Default::default();
+    let constructor_calldata: Array<felt252> = ArrayTrait::new();
     let (token_address, _) = deploy_syscall(
         MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_calldata.span(), true
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
-}
-
-fn fake_pool_key() -> PoolKey {
-    PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
-        fee: 0,
-        tick_spacing: 1
-    }
 }
 
 #[derive(Copy, Drop)]
@@ -43,6 +37,29 @@ struct SetupPoolResult {
     pool_key: PoolKey,
     core: IEkuboDispatcher,
     locker: ICoreLockerDispatcher
+}
+
+fn deploy_core(owner: ContractAddress) -> IEkuboDispatcher {
+    let mut core_constructor_args: Array<felt252> = ArrayTrait::new();
+    core_constructor_args.append(owner.into());
+
+    let (core_address, _) = deploy_syscall(
+        Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
+    )
+        .expect('core deploy failed');
+
+    IEkuboDispatcher { contract_address: core_address }
+}
+
+fn deploy_locker(core: IEkuboDispatcher) -> ICoreLockerDispatcher {
+    let mut locker_constructor_args: Array<felt252> = ArrayTrait::new();
+    locker_constructor_args.append(core.contract_address.into());
+    let (locker_address, _) = deploy_syscall(
+        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, locker_constructor_args.span(), true
+    )
+        .expect('locker deploy failed');
+
+    ICoreLockerDispatcher { contract_address: locker_address }
 }
 
 fn setup_pool(
@@ -60,26 +77,10 @@ fn setup_pool(
         token0: token0.contract_address, token1: token1.contract_address, fee, tick_spacing
     };
 
-    let mut core_constructor_args: Array<felt252> = Default::default();
-    core_constructor_args.append(owner.into());
-
-    let (core_address, _) = deploy_syscall(
-        Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
-    )
-        .expect('core deploy failed');
-
-    let core = IEkuboDispatcher { contract_address: core_address };
-
+    let core = deploy_core(owner);
     core.initialize_pool(pool_key, initial_tick);
 
-    let mut locker_constructor_args: Array<felt252> = Default::default();
-    locker_constructor_args.append(core_address.into());
-    let (locker_address, _) = deploy_syscall(
-        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, locker_constructor_args.span(), true
-    )
-        .expect('locker deploy failed');
-
-    let locker = ICoreLockerDispatcher { contract_address: locker_address };
+    let locker = deploy_locker(core);
 
     SetupPoolResult { token0, token1, pool_key, core, locker }
 }

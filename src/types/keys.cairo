@@ -1,5 +1,5 @@
 use ekubo::types::i129::i129;
-use starknet::ContractAddress;
+use starknet::{contract_address_const, ContractAddress};
 use hash::pedersen;
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
@@ -11,6 +11,17 @@ struct PoolKey {
     token1: ContractAddress,
     fee: u128,
     tick_spacing: u128
+}
+
+impl DefaultPoolKey of Default<PoolKey> {
+    fn default() -> PoolKey {
+        PoolKey {
+            token0: contract_address_const::<0>(),
+            token1: contract_address_const::<0>(),
+            fee: 0,
+            tick_spacing: 0
+        }
+    }
 }
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
