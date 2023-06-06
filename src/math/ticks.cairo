@@ -392,7 +392,7 @@ fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
     let error = u256 { low: internal::MAX_ERROR_MAGNITUDE, high: 0 };
 
     let (tick_low, tick_high) = if (sign) {
-        // todo: improve how we round towards negative infinity
+        // rounds towards negative infinity and includes error
         (
             i129 {
                 mag: (tick_mag_x128 + error + u256 {
@@ -401,21 +401,13 @@ fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
                     .high,
                 sign
                 }, i129 {
-                mag: (internal::max(tick_mag_x128, error) - error + u256 {
-                    low: 0xffffffffffffffffffffffffffffffff, high: 0
-                })
+                mag: (tick_mag_x128 + u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 })
                     .high,
                 sign
             }
         )
     } else {
-        (
-            i129 {
-                mag: (internal::max(tick_mag_x128, error) - error).high, sign
-                }, i129 {
-                mag: (tick_mag_x128 + error).high, sign
-            }
-        )
+        (i129 { mag: tick_mag_x128.high, sign }, i129 { mag: (tick_mag_x128 + error).high, sign })
     };
 
     if (tick_low == tick_high) {
