@@ -78,175 +78,175 @@ mod internal {
         // 63
         r = by_2_127(r * r);
         let mut f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x8000000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 62
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x4000000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 61
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x2000000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 60
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x1000000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 59
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x800000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 58
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x400000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 57
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x200000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 56
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x100000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 55
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x80000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 54
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x40000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 53
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x20000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 52
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x10000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 51
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x8000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 50
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x4000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 49
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x2000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 48
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x1000000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 47
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x800000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 46
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x400000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 45
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x200000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 44
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x100000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 43
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x80000000000;
+            r /= u256 { low: 2, high: 0 };
         }
-        r = shr(downcast(f).unwrap(), r);
 
         // 42
         r = by_2_127(r * r);
         f = r.high;
-        if f > 0 {
+        if f != 0 {
             log_2 = log_2 + 0x40000000000;
         }
 
