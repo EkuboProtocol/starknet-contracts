@@ -49,7 +49,6 @@ mod internal {
         return low;
     }
 
-    use debug::PrintTrait;
     #[inline(always)]
     fn by_2_127(x: u256) -> u256 {
         let (sum, overflow) = u256_overflowing_add(x, x);
