@@ -232,7 +232,7 @@ mod initialized_ticks_tests {
     }
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(5000000)]
     fn test_insert_balanced() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -271,7 +271,7 @@ mod initialized_ticks_tests {
     }
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(50000000)]
     fn test_insert_balanced_bigger_tree() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -340,7 +340,7 @@ mod initialized_ticks_tests {
 
     // this test should be updated when the rebalancing is implemented
     #[test]
-    #[available_gas(5000000000)]
+    #[available_gas(800000000)]
     fn test_insert_sorted_ticks_and_removes() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -391,7 +391,7 @@ mod initialized_ticks_tests {
     }
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(50000000)]
     fn test_insert_balanced_remove_left() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -422,7 +422,7 @@ mod initialized_ticks_tests {
 
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(50000000)]
     fn test_insert_balanced_remove_right() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -451,7 +451,7 @@ mod initialized_ticks_tests {
 
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(50000000)]
     fn test_insert_balanced_remove_root() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -481,7 +481,7 @@ mod initialized_ticks_tests {
 
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(100000000)]
     fn test_insert_many_ticks_prev_next() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
@@ -549,7 +549,7 @@ mod initialized_ticks_tests {
     }
 
     #[test]
-    #[available_gas(500000000)]
+    #[available_gas(100000000)]
     fn test_insert_many_ticks_prev_next_reverse_order_insert() {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
