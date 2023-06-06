@@ -28,10 +28,6 @@ jobs:
           fi
           echo "$HOME/.scarb/bin" >> $GITHUB_PATH
 
-      - name: Scarb Build
-        run: |
-          scarb build
-          
       - name: Test the code
         run: |
           scarb test
