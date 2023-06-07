@@ -1,6 +1,6 @@
 use starknet::{ContractAddress};
-use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
+use ekubo::types::i129::{i129};
 
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
@@ -9,8 +9,18 @@ struct PositionKey {
     tick_upper: i129
 }
 
+#[derive(Copy, Drop, Serde)]
+struct TokenInfo {
+    position_key_hash: felt252,
+    liquidity: u128,
+    fee_growth_inside_last_token0: u256,
+    fee_growth_inside_last_token1: u256,
+    fees_token0: u128,
+    fees_token1: u128,
+}
+
 #[abi]
-trait IERC721 {
+trait IPositions {
     #[view]
     fn name() -> felt252;
     #[view]
@@ -35,4 +45,22 @@ trait IERC721 {
     fn is_approved_for_all(owner: ContractAddress, operator: ContractAddress) -> bool;
     #[view]
     fn token_uri(token_id: u256) -> felt252;
+
+    #[external]
+    fn mint(recipient: ContractAddress, position_key: PositionKey) -> u128;
+
+    #[external]
+    fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) -> u128;
+
+    #[external]
+    fn clear(token: ContractAddress, recipient: ContractAddress);
+
+    #[external]
+    fn withdraw(
+        token_id: u256,
+        position_key: PositionKey,
+        liquidity: u128,
+        min_token0: u128,
+        min_token1: u128
+    ) -> (u128, u128);
 }

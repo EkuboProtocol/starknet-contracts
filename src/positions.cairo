@@ -11,14 +11,9 @@ use core::hash::LegacyHash;
 use traits::{Into, TryInto};
 use option::{Option, OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::interfaces::positions::{PositionKey, TokenInfo};
 use serde::Serde;
 
-#[derive(Copy, Drop, Serde)]
-struct PositionKey {
-    pool_key: PoolKey,
-    tick_lower: i129,
-    tick_upper: i129
-}
 
 // Compute the hash for a given position key
 fn hash_position_key(position_key: PositionKey) -> felt252 {
@@ -26,16 +21,6 @@ fn hash_position_key(position_key: PositionKey) -> felt252 {
         pedersen(position_key.tick_lower.into(), position_key.tick_upper.into()),
         position_key.pool_key
     )
-}
-
-#[derive(Copy, Drop, Serde)]
-struct TokenInfo {
-    position_key_hash: felt252,
-    liquidity: u128,
-    fee_growth_inside_last_token0: u256,
-    fee_growth_inside_last_token1: u256,
-    fees_token0: u128,
-    fees_token1: u128,
 }
 
 impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
@@ -139,14 +124,13 @@ impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
 }
 
 
-
-
 #[contract]
 mod Positions {
     use super::{
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
         IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, PositionKey, TokenInfo, hash_position_key,
-        IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait
+        IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
+        TokenInfoStorageAccess
     };
 
     struct Storage {

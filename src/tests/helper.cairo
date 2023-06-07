@@ -5,7 +5,7 @@ use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Ekubo};
 use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
-use ekubo::interfaces::erc721::{IERC721Dispatcher};
+use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::positions::{Positions};
 use integer::{u256, u256_from_felt252, BoundedInt};
 use result::{Result, ResultTrait};
@@ -65,7 +65,7 @@ fn deploy_locker(core: IEkuboDispatcher) -> ICoreLockerDispatcher {
     ICoreLockerDispatcher { contract_address: locker_address }
 }
 
-fn deploy_positions(core: IEkuboDispatcher) -> IERC721Dispatcher {
+fn deploy_positions(core: IEkuboDispatcher) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     constructor_args.append(core.contract_address.into());
     let (address, _) = deploy_syscall(
@@ -73,7 +73,7 @@ fn deploy_positions(core: IEkuboDispatcher) -> IERC721Dispatcher {
     )
         .expect('deploy failed');
 
-    IERC721Dispatcher { contract_address: address }
+    IPositionsDispatcher { contract_address: address }
 }
 
 fn setup_pool(
