@@ -3,9 +3,8 @@ use ekubo::types::i129::i129;
 use starknet::ContractAddress;
 use array::ArrayTrait;
 use serde::Serde;
-use ekubo::core::{
-    UpdatePositionParameters, SwapParameters, Delta, IERC20Dispatcher, IERC20DispatcherTrait
-};
+use ekubo::core::{UpdatePositionParameters, SwapParameters, Delta};
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 
 #[derive(Copy, Drop, Serde)]

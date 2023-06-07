@@ -3,16 +3,11 @@ use starknet::ContractAddress;
 use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 #[abi]
 trait ILocker {
     fn locked(id: felt252, data: Array<felt252>) -> Array<felt252>;
-}
-
-#[abi]
-trait IERC20 {
-    fn transfer(recipient: ContractAddress, amount: u256);
-    fn balance_of(account: ContractAddress) -> u256;
 }
 
 #[derive(Copy, Drop, Serde)]
