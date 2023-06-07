@@ -130,6 +130,18 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
+    fn test_initialize_pool_succeeds_max_tick_spacing_minus_one() {
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: 0,
+            tick_spacing: 1386294,
+        };
+        Ekubo::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    }
+
+    #[test]
+    #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', ))]
     fn test_initialize_pool_fails_max_tick_spacing() {
         let pool_key = PoolKey {

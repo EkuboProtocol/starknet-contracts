@@ -102,6 +102,7 @@ fn negative_one_hundred_tick() {
     );
 }
 
+
 #[test]
 fn test_max_tick() {
     let sqrt_ratio = tick_to_sqrt_ratio(max_tick());

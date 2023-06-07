@@ -1,21 +1,15 @@
-use core::array::SpanTrait;
-use starknet::ContractAddress;
-use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
-use ekubo::types::keys::{PositionKey, PoolKey};
-use ekubo::types::i129::{i129};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::interfaces::core::{
-    Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait
-};
-
 #[contract]
 mod Ekubo {
-    use super::{
-        IERC20Dispatcher, IERC20DispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait,
-        ContractAddress, SwapParameters, UpdatePositionParameters, Delta
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::interfaces::core::{
+        Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait
     };
-
+    use starknet::{
+        ContractAddress, contract_address_const, get_caller_address, get_contract_address
+    };
+    use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
+
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
@@ -28,9 +22,6 @@ mod Ekubo {
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
     use ekubo::types::keys::{PositionKey, PoolKey};
-
-    use starknet::{contract_address_const, get_caller_address, get_contract_address};
-    use option::{Option, OptionTrait};
 
     struct Storage {
         // the owner is the one who controls withdrawal fees
@@ -218,8 +209,6 @@ mod Ekubo {
 
         account_delta(id, token_address, i129 { mag: amount, sign: true });
     }
-
-    const MAX_TICK_SPACING: u128 = 16384;
 
     #[external]
     fn initialize_pool(pool_key: PoolKey, initial_tick: i129) {
