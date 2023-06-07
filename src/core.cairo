@@ -142,18 +142,12 @@ mod Ekubo {
         result
     }
 
-    // Returns the current locker of the contract
     #[internal]
-    fn current_locker() -> (felt252, ContractAddress) {
+    fn require_locker() -> (felt252, ContractAddress) {
         let id = lock_count::read() - 1;
-        (id, locker_addresses::read(id))
-    }
-
-    #[internal]
-    fn require_locker() -> felt252 {
-        let (id, locker) = current_locker();
+        let locker = locker_addresses::read(id);
         assert(locker == get_caller_address(), 'NOT_LOCKER');
-        id
+        (id, locker)
     }
 
     #[internal]
@@ -171,7 +165,7 @@ mod Ekubo {
 
     #[external]
     fn withdraw(token_address: ContractAddress, recipient: ContractAddress, amount: u128) {
-        let id = require_locker();
+        let (id, _) = require_locker();
 
         let res = reserves::read(token_address);
         assert(res >= u256 { low: amount, high: 0 }, 'INSUFFICIENT_RESERVES');
@@ -187,7 +181,7 @@ mod Ekubo {
 
     #[external]
     fn save(token_address: ContractAddress, recipient: ContractAddress, amount: u128) {
-        let id = require_locker();
+        let (id, _) = require_locker();
 
         let saved_balance = saved_balances::read((recipient, token_address));
         saved_balances::write((recipient, token_address), saved_balance + amount);
@@ -198,7 +192,7 @@ mod Ekubo {
 
     #[external]
     fn deposit(token_address: ContractAddress) -> u128 {
-        let id = require_locker();
+        let (id, _) = require_locker();
 
         let balance = IERC20Dispatcher {
             contract_address: token_address
@@ -220,8 +214,7 @@ mod Ekubo {
 
     #[external]
     fn load(token_address: ContractAddress, amount: u128) {
-        let (id, locker) = current_locker();
-        assert(locker != contract_address_const::<0>(), 'NOT_LOCKED');
+        let (id, locker) = require_locker();
 
         let saved_balance = saved_balances::read((locker, token_address));
         saved_balances::write((locker, token_address), saved_balance - amount);
@@ -678,7 +671,7 @@ mod Ekubo {
 
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta {
-        let id = require_locker();
+        let (id, locker) = require_locker();
 
         assert(params.tick_lower < params.tick_upper, 'ORDER');
         assert(params.tick_lower >= min_tick(), 'MIN');
@@ -769,9 +762,7 @@ mod Ekubo {
 
         // here we are accumulating fees owed to the position based on its current liquidity
         let position_key = PositionKey {
-            owner: get_caller_address(),
-            tick_lower: params.tick_lower,
-            tick_upper: params.tick_upper
+            owner: locker, tick_lower: params.tick_lower, tick_upper: params.tick_upper
         };
         let position: Position = positions::read((pool_key, position_key));
 
@@ -836,7 +827,7 @@ mod Ekubo {
 
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta {
-        let id = require_locker();
+        let (id, _) = require_locker();
 
         let pool = pools::read(pool_key);
 
