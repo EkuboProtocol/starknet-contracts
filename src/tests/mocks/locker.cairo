@@ -10,6 +10,7 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 #[derive(Copy, Drop, Serde)]
 enum Action {
     AssertLockerId: felt252,
+    Relock: (felt252, felt252), // expected id, number of relocks
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
     Swap: (PoolKey, SwapParameters, ContractAddress)
 }
@@ -17,6 +18,7 @@ enum Action {
 #[derive(Copy, Drop, Serde)]
 enum ActionResult {
     AssertLockerId: (),
+    Relock: (),
     UpdatePosition: Delta,
     Swap: Delta
 }
@@ -29,9 +31,12 @@ trait ICoreLocker {
 
 #[contract]
 mod CoreLocker {
-    use super::{Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, i129};
+    use super::{
+        Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
+        ICoreLockerDispatcherTrait, i129
+    };
     use serde::Serde;
-    use starknet::{ContractAddress, get_caller_address};
+    use starknet::{ContractAddress, get_caller_address,get_contract_address};
     use array::ArrayTrait;
     use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -94,6 +99,20 @@ mod CoreLocker {
                 assert(locker_id == id, 'INVALID_LOCKER_ID');
 
                 ActionResult::AssertLockerId(())
+            },
+            Action::Relock((
+                locker_id, relock_count
+            )) => {
+                assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
+
+                if (relock_count != Default::default()) {
+                    // relock
+                    ICoreLockerDispatcher {
+                        contract_address: get_contract_address()
+                    }.call(Action::Relock((locker_id + 1, relock_count - 1)));
+                }
+
+                ActionResult::Relock(())
             },
             Action::UpdatePosition((
                 pool_key, params, recipient

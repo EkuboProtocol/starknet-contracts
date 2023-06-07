@@ -839,6 +839,16 @@ mod locks {
         );
         setup.locker.call(Action::AssertLockerId(0));
     }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_relock_call() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+        setup.locker.call(Action::Relock((0, 5)));
+    }
+
     #[test]
     #[available_gas(500000000)]
     #[should_panic(
@@ -851,6 +861,20 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
         setup.locker.call(Action::AssertLockerId(1));
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(
+        expected: (
+            'RL_INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_relock_call_fails_invalid_id() {
+        let setup = setup_pool(
+            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+        );
+        setup.locker.call(Action::Relock((1, 5)));
     }
 
     #[test]
