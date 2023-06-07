@@ -46,6 +46,9 @@ trait IPositions {
     #[view]
     fn token_uri(token_id: u256) -> felt252;
 
+#[external]
+fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129);
+
     #[external]
     fn mint(recipient: ContractAddress, position_key: PositionKey) -> u128;
 

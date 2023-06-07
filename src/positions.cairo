@@ -319,6 +319,17 @@ mod Positions {
         Withdraw: WithdrawCallbackResult
     }
 
+    // Initializes a pool only if it's not already initialized
+    // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
+    #[external]
+    fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129) {
+        let core_dispatcher = IEkuboDispatcher { contract_address: core::read() };
+        let pool = core_dispatcher.get_pool(pool_key);
+        if (pool.sqrt_ratio == Default::default()) {
+            core_dispatcher.initialize_pool(pool_key, initial_tick);
+        }
+    }
+
     // Deposits the tokens held by this contract for the given token ID
     #[external]
     fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) -> u128 {
