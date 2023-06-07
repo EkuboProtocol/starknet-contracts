@@ -33,7 +33,7 @@ mod CoreLocker {
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address};
     use array::ArrayTrait;
-    use ekubo::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
+    use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 

@@ -5,7 +5,7 @@ use starknet::{
 };
 use ekubo::types::i129::{i129, i129IntoFelt252};
 use array::{ArrayTrait};
-use ekubo::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
+use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
 use ekubo::types::keys::{PoolKey};
 use core::hash::LegacyHash;
 use traits::{Into, TryInto};
