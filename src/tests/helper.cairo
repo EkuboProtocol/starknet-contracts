@@ -5,6 +5,8 @@ use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Ekubo};
 use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
+use ekubo::interfaces::erc721::{IERC721Dispatcher};
+use ekubo::positions::{Positions};
 use integer::{u256, u256_from_felt252, BoundedInt};
 use result::{Result, ResultTrait};
 use traits::{Into, TryInto};
@@ -41,11 +43,11 @@ struct SetupPoolResult {
 }
 
 fn deploy_core(owner: ContractAddress) -> IEkuboDispatcher {
-    let mut core_constructor_args: Array<felt252> = ArrayTrait::new();
-    core_constructor_args.append(owner.into());
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    constructor_args.append(owner.into());
 
     let (core_address, _) = deploy_syscall(
-        Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, core_constructor_args.span(), true
+        Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('core deploy failed');
 
@@ -53,14 +55,25 @@ fn deploy_core(owner: ContractAddress) -> IEkuboDispatcher {
 }
 
 fn deploy_locker(core: IEkuboDispatcher) -> ICoreLockerDispatcher {
-    let mut locker_constructor_args: Array<felt252> = ArrayTrait::new();
-    locker_constructor_args.append(core.contract_address.into());
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    constructor_args.append(core.contract_address.into());
     let (locker_address, _) = deploy_syscall(
-        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, locker_constructor_args.span(), true
+        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('locker deploy failed');
 
     ICoreLockerDispatcher { contract_address: locker_address }
+}
+
+fn deploy_positions(core: IEkuboDispatcher) -> IERC721Dispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    constructor_args.append(core.contract_address.into());
+    let (address, _) = deploy_syscall(
+        Positions::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+    )
+        .expect('deploy failed');
+
+    IERC721Dispatcher { contract_address: address }
 }
 
 fn setup_pool(

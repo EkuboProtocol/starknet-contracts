@@ -1,7 +1,7 @@
 use starknet::{ContractAddress};
 
 #[abi]
-trait ERC721 {
+trait IERC721 {
     #[view]
     fn name() -> felt252;
     #[view]
