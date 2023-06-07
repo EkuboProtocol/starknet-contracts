@@ -11,6 +11,7 @@ use core::hash::LegacyHash;
 use traits::{Into, TryInto};
 use option::{Option, OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use serde::Serde;
 
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
@@ -143,7 +144,7 @@ mod Positions {
     use super::{
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
         IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, PositionKey, TokenInfo, hash_position_key,
-        IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address
+        IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait
     };
 
     struct Storage {
@@ -300,15 +301,69 @@ mod Positions {
         info
     }
 
+    #[derive(Serde, Copy, Drop)]
+    struct DepositCallbackData {
+        position_key: PositionKey,
+        min_liquidity: u128
+    }
+    #[derive(Serde, Copy, Drop)]
+    struct WithdrawCallbackData {
+        position_key: PositionKey,
+        min_token0: u128,
+        min_token1: u128
+    }
+    #[derive(Serde, Copy, Drop)]
+    enum LockCallbackData {
+        Deposit: DepositCallbackData,
+        Withdraw: WithdrawCallbackData
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct DepositCallbackResult {
+        liquidity: u128
+    }
+    #[derive(Serde, Copy, Drop)]
+    struct WithdrawCallbackResult {
+        token0_amount: u128,
+        token1_amount: u128
+    }
+    #[derive(Serde, Copy, Drop)]
+    enum LockCallbackResult {
+        Deposit: DepositCallbackResult,
+        Withdraw: WithdrawCallbackResult
+    }
+
     // Deposits the tokens held by this contract for the given token ID
     #[external]
-    fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) {
+    fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) -> u128 {
         validate_token_id(token_id);
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
         let info = get_token_info(token_id.low, position_key);
 
-        assert(false, 'todo');
+        let mut data: Array<felt252> = ArrayTrait::new();
+        // make the deposit to the pool
+        Serde::<LockCallbackData>::serialize(
+            @LockCallbackData::Deposit(DepositCallbackData { position_key, min_liquidity }),
+            ref data
+        );
+
+        let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+
+        let liquidity =
+            match Serde::<LockCallbackResult>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE') {
+            LockCallbackResult::Deposit(result) => {
+                result.liquidity
+            },
+            LockCallbackResult::Withdraw(result) => {
+                assert(false, 'INVALID_DEPOSIT_RESULT');
+                Default::<u128>::default()
+            }
+        };
+
+        liquidity
+    // todo: update the position info here
     }
 
     #[external]
@@ -318,13 +373,38 @@ mod Positions {
         liquidity: u128,
         min_token0: u128,
         min_token1: u128
-    ) {
+    ) -> (u128, u128) {
         validate_token_id(token_id);
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
         let info = get_token_info(token_id.low, position_key);
 
-        assert(false, 'todo');
+        let mut data: Array<felt252> = ArrayTrait::new();
+        // make the deposit to the pool
+        Serde::<LockCallbackData>::serialize(
+            @LockCallbackData::Withdraw(
+                WithdrawCallbackData { position_key, min_token0, min_token1 }
+            ),
+            ref data
+        );
+
+        let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+
+        let (token0_amount, token1_amount) =
+            match Serde::<LockCallbackResult>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE') {
+            LockCallbackResult::Deposit(result) => {
+                assert(false, 'INVALID_WITHDRAW_RESULT');
+                (Default::<u128>::default(), Default::<u128>::default())
+            },
+            LockCallbackResult::Withdraw(result) => {
+                assert(false, 'TODO');
+                (Default::<u128>::default(), Default::<u128>::default())
+            }
+        };
+        // todo: update the position info here
+
+        (token0_amount, token1_amount)
     }
 
     // This contract only holds tokens for the duration of a transaction.
@@ -342,8 +422,24 @@ mod Positions {
         let caller = get_caller_address();
         assert(caller == core::read(), 'CORE');
 
-        assert(false, 'todo');
+        let mut data_span = data.span();
+        let result: LockCallbackResult =
+            match Serde::<LockCallbackData>::deserialize(ref data_span)
+                .expect('DESERIALIZE_CALLBACK_FAILED') {
+            LockCallbackData::Deposit(deposit) => {
+                LockCallbackResult::Deposit(DepositCallbackResult { liquidity: Default::default() })
+            },
+            LockCallbackData::Withdraw(withdraw) => {
+                LockCallbackResult::Withdraw(
+                    WithdrawCallbackResult {
+                        token0_amount: Default::default(), token1_amount: Default::default()
+                    }
+                )
+            }
+        };
 
-        ArrayTrait::new()
+        let mut result_data: Array<felt252> = ArrayTrait::new();
+        Serde::<LockCallbackResult>::serialize(@result, ref result_data);
+        result_data
     }
 }
