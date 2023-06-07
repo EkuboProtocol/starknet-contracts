@@ -2,7 +2,8 @@
 mod Ekubo {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
-        Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait
+        Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
+        LockerState
     };
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address
@@ -67,6 +68,14 @@ mod Ekubo {
     #[view]
     fn get_owner() -> ContractAddress {
         owner::read()
+    }
+
+
+    #[view]
+    fn get_locker_state(id: felt252) -> LockerState {
+        let address = locker_addresses::read(id);
+        let nonzero_delta_count = nonzero_delta_counts::read(id);
+        LockerState { id, address, nonzero_delta_count }
     }
 
     #[view]

@@ -46,11 +46,23 @@ impl DefaultDelta of Default<Delta> {
     }
 }
 
+// The current state of the queried locker
+#[derive(Copy, Drop, Serde)]
+struct LockerState {
+    id: felt252,
+    address: ContractAddress,
+    nonzero_delta_count: felt252
+}
+
 #[abi]
 trait IEkubo {
     // The address that has the right to any fees collected by this contract
     #[view]
     fn get_owner() -> ContractAddress;
+
+    // Get the state of the locker with the given ID
+    #[view]
+    fn get_locker_state(id: felt252) -> LockerState;
 
     // Get the current state of the given pool
     #[view]
