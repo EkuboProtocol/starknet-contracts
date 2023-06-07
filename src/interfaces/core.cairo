@@ -1,4 +1,3 @@
-use core::array::SpanTrait;
 use starknet::ContractAddress;
 use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
 use ekubo::types::keys::{PositionKey, PoolKey};
@@ -34,6 +33,7 @@ struct SwapParameters {
 
 // From the perspective of the core contract, this represents the change in balances.
 // For example, swapping 100 token0 for 150 token1 would result in a Delta of { amount0_delta: 100, amount1_delta: -150 }
+// Note in case the price limit is reached, the amount0_delta or amount1_delta may be less than the amount specified in the swap parameters.
 #[derive(Copy, Drop, Serde)]
 struct Delta {
     amount0_delta: i129,
@@ -111,10 +111,12 @@ trait IEkubo {
     fn initialize_pool(pool_key: PoolKey, initial_tick: i129);
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
+    // Note you must call this within a lock callback
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta;
 
     // Make a swap against a pool.
+    // Note you must call this within a lock callback
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta;
 }
