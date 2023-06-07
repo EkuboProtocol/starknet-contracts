@@ -4,7 +4,17 @@ use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 
+#[abi]
+trait ILocker {
+    // This function is called on the caller of lock, i.e. a callback
+    // The input is the data passed to IEkubo#lock, the output is passed back through as the return value of #lock
+    fn locked(id: felt252, data: Array<felt252>) -> Array<felt252>;
+}
 
+// Passed as an argument to update a position. The owner of the position is implicit in the locker.
+// tick_lower is the lower bound of the position's price range
+// tick_upper is the upper bound of the position's price range
+// liquidity_delta is how the position's liquidity should be modified.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
     tick_lower: i129,
@@ -12,6 +22,9 @@ struct UpdatePositionParameters {
     liquidity_delta: i129,
 }
 
+// The amount is the amount of token0 or token1 to swap, depending on is_token1. A negative amount implies an exact-output swap.
+// is_token1 Indicates whether the amount is in terms of token0 or token1.
+// sqrt_ratio_limit is a limit on how far the price can move as part of the swap. Note this must always be specified, and must be between the maximum and minimum sqrt ratio.
 #[derive(Copy, Drop, Serde)]
 struct SwapParameters {
     amount: i129,
@@ -19,7 +32,8 @@ struct SwapParameters {
     sqrt_ratio_limit: u256,
 }
 
-// from the perspective of the core contract, the change in balances
+// From the perspective of the core contract, this represents the change in balances.
+// For example, swapping 100 token0 for 150 token1 would result in a Delta of { amount0_delta: 100, amount1_delta: -150 }
 #[derive(Copy, Drop, Serde)]
 struct Delta {
     amount0_delta: i129,

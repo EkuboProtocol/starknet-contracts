@@ -4,12 +4,9 @@ use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::interfaces::core::{Delta, SwapParameters, UpdatePositionParameters};
-
-#[abi]
-trait ILocker {
-    fn locked(id: felt252, data: Array<felt252>) -> Array<felt252>;
-}
+use ekubo::interfaces::core::{
+    Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait
+};
 
 #[contract]
 mod Ekubo {
