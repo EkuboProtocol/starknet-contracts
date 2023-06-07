@@ -59,6 +59,9 @@ trait IEkubo {
     #[view]
     fn get_reserves(token: ContractAddress) -> u256;
 
+    #[view]
+    fn get_saved_balance(owner: ContractAddress, token: ContractAddress) -> u128;
+
     #[external]
     fn set_owner(new_owner: ContractAddress);
 
@@ -72,7 +75,13 @@ trait IEkubo {
     fn withdraw(token_address: ContractAddress, recipient: ContractAddress, amount: u128);
 
     #[external]
+    fn save(token_address: ContractAddress, recipient: ContractAddress, amount: u128);
+
+    #[external]
     fn deposit(token_address: ContractAddress) -> u128;
+
+    #[external]
+    fn load(token_address: ContractAddress, amount: u128);
 
     #[external]
     fn initialize_pool(pool_key: PoolKey, initial_tick: i129);
@@ -128,6 +137,8 @@ mod Ekubo {
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
         initialized_ticks: LegacyMap::<(PoolKey, i129), TickTreeNode>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
+        // users may save balances in the singleton to avoid transfers, keyed by (owner, token)
+        saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
     }
 
     #[event]
@@ -170,6 +181,11 @@ mod Ekubo {
     #[view]
     fn get_position(pool_key: PoolKey, position_key: PositionKey) -> Position {
         positions::read((pool_key, position_key))
+    }
+
+    #[view]
+    fn get_saved_balance(owner: ContractAddress, token: ContractAddress) -> u128 {
+        saved_balances::read((owner, token))
     }
 
     #[external]
@@ -252,6 +268,17 @@ mod Ekubo {
     }
 
     #[external]
+    fn save(token_address: ContractAddress, recipient: ContractAddress, amount: u128) {
+        let id = require_locker();
+
+        let saved_balance = saved_balances::read((recipient, token_address));
+        saved_balances::write((recipient, token_address), saved_balance + amount);
+
+        // tracks the delta for the given token address
+        account_delta(id, token_address, i129 { mag: amount, sign: false });
+    }
+
+    #[external]
     fn deposit(token_address: ContractAddress) -> u128 {
         let id = require_locker();
 
@@ -271,6 +298,17 @@ mod Ekubo {
         reserves::write(token_address, balance);
 
         delta.low
+    }
+
+    #[external]
+    fn load(token_address: ContractAddress, amount: u128) {
+        let (id, locker) = current_locker();
+        assert(locker != contract_address_const::<0>(), 'NOT_LOCKED');
+
+        let saved_balance = saved_balances::read((locker, token_address));
+        saved_balances::write((locker, token_address), saved_balance - amount);
+
+        account_delta(id, token_address, i129 { mag: amount, sign: true });
     }
 
     const MAX_TICK_SPACING: u128 = 16384;

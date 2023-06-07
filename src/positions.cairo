@@ -1,10 +1,11 @@
 use starknet::{ContractAddress, contract_address_const, get_caller_address};
 use ekubo::types::i129::i129;
-use serde::{Serde};
 use array::{ArrayTrait};
+use ekubo::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
+use ekubo::types::keys::{PoolKey};
 
 #[abi]
-trait NFT {
+trait ERC721 {
     #[view]
     fn name() -> felt252;
     #[view]
@@ -32,14 +33,15 @@ trait NFT {
 }
 
 #[contract]
-mod Nft {
+mod Positions {
     use super::{
-        ContractAddress, get_caller_address, i129, contract_address_const, Serde, ArrayTrait
+        ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
+        IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey
     };
-    use array::{Span, SpanTrait};
 
     struct Storage {
         core: ContractAddress,
+        next_token_id: u128,
         approvals: LegacyMap<u128, ContractAddress>,
         owners: LegacyMap<u128, ContractAddress>,
         balances: LegacyMap<ContractAddress, u128>,
@@ -58,6 +60,7 @@ mod Nft {
     #[constructor]
     fn constructor(_core: ContractAddress) {
         core::write(_core);
+        next_token_id::write(1);
     }
 
     #[view]
@@ -144,6 +147,26 @@ mod Nft {
     #[view]
     fn token_uri(token_id: u256) -> felt252 {
         'https://nft.ekubo.org/'
+    }
+
+    // Creates the NFT and returns the token ID. Does not add any liquidity.
+    #[external]
+    fn mint(
+        recipient: ContractAddress, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+    ) -> u128 {
+        // validate the pool is initialized
+        let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
+        assert(pool.sqrt_ratio != Default::default(), 'POOL_NOT_INITIALIZED');
+
+        let id = next_token_id::read();
+        next_token_id::write(id + 1);
+        
+        // effect the mint by updating storage
+        owners::write(id, recipient);
+        balances::write(recipient, balances::read(recipient) + 1);
+        Transfer(contract_address_const::<0>(), recipient, u256 { low: id, high: 0 });
+
+        id
     }
 
 
