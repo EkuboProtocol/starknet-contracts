@@ -2,13 +2,6 @@ use starknet::{ContractAddress};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
 
-#[derive(Copy, Drop, Serde)]
-struct PositionKey {
-    pool_key: PoolKey,
-    tick_lower: i129,
-    tick_upper: i129
-}
-
 #[abi]
 trait IERC721 {
     #[view]
