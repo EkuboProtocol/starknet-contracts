@@ -350,60 +350,63 @@ mod Positions {
         let info = get_token_info(token_id.low, pool_key, bounds);
         let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
 
-        // first update the position
-        let (fee_growth_inside_token0, fee_growth_inside_token1) = IEkuboDispatcher {
-            contract_address: core::read()
-        }.get_pool_fee_growth_inside(pool_key, bounds.tick_lower, bounds.tick_upper);
-
-        let fees0 = (unsafe_sub(fee_growth_inside_token0, info.fee_growth_inside_last_token0)
-            * u256 {
-            low: info.liquidity, high: 0
-        })
-            .high;
-        let fees1 = (unsafe_sub(fee_growth_inside_token1, info.fee_growth_inside_last_token1)
-            * u256 {
-            low: info.liquidity, high: 0
-        })
-            .high;
-
-        let liquidity = max_liquidity(
+        // compute how much liquidity we can deposit based on token balances
+        let liquidity: u128 = max_liquidity(
             pool.sqrt_ratio,
             tick_to_sqrt_ratio(bounds.tick_lower),
             tick_to_sqrt_ratio(bounds.tick_upper),
             balance_of_token(pool_key.token0),
             balance_of_token(pool_key.token1)
         );
-
-        // token_info::write(
-        //     token_id.low,
-        //     TokenInfo {
-        //         liquidity: info.liquidity + liquidity,
-        //         key_hash: info.key_hash,
-        //         fee_growth_inside_last_token0: fee_growth_inside_token0,
-        //         fee_growth_inside_last_token1: fee_growth_inside_token1,
-        //         fees_token0: info.fees_token0 + fees0,
-        //         fees_token1: info.fees_token1 + fees1,
-        //     }
-        // );
-
         assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-        let mut data: Array<felt252> = ArrayTrait::new();
-        // make the deposit to the pool
-        Serde::<LockCallbackData>::serialize(
-            @LockCallbackData::Deposit(DepositCallbackData { pool_key, bounds, liquidity }),
-            ref data
-        );
+        // first update the position
+        {
+            let (fee_growth_inside_token0, fee_growth_inside_token1) = IEkuboDispatcher {
+                contract_address: core::read()
+            }.get_pool_fee_growth_inside(pool_key, bounds.tick_lower, bounds.tick_upper);
 
-        let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+            let fees0 = (unsafe_sub(fee_growth_inside_token0, info.fee_growth_inside_last_token0)
+                * u256 {
+                low: info.liquidity, high: 0
+            })
+                .high;
+            let fees1 = (unsafe_sub(fee_growth_inside_token1, info.fee_growth_inside_last_token1)
+                * u256 {
+                low: info.liquidity, high: 0
+            })
+                .high;
+        // let token_info_next = TokenInfo {
+        //     key_hash: info.key_hash,
+        //     liquidity: info.liquidity + liquidity,
+        //     fee_growth_inside_last_token0: fee_growth_inside_token0,
+        //     fee_growth_inside_last_token1: fee_growth_inside_token1,
+        //     fees_token0: info.fees_token0 + fees0,
+        //     fees_token1: info.fees_token1 + fees1,
+        // };
 
-        match Serde::<LockCallbackResult>::deserialize(ref result)
-            .expect('CALLBACK_RESULT_DESERIALIZE') {
-            LockCallbackResult::Deposit(_) => {},
-            LockCallbackResult::Withdraw(_) => {
-                assert(false, 'INVALID_DEPOSIT_RESULT');
-            }
-        };
+        // token_info::write(token_id.low, token_info_next);
+        }
+
+        // do the deposit (never expected to fail because we pre-computed liquidity)
+        {
+            let mut data: Array<felt252> = ArrayTrait::new();
+            // make the deposit to the pool
+            Serde::<LockCallbackData>::serialize(
+                @LockCallbackData::Deposit(DepositCallbackData { pool_key, bounds, liquidity }),
+                ref data
+            );
+
+            let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+
+            match Serde::<LockCallbackResult>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE') {
+                LockCallbackResult::Deposit(_) => {},
+                LockCallbackResult::Withdraw(_) => {
+                    assert(false, 'INVALID_DEPOSIT_RESULT');
+                }
+            };
+        }
 
         liquidity
     }
@@ -450,12 +453,13 @@ mod Positions {
 
     // This contract only holds tokens for the duration of a transaction.
     #[external]
-    fn clear(token: ContractAddress, recipient: ContractAddress) {
+    fn clear(token: ContractAddress, recipient: ContractAddress) -> u256 {
         let dispatcher = IERC20Dispatcher { contract_address: token };
         let balance = dispatcher.balance_of(get_contract_address());
         if (balance != u256 { low: 0, high: 0 }) {
             dispatcher.transfer(recipient, balance);
         }
+        balance
     }
 
     use debug::PrintTrait;

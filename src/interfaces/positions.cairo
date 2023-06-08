@@ -65,7 +65,7 @@ trait IPositions {
     fn deposit(token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128) -> u128;
 
     #[external]
-    fn clear(token: ContractAddress, recipient: ContractAddress);
+    fn clear(token: ContractAddress, recipient: ContractAddress) -> u256;
 
     #[external]
     fn withdraw(
