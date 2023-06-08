@@ -58,7 +58,24 @@ mod nft {
 
     #[test]
     #[available_gas(20000000)]
-    fn test_deposit_liquidity_no_tokens() {
+    fn test_deposit_liquidity_full_range() {
+        let caller = contract_address_const::<1>();
+        set_caller_address(caller);
+        let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
+        let positions = deploy_positions(setup.core);
+        let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: Default::default());
+        assert(token_id == 1, 'token id');
+        setup.token0.increase_balance(positions.contract_address, 100000000);
+        setup.token1.increase_balance(positions.contract_address, 100000000);
+        let liquidity = positions
+            .deposit_last(pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100);
+
+        assert(liquidity == 100000000, 'liquidity');
+    }
+
+    #[test]
+    #[available_gas(20000000)]
+    fn test_deposit_liquidity_concentrated() {
         let caller = contract_address_const::<1>();
         set_caller_address(caller);
         let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
