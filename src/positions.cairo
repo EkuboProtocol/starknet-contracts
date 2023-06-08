@@ -6,7 +6,7 @@ use starknet::{
 use ekubo::types::i129::{i129, i129IntoFelt252};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use array::{ArrayTrait};
-use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
+use ekubo::interfaces::core::{IEkuboDispatcher, UpdatePositionParameters, IEkuboDispatcherTrait};
 use ekubo::types::keys::{PoolKey};
 use core::hash::LegacyHash;
 use traits::{Into, TryInto};
@@ -127,7 +127,7 @@ mod Positions {
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
         IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
         IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
-        TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio
+        TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio, UpdatePositionParameters
     };
 
     struct Storage {
@@ -287,6 +287,7 @@ mod Positions {
 
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
+        pool_key: PoolKey,
         bounds: Bounds,
         liquidity: u128
     }
@@ -348,6 +349,8 @@ mod Positions {
 
         let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
 
+        // todo: compute the fees owed to this position before touching the pool, add it to the position
+
         let liquidity = max_liquidity(
             pool.sqrt_ratio,
             tick_to_sqrt_ratio(bounds.tick_lower),
@@ -361,7 +364,8 @@ mod Positions {
         let mut data: Array<felt252> = ArrayTrait::new();
         // make the deposit to the pool
         Serde::<LockCallbackData>::serialize(
-            @LockCallbackData::Deposit(DepositCallbackData { bounds, liquidity }), ref data
+            @LockCallbackData::Deposit(DepositCallbackData { pool_key, bounds, liquidity }),
+            ref data
         );
 
         let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
@@ -427,6 +431,8 @@ mod Positions {
         }
     }
 
+    use debug::PrintTrait;
+
     #[external]
     fn locked(id: felt252, data: Array<felt252>) -> Array<felt252> {
         let caller = get_caller_address();
@@ -437,6 +443,35 @@ mod Positions {
             match Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('DESERIALIZE_CALLBACK_FAILED') {
             LockCallbackData::Deposit(deposit) => {
+                let delta = IEkuboDispatcher {
+                    contract_address: caller
+                }
+                    .update_position(
+                        deposit.pool_key,
+                        UpdatePositionParameters {
+                            tick_lower: deposit.bounds.tick_lower,
+                            tick_upper: deposit.bounds.tick_upper,
+                            liquidity_delta: i129 {
+                                mag: deposit.liquidity, sign: false
+                            }
+                        }
+                    );
+
+                delta.amount0_delta.print();
+                delta.amount1_delta.print();
+                if delta.amount0_delta.mag != 0 {
+                    IERC20Dispatcher {
+                        contract_address: deposit.pool_key.token0
+                    }.transfer(caller, u256 { low: delta.amount0_delta.mag, high: 0 });
+                    IEkuboDispatcher { contract_address: caller }.deposit(deposit.pool_key.token0);
+                }
+                if (delta.amount1_delta.mag != 0) {
+                    IERC20Dispatcher {
+                        contract_address: deposit.pool_key.token0
+                    }.transfer(caller, u256 { low: delta.amount1_delta.mag, high: 0 });
+                    IEkuboDispatcher { contract_address: caller }.deposit(deposit.pool_key.token1);
+                }
+
                 LockCallbackResult::Deposit(())
             },
             LockCallbackData::Withdraw(withdraw) => {

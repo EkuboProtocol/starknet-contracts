@@ -30,6 +30,7 @@ mod MockERC20 {
     #[external]
     fn transfer(to: ContractAddress, amount: u256) {
         let caller = get_caller_address();
+        assert(balance_of(caller) >= amount, 'INSUFFICIENT_BALANCE');
         balances::write(caller, balance_of(caller) - amount);
         balances::write(to, balance_of(to) + amount);
     }
