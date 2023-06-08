@@ -23,7 +23,7 @@ fn liquidity_delta_to_amount_delta(
     // if the pool is losing liquidity, we round the amount down
     let round_up = !liquidity_delta.sign;
 
-    if (sqrt_ratio < sqrt_ratio_lower) {
+    if (sqrt_ratio <= sqrt_ratio_lower) {
         return (
             i129 {
                 mag: amount0_delta(
@@ -57,6 +57,7 @@ fn liquidity_delta_to_amount_delta(
 
 // Returns the max amount of liquidity that can be deposited based on amount of token0
 // This function is the inverse of the amount0_delta function
+// In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
 fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount == 0) {
         return 0;
@@ -76,7 +77,7 @@ fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
     // Initialize carry as u128
     let mut carry: u128 = 0;
 
-    //Add the upper limbs of mul2 and mul3 with carry handling
+    // Add the upper limbs of mul2 and mul3 with carry handling
     match u128_overflowing_add(mul2.limb2, mul3.limb0) {
         Result::Ok(x) => result.limb2 = x,
         Result::Err(x) => {
@@ -109,6 +110,7 @@ fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
 
 // Returns the max amount of liquidity that can be deposited based on amount of token1
 // This function is the inverse of the amount1_delta function
+// In other words, it computes the amount of liquidity corresponding to a given amount of token1 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
 fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount == 0) {
         return 0;
@@ -117,6 +119,9 @@ fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
     assert(result.high == 0, 'OVERFLOW_MLFT1');
     result.low
 }
+
+
+use debug::PrintTrait;
 
 // Return the max liquidity that can be deposited based on the price bounds and the amounts of token0 and token1
 fn max_liquidity(
@@ -129,6 +134,8 @@ fn max_liquidity(
     } else if (sqrt_ratio < sqrt_ratio_upper) {
         let max_from_token0 = max_liquidity_for_token0(sqrt_ratio, sqrt_ratio_upper, amount0);
         let max_from_token1 = max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio, amount1);
+        max_from_token0.print();
+        max_from_token1.print();
         return if max_from_token0 < max_from_token1 {
             max_from_token0
         } else {

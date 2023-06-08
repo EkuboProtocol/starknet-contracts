@@ -196,3 +196,80 @@ fn test_max_liquidity_for_token1_max_upper_half_range() {
     );
     assert(result == 18446748437148339062, 'max at half range');
 }
+
+#[test]
+#[available_gas(2000000)]
+#[should_panic(expected: ('SQRT_RATIO_ORDER', ))]
+fn test_max_liquidity_panics_order_ratios() {
+    max_liquidity(
+        u256 { low: 0, high: 1 },
+        max_sqrt_ratio(),
+        min_sqrt_ratio(),
+        0xffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffff
+    );
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_concentrated_example() {
+    let liquidity = max_liquidity(
+        u256 { low: 0, high: 1 },
+        u256 { low: 324446506639056680081293727153829971379, high: 0 },
+        u256 { low: 16608790382023884626048492437444757061, high: 1 },
+        100,
+        200
+    );
+    assert(liquidity == 2148, 'liquidity');
+}
+
+#[test]
+#[available_gas(2000000)]
+#[should_panic(expected: ('SQRT_RATIO_ORDER', ))]
+fn test_max_liquidity_panics_equal_ratios() {
+    max_liquidity(
+        u256 { low: 0, high: 1 },
+        min_sqrt_ratio(),
+        min_sqrt_ratio(),
+        0xffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffff
+    );
+}
+
+#[test]
+#[available_gas(2000000)]
+#[should_panic(expected: ('SQRT_RATIO_ZERO', ))]
+fn test_max_liquidity_panics_zero_ratio_lower() {
+    max_liquidity(
+        u256 { low: 0, high: 1 },
+        u256 { low: 0, high: 0 },
+        min_sqrt_ratio(),
+        0xffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffff
+    );
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_less_than_liquidity_deltas() {
+    let amount0 = 100000000;
+    let amount1 = 100000000;
+    let sqrt_ratio = u256 { low: 0, high: 1 };
+    let sqrt_ratio_lower = min_sqrt_ratio();
+    let sqrt_ratio_upper = max_sqrt_ratio();
+
+    let liquidity = max_liquidity(sqrt_ratio, sqrt_ratio_lower, sqrt_ratio_upper, amount0, amount1);
+
+    let (amount0_delta, amount1_delta) = liquidity_delta_to_amount_delta(
+        sqrt_ratio,
+        liquidity_delta: i129 { mag: liquidity, sign: false },
+        sqrt_ratio_lower: sqrt_ratio_lower,
+        sqrt_ratio_upper: sqrt_ratio_upper
+    );
+    amount0_delta.print();
+    amount1_delta.print();
+    assert(amount0_delta.mag <= amount0, 'amount0.mag');
+    assert(amount0_delta.sign == false, 'amount0.sign');
+    assert(amount1_delta.mag <= amount1, 'amount1.mag');
+    assert(amount1_delta.sign == false, 'amount1.sign');
+}

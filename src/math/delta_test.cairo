@@ -35,6 +35,30 @@ fn test_amount0_delta_price_down() {
     assert(delta == 1000, 'delta');
 }
 
+
+#[test]
+fn test_amount0_delta_price_example_down() {
+    let delta = amount0_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 34028236692093846346337460743176821145, high: 1 },
+        1000000000000000000,
+        false
+    );
+    assert(delta == 90909090909090909, 'delta');
+}
+
+#[test]
+fn test_amount0_delta_price_example_up() {
+    let delta = amount0_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 34028236692093846346337460743176821145, high: 1 },
+        1000000000000000000,
+        true
+    );
+    assert(delta == 90909090909090910, 'delta');
+}
+
+
 #[test]
 fn test_amount0_delta_price_up() {
     let delta = amount0_delta(
@@ -108,6 +132,31 @@ fn test_amount1_delta_price_up() {
     );
     assert(delta == 1001, 'delta');
 }
+
+
+#[test]
+fn test_amount1_delta_price_example_down() {
+    let delta = amount1_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 309347606291762239512158734028880192232, high: 0 },
+        1000000000000000000,
+        false
+    );
+    assert(delta == 90909090909090909, 'delta');
+}
+
+
+#[test]
+fn test_amount1_delta_price_example_up() {
+    let delta = amount1_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 309347606291762239512158734028880192232, high: 0 },
+        1000000000000000000,
+        true
+    );
+    assert(delta == 90909090909090910, 'delta');
+}
+
 
 #[test]
 fn test_amount1_delta_price_down_round_up() {

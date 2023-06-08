@@ -97,14 +97,16 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
         return 0;
     }
 
-    let result = muldiv(
-        u256 { low: liquidity, high: 0 },
-        sqrt_ratio_upper - sqrt_ratio_lower,
-        u256 { high: 1, low: 0 },
-        round_up
+    let result = u256_wide_mul(
+        u256 { low: liquidity, high: 0 }, sqrt_ratio_upper - sqrt_ratio_lower
     );
-    assert(result.high == 0, 'OVERFLOW');
 
-    return result.low;
+    assert((result.limb3 == 0) & (result.limb2 == 0), 'OVERFLOW');
+
+    if (round_up & result.limb0 != 0) {
+        result.limb1 + 1
+    } else {
+        result.limb1
+    }
 }
 
