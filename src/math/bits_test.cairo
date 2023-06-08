@@ -60,6 +60,25 @@ fn msb_2_255_plus_one() {
     assert(res == 255, 'msb of 2**255 + 1 is 255');
 }
 
+#[test]
+#[available_gas(74000000)]
+fn msb_many_iterations_min_gas() {
+    let mut i: u128 = 0;
+    loop {
+        if (i == 1024) {
+            break ();
+        }
+
+        if ((i % 2) == 0) {
+            msb(u256 { high: i + 1, low: 0 });
+        } else {
+            msb(u256 { high: 0, low: i + 1 });
+        };
+
+        i += 1;
+    };
+}
+
 
 #[test]
 fn msb_max() {

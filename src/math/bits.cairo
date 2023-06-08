@@ -4,10 +4,10 @@ use ekubo::math::exp2::exp2;
 fn msb(x: u256) -> u8 {
     assert(x != u256 { high: 0, low: 0 }, 'MSB_NONZERO');
 
-    let (mut res, mut rem) = if x.high != 0 {
-        (128, (x / u256 { high: 1, low: 0 }).low)
-    } else {
+    let (mut res, mut rem) = if x.high == 0 {
         (0, x.low)
+    } else {
+        (128, x.high)
     };
 
     if (rem >= 0x10000000000000000) {

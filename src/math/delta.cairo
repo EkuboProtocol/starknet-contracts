@@ -2,7 +2,7 @@ use ekubo::types::i129::i129;
 use ekubo::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
 
-// Compute the next ratio from a delta amount0, rounded towards starting price for input, and away from starting price for output
+// Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
 fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129) -> u256 {
     if (amount.mag == 0) {
         return sqrt_ratio;
@@ -33,7 +33,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
     }
 }
 
-// Compute the next ratio from a delta amount1, rounded towards the starting price
+// Compute the next ratio from a delta amount1, always rounded towards the starting price
 fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129) -> u256 {
     if (amount.mag == 0) {
         return sqrt_ratio;
@@ -59,7 +59,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
     }
 }
 
-// Compute the difference in amount of token0 between two ratios, rounded down
+// Compute the difference in amount of token0 between two ratios, rounded as specified
 fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)
@@ -83,7 +83,7 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     return result.low;
 }
 
-// Compute the difference in amount of token1 between two ratios, rounded down
+// Compute the difference in amount of token1 between two ratios, rounded as specified
 fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)
