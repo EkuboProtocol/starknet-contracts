@@ -989,8 +989,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 51, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 51, sign: false }, 'amount1_delta');
+        assert(delta.amount0_delta == i129 { mag: 50, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 50, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -1011,8 +1011,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 5001, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 5001, sign: false }, 'amount1_delta');
+        assert(delta.amount0_delta == i129 { mag: 5000, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 5000, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -1022,8 +1022,12 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
-        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         let delta = update_position(
             setup,
@@ -1033,14 +1037,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(
-            delta.amount0_delta == i129 { mag: 18446739710271796308434404910, sign: false },
-            'amount0_delta'
-        );
-        assert(
-            delta.amount1_delta == i129 { mag: 18446739710271796308434404910, sign: false },
-            'amount1_delta'
-        );
+        assert(delta.amount0_delta == i129 { mag: 1000000000, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 1000000000, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -1050,8 +1048,12 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
-        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         update_position(
             setup,
@@ -1069,14 +1071,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(
-            delta.amount0_delta == i129 { mag: 9131136156584539172675030429, sign: true },
-            'amount0_delta'
-        );
-        assert(
-            delta.amount1_delta == i129 { mag: 9131136156584539172675030429, sign: true },
-            'amount1_delta'
-        );
+        assert(delta.amount0_delta == i129 { mag: 494999999, sign: true }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 494999999, sign: true }, 'amount1_delta');
     }
 
     #[test]
@@ -1086,8 +1082,12 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
-        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token0
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup
+            .token1
+            .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         update_position(
             setup,
@@ -1105,14 +1105,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(
-            delta.amount0_delta == i129 { mag: 18262272313169078345350060859, sign: true },
-            'amount0_delta'
-        );
-        assert(
-            delta.amount1_delta == i129 { mag: 18262272313169078345350060859, sign: true },
-            'amount1_delta'
-        );
+        assert(delta.amount0_delta == i129 { mag: 989999999, sign: true }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 989999999, sign: true }, 'amount1_delta');
     }
 
     #[test]

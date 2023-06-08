@@ -35,10 +35,10 @@ fn liquidity_delta_to_amount_delta(
     } else if (sqrt_ratio < sqrt_ratio_upper) {
         return (
             i129 {
-                mag: amount0_delta(sqrt_ratio_lower, sqrt_ratio, liquidity_delta.mag, round_up),
+                mag: amount0_delta(sqrt_ratio, sqrt_ratio_upper, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
                 }, i129 {
-                mag: amount1_delta(sqrt_ratio, sqrt_ratio_upper, liquidity_delta.mag, round_up),
+                mag: amount1_delta(sqrt_ratio_lower, sqrt_ratio, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
             }
         );
@@ -120,9 +120,6 @@ fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
     result.low
 }
 
-
-use debug::PrintTrait;
-
 // Return the max liquidity that can be deposited based on the price bounds and the amounts of token0 and token1
 fn max_liquidity(
     sqrt_ratio: u256, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount0: u128, amount1: u128
@@ -134,8 +131,6 @@ fn max_liquidity(
     } else if (sqrt_ratio < sqrt_ratio_upper) {
         let max_from_token0 = max_liquidity_for_token0(sqrt_ratio, sqrt_ratio_upper, amount0);
         let max_from_token1 = max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio, amount1);
-        max_from_token0.print();
-        max_from_token1.print();
         return if max_from_token0 < max_from_token1 {
             max_from_token0
         } else {

@@ -18,8 +18,8 @@ fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 184467397102717963084345, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 184467397102717963084345, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 10000, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 10000, sign: false }, 'amount1');
 }
 
 #[test]
@@ -32,8 +32,8 @@ fn test_liquidity_delta_to_amount_delta_full_range_mid_price_withdraw() {
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 184467397102717963084344, sign: true }, 'amount0');
-    assert(amount1 == i129 { mag: 184467397102717963084344, sign: true }, 'amount1');
+    assert(amount0 == i129 { mag: 9999, sign: true }, 'amount0');
+    assert(amount1 == i129 { mag: 9999, sign: true }, 'amount1');
 }
 
 #[test]
@@ -46,8 +46,8 @@ fn test_liquidity_delta_to_amount_delta_low_price_in_range() {
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 184467397059768290134345, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 184467397102717963094345, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 42949672960000, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 1, sign: false }, 'amount1');
 }
 
 #[test]
@@ -60,8 +60,8 @@ fn test_liquidity_delta_to_amount_delta_low_price_in_range_withdraw() {
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 184467397059768290134344, sign: true }, 'amount0');
-    assert(amount1 == i129 { mag: 184467397102717963094344, sign: true }, 'amount1');
+    assert(amount0 == i129 { mag: 42949672959999, sign: true }, 'amount0');
+    assert(amount1 == i129 { mag: 0, sign: true }, 'amount1');
 }
 
 #[test]
@@ -74,8 +74,8 @@ fn test_liquidity_delta_to_amount_delta_high_price_in_range() {
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 184467397102717963094345, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 184467397059768290134345, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 1, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 42949672960000, sign: false }, 'amount1');
 }
 
 #[test]
@@ -88,8 +88,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 10000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 10000, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 5000, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 5000, sign: false }, 'amount1');
 }
 
 #[test]
@@ -130,8 +130,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
         tick_to_sqrt_ratio(i129 { mag: 10, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 5001, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 5001, sign: false }, 'amount1');
+    assert(amount0 == i129 { mag: 5000, sign: false }, 'amount0');
+    assert(amount1 == i129 { mag: 5000, sign: false }, 'amount1');
 }
 
 
@@ -266,8 +266,6 @@ fn test_max_liquidity_less_than_liquidity_deltas() {
         sqrt_ratio_lower: sqrt_ratio_lower,
         sqrt_ratio_upper: sqrt_ratio_upper
     );
-    amount0_delta.print();
-    amount1_delta.print();
     assert(amount0_delta.mag <= amount0, 'amount0.mag');
     assert(amount0_delta.sign == false, 'amount0.sign');
     assert(amount1_delta.mag <= amount1, 'amount1.mag');

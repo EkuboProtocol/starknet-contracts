@@ -457,8 +457,6 @@ mod Positions {
                         }
                     );
 
-                delta.amount0_delta.print();
-                delta.amount1_delta.print();
                 if delta.amount0_delta.mag != 0 {
                     IERC20Dispatcher {
                         contract_address: deposit.pool_key.token0
@@ -467,7 +465,7 @@ mod Positions {
                 }
                 if (delta.amount1_delta.mag != 0) {
                     IERC20Dispatcher {
-                        contract_address: deposit.pool_key.token0
+                        contract_address: deposit.pool_key.token1
                     }.transfer(caller, u256 { low: delta.amount1_delta.mag, high: 0 });
                     IEkuboDispatcher { contract_address: caller }.deposit(deposit.pool_key.token1);
                 }
