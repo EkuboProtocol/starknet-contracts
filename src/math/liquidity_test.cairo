@@ -1,4 +1,7 @@
-use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
+use ekubo::math::liquidity::{
+    liquidity_delta_to_amount_delta, max_liquidity_for_token0, max_liquidity_for_token1,
+    max_liquidity
+};
 use ekubo::math::ticks::{
     min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
 };
@@ -129,4 +132,67 @@ fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
 
     assert(amount0 == i129 { mag: 5001, sign: false }, 'amount0');
     assert(amount1 == i129 { mag: 5001, sign: false }, 'amount1');
+}
+
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_for_token0_max_at_full_range() {
+    let result = max_liquidity_for_token0(
+        min_sqrt_ratio(), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
+    );
+    assert(result == 18446748437148339061, 'max at full range');
+}
+
+#[test]
+#[available_gas(2000000)]
+#[should_panic(expected: ('OVERFLOW_MLFT0', ))]
+fn test_max_liquidity_for_token0_max_lower_half_range() {
+    let result = max_liquidity_for_token0(
+        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        max_sqrt_ratio(),
+        0xffffffffffffffffffffffffffffffff
+    );
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_for_token0_max_upper_half_range() {
+    let result = max_liquidity_for_token0(
+        min_sqrt_ratio(),
+        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        0xffffffffffffffffffffffffffffffff
+    );
+    assert(result == 18446748437148339062, 'max at half range');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_for_token1_max_at_full_range() {
+    let result = max_liquidity_for_token1(
+        min_sqrt_ratio(), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
+    );
+    assert(result == 18446748437148339061, 'max at full range');
+}
+
+#[test]
+#[available_gas(2000000)]
+#[should_panic(expected: ('OVERFLOW_MLFT1', ))]
+fn test_max_liquidity_for_token1_max_lower_half_range() {
+    let result = max_liquidity_for_token1(
+        min_sqrt_ratio(),
+        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        0xffffffffffffffffffffffffffffffff
+    );
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_max_liquidity_for_token1_max_upper_half_range() {
+    let result = max_liquidity_for_token1(
+        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        max_sqrt_ratio(),
+        0xffffffffffffffffffffffffffffffff
+    );
+    assert(result == 18446748437148339062, 'max at half range');
 }

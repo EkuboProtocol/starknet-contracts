@@ -978,12 +978,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         let delta = update_position(
             setup: setup,
@@ -1004,12 +1000,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         let delta = update_position(
             setup,
@@ -1030,8 +1022,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
-        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         let delta = update_position(
             setup,
@@ -1058,8 +1050,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
-        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         update_position(
             setup,
@@ -1094,8 +1086,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
-        setup.token1.increase_balance(setup.locker.contract_address, u256 { low: 0, high: 1 });
+        setup.token0.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
+        setup.token1.increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         update_position(
             setup,
@@ -1260,12 +1252,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1307,12 +1295,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1354,12 +1338,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1400,12 +1380,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1446,12 +1422,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1493,12 +1465,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1540,12 +1508,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,
@@ -1586,12 +1550,8 @@ mod locks {
             contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
         );
 
-        setup
-            .token0
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
-        setup
-            .token1
-            .increase_balance(setup.locker.contract_address, u256 { low: 10000000, high: 0 });
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
 
         update_position(
             setup,

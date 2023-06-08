@@ -3,15 +3,14 @@ use ekubo::types::keys::{PoolKey};
 use ekubo::types::i129::{i129};
 
 #[derive(Copy, Drop, Serde)]
-struct PositionKey {
-    pool_key: PoolKey,
+struct Bounds {
     tick_lower: i129,
     tick_upper: i129
 }
 
 #[derive(Copy, Drop, Serde)]
 struct TokenInfo {
-    position_key_hash: felt252,
+    key_hash: felt252,
     liquidity: u128,
     fee_growth_inside_last_token0: u256,
     fee_growth_inside_last_token1: u256,
@@ -46,14 +45,17 @@ trait IPositions {
     #[view]
     fn token_uri(token_id: u256) -> felt252;
 
-#[external]
-fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129);
+    #[external]
+    fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129);
 
     #[external]
-    fn mint(recipient: ContractAddress, position_key: PositionKey) -> u128;
+    fn mint(recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds) -> u128;
 
     #[external]
-    fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) -> u128;
+    fn deposit_last(pool_key: PoolKey, bounds: Bounds, min_liquidity: u128) -> u128;
+
+    #[external]
+    fn deposit(token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128) -> u128;
 
     #[external]
     fn clear(token: ContractAddress, recipient: ContractAddress);
@@ -61,7 +63,8 @@ fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129);
     #[external]
     fn withdraw(
         token_id: u256,
-        position_key: PositionKey,
+        pool_key: PoolKey,
+        bounds: Bounds,
         liquidity: u128,
         min_token0: u128,
         min_token1: u128

@@ -9,9 +9,9 @@ trait IMockERC20 {
     #[external]
     fn set_balance(address: ContractAddress, amount: u256);
     #[external]
-    fn increase_balance(address: ContractAddress, amount: u256);
+    fn increase_balance(address: ContractAddress, amount: u128);
     #[external]
-    fn decrease_balance(address: ContractAddress, amount: u256);
+    fn decrease_balance(address: ContractAddress, amount: u128);
 }
 
 #[contract]
@@ -40,12 +40,12 @@ mod MockERC20 {
     }
 
     #[external]
-    fn increase_balance(address: ContractAddress, amount: u256) {
-        balances::write(address, balance_of(address) + amount);
+    fn increase_balance(address: ContractAddress, amount: u128) {
+        balances::write(address, balance_of(address) + u256 { low: amount, high: 0 });
     }
 
     #[external]
-    fn decrease_balance(address: ContractAddress, amount: u256) {
-        balances::write(address, balance_of(address) - amount);
+    fn decrease_balance(address: ContractAddress, amount: u128) {
+        balances::write(address, balance_of(address) - u256 { low: amount, high: 0 });
     }
 }

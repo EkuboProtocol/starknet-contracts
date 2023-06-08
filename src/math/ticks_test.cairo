@@ -270,6 +270,18 @@ fn sqrt_ratio_to_tick_min_sqrt_ratio() {
     assert(tick == min_tick(), 'tick == min_tick()');
 }
 
+#[test]
+fn test_min_sqrt_ratio_to_max_sqrt_ratio_size() {
+    assert(
+        max_sqrt_ratio() - min_sqrt_ratio() < u256 { high: 0x10000000000000000, low: 0 },
+        'difference lt 192 bits'
+    );
+}
+
+#[test]
+fn test_max_sqrt_ratio_size() {
+    assert(max_sqrt_ratio() < u256 { high: 0x10000000000000000, low: 0 }, 'max is lt 192 bits');
+}
 
 #[test]
 #[available_gas(50000000000000)]

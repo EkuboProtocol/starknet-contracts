@@ -4,6 +4,7 @@ use starknet::{
     storage_address_from_base_and_offset
 };
 use ekubo::types::i129::{i129, i129IntoFelt252};
+use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use array::{ArrayTrait};
 use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
 use ekubo::types::keys::{PoolKey};
@@ -11,21 +12,19 @@ use core::hash::LegacyHash;
 use traits::{Into, TryInto};
 use option::{Option, OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::interfaces::positions::{PositionKey, TokenInfo};
+use ekubo::math::liquidity::{max_liquidity};
+use ekubo::interfaces::positions::{Bounds, TokenInfo};
 use serde::Serde;
 
 
 // Compute the hash for a given position key
-fn hash_position_key(position_key: PositionKey) -> felt252 {
-    LegacyHash::hash(
-        pedersen(position_key.tick_lower.into(), position_key.tick_upper.into()),
-        position_key.pool_key
-    )
+fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
+    LegacyHash::hash(pedersen(bounds.tick_lower.into(), bounds.tick_upper.into()), pool_key)
 }
 
 impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
     fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<TokenInfo> {
-        let position_key_hash: felt252 = storage_read_syscall(
+        let key_hash: felt252 = storage_read_syscall(
             address_domain, storage_address_from_base_and_offset(base, 0_u8)
         )?;
         let liquidity: u128 = storage_read_syscall(
@@ -71,7 +70,7 @@ impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
 
         SyscallResult::Ok(
             TokenInfo {
-                position_key_hash,
+                key_hash,
                 liquidity,
                 fee_growth_inside_last_token0,
                 fee_growth_inside_last_token1,
@@ -82,9 +81,7 @@ impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
     }
     fn write(address_domain: u32, base: StorageBaseAddress, value: TokenInfo) -> SyscallResult<()> {
         storage_write_syscall(
-            address_domain,
-            storage_address_from_base_and_offset(base, 0_u8),
-            value.position_key_hash
+            address_domain, storage_address_from_base_and_offset(base, 0_u8), value.key_hash
         )?;
         storage_write_syscall(
             address_domain, storage_address_from_base_and_offset(base, 1_u8), value.liquidity.into()
@@ -128,9 +125,9 @@ impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
 mod Positions {
     use super::{
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
-        IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, PositionKey, TokenInfo, hash_position_key,
+        IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
         IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
-        TokenInfoStorageAccess
+        TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio
     };
 
     struct Storage {
@@ -257,7 +254,7 @@ mod Positions {
 
     // Creates the NFT and returns the token ID. Does not add any liquidity.
     #[external]
-    fn mint(recipient: ContractAddress, position_key: PositionKey) -> u128 {
+    fn mint(recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds) -> u128 {
         let id = next_token_id::read();
         next_token_id::write(id + 1);
 
@@ -267,7 +264,7 @@ mod Positions {
         token_info::write(
             id,
             TokenInfo {
-                position_key_hash: hash_position_key(position_key),
+                key_hash: hash_key(pool_key, bounds),
                 liquidity: Default::default(),
                 fee_growth_inside_last_token0: Default::default(),
                 fee_growth_inside_last_token1: Default::default(),
@@ -275,26 +272,27 @@ mod Positions {
                 fees_token1: Default::default(),
             }
         );
+
         Transfer(contract_address_const::<0>(), recipient, u256 { low: id, high: 0 });
 
         id
     }
 
     #[internal]
-    fn get_token_info(token_id: u128, position_key: PositionKey) -> TokenInfo {
+    fn get_token_info(token_id: u128, pool_key: PoolKey, bounds: Bounds) -> TokenInfo {
         let info = token_info::read(token_id);
-        assert(info.position_key_hash == hash_position_key(position_key), 'POSITION_KEY');
+        assert(info.key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
         info
     }
 
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
-        position_key: PositionKey,
-        min_liquidity: u128
+        bounds: Bounds,
+        liquidity: u128
     }
     #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackData {
-        position_key: PositionKey,
+        bounds: Bounds,
         min_token0: u128,
         min_token1: u128
     }
@@ -305,17 +303,13 @@ mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct DepositCallbackResult {
-        liquidity: u128
-    }
-    #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackResult {
         token0_amount: u128,
         token1_amount: u128
     }
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackResult {
-        Deposit: DepositCallbackResult,
+        Deposit: (),
         Withdraw: WithdrawCallbackResult
     }
 
@@ -330,43 +324,64 @@ mod Positions {
         }
     }
 
-    // Deposits the tokens held by this contract for the given token ID
     #[external]
-    fn deposit(token_id: u256, position_key: PositionKey, min_liquidity: u128) -> u128 {
+    fn deposit_last(pool_key: PoolKey, bounds: Bounds, min_liquidity: u128) -> u128 {
+        deposit(u256 { low: next_token_id::read() - 1, high: 0 }, pool_key, bounds, min_liquidity)
+    }
+
+    #[internal]
+    fn balance_of_token(token: ContractAddress) -> u128 {
+        let balance = IERC20Dispatcher {
+            contract_address: token
+        }.balance_of(get_contract_address());
+        assert(balance.high == 0, 'BALANCE_OVERFLOW');
+        balance.low
+    }
+
+    // Deposits the tokens held by this contract for the given token ID, using the balances transiently held by this contract
+    #[external]
+    fn deposit(token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128) -> u128 {
         validate_token_id(token_id);
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
-        let info = get_token_info(token_id.low, position_key);
+        let info = get_token_info(token_id.low, pool_key, bounds);
+
+        let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
+
+        let liquidity = max_liquidity(
+            pool.sqrt_ratio,
+            tick_to_sqrt_ratio(bounds.tick_lower),
+            tick_to_sqrt_ratio(bounds.tick_upper),
+            balance_of_token(pool_key.token0),
+            balance_of_token(pool_key.token1)
+        );
+
+        assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
         let mut data: Array<felt252> = ArrayTrait::new();
         // make the deposit to the pool
         Serde::<LockCallbackData>::serialize(
-            @LockCallbackData::Deposit(DepositCallbackData { position_key, min_liquidity }),
-            ref data
+            @LockCallbackData::Deposit(DepositCallbackData { bounds, liquidity }), ref data
         );
 
         let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
 
-        let liquidity =
-            match Serde::<LockCallbackResult>::deserialize(ref result)
-                .expect('CALLBACK_RESULT_DESERIALIZE') {
-            LockCallbackResult::Deposit(result) => {
-                result.liquidity
-            },
-            LockCallbackResult::Withdraw(result) => {
+        match Serde::<LockCallbackResult>::deserialize(ref result)
+            .expect('CALLBACK_RESULT_DESERIALIZE') {
+            LockCallbackResult::Deposit(_) => {},
+            LockCallbackResult::Withdraw(_) => {
                 assert(false, 'INVALID_DEPOSIT_RESULT');
-                Default::<u128>::default()
             }
         };
 
         liquidity
-    // todo: update the position info here
     }
 
     #[external]
     fn withdraw(
         token_id: u256,
-        position_key: PositionKey,
+        pool_key: PoolKey,
+        bounds: Bounds,
         liquidity: u128,
         min_token0: u128,
         min_token1: u128
@@ -374,14 +389,12 @@ mod Positions {
         validate_token_id(token_id);
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
-        let info = get_token_info(token_id.low, position_key);
+        let info = get_token_info(token_id.low, pool_key, bounds);
 
         let mut data: Array<felt252> = ArrayTrait::new();
         // make the deposit to the pool
         Serde::<LockCallbackData>::serialize(
-            @LockCallbackData::Withdraw(
-                WithdrawCallbackData { position_key, min_token0, min_token1 }
-            ),
+            @LockCallbackData::Withdraw(WithdrawCallbackData { bounds, min_token0, min_token1 }),
             ref data
         );
 
@@ -390,7 +403,7 @@ mod Positions {
         let (token0_amount, token1_amount) =
             match Serde::<LockCallbackResult>::deserialize(ref result)
                 .expect('CALLBACK_RESULT_DESERIALIZE') {
-            LockCallbackResult::Deposit(result) => {
+            LockCallbackResult::Deposit(_) => {
                 assert(false, 'INVALID_WITHDRAW_RESULT');
                 (Default::<u128>::default(), Default::<u128>::default())
             },
@@ -424,7 +437,7 @@ mod Positions {
             match Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('DESERIALIZE_CALLBACK_FAILED') {
             LockCallbackData::Deposit(deposit) => {
-                LockCallbackResult::Deposit(DepositCallbackResult { liquidity: Default::default() })
+                LockCallbackResult::Deposit(())
             },
             LockCallbackData::Withdraw(withdraw) => {
                 LockCallbackResult::Withdraw(
