@@ -664,6 +664,78 @@ mod Ekubo {
         next_root
     }
 
+    #[view]
+    fn get_pool_fee_growth_inside(
+        pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+    ) -> (u256, u256) {
+        let pool = pools::read(pool_key);
+        assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
+
+        let (fee_growth_inside_token0, fee_growth_inside_token1, _) = get_fee_growth_inside(
+            pool_key,
+            pool.tick,
+            pool.fee_growth_global_token0,
+            pool.fee_growth_global_token1,
+            tick_lower,
+            tick_upper
+        );
+        
+        (fee_growth_inside_token0, fee_growth_inside_token1)
+    }
+
+    #[internal]
+    fn get_fee_growth_inside(
+        pool_key: PoolKey,
+        pool_tick: i129,
+        pool_fee_growth_global_token0: u256,
+        pool_fee_growth_global_token1: u256,
+        tick_lower: i129,
+        tick_upper: i129
+    ) -> (u256, u256, bool) {
+        if (pool_tick < tick_lower) {
+            let tick_lower_state = ticks::read((pool_key, tick_lower));
+            (
+                unsafe_sub(
+                    pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
+                ),
+                unsafe_sub(
+                    pool_fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
+                ),
+                false
+            )
+        } else if (pool_tick < tick_upper) {
+            let tick_lower_state = ticks::read((pool_key, tick_lower));
+            let tick_upper_state = ticks::read((pool_key, tick_upper));
+
+            (
+                unsafe_sub(
+                    unsafe_sub(
+                        pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
+                    ),
+                    tick_upper_state.fee_growth_outside_token0
+                ),
+                unsafe_sub(
+                    unsafe_sub(
+                        pool_fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
+                    ),
+                    tick_upper_state.fee_growth_outside_token1
+                ),
+                true
+            )
+        } else {
+            let tick_upper_state = ticks::read((pool_key, tick_upper));
+            (
+                unsafe_sub(
+                    pool_fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
+                ),
+                unsafe_sub(
+                    pool_fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
+                ),
+                false
+            )
+        }
+    }
+
     #[external]
     fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta {
         let (id, locker) = require_locker();
@@ -709,50 +781,19 @@ mod Ekubo {
             );
         }
 
-        // now we need to compute the fee growth inside the tick range, and the next pool liquidity
-        let mut pool_liquidity_next: u128 = pool.liquidity;
-        let (fee_growth_inside_token0, fee_growth_inside_token1) = if (pool
-            .tick < params
-            .tick_lower) {
-            let tick_lower_state = ticks::read((pool_key, params.tick_lower));
-            (
-                unsafe_sub(
-                    pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
-                    pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
-                )
-            )
-        } else if (pool.tick < params.tick_upper) {
-            let tick_lower_state = ticks::read((pool_key, params.tick_lower));
-            let tick_upper_state = ticks::read((pool_key, params.tick_upper));
+        let (fee_growth_inside_token0, fee_growth_inside_token1, add_delta) = get_fee_growth_inside(
+            pool_key,
+            pool.tick,
+            pool.fee_growth_global_token0,
+            pool.fee_growth_global_token1,
+            params.tick_lower,
+            params.tick_upper
+        );
 
-            pool_liquidity_next = add_delta(pool_liquidity_next, params.liquidity_delta);
-
-            (
-                unsafe_sub(
-                    unsafe_sub(
-                        pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
-                    ),
-                    tick_upper_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
-                    unsafe_sub(
-                        pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
-                    ),
-                    tick_upper_state.fee_growth_outside_token1
-                )
-            )
+        let pool_liquidity_next: u128 = if (add_delta) {
+            add_delta(pool.liquidity, params.liquidity_delta)
         } else {
-            let tick_upper_state = ticks::read((pool_key, params.tick_upper));
-            (
-                unsafe_sub(
-                    pool.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
-                    pool.fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
-                )
-            )
+            pool.liquidity
         };
 
         // here we are accumulating fees owed to the position based on its current liquidity

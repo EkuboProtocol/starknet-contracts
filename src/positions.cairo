@@ -5,6 +5,7 @@ use starknet::{
 };
 use ekubo::types::i129::{i129, i129IntoFelt252};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::math::utils::{unsafe_sub};
 use array::{ArrayTrait};
 use ekubo::interfaces::core::{IEkuboDispatcher, UpdatePositionParameters, IEkuboDispatcherTrait};
 use ekubo::types::keys::{PoolKey};
@@ -127,7 +128,8 @@ mod Positions {
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
         IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
         IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
-        TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio, UpdatePositionParameters
+        TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio, UpdatePositionParameters,
+        unsafe_sub
     };
 
     struct Storage {
@@ -346,10 +348,23 @@ mod Positions {
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
         let info = get_token_info(token_id.low, pool_key, bounds);
-
         let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
 
-        // todo: compute the fees owed to this position before touching the pool, add it to the position
+        // first update the position
+        let (fee_growth_inside_token0, fee_growth_inside_token1) = IEkuboDispatcher {
+            contract_address: core::read()
+        }.get_pool_fee_growth_inside(pool_key, bounds.tick_lower, bounds.tick_upper);
+
+        let fees0 = (unsafe_sub(fee_growth_inside_token0, info.fee_growth_inside_last_token0)
+            * u256 {
+            low: info.liquidity, high: 0
+        })
+            .high;
+        let fees1 = (unsafe_sub(fee_growth_inside_token1, info.fee_growth_inside_last_token1)
+            * u256 {
+            low: info.liquidity, high: 0
+        })
+            .high;
 
         let liquidity = max_liquidity(
             pool.sqrt_ratio,
@@ -358,6 +373,18 @@ mod Positions {
             balance_of_token(pool_key.token0),
             balance_of_token(pool_key.token1)
         );
+
+        // token_info::write(
+        //     token_id.low,
+        //     TokenInfo {
+        //         liquidity: info.liquidity + liquidity,
+        //         key_hash: info.key_hash,
+        //         fee_growth_inside_last_token0: fee_growth_inside_token0,
+        //         fee_growth_inside_last_token1: fee_growth_inside_token1,
+        //         fees_token0: info.fees_token0 + fees0,
+        //         fees_token1: info.fees_token1 + fees1,
+        //     }
+        // );
 
         assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 

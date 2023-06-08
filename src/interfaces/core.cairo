@@ -68,6 +68,12 @@ trait IEkubo {
     #[view]
     fn get_pool(pool_key: PoolKey) -> Pool;
 
+    // Get the fee growth inside for a given tick range
+    #[view]
+    fn get_pool_fee_growth_inside(
+        pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+    ) -> (u256, u256);
+
     // Get the state of a given tick for the given pool
     #[view]
     fn get_tick(pool_key: PoolKey, index: i129) -> Tick;
