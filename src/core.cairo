@@ -1,5 +1,5 @@
 #[contract]
-mod Ekubo {
+mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,

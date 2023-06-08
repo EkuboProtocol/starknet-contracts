@@ -7,7 +7,7 @@ use ekubo::types::i129::{i129, i129IntoFelt252};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::utils::{unsafe_sub};
 use array::{ArrayTrait};
-use ekubo::interfaces::core::{IEkuboDispatcher, UpdatePositionParameters, IEkuboDispatcherTrait};
+use ekubo::interfaces::core::{ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait};
 use ekubo::types::keys::{PoolKey};
 use core::hash::LegacyHash;
 use traits::{Into, TryInto};
@@ -126,7 +126,7 @@ impl TokenInfoStorageAccess of StorageAccess<TokenInfo> {
 mod Positions {
     use super::{
         ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
-        IEkuboDispatcher, IEkuboDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
+        ICoreDispatcher, ICoreDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
         IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
         TokenInfoStorageAccess, max_liquidity, tick_to_sqrt_ratio, UpdatePositionParameters,
         unsafe_sub
@@ -159,7 +159,7 @@ mod Positions {
 
     #[view]
     fn name() -> felt252 {
-        'Ekubo Position NFT'
+        'Core Position NFT'
     }
 
     #[view]
@@ -320,7 +320,7 @@ mod Positions {
     // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
     #[external]
     fn maybe_initialize_pool(pool_key: PoolKey, initial_tick: i129) {
-        let core_dispatcher = IEkuboDispatcher { contract_address: core::read() };
+        let core_dispatcher = ICoreDispatcher { contract_address: core::read() };
         let pool = core_dispatcher.get_pool(pool_key);
         if (pool.sqrt_ratio == Default::default()) {
             core_dispatcher.initialize_pool(pool_key, initial_tick);
@@ -348,7 +348,7 @@ mod Positions {
         check_is_caller_authorized(owners::read(token_id.low), token_id.low);
 
         let info = get_token_info(token_id.low, pool_key, bounds);
-        let pool = IEkuboDispatcher { contract_address: core::read() }.get_pool(pool_key);
+        let pool = ICoreDispatcher { contract_address: core::read() }.get_pool(pool_key);
 
         // compute how much liquidity we can deposit based on token balances
         let liquidity: u128 = max_liquidity(
@@ -362,7 +362,7 @@ mod Positions {
 
         // first update the position
         {
-            let (fee_growth_inside_token0, fee_growth_inside_token1) = IEkuboDispatcher {
+            let (fee_growth_inside_token0, fee_growth_inside_token1) = ICoreDispatcher {
                 contract_address: core::read()
             }.get_pool_fee_growth_inside(pool_key, bounds.tick_lower, bounds.tick_upper);
 
@@ -397,7 +397,7 @@ mod Positions {
                 ref data
             );
 
-            let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+            let mut result = ICoreDispatcher { contract_address: core::read() }.lock(data).span();
 
             match Serde::<LockCallbackResult>::deserialize(ref result)
                 .expect('CALLBACK_RESULT_DESERIALIZE') {
@@ -432,7 +432,7 @@ mod Positions {
             ref data
         );
 
-        let mut result = IEkuboDispatcher { contract_address: core::read() }.lock(data).span();
+        let mut result = ICoreDispatcher { contract_address: core::read() }.lock(data).span();
 
         let (token0_amount, token1_amount) =
             match Serde::<LockCallbackResult>::deserialize(ref result)
@@ -474,7 +474,7 @@ mod Positions {
             match Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('DESERIALIZE_CALLBACK_FAILED') {
             LockCallbackData::Deposit(deposit) => {
-                let delta = IEkuboDispatcher {
+                let delta = ICoreDispatcher {
                     contract_address: caller
                 }
                     .update_position(
@@ -492,13 +492,13 @@ mod Positions {
                     IERC20Dispatcher {
                         contract_address: deposit.pool_key.token0
                     }.transfer(caller, u256 { low: delta.amount0_delta.mag, high: 0 });
-                    IEkuboDispatcher { contract_address: caller }.deposit(deposit.pool_key.token0);
+                    ICoreDispatcher { contract_address: caller }.deposit(deposit.pool_key.token0);
                 }
                 if (delta.amount1_delta.mag != 0) {
                     IERC20Dispatcher {
                         contract_address: deposit.pool_key.token1
                     }.transfer(caller, u256 { low: delta.amount1_delta.mag, high: 0 });
-                    IEkuboDispatcher { contract_address: caller }.deposit(deposit.pool_key.token1);
+                    ICoreDispatcher { contract_address: caller }.deposit(deposit.pool_key.token1);
                 }
 
                 LockCallbackResult::Deposit(())

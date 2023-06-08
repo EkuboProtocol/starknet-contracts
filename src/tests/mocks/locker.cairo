@@ -38,7 +38,7 @@ mod CoreLocker {
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use array::ArrayTrait;
-    use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
@@ -56,7 +56,7 @@ mod CoreLocker {
         let mut arr: Array<felt252> = ArrayTrait::new();
         Serde::<Action>::serialize(@action, ref arr);
 
-        let result = IEkuboDispatcher { contract_address: core::read() }.lock(arr);
+        let result = ICoreDispatcher { contract_address: core::read() }.lock(arr);
 
         let mut result_data = result.span();
         let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(ref result_data)
@@ -76,12 +76,12 @@ mod CoreLocker {
             }.transfer(core, u256 { low: delta.mag, high: 0 });
             // then call pay
             assert(
-                IEkuboDispatcher { contract_address: core }.deposit(token) == delta.mag,
+                ICoreDispatcher { contract_address: core }.deposit(token) == delta.mag,
                 'DEPOSIT_FAILED'
             );
         } else if (delta < Default::default()) {
             // withdraw to recipient
-            IEkuboDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+            ICoreDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
         }
     }
 
@@ -98,7 +98,7 @@ mod CoreLocker {
             Action::AssertLockerId(locker_id) => {
                 assert(locker_id == id, 'INVALID_LOCKER_ID');
 
-                let state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
 
                 assert(state.id == locker_id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
@@ -111,13 +111,13 @@ mod CoreLocker {
             )) => {
                 assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
 
-                let state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.id == locker_id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
                 assert(state.nonzero_delta_count == 0, 'no deltas');
 
                 if (id != 0) {
-                    let prev_state = IEkuboDispatcher {
+                    let prev_state = ICoreDispatcher {
                         contract_address: caller
                     }.get_locker_state(id - 1);
                     assert(prev_state.id == locker_id - 1, 'locker id');
@@ -137,16 +137,16 @@ mod CoreLocker {
             Action::UpdatePosition((
                 pool_key, params, recipient
             )) => {
-                let mut state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                let mut state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.id == id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
                 assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                let delta = IEkuboDispatcher {
+                let delta = ICoreDispatcher {
                     contract_address: caller
                 }.update_position(pool_key, params);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.id == id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
                 assert(
@@ -166,7 +166,7 @@ mod CoreLocker {
 
                 handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(
                     state
                         .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
@@ -179,7 +179,7 @@ mod CoreLocker {
 
                 handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.nonzero_delta_count == 0, 'deltas');
 
                 ActionResult::UpdatePosition(delta)
@@ -187,14 +187,14 @@ mod CoreLocker {
             Action::Swap((
                 pool_key, params, recipient
             )) => {
-                let mut state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                let mut state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.id == id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
                 assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                let delta = IEkuboDispatcher { contract_address: caller }.swap(pool_key, params);
+                let delta = ICoreDispatcher { contract_address: caller }.swap(pool_key, params);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.id == id, 'locker id');
                 assert(state.address == get_contract_address(), 'is locker');
 
@@ -215,7 +215,7 @@ mod CoreLocker {
 
                 handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(
                     state
                         .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
@@ -228,7 +228,7 @@ mod CoreLocker {
 
                 handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
-                state = IEkuboDispatcher { contract_address: caller }.get_locker_state(id);
+                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                 assert(state.nonzero_delta_count == 0, 'deltas');
 
                 ActionResult::Swap(delta)

@@ -6,7 +6,7 @@ use ekubo::types::i129::{i129};
 #[abi]
 trait ILocker {
     // This function is called on the caller of lock, i.e. a callback
-    // The input is the data passed to IEkubo#lock, the output is passed back through as the return value of #lock
+    // The input is the data passed to ICore#lock, the output is passed back through as the return value of #lock
     fn locked(id: felt252, data: Array<felt252>) -> Array<felt252>;
 }
 
@@ -55,7 +55,7 @@ struct LockerState {
 }
 
 #[abi]
-trait IEkubo {
+trait ICore {
     // The address that has the right to any fees collected by this contract
     #[view]
     fn get_owner() -> ContractAddress;

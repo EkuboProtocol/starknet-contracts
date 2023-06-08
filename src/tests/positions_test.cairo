@@ -4,7 +4,7 @@ mod nft {
     use starknet::testing::{set_caller_address};
     use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-    use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait};
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
     use ekubo::types::keys::{PoolKey};
     use ekubo::math::ticks::{constants as tick_constants};

@@ -3,8 +3,8 @@ use ekubo::types::storage::{Pool};
 use ekubo::types::i129::i129;
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
-use ekubo::core::{Ekubo};
-use ekubo::interfaces::core::{IEkuboDispatcher, IEkuboDispatcherTrait, Delta};
+use ekubo::core::{Core};
+use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, Delta};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::positions::{Positions};
 use integer::{u256, u256_from_felt252, BoundedInt};
@@ -38,23 +38,23 @@ struct SetupPoolResult {
     token0: IMockERC20Dispatcher,
     token1: IMockERC20Dispatcher,
     pool_key: PoolKey,
-    core: IEkuboDispatcher,
+    core: ICoreDispatcher,
     locker: ICoreLockerDispatcher
 }
 
-fn deploy_core(owner: ContractAddress) -> IEkuboDispatcher {
+fn deploy_core(owner: ContractAddress) -> ICoreDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     constructor_args.append(owner.into());
 
     let (core_address, _) = deploy_syscall(
-        Ekubo::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Core::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('core deploy failed');
 
-    IEkuboDispatcher { contract_address: core_address }
+    ICoreDispatcher { contract_address: core_address }
 }
 
-fn deploy_locker(core: IEkuboDispatcher) -> ICoreLockerDispatcher {
+fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     constructor_args.append(core.contract_address.into());
     let (locker_address, _) = deploy_syscall(
@@ -65,7 +65,7 @@ fn deploy_locker(core: IEkuboDispatcher) -> ICoreLockerDispatcher {
     ICoreLockerDispatcher { contract_address: locker_address }
 }
 
-fn deploy_positions(core: IEkuboDispatcher) -> IPositionsDispatcher {
+fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     constructor_args.append(core.contract_address.into());
     let (address, _) = deploy_syscall(
