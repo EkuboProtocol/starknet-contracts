@@ -20,7 +20,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::muldiv::muldiv;
     use ekubo::math::exp2::{exp2};
-    use ekubo::math::bits::{msb, msb_low};
+    use ekubo::math::bits::{msb_low};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
@@ -279,7 +279,8 @@ mod Core {
         let (word, bit) = word_and_bit_index;
         if (word >= NEGATIVE_OFFSET) {
             i129 {
-                mag: ((word - NEGATIVE_OFFSET) * 128 * tick_spacing) + ((upcast(bit) + 1) * tick_spacing),
+                mag: ((word - NEGATIVE_OFFSET) * 128 * tick_spacing)
+                    + ((upcast(bit) + 1) * tick_spacing),
                 sign: true
             }
         } else {
@@ -310,9 +311,8 @@ mod Core {
     // Returns the tick > from to iterate towards that may or may not be initialized
     #[external]
     fn next_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
-        let checking_at = from + i129 { mag: 1, sign: false };
         let (word_index, bit_index) = tick_to_word_and_bit_index(
-            checking_at, pool_key.tick_spacing
+            from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
         );
 
         let bitmap = tick_bitmaps::read((pool_key, word_index));
@@ -324,13 +324,9 @@ mod Core {
 
         // if it's 0, we know there is no set bit in this word
         if (masked == 0) {
-            let delta: u128 = upcast(bit_index) + 1;
-
-            (from + i129 { mag: delta, sign: false }, true)
+            (word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing), false)
         } else {
-            let delta: u128 = upcast(bit_index - msb_low(masked));
-
-            (from + i129 { mag: delta, sign: false }, false)
+            (word_and_bit_index_to_tick((word_index, msb_low(masked)), pool_key.tick_spacing), true)
         }
     }
 
@@ -338,7 +334,20 @@ mod Core {
     #[external]
     fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
         let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
-        (Default::default(), false)
+
+        let bitmap = tick_bitmaps::read((pool_key, word_index));
+
+        let mask = ~(exp2(bit_index) - 1);
+
+        let masked = bitmap & mask;
+
+        // if it's 0, we know there is no set bit in this word
+        if (masked == 0) {
+            (word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing), false)
+        } else {
+            assert(false, 'todo');
+            (Default::default(), true)
+        }
     }
 
     #[internal]
