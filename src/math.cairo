@@ -7,6 +7,7 @@ mod liquidity;
 mod swap;
 mod fee;
 mod utils;
+mod bitmap;
 
 #[cfg(test)]
 mod ticks_test;
@@ -18,3 +19,4 @@ mod liquidity_test;
 mod swap_test;
 mod fee_test;
 mod utils_test;
+mod bitmap_test;
