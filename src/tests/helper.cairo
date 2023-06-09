@@ -217,7 +217,8 @@ fn swap(
     amount: i129,
     is_token1: bool,
     sqrt_ratio_limit: u256,
-    recipient: ContractAddress
+    recipient: ContractAddress,
+    skip_ahead: u128
 ) -> Delta {
     let before: Balances = get_balances(setup, recipient);
 
@@ -228,6 +229,7 @@ fn swap(
                 (
                     setup.pool_key, SwapParameters {
                         amount, is_token1, sqrt_ratio_limit, 
+                        skip_ahead,
                     }, recipient
                 )
             )

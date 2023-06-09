@@ -7,6 +7,9 @@ mod constants {
     // doubling of sqrt ratio => quadrupling of price
     const TICKS_IN_DOUBLE_SQRT_RATIO: u128 = 1386295;
 
+    // one percent
+    const TICKS_IN_ONE_PERCENT: u128 = 9950;
+
     const MAX_SQRT_RATIO_HIGH: u128 = 18446739710271796309;
     const MAX_SQRT_RATIO_LOW: u128 = 147820330697885451836970967903133202728;
 

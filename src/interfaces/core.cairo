@@ -29,6 +29,7 @@ struct SwapParameters {
     amount: i129,
     is_token1: bool,
     sqrt_ratio_limit: u256,
+    skip_ahead: u128,
 }
 
 // From the perspective of the core contract, this represents the change in balances.

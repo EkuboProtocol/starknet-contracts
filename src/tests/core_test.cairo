@@ -10,7 +10,9 @@ use traits::Into;
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
 use ekubo::types::i129::i129;
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
+use ekubo::math::ticks::{
+    max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
+};
 use array::{ArrayTrait};
 use option::OptionTrait;
 use option::Option;
@@ -421,7 +423,7 @@ mod ticks_bitmap_tests {
         );
         assert(word == 0x100000000, 'word');
         assert(bit == 127, 'bit');
-        
+
         assert(
             Core::word_and_bit_index_to_tick((0x100000000, 127), tick_spacing: 3) == i129 {
                 mag: 384, sign: true
@@ -437,7 +439,7 @@ mod ticks_bitmap_tests {
         );
         assert(word == 0x100000000, 'word');
         assert(bit == 127, 'bit');
-        
+
         assert(
             Core::word_and_bit_index_to_tick((0x100000000, 127), tick_spacing: 3) == i129 {
                 mag: 384, sign: true
@@ -445,12 +447,10 @@ mod ticks_bitmap_tests {
             'reverse'
         );
     }
-
-    
 }
 
 mod initialize_pool_tests {
-    use super::{PoolKey, Core, i129, contract_address_const};
+    use super::{PoolKey, Core, i129, contract_address_const, tick_constants};
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
@@ -458,7 +458,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
         };
         Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         let pool = Core::get_pool(pool_key);
@@ -480,7 +480,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
         };
         Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
@@ -493,7 +493,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<2>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
         };
         Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
@@ -506,7 +506,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<0>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
         };
         Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
@@ -557,7 +557,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
         };
         Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
@@ -567,7 +567,9 @@ mod initialize_pool_tests {
 mod locks {
     use debug::PrintTrait;
 
-    use super::{setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult};
+    use super::{
+        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants
+    };
     use ekubo::types::i129::{i129OptionPartialEq};
     use super::{
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
@@ -580,7 +582,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
         setup.locker.call(Action::AssertLockerId(0));
     }
@@ -589,7 +594,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_relock_call() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
         setup.locker.call(Action::Relock((0, 5)));
     }
@@ -603,7 +611,10 @@ mod locks {
     )]
     fn test_assert_locker_id_call_wrong() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
         setup.locker.call(Action::AssertLockerId(1));
     }
@@ -617,7 +628,10 @@ mod locks {
     )]
     fn test_relock_call_fails_invalid_id() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
         setup.locker.call(Action::Relock((1, 5)));
     }
@@ -626,12 +640,15 @@ mod locks {
     #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
         update_position(
             setup,
-            i129 { mag: 10, sign: true },
-            i129 { mag: 10, sign: false },
+            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             Default::default(),
             contract_address_const::<42>()
         );
@@ -650,12 +667,15 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: 10, sign: true },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
             tick_upper: i129 { mag: 12, sign: false },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
@@ -675,12 +695,15 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: 12, sign: true },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
             tick_upper: i129 { mag: 10, sign: false },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
@@ -701,7 +724,10 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 3, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = update_position(
@@ -720,7 +746,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -742,7 +771,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_larger_amount_liquidity_add() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -764,7 +796,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup
@@ -790,7 +825,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_half_burn() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup
@@ -824,7 +862,10 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_full_burn() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup
@@ -858,7 +899,10 @@ mod locks {
     #[available_gas(8000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = swap(
@@ -867,6 +911,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
+            skip_ahead: 1,
         );
 
         assert(delta.amount0_delta == Default::default(), 'amount0_delta');
@@ -883,7 +928,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_no_liquidity() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = swap(
@@ -892,6 +940,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
+            skip_ahead: 1,
         );
 
         assert(delta.amount0_delta == Default::default(), 'amount0_delta');
@@ -908,7 +957,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_no_liquidity() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = swap(
@@ -917,6 +969,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
+            skip_ahead: 1,
         );
 
         assert(delta.amount0_delta == Default::default(), 'amount0_delta');
@@ -933,7 +986,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_no_liquidity() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = swap(
@@ -942,6 +998,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
+            skip_ahead: 1,
         );
 
         assert(delta.amount0_delta == Default::default(), 'amount0_delta');
@@ -958,7 +1015,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_no_liquidity() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         let delta = swap(
@@ -967,6 +1027,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
+            skip_ahead: 1,
         );
 
         assert(delta.amount0_delta == Default::default(), 'amount0_delta');
@@ -983,7 +1044,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1002,7 +1066,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount0_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000');
@@ -1025,16 +1090,19 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
-        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token0.increase_balance(setup.locker.contract_address, 1000000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 1000000000);
 
         update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1044,7 +1112,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount0_delta == i129 { mag: 1000, sign: true }, 'amount0_delta==1000');
@@ -1067,7 +1136,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1086,7 +1158,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount0_delta == i129 { mag: 51, sign: false }, 'amount0_delta==1000');
@@ -1108,7 +1181,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1127,7 +1203,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount0_delta == i129 { mag: 50, sign: true }, 'amount0_delta');
@@ -1149,7 +1226,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1168,7 +1248,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: true,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount1_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000');
@@ -1191,7 +1272,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1210,7 +1294,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount1_delta == i129 { mag: 1000, sign: true }, 'amount0_delta');
@@ -1233,7 +1318,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1241,8 +1329,8 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: 9950, sign: true },
+            tick_upper: i129 { mag: 9950, sign: false },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1252,7 +1340,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: true,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 10
         );
 
         assert(delta.amount0_delta == i129 { mag: 49, sign: true }, 'amount0_delta');
@@ -1274,7 +1363,10 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            contract_address_const::<1>(), FEE_ONE_PERCENT, 1, Default::default()
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1293,7 +1385,8 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 1
         );
 
         assert(delta.amount0_delta == i129 { mag: 50, sign: false }, 'amount0_delta');

@@ -11,6 +11,7 @@ mod Core {
     use option::{Option, OptionTrait};
     use integer::{downcast, upcast};
     use array::{ArrayTrait, SpanTrait};
+    use traits::{Neg};
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
@@ -20,7 +21,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::muldiv::muldiv;
     use ekubo::math::exp2::{exp2};
-    use ekubo::math::bits::{msb_low};
+    use ekubo::math::bits::{msb_low, lsb_low};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
@@ -310,7 +311,7 @@ mod Core {
 
     // Returns the tick > from to iterate towards that may or may not be initialized
     #[external]
-    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
+    fn next_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> (i129, bool) {
         let (word_index, bit_index) = tick_to_word_and_bit_index(
             from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
         );
@@ -324,7 +325,12 @@ mod Core {
 
         // if it's 0, we know there is no set bit in this word
         if (masked == 0) {
-            (word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing), false)
+            let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+            if (skip_ahead == 0) {
+                (next, false)
+            } else {
+                next_initialized_tick(pool_key, next, skip_ahead - 1)
+            }
         } else {
             (word_and_bit_index_to_tick((word_index, msb_low(masked)), pool_key.tick_spacing), true)
         }
@@ -332,21 +338,25 @@ mod Core {
 
     // Returns the next tick <= from to iterate towards
     #[external]
-    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
+    fn prev_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> (i129, bool) {
         let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
 
         let bitmap = tick_bitmaps::read((pool_key, word_index));
 
-        let mask = ~(exp2(bit_index) - 1);
+        let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
 
         let masked = bitmap & mask;
 
         // if it's 0, we know there is no set bit in this word
         if (masked == 0) {
-            (word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing), false)
+            let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
+            if (skip_ahead == 0) {
+                (prev, false)
+            } else {
+                prev_initialized_tick(pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1)
+            }
         } else {
-            assert(false, 'todo');
-            (Default::default(), true)
+            (word_and_bit_index_to_tick((word_index, lsb_low(masked)), pool_key.tick_spacing), true)
         }
     }
 
@@ -613,9 +623,9 @@ mod Core {
             }
 
             let (next_tick, is_initialized) = if (increasing) {
-                next_initialized_tick(pool_key, tick)
+                next_initialized_tick(pool_key, tick, params.skip_ahead)
             } else {
-                prev_initialized_tick(pool_key, tick)
+                prev_initialized_tick(pool_key, tick, params.skip_ahead)
             };
 
             let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
