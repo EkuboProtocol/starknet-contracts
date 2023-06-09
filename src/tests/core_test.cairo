@@ -52,6 +52,155 @@ mod owner_tests {
     }
 }
 
+mod ticks_bitmap_tests {
+    use super::{i129, Core};
+    use debug::PrintTrait;
+
+    #[test]
+    fn test_word_and_bit_index_0_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 0, sign: false }, tick_spacing: 1
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_0_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 0, sign: true }, tick_spacing: 1
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_0_tick_spacing_100() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 0, sign: false }, tick_spacing: 100
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_0_tick_spacing_100() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 0, sign: true }, tick_spacing: 100
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_50_tick_spacing_100() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 50, sign: false }, tick_spacing: 100
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_99_tick_spacing_100() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 99, sign: false }, tick_spacing: 100
+        );
+        assert(word == 0, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_100_tick_spacing_100() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 100, sign: false }, tick_spacing: 100
+        );
+        assert(word == 0, 'word');
+        assert(bit == 126, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_100_tick_spacing_2() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 100, sign: false }, tick_spacing: 2
+        );
+        assert(word == 0, 'word');
+        assert(bit == 77, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_127_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 127, sign: false }, tick_spacing: 1
+        );
+        assert(word == 0, 'word');
+        assert(bit == 0, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_128_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 128, sign: false }, tick_spacing: 1
+        );
+        assert(word == 1, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_385_tick_spacing_3() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 385, sign: false }, tick_spacing: 3
+        );
+        assert(word == 1, 'word');
+        assert(bit == 127, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_388_tick_spacing_3() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 388, sign: false }, tick_spacing: 3
+        );
+        assert(word == 1, 'word');
+        assert(bit == 126, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_1_tick_spacing_3() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 1, sign: true }, tick_spacing: 3
+        );
+        assert(word == 4294967296, 'word');
+        assert(bit == 0, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_3_tick_spacing_3() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 3, sign: true }, tick_spacing: 3
+        );
+        assert(word == 0x100000000, 'word');
+        assert(bit == 1, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_1_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 1, sign: true }, tick_spacing: 1
+        );
+        assert(word == 0x100000000, 'word');
+        assert(bit == 0, 'bit')
+    }
+
+    #[test]
+    fn test_word_and_bit_index_negative_3_tick_spacing_1() {
+        let (word, bit) = Core::tick_to_word_and_bit_index(
+            tick: i129 { mag: 3, sign: true }, tick_spacing: 1
+        );
+        assert(word == 4294967296, 'word');
+        assert(bit == 2, 'bit')
+    }
+}
+
 mod initialize_pool_tests {
     use super::{PoolKey, Core, i129, contract_address_const};
     #[test]

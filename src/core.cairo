@@ -9,7 +9,7 @@ mod Core {
         ContractAddress, contract_address_const, get_caller_address, get_contract_address
     };
     use option::{Option, OptionTrait};
-    use integer::{downcast};
+    use integer::{downcast, upcast};
     use array::{ArrayTrait, SpanTrait};
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
@@ -20,6 +20,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::muldiv::muldiv;
     use ekubo::math::exp2::{exp2};
+    use ekubo::math::bits::{msb, msb_low};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
@@ -248,46 +249,93 @@ mod Core {
         PoolInitialized(pool_key, initial_tick);
     }
 
+
+    const NEGATIVE_OFFSET: u128 = 0x100000000;
+
+    // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
+    // The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
     #[internal]
-    fn word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
-        let denom: u128 = tick_spacing * 128;
+    fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
+        // we don't care about the relative placement of words, only the placement of bits within a word
         if (tick.sign & (tick.mag != 0)) {
-            // it's negative, so larger mag is actually smaller value, so we round towards negative infinity
-            ((tick.mag / denom) + 0x100000000, downcast(127 - (tick.mag % 128)).unwrap())
+            // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
+            // also, the word must 
+            (
+                (tick.mag / (tick_spacing * 128)) + NEGATIVE_OFFSET,
+                downcast((tick.mag / tick_spacing) % 128).unwrap()
+            )
         } else {
-            ((tick.mag / denom), downcast(tick.mag % 128).unwrap())
+            // we want the word to have bits from smallest tick to largest tick, and larger mag here means larger tick
+            (
+                tick.mag / (tick_spacing * 128),
+                127_u8 - downcast((tick.mag / tick_spacing) % 128).unwrap()
+            )
+        }
+    }
+
+    // Compute the tick corresponding to the word and bit index
+    #[internal]
+    fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
+        let (word, bit) = word_and_bit_index;
+        if (word >= NEGATIVE_OFFSET) {
+            i129 {
+                mag: ((word - NEGATIVE_OFFSET) * 128 * tick_spacing) + (upcast(bit) * tick_spacing),
+                sign: true
+            }
+        } else {
+            i129 { mag: (word * 128 * tick_spacing) + (upcast(127 - bit) * tick_spacing), sign: false }
         }
     }
 
     // Remove the initialized tick for the given pool
     #[internal]
     fn remove_initialized_tick(pool_key: PoolKey, index: i129) {
-        let (word_index, bit_index) = word_and_bit_index(index, pool_key.tick_spacing);
+        let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
         let bitmap = tick_bitmaps::read((pool_key, word_index));
+        // it is assumed that bitmap already contains the set bit exp2(bit_index)
         tick_bitmaps::write((pool_key, word_index), bitmap - exp2(bit_index));
     }
 
     // Insert an initialized tick for the given pool
     #[internal]
     fn insert_initialized_tick(pool_key: PoolKey, index: i129) {
-        let (word_index, bit_index) = word_and_bit_index(index, pool_key.tick_spacing);
+        let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
         let bitmap = tick_bitmaps::read((pool_key, word_index));
+        // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
         tick_bitmaps::write((pool_key, word_index), bitmap + exp2(bit_index));
     }
 
     // Returns the tick > from to iterate towards that may or may not be initialized
     #[external]
     fn next_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
-        let (word_index, bit_index) = word_and_bit_index(
-            from + i129 { mag: 1, sign: false }, pool_key.tick_spacing
+        let checking_at = from + i129 { mag: 1, sign: false };
+        let (word_index, bit_index) = tick_to_word_and_bit_index(
+            checking_at, pool_key.tick_spacing
         );
-        (Default::default(), false)
+
+        let bitmap = tick_bitmaps::read((pool_key, word_index));
+        // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
+        let mask = (exp2(bit_index) - 1);
+
+        // now the next tick is at the most significant bit in the masked bitmap
+        let masked = bitmap & mask;
+
+        // if it's 0, we know there is no set bit in this word
+        if (masked == 0) {
+            let delta: u128 = upcast(bit_index) + 1;
+
+            (from + i129 { mag: delta, sign: false }, true)
+        } else {
+            let delta: u128 = upcast(bit_index - msb_low(masked));
+
+            (from + i129 { mag: delta, sign: false }, false)
+        }
     }
 
     // Returns the next tick <= from to iterate towards
     #[external]
     fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
-        let (word_index, bit_index) = word_and_bit_index(from, pool_key.tick_spacing);
+        let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
         (Default::default(), false)
     }
 

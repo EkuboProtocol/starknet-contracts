@@ -1,15 +1,8 @@
 use ekubo::math::exp2::{exp2, exp2_big};
 
-// Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**msb(ratio)
-fn msb(x: u256) -> u8 {
-    assert(x != u256 { high: 0, low: 0 }, 'MSB_NONZERO');
-
-    let (mut res, mut rem) = if x.high == 0 {
-        (0, x.low)
-    } else {
-        (128, x.high)
-    };
-
+// Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
+fn msb_low(mut rem: u128) -> u8 {
+    let mut res: u8 = 0;
     if (rem >= 0x10000000000000000) {
         rem /= 0x10000000000000000;
         res += 64;
@@ -39,6 +32,17 @@ fn msb(x: u256) -> u8 {
         res += 1;
     }
     return res;
+}
+
+// Computes and returns the index of the most significant bit in the given integer, s.t. ratio >= 2**msb(integer)
+fn msb(x: u256) -> u8 {
+    assert(x != u256 { high: 0, low: 0 }, 'MSB_NONZERO');
+
+    if x.high == 0 {
+        msb_low(x.low)
+    } else {
+        128_u8 + msb_low(x.high)
+    }
 }
 
 // Computes x>>n
