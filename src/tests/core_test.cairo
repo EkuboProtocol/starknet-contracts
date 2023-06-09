@@ -568,11 +568,13 @@ mod locks {
             initial_tick: Default::default()
         );
 
+        let sqrt_ratio_limit = u256 { low: 0, high: 2 };
+
         let delta = swap(
             setup,
             amount: i129 { mag: 1, sign: false },
             is_token1: true,
-            sqrt_ratio_limit: max_sqrt_ratio(),
+            sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
             skip_ahead: 1,
         );
@@ -581,7 +583,7 @@ mod locks {
         assert(delta.amount1_delta == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
+        assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is max');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -597,11 +599,13 @@ mod locks {
             initial_tick: Default::default()
         );
 
+        let sqrt_ratio_limit = u256 { low: 0, high: 2 };
+
         let delta = swap(
             setup,
             amount: i129 { mag: 1, sign: true },
             is_token1: false,
-            sqrt_ratio_limit: max_sqrt_ratio(),
+            sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
             skip_ahead: 1,
         );
@@ -610,7 +614,7 @@ mod locks {
         assert(delta.amount1_delta == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
+        assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -626,11 +630,13 @@ mod locks {
             initial_tick: Default::default()
         );
 
+        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
+
         let delta = swap(
             setup,
             amount: i129 { mag: 1, sign: true },
             is_token1: true,
-            sqrt_ratio_limit: min_sqrt_ratio(),
+            sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
             skip_ahead: 1,
         );
@@ -639,7 +645,7 @@ mod locks {
         assert(delta.amount1_delta == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price is min');
+        assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -660,8 +666,8 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -842,8 +848,8 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
