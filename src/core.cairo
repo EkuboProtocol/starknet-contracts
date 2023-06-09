@@ -261,8 +261,8 @@ mod Core {
             // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
             // also, the word must 
             (
-                (tick.mag / (tick_spacing * 128)) + NEGATIVE_OFFSET,
-                downcast((tick.mag / tick_spacing) % 128).unwrap()
+                ((tick.mag - 1) / (tick_spacing * 128)) + NEGATIVE_OFFSET,
+                downcast(((tick.mag - 1) / tick_spacing) % 128).unwrap()
             )
         } else {
             // we want the word to have bits from smallest tick to largest tick, and larger mag here means larger tick
@@ -279,11 +279,13 @@ mod Core {
         let (word, bit) = word_and_bit_index;
         if (word >= NEGATIVE_OFFSET) {
             i129 {
-                mag: ((word - NEGATIVE_OFFSET) * 128 * tick_spacing) + (upcast(bit) * tick_spacing),
+                mag: ((word - NEGATIVE_OFFSET) * 128 * tick_spacing) + ((upcast(bit) + 1) * tick_spacing),
                 sign: true
             }
         } else {
-            i129 { mag: (word * 128 * tick_spacing) + (upcast(127 - bit) * tick_spacing), sign: false }
+            i129 {
+                mag: (word * 128 * tick_spacing) + (upcast(127 - bit) * tick_spacing), sign: false
+            }
         }
     }
 
