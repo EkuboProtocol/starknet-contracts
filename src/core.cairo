@@ -9,8 +9,8 @@ mod Core {
         ContractAddress, contract_address_const, get_caller_address, get_contract_address
     };
     use option::{Option, OptionTrait};
+    use integer::{downcast};
     use array::{ArrayTrait, SpanTrait};
-
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
@@ -19,6 +19,7 @@ mod Core {
     use ekubo::math::swap::{swap_result, is_price_increasing};
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::muldiv::muldiv;
+    use ekubo::math::exp2::{exp2};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
@@ -43,6 +44,7 @@ mod Core {
         pools: LegacyMap::<PoolKey, Pool>,
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
+        tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
     }
@@ -246,31 +248,47 @@ mod Core {
         PoolInitialized(pool_key, initial_tick);
     }
 
-    // Remove the initialized tick and return the new root node of the tree
+    #[internal]
+    fn word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
+        let denom: u128 = tick_spacing * 128;
+        if (tick.sign & (tick.mag != 0)) {
+            // it's negative, so larger mag is actually smaller value, so we round towards negative infinity
+            ((tick.mag / denom) + 0x100000000, downcast(127 - (tick.mag % 128)).unwrap())
+        } else {
+            ((tick.mag / denom), downcast(tick.mag % 128).unwrap())
+        }
+    }
+
+    // Remove the initialized tick for the given pool
     #[internal]
     fn remove_initialized_tick(pool_key: PoolKey, index: i129) {
-        assert(false, 'todo');
+        let (word_index, bit_index) = word_and_bit_index(index, pool_key.tick_spacing);
+        let bitmap = tick_bitmaps::read((pool_key, word_index));
+        tick_bitmaps::write((pool_key, word_index), bitmap - exp2(bit_index));
     }
 
-
-    // Insert an initialized tick and return the new root node of the tree
+    // Insert an initialized tick for the given pool
     #[internal]
     fn insert_initialized_tick(pool_key: PoolKey, index: i129) {
-        assert(false, 'todo');
+        let (word_index, bit_index) = word_and_bit_index(index, pool_key.tick_spacing);
+        let bitmap = tick_bitmaps::read((pool_key, word_index));
+        tick_bitmaps::write((pool_key, word_index), bitmap + exp2(bit_index));
     }
 
-    // Returns the next tick from a given starting tick, i.e. the tick in the set of initialized ticks that is greater than the current tick
+    // Returns the tick > from to iterate towards that may or may not be initialized
     #[external]
-    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129> {
-        assert(false, 'todo');
-        Option::None(())
+    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
+        let (word_index, bit_index) = word_and_bit_index(
+            from + i129 { mag: 1, sign: false }, pool_key.tick_spacing
+        );
+        (Default::default(), false)
     }
 
-    // Returns the previous tick from a given starting tick, i.e. the tick in the set of initialized ticks that is less than or equal to the current tick
+    // Returns the next tick <= from to iterate towards
     #[external]
-    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129> {
-        assert(false, 'todo');
-        Option::None(())
+    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> (i129, bool) {
+        let (word_index, bit_index) = word_and_bit_index(from, pool_key.tick_spacing);
+        (Default::default(), false)
     }
 
     #[internal]
@@ -536,15 +554,9 @@ mod Core {
             }
 
             let (next_tick, is_initialized) = if (increasing) {
-                match (next_initialized_tick(pool_key, tick)) {
-                    Option::Some(tick) => (tick, true),
-                    Option::None(_) => (max_tick(), false)
-                }
+                next_initialized_tick(pool_key, tick)
             } else {
-                match (prev_initialized_tick(pool_key,  tick)) {
-                    Option::Some(tick) => (tick, true),
-                    Option::None(_) => (min_tick(), false)
-                }
+                prev_initialized_tick(pool_key, tick)
             };
 
             let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
