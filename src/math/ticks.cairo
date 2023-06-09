@@ -15,7 +15,7 @@ mod constants {
 }
 
 mod internal {
-    use ekubo::math::bits::{msb, shr};
+    use ekubo::math::bits::{msb, shr_big};
     use integer::downcast;
     use option::{OptionTrait, Option};
     use core::traits::{Into, TryInto};
@@ -73,7 +73,11 @@ mod internal {
 
         let msb_x = msb(x);
 
-        let (mut r, mut log_2) = (shr(msb_x - 127, x), (msb_x - 128).into() * 0x10000000000000000);
+        // msb always greater than 128 because we checked for less than 128 above and recursed with the inverse
+
+        let (mut r, mut log_2) = (
+            shr_big(msb_x - 127, x), (msb_x - 128).into() * 0x10000000000000000
+        );
 
         // 63
         r = by_2_127(r * r);

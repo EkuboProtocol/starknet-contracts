@@ -1,4 +1,4 @@
-use ekubo::math::exp2::exp2;
+use ekubo::math::exp2::{exp2, exp2_big};
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**msb(ratio)
 fn msb(x: u256) -> u8 {
@@ -43,6 +43,12 @@ fn msb(x: u256) -> u8 {
 
 // Computes x>>n
 #[inline(always)]
-fn shr(n: u8, x: u256) -> u256 {
+fn shr(n: u8, x: u128) -> u128 {
     x / exp2(n)
+}
+
+// Computes x>>n
+#[inline(always)]
+fn shr_big(n: u8, x: u256) -> u256 {
+    x / exp2_big(n)
 }

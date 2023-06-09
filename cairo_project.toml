@@ -1,0 +1,2 @@
+[crate_roots]
+ekubo = "src"

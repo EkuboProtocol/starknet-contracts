@@ -12,8 +12,6 @@ use integer::{u128_as_non_zero, u128_safe_divmod};
 struct Pool {
     // the current ratio, up to 192 bits
     sqrt_ratio: u256,
-    // the root tick of the initialized ticks tree
-    root_tick: Option<i129>,
     // the current tick, up to 32 bits
     tick: i129,
     // the current liquidity, i.e. between tick_prev and tick_next
@@ -43,13 +41,6 @@ struct Tick {
     // the fee growth that is on the other side of the tick, from the current tick
     fee_growth_outside_token0: u256,
     fee_growth_outside_token1: u256,
-}
-
-#[derive(Copy, Drop)]
-struct TickTreeNode {
-    parent: Option<i129>,
-    left: Option<i129>,
-    right: Option<i129>
 }
 
 const NOT_PRESENT: felt252 = 0x200000000000000000000000000000000; // 2**129
@@ -90,30 +81,25 @@ impl PoolStorageAccess of StorageAccess<Pool> {
                 .expect('PSQRTH')
         };
 
-        let root_tick: Option<i129> = storage_read_syscall(
+        let tick: i129 = storage_read_syscall(
             address_domain, storage_address_from_base_and_offset(base, 2_u8)
         )?
             .into();
 
-        let tick: i129 = storage_read_syscall(
-            address_domain, storage_address_from_base_and_offset(base, 3_u8)
-        )?
-            .into();
-
         let liquidity: u128 = storage_read_syscall(
-            address_domain, storage_address_from_base_and_offset(base, 4_u8)
+            address_domain, storage_address_from_base_and_offset(base, 3_u8)
         )?
             .try_into()
             .expect('LIQ');
 
         let fee_growth_global_token0: u256 = u256 {
             low: storage_read_syscall(
-                address_domain, storage_address_from_base_and_offset(base, 5_u8)
+                address_domain, storage_address_from_base_and_offset(base, 4_u8)
             )?
                 .try_into()
                 .expect('FGGT0L'),
             high: storage_read_syscall(
-                address_domain, storage_address_from_base_and_offset(base, 6_u8)
+                address_domain, storage_address_from_base_and_offset(base, 5_u8)
             )?
                 .try_into()
                 .expect('FGGT0H')
@@ -121,12 +107,12 @@ impl PoolStorageAccess of StorageAccess<Pool> {
 
         let fee_growth_global_token1: u256 = u256 {
             low: storage_read_syscall(
-                address_domain, storage_address_from_base_and_offset(base, 7_u8)
+                address_domain, storage_address_from_base_and_offset(base, 6_u8)
             )?
                 .try_into()
                 .expect('FGGT1L'),
             high: storage_read_syscall(
-                address_domain, storage_address_from_base_and_offset(base, 8_u8)
+                address_domain, storage_address_from_base_and_offset(base, 7_u8)
             )?
                 .try_into()
                 .expect('FGGT1H')
@@ -135,7 +121,6 @@ impl PoolStorageAccess of StorageAccess<Pool> {
         SyscallResult::Ok(
             Pool {
                 sqrt_ratio: sqrt_ratio,
-                root_tick: root_tick,
                 tick: tick,
                 liquidity: liquidity,
                 fee_growth_global_token0: fee_growth_global_token0,
@@ -157,32 +142,29 @@ impl PoolStorageAccess of StorageAccess<Pool> {
             value.sqrt_ratio.high.into()
         )?;
         storage_write_syscall(
-            address_domain, storage_address_from_base_and_offset(base, 2_u8), value.root_tick.into()
+            address_domain, storage_address_from_base_and_offset(base, 2_u8), value.tick.into()
         )?;
         storage_write_syscall(
-            address_domain, storage_address_from_base_and_offset(base, 3_u8), value.tick.into()
-        )?;
-        storage_write_syscall(
-            address_domain, storage_address_from_base_and_offset(base, 4_u8), value.liquidity.into()
+            address_domain, storage_address_from_base_and_offset(base, 3_u8), value.liquidity.into()
         )?;
         storage_write_syscall(
             address_domain,
-            storage_address_from_base_and_offset(base, 5_u8),
+            storage_address_from_base_and_offset(base, 4_u8),
             value.fee_growth_global_token0.low.into()
         )?;
         storage_write_syscall(
             address_domain,
-            storage_address_from_base_and_offset(base, 6_u8),
+            storage_address_from_base_and_offset(base, 5_u8),
             value.fee_growth_global_token0.high.into()
         )?;
         storage_write_syscall(
             address_domain,
-            storage_address_from_base_and_offset(base, 7_u8),
+            storage_address_from_base_and_offset(base, 6_u8),
             value.fee_growth_global_token1.low.into()
         )?;
         storage_write_syscall(
             address_domain,
-            storage_address_from_base_and_offset(base, 8_u8),
+            storage_address_from_base_and_offset(base, 7_u8),
             value.fee_growth_global_token1.high.into()
         )?;
         SyscallResult::Ok(())
@@ -265,7 +247,6 @@ impl PoolDefault of Default<Pool> {
     fn default() -> Pool {
         Pool {
             sqrt_ratio: Default::default(),
-            root_tick: Option::None(()),
             tick: Default::default(),
             liquidity: Default::default(),
             fee_growth_global_token0: Default::default(),
@@ -414,78 +395,4 @@ mod tick_tree_node_internal {
     }
 }
 
-
-impl TickTreeNodePartialEq of PartialEq<TickTreeNode> {
-    fn eq(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
-        (lhs.left == rhs.left) & (lhs.right == rhs.right)
-    }
-    fn ne(lhs: TickTreeNode, rhs: TickTreeNode) -> bool {
-        !PartialEq::<TickTreeNode>::eq(lhs, rhs)
-    }
-}
-
-
-impl TickTreeNodeDefault of Default<TickTreeNode> {
-    fn default() -> TickTreeNode {
-        TickTreeNode { parent: Option::None(()), left: Option::None(()), right: Option::None(()) }
-    }
-}
-
-impl TickTreeNodeStorageAccess of StorageAccess<TickTreeNode> {
-    fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<TickTreeNode> {
-        // read a u128 out of the slot
-        let packed_result: felt252 = StorageAccess::<felt252>::read(address_domain, base)?;
-
-        // not set
-        if (packed_result == 0) {
-            return SyscallResult::Ok(Default::default());
-        }
-
-        let mut parsed: u128 = packed_result.try_into().unwrap();
-
-        let (parent, left_right) = u128_safe_divmod(parsed, u128_as_non_zero(0x10000000000000000));
-        let (left, right) = u128_safe_divmod(left_right, u128_as_non_zero(0x100000000));
-
-        SyscallResult::Ok(
-            TickTreeNode {
-                parent: tick_tree_node_internal::to_tick(parent),
-                left: tick_tree_node_internal::to_tick(left),
-                right: tick_tree_node_internal::to_tick(right)
-            }
-        )
-    }
-
-    fn write(
-        address_domain: u32, base: starknet::StorageBaseAddress, value: TickTreeNode
-    ) -> starknet::SyscallResult<()> {
-        // validation of the tree node being written to storage
-        match value.left {
-            Option::Some(left_value) => {
-                assert(left_value.mag < 0x40000000, 'LEFT');
-                match value.right {
-                    Option::Some(right_value) => {
-                        assert(left_value < right_value, 'ORDER');
-                    },
-                    Option::None(_) => {}
-                }
-            },
-            Option::None(_) => {
-                match value.right {
-                    Option::Some(right_value) => {
-                        assert(right_value.mag < 0x40000000, 'RIGHT');
-                    },
-                    Option::None(_) => {},
-                }
-            }
-        }
-
-        StorageAccess::<u128>::write(
-            address_domain,
-            base,
-            (tick_tree_node_internal::to_u32(value.parent) * 0x10000000000000000)
-                + (tick_tree_node_internal::to_u32(value.left) * 0x100000000)
-                + tick_tree_node_internal::to_u32(value.right)
-        )
-    }
-}
 

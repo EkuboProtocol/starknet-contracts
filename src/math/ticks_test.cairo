@@ -296,7 +296,7 @@ fn sqrt_ratio_to_tick_powers_of_tick() {
             sign = true;
             pow = 1;
         }
-        let tick = i129 { mag: exp2(pow).low, sign };
+        let tick = i129 { mag: exp2(pow), sign };
         let sqrt_ratio = tick_to_sqrt_ratio(tick);
         let computed_tick = sqrt_ratio_to_tick(sqrt_ratio);
         assert(tick == computed_tick, 'computed tick');

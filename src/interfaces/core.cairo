@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use ekubo::types::storage::{Tick, Position, Pool, TickTreeNode};
+use ekubo::types::storage::{Tick, Position, Pool};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 
@@ -137,4 +137,12 @@ trait ICore {
     // Note you must call this within a lock callback
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta;
+
+    // Return the next initialized tick from the given tick
+    #[external]
+    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129>;
+
+    // Return the previous initialized tick from the given tick
+    #[external]
+    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129>;
 }

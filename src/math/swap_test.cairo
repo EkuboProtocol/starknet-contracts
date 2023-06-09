@@ -156,7 +156,7 @@ fn test_swap_against_liquidity_max_limit_token0_input() {
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: false },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 10000, sign: false }, 'consumed_amount');
@@ -176,7 +176,7 @@ fn test_swap_against_liquidity_max_limit_token0_minimum_input() {
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: false }, 'consumed_amount');
@@ -194,7 +194,7 @@ fn test_swap_against_liquidity_min_limit_token0_output() {
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: true },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 10000, sign: true }, 'consumed_amount');
@@ -215,7 +215,7 @@ fn test_swap_against_liquidity_min_limit_token0_minimum_output() {
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 1, sign: true },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: true }, 'consumed_amount');
@@ -236,7 +236,7 @@ fn test_swap_against_liquidity_max_limit_token1_input() {
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: false },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 10000, sign: false }, 'consumed_amount');
@@ -256,7 +256,7 @@ fn test_swap_against_liquidity_max_limit_token1_minimum_input() {
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 1, sign: false },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: false }, 'consumed_amount');
@@ -274,7 +274,7 @@ fn test_swap_against_liquidity_min_limit_token1_output() {
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: true },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 10000, sign: true }, 'consumed_amount');
@@ -295,7 +295,7 @@ fn test_swap_against_liquidity_min_limit_token1_minimum_output() {
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: true },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: true }, 'consumed_amount');
@@ -318,7 +318,7 @@ fn test_swap_against_liquidity_hit_limit_token0_input() {
         sqrt_ratio_limit: u256 { high: 0, low: 333476719582519694194107115283132847226 },
         amount: i129 { mag: 10000, sign: false },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 2041, sign: false }, 'consumed_amount');
@@ -338,7 +338,7 @@ fn test_swap_against_liquidity_hit_limit_token1_input() {
         sqrt_ratio_limit: u256 { high: 1, low: 6805647338418769269267492148635364229 },
         amount: i129 { mag: 10000, sign: false },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 2000, sign: false }, 'consumed_amount');
@@ -359,7 +359,7 @@ fn test_swap_against_liquidity_hit_limit_token0_output() {
         sqrt_ratio_limit: u256 { high: 1, low: 6805647338418769269267492148635364229 },
         amount: i129 { mag: 10000, sign: true },
         is_token1: false,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 1961, sign: true }, 'consumed_amount');
@@ -379,7 +379,7 @@ fn test_swap_against_liquidity_hit_limit_token1_output() {
         sqrt_ratio_limit: u256 { high: 0, low: 333476719582519694194107115283132847226 },
         amount: i129 { mag: 10000, sign: true },
         is_token1: true,
-        fee: exp2(127).low, // equal to 0.5
+        fee: exp2(127), // equal to 0.5
     );
 
     assert(result.consumed_amount == i129 { mag: 2001, sign: true }, 'consumed_amount');

@@ -69,7 +69,6 @@ mod initialize_pool_tests {
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
         );
-        assert(pool.root_tick == Option::None(()), 'root_tick');
         assert(pool.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(pool.liquidity == 0, 'tick');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fggt0');
@@ -165,657 +164,6 @@ mod initialize_pool_tests {
         };
         Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
-    }
-}
-
-mod initialized_ticks_tests {
-    use super::{Option, OptionTrait, PoolKey, Pool, Core, i129, contract_address_const};
-    use ekubo::math::utils::{u128_max};
-
-    fn max_height(pool_key: PoolKey, from_tick: Option<i129>) -> u128 {
-        match (from_tick) {
-            Option::Some(value) => {
-                let node = Core::initialized_ticks::read((pool_key, value));
-                u128_max(max_height(pool_key, node.left), max_height(pool_key, node.right)) + 1
-            },
-            Option::None(_) => 0
-        }
-    }
-
-    fn check_tree_correctness(pool_key: PoolKey, tick: Option<i129>, parent: Option<i129>) {
-        match tick {
-            Option::Some(value) => {
-                let node = Core::initialized_ticks::read((pool_key, value));
-                assert(parent == node.parent, 'parent');
-                match node.left {
-                    Option::Some(left) => {
-                        assert(left < value, 'left < current');
-                    },
-                    Option::None(_) => {}
-                }
-                match node.right {
-                    Option::Some(right) => {
-                        assert(right > value, 'right > current');
-                    },
-                    Option::None(_) => {}
-                }
-                check_tree_correctness(pool_key, node.left, tick);
-                check_tree_correctness(pool_key, node.right, tick);
-            },
-            Option::None(_) => {}
-        }
-        if (tick.is_none()) {
-            return ();
-        }
-    }
-
-    fn rebalance_tree(pool_key: PoolKey, root: i129) -> Option<i129> {
-        let pool = Core::pools::read(pool_key);
-        Core::pools::write(
-            pool_key,
-            Pool {
-                sqrt_ratio: pool.sqrt_ratio,
-                root_tick: Option::Some(root),
-                tick: pool.tick,
-                liquidity: pool.liquidity,
-                fee_growth_global_token0: pool.fee_growth_global_token0,
-                fee_growth_global_token1: pool.fee_growth_global_token1,
-            }
-        );
-        Option::Some(Core::rebalance_tree(pool_key, root))
-    }
-
-    fn is_tree_balanced(pool_key: PoolKey, at_tick: Option<i129>) -> bool {
-        match at_tick {
-            Option::Some(value) => {
-                let node = Core::initialized_ticks::read((pool_key, value));
-                let left_height = max_height(pool_key, node.left);
-                let right_height = max_height(pool_key, node.right);
-                let diff = if (left_height < right_height) {
-                    right_height - left_height
-                } else {
-                    left_height - right_height
-                };
-                diff <= 1
-                    & is_tree_balanced(pool_key, node.left)
-                    & is_tree_balanced(pool_key, node.right)
-            },
-            Option::None(_) => true,
-        }
-    }
-
-    #[test]
-    #[available_gas(5000000)]
-    fn test_insert_balanced() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 0, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Core::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
-        assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
-
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 1, sign: true })
-            ) == Default::default(),
-            'left is default'
-        );
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 1, sign: false })
-            ) == Default::default(),
-            'right is default'
-        );
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_balanced_bigger_tree() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 0, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 2, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 3, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-
-        let root_node = Core::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.left == Option::Some(i129 { mag: 2, sign: true }), 'root.left is -2');
-        assert(root_node.right == Option::Some(i129 { mag: 2, sign: false }), 'root.right is 2');
-
-        let left_node = Core::initialized_ticks::read((pool_key, root_node.left.unwrap()));
-        assert(left_node.left == Option::Some(i129 { mag: 3, sign: true }), 'left.left is -3');
-        assert(left_node.right == Option::Some(i129 { mag: 1, sign: true }), 'left.right is -1');
-
-        let right_node = Core::initialized_ticks::read((pool_key, root_node.right.unwrap()));
-        assert(right_node.left == Option::Some(i129 { mag: 1, sign: false }), 'left.left is 1');
-        assert(right_node.right == Option::Some(i129 { mag: 3, sign: false }), 'left.right is 3');
-
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 3, sign: true })
-            ) == Default::default(),
-            'leaf -3 is default'
-        );
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 1, sign: true })
-            ) == Default::default(),
-            'leaf -1 is default'
-        );
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 1, sign: false })
-            ) == Default::default(),
-            'leaf 1 is default'
-        );
-        assert(
-            Core::initialized_ticks::read(
-                (pool_key, i129 { mag: 3, sign: false })
-            ) == Default::default(),
-            'leaf 3 is default'
-        );
-    }
-
-
-    // this test should be updated when the rebalancing is implemented
-    #[test]
-    #[available_gas(800000000)]
-    fn test_insert_sorted_ticks_and_removes() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root: Option<i129> = Option::None(());
-        let mut next: i129 = i129 { mag: 0, sign: false };
-        loop {
-            if (next > i129 { mag: 30, sign: false }) {
-                break ();
-            }
-            root = Core::insert_initialized_tick(pool_key, root, next);
-            next = next + i129 { mag: 1, sign: false };
-        };
-
-        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
-        check_tree_correctness(pool_key, root, Option::None(()));
-
-        // remove some from the middle
-        next = i129 { mag: 10, sign: false };
-        loop {
-            if (next < i129 { mag: 6, sign: false }) {
-                break ();
-            }
-            root = Core::remove_initialized_tick(pool_key, root, next);
-            next = next - i129 { mag: 1, sign: false };
-        };
-        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
-        check_tree_correctness(pool_key, root, Option::None(()));
-
-        // remove the root node 5 times
-        next = i129 { mag: 0, sign: false };
-        loop {
-            if (next > i129 { mag: 4, sign: false }) {
-                break ();
-            }
-            root = Core::remove_initialized_tick(pool_key, root, root.unwrap());
-            next = next + i129 { mag: 1, sign: false };
-        };
-        assert(!is_tree_balanced(pool_key, root), 'tree is not balanced');
-        check_tree_correctness(pool_key, root, Option::None(()));
-
-        root = rebalance_tree(pool_key, root.unwrap());
-        assert(is_tree_balanced(pool_key, root), 'tree is balanced');
-        check_tree_correctness(pool_key, root, Option::None(()));
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_balanced_remove_left() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 0, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-
-        root_tick =
-            Core::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Core::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.left == Option::None(()), 'left is gone');
-        assert(root_node.right == Option::Some(i129 { mag: 1, sign: false }), 'right is 1');
-    }
-
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_balanced_remove_right() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 0, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        root_tick =
-            Core::remove_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(root_tick == Option::Some(i129 { mag: 0, sign: false }), 'root tick is 0');
-        let root_node = Core::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
-        assert(root_node.right == Option::None(()), 'right is gone');
-    }
-
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_balanced_remove_root() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 0, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-
-        root_tick =
-            Core::remove_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false });
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(root_tick == Option::Some(i129 { mag: 1, sign: false }), 'root tick is 1');
-        let root_node = Core::initialized_ticks::read((pool_key, root_tick.unwrap()));
-        assert(root_node.parent == Option::None(()), 'parent is none');
-        assert(root_node.left == Option::Some(i129 { mag: 1, sign: true }), 'left is -1');
-        assert(root_node.right == Option::None(()), 'right is empty');
-    }
-
-
-    #[test]
-    #[available_gas(100000000)]
-    fn test_insert_many_ticks_prev_next() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 100, sign: true }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: false });
-
-        assert(!is_tree_balanced(pool_key, root_tick), 'tree not balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
-                .expect('>-42') == i129 {
-                mag: 10, sign: true
-            },
-            'next tick of -42'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
-                .expect('<=-42') == i129 {
-                mag: 50, sign: true
-            },
-            'prev tick of -42'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
-                .expect('>42') == i129 {
-                mag: 50, sign: false
-            },
-            'next tick of 42'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
-                .expect('<=42') == i129 {
-                mag: 10, sign: false
-            },
-            'prev tick of 42'
-        );
-
-        root_tick = rebalance_tree(pool_key, root_tick.unwrap());
-        assert(is_tree_balanced(pool_key, root_tick), 'tree is balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-    }
-
-    #[test]
-    #[available_gas(100000000)]
-    fn test_insert_many_ticks_prev_next_reverse_order_insert() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 100, sign: false }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 5, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 10, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 50, sign: true });
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 100, sign: true });
-
-        assert(!is_tree_balanced(pool_key, root_tick), 'tree not balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
-                .expect('>-42') == i129 {
-                mag: 10, sign: true
-            },
-            'next tick of -42'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: true })
-                .expect('<=-42') == i129 {
-                mag: 50, sign: true
-            },
-            'prev tick of -42'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
-                .expect('>42') == i129 {
-                mag: 50, sign: false
-            },
-            'next tick of 42'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 42, sign: false })
-                .expect('<=42') == i129 {
-                mag: 10, sign: false
-            },
-            'prev tick of 42'
-        );
-
-        root_tick = rebalance_tree(pool_key, root_tick.unwrap());
-        assert(is_tree_balanced(pool_key, root_tick), 'tree not balanced');
-        check_tree_correctness(pool_key, root_tick, Option::None(()));
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    #[should_panic(expected: ('ALREADY_EXISTS', ))]
-    fn test_insert_fails_if_already_exists() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-
-        let root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
-        );
-        Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true });
-    }
-
-    // test that removing a tick that does not exist in the tree fails
-    #[test]
-    #[available_gas(50000000)]
-    #[should_panic(expected: ('TICK_NOT_FOUND', ))]
-    fn test_remove_fails_if_does_not_exist() {
-        Core::remove_initialized_tick(
-            PoolKey {
-                token0: contract_address_const::<1>(),
-                token1: contract_address_const::<2>(),
-                fee: 0,
-                tick_spacing: 1,
-            },
-            Option::None(()),
-            i129 { mag: 1000, sign: true }
-        );
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_initialized_tick_next_initialized_tick() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
-        );
-        root_tick =
-            Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
-
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
-                .expect('-1001') == i129 {
-                mag: 1000, sign: true
-            },
-            'next tick of -1001'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
-                .expect('-1000') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of -1000'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
-                .expect('-999') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of -999'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
-                .expect('-1') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of -1'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
-                .expect('0') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of 0'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
-                .expect('1') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of 1'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
-                .expect('999') == i129 {
-                mag: 1000, sign: false
-            },
-            'next tick of 999'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
-                .is_none(),
-            'next tick of 1000'
-        );
-        assert(
-            Core::next_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
-                .is_none(),
-            'next tick of 1001'
-        );
-    }
-
-    #[test]
-    #[available_gas(50000000)]
-    fn test_insert_initialized_tick_prev_initialized_tick() {
-        let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
-            fee: 0,
-            tick_spacing: 1,
-        };
-
-        let mut root_tick = Core::insert_initialized_tick(
-            pool_key, Option::None(()), i129 { mag: 1000, sign: true }
-        );
-        Core::insert_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false });
-
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: true })
-                .is_none(),
-            'prev tick of -1001'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: true })
-                .expect('-1000') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of -1000'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: true })
-                .expect('-999') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of -999'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: true })
-                .expect('-1') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of -1'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 0, sign: false })
-                .expect('0') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of 0'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1, sign: false })
-                .expect('1') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of 1'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 999, sign: false })
-                .expect('999') == i129 {
-                mag: 1000, sign: true
-            },
-            'prev tick of 999'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1000, sign: false })
-                .expect('1000') == i129 {
-                mag: 1000, sign: false
-            },
-            'prev tick of 1000'
-        );
-        assert(
-            Core::prev_initialized_tick(pool_key, root_tick, i129 { mag: 1001, sign: false })
-                .expect('1000') == i129 {
-                mag: 1000, sign: false
-            },
-            'prev tick of 1001'
-        );
     }
 }
 
@@ -1129,7 +477,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
-        assert(pool.root_tick == Option::None(()), 'root tick is none');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -1155,7 +502,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price is min');
-        assert(pool.root_tick == Option::None(()), 'root tick is none');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -1181,7 +527,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
-        assert(pool.root_tick == Option::None(()), 'root tick is none');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -1207,7 +552,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price is max');
-        assert(pool.root_tick == Option::None(()), 'root tick is none');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -1233,7 +577,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price is min');
-        assert(pool.root_tick == Option::None(()), 'root tick is none');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
@@ -1273,7 +616,6 @@ mod locks {
             pool.sqrt_ratio == u256 { low: 340282030041728722151939677011487970083, high: 0 },
             'price lower'
         );
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 1000000000, 'liquidity is original');
         assert(
             pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
@@ -1316,7 +658,6 @@ mod locks {
             pool.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
             'price lower'
         );
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 1000000000, 'liquidity is original');
         assert(
             pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
@@ -1356,7 +697,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == min_sqrt_ratio(), 'price min');
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(
             pool.fee_growth_global_token0 == u256 {
@@ -1398,7 +738,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == max_sqrt_ratio(), 'price min');
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(
             pool.fee_growth_global_token0 == u256 {
@@ -1443,7 +782,6 @@ mod locks {
             pool.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
             'price lower'
         );
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 1000000000, 'liquidity is original');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(
@@ -1486,7 +824,6 @@ mod locks {
             pool.sqrt_ratio == u256 { low: 340282023235747873315526509423414705371, high: 0 },
             'price'
         );
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 1000000000, 'liquidity is original');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(
@@ -1526,7 +863,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == max_sqrt_ratio(), 'ratio after');
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(
@@ -1568,7 +904,6 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == min_sqrt_ratio(), 'ratio after');
-        assert(pool.root_tick == Option::Some(i129 { mag: 10, sign: true }), 'root tick is 10');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(

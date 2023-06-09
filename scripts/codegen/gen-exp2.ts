@@ -6,9 +6,7 @@ function indent(s: string, amt: number): string {
 function genExp2(lower: bigint, upper: bigint, idt: number): string {
     if (lower == upper) {
         const val = 2n ** lower
-        const high = val >> 128n
-        const low = val % (2n ** 128n)
-        return `return u256 { high: 0x${high.toString(16)}, low: 0x${low.toString(16)} };`
+        return `0x${val.toString(16)}`
     }
     const mid = (lower + upper) / 2n
 
@@ -28,6 +26,18 @@ function genExp2(lower: bigint, upper: bigint, idt: number): string {
 }`, idt)
 }
 
-console.log(`fn exp2(n: u8) -> u256 {
-    ${genExp2(0n, 255n, 0)}
+console.log(`
+// Returns 2**n
+fn exp2(n: u8) -> u128 {
+    assert(n < 128, 'exp2');
+    ${genExp2(0n, 127n, 0)}
+}
+
+// Returns 2**n for n > 127
+fn exp2_big(n: u8) -> u256 {
+    if (n > 127) {
+        u256 { high: exp2(n - 128), low: 0 }
+    } else {
+        u256 { high: 0, low: exp2(n) }
+    }
 }`)
