@@ -352,7 +352,7 @@ mod locks {
         let setup = setup_pool(
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
             initial_tick: Default::default()
         );
 
@@ -381,19 +381,19 @@ mod locks {
             initial_tick: Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
-        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000000);
 
         let delta = update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 5000, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 5000, sign: false }, 'amount1_delta');
+        assert(delta.amount0_delta == i129 { mag: 4962643, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 4962643, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -402,7 +402,7 @@ mod locks {
         let setup = setup_pool(
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
             initial_tick: Default::default()
         );
 
@@ -431,7 +431,7 @@ mod locks {
         let setup = setup_pool(
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
             initial_tick: Default::default()
         );
 
@@ -468,7 +468,7 @@ mod locks {
         let setup = setup_pool(
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
             initial_tick: Default::default()
         );
 
@@ -1005,8 +1005,8 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
