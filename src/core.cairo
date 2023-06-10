@@ -339,7 +339,7 @@ mod Core {
             }
         );
 
-        if ((next_liquidity_net == 0) ^ (tick.liquidity_net == 0)) {
+        if ((next_liquidity_net == 0) != (tick.liquidity_net == 0)) {
             if (next_liquidity_net == 0) {
                 remove_initialized_tick(pool_key, index);
             } else {

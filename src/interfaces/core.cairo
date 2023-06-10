@@ -141,9 +141,9 @@ trait ICore {
 
     // Return the next initialized tick from the given tick
     #[external]
-    fn next_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129>;
+    fn next_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> i129;
 
     // Return the previous initialized tick from the given tick
     #[external]
-    fn prev_initialized_tick(pool_key: PoolKey, from: i129) -> Option<i129>;
+    fn prev_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> i129;
 }
