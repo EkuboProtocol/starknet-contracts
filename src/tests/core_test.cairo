@@ -241,13 +241,6 @@ mod initialized_ticks {
             'next from 0, skip 1'
         );
 
-        setup
-            .core
-            .next_initialized_tick(
-                pool_key: setup.pool_key, from: Default::default(), skip_ahead: 5
-            )
-            .print();
-
         assert(
             setup
                 .core
