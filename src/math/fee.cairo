@@ -5,11 +5,10 @@ use ekubo::types::i129::i129;
 #[inline(always)]
 fn compute_fee(amount: u128, fee: u128) -> u128 {
     let num = u256 { low: amount, high: 0 } * u256 { low: fee, high: 0 };
-    let (div, rem) = u256_safe_divmod(num, u256_as_non_zero(u256 { low: 0, high: 1 }));
-    if (rem.low == 0) {
-        div.low
+    if (num.low == 0) {
+        num.high
     } else {
-        div.low + 1
+        num.high + 1
     }
 }
 

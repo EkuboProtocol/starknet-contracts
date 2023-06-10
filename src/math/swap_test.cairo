@@ -279,7 +279,7 @@ fn test_swap_against_liquidity_min_limit_token1_output() {
 
     assert(result.consumed_amount == i129 { mag: 10000, sign: true }, 'consumed_amount');
     assert(
-        result.sqrt_ratio_next == u256 { high: 0, low: 289240011882797693943868416317002979738 },
+        result.sqrt_ratio_next == u256 { high: 0, low: 289240011882797693943868416317002979737 },
         'sqrt_ratio_next'
     );
     assert(result.calculated_amount == 17647, 'calculated_amount');
@@ -300,7 +300,7 @@ fn test_swap_against_liquidity_min_limit_token1_minimum_output() {
 
     assert(result.consumed_amount == i129 { mag: 1, sign: true }, 'consumed_amount');
     assert(
-        result.sqrt_ratio_next == u256 { high: 0, low: 340275561273600044694105339939619576092 },
+        result.sqrt_ratio_next == u256 { high: 0, low: 340275561273600044694105339939619576091 },
         'sqrt_ratio_next'
     );
     assert(result.calculated_amount == 2, 'calculated_amount');

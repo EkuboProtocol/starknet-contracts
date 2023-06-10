@@ -486,23 +486,21 @@ mod Core {
         };
         let position: Position = positions::read((pool_key, position_key));
 
-        let amount0_fees = muldiv(
+        let (amount0_fees, _) = muldiv(
             unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
             u256 { low: position.liquidity, high: 0 },
             u256 { low: 0, high: 1 },
             false
-        )
-            .low;
-        let amount1_fees = muldiv(
+        );
+        let (amount1_fees, _) = muldiv(
             unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
             u256 { low: position.liquidity, high: 0 },
             u256 { low: 0, high: 1 },
             false
-        )
-            .low;
+        );
 
-        amount0_delta += i129 { mag: amount0_fees, sign: true };
-        amount1_delta += i129 { mag: amount1_fees, sign: true };
+        amount0_delta += i129 { mag: amount0_fees.low, sign: true };
+        amount1_delta += i129 { mag: amount1_fees.low, sign: true };
 
         // update the position
         positions::write(
@@ -618,7 +616,8 @@ mod Core {
             sqrt_ratio = swap_result.sqrt_ratio_next;
             calculated_amount += swap_result.calculated_amount;
 
-            if (liquidity != 0) {
+            // this only happens when liquidity != 0
+            if (swap_result.fee_amount != 0) {
                 fee_growth_global += u256 {
                     low: 0, high: swap_result.fee_amount
                     } / u256 {
@@ -634,6 +633,7 @@ mod Core {
                     } else {
                         next_tick - i129 { mag: 1, sign: false }
                     };
+
                 if (is_initialized) {
                     let tick_data = ticks::read((pool_key, next_tick));
                     // update our working liquidity based on the direction we are crossing the tick

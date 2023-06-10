@@ -1203,7 +1203,7 @@ mod locks {
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(
-            pool.sqrt_ratio == u256 { low: 340282023235747873315526509423414705371, high: 0 },
+            pool.sqrt_ratio == u256 { low: 340282023235747873315526509423414705370, high: 0 },
             'price'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
@@ -1273,8 +1273,8 @@ mod locks {
             initial_tick: Default::default()
         );
 
-        setup.token0.increase_balance(setup.locker.contract_address, 100000000000);
-        setup.token1.increase_balance(setup.locker.contract_address, 100000000000);
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
 
         update_position(
             setup,
@@ -1297,10 +1297,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        delta.print();
-
-        assert(delta.amount0_delta == i129 { mag: 50, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 50, sign: true }, 'amount1_delta');
+        assert(delta.amount0_delta == i129 { mag: 49873, sign: false }, 'amount0_delta');
+        assert(delta.amount1_delta == i129 { mag: 49627, sign: true }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
@@ -1308,7 +1306,7 @@ mod locks {
         assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
         assert(
             pool.fee_growth_global_token1 == u256 {
-                low: 34028236692093846346337460743176, high: 0
+                low: 16912033635970641634129717989358880, high: 0
             },
             'fgg1 != 0'
         );

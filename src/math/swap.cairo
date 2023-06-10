@@ -62,16 +62,14 @@ fn swap_result(
     // we know limit != sqrt_ratio because of the early return, so this ensures that the limit is in the correct direction
     assert((sqrt_ratio_limit > sqrt_ratio) == increasing, 'DIRECTION');
 
-    // todo: below this line still under construction
-
     // this amount is what moves the price. fee is always taken on the specified amount
     let with_fee = amount_with_fee(amount, fee);
 
     // compute the next sqrt_ratio resulting from trading the entire input/output amount
     let mut sqrt_ratio_next: u256 = if (is_token1) {
-        next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, with_fee)
+        next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, with_fee, sqrt_ratio_limit)
     } else {
-        next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, with_fee)
+        next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, with_fee, sqrt_ratio_limit)
     };
 
     // if we exceeded the limit, then adjust the delta to be the amount spent to reach the limit

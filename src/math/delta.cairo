@@ -1,9 +1,15 @@
 use ekubo::types::i129::i129;
 use ekubo::math::muldiv::{muldiv, div};
-use integer::{u256_wide_mul, u256_safe_divmod, u256_as_non_zero};
+use integer::{
+    u256_wide_mul, u256_safe_divmod, u256_as_non_zero, u256_overflow_mul, u256_overflow_sub,
+    u256_overflowing_add
+};
 
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
-fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129) -> u256 {
+// The default result is returned on overflow
+fn next_sqrt_ratio_from_amount0(
+    sqrt_ratio: u256, liquidity: u128, amount: i129, default_result: u256
+) -> u256 {
     if (amount.mag == 0) {
         return sqrt_ratio;
     }
@@ -14,27 +20,46 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
 
     if (amount.sign) {
         // this will revert on overflow, which is fine because it also means the denominator underflows on line 17
-        let product = u256 { low: amount.mag, high: 0 } * sqrt_ratio;
+        let (product, overflow_mul) = u256_overflow_mul(
+            u256 { low: amount.mag, high: 0 }, sqrt_ratio
+        );
 
-        let denominator = numerator1 - product;
+        if (overflow_mul) {
+            return default_result;
+        }
 
-        return muldiv(numerator1, sqrt_ratio, denominator, true);
+        let (denominator, overflow_sub) = u256_overflow_sub(numerator1, product);
+        if (overflow_sub) {
+            return default_result;
+        }
+
+        let (result, overflows) = muldiv(numerator1, sqrt_ratio, denominator, true);
+        if (overflows) {
+            return default_result;
+        }
+        return result;
     } else {
         // adding amount0, taking out amount1, price is less than sqrt_ratio and should round up
         let denominator = (numerator1 / sqrt_ratio) + u256 { high: 0, low: amount.mag };
 
         // we know denominator is non-zero because amount.mag is non-zero
         let (quotient, remainder) = u256_safe_divmod(numerator1, u256_as_non_zero(denominator));
-        return if (remainder != u256 { low: 0, high: 0 }) {
-            quotient + u256 { low: 1, high: 0 }
-        } else {
+        return if (remainder == u256 { low: 0, high: 0 }) {
             quotient
+        } else {
+            let (result, overflow) = u256_overflowing_add(quotient, u256 { low: 1, high: 0 });
+            if (overflow) {
+                return default_result;
+            }
+            result
         };
     }
 }
 
 // Compute the next ratio from a delta amount1, always rounded towards the starting price
-fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129) -> u256 {
+fn next_sqrt_ratio_from_amount1(
+    sqrt_ratio: u256, liquidity: u128, amount: i129, default_result: u256
+) -> u256 {
     if (amount.mag == 0) {
         return sqrt_ratio;
     }
@@ -48,14 +73,27 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
     // because quotient is rounded down, this price movement is also rounded towards sqrt_ratio
     if (amount.sign) {
         // adding amount1, taking out amount0
-        return if (remainder != u256 { low: 0, high: 0 }) {
-            sqrt_ratio - quotient
+        let (res, overflow) = u256_overflow_sub(sqrt_ratio, quotient);
+        if (overflow) {
+            return default_result;
+        }
+
+        return if (remainder == u256 { low: 0, high: 0 }) {
+            res
         } else {
-            sqrt_ratio - quotient - u256 { low: 1, high: 0 }
+            if (res != u256 { low: 0, high: 0 }) {
+                res - u256 { low: 1, high: 0 }
+            } else {
+                default_result
+            }
         };
     } else {
         // adding amount1, taking out amount0, price goes up
-        return sqrt_ratio + quotient;
+        let (res, overflow) = u256_overflowing_add(sqrt_ratio, quotient);
+        if (overflow) {
+            return default_result;
+        }
+        return res;
     }
 }
 
@@ -73,10 +111,13 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
         return 0;
     }
 
-    let numerator1 = u256 { low: 0, high: liquidity };
-    let numerator2 = sqrt_ratio_upper - sqrt_ratio_lower;
-
-    let result_0 = muldiv(numerator1, numerator2, sqrt_ratio_upper, round_up);
+    let (result_0, result_0_overflow) = muldiv(
+        u256 { low: 0, high: liquidity },
+        sqrt_ratio_upper - sqrt_ratio_lower,
+        sqrt_ratio_upper,
+        round_up
+    );
+    assert(!result_0_overflow, 'OVERFLOW_AMOUNT0_DELTA_0');
     let result = div(result_0, sqrt_ratio_lower, round_up);
     assert(result.high == 0, 'OVERFLOW_AMOUNT0_DELTA');
 

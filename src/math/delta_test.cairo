@@ -9,7 +9,7 @@ use ekubo::math::delta::{
 fn test_next_sqrt_ratio_from_amount0_add_price_goes_down() {
     // adding amount0 means price goes down
     let next_ratio = next_sqrt_ratio_from_amount0(
-        u256 { high: 1, low: 0 }, 1000000, i129 { mag: 1000, sign: false }
+        u256 { high: 1, low: 0 }, 1000000, i129 { mag: 1000, sign: false }, u256 { low: 0, high: 0 }
     );
     assert(next_ratio == u256 { low: 339942424496442021441932674757011200256, high: 0 }, 'price');
 }
@@ -18,7 +18,10 @@ fn test_next_sqrt_ratio_from_amount0_add_price_goes_down() {
 fn test_next_sqrt_ratio_from_amount0_sub_price_goes_up() {
     // adding amount0 means price goes down
     let next_ratio = next_sqrt_ratio_from_amount0(
-        u256 { low: 0, high: 1 }, 100000000000, i129 { mag: 1000, sign: true }
+        u256 { low: 0, high: 1 },
+        100000000000,
+        i129 { mag: 1000, sign: true },
+        u256 { low: 0, high: 0 }
     );
     assert(next_ratio == u256 { low: 3402823703237621667009962744418, high: 1 }, 'price');
 }
@@ -97,7 +100,7 @@ fn test_amount0_delta_price_up_round_up() {
 fn test_next_sqrt_ratio_from_amount1_add_price_goes_up() {
     // adding amount0 means price goes down
     let next_ratio = next_sqrt_ratio_from_amount1(
-        u256 { high: 1, low: 0 }, 1000000, i129 { mag: 1000, sign: false }
+        u256 { high: 1, low: 0 }, 1000000, i129 { mag: 1000, sign: false }, u256 { low: 0, high: 0 }
     );
     assert(next_ratio == u256 { low: 340282366920938463463374607431768211, high: 1 }, 'price');
 }
@@ -106,9 +109,9 @@ fn test_next_sqrt_ratio_from_amount1_add_price_goes_up() {
 fn test_next_sqrt_ratio_from_amount1_sub_price_goes_down() {
     // adding amount0 means price goes down
     let next_ratio = next_sqrt_ratio_from_amount1(
-        u256 { low: 0, high: 1 }, 1000000, i129 { mag: 1000, sign: true }
+        u256 { low: 0, high: 1 }, 1000000, i129 { mag: 1000, sign: true }, u256 { low: 0, high: 0 }
     );
-    assert(next_ratio == u256 { low: 339942084554017524999911232824336443245, high: 0 }, 'price');
+    assert(next_ratio == u256 { low: 339942084554017524999911232824336443244, high: 0 }, 'price');
 }
 
 #[test]
