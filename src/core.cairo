@@ -20,6 +20,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::muldiv::muldiv;
     use ekubo::math::exp2::{exp2};
+    use ekubo::math::mask::{mask};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb_low, lsb_low};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
@@ -278,10 +279,8 @@ mod Core {
 
         let bitmap = tick_bitmaps::read((pool_key, word_index));
         // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
-        let mask = (exp2(bit_index) - 1);
-
         // now the next tick is at the most significant bit in the masked bitmap
-        let masked = bitmap & mask;
+        let masked = bitmap & mask(bit_index);
 
         // if it's 0, we know there is no set bit in this word
         if (masked == 0) {
@@ -542,6 +541,8 @@ mod Core {
 
         Delta { amount0_delta, amount1_delta }
     }
+
+    use debug::PrintTrait;
 
     #[external]
     fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta {

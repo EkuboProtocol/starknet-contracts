@@ -30,14 +30,14 @@ console.log(`
 // Returns (2**n) - 1
 fn mask(n: u8) -> u128 {
     assert(n < 128, 'mask');
-    ${genMask(0n, 255n, 0)}
+    ${genMask(0n, 127n, 0)}
 }
 
 // Returns (2**n) - 1 for n > 127
 fn mask_big(n: u8) -> u256 {
     if (n > 127) {
-        u256 { high: mask(n - 128), low: 0 }
+        u256 { high: mask(n - 128), low: 0xffffffffffffffffffffffffffffffff }
     } else {
-        u256 { high: 0, low: exp2(n) }
+        u256 { high: 0, low: mask(n) }
     }
 }`)
