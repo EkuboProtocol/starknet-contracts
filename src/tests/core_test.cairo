@@ -526,6 +526,30 @@ mod locks {
             Default::default(),
             contract_address_const::<42>()
         );
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key,
+                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                    skip_ahead: 1
+                ) != i129 {
+                mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+            },
+            'ticks not initialized'
+        );
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key,
+                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                    skip_ahead: 1
+                ) != i129 {
+                mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+            },
+            'ticks not initialized'
+        );
     }
 
     #[test]
@@ -728,6 +752,23 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
+                ) == min_tick(),
+            'ticks initialized'
+        );
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
+                ) == max_tick(),
+            'ticks initialized'
+        );
+
         assert(delta.amount0_delta == i129 { mag: 494999999, sign: true }, 'amount0_delta');
         assert(delta.amount1_delta == i129 { mag: 494999999, sign: true }, 'amount1_delta');
     }
@@ -763,6 +804,24 @@ mod locks {
             tick_upper: max_tick(),
             liquidity_delta: i129 { mag: 1000000000, sign: true },
             recipient: contract_address_const::<42>()
+        );
+
+
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
+                ) != min_tick(),
+            'ticks initialized'
+        );
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
+                ) != max_tick(),
+            'ticks initialized'
         );
 
         assert(delta.amount0_delta == i129 { mag: 989999999, sign: true }, 'amount0_delta');
