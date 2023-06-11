@@ -1,52 +1,47 @@
 use starknet::{ContractAddress};
 
-#[abi]
-trait IMockERC20 {
-    #[view]
-    fn balance_of(address: ContractAddress) -> u256;
-    #[external]
-    fn transfer(to: ContractAddress, amount: u256);
-    #[external]
-    fn set_balance(address: ContractAddress, amount: u256);
-    #[external]
-    fn increase_balance(address: ContractAddress, amount: u128);
-    #[external]
-    fn decrease_balance(address: ContractAddress, amount: u128);
+#[starknet::interface]
+trait IMockERC20<TStorage> {
+    fn balance_of(self: @TStorage, address: ContractAddress) -> u256;
+    fn transfer(ref self: TStorage, to: ContractAddress, amount: u256);
+    fn set_balance(ref self: TStorage, address: ContractAddress, amount: u256);
+    fn increase_balance(ref self: TStorage, address: ContractAddress, amount: u128);
+    fn decrease_balance(ref self: TStorage, address: ContractAddress, amount: u128);
 }
 
-#[contract]
+#[starknet::contract]
 mod MockERC20 {
+    use super::{IMockERC20};
     use starknet::{ContractAddress, get_caller_address};
 
+    #[storage]
     struct Storage {
         balances: LegacyMap<ContractAddress, u256>
     }
 
-    #[view]
-    fn balance_of(address: ContractAddress) -> u256 {
-        balances::read(address)
-    }
+    #[external(v0)]
+    impl MockERC20Impl of IMockERC20<Storage> {
+        fn balance_of(self: @Storage, address: ContractAddress) -> u256 {
+            self.balances.read(address)
+        }
 
-    #[external]
-    fn transfer(to: ContractAddress, amount: u256) {
-        let caller = get_caller_address();
-        assert(balance_of(caller) >= amount, 'INSUFFICIENT_BALANCE');
-        balances::write(caller, balance_of(caller) - amount);
-        balances::write(to, balance_of(to) + amount);
-    }
+        fn transfer(ref self: Storage, to: ContractAddress, amount: u256) {
+            let caller = get_caller_address();
+            assert(self.balance_of(caller) >= amount, 'INSUFFICIENT_BALANCE');
+            self.balances.write(caller, self.balance_of(caller) - amount);
+            self.balances.write(to, self.balance_of(to) + amount);
+        }
 
-    #[external]
-    fn set_balance(address: ContractAddress, amount: u256) {
-        balances::write(address, amount);
-    }
+        fn set_balance(ref self: Storage, address: ContractAddress, amount: u256) {
+            self.balances.write(address, amount);
+        }
 
-    #[external]
-    fn increase_balance(address: ContractAddress, amount: u128) {
-        balances::write(address, balance_of(address) + u256 { low: amount, high: 0 });
-    }
+        fn increase_balance(ref self: Storage, address: ContractAddress, amount: u128) {
+            self.balances.write(address, self.balance_of(address) + u256 { low: amount, high: 0 });
+        }
 
-    #[external]
-    fn decrease_balance(address: ContractAddress, amount: u128) {
-        balances::write(address, balance_of(address) - u256 { low: amount, high: 0 });
+        fn decrease_balance(ref self: Storage, address: ContractAddress, amount: u128) {
+            self.balances.write(address, self.balance_of(address) - u256 { low: amount, high: 0 });
+        }
     }
 }

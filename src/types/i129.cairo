@@ -81,13 +81,31 @@ impl i129LegacyHash of LegacyHash<i129> {
     }
 }
 
+
 impl i129StorageAccess of StorageAccess<i129> {
     fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<i129> {
-        let x: felt252 = StorageAccess::<felt252>::read(address_domain, base)?;
-        Result::Ok(x.into())
+        StorageAccess::<i129>::read_at_offset_internal(address_domain, base, 0_u8)
     }
     fn write(address_domain: u32, base: StorageBaseAddress, value: i129) -> SyscallResult<()> {
-        StorageAccess::<felt252>::write(address_domain, base, value.into())
+        StorageAccess::<i129>::write_at_offset_internal(address_domain, base, 0_u8, value.into())
+    }
+    fn read_at_offset_internal(
+        address_domain: u32, base: StorageBaseAddress, offset: u8
+    ) -> SyscallResult<i129> {
+        let x: felt252 = StorageAccess::<felt252>::read_at_offset_internal(
+            address_domain, base, offset
+        )?;
+        Result::Ok(x.into())
+    }
+    fn write_at_offset_internal(
+        address_domain: u32, base: StorageBaseAddress, offset: u8, value: i129
+    ) -> SyscallResult<()> {
+        StorageAccess::<felt252>::write_at_offset_internal(
+            address_domain, base, offset, value.into()
+        )
+    }
+    fn size_internal(value: i129) -> u8 {
+        1
     }
 }
 
@@ -144,17 +162,17 @@ impl i129DivEq of DivEq<i129> {
 }
 
 impl i129PartialEq of PartialEq<i129> {
-    fn eq(lhs: i129, rhs: i129) -> bool {
+    fn eq(lhs: @i129, rhs: @i129) -> bool {
         i129_eq(lhs, rhs)
     }
 
-    fn ne(lhs: i129, rhs: i129) -> bool {
+    fn ne(lhs: @i129, rhs: @i129) -> bool {
         !i129_eq(lhs, rhs)
     }
 }
 
 
-fn i129_option_eq(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+fn i129_option_eq(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
     match lhs {
         Option::Some(lhs_value) => {
             match rhs {
@@ -174,11 +192,11 @@ fn i129_option_eq(lhs: Option<i129>, rhs: Option<i129>) -> bool {
 }
 
 impl i129OptionPartialEq of PartialEq<Option<i129>> {
-    fn eq(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+    fn eq(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
         i129_option_eq(lhs, rhs)
     }
 
-    fn ne(lhs: Option<i129>, rhs: Option<i129>) -> bool {
+    fn ne(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
         !i129_option_eq(lhs, rhs)
     }
 }
@@ -236,7 +254,7 @@ fn i129_div(a: i129, b: i129) -> i129 {
 }
 
 #[inline(always)]
-fn i129_eq(a: i129, b: i129) -> bool {
+fn i129_eq(a: @i129, b: @i129) -> bool {
     (a.mag == b.mag) & ((a.sign == b.sign) | (a.mag == 0))
 }
 

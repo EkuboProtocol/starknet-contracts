@@ -142,7 +142,7 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
 
     assert((result.limb3 == 0) & (result.limb2 == 0), 'OVERFLOW');
 
-    if (round_up & result.limb0 != 0) {
+    if (round_up & (result.limb0 != 0)) {
         result.limb1 + 1
     } else {
         result.limb1

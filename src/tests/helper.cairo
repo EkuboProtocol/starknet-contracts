@@ -228,7 +228,7 @@ fn swap(
             Action::Swap(
                 (
                     setup.pool_key, SwapParameters {
-                        amount, is_token1, sqrt_ratio_limit, skip_ahead, 
+                        amount, is_token1, sqrt_ratio_limit, skip_ahead
                     }, recipient
                 )
             )

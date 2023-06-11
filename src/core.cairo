@@ -1,9 +1,9 @@
-#[contract]
+#[starknet::contract]
 mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState
+        LockerState, ICore
     };
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address
@@ -28,6 +28,7 @@ mod Core {
     use ekubo::types::storage::{Tick, Position, Pool};
     use ekubo::types::keys::{PositionKey, PoolKey};
 
+    #[storage]
     struct Storage {
         // the owner is the one who controls withdrawal fees
         owner: ContractAddress,
@@ -52,664 +53,735 @@ mod Core {
         saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
     }
 
-    #[event]
-    fn OwnerChanged(old_owner: ContractAddress, new_owner: ContractAddress) {}
 
-    #[event]
-    fn FeesWithdrawn(recipient: ContractAddress, token: ContractAddress, amount: u128) {}
+    #[derive(starknet::Event, Drop)]
+    struct OwnerChanged {
+        old_owner: ContractAddress,
+        new_owner: ContractAddress
+    }
 
-    #[event]
-    fn PoolInitialized(pool_key: PoolKey, initial_tick: i129) {}
+    #[derive(starknet::Event, Drop)]
+    struct FeesWithdrawn {
+        recipient: ContractAddress,
+        token: ContractAddress,
+        amount: u128
+    }
 
+    #[derive(starknet::Event, Drop)]
+    struct PoolInitialized {
+        pool_key: PoolKey,
+        initial_tick: i129
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct PositionUpdated {
+        pool_key: PoolKey,
+        position_key: PositionKey,
+        liquidity_delta: i129
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
-    fn PositionUpdated(pool_key: PoolKey, position_key: PositionKey, liquidity_delta: i129) {}
+    enum Event {
+        OwnerChanged: OwnerChanged,
+        FeesWithdrawn: FeesWithdrawn,
+        PoolInitialized: PoolInitialized,
+        PositionUpdated: PositionUpdated,
+    }
 
     #[constructor]
-    fn constructor(_owner: ContractAddress) {
-        owner::write(_owner);
+    fn constructor(ref self: Storage, _owner: ContractAddress) {
+        self.owner.write(_owner);
     }
 
-    #[view]
-    fn get_owner() -> ContractAddress {
-        owner::read()
-    }
-
-
-    #[view]
-    fn get_locker_state(id: felt252) -> LockerState {
-        let address = locker_addresses::read(id);
-        let nonzero_delta_count = nonzero_delta_counts::read(id);
-        LockerState { id, address, nonzero_delta_count }
-    }
-
-    #[view]
-    fn get_pool(pool_key: PoolKey) -> Pool {
-        pools::read(pool_key)
-    }
-
-    #[view]
-    fn get_reserves(token: ContractAddress) -> u256 {
-        reserves::read(token)
-    }
-
-    #[view]
-    fn get_tick(pool_key: PoolKey, index: i129) -> Tick {
-        ticks::read((pool_key, index))
-    }
-
-    #[view]
-    fn get_position(pool_key: PoolKey, position_key: PositionKey) -> Position {
-        positions::read((pool_key, position_key))
-    }
-
-    #[view]
-    fn get_saved_balance(owner: ContractAddress, token: ContractAddress) -> u128 {
-        saved_balances::read((owner, token))
-    }
-
-    #[external]
-    fn set_owner(new_owner: ContractAddress) {
-        let old_owner = owner::read();
-        assert(get_caller_address() == old_owner, 'OWNER_ONLY');
-        owner::write(new_owner);
-        OwnerChanged(old_owner, new_owner);
-    }
-
-    #[external]
-    fn withdraw_fees_collected(recipient: ContractAddress, token: ContractAddress, amount: u128) {
-        let collected: u128 = fees_collected::read(token);
-        fees_collected::write(token, collected - amount);
-        IERC20Dispatcher {
-            contract_address: token
-        }.transfer(recipient, u256 { low: amount, high: 0 });
-        FeesWithdrawn(recipient, token, amount);
-    }
-
-    #[external]
-    fn lock(data: Array<felt252>) -> Array<felt252> {
-        let id = lock_count::read();
-        let caller = get_caller_address();
-
-        lock_count::write(id + 1);
-        locker_addresses::write(id, caller);
-
-        let result = ILockerDispatcher { contract_address: caller }.locked(id, data);
-
-        assert(nonzero_delta_counts::read(id) == 0, 'NOT_ZEROED');
-
-        lock_count::write(id);
-        locker_addresses::write(id, contract_address_const::<0>());
-
-        result
-    }
-
-    #[internal]
-    fn require_locker() -> (felt252, ContractAddress) {
-        let id = lock_count::read() - 1;
-        let locker = locker_addresses::read(id);
-        assert(locker == get_caller_address(), 'NOT_LOCKER');
-        (id, locker)
-    }
-
-    #[internal]
-    fn account_delta(id: felt252, token_address: ContractAddress, delta: i129) {
-        let key = (id, token_address);
-        let current = deltas::read(key);
-        let next = current + delta;
-        deltas::write(key, next);
-        if ((current.mag == 0) & (next.mag != 0)) {
-            nonzero_delta_counts::write(id, nonzero_delta_counts::read(id) + 1);
-        } else if ((current.mag != 0) & (next.mag == 0)) {
-            nonzero_delta_counts::write(id, nonzero_delta_counts::read(id) - 1);
+    #[generate_trait]
+    impl CoreInternal of CoreInternalTrait {
+        fn require_locker(ref self: Storage) -> (felt252, ContractAddress) {
+            let id = self.lock_count.read() - 1;
+            let locker = self.locker_addresses.read(id);
+            assert(locker == get_caller_address(), 'NOT_LOCKER');
+            (id, locker)
         }
-    }
 
-    #[external]
-    fn withdraw(token_address: ContractAddress, recipient: ContractAddress, amount: u128) {
-        let (id, _) = require_locker();
-
-        let res = reserves::read(token_address);
-        assert(res >= u256 { low: amount, high: 0 }, 'INSUFFICIENT_RESERVES');
-        reserves::write(token_address, res - u256 { high: 0, low: amount });
-
-        // tracks the delta for the given token address
-        account_delta(id, token_address, i129 { mag: amount, sign: false });
-
-        IERC20Dispatcher {
-            contract_address: token_address
-        }.transfer(recipient, u256 { low: amount, high: 0 });
-    }
-
-    #[external]
-    fn save(token_address: ContractAddress, recipient: ContractAddress, amount: u128) {
-        let (id, _) = require_locker();
-
-        let saved_balance = saved_balances::read((recipient, token_address));
-        saved_balances::write((recipient, token_address), saved_balance + amount);
-
-        // tracks the delta for the given token address
-        account_delta(id, token_address, i129 { mag: amount, sign: false });
-    }
-
-    #[external]
-    fn deposit(token_address: ContractAddress) -> u128 {
-        let (id, _) = require_locker();
-
-        let balance = IERC20Dispatcher {
-            contract_address: token_address
-        }.balance_of(get_contract_address());
-
-        let reserve = reserves::read(token_address);
-        // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
-        assert(balance >= reserve, 'BALANCE_LT_RESERVE');
-        let delta = balance - reserve;
-        // the delta is limited to u128
-        assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
-
-        account_delta(id, token_address, i129 { mag: delta.low, sign: true });
-
-        reserves::write(token_address, balance);
-
-        delta.low
-    }
-
-    #[external]
-    fn load(token_address: ContractAddress, amount: u128) {
-        let (id, locker) = require_locker();
-
-        let saved_balance = saved_balances::read((locker, token_address));
-        saved_balances::write((locker, token_address), saved_balance - amount);
-
-        account_delta(id, token_address, i129 { mag: amount, sign: true });
-    }
-
-    #[external]
-    fn initialize_pool(pool_key: PoolKey, initial_tick: i129) {
-        // token0 is always l.t. token1
-        assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
-        assert(pool_key.token0 != contract_address_const::<0>(), 'TOKEN_ZERO');
-        assert(
-            (pool_key.tick_spacing != Default::default())
-                & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
-            'TICK_SPACING'
-        );
-
-        let pool = pools::read(pool_key);
-        assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
-
-        pools::write(
-            pool_key,
-            Pool {
-                sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
-                tick: initial_tick,
-                liquidity: Default::default(),
-                fee_growth_global_token0: Default::default(),
-                fee_growth_global_token1: Default::default(),
+        fn account_delta(
+            ref self: Storage, id: felt252, token_address: ContractAddress, delta: i129
+        ) {
+            let key = (id, token_address);
+            let current = self.deltas.read(key);
+            let next = current + delta;
+            self.deltas.write(key, next);
+            if ((current.mag == 0) & (next.mag != 0)) {
+                self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) + 1);
+            } else if ((current.mag != 0) & (next.mag == 0)) {
+                self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) - 1);
             }
-        );
-
-        PoolInitialized(pool_key, initial_tick);
-    }
-
-
-    // Remove the initialized tick for the given pool
-    #[internal]
-    fn remove_initialized_tick(pool_key: PoolKey, index: i129) {
-        let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
-        let bitmap = tick_bitmaps::read((pool_key, word_index));
-        // it is assumed that bitmap already contains the set bit exp2(bit_index)
-        tick_bitmaps::write((pool_key, word_index), bitmap - exp2(bit_index));
-    }
-
-    // Insert an initialized tick for the given pool
-    #[internal]
-    fn insert_initialized_tick(pool_key: PoolKey, index: i129) {
-        let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
-        let bitmap = tick_bitmaps::read((pool_key, word_index));
-        // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
-        tick_bitmaps::write((pool_key, word_index), bitmap + exp2(bit_index));
-    }
-
-    // Returns the tick > from to iterate towards that may or may not be initialized
-    #[external]
-    fn next_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> (i129, bool) {
-        let (word_index, bit_index) = tick_to_word_and_bit_index(
-            from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
-        );
-
-        let bitmap = tick_bitmaps::read((pool_key, word_index));
-        // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
-        // now the next tick is at the most significant bit in the masked bitmap
-        let masked = bitmap & mask(bit_index);
-
-        // if it's 0, we know there is no set bit in this word
-        if (masked == 0) {
-            let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
-            if (skip_ahead == 0) {
-                (next, false)
-            } else {
-                next_initialized_tick(pool_key, next, skip_ahead - 1)
-            }
-        } else {
-            (word_and_bit_index_to_tick((word_index, msb_low(masked)), pool_key.tick_spacing), true)
         }
-    }
 
-    // Returns the next tick <= from to iterate towards
-    #[external]
-    fn prev_initialized_tick(pool_key: PoolKey, from: i129, skip_ahead: u128) -> (i129, bool) {
-        let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
-
-        let bitmap = tick_bitmaps::read((pool_key, word_index));
-
-        let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
-
-        let masked = bitmap & mask;
-
-        // if it's 0, we know there is no set bit in this word
-        if (masked == 0) {
-            let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
-            if (skip_ahead == 0) {
-                (prev, false)
-            } else {
-                prev_initialized_tick(pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1)
-            }
-        } else {
-            (word_and_bit_index_to_tick((word_index, lsb_low(masked)), pool_key.tick_spacing), true)
+        // Remove the initialized tick for the given pool
+        fn remove_initialized_tick(ref self: Storage, pool_key: PoolKey, index: i129) {
+            let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            // it is assumed that bitmap already contains the set bit exp2(bit_index)
+            self.tick_bitmaps.write((pool_key, word_index), bitmap - exp2(bit_index));
         }
-    }
 
-    #[internal]
-    fn update_tick(pool_key: PoolKey, index: i129, liquidity_delta: i129, is_upper: bool) {
-        let tick = ticks::read((pool_key, index));
+        // Insert an initialized tick for the given pool
+        fn insert_initialized_tick(ref self: Storage, pool_key: PoolKey, index: i129) {
+            let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
+            self.tick_bitmaps.write((pool_key, word_index), bitmap + exp2(bit_index));
+        }
 
-        let next_liquidity_net = add_delta(tick.liquidity_net, liquidity_delta);
+        fn update_tick(
+            ref self: Storage, pool_key: PoolKey, index: i129, liquidity_delta: i129, is_upper: bool
+        ) {
+            let tick = self.ticks.read((pool_key, index));
 
-        ticks::write(
-            (pool_key, index),
-            Tick {
-                liquidity_delta: if is_upper {
-                    tick.liquidity_delta - liquidity_delta
+            let next_liquidity_net = add_delta(tick.liquidity_net, liquidity_delta);
+
+            self
+                .ticks
+                .write(
+                    (pool_key, index),
+                    Tick {
+                        liquidity_delta: if is_upper {
+                            tick.liquidity_delta - liquidity_delta
+                        } else {
+                            tick.liquidity_delta + liquidity_delta
+                        },
+                        liquidity_net: next_liquidity_net,
+                        fee_growth_outside_token0: tick.fee_growth_outside_token0,
+                        fee_growth_outside_token1: tick.fee_growth_outside_token1
+                    }
+                );
+
+            if ((next_liquidity_net == 0) != (tick.liquidity_net == 0)) {
+                if (next_liquidity_net == 0) {
+                    self.remove_initialized_tick(pool_key, index);
                 } else {
-                    tick.liquidity_delta + liquidity_delta
-                },
-                liquidity_net: next_liquidity_net,
-                fee_growth_outside_token0: tick.fee_growth_outside_token0,
-                fee_growth_outside_token1: tick.fee_growth_outside_token1
-            }
-        );
+                    self.insert_initialized_tick(pool_key, index);
+                }
+            };
+        }
 
-        if ((next_liquidity_net == 0) != (tick.liquidity_net == 0)) {
-            if (next_liquidity_net == 0) {
-                remove_initialized_tick(pool_key, index);
-            } else {
-                insert_initialized_tick(pool_key, index);
-            }
-        };
-    }
-
-    #[view]
-    fn get_pool_fee_growth_inside(
-        pool_key: PoolKey, tick_lower: i129, tick_upper: i129
-    ) -> (u256, u256) {
-        let pool = pools::read(pool_key);
-        assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
-
-        let (fee_growth_inside_token0, fee_growth_inside_token1, _) = get_fee_growth_inside(
-            pool_key,
-            pool.tick,
-            pool.fee_growth_global_token0,
-            pool.fee_growth_global_token1,
-            tick_lower,
-            tick_upper
-        );
-
-        (fee_growth_inside_token0, fee_growth_inside_token1)
-    }
-
-    #[internal]
-    fn get_fee_growth_inside(
-        pool_key: PoolKey,
-        pool_tick: i129,
-        pool_fee_growth_global_token0: u256,
-        pool_fee_growth_global_token1: u256,
-        tick_lower: i129,
-        tick_upper: i129
-    ) -> (u256, u256, bool) {
-        if (pool_tick < tick_lower) {
-            let tick_lower_state = ticks::read((pool_key, tick_lower));
-            (
-                unsafe_sub(
-                    pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
-                    pool_fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
-                ),
-                false
-            )
-        } else if (pool_tick < tick_upper) {
-            let tick_lower_state = ticks::read((pool_key, tick_lower));
-            let tick_upper_state = ticks::read((pool_key, tick_upper));
-
-            (
-                unsafe_sub(
+        fn get_fee_growth_inside(
+            self: @Storage,
+            pool_key: PoolKey,
+            pool_tick: i129,
+            pool_fee_growth_global_token0: u256,
+            pool_fee_growth_global_token1: u256,
+            tick_lower: i129,
+            tick_upper: i129
+        ) -> (u256, u256, bool) {
+            if (pool_tick < tick_lower) {
+                let tick_lower_state = self.ticks.read((pool_key, tick_lower));
+                (
                     unsafe_sub(
                         pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
                     ),
-                    tick_upper_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
                     unsafe_sub(
                         pool_fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
                     ),
-                    tick_upper_state.fee_growth_outside_token1
-                ),
-                true
-            )
-        } else {
-            let tick_upper_state = ticks::read((pool_key, tick_upper));
-            (
-                unsafe_sub(
-                    pool_fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
-                ),
-                unsafe_sub(
-                    pool_fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
-                ),
-                false
-            )
+                    false
+                )
+            } else if (pool_tick < tick_upper) {
+                let tick_lower_state = self.ticks.read((pool_key, tick_lower));
+                let tick_upper_state = self.ticks.read((pool_key, tick_upper));
+
+                (
+                    unsafe_sub(
+                        unsafe_sub(
+                            pool_fee_growth_global_token0,
+                            tick_lower_state.fee_growth_outside_token0
+                        ),
+                        tick_upper_state.fee_growth_outside_token0
+                    ),
+                    unsafe_sub(
+                        unsafe_sub(
+                            pool_fee_growth_global_token1,
+                            tick_lower_state.fee_growth_outside_token1
+                        ),
+                        tick_upper_state.fee_growth_outside_token1
+                    ),
+                    true
+                )
+            } else {
+                let tick_upper_state = self.ticks.read((pool_key, tick_upper));
+                (
+                    unsafe_sub(
+                        pool_fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
+                    ),
+                    unsafe_sub(
+                        pool_fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
+                    ),
+                    false
+                )
+            }
         }
     }
 
-    #[external]
-    fn update_position(pool_key: PoolKey, params: UpdatePositionParameters) -> Delta {
-        let (id, locker) = require_locker();
-
-        assert(params.tick_lower < params.tick_upper, 'ORDER');
-        assert(params.tick_lower >= min_tick(), 'MIN');
-        assert(params.tick_upper <= max_tick(), 'MAX');
-        assert(
-            ((params.tick_lower.mag % pool_key.tick_spacing) == 0)
-                & ((params.tick_upper.mag % pool_key.tick_spacing) == 0),
-            'TICK_SPACING'
-        );
-
-        let pool = pools::read(pool_key);
-
-        // pool must be initialized
-        assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
-
-        let (sqrt_ratio_lower, sqrt_ratio_upper) = (
-            tick_to_sqrt_ratio(params.tick_lower), tick_to_sqrt_ratio(params.tick_upper)
-        );
-
-        // first compute the amount deltas due to the liquidity delta
-        let (mut amount0_delta, mut amount1_delta) = liquidity_delta_to_amount_delta(
-            pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
-        );
-
-        // first, account the withdrawal protocol fee, because it's based on the deltas
-        if (params.liquidity_delta.sign) {
-            let amount0_fee = compute_fee(amount0_delta.mag, pool_key.fee);
-            let amount1_fee = compute_fee(amount1_delta.mag, pool_key.fee);
-
-            amount0_delta += i129 { mag: amount0_fee, sign: false };
-            amount1_delta += i129 { mag: amount1_fee, sign: false };
-
-            fees_collected::write(
-                pool_key.token0,
-                accumulate_fee_amount(fees_collected::read(pool_key.token0), amount0_fee)
-            );
-            fees_collected::write(
-                pool_key.token1,
-                accumulate_fee_amount(fees_collected::read(pool_key.token1), amount1_fee)
-            );
+    #[external(v0)]
+    impl Core of ICore<Storage> {
+        fn get_owner(self: @Storage) -> ContractAddress {
+            self.owner.read()
         }
 
-        let (fee_growth_inside_token0, fee_growth_inside_token1, add_delta) = get_fee_growth_inside(
-            pool_key,
-            pool.tick,
-            pool.fee_growth_global_token0,
-            pool.fee_growth_global_token1,
-            params.tick_lower,
-            params.tick_upper
-        );
-
-        let pool_liquidity_next: u128 = if (add_delta) {
-            add_delta(pool.liquidity, params.liquidity_delta)
-        } else {
-            pool.liquidity
-        };
-
-        // here we are accumulating fees owed to the position based on its current liquidity
-        let position_key = PositionKey {
-            owner: locker, tick_lower: params.tick_lower, tick_upper: params.tick_upper
-        };
-        let position: Position = positions::read((pool_key, position_key));
-
-        let (amount0_fees, _) = muldiv(
-            unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
-            u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 },
-            false
-        );
-        let (amount1_fees, _) = muldiv(
-            unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
-            u256 { low: position.liquidity, high: 0 },
-            u256 { low: 0, high: 1 },
-            false
-        );
-
-        amount0_delta += i129 { mag: amount0_fees.low, sign: true };
-        amount1_delta += i129 { mag: amount1_fees.low, sign: true };
-
-        // update the position
-        positions::write(
-            (pool_key, position_key),
-            Position {
-                liquidity: add_delta(position.liquidity, params.liquidity_delta),
-                fee_growth_inside_last_token0: fee_growth_inside_token0,
-                fee_growth_inside_last_token1: fee_growth_inside_token1
-            }
-        );
-
-        // update each tick, and recompute the root tick if necessary
-        update_tick(pool_key, params.tick_lower, params.liquidity_delta, false);
-
-        update_tick(pool_key, params.tick_upper, params.liquidity_delta, true);
-
-        // update pool liquidity if it changed
-        if (pool_liquidity_next != pool.liquidity) {
-            pools::write(
-                pool_key,
-                Pool {
-                    sqrt_ratio: pool.sqrt_ratio,
-                    tick: pool.tick,
-                    liquidity: pool_liquidity_next,
-                    fee_growth_global_token0: pool.fee_growth_global_token0,
-                    fee_growth_global_token1: pool.fee_growth_global_token1
-                }
-            );
+        fn get_locker_state(self: @Storage, id: felt252) -> LockerState {
+            let address = self.locker_addresses.read(id);
+            let nonzero_delta_count = self.nonzero_delta_counts.read(id);
+            LockerState { id, address, nonzero_delta_count }
         }
 
-        // and finally account the computed deltas
-        account_delta(id, pool_key.token0, amount0_delta);
-        account_delta(id, pool_key.token1, amount1_delta);
+        fn get_pool(self: @Storage, pool_key: PoolKey) -> Pool {
+            self.pools.read(pool_key)
+        }
 
-        PositionUpdated(pool_key, position_key, params.liquidity_delta);
+        fn get_reserves(self: @Storage, token: ContractAddress) -> u256 {
+            self.reserves.read(token)
+        }
 
-        Delta { amount0_delta, amount1_delta }
-    }
+        fn get_tick(self: @Storage, pool_key: PoolKey, index: i129) -> Tick {
+            self.ticks.read((pool_key, index))
+        }
 
-    use debug::PrintTrait;
+        fn get_position(self: @Storage, pool_key: PoolKey, position_key: PositionKey) -> Position {
+            self.positions.read((pool_key, position_key))
+        }
 
-    #[external]
-    fn swap(pool_key: PoolKey, params: SwapParameters) -> Delta {
-        let (id, _) = require_locker();
+        fn get_saved_balance(
+            self: @Storage, owner: ContractAddress, token: ContractAddress
+        ) -> u128 {
+            self.saved_balances.read((owner, token))
+        }
 
-        let pool = pools::read(pool_key);
+        fn set_owner(ref self: Storage, new_owner: ContractAddress) {
+            let old_owner = self.owner.read();
+            assert(get_caller_address() == old_owner, 'OWNER_ONLY');
+            self.owner.write(new_owner);
+            self.emit(Event::OwnerChanged(OwnerChanged { old_owner, new_owner }));
+        }
 
-        // pool must be initialized
-        assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+        fn withdraw_fees_collected(
+            ref self: Storage, recipient: ContractAddress, token: ContractAddress, amount: u128
+        ) {
+            let collected: u128 = self.fees_collected.read(token);
+            self.fees_collected.write(token, collected - amount);
+            IERC20Dispatcher {
+                contract_address: token
+            }.transfer(recipient, u256 { low: amount, high: 0 });
+            self.emit(Event::FeesWithdrawn(FeesWithdrawn { recipient, token, amount }));
+        }
 
-        let increasing = is_price_increasing(params.amount.sign, params.is_token1);
+        fn lock(ref self: Storage, data: Array<felt252>) -> Array<felt252> {
+            let id = self.lock_count.read();
+            let caller = get_caller_address();
 
-        // check the limit is not in the wrong direction and is within the price bounds
-        assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
-        assert(
-            (params.sqrt_ratio_limit >= min_sqrt_ratio())
-                & params.sqrt_ratio_limit <= max_sqrt_ratio(),
-            'LIMIT_MAG'
-        );
+            self.lock_count.write(id + 1);
+            self.locker_addresses.write(id, caller);
 
-        let mut tick = pool.tick;
-        let mut amount_remaining = params.amount;
-        let mut sqrt_ratio = pool.sqrt_ratio;
-        let mut liquidity = pool.liquidity;
-        let mut calculated_amount: u128 = Default::default();
-        let mut fee_growth_global = if params.is_token1 {
-            pool.fee_growth_global_token1
-        } else {
-            pool.fee_growth_global_token0
-        };
+            let result = ILockerDispatcher { contract_address: caller }.locked(id, data);
 
-        loop {
-            if (amount_remaining == Default::default()) {
-                break ();
-            }
+            assert(self.nonzero_delta_counts.read(id) == 0, 'NOT_ZEROED');
 
-            if (sqrt_ratio == params.sqrt_ratio_limit) {
-                break ();
-            }
+            self.lock_count.write(id);
+            self.locker_addresses.write(id, contract_address_const::<0>());
 
-            let (next_tick, is_initialized) = if (increasing) {
-                next_initialized_tick(pool_key, tick, params.skip_ahead)
-            } else {
-                prev_initialized_tick(pool_key, tick, params.skip_ahead)
-            };
+            result
+        }
 
-            let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
+        fn withdraw(
+            ref self: Storage,
+            token_address: ContractAddress,
+            recipient: ContractAddress,
+            amount: u128
+        ) {
+            let (id, _) = self.require_locker();
 
-            let step_sqrt_ratio_limit = if (increasing) {
-                if (params.sqrt_ratio_limit < next_tick_sqrt_ratio) {
-                    params.sqrt_ratio_limit
-                } else {
-                    next_tick_sqrt_ratio
-                }
-            } else {
-                if (params.sqrt_ratio_limit > next_tick_sqrt_ratio) {
-                    params.sqrt_ratio_limit
-                } else {
-                    next_tick_sqrt_ratio
-                }
-            };
+            let res = self.reserves.read(token_address);
+            assert(res >= u256 { low: amount, high: 0 }, 'INSUFFICIENT_RESERVES');
+            self.reserves.write(token_address, res - u256 { high: 0, low: amount });
 
-            let swap_result = swap_result(
-                sqrt_ratio,
-                liquidity,
-                sqrt_ratio_limit: step_sqrt_ratio_limit,
-                amount: amount_remaining,
-                is_token1: params.is_token1,
-                fee: pool_key.fee
+            // tracks the delta for the given token address
+            self.account_delta(id, token_address, i129 { mag: amount, sign: false });
+
+            IERC20Dispatcher {
+                contract_address: token_address
+            }.transfer(recipient, u256 { low: amount, high: 0 });
+        }
+
+        fn save(
+            ref self: Storage,
+            token_address: ContractAddress,
+            recipient: ContractAddress,
+            amount: u128
+        ) {
+            let (id, _) = self.require_locker();
+
+            let saved_balance = self.saved_balances.read((recipient, token_address));
+            self.saved_balances.write((recipient, token_address), saved_balance + amount);
+
+            // tracks the delta for the given token address
+            self.account_delta(id, token_address, i129 { mag: amount, sign: false });
+        }
+
+        fn deposit(ref self: Storage, token_address: ContractAddress) -> u128 {
+            let (id, _) = self.require_locker();
+
+            let balance = IERC20Dispatcher {
+                contract_address: token_address
+            }.balance_of(get_contract_address());
+
+            let reserve = self.reserves.read(token_address);
+            // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
+            assert(balance >= reserve, 'BALANCE_LT_RESERVE');
+            let delta = balance - reserve;
+            // the delta is limited to u128
+            assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
+
+            self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
+
+            self.reserves.write(token_address, balance);
+
+            delta.low
+        }
+
+        fn load(ref self: Storage, token_address: ContractAddress, amount: u128) {
+            let (id, locker) = self.require_locker();
+
+            let saved_balance = self.saved_balances.read((locker, token_address));
+            self.saved_balances.write((locker, token_address), saved_balance - amount);
+
+            self.account_delta(id, token_address, i129 { mag: amount, sign: true });
+        }
+
+        fn initialize_pool(ref self: Storage, pool_key: PoolKey, initial_tick: i129) {
+            // token0 is always l.t. token1
+            assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
+            assert(pool_key.token0 != contract_address_const::<0>(), 'TOKEN_ZERO');
+            assert(
+                (pool_key.tick_spacing != Default::default())
+                    & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
+                'TICK_SPACING'
             );
 
-            amount_remaining -= swap_result.consumed_amount;
-            sqrt_ratio = swap_result.sqrt_ratio_next;
-            calculated_amount += swap_result.calculated_amount;
+            let pool = self.pools.read(pool_key);
+            assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
 
-            // this only happens when liquidity != 0
-            if (swap_result.fee_amount != 0) {
-                fee_growth_global += u256 {
-                    low: 0, high: swap_result.fee_amount
-                    } / u256 {
-                    low: liquidity, high: 0
-                };
-            }
-
-            if (sqrt_ratio == next_tick_sqrt_ratio) {
-                // we are crossing the tick, so the tick is changed to the next tick
-                tick =
-                    if (increasing) {
-                        next_tick
-                    } else {
-                        next_tick - i129 { mag: 1, sign: false }
-                    };
-
-                if (is_initialized) {
-                    let tick_data = ticks::read((pool_key, next_tick));
-                    // update our working liquidity based on the direction we are crossing the tick
-                    if (increasing) {
-                        liquidity = add_delta(liquidity, tick_data.liquidity_delta);
-                    } else {
-                        liquidity = add_delta(liquidity, -tick_data.liquidity_delta);
+            self
+                .pools
+                .write(
+                    pool_key,
+                    Pool {
+                        sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
+                        tick: initial_tick,
+                        liquidity: Default::default(),
+                        fee_growth_global_token0: Default::default(),
+                        fee_growth_global_token1: Default::default(),
                     }
+                );
 
-                    let (fee_growth_outside_token0, fee_growth_outside_token1) = if (params
-                        .is_token1) {
-                        (
-                            unsafe_sub(
-                                pool.fee_growth_global_token0, tick_data.fee_growth_outside_token0
-                            ),
-                            unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token1)
-                        )
-                    } else {
-                        (
-                            unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token0),
-                            unsafe_sub(
-                                pool.fee_growth_global_token1, tick_data.fee_growth_outside_token1
-                            )
-                        )
-                    };
+            self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
+        }
 
-                    // update the tick fee state
-                    ticks::write(
-                        (pool_key, next_tick),
-                        Tick {
-                            liquidity_delta: tick_data.liquidity_delta,
-                            liquidity_net: tick_data.liquidity_net,
-                            fee_growth_outside_token0,
-                            fee_growth_outside_token1
+        // Returns the tick > from to iterate towards that may or may not be initialized
+        fn next_initialized_tick(
+            ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            let (word_index, bit_index) = tick_to_word_and_bit_index(
+                from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
+            );
+
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
+            // now the next tick is at the most significant bit in the masked bitmap
+            let masked = bitmap & mask(bit_index);
+
+            // if it's 0, we know there is no set bit in this word
+            if (masked == 0) {
+                let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+                if (skip_ahead == 0) {
+                    (next, false)
+                } else {
+                    self.next_initialized_tick(pool_key, next, skip_ahead - 1)
+                }
+            } else {
+                (
+                    word_and_bit_index_to_tick(
+                        (word_index, msb_low(masked)), pool_key.tick_spacing
+                    ),
+                    true
+                )
+            }
+        }
+
+        // Returns the next tick <= from to iterate towards
+        fn prev_initialized_tick(
+            ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
+
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+
+            let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
+
+            let masked = bitmap & mask;
+
+            // if it's 0, we know there is no set bit in this word
+            if (masked == 0) {
+                let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
+                if (skip_ahead == 0) {
+                    (prev, false)
+                } else {
+                    self
+                        .prev_initialized_tick(
+                            pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
+                        )
+                }
+            } else {
+                (
+                    word_and_bit_index_to_tick(
+                        (word_index, lsb_low(masked)), pool_key.tick_spacing
+                    ),
+                    true
+                )
+            }
+        }
+
+        fn get_pool_fee_growth_inside(
+            self: @Storage, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+        ) -> (u256, u256) {
+            let pool = self.pools.read(pool_key);
+            assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
+
+            let (fee_growth_inside_token0, fee_growth_inside_token1, _) = self
+                .get_fee_growth_inside(
+                    pool_key,
+                    pool.tick,
+                    pool.fee_growth_global_token0,
+                    pool.fee_growth_global_token1,
+                    tick_lower,
+                    tick_upper
+                );
+
+            (fee_growth_inside_token0, fee_growth_inside_token1)
+        }
+
+        fn update_position(
+            ref self: Storage, pool_key: PoolKey, params: UpdatePositionParameters
+        ) -> Delta {
+            let (id, locker) = self.require_locker();
+
+            assert(params.tick_lower < params.tick_upper, 'ORDER');
+            assert(params.tick_lower >= min_tick(), 'MIN');
+            assert(params.tick_upper <= max_tick(), 'MAX');
+            assert(
+                ((params.tick_lower.mag % pool_key.tick_spacing) == 0)
+                    & ((params.tick_upper.mag % pool_key.tick_spacing) == 0),
+                'TICK_SPACING'
+            );
+
+            let pool = self.pools.read(pool_key);
+
+            // pool must be initialized
+            assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+
+            let (sqrt_ratio_lower, sqrt_ratio_upper) = (
+                tick_to_sqrt_ratio(params.tick_lower), tick_to_sqrt_ratio(params.tick_upper)
+            );
+
+            // first compute the amount deltas due to the liquidity delta
+            let (mut amount0_delta, mut amount1_delta) = liquidity_delta_to_amount_delta(
+                pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
+            );
+
+            // first, account the withdrawal protocol fee, because it's based on the deltas
+            if (params.liquidity_delta.sign) {
+                let amount0_fee = compute_fee(amount0_delta.mag, pool_key.fee);
+                let amount1_fee = compute_fee(amount1_delta.mag, pool_key.fee);
+
+                amount0_delta += i129 { mag: amount0_fee, sign: false };
+                amount1_delta += i129 { mag: amount1_fee, sign: false };
+
+                self
+                    .fees_collected
+                    .write(
+                        pool_key.token0,
+                        accumulate_fee_amount(
+                            self.fees_collected.read(pool_key.token0), amount0_fee
+                        )
+                    );
+                self
+                    .fees_collected
+                    .write(
+                        pool_key.token1,
+                        accumulate_fee_amount(
+                            self.fees_collected.read(pool_key.token1), amount1_fee
+                        )
+                    );
+            }
+
+            let (fee_growth_inside_token0, fee_growth_inside_token1, add_delta) = self
+                .get_fee_growth_inside(
+                    pool_key,
+                    pool.tick,
+                    pool.fee_growth_global_token0,
+                    pool.fee_growth_global_token1,
+                    params.tick_lower,
+                    params.tick_upper
+                );
+
+            let pool_liquidity_next: u128 = if (add_delta) {
+                add_delta(pool.liquidity, params.liquidity_delta)
+            } else {
+                pool.liquidity
+            };
+
+            // here we are accumulating fees owed to the position based on its current liquidity
+            let position_key = PositionKey {
+                owner: locker, tick_lower: params.tick_lower, tick_upper: params.tick_upper
+            };
+            let position: Position = self.positions.read((pool_key, position_key));
+
+            let (amount0_fees, _) = muldiv(
+                unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
+                u256 { low: position.liquidity, high: 0 },
+                u256 { low: 0, high: 1 },
+                false
+            );
+            let (amount1_fees, _) = muldiv(
+                unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
+                u256 { low: position.liquidity, high: 0 },
+                u256 { low: 0, high: 1 },
+                false
+            );
+
+            amount0_delta += i129 { mag: amount0_fees.low, sign: true };
+            amount1_delta += i129 { mag: amount1_fees.low, sign: true };
+
+            // update the position
+            self
+                .positions
+                .write(
+                    (pool_key, position_key),
+                    Position {
+                        liquidity: add_delta(position.liquidity, params.liquidity_delta),
+                        fee_growth_inside_last_token0: fee_growth_inside_token0,
+                        fee_growth_inside_last_token1: fee_growth_inside_token1
+                    }
+                );
+
+            self.update_tick(pool_key, params.tick_lower, params.liquidity_delta, false);
+            self.update_tick(pool_key, params.tick_upper, params.liquidity_delta, true);
+
+            // update pool liquidity if it changed
+            if (pool_liquidity_next != pool.liquidity) {
+                self
+                    .pools
+                    .write(
+                        pool_key,
+                        Pool {
+                            sqrt_ratio: pool.sqrt_ratio,
+                            tick: pool.tick,
+                            liquidity: pool_liquidity_next,
+                            fee_growth_global_token0: pool.fee_growth_global_token0,
+                            fee_growth_global_token1: pool.fee_growth_global_token1
                         }
                     );
-                }
-            } else {
-                tick = sqrt_ratio_to_tick(sqrt_ratio);
-            };
-        };
-
-        let (amount0_delta, amount1_delta) = if (params.is_token1) {
-            (
-                i129 {
-                    mag: calculated_amount, sign: !params.amount.sign
-                }, params.amount - amount_remaining
-            )
-        } else {
-            (
-                params.amount - amount_remaining, i129 {
-                    mag: calculated_amount, sign: !params.amount.sign
-                }
-            )
-        };
-
-        let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params.is_token1 {
-            (pool.fee_growth_global_token0, fee_growth_global)
-        } else {
-            (fee_growth_global, pool.fee_growth_global_token1)
-        };
-
-        pools::write(
-            pool_key,
-            Pool {
-                sqrt_ratio,
-                tick,
-                liquidity,
-                fee_growth_global_token0: fee_growth_global_token0_next,
-                fee_growth_global_token1: fee_growth_global_token1_next,
             }
-        );
 
-        account_delta(id, pool_key.token0, amount0_delta);
-        account_delta(id, pool_key.token1, amount1_delta);
+            // and finally account the computed deltas
+            self.account_delta(id, pool_key.token0, amount0_delta);
+            self.account_delta(id, pool_key.token1, amount1_delta);
 
-        Delta { amount0_delta, amount1_delta }
+            self
+                .emit(
+                    Event::PositionUpdated(
+                        PositionUpdated {
+                            pool_key, position_key, liquidity_delta: params.liquidity_delta
+                        }
+                    )
+                );
+
+            Delta { amount0_delta, amount1_delta }
+        }
+
+
+        fn swap(ref self: Storage, pool_key: PoolKey, params: SwapParameters) -> Delta {
+            let (id, _) = self.require_locker();
+
+            let pool = self.pools.read(pool_key);
+
+            // pool must be initialized
+            assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+
+            let increasing = is_price_increasing(params.amount.sign, params.is_token1);
+
+            // check the limit is not in the wrong direction and is within the price bounds
+            assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
+            assert(
+                (params.sqrt_ratio_limit >= min_sqrt_ratio())
+                    & (params.sqrt_ratio_limit <= max_sqrt_ratio()),
+                'LIMIT_MAG'
+            );
+
+            let mut tick = pool.tick;
+            let mut amount_remaining = params.amount;
+            let mut sqrt_ratio = pool.sqrt_ratio;
+            let mut liquidity = pool.liquidity;
+            let mut calculated_amount: u128 = Default::default();
+            let mut fee_growth_global = if params.is_token1 {
+                pool.fee_growth_global_token1
+            } else {
+                pool.fee_growth_global_token0
+            };
+
+            loop {
+                if (amount_remaining == Default::default()) {
+                    break ();
+                }
+
+                if (sqrt_ratio == params.sqrt_ratio_limit) {
+                    break ();
+                }
+
+                let (next_tick, is_initialized) = if (increasing) {
+                    self.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                } else {
+                    self.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                };
+
+                let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
+
+                let step_sqrt_ratio_limit = if (increasing) {
+                    if (params.sqrt_ratio_limit < next_tick_sqrt_ratio) {
+                        params.sqrt_ratio_limit
+                    } else {
+                        next_tick_sqrt_ratio
+                    }
+                } else {
+                    if (params.sqrt_ratio_limit > next_tick_sqrt_ratio) {
+                        params.sqrt_ratio_limit
+                    } else {
+                        next_tick_sqrt_ratio
+                    }
+                };
+
+                let swap_result = swap_result(
+                    sqrt_ratio,
+                    liquidity,
+                    sqrt_ratio_limit: step_sqrt_ratio_limit,
+                    amount: amount_remaining,
+                    is_token1: params.is_token1,
+                    fee: pool_key.fee
+                );
+
+                amount_remaining -= swap_result.consumed_amount;
+                sqrt_ratio = swap_result.sqrt_ratio_next;
+                calculated_amount += swap_result.calculated_amount;
+
+                // this only happens when liquidity != 0
+                if (swap_result.fee_amount != 0) {
+                    fee_growth_global += u256 {
+                        low: 0, high: swap_result.fee_amount
+                        } / u256 {
+                        low: liquidity, high: 0
+                    };
+                }
+
+                if (sqrt_ratio == next_tick_sqrt_ratio) {
+                    // we are crossing the tick, so the tick is changed to the next tick
+                    tick =
+                        if (increasing) {
+                            next_tick
+                        } else {
+                            next_tick - i129 { mag: 1, sign: false }
+                        };
+
+                    if (is_initialized) {
+                        let tick_data = self.ticks.read((pool_key, next_tick));
+                        // update our working liquidity based on the direction we are crossing the tick
+                        if (increasing) {
+                            liquidity = add_delta(liquidity, tick_data.liquidity_delta);
+                        } else {
+                            liquidity = add_delta(liquidity, -tick_data.liquidity_delta);
+                        }
+
+                        let (fee_growth_outside_token0, fee_growth_outside_token1) = if (params
+                            .is_token1) {
+                            (
+                                unsafe_sub(
+                                    pool.fee_growth_global_token0,
+                                    tick_data.fee_growth_outside_token0
+                                ),
+                                unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token1)
+                            )
+                        } else {
+                            (
+                                unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token0),
+                                unsafe_sub(
+                                    pool.fee_growth_global_token1,
+                                    tick_data.fee_growth_outside_token1
+                                )
+                            )
+                        };
+
+                        // update the tick fee state
+                        self
+                            .ticks
+                            .write(
+                                (pool_key, next_tick),
+                                Tick {
+                                    liquidity_delta: tick_data.liquidity_delta,
+                                    liquidity_net: tick_data.liquidity_net,
+                                    fee_growth_outside_token0,
+                                    fee_growth_outside_token1
+                                }
+                            );
+                    }
+                } else {
+                    tick = sqrt_ratio_to_tick(sqrt_ratio);
+                };
+            };
+
+            let (amount0_delta, amount1_delta) = if (params.is_token1) {
+                (
+                    i129 {
+                        mag: calculated_amount, sign: !params.amount.sign
+                    }, params.amount - amount_remaining
+                )
+            } else {
+                (
+                    params.amount - amount_remaining, i129 {
+                        mag: calculated_amount, sign: !params.amount.sign
+                    }
+                )
+            };
+
+            let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params
+                .is_token1 {
+                (pool.fee_growth_global_token0, fee_growth_global)
+            } else {
+                (fee_growth_global, pool.fee_growth_global_token1)
+            };
+
+            self
+                .pools
+                .write(
+                    pool_key,
+                    Pool {
+                        sqrt_ratio,
+                        tick,
+                        liquidity,
+                        fee_growth_global_token0: fee_growth_global_token0_next,
+                        fee_growth_global_token1: fee_growth_global_token1_next,
+                    }
+                );
+
+            self.account_delta(id, pool_key.token0, amount0_delta);
+            self.account_delta(id, pool_key.token1, amount1_delta);
+
+            Delta { amount0_delta, amount1_delta }
+        }
     }
 }

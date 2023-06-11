@@ -1,7 +1,7 @@
 use starknet::{ContractAddress};
 
-#[abi]
-trait IERC20 {
-    fn transfer(recipient: ContractAddress, amount: u256);
-    fn balance_of(account: ContractAddress) -> u256;
+#[starknet::interface]
+trait IERC20<Storage> {
+    fn transfer(ref self: Storage, recipient: ContractAddress, amount: u256);
+    fn balance_of(self: @Storage, account: ContractAddress) -> u256;
 }

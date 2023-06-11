@@ -23,13 +23,12 @@ enum ActionResult {
     Swap: Delta
 }
 
-#[abi]
-trait ICoreLocker {
-    #[external]
-    fn call(action: Action) -> ActionResult;
+#[starknet::interface]
+trait ICoreLocker<Storage> {
+    fn call(ref self: Storage, action: Action) -> ActionResult;
 }
 
-#[contract]
+#[starknet::contract]
 mod CoreLocker {
     use super::{
         Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
@@ -42,201 +41,216 @@ mod CoreLocker {
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
+    #[storage]
     struct Storage {
         core: ContractAddress
     }
 
     #[constructor]
-    fn constructor(_core: ContractAddress) {
-        core::write(_core);
+    fn constructor(ref self: Storage, _core: ContractAddress) {
+        self.core.write(_core);
     }
 
-    #[external]
-    fn call(action: Action) -> ActionResult {
-        let mut arr: Array<felt252> = ArrayTrait::new();
-        Serde::<Action>::serialize(@action, ref arr);
-
-        let result = ICoreDispatcher { contract_address: core::read() }.lock(arr);
-
-        let mut result_data = result.span();
-        let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(ref result_data)
-            .expect('DESERIALIZE_RESULT_FAILED');
-
-        action_result
-    }
-
-    #[internal]
-    fn handle_delta(
-        core: ContractAddress, token: ContractAddress, delta: i129, recipient: ContractAddress
-    ) {
-        if (delta > Default::default()) {
-            // transfer the token from self (assumes we have the balance)
-            IERC20Dispatcher {
-                contract_address: token
-            }.transfer(core, u256 { low: delta.mag, high: 0 });
-            // then call pay
-            assert(
-                ICoreDispatcher { contract_address: core }.deposit(token) == delta.mag,
-                'DEPOSIT_FAILED'
-            );
-        } else if (delta < Default::default()) {
-            // withdraw to recipient
-            ICoreDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+    #[generate_trait]
+    impl Internal of CoreLocker {
+        fn handle_delta(
+            ref self: Storage,
+            core: ContractAddress,
+            token: ContractAddress,
+            delta: i129,
+            recipient: ContractAddress
+        ) {
+            if (delta > Default::default()) {
+                // transfer the token from self (assumes we have the balance)
+                IERC20Dispatcher {
+                    contract_address: token
+                }.transfer(core, u256 { low: delta.mag, high: 0 });
+                // then call pay
+                assert(
+                    ICoreDispatcher { contract_address: core }.deposit(token) == delta.mag,
+                    'DEPOSIT_FAILED'
+                );
+            } else if (delta < Default::default()) {
+                // withdraw to recipient
+                ICoreDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+            }
         }
     }
 
-    #[external]
-    fn locked(id: felt252, data: Array<felt252>) -> Array<felt252> {
-        let caller = get_caller_address();
-        assert(caller == core::read(), 'UNAUTHORIZED_CALLBACK');
+    #[external(v0)]
+    impl CoreLockerImpl of ICoreLocker<Storage> {
+        fn call(ref self: Storage, action: Action) -> ActionResult {
+            let mut arr: Array<felt252> = ArrayTrait::new();
+            Serde::<Action>::serialize(@action, ref arr);
 
-        let mut action_data = data.span();
-        let mut action: Action = Serde::<Action>::deserialize(ref action_data)
-            .expect('DESERIALIZE_FAILED');
+            let result = ICoreDispatcher { contract_address: self.core.read() }.lock(arr);
 
-        let result = match action {
-            Action::AssertLockerId(locker_id) => {
-                assert(locker_id == id, 'INVALID_LOCKER_ID');
+            let mut result_data = result.span();
+            let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(
+                ref result_data
+            )
+                .expect('DESERIALIZE_RESULT_FAILED');
 
-                let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+            action_result
+        }
 
-                assert(state.id == locker_id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-                assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                ActionResult::AssertLockerId(())
-            },
-            Action::Relock((
-                locker_id, relock_count
-            )) => {
-                assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
+        fn locked(ref self: Storage, id: felt252, data: Array<felt252>) -> Array<felt252> {
+            let caller = get_caller_address();
+            assert(caller == self.core.read(), 'UNAUTHORIZED_CALLBACK');
 
-                let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.id == locker_id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-                assert(state.nonzero_delta_count == 0, 'no deltas');
+            let mut action_data = data.span();
+            let mut action: Action = Serde::<Action>::deserialize(ref action_data)
+                .expect('DESERIALIZE_FAILED');
 
-                if (id != 0) {
-                    let prev_state = ICoreDispatcher {
+            let result = match action {
+                Action::AssertLockerId(locker_id) => {
+                    assert(locker_id == id, 'INVALID_LOCKER_ID');
+
+                    let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+
+                    assert(state.id == locker_id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 0, 'no deltas');
+
+                    ActionResult::AssertLockerId(())
+                },
+                Action::Relock((
+                    locker_id, relock_count
+                )) => {
+                    assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
+
+                    let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.id == locker_id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 0, 'no deltas');
+
+                    if (id != 0) {
+                        let prev_state = ICoreDispatcher {
+                            contract_address: caller
+                        }.get_locker_state(id - 1);
+                        assert(prev_state.id == locker_id - 1, 'locker id');
+                        assert(prev_state.address == get_contract_address(), 'is locker');
+                        assert(prev_state.nonzero_delta_count == 0, 'no deltas');
+                    }
+
+                    if (relock_count != Default::default()) {
+                        // relock
+                        ICoreLockerDispatcher {
+                            contract_address: get_contract_address()
+                        }.call(Action::Relock((locker_id + 1, relock_count - 1)));
+                    }
+
+                    ActionResult::Relock(())
+                },
+                Action::UpdatePosition((
+                    pool_key, params, recipient
+                )) => {
+                    let mut state = ICoreDispatcher {
                         contract_address: caller
-                    }.get_locker_state(id - 1);
-                    assert(prev_state.id == locker_id - 1, 'locker id');
-                    assert(prev_state.address == get_contract_address(), 'is locker');
-                    assert(prev_state.nonzero_delta_count == 0, 'no deltas');
-                }
+                    }.get_locker_state(id);
+                    assert(state.id == id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                if (relock_count != Default::default()) {
-                    // relock
-                    ICoreLockerDispatcher {
-                        contract_address: get_contract_address()
-                    }.call(Action::Relock((locker_id + 1, relock_count - 1)));
-                }
+                    let delta = ICoreDispatcher {
+                        contract_address: caller
+                    }.update_position(pool_key, params);
 
-                ActionResult::Relock(())
-            },
-            Action::UpdatePosition((
-                pool_key, params, recipient
-            )) => {
-                let mut state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.id == id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-                assert(state.nonzero_delta_count == 0, 'no deltas');
-
-                let delta = ICoreDispatcher {
-                    contract_address: caller
-                }.update_position(pool_key, params);
-
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.id == id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-                assert(
-                    state
-                        .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
-                            0
-                        } else {
-                            1
-                        })
-                            + (if delta.amount1_delta == Default::default() {
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.id == id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(
+                        state
+                            .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
                                 0
                             } else {
                                 1
-                            })),
-                    'deltas'
-                );
+                            })
+                                + (if delta.amount1_delta == Default::default() {
+                                    0
+                                } else {
+                                    1
+                                })),
+                        'deltas'
+                    );
 
-                handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
 
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(
-                    state
-                        .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
-                            0
-                        } else {
-                            1
-                        }),
-                    'deltas'
-                );
-
-                handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
-
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.nonzero_delta_count == 0, 'deltas');
-
-                ActionResult::UpdatePosition(delta)
-            },
-            Action::Swap((
-                pool_key, params, recipient
-            )) => {
-                let mut state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.id == id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-                assert(state.nonzero_delta_count == 0, 'no deltas');
-
-                let delta = ICoreDispatcher { contract_address: caller }.swap(pool_key, params);
-
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.id == id, 'locker id');
-                assert(state.address == get_contract_address(), 'is locker');
-
-                assert(
-                    state
-                        .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
-                            0
-                        } else {
-                            1
-                        })
-                            + (if delta.amount1_delta == Default::default() {
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(
+                        state
+                            .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
                                 0
                             } else {
                                 1
-                            })),
-                    'deltas'
-                );
+                            }),
+                        'deltas'
+                    );
 
-                handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(
-                    state
-                        .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
-                            0
-                        } else {
-                            1
-                        }),
-                    'deltas'
-                );
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.nonzero_delta_count == 0, 'deltas');
 
-                handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+                    ActionResult::UpdatePosition(delta)
+                },
+                Action::Swap((
+                    pool_key, params, recipient
+                )) => {
+                    let mut state = ICoreDispatcher {
+                        contract_address: caller
+                    }.get_locker_state(id);
+                    assert(state.id == id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                assert(state.nonzero_delta_count == 0, 'deltas');
+                    let delta = ICoreDispatcher { contract_address: caller }.swap(pool_key, params);
 
-                ActionResult::Swap(delta)
-            }
-        };
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.id == id, 'locker id');
+                    assert(state.address == get_contract_address(), 'is locker');
 
-        let mut arr: Array<felt252> = ArrayTrait::new();
-        Serde::<ActionResult>::serialize(@result, ref arr);
-        arr
+                    assert(
+                        state
+                            .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
+                                0
+                            } else {
+                                1
+                            })
+                                + (if delta.amount1_delta == Default::default() {
+                                    0
+                                } else {
+                                    1
+                                })),
+                        'deltas'
+                    );
+
+                    handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(
+                        state
+                            .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
+                                0
+                            } else {
+                                1
+                            }),
+                        'deltas'
+                    );
+
+                    handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.nonzero_delta_count == 0, 'deltas');
+
+                    ActionResult::Swap(delta)
+                }
+            };
+
+            let mut arr: Array<felt252> = ArrayTrait::new();
+            Serde::<ActionResult>::serialize(@result, ref arr);
+            arr
+        }
     }
 }

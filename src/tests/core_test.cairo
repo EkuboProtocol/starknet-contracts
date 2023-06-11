@@ -9,7 +9,7 @@ use integer::BoundedInt;
 use traits::Into;
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
-use ekubo::types::i129::i129;
+use ekubo::types::i129::{i129, i129OptionPartialEq};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
@@ -18,55 +18,76 @@ use option::OptionTrait;
 use option::Option;
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 
-use ekubo::tests::helper::{FEE_ONE_PERCENT, setup_pool, swap, update_position, SetupPoolResult};
+use ekubo::tests::helper::{
+    FEE_ONE_PERCENT, deploy_core, setup_pool, swap, update_position, SetupPoolResult
+};
 
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
 
+impl EqualTickBool of traits::PartialEq<(i129, bool)> {
+    fn eq(lhs: (i129, bool), rhs: (i129, bool)) -> bool {
+        let (a, b) = lhs;
+        let (c, d) = rhs;
+        (a == c) & (b == d)
+    }
+    fn ne(lhs: (i129, bool), rhs: (i129, bool)) -> bool {
+        !EqualTickBool::eq(lhs, rhs)
+    }
+}
+
 mod owner_tests {
-    use super::{PoolKey, Core, i129, contract_address_const, set_caller_address};
+    use super::{
+        deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const, set_caller_address
+    };
+
     #[test]
     #[available_gas(2000000)]
     fn test_constructor_sets_owner() {
-        assert(Core::get_owner() == contract_address_const::<0>(), 'not set');
-        Core::constructor(contract_address_const::<1>());
-        let owner_read = Core::get_owner();
-        assert(owner_read == contract_address_const::<1>(), 'owner');
+        let core = deploy_core(contract_address_const::<101>());
+        assert(core.get_owner() == contract_address_const::<101>(), 'owner');
     }
 
     #[test]
     #[available_gas(2000000)]
     fn test_owner_can_be_changed_by_owner() {
-        Core::constructor(contract_address_const::<1>());
-        set_caller_address(contract_address_const::<1>());
-        Core::set_owner(contract_address_const::<42>());
-        assert(Core::get_owner() == contract_address_const::<42>(), 'owner');
+        let core = deploy_core(contract_address_const::<101>());
+        assert(core.get_owner() == contract_address_const::<101>(), 'owner');
+        set_caller_address(contract_address_const::<101>());
+        core.set_owner(contract_address_const::<102>());
+        assert(core.get_owner() == contract_address_const::<102>(), 'owner');
     }
 
     #[test]
     #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', ))]
-    fn test_owner_cannot_be_changed_by_caller() {
+    fn test_owner_cannot_be_changed_by_other() {
+        let core = deploy_core(contract_address_const::<101>());
         set_caller_address(contract_address_const::<1>());
-        Core::set_owner(contract_address_const::<42>());
+        core.set_owner(contract_address_const::<42>());
     }
 }
 
 mod initialize_pool_tests {
-    use super::{PoolKey, Core, i129, contract_address_const, tick_constants};
+    use super::{
+        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const,
+        i129OptionPartialEq
+    };
+
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
-        let pool = Core::get_pool(pool_key);
+        core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        let pool = core.get_pool(pool_key);
         assert(
             pool.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
@@ -81,100 +102,109 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', ))]
     fn test_initialize_pool_fails_token_order_same_token() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', ))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<2>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ZERO', ))]
     fn test_initialize_pool_fails_token_order_zero_token() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<0>(),
             token1: contract_address_const::<1>(),
             fee: 0,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', ))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 0,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(3000000)]
     fn test_initialize_pool_succeeds_max_tick_spacing_minus_one() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1386294,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', ))]
     fn test_initialize_pool_fails_max_tick_spacing() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1386295,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
     }
 
     #[test]
     #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', ))]
     fn test_initialize_pool_fails_already_initialized() {
+        let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            tick_spacing: 1,
         };
-        Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
-        Core::initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+        core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
     }
 }
+
 
 mod initialized_ticks {
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait,
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool
     };
-    use debug::PrintTrait;
+
 
     #[test]
     #[available_gas(30000000)]
@@ -191,9 +221,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 0
-                ) == i129 {
-                mag: 0, sign: false
-            },
+                ) == (i129 { mag: 0, sign: false }, false),
             'prev from 0'
         );
 
@@ -202,9 +230,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 2
-                ) == i129 {
-                mag: 2547200, sign: true
-            },
+                ) == (i129 { mag: 2547200, sign: true }, false),
             'prev from 0, skip 1'
         );
 
@@ -213,9 +239,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 5
-                ) == i129 {
-                mag: 6368000, sign: true
-            },
+                ) == (i129 { mag: 6368000, sign: true }, false),
             'prev from 0, skip 5'
         );
 
@@ -224,9 +248,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 0
-                ) == i129 {
-                mag: 1263650, sign: false
-            },
+                ) == (i129 { mag: 1263650, sign: false }, false),
             'next from 0'
         );
 
@@ -235,9 +257,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 1
-                ) == i129 {
-                mag: 2537250, sign: false
-            },
+                ) == (i129 { mag: 2537250, sign: false }, false),
             'next from 0, skip 1'
         );
 
@@ -246,9 +266,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Default::default(), skip_ahead: 5
-                ) == i129 {
-                mag: 7631650, sign: false
-            },
+                ) == (i129 { mag: 7631650, sign: false }, false),
             'next from 0, skip 5'
         );
     }
@@ -296,9 +314,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 500, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
             'next from -500, skip 5'
         );
         assert(
@@ -308,9 +324,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
             'next from -154, skip 5'
         );
         assert(
@@ -320,9 +334,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
             'next from -128, skip 5'
         );
         assert(
@@ -332,9 +344,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
             'next from -12, skip 5'
         );
         assert(
@@ -344,9 +354,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
             'next from 9, skip 5'
         );
         assert(
@@ -356,9 +364,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
             'next from 128, skip 5'
         );
 
@@ -371,9 +377,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 500, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
             'prev from 500, skip 5'
         );
         assert(
@@ -383,9 +387,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 199, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
             'prev from 199, skip 5'
         );
         assert(
@@ -395,9 +397,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 127, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
             'prev from 127, skip 5'
         );
         assert(
@@ -407,9 +407,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 8, sign: false },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
             'prev from 8, skip 5'
         );
         assert(
@@ -419,9 +417,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 13, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
             'prev from -13, skip 5'
         );
         assert(
@@ -431,9 +427,7 @@ mod initialized_ticks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 129, sign: true },
                     skip_ahead: 5
-                ) == i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true
-            },
+                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
             'prev from -129, skip 5'
         );
     }
@@ -449,7 +443,7 @@ mod locks {
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool
     };
 
     #[test]
@@ -533,9 +527,7 @@ mod locks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
                     skip_ahead: 1
-                ) != i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-            },
+                ) != (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true }, true),
             'ticks not initialized'
         );
         assert(
@@ -545,9 +537,7 @@ mod locks {
                     pool_key: setup.pool_key,
                     from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
                     skip_ahead: 1
-                ) != i129 {
-                mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-            },
+                ) != (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }, false),
             'ticks not initialized'
         );
     }
@@ -757,7 +747,7 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
-                ) == min_tick(),
+                ) == (min_tick(), true),
             'ticks initialized'
         );
         assert(
@@ -765,7 +755,7 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
-                ) == max_tick(),
+                ) == (max_tick(), true),
             'ticks initialized'
         );
 
@@ -811,7 +801,7 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
-                ) != min_tick(),
+                ) != (min_tick(), true),
             'ticks initialized'
         );
         assert(
@@ -819,7 +809,7 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
-                ) != max_tick(),
+                ) != (max_tick(), true),
             'ticks initialized'
         );
 
