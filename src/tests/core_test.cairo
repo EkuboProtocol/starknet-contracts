@@ -203,9 +203,84 @@ mod initialize_pool_tests {
 mod initialized_ticks {
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool, min_tick, max_tick
     };
 
+    #[test]
+    #[available_gas(30000000)]
+    #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED', ))]
+    fn test_prev_initialized_tick_min_tick_minus_one() {
+        let setup = setup_pool(
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
+        );
+
+        setup
+            .core
+            .prev_initialized_tick(
+                pool_key: setup.pool_key,
+                from: min_tick() - i129 { mag: 1, sign: false },
+                skip_ahead: 0
+            );
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_prev_initialized_tick_min_tick() {
+        let setup = setup_pool(
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
+        );
+
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 5
+                ) == (min_tick(), false),
+            'min tick always limited'
+        );
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED', ))]
+    fn test_next_initialized_tick_max_tick() {
+        let setup = setup_pool(
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
+        );
+
+        setup.core.next_initialized_tick(pool_key: setup.pool_key, from: max_tick(), skip_ahead: 0);
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_next_initialized_tick_max_tick_minus_one() {
+        let setup = setup_pool(
+            owner: contract_address_const::<1>(),
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Default::default()
+        );
+
+        assert(
+            setup
+                .core
+                .next_initialized_tick(
+                    pool_key: setup.pool_key,
+                    from: max_tick() - i129 { mag: 1, sign: false },
+                    skip_ahead: 5
+                ) == (max_tick(), false),
+            'max tick always limited'
+        );
+    }
 
     #[test]
     #[available_gas(30000000)]

@@ -397,6 +397,8 @@ mod Core {
         fn next_initialized_tick(
             ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
+            assert(from < max_tick(), 'NEXT_FROM_MAX');
+
             let (word_index, bit_index) = tick_to_word_and_bit_index(
                 from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
             );
@@ -409,6 +411,9 @@ mod Core {
             // if it's 0, we know there is no set bit in this word
             if (masked == 0) {
                 let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+                if (next > max_tick()) {
+                    return (max_tick(), false);
+                }
                 if (skip_ahead == 0) {
                     (next, false)
                 } else {
@@ -428,6 +433,7 @@ mod Core {
         fn prev_initialized_tick(
             ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
+            assert(from >= min_tick(), 'PREV_FROM_MIN');
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
 
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
@@ -439,6 +445,9 @@ mod Core {
             // if it's 0, we know there is no set bit in this word
             if (masked == 0) {
                 let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
+                if (prev < min_tick()) {
+                    return (min_tick(), false);
+                }
                 if (skip_ahead == 0) {
                     (prev, false)
                 } else {
