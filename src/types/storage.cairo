@@ -43,29 +43,6 @@ struct Tick {
     fee_growth_outside_token1: u256,
 }
 
-const NOT_PRESENT: felt252 = 0x200000000000000000000000000000000; // 2**129
-impl OptionalI129IntoFelt252 of Into<Option<i129>, felt252> {
-    fn into(self: Option<i129>) -> felt252 {
-        match self {
-            Option::Some(value) => {
-                value.into()
-            },
-            Option::None(_) => {
-                NOT_PRESENT
-            }
-        }
-    }
-}
-impl Felt252IntoOptionalI129 of Into<felt252, Option<i129>> {
-    fn into(self: felt252) -> Option<i129> {
-        if (self == NOT_PRESENT) {
-            Option::None(())
-        } else {
-            Option::Some(self.into())
-        }
-    }
-}
-
 impl PoolDefault of Default<Pool> {
     fn default() -> Pool {
         Pool {

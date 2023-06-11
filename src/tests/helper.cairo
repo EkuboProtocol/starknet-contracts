@@ -1,3 +1,9 @@
+use integer::{u256, u256_from_felt252, BoundedInt};
+use result::{Result, ResultTrait};
+use traits::{Into, TryInto};
+use array::{Array, ArrayTrait};
+use option::{Option, OptionTrait};
+
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
 use ekubo::types::i129::i129;
@@ -7,22 +13,16 @@ use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, Delta};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::positions::{Positions};
-use integer::{u256, u256_from_felt252, BoundedInt};
-use result::{Result, ResultTrait};
-use traits::{Into, TryInto};
-use array::{Array, ArrayTrait};
-use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
-use starknet::testing::{set_caller_address, set_contract_address};
+
 use starknet::{deploy_syscall, ClassHash, contract_address_const, ContractAddress};
 use starknet::class_hash::Felt252TryIntoClassHash;
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
-
 
 fn deploy_mock_token() -> IMockERC20Dispatcher {
     let constructor_calldata: Array<felt252> = ArrayTrait::new();

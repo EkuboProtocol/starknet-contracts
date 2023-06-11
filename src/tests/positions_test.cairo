@@ -1,5 +1,5 @@
 use starknet::{contract_address_const};
-use starknet::testing::{set_caller_address};
+use starknet::testing::{set_contract_address};
 use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
@@ -56,7 +56,7 @@ fn test_nft_balance_of() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_full_range() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
     let positions = deploy_positions(setup.core);
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: Default::default());
@@ -73,7 +73,7 @@ fn test_deposit_liquidity_full_range() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -108,7 +108,7 @@ fn test_deposit_liquidity_concentrated() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 500, sign: false });
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -142,7 +142,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 500, sign: true });
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -176,7 +176,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 1000, sign: false });
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -210,7 +210,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let caller = contract_address_const::<1>();
-    set_caller_address(caller);
+    set_contract_address(caller);
     let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 1000, sign: true });
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
