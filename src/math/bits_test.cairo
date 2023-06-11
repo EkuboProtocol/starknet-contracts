@@ -1,4 +1,4 @@
-use ekubo::math::bits::{msb, shr_big,lsb,lsb_low};
+use ekubo::math::bits::{msb, lsb, lsb_low};
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO', ))]
@@ -153,36 +153,4 @@ fn msb_max() {
 fn msb_min_value_max() {
     let res = msb(u256 { high: 0x80000000000000000000000000000000, low: 0 });
     assert(res == 255, 'msb of max');
-}
-
-
-#[test]
-fn test_shr_big_0_0() {
-    assert(shr_big(0, u256 { high: 0, low: 0 }) == u256 { high: 0, low: 0 }, '0 >> 0 == 0');
-}
-
-
-#[test]
-fn test_shr_big_1_0() {
-    assert(shr_big(1, u256 { high: 0, low: 0 }) == u256 { high: 0, low: 0 }, '0 >> 1 == 0');
-}
-
-#[test]
-fn test_shr_big_255_0() {
-    assert(shr_big(255, u256 { high: 0, low: 0 }) == u256 { high: 0, low: 0 }, '0 >> 255 == 0');
-}
-
-#[test]
-fn test_shr_big_255_max() {
-    assert(
-        shr_big(
-            255,
-            u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
-            }
-        ) == u256 {
-            high: 0, low: 1
-        },
-        'max >> 255 == 1'
-    );
 }

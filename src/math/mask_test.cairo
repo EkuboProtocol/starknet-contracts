@@ -34,5 +34,10 @@ fn test_mask_big_128() {
 
 #[test]
 fn test_mask_big_255() {
-    assert(mask_big(255) == u256 { high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff }, 'mask');
+    assert(
+        mask_big(255) == u256 {
+            high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
+        },
+        'mask'
+    );
 }

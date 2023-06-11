@@ -33,7 +33,7 @@ fn msb_low(mut x: u128) -> u8 {
         x /= 2;
         res += 1;
     }
-    
+
     res
 }
 
@@ -72,16 +72,4 @@ fn lsb(x: u256) -> u8 {
     } else {
         lsb_low(x.low)
     }
-}
-
-// Computes x>>n
-#[inline(always)]
-fn shr(n: u8, x: u128) -> u128 {
-    x / exp2(n)
-}
-
-// Computes x>>n
-#[inline(always)]
-fn shr_big(n: u8, x: u256) -> u256 {
-    x / exp2_big(n)
 }

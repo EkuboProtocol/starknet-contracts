@@ -806,7 +806,6 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-
         assert(
             setup
                 .core

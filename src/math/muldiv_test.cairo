@@ -3,25 +3,19 @@ use ekubo::math::muldiv::{div, muldiv};
 #[test]
 #[should_panic(expected: ('u256 is 0', ))]
 fn test_muldiv_div_by_zero() {
-    muldiv(
-        u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false
-    );
+    muldiv(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false);
 }
 
 #[test]
 #[should_panic(expected: ('u256 is 0', ))]
 fn test_muldiv_up_div_by_zero() {
-    muldiv(
-        u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false
-    );
+    muldiv(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false);
 }
 
 #[test]
 #[should_panic(expected: ('u256 is 0', ))]
 fn test_muldiv_up_div_by_zero_no_overflow() {
-     muldiv(
-        u256 { low: 0, high: 1 }, u256 { low: 1, high: 0 }, u256 { low: 0, high: 0 }, false
-    );
+    muldiv(u256 { low: 0, high: 1 }, u256 { low: 1, high: 0 }, u256 { low: 0, high: 0 }, false);
 }
 
 #[test]
