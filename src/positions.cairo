@@ -72,13 +72,7 @@ mod Positions {
 
     // Compute the hash for a given position key
     fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
-        LegacyHash::hash(
-            pedersen(
-                Into::<i129, felt252>::into(bounds.tick_lower),
-                Into::<i129, felt252>::into(bounds.tick_upper)
-            ),
-            pool_key
-        )
+        LegacyHash::hash(pedersen(bounds.tick_lower.into(), bounds.tick_upper.into(), ), pool_key)
     }
 
     #[derive(Serde, Copy, Drop)]
