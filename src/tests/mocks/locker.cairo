@@ -24,15 +24,16 @@ enum ActionResult {
 }
 
 #[starknet::interface]
-trait ICoreLocker<Storage> {
-    fn call(ref self: Storage, action: Action) -> ActionResult;
+trait ICoreLocker<TStorage> {
+    fn call(ref self: TStorage, action: Action) -> ActionResult;
+    fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 }
 
 #[starknet::contract]
 mod CoreLocker {
     use super::{
         Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129
+        ICoreLockerDispatcherTrait, i129, ICoreLocker
     };
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address, get_contract_address};
@@ -47,14 +48,14 @@ mod CoreLocker {
     }
 
     #[constructor]
-    fn constructor(ref self: Storage, _core: ContractAddress) {
+    fn constructor(ref self: ContractState, _core: ContractAddress) {
         self.core.write(_core);
     }
 
     #[generate_trait]
     impl Internal of CoreLocker {
         fn handle_delta(
-            ref self: Storage,
+            ref self: ContractState,
             core: ContractAddress,
             token: ContractAddress,
             delta: i129,
@@ -78,8 +79,8 @@ mod CoreLocker {
     }
 
     #[external(v0)]
-    impl CoreLockerImpl of ICoreLocker<Storage> {
-        fn call(ref self: Storage, action: Action) -> ActionResult {
+    impl CoreLockerImpl of ICoreLocker<ContractState> {
+        fn call(ref self: ContractState, action: Action) -> ActionResult {
             let mut arr: Array<felt252> = ArrayTrait::new();
             Serde::<Action>::serialize(@action, ref arr);
 
@@ -94,8 +95,7 @@ mod CoreLocker {
             action_result
         }
 
-
-        fn locked(ref self: Storage, id: felt252, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
             let caller = get_caller_address();
             assert(caller == self.core.read(), 'UNAUTHORIZED_CALLBACK');
 
@@ -175,7 +175,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    self.handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
@@ -188,7 +188,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+                    self.handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -226,7 +226,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    self.handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
@@ -239,7 +239,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+                    self.handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');

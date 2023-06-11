@@ -4,10 +4,10 @@ use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 
 #[starknet::interface]
-trait ILocker<Storage> {
+trait ILocker<TStorage> {
     // This function is called on the caller of lock, i.e. a callback
     // The input is the data passed to ICore#lock, the output is passed back through as the return value of #lock
-    fn locked(ref self: Storage, id: felt252, data: Array<felt252>) -> Array<felt252>;
+    fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 }
 
 // Passed as an argument to update a position. The owner of the position is implicit in the locker.
@@ -56,86 +56,86 @@ struct LockerState {
 }
 
 #[starknet::interface]
-trait ICore<Storage> {
+trait ICore<TStorage> {
     // The address that has the right to any fees collected by this contract
-    fn get_owner(self: @Storage) -> ContractAddress;
+    fn get_owner(self: @TStorage) -> ContractAddress;
 
     // Get the state of the locker with the given ID
-    fn get_locker_state(self: @Storage, id: felt252) -> LockerState;
+    fn get_locker_state(self: @TStorage, id: felt252) -> LockerState;
 
     // Get the current state of the given pool
-    fn get_pool(self: @Storage, pool_key: PoolKey) -> Pool;
+    fn get_pool(self: @TStorage, pool_key: PoolKey) -> Pool;
 
     // Get the fee growth inside for a given tick range
     fn get_pool_fee_growth_inside(
-        self: @Storage, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+        self: @TStorage, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
     ) -> (u256, u256);
 
     // Get the state of a given tick for the given pool
-    fn get_tick(self: @Storage, pool_key: PoolKey, index: i129) -> Tick;
+    fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
 
     // Get the state of a given position for the given pool
-    fn get_position(self: @Storage, pool_key: PoolKey, position_key: PositionKey) -> Position;
+    fn get_position(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> Position;
 
     // Get the last recorded balance of a token for core, used by core for computing payment amounts
-    fn get_reserves(self: @Storage, token: ContractAddress) -> u256;
+    fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
 
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
-    fn get_saved_balance(self: @Storage, owner: ContractAddress, token: ContractAddress) -> u128;
+    fn get_saved_balance(self: @TStorage, owner: ContractAddress, token: ContractAddress) -> u128;
 
     // Set the owner of the contract to a new owner (only the current owner can call the function)
-    fn set_owner(ref self: Storage, new_owner: ContractAddress);
+    fn set_owner(ref self: TStorage, new_owner: ContractAddress);
 
     // Withdraw any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
-        ref self: Storage, recipient: ContractAddress, token: ContractAddress, amount: u128
+        ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
     );
 
     // Main entrypoint for any actions, which must be called before any other pool functions can be called.
     // Other functions must be called within the callback to lock. The lock callback is called with the input data, and the returned array is passed through to the caller.
-    fn lock(ref self: Storage, data: Array<felt252>) -> Array<felt252>;
+    fn lock(ref self: TStorage, data: Array<felt252>) -> Array<felt252>;
 
     // Withdraw a given token from core. This is used to withdraw the output of swaps or burnt liquidity, and also for flash loans.
     // Note you must call this within a lock callback
     fn withdraw(
-        ref self: Storage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
+        ref self: TStorage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
     );
 
     // Save a given token balance in core for a given account for use in a future lock. It can be recalled by calling load.
     // Note you must call this within a lock callback
     fn save(
-        ref self: Storage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
+        ref self: TStorage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
     );
 
     // Deposit a given token into core. This is how payments are made to core. First send the token to core, and then call deposit to account the delta.
     // Note this is how reserves are used.
     // Note you must call this within a lock callback
-    fn deposit(ref self: Storage, token_address: ContractAddress) -> u128;
+    fn deposit(ref self: TStorage, token_address: ContractAddress) -> u128;
 
     // Recall a balance previously saved via #save
     // Note you must call this within a lock callback
-    fn load(ref self: Storage, token_address: ContractAddress, amount: u128);
+    fn load(ref self: TStorage, token_address: ContractAddress, amount: u128);
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
-    fn initialize_pool(ref self: Storage, pool_key: PoolKey, initial_tick: i129);
+    fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
     // Note you must call this within a lock callback
     fn update_position(
-        ref self: Storage, pool_key: PoolKey, params: UpdatePositionParameters
+        ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
     ) -> Delta;
 
     // Make a swap against a pool.
     // Note you must call this within a lock callback
-    fn swap(ref self: Storage, pool_key: PoolKey, params: SwapParameters) -> Delta;
+    fn swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> Delta;
 
     // Return the next initialized tick from the given tick
     fn next_initialized_tick(
-        ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
     // Return the previous initialized tick from the given tick
     fn prev_initialized_tick(
-        ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 }

@@ -90,13 +90,13 @@ mod Core {
     }
 
     #[constructor]
-    fn constructor(ref self: Storage, _owner: ContractAddress) {
+    fn constructor(ref self: ContractState, _owner: ContractAddress) {
         self.owner.write(_owner);
     }
 
     #[generate_trait]
     impl CoreInternal of CoreInternalTrait {
-        fn require_locker(ref self: Storage) -> (felt252, ContractAddress) {
+        fn require_locker(ref self: ContractState) -> (felt252, ContractAddress) {
             let id = self.lock_count.read() - 1;
             let locker = self.locker_addresses.read(id);
             assert(locker == get_caller_address(), 'NOT_LOCKER');
@@ -104,7 +104,7 @@ mod Core {
         }
 
         fn account_delta(
-            ref self: Storage, id: felt252, token_address: ContractAddress, delta: i129
+            ref self: ContractState, id: felt252, token_address: ContractAddress, delta: i129
         ) {
             let key = (id, token_address);
             let current = self.deltas.read(key);
@@ -118,7 +118,7 @@ mod Core {
         }
 
         // Remove the initialized tick for the given pool
-        fn remove_initialized_tick(ref self: Storage, pool_key: PoolKey, index: i129) {
+        fn remove_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
@@ -126,7 +126,7 @@ mod Core {
         }
 
         // Insert an initialized tick for the given pool
-        fn insert_initialized_tick(ref self: Storage, pool_key: PoolKey, index: i129) {
+        fn insert_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
@@ -134,7 +134,11 @@ mod Core {
         }
 
         fn update_tick(
-            ref self: Storage, pool_key: PoolKey, index: i129, liquidity_delta: i129, is_upper: bool
+            ref self: ContractState,
+            pool_key: PoolKey,
+            index: i129,
+            liquidity_delta: i129,
+            is_upper: bool
         ) {
             let tick = self.ticks.read((pool_key, index));
 
@@ -166,7 +170,7 @@ mod Core {
         }
 
         fn get_fee_growth_inside(
-            self: @Storage,
+            self: @ContractState,
             pool_key: PoolKey,
             pool_tick: i129,
             pool_fee_growth_global_token0: u256,
@@ -222,40 +226,42 @@ mod Core {
     }
 
     #[external(v0)]
-    impl Core of ICore<Storage> {
-        fn get_owner(self: @Storage) -> ContractAddress {
+    impl Core of ICore<ContractState> {
+        fn get_owner(self: @ContractState) -> ContractAddress {
             self.owner.read()
         }
 
-        fn get_locker_state(self: @Storage, id: felt252) -> LockerState {
+        fn get_locker_state(self: @ContractState, id: felt252) -> LockerState {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
             LockerState { id, address, nonzero_delta_count }
         }
 
-        fn get_pool(self: @Storage, pool_key: PoolKey) -> Pool {
+        fn get_pool(self: @ContractState, pool_key: PoolKey) -> Pool {
             self.pools.read(pool_key)
         }
 
-        fn get_reserves(self: @Storage, token: ContractAddress) -> u256 {
+        fn get_reserves(self: @ContractState, token: ContractAddress) -> u256 {
             self.reserves.read(token)
         }
 
-        fn get_tick(self: @Storage, pool_key: PoolKey, index: i129) -> Tick {
+        fn get_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
             self.ticks.read((pool_key, index))
         }
 
-        fn get_position(self: @Storage, pool_key: PoolKey, position_key: PositionKey) -> Position {
+        fn get_position(
+            self: @ContractState, pool_key: PoolKey, position_key: PositionKey
+        ) -> Position {
             self.positions.read((pool_key, position_key))
         }
 
         fn get_saved_balance(
-            self: @Storage, owner: ContractAddress, token: ContractAddress
+            self: @ContractState, owner: ContractAddress, token: ContractAddress
         ) -> u128 {
             self.saved_balances.read((owner, token))
         }
 
-        fn set_owner(ref self: Storage, new_owner: ContractAddress) {
+        fn set_owner(ref self: ContractState, new_owner: ContractAddress) {
             let old_owner = self.owner.read();
             assert(get_caller_address() == old_owner, 'OWNER_ONLY');
             self.owner.write(new_owner);
@@ -263,7 +269,10 @@ mod Core {
         }
 
         fn withdraw_fees_collected(
-            ref self: Storage, recipient: ContractAddress, token: ContractAddress, amount: u128
+            ref self: ContractState,
+            recipient: ContractAddress,
+            token: ContractAddress,
+            amount: u128
         ) {
             let collected: u128 = self.fees_collected.read(token);
             self.fees_collected.write(token, collected - amount);
@@ -273,7 +282,7 @@ mod Core {
             self.emit(Event::FeesWithdrawn(FeesWithdrawn { recipient, token, amount }));
         }
 
-        fn lock(ref self: Storage, data: Array<felt252>) -> Array<felt252> {
+        fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
             let id = self.lock_count.read();
             let caller = get_caller_address();
 
@@ -291,7 +300,7 @@ mod Core {
         }
 
         fn withdraw(
-            ref self: Storage,
+            ref self: ContractState,
             token_address: ContractAddress,
             recipient: ContractAddress,
             amount: u128
@@ -311,7 +320,7 @@ mod Core {
         }
 
         fn save(
-            ref self: Storage,
+            ref self: ContractState,
             token_address: ContractAddress,
             recipient: ContractAddress,
             amount: u128
@@ -325,7 +334,7 @@ mod Core {
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
         }
 
-        fn deposit(ref self: Storage, token_address: ContractAddress) -> u128 {
+        fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
             let (id, _) = self.require_locker();
 
             let balance = IERC20Dispatcher {
@@ -346,7 +355,7 @@ mod Core {
             delta.low
         }
 
-        fn load(ref self: Storage, token_address: ContractAddress, amount: u128) {
+        fn load(ref self: ContractState, token_address: ContractAddress, amount: u128) {
             let (id, locker) = self.require_locker();
 
             let saved_balance = self.saved_balances.read((locker, token_address));
@@ -355,7 +364,7 @@ mod Core {
             self.account_delta(id, token_address, i129 { mag: amount, sign: true });
         }
 
-        fn initialize_pool(ref self: Storage, pool_key: PoolKey, initial_tick: i129) {
+        fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0 != contract_address_const::<0>(), 'TOKEN_ZERO');
@@ -386,7 +395,7 @@ mod Core {
 
         // Returns the tick > from to iterate towards that may or may not be initialized
         fn next_initialized_tick(
-            ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(
                 from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
@@ -417,7 +426,7 @@ mod Core {
 
         // Returns the next tick <= from to iterate towards
         fn prev_initialized_tick(
-            ref self: Storage, pool_key: PoolKey, from: i129, skip_ahead: u128
+            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
 
@@ -449,7 +458,7 @@ mod Core {
         }
 
         fn get_pool_fee_growth_inside(
-            self: @Storage, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+            self: @ContractState, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
         ) -> (u256, u256) {
             let pool = self.pools.read(pool_key);
             assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
@@ -468,7 +477,7 @@ mod Core {
         }
 
         fn update_position(
-            ref self: Storage, pool_key: PoolKey, params: UpdatePositionParameters
+            ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
@@ -607,7 +616,7 @@ mod Core {
         }
 
 
-        fn swap(ref self: Storage, pool_key: PoolKey, params: SwapParameters) -> Delta {
+        fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, _) = self.require_locker();
 
             let pool = self.pools.read(pool_key);

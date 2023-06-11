@@ -26,47 +26,49 @@ struct TokenInfo {
 }
 
 #[starknet::interface]
-trait IPositions<Storage> {
-    fn name(self: @Storage) -> felt252;
-    fn symbol(self: @Storage) -> felt252;
-    fn approve(ref self: Storage, to: ContractAddress, token_id: u256);
-    fn balance_of(self: @Storage, account: ContractAddress) -> u256;
-    fn owner_of(self: @Storage, token_id: u256) -> ContractAddress;
-    fn transfer_from(ref self: Storage, from: ContractAddress, to: ContractAddress, token_id: u256);
+trait IPositions<TStorage> {
+    fn name(self: @TStorage) -> felt252;
+    fn symbol(self: @TStorage) -> felt252;
+    fn approve(ref self: TStorage, to: ContractAddress, token_id: u256);
+    fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
+    fn owner_of(self: @TStorage, token_id: u256) -> ContractAddress;
+    fn transfer_from(
+        ref self: TStorage, from: ContractAddress, to: ContractAddress, token_id: u256
+    );
     fn safe_transfer_from(
-        ref self: Storage,
+        ref self: TStorage,
         from: ContractAddress,
         to: ContractAddress,
         token_id: u256,
         data: Span<felt252>
     );
-    fn set_approval_for_all(ref self: Storage, operator: ContractAddress, approved: bool);
-    fn get_approved(self: @Storage, token_id: u256) -> ContractAddress;
+    fn set_approval_for_all(ref self: TStorage, operator: ContractAddress, approved: bool);
+    fn get_approved(self: @TStorage, token_id: u256) -> ContractAddress;
     fn is_approved_for_all(
-        self: @Storage, owner: ContractAddress, operator: ContractAddress
+        self: @TStorage, owner: ContractAddress, operator: ContractAddress
     ) -> bool;
-    fn token_uri(self: @Storage, token_id: u256) -> felt252;
+    fn token_uri(self: @TStorage, token_id: u256) -> felt252;
 
-    fn locked(ref self: Storage, id: felt252, data: Array<felt252>) -> Array<felt252>;
+    fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 
-    fn maybe_initialize_pool(ref self: Storage, pool_key: PoolKey, initial_tick: i129);
+    fn maybe_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
     fn mint(
-        ref self: Storage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
+        ref self: TStorage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
     ) -> u128;
 
     fn deposit_last(
-        ref self: Storage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
     fn deposit(
-        ref self: Storage, token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ref self: TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
-    fn clear(ref self: Storage, token: ContractAddress, recipient: ContractAddress) -> u256;
+    fn clear(ref self: TStorage, token: ContractAddress, recipient: ContractAddress) -> u256;
 
     fn withdraw(
-        ref self: Storage,
+        ref self: TStorage,
         token_id: u256,
         pool_key: PoolKey,
         bounds: Bounds,

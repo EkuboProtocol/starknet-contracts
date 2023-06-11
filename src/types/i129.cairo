@@ -255,7 +255,7 @@ fn i129_div(a: i129, b: i129) -> i129 {
 
 #[inline(always)]
 fn i129_eq(a: @i129, b: @i129) -> bool {
-    (a.mag == b.mag) & ((a.sign == b.sign) | (a.mag == 0))
+    (a.mag == b.mag) & ((a.sign == b.sign) | (*a.mag == 0))
 }
 
 
@@ -276,7 +276,7 @@ fn i129_gt(a: i129, b: i129) -> bool {
 
 #[inline(always)]
 fn i129_ge(a: i129, b: i129) -> bool {
-    (i129_eq(a, b) | i129_gt(a, b))
+    (i129_eq(@a, @b) | i129_gt(a, b))
 }
 
 #[inline(always)]

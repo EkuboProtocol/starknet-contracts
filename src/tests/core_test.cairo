@@ -2,7 +2,7 @@ use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use starknet::contract_address_const;
 use starknet::ContractAddress;
-use starknet::testing::{set_caller_address, set_contract_address};
+use starknet::testing::{set_contract_address};
 use integer::u256;
 use integer::u256_from_felt252;
 use integer::BoundedInt;
@@ -28,19 +28,20 @@ use ekubo::tests::mocks::locker::{
 };
 
 impl EqualTickBool of traits::PartialEq<(i129, bool)> {
-    fn eq(lhs: (i129, bool), rhs: (i129, bool)) -> bool {
-        let (a, b) = lhs;
-        let (c, d) = rhs;
+    fn eq(lhs: @(i129, bool), rhs: @(i129, bool)) -> bool {
+        let (a, b) = *lhs;
+        let (c, d) = *rhs;
         (a == c) & (b == d)
     }
-    fn ne(lhs: (i129, bool), rhs: (i129, bool)) -> bool {
+    fn ne(lhs: @(i129, bool), rhs: @(i129, bool)) -> bool {
         !EqualTickBool::eq(lhs, rhs)
     }
 }
 
 mod owner_tests {
     use super::{
-        deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const, set_caller_address
+        deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
+        set_contract_address
     };
 
     #[test]
@@ -55,17 +56,17 @@ mod owner_tests {
     fn test_owner_can_be_changed_by_owner() {
         let core = deploy_core(contract_address_const::<101>());
         assert(core.get_owner() == contract_address_const::<101>(), 'owner');
-        set_caller_address(contract_address_const::<101>());
+        set_contract_address(contract_address_const::<101>());
         core.set_owner(contract_address_const::<102>());
         assert(core.get_owner() == contract_address_const::<102>(), 'owner');
     }
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('OWNER_ONLY', ))]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
     fn test_owner_cannot_be_changed_by_other() {
         let core = deploy_core(contract_address_const::<101>());
-        set_caller_address(contract_address_const::<1>());
+        set_contract_address(contract_address_const::<1>());
         core.set_owner(contract_address_const::<42>());
     }
 }
@@ -100,7 +101,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ORDER', ))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_same_token() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
@@ -114,7 +115,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ORDER', ))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
@@ -129,7 +130,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ZERO', ))]
+    #[should_panic(expected: ('TOKEN_ZERO', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
@@ -143,7 +144,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TICK_SPACING', ))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
@@ -170,7 +171,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TICK_SPACING', ))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_max_tick_spacing() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
@@ -184,7 +185,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(4000000)]
-    #[should_panic(expected: ('ALREADY_INITIALIZED', ))]
+    #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_already_initialized() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {

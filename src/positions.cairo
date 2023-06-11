@@ -80,7 +80,7 @@ mod Positions {
     }
 
     #[constructor]
-    fn constructor(ref self: Storage, _core: ContractAddress) {
+    fn constructor(ref self: ContractState, _core: ContractAddress) {
         self.core.write(_core);
         self.next_token_id.write(1);
     }
@@ -121,7 +121,9 @@ mod Positions {
 
     #[generate_trait]
     impl PositionsInternal of PositionsInternalTrait {
-        fn check_is_caller_authorized(ref self: Storage, owner: ContractAddress, token_id: u128) {
+        fn check_is_caller_authorized(
+            ref self: ContractState, owner: ContractAddress, token_id: u128
+        ) {
             let caller = get_caller_address();
             if (caller != owner) {
                 let approved = self.approvals.read(token_id);
@@ -132,7 +134,9 @@ mod Positions {
             }
         }
 
-        fn transfer(ref self: Storage, from: ContractAddress, to: ContractAddress, token_id: u256) {
+        fn transfer(
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+        ) {
             validate_token_id(token_id);
 
             let owner = self.owners.read(token_id.low);
@@ -148,14 +152,14 @@ mod Positions {
         }
 
         fn get_token_info(
-            ref self: Storage, token_id: u128, pool_key: PoolKey, bounds: Bounds
+            ref self: ContractState, token_id: u128, pool_key: PoolKey, bounds: Bounds
         ) -> TokenInfo {
             let info = self.token_info.read(token_id);
             assert(info.key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
             info
         }
 
-        fn balance_of_token(ref self: Storage, token: ContractAddress) -> u128 {
+        fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
             let balance = IERC20Dispatcher {
                 contract_address: token
             }.balance_of(get_contract_address());
@@ -165,27 +169,27 @@ mod Positions {
     }
 
     #[external(v0)]
-    impl PositionsExternal of IPositions<Storage> {
-        fn name(self: @Storage) -> felt252 {
+    impl PositionsExternal of IPositions<ContractState> {
+        fn name(self: @ContractState) -> felt252 {
             'Ekubo Position NFT'
         }
 
-        fn symbol(self: @Storage) -> felt252 {
+        fn symbol(self: @ContractState) -> felt252 {
             'EpNFT'
         }
 
-        fn approve(ref self: Storage, to: ContractAddress, token_id: u256) {
+        fn approve(ref self: ContractState, to: ContractAddress, token_id: u256) {
             let caller = get_caller_address();
             assert(caller == self.owner_of(token_id), 'OWNER');
             self.approvals.write(token_id.low, to);
             self.emit(Event::Approval(Approval { owner: caller, approved: to, token_id }));
         }
 
-        fn balance_of(self: @Storage, account: ContractAddress) -> u256 {
+        fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
             u256 { low: self.balances.read(account), high: 0 }
         }
 
-        fn owner_of(self: @Storage, token_id: u256) -> ContractAddress {
+        fn owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
             assert(token_id.high == 0, 'INVALID_ID');
             self.owners.read(token_id.low)
         }
@@ -193,7 +197,7 @@ mod Positions {
 
         // Deposits the tokens held by this contract for the given token ID, using the balances transiently held by this contract
         fn deposit(
-            ref self: Storage,
+            ref self: ContractState,
             token_id: u256,
             pool_key: PoolKey,
             bounds: Bounds,
@@ -273,7 +277,7 @@ mod Positions {
         }
 
         fn withdraw(
-            ref self: Storage,
+            ref self: ContractState,
             token_id: u256,
             pool_key: PoolKey,
             bounds: Bounds,
@@ -317,7 +321,9 @@ mod Positions {
         }
 
         // This contract only holds tokens for the duration of a transaction.
-        fn clear(ref self: Storage, token: ContractAddress, recipient: ContractAddress) -> u256 {
+        fn clear(
+            ref self: ContractState, token: ContractAddress, recipient: ContractAddress
+        ) -> u256 {
             let dispatcher = IERC20Dispatcher { contract_address: token };
             let balance = dispatcher.balance_of(get_contract_address());
             if (balance != u256 { low: 0, high: 0 }) {
@@ -326,7 +332,7 @@ mod Positions {
             balance
         }
 
-        fn locked(ref self: Storage, id: felt252, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
             let caller = get_caller_address();
             assert(caller == self.core.read(), 'CORE');
 
@@ -384,7 +390,7 @@ mod Positions {
 
         // Initializes a pool only if it's not already initialized
         // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
-        fn maybe_initialize_pool(ref self: Storage, pool_key: PoolKey, initial_tick: i129) {
+        fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             let core_dispatcher = ICoreDispatcher { contract_address: self.core.read() };
             let pool = core_dispatcher.get_pool(pool_key);
             if (pool.sqrt_ratio == Default::default()) {
@@ -393,7 +399,7 @@ mod Positions {
         }
 
         fn deposit_last(
-            ref self: Storage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> u128 {
             self
                 .deposit(
@@ -406,13 +412,13 @@ mod Positions {
 
 
         fn transfer_from(
-            ref self: Storage, from: ContractAddress, to: ContractAddress, token_id: u256
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
             self.transfer(from, to, token_id);
         }
 
         fn safe_transfer_from(
-            ref self: Storage,
+            ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
             token_id: u256,
@@ -422,29 +428,31 @@ mod Positions {
             assert(false, 'todo');
         }
 
-        fn set_approval_for_all(ref self: Storage, operator: ContractAddress, approved: bool) {
+        fn set_approval_for_all(
+            ref self: ContractState, operator: ContractAddress, approved: bool
+        ) {
             let owner = get_caller_address();
             self.operators.write((owner, operator), approved);
             self.emit(Event::ApprovalForAll(ApprovalForAll { owner, operator, approved }));
         }
 
-        fn get_approved(self: @Storage, token_id: u256) -> ContractAddress {
+        fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
             self.approvals.read(token_id.low)
         }
 
         fn is_approved_for_all(
-            self: @Storage, owner: ContractAddress, operator: ContractAddress
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress
         ) -> bool {
             self.operators.read((owner, operator))
         }
 
-        fn token_uri(self: @Storage, token_id: u256) -> felt252 {
+        fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
             'https://nft.ekubo.org/'
         }
 
         // Creates the NFT and returns the token ID. Does not add any liquidity.
         fn mint(
-            ref self: Storage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
+            ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
         ) -> u128 {
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
@@ -476,7 +484,7 @@ mod Positions {
                         }
                     )
                 );
-                
+
             id
         }
     }
