@@ -13,7 +13,6 @@ fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     // we don't care about the relative placement of words, only the placement of bits within a word
     if (tick.sign & (tick.mag != 0)) {
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
-        // also, the word must 
         (
             ((tick.mag - 1) / (tick_spacing * 128)) + internal::NEGATIVE_OFFSET,
             downcast(((tick.mag - 1) / tick_spacing) % 128).unwrap()
