@@ -1,4 +1,4 @@
-use core::result::ResultTrait;
+use result::ResultTrait;
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::muldiv::{muldiv};
 use ekubo::types::i129::i129;

@@ -1,9 +1,7 @@
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::i129;
 use starknet::contract_address_const;
-use debug::PrintTrait;
-use core::hash::LegacyHash;
-
+use hash::LegacyHash;
 
 #[test]
 fn test_pool_key_hash() {

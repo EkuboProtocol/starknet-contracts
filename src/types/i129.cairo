@@ -2,10 +2,10 @@ use array::ArrayTrait;
 use debug::PrintTrait;
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
-use core::starknet::storage_access::{
+use starknet::storage_access::{
     StorageAccess, SyscallResult, StorageBaseAddress, storage_address_from_base_and_offset
 };
-use core::hash::LegacyHash;
+use hash::LegacyHash;
 use integer::{u128_safe_divmod, u128_as_non_zero};
 
 // Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128 bits are magnitude
@@ -171,7 +171,6 @@ impl i129PartialEq of PartialEq<i129> {
     }
 }
 
-
 fn i129_option_eq(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
     match lhs {
         Option::Some(lhs_value) => {
@@ -257,7 +256,6 @@ fn i129_div(a: i129, b: i129) -> i129 {
 fn i129_eq(a: @i129, b: @i129) -> bool {
     (a.mag == b.mag) & ((a.sign == b.sign) | (*a.mag == 0))
 }
-
 
 fn i129_gt(a: i129, b: i129) -> bool {
     if (a.sign & !b.sign) {

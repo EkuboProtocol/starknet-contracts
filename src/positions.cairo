@@ -1,43 +1,24 @@
-use starknet::{
-    ContractAddress, contract_address_const, get_caller_address, get_contract_address,
-    StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall, storage_write_syscall,
-    storage_address_from_base_and_offset
-};
-use ekubo::types::i129::{i129, i129IntoFelt252};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::math::utils::{unsafe_sub};
-use array::{ArrayTrait};
-use ekubo::interfaces::core::{ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait};
-use ekubo::interfaces::positions::{IPositions};
-use ekubo::types::keys::{PoolKey};
-use core::hash::LegacyHash;
-use traits::{Into, TryInto};
-use option::{Option, OptionTrait};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::math::liquidity::{max_liquidity};
-use ekubo::interfaces::positions::{Bounds, TokenInfo};
-use serde::Serde;
-
-
-// Compute the hash for a given position key
-fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
-    LegacyHash::hash(
-        pedersen(
-            Into::<i129, felt252>::into(bounds.tick_lower),
-            Into::<i129, felt252>::into(bounds.tick_upper)
-        ),
-        pool_key
-    )
-}
-
 #[starknet::contract]
 mod Positions {
-    use super::{
-        ContractAddress, get_caller_address, i129, contract_address_const, ArrayTrait,
-        ICoreDispatcher, ICoreDispatcherTrait, PoolKey, Bounds, TokenInfo, hash_key,
-        IERC20Dispatcher, IERC20DispatcherTrait, get_contract_address, Serde, Option, OptionTrait,
-        max_liquidity, tick_to_sqrt_ratio, UpdatePositionParameters, unsafe_sub, IPositions
+    use starknet::{
+        ContractAddress, contract_address_const, get_caller_address, get_contract_address,
+        StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall,
+        storage_write_syscall, storage_address_from_base_and_offset
     };
+    use ekubo::types::i129::{i129, i129IntoFelt252};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::utils::{unsafe_sub};
+    use array::{ArrayTrait};
+    use ekubo::interfaces::core::{ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait};
+    use ekubo::interfaces::positions::{IPositions};
+    use ekubo::types::keys::{PoolKey};
+    use hash::LegacyHash;
+    use traits::{Into, TryInto};
+    use option::{Option, OptionTrait};
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::math::liquidity::{max_liquidity};
+    use ekubo::interfaces::positions::{Bounds, TokenInfo};
+    use serde::Serde;
 
     #[storage]
     struct Storage {
@@ -85,6 +66,20 @@ mod Positions {
         self.next_token_id.write(1);
     }
 
+    fn validate_token_id(token_id: u256) {
+        assert(token_id.high == 0, 'INVALID_ID');
+    }
+
+    // Compute the hash for a given position key
+    fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
+        LegacyHash::hash(
+            pedersen(
+                Into::<i129, felt252>::into(bounds.tick_lower),
+                Into::<i129, felt252>::into(bounds.tick_upper)
+            ),
+            pool_key
+        )
+    }
 
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
@@ -103,7 +98,6 @@ mod Positions {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData
     }
-
     #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackResult {
         token0_amount: u128,
@@ -115,12 +109,8 @@ mod Positions {
         Withdraw: WithdrawCallbackResult
     }
 
-    fn validate_token_id(token_id: u256) {
-        assert(token_id.high == 0, 'INVALID_ID');
-    }
-
     #[generate_trait]
-    impl PositionsInternal of PositionsInternalTrait {
+    impl Internal of InternalTrait {
         fn check_is_caller_authorized(
             ref self: ContractState, owner: ContractAddress, token_id: u128
         ) {
@@ -169,7 +159,7 @@ mod Positions {
     }
 
     #[external(v0)]
-    impl PositionsExternal of IPositions<ContractState> {
+    impl Positions of IPositions<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             'Ekubo Position NFT'
         }
@@ -239,16 +229,17 @@ mod Positions {
                     low: info.liquidity, high: 0
                 })
                     .high;
-            // let token_info_next = TokenInfo {
-            //     key_hash: info.key_hash,
-            //     liquidity: info.liquidity + liquidity,
-            //     fee_growth_inside_last_token0: fee_growth_inside_token0,
-            //     fee_growth_inside_last_token1: fee_growth_inside_token1,
-            //     fees_token0: info.fees_token0 + fees0,
-            //     fees_token1: info.fees_token1 + fees1,
-            // };
 
-            // self.token_info.write(token_id.low, token_info_next);
+                let token_info_next = TokenInfo {
+                    key_hash: info.key_hash,
+                    liquidity: info.liquidity + liquidity,
+                    fee_growth_inside_last_token0: fee_growth_inside_token0,
+                    fee_growth_inside_last_token1: fee_growth_inside_token1,
+                    fees_token0: info.fees_token0 + fees0,
+                    fees_token1: info.fees_token1 + fees1,
+                };
+
+                self.token_info.write(token_id.low, token_info_next);
             }
 
             // do the deposit (never expected to fail because we pre-computed liquidity)

@@ -3,7 +3,7 @@ use starknet::{contract_address_const, ContractAddress};
 use hash::pedersen;
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
-use core::hash::LegacyHash;
+use hash::LegacyHash;
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)

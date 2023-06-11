@@ -95,7 +95,7 @@ mod Core {
     }
 
     #[generate_trait]
-    impl CoreInternal of CoreInternalTrait {
+    impl Internal of InternalTrait {
         fn require_locker(ref self: ContractState) -> (felt252, ContractAddress) {
             let id = self.lock_count.read() - 1;
             let locker = self.locker_addresses.read(id);

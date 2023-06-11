@@ -22,7 +22,7 @@ mod internal {
     use ekubo::math::exp2::{exp2_big};
     use integer::downcast;
     use option::{OptionTrait, Option};
-    use core::traits::{Into, TryInto};
+    use traits::{Into, TryInto};
     use ekubo::types::i129::{i129, i129_min, i129_max};
     use integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
 
