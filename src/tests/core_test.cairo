@@ -10,6 +10,7 @@ use traits::Into;
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
 use ekubo::types::i129::{i129, i129OptionPartialEq};
+use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
@@ -212,7 +213,8 @@ mod initialize_pool_tests {
 mod initialized_ticks {
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool, min_tick, max_tick
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool, min_tick, max_tick,
+        Bounds
     };
 
     #[test]
@@ -377,22 +379,37 @@ mod initialized_ticks {
 
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
         );
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
         );
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -534,7 +551,7 @@ mod locks {
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool, Bounds
     };
 
     #[test]
@@ -610,11 +627,16 @@ mod locks {
             extension: Zeroable::zero(),
         );
         update_position(
-            setup,
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
-            Default::default(),
-            contract_address_const::<42>()
+            setup: setup,
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                }
+            },
+            liquidity_delta: Default::default(),
+            recipient: contract_address_const::<42>()
         );
         assert(
             setup
@@ -642,7 +664,7 @@ mod locks {
     #[available_gas(500000000)]
     #[should_panic(
         expected: (
-            'TICK_SPACING',
+            'BOUNDS_TICK_SPACING',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
@@ -660,8 +682,13 @@ mod locks {
 
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: 12, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: 12, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -671,7 +698,7 @@ mod locks {
     #[available_gas(500000000)]
     #[should_panic(
         expected: (
-            'TICK_SPACING',
+            'BOUNDS_TICK_SPACING',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
@@ -689,8 +716,13 @@ mod locks {
 
         update_position(
             setup: setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: 10, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -701,7 +733,7 @@ mod locks {
     #[available_gas(500000000)]
     #[should_panic(
         expected: (
-            'TICK_SPACING',
+            'BOUNDS_TICK_SPACING',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
@@ -719,8 +751,9 @@ mod locks {
 
         let delta = update_position(
             setup: setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 { mag: 10, sign: true }, tick_upper: i129 { mag: 10, sign: false }, 
+            },
             liquidity_delta: i129 { mag: 0, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -745,8 +778,9 @@ mod locks {
 
         let delta = update_position(
             setup: setup,
-            tick_lower: i129 { mag: 10, sign: true },
-            tick_upper: i129 { mag: 10, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 { mag: 10, sign: true }, tick_upper: i129 { mag: 10, sign: false }, 
+            },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -771,8 +805,13 @@ mod locks {
 
         let delta = update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -801,8 +840,7 @@ mod locks {
 
         let delta = update_position(
             setup,
-            tick_lower: min_tick(),
-            tick_upper: max_tick(),
+            bounds: Default::default(),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -830,17 +868,15 @@ mod locks {
             .increase_balance(setup.locker.contract_address, 0xffffffffffffffffffffffffffffffff);
 
         update_position(
-            setup,
-            tick_lower: min_tick(),
-            tick_upper: max_tick(),
+            setup: setup,
+            bounds: Default::default(),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let delta = update_position(
-            setup,
-            tick_lower: min_tick(),
-            tick_upper: max_tick(),
+            setup: setup,
+            bounds: Default::default(),
             liquidity_delta: i129 { mag: 500000000, sign: true },
             recipient: contract_address_const::<42>()
         );
@@ -886,16 +922,14 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: min_tick(),
-            tick_upper: max_tick(),
+            bounds: Default::default(),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let delta = update_position(
             setup,
-            tick_lower: min_tick(),
-            tick_upper: max_tick(),
+            bounds: Default::default(),
             liquidity_delta: i129 { mag: 1000000000, sign: true },
             recipient: contract_address_const::<42>()
         );
@@ -1097,8 +1131,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1144,8 +1183,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1176,13 +1220,6 @@ mod locks {
     }
 
 
-    impl DeltaPrint of PrintTrait<Delta> {
-        fn print(self: Delta) {
-            self.amount0_delta.print();
-            self.amount1_delta.print();
-        }
-    }
-
     #[test]
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
@@ -1199,8 +1236,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1249,8 +1291,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1299,8 +1346,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1346,8 +1398,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1393,8 +1450,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1443,8 +1505,13 @@ mod locks {
 
         update_position(
             setup,
-            tick_lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-            tick_upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+            bounds: Bounds {
+                tick_lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, tick_upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );

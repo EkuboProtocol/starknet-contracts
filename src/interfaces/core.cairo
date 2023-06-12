@@ -2,6 +2,8 @@ use starknet::ContractAddress;
 use ekubo::types::storage::{Tick, Position, Pool};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
+use ekubo::types::delta::{Delta};
 
 #[starknet::interface]
 trait ILocker<TStorage> {
@@ -16,8 +18,7 @@ trait ILocker<TStorage> {
 // liquidity_delta is how the position's liquidity should be modified.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
-    tick_lower: i129,
-    tick_upper: i129,
+    bounds: Bounds,
     liquidity_delta: i129,
 }
 
@@ -30,21 +31,6 @@ struct SwapParameters {
     is_token1: bool,
     sqrt_ratio_limit: u256,
     skip_ahead: u128,
-}
-
-// From the perspective of the core contract, this represents the change in balances.
-// For example, swapping 100 token0 for 150 token1 would result in a Delta of { amount0_delta: 100, amount1_delta: -150 }
-// Note in case the price limit is reached, the amount0_delta or amount1_delta may be less than the amount specified in the swap parameters.
-#[derive(Copy, Drop, Serde)]
-struct Delta {
-    amount0_delta: i129,
-    amount1_delta: i129,
-}
-
-impl DefaultDelta of Default<Delta> {
-    fn default() -> Delta {
-        Delta { amount0_delta: Default::default(), amount1_delta: Default::default(),  }
-    }
 }
 
 // The current state of the queried locker
@@ -91,7 +77,7 @@ trait ICore<TStorage> {
 
     // Get the fee growth inside for a given tick range
     fn get_pool_fee_growth_inside(
-        self: @TStorage, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+        self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> (u256, u256);
 
     // Get the state of a given tick for the given pool

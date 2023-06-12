@@ -6,6 +6,7 @@ mod Positions {
         storage_write_syscall, storage_address_from_base_and_offset
     };
     use ekubo::types::i129::{i129, i129IntoFelt252};
+    use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::utils::{unsafe_sub};
     use array::{ArrayTrait};
@@ -17,7 +18,7 @@ mod Positions {
     use option::{Option, OptionTrait};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::liquidity::{max_liquidity};
-    use ekubo::interfaces::positions::{Bounds, TokenInfo};
+    use ekubo::interfaces::positions::{TokenInfo};
     use serde::Serde;
 
     #[storage]
@@ -72,7 +73,7 @@ mod Positions {
 
     // Compute the hash for a given position key
     fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
-        LegacyHash::hash(pedersen(bounds.tick_lower.into(), bounds.tick_upper.into(), ), pool_key)
+        LegacyHash::hash(bounds.into(), pool_key)
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -207,7 +208,7 @@ mod Positions {
             {
                 let (fee_growth_inside_token0, fee_growth_inside_token1) = ICoreDispatcher {
                     contract_address: self.core.read()
-                }.get_pool_fee_growth_inside(pool_key, bounds.tick_lower, bounds.tick_upper);
+                }.get_pool_fee_growth_inside(pool_key, bounds);
 
                 let fees0 = (unsafe_sub(
                     fee_growth_inside_token0, info.fee_growth_inside_last_token0
@@ -332,9 +333,7 @@ mod Positions {
                         .update_position(
                             deposit.pool_key,
                             UpdatePositionParameters {
-                                tick_lower: deposit.bounds.tick_lower,
-                                tick_upper: deposit.bounds.tick_upper,
-                                liquidity_delta: i129 {
+                                bounds: deposit.bounds, liquidity_delta: i129 {
                                     mag: deposit.liquidity, sign: false
                                 }
                             }

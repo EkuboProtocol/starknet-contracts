@@ -28,6 +28,7 @@ mod Core {
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
     use ekubo::types::keys::{PositionKey, PoolKey};
+    use ekubo::types::bounds::{Bounds, check_bounds_valid};
 
     #[storage]
     struct Storage {
@@ -183,11 +184,10 @@ mod Core {
             pool_tick: i129,
             pool_fee_growth_global_token0: u256,
             pool_fee_growth_global_token1: u256,
-            tick_lower: i129,
-            tick_upper: i129
+            bounds: Bounds,
         ) -> (u256, u256, bool) {
-            if (pool_tick < tick_lower) {
-                let tick_lower_state = self.ticks.read((pool_key, tick_lower));
+            if (pool_tick < bounds.tick_lower) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
                 (
                     unsafe_sub(
                         pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
@@ -197,9 +197,9 @@ mod Core {
                     ),
                     false
                 )
-            } else if (pool_tick < tick_upper) {
-                let tick_lower_state = self.ticks.read((pool_key, tick_lower));
-                let tick_upper_state = self.ticks.read((pool_key, tick_upper));
+            } else if (pool_tick < bounds.tick_upper) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
+                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
 
                 (
                     unsafe_sub(
@@ -219,7 +219,7 @@ mod Core {
                     true
                 )
             } else {
-                let tick_upper_state = self.ticks.read((pool_key, tick_upper));
+                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
                 (
                     unsafe_sub(
                         pool_fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
@@ -487,7 +487,7 @@ mod Core {
         }
 
         fn get_pool_fee_growth_inside(
-            self: @ContractState, pool_key: PoolKey, tick_lower: i129, tick_upper: i129
+            self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> (u256, u256) {
             let pool = self.pools.read(pool_key);
             assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
@@ -498,8 +498,7 @@ mod Core {
                     pool.tick,
                     pool.fee_growth_global_token0,
                     pool.fee_growth_global_token1,
-                    tick_lower,
-                    tick_upper
+                    bounds
                 );
 
             (fee_growth_inside_token0, fee_growth_inside_token1)
@@ -516,14 +515,7 @@ mod Core {
                 }.before_update_position(pool_key, params);
             }
 
-            assert(params.tick_lower < params.tick_upper, 'ORDER');
-            assert(params.tick_lower >= min_tick(), 'MIN');
-            assert(params.tick_upper <= max_tick(), 'MAX');
-            assert(
-                ((params.tick_lower.mag % pool_key.tick_spacing) == 0)
-                    & ((params.tick_upper.mag % pool_key.tick_spacing) == 0),
-                'TICK_SPACING'
-            );
+            check_bounds_valid(params.bounds, pool_key.tick_spacing);
 
             let pool = self.pools.read(pool_key);
 
@@ -531,7 +523,8 @@ mod Core {
             assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
-                tick_to_sqrt_ratio(params.tick_lower), tick_to_sqrt_ratio(params.tick_upper)
+                tick_to_sqrt_ratio(params.bounds.tick_lower),
+                tick_to_sqrt_ratio(params.bounds.tick_upper)
             );
 
             // first compute the amount deltas due to the liquidity delta
@@ -571,8 +564,7 @@ mod Core {
                     pool.tick,
                     pool.fee_growth_global_token0,
                     pool.fee_growth_global_token1,
-                    params.tick_lower,
-                    params.tick_upper
+                    params.bounds,
                 );
 
             let pool_liquidity_next: u128 = if (add_delta) {
@@ -582,9 +574,7 @@ mod Core {
             };
 
             // here we are accumulating fees owed to the position based on its current liquidity
-            let position_key = PositionKey {
-                owner: locker, tick_lower: params.tick_lower, tick_upper: params.tick_upper
-            };
+            let position_key = PositionKey { owner: locker, bounds: params.bounds };
             let position: Position = self.positions.read((pool_key, position_key));
 
             let (amount0_fees, _) = muldiv(
@@ -615,8 +605,8 @@ mod Core {
                     }
                 );
 
-            self.update_tick(pool_key, params.tick_lower, params.liquidity_delta, false);
-            self.update_tick(pool_key, params.tick_upper, params.liquidity_delta, true);
+            self.update_tick(pool_key, params.bounds.tick_lower, params.liquidity_delta, false);
+            self.update_tick(pool_key, params.bounds.tick_upper, params.liquidity_delta, true);
 
             // update pool liquidity if it changed
             if (pool_liquidity_next != pool.liquidity) {

@@ -1,7 +1,9 @@
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::i129;
+use ekubo::types::bounds::Bounds;
 use starknet::contract_address_const;
 use hash::LegacyHash;
+use debug::PrintTrait;
 
 #[test]
 fn test_pool_key_hash() {
@@ -25,14 +27,12 @@ fn test_position_key_hash() {
     let hash = LegacyHash::<PositionKey>::hash(
         0,
         PositionKey {
-            owner: contract_address_const::<1>(), tick_lower: i129 {
-                mag: 0, sign: false
-                }, tick_upper: i129 {
-                mag: 0, sign: false
+            owner: contract_address_const::<1>(), bounds: Bounds {
+                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
             },
         }
     );
     assert(
-        hash == 498631414849929381120934161501384849129150136695721711031999307687030251904, 'id'
+        hash == 1411812989538278467630150792407132233026760638173269385928914869656690555734, 'id'
     );
 }

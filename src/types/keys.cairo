@@ -1,10 +1,11 @@
-use ekubo::types::i129::i129;
-use starknet::{contract_address_const, ContractAddress};
 use hash::pedersen;
+use starknet::{contract_address_const, ContractAddress};
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
 use hash::LegacyHash;
 use zeroable::Zeroable;
+use ekubo::types::i129::i129;
+use ekubo::types::bounds::Bounds;
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)
@@ -47,15 +48,11 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
     owner: ContractAddress,
-    tick_lower: i129,
-    tick_upper: i129
+    bounds: Bounds,
 }
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        pedersen(
-            state,
-            pedersen(value.owner.into(), pedersen(value.tick_lower.into(), value.tick_upper.into()))
-        )
+        pedersen(state, pedersen(value.owner.into(), value.bounds.into()))
     }
 }

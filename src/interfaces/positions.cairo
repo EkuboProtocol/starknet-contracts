@@ -1,19 +1,7 @@
 use starknet::{ContractAddress};
 use ekubo::types::keys::{PoolKey};
 use ekubo::types::i129::{i129};
-use ekubo::math::ticks::{min_tick, max_tick};
-
-#[derive(Copy, Drop, Serde)]
-struct Bounds {
-    tick_lower: i129,
-    tick_upper: i129
-}
-
-impl DefaultBounds of Default<Bounds> {
-    fn default() -> Bounds {
-        Bounds { tick_lower: min_tick(), tick_upper: max_tick() }
-    }
-}
+use ekubo::types::bounds::{Bounds};
 
 #[derive(Copy, Drop, Serde, storage_access::StorageAccess)]
 struct TokenInfo {

@@ -7,6 +7,7 @@ use option::{Option, OptionTrait};
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
 use ekubo::types::i129::i129;
+use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Core};
@@ -182,22 +183,14 @@ fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
 }
 
 fn update_position(
-    setup: SetupPoolResult,
-    tick_lower: i129,
-    tick_upper: i129,
-    liquidity_delta: i129,
-    recipient: ContractAddress
+    setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
 ) -> Delta {
     let before: Balances = get_balances(setup, recipient);
     match setup
         .locker
         .call(
             Action::UpdatePosition(
-                (
-                    setup.pool_key, UpdatePositionParameters {
-                        tick_lower, tick_upper, liquidity_delta
-                    }, recipient
-                )
+                (setup.pool_key, UpdatePositionParameters { bounds, liquidity_delta }, recipient)
             )
         ) {
         ActionResult::AssertLockerId(_) => {
