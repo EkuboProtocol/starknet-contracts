@@ -9,6 +9,13 @@ struct TokenInfo {
     liquidity: u128,
 }
 
+#[derive(Copy, Drop, Serde)]
+struct GetPositionInfoResult {
+    liquidity: u128,
+    fees0: u128,
+    fees1: u128,
+}
+
 #[starknet::interface]
 trait IPositions<TStorage> {
     // See IERC721
@@ -37,6 +44,11 @@ trait IPositions<TStorage> {
     // See ILocker
     fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 
+    // Return the principal and fee amounts owed to a position
+    fn get_position_info(
+        self: @TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds
+    ) -> GetPositionInfoResult;
+
     // Initializes a pool only if it's not already initialized
     // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
     fn maybe_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
@@ -44,7 +56,7 @@ trait IPositions<TStorage> {
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(
         ref self: TStorage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
-    ) -> u128;
+    ) -> u256;
 
     // Delete the NFT. The NFT must have zero liquidity. Must be called by an operator, approved address or the owner
     fn burn(ref self: TStorage, token_id: u256);

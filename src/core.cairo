@@ -21,6 +21,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
+    use ekubo::math::muldiv::{muldiv};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb_low, lsb_low};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
@@ -29,6 +30,8 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, check_bounds_valid};
     use ekubo::types::delta::{Delta};
+
+    use debug::PrintTrait;
 
     #[storage]
     struct Storage {
@@ -223,26 +226,24 @@ mod Core {
 
                 // WARNING: we only use the lower 128 bits from this calculation, and if accumulated fees overflow a u128 they are simply discarded
                 // we discard the fees instead of asserting because we do not want to fail a withdrawal due to too many fees
-                let amount0_fees = (unsafe_sub(
-                    fee_growth_inside_token0, position.fee_growth_inside_last_token0
-                )
-                    / u256 {
-                    low: position.liquidity, high: 0
-                })
-                    .high;
+                let (amount0_fees, _) = muldiv(
+                    unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
+                    u256 { low: position.liquidity, high: 0 },
+                    u256 { high: 1, low: 0 },
+                    false
+                );
 
-                let amount1_fees = (unsafe_sub(
-                    fee_growth_inside_token1, position.fee_growth_inside_last_token1
-                )
-                    / u256 {
-                    low: position.liquidity, high: 0
-                })
-                    .high;
+                let (amount1_fees, _) = muldiv(
+                    unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
+                    u256 { low: position.liquidity, high: 0 },
+                    u256 { high: 1, low: 0 },
+                    false
+                );
 
                 GetPositionResult {
                     position: position,
-                    fees0: amount0_fees,
-                    fees1: amount1_fees,
+                    fees0: amount0_fees.low,
+                    fees1: amount1_fees.low,
                     fee_growth_inside_token0,
                     fee_growth_inside_token1
                 }

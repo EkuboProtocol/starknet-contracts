@@ -11,14 +11,14 @@ mod Positions {
     use ekubo::math::utils::{unsafe_sub};
     use array::{ArrayTrait};
     use ekubo::interfaces::core::{ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait};
-    use ekubo::interfaces::positions::{IPositions};
+    use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
     use ekubo::types::keys::{PoolKey};
     use hash::LegacyHash;
     use traits::{Into, TryInto};
     use option::{Option, OptionTrait};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::positions::{TokenInfo};
     use ekubo::types::delta::{Delta};
+    use ekubo::types::keys::{PositionKey};
     use ekubo::math::liquidity::{max_liquidity};
     use ekubo::math::utils::{add_delta};
     use serde::Serde;
@@ -131,7 +131,7 @@ mod Positions {
         }
 
         fn get_token_info(
-            ref self: ContractState, token_id: u128, pool_key: PoolKey, bounds: Bounds
+            self: @ContractState, token_id: u128, pool_key: PoolKey, bounds: Bounds
         ) -> TokenInfo {
             let info = self.token_info.read(token_id);
             assert(info.key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
@@ -214,7 +214,7 @@ mod Positions {
 
         fn mint(
             ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
-        ) -> u128 {
+        ) -> u256 {
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
 
@@ -241,7 +241,7 @@ mod Positions {
                     )
                 );
 
-            id
+            u256 { low: id, high: 0 }
         }
 
         fn burn(ref self: ContractState, token_id: u256) {
@@ -260,6 +260,27 @@ mod Positions {
                 .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Default::default() });
 
             self.emit(Event::Transfer(Transfer { from: owner, to: Zeroable::zero(), token_id }));
+        }
+
+        fn get_position_info(
+            self: @ContractState, token_id: u256, pool_key: PoolKey, bounds: Bounds
+        ) -> GetPositionInfoResult {
+            validate_token_id(token_id);
+
+            let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let get_position_result = ICoreDispatcher {
+                contract_address: self.core.read()
+            }
+                .get_position(
+                    pool_key,
+                    PositionKey { owner: get_contract_address(), salt: token_id.low.into(), bounds }
+                );
+
+            GetPositionInfoResult {
+                liquidity: info.liquidity,
+                fees0: get_position_result.fees0,
+                fees1: get_position_result.fees1
+            }
         }
 
         fn deposit(

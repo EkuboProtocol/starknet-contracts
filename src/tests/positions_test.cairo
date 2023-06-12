@@ -1,12 +1,13 @@
 use starknet::{contract_address_const, get_contract_address};
 use starknet::testing::{set_contract_address};
-use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT};
+use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT, swap};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
 use ekubo::types::keys::{PoolKey};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::i129::{i129};
+use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use zeroable::Zeroable;
 
 use debug::PrintTrait;
@@ -56,7 +57,7 @@ fn test_nft_approve_succeeds_after_mint() {
     let positions = deploy_positions(core);
     set_contract_address(contract_address_const::<1>());
 
-    let token_id_low = positions
+    let token_id = positions
         .mint(
             contract_address_const::<1>(),
             pool_key: PoolKey {
@@ -69,12 +70,8 @@ fn test_nft_approve_succeeds_after_mint() {
             bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
         );
 
-    positions.approve(contract_address_const::<2>(), u256 { low: token_id_low, high: 0 });
-    assert(
-        positions
-            .get_approved(u256 { low: token_id_low, high: 0 }) == contract_address_const::<2>(),
-        'approved'
-    );
+    positions.approve(contract_address_const::<2>(), token_id);
+    assert(positions.get_approved(token_id) == contract_address_const::<2>(), 'approved');
 }
 
 #[test]
@@ -84,7 +81,7 @@ fn test_nft_approve_only_owner_can_approve() {
     let core = deploy_core(contract_address_const::<1>());
     let positions = deploy_positions(core);
 
-    let token_id_low = positions
+    let token_id = positions
         .mint(
             contract_address_const::<1>(),
             pool_key: PoolKey {
@@ -98,7 +95,7 @@ fn test_nft_approve_only_owner_can_approve() {
         );
 
     set_contract_address(contract_address_const::<2>());
-    positions.approve(contract_address_const::<2>(), u256 { low: token_id_low, high: 0 });
+    positions.approve(contract_address_const::<2>(), token_id);
 }
 
 #[test]
@@ -352,4 +349,51 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     assert(balance0 == Default::default(), 'balance0');
     assert(balance1 == u256 { low: 100000000, high: 0 }, 'balance1');
     assert(liquidity == 100000045833, 'liquidity');
+}
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_then_withdraw_with_fees() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Default::default(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+
+    setup.token0.increase_balance(setup.locker.contract_address, 100000000000);
+    setup.token1.increase_balance(setup.locker.contract_address, 100000000000);
+    let delta_first_swap = swap(
+        setup: setup,
+        amount: i129 { mag: 1000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: max_sqrt_ratio(),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    let delta_second_swap = swap(
+        setup: setup,
+        amount: i129 { mag: 2000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: min_sqrt_ratio(),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(get_position_result.fees0 == 20, 'fees0');
+    assert(get_position_result.fees1 == 9, 'fees1');
 }
