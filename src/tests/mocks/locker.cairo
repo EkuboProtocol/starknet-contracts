@@ -162,12 +162,12 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
+                            .nonzero_delta_count == ((if delta.amount0 == Default::default() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1_delta == Default::default() {
+                                + (if delta.amount1 == Default::default() {
                                     0
                                 } else {
                                     1
@@ -175,12 +175,12 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    self.handle_delta(caller, pool_key.token0, delta.amount0, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
+                            .nonzero_delta_count == (if delta.amount1 == Default::default() {
                                 0
                             } else {
                                 1
@@ -188,7 +188,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+                    self.handle_delta(caller, pool_key.token1, delta.amount1, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -213,12 +213,12 @@ mod CoreLocker {
 
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0_delta == Default::default() {
+                            .nonzero_delta_count == ((if delta.amount0 == Default::default() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1_delta == Default::default() {
+                                + (if delta.amount1 == Default::default() {
                                     0
                                 } else {
                                     1
@@ -226,12 +226,12 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token0, delta.amount0_delta, recipient);
+                    self.handle_delta(caller, pool_key.token0, delta.amount0, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1_delta == Default::default() {
+                            .nonzero_delta_count == (if delta.amount1 == Default::default() {
                                 0
                             } else {
                                 1
@@ -239,7 +239,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token1, delta.amount1_delta, recipient);
+                    self.handle_delta(caller, pool_key.token1, delta.amount1, recipient);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');

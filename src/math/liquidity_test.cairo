@@ -11,127 +11,127 @@ use debug::PrintTrait;
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 1 },
         i129 { mag: 10000, sign: false },
         min_sqrt_ratio(),
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 10000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 10000, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 10000, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 10000, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price_withdraw() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 1 },
         i129 { mag: 10000, sign: true },
         min_sqrt_ratio(),
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 9999, sign: true }, 'amount0');
-    assert(amount1 == i129 { mag: 9999, sign: true }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 9999, sign: true }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 9999, sign: true }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_low_price_in_range() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
         i129 { mag: 10000, sign: false },
         min_sqrt_ratio(),
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 42949672960000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 1, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 42949672960000, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 1, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_low_price_in_range_withdraw() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
         i129 { mag: 10000, sign: true },
         min_sqrt_ratio(),
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 42949672959999, sign: true }, 'amount0');
-    assert(amount1 == i129 { mag: 0, sign: true }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 42949672959999, sign: true }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 0, sign: true }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_high_price_in_range() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 4294967296 },
         i129 { mag: 10000, sign: false },
         min_sqrt_ratio(),
         max_sqrt_ratio()
     );
 
-    assert(amount0 == i129 { mag: 1, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 42949672960000, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 1, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 42949672960000, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 1 },
         i129 { mag: 10000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 5000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 5000, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 5000, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 5000, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
         i129 { mag: 10000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 15000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 0, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 15000, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 0, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 4294967296 },
         i129 { mag: 10000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 0, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 15000, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 0, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 15000, sign: false }, 'amount1');
 }
 
 #[test]
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
-    let (amount0, amount1) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
         i129 { mag: 1000000000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: 10, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: 10, sign: false })
     );
 
-    assert(amount0 == i129 { mag: 5000, sign: false }, 'amount0');
-    assert(amount1 == i129 { mag: 5000, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 5000, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 5000, sign: false }, 'amount1');
 }
 
 
@@ -260,14 +260,14 @@ fn test_max_liquidity_less_than_liquidity_deltas() {
 
     let liquidity = max_liquidity(sqrt_ratio, sqrt_ratio_lower, sqrt_ratio_upper, amount0, amount1);
 
-    let (amount0_delta, amount1_delta) = liquidity_delta_to_amount_delta(
+    let delta = liquidity_delta_to_amount_delta(
         sqrt_ratio,
         liquidity_delta: i129 { mag: liquidity, sign: false },
         sqrt_ratio_lower: sqrt_ratio_lower,
         sqrt_ratio_upper: sqrt_ratio_upper
     );
-    assert(amount0_delta.mag <= amount0, 'amount0.mag');
-    assert(amount0_delta.sign == false, 'amount0.sign');
-    assert(amount1_delta.mag <= amount1, 'amount1.mag');
-    assert(amount1_delta.sign == false, 'amount1.sign');
+    assert(delta.amount0.mag <= amount0, 'amount0.mag');
+    assert(delta.amount0.sign == false, 'amount0.sign');
+    assert(delta.amount1.mag <= amount1, 'amount1.mag');
+    assert(delta.amount1.sign == false, 'amount1.sign');
 }

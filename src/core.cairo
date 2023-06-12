@@ -2,7 +2,7 @@
 mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
-        Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
+        SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait
     };
     use zeroable::Zeroable;
@@ -29,6 +29,7 @@ mod Core {
     use ekubo::types::storage::{Tick, Position, Pool};
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, check_bounds_valid};
+    use ekubo::types::delta::{Delta};
 
     #[storage]
     struct Storage {
@@ -528,17 +529,22 @@ mod Core {
             );
 
             // first compute the amount deltas due to the liquidity delta
-            let (mut amount0_delta, mut amount1_delta) = liquidity_delta_to_amount_delta(
+            let mut delta = liquidity_delta_to_amount_delta(
                 pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
             );
 
             // first, account the withdrawal protocol fee, because it's based on the deltas
             if (params.liquidity_delta.sign) {
-                let amount0_fee = compute_fee(amount0_delta.mag, pool_key.fee);
-                let amount1_fee = compute_fee(amount1_delta.mag, pool_key.fee);
+                let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
+                let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
-                amount0_delta += i129 { mag: amount0_fee, sign: false };
-                amount1_delta += i129 { mag: amount1_fee, sign: false };
+                delta = Delta {
+                    amount0: delta.amount0 + i129 {
+                        mag: amount0_fee, sign: false
+                        }, amount1: delta.amount1 + i129 {
+                        mag: amount1_fee, sign: false
+                    },
+                };
 
                 self
                     .fees_collected
@@ -590,8 +596,13 @@ mod Core {
                 false
             );
 
-            amount0_delta += i129 { mag: amount0_fees.low, sign: true };
-            amount1_delta += i129 { mag: amount1_fees.low, sign: true };
+            delta = Delta {
+                amount0: delta.amount0 + i129 {
+                    mag: amount0_fees.low, sign: true
+                    }, amount1: delta.amount1 + i129 {
+                    mag: amount1_fees.low, sign: true
+                },
+            };
 
             // update the position
             self
@@ -625,10 +636,8 @@ mod Core {
             }
 
             // and finally account the computed deltas
-            self.account_delta(id, pool_key.token0, amount0_delta);
-            self.account_delta(id, pool_key.token1, amount1_delta);
-
-            let delta = Delta { amount0_delta, amount1_delta };
+            self.account_delta(id, pool_key.token0, delta.amount0);
+            self.account_delta(id, pool_key.token1, delta.amount1);
 
             self.emit(Event::PositionUpdated(PositionUpdated { pool_key, params, delta }));
 
@@ -785,18 +794,18 @@ mod Core {
                 };
             };
 
-            let (amount0_delta, amount1_delta) = if (params.is_token1) {
-                (
-                    i129 {
+            let delta = if (params.is_token1) {
+                Delta {
+                    amount0: i129 {
                         mag: calculated_amount, sign: !params.amount.sign
-                    }, params.amount - amount_remaining
-                )
+                    }, amount1: params.amount - amount_remaining
+                }
             } else {
-                (
-                    params.amount - amount_remaining, i129 {
+                Delta {
+                    amount0: params.amount - amount_remaining, amount1: i129 {
                         mag: calculated_amount, sign: !params.amount.sign
                     }
-                )
+                }
             };
 
             let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params
@@ -819,10 +828,8 @@ mod Core {
                     }
                 );
 
-            self.account_delta(id, pool_key.token0, amount0_delta);
-            self.account_delta(id, pool_key.token1, amount1_delta);
-
-            let delta = Delta { amount0_delta, amount1_delta };
+            self.account_delta(id, pool_key.token0, delta.amount0);
+            self.account_delta(id, pool_key.token1, delta.amount1);
 
             self.emit(Event::Swapped(Swapped { pool_key, params, delta }));
 

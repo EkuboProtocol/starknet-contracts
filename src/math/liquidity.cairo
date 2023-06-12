@@ -2,6 +2,7 @@ use result::ResultTrait;
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::muldiv::{muldiv};
 use ekubo::types::i129::i129;
+use ekubo::types::delta::Delta;
 use ekubo::math::ticks::tick_to_sqrt_ratio;
 use integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
@@ -11,10 +12,10 @@ use integer::{
 // Returns the token0, token1 delta owed for a given change in liquidity
 fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
-) -> (i129, i129) {
+) -> Delta {
     // handle the 0 case so we do not return 1 for 0 liquidity delta
     if (liquidity_delta == Default::default()) {
-        return (Default::default(), Default::default());
+        return Default::default();
     }
 
     // we always add one to the delta so that we never give more tokens than is owed or receive less than is needed
@@ -24,33 +25,33 @@ fn liquidity_delta_to_amount_delta(
     let round_up = !liquidity_delta.sign;
 
     if (sqrt_ratio <= sqrt_ratio_lower) {
-        return (
-            i129 {
+        return Delta {
+            amount0: i129 {
                 mag: amount0_delta(
                     sqrt_ratio_lower, sqrt_ratio_upper, liquidity_delta.mag, round_up
                 ),
                 sign: liquidity_delta.sign
-            }, ZERO
-        );
+            }, amount1: ZERO
+        };
     } else if (sqrt_ratio < sqrt_ratio_upper) {
-        return (
-            i129 {
+        return Delta {
+            amount0: i129 {
                 mag: amount0_delta(sqrt_ratio, sqrt_ratio_upper, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
-                }, i129 {
+                }, amount1: i129 {
                 mag: amount1_delta(sqrt_ratio_lower, sqrt_ratio, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
             }
-        );
+        };
     } else {
-        return (
-            ZERO, i129 {
+        return Delta {
+            amount0: ZERO, amount1: i129 {
                 mag: amount1_delta(
                     sqrt_ratio_lower, sqrt_ratio_upper, liquidity_delta.mag, round_up
                 ),
                 sign: liquidity_delta.sign
             }
-        );
+        };
     }
 }
 

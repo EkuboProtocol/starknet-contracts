@@ -757,8 +757,8 @@ mod locks {
             liquidity_delta: i129 { mag: 0, sign: false },
             recipient: contract_address_const::<42>()
         );
-        assert(delta.amount0_delta == Default::default(), 'amount0');
-        assert(delta.amount1_delta == Default::default(), 'amount1');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1');
     }
 
 
@@ -785,8 +785,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 50, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 50, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 50, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 50, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -816,8 +816,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 4962643, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 4962643, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 4962643, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 4962643, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -845,8 +845,8 @@ mod locks {
             recipient: contract_address_const::<42>()
         );
 
-        assert(delta.amount0_delta == i129 { mag: 1000000000, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 1000000000, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 1000000000, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 1000000000, sign: false }, 'amount1_delta');
     }
 
     #[test]
@@ -898,8 +898,8 @@ mod locks {
             'ticks initialized'
         );
 
-        assert(delta.amount0_delta == i129 { mag: 494999999, sign: true }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 494999999, sign: true }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 494999999, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 494999999, sign: true }, 'amount1_delta');
     }
 
     #[test]
@@ -951,8 +951,8 @@ mod locks {
             'ticks initialized'
         );
 
-        assert(delta.amount0_delta == i129 { mag: 989999999, sign: true }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 989999999, sign: true }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 989999999, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 989999999, sign: true }, 'amount1_delta');
     }
 
     #[test]
@@ -975,8 +975,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
-        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
@@ -1009,8 +1009,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
-        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
@@ -1041,8 +1041,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
-        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is max');
@@ -1073,8 +1073,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
-        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
@@ -1105,8 +1105,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0_delta == Default::default(), 'amount0_delta');
-        assert(delta.amount1_delta == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Default::default(), 'amount0');
+        assert(delta.amount1 == Default::default(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
@@ -1151,8 +1151,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000');
-        assert(delta.amount1_delta == i129 { mag: 989, sign: true }, 'amount1_delta==989');
+        assert(delta.amount0 == i129 { mag: 1000, sign: false }, 'amount0==1000');
+        assert(delta.amount1 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(
@@ -1203,8 +1203,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 1000, sign: true }, 'amount0_delta==1000');
-        assert(delta.amount1_delta == i129 { mag: 1010, sign: false }, 'amount1_delta==989');
+        assert(delta.amount0 == i129 { mag: 1000, sign: true }, 'amount0==1000');
+        assert(delta.amount1 == i129 { mag: 1010, sign: false }, 'amount1_delta==989');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(
@@ -1260,8 +1260,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 499, sign: false }, 'amount0_delta==1000');
-        assert(delta.amount1_delta == i129 { mag: 496, sign: true }, 'amount1_delta==987');
+        assert(delta.amount0 == i129 { mag: 499, sign: false }, 'amount0==1000');
+        assert(delta.amount1 == i129 { mag: 496, sign: true }, 'amount1_delta==987');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price min');
@@ -1315,8 +1315,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 497, sign: true }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 498, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 497, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 498, sign: false }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price min');
@@ -1366,8 +1366,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount1_delta == i129 { mag: 1000, sign: false }, 'amount0_delta==1000');
-        assert(delta.amount0_delta == i129 { mag: 989, sign: true }, 'amount1_delta==989');
+        assert(delta.amount1 == i129 { mag: 1000, sign: false }, 'amount0==1000');
+        assert(delta.amount0 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(
@@ -1418,8 +1418,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount1_delta == i129 { mag: 1000, sign: true }, 'amount0_delta');
-        assert(delta.amount0_delta == i129 { mag: 1010, sign: false }, 'amount1_delta');
+        assert(delta.amount1 == i129 { mag: 1000, sign: true }, 'amount0');
+        assert(delta.amount0 == i129 { mag: 1010, sign: false }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(
@@ -1474,8 +1474,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 49626, sign: true }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 49874, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 49626, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 49874, sign: false }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
@@ -1529,8 +1529,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0_delta == i129 { mag: 49873, sign: false }, 'amount0_delta');
-        assert(delta.amount1_delta == i129 { mag: 49627, sign: true }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 49873, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 49627, sign: true }, 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');

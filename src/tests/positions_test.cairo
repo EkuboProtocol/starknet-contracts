@@ -31,6 +31,78 @@ fn test_maybe_initialize_pool_twice() {
 
 #[test]
 #[available_gas(300000000)]
+fn test_nft_name_symbol() {
+    let core = deploy_core(contract_address_const::<1>());
+    let positions = deploy_positions(core);
+    assert(positions.name() == 'Ekubo Position NFT', 'name');
+    assert(positions.symbol() == 'EpNFT', 'symbol');
+    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://nft.ekubo.org/', 'token_uri');
+}
+
+#[test]
+#[available_gas(300000000)]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
+fn test_nft_approve_fails_id_not_exists() {
+    let core = deploy_core(contract_address_const::<1>());
+    let positions = deploy_positions(core);
+    set_contract_address(contract_address_const::<1>());
+    positions.approve(contract_address_const::<2>(), 1);
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_approve_succeeds_after_mint() {
+    let core = deploy_core(contract_address_const::<1>());
+    let positions = deploy_positions(core);
+    set_contract_address(contract_address_const::<1>());
+
+    let token_id_low = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: contract_address_const::<0>(),
+                token1: contract_address_const::<0>(),
+                fee: Default::default(),
+                tick_spacing: Default::default(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
+        );
+
+    positions.approve(contract_address_const::<2>(), u256 { low: token_id_low, high: 0 });
+    assert(
+        positions
+            .get_approved(u256 { low: token_id_low, high: 0 }) == contract_address_const::<2>(),
+        'approved'
+    );
+}
+
+#[test]
+#[available_gas(300000000)]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
+fn test_nft_approve_only_owner_can_approve() {
+    let core = deploy_core(contract_address_const::<1>());
+    let positions = deploy_positions(core);
+
+    let token_id_low = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: contract_address_const::<0>(),
+                token1: contract_address_const::<0>(),
+                fee: Default::default(),
+                tick_spacing: Default::default(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
+        );
+
+    set_contract_address(contract_address_const::<2>());
+    positions.approve(contract_address_const::<2>(), u256 { low: token_id_low, high: 0 });
+}
+
+#[test]
+#[available_gas(300000000)]
 fn test_nft_balance_of() {
     let core = deploy_core(contract_address_const::<1>());
     let positions = deploy_positions(core);
@@ -53,6 +125,7 @@ fn test_nft_balance_of() {
             ) == 1,
         'token id'
     );
+    assert(positions.owner_of(1) == recipient, 'owner');
     assert(positions.balance_of(recipient) == u256 { low: 1, high: 0 }, 'balance check after');
 }
 

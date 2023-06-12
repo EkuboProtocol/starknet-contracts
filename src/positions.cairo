@@ -275,9 +275,10 @@ mod Positions {
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let pool = ICoreDispatcher { contract_address: self.core.read() }.get_pool(pool_key);
 
             let mut data: Array<felt252> = ArrayTrait::new();
-            // make the deposit to the pool
+            // make the withdrawal from the pool
             Serde::<LockCallbackData>::serialize(
                 @LockCallbackData::Withdraw(
                     WithdrawCallbackData { bounds, min_token0, min_token1 }
@@ -301,7 +302,6 @@ mod Positions {
                     (Default::<u128>::default(), Default::<u128>::default())
                 }
             };
-            // todo: update the position info here
 
             (token0_amount, token1_amount)
         }
@@ -339,18 +339,18 @@ mod Positions {
                             }
                         );
 
-                    if delta.amount0_delta.mag != 0 {
+                    if delta.amount0.mag != 0 {
                         IERC20Dispatcher {
                             contract_address: deposit.pool_key.token0
-                        }.transfer(caller, u256 { low: delta.amount0_delta.mag, high: 0 });
+                        }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
                         ICoreDispatcher {
                             contract_address: caller
                         }.deposit(deposit.pool_key.token0);
                     }
-                    if (delta.amount1_delta.mag != 0) {
+                    if (delta.amount1.mag != 0) {
                         IERC20Dispatcher {
                             contract_address: deposit.pool_key.token1
-                        }.transfer(caller, u256 { low: delta.amount1_delta.mag, high: 0 });
+                        }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
                         ICoreDispatcher {
                             contract_address: caller
                         }.deposit(deposit.pool_key.token1);

@@ -148,35 +148,33 @@ fn diff(x: u256, y: u256) -> i129 {
 
 fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     assert(
-        diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0_delta,
+        diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0,
         'token0_balance_core'
     );
     assert(
-        diff(after.token1_balance_core, before.token1_balance_core) == delta.amount1_delta,
+        diff(after.token1_balance_core, before.token1_balance_core) == delta.amount1,
         'token1_balance_core'
     );
 
-    if (delta.amount0_delta.sign) {
+    if (delta.amount0.sign) {
         assert(
-            diff(after.token0_balance_recipient, before.token0_balance_recipient) == -delta
-                .amount0_delta,
+            diff(after.token0_balance_recipient, before.token0_balance_recipient) == -delta.amount0,
             'token0_balance_recipient'
         );
     } else {
         assert(
-            diff(after.token0_balance_locker, before.token0_balance_locker) == -delta.amount0_delta,
+            diff(after.token0_balance_locker, before.token0_balance_locker) == -delta.amount0,
             'token0_balance_locker'
         );
     }
-    if (delta.amount1_delta.sign) {
+    if (delta.amount1.sign) {
         assert(
-            diff(after.token1_balance_recipient, before.token1_balance_recipient) == -delta
-                .amount1_delta,
+            diff(after.token1_balance_recipient, before.token1_balance_recipient) == -delta.amount1,
             'token1_balance_recipient'
         );
     } else {
         assert(
-            diff(after.token1_balance_locker, before.token1_balance_locker) == -delta.amount1_delta,
+            diff(after.token1_balance_locker, before.token1_balance_locker) == -delta.amount1,
             'token1_balance_locker'
         );
     }
