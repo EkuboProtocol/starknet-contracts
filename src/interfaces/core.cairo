@@ -18,6 +18,7 @@ trait ILocker<TStorage> {
 // liquidity_delta is how the position's liquidity should be modified.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
+    salt: felt252,
     bounds: Bounds,
     liquidity_delta: i129,
 }
@@ -146,7 +147,7 @@ trait ICore<TStorage> {
     ) -> Delta;
 
     // Collect the fees owed on a position
-    fn collect_fees(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> Delta;
+    fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: felt252, bounds: Bounds) -> Delta;
 
     // Make a swap against a pool.
     // Note you must call this within a lock callback

@@ -333,7 +333,9 @@ mod Positions {
                 .update_position(
                     callback_data.pool_key,
                     UpdatePositionParameters {
-                        bounds: callback_data.bounds, liquidity_delta: callback_data.liquidity_delta
+                        salt: 0,
+                        bounds: callback_data.bounds,
+                        liquidity_delta: callback_data.liquidity_delta
                     }
                 );
 

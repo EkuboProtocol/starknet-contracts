@@ -581,7 +581,9 @@ mod Core {
             }
 
             // here we are accumulating fees owed to the position based on its current liquidity
-            let position_key = PositionKey { owner: locker, bounds: params.bounds };
+            let position_key = PositionKey {
+                owner: locker, salt: params.salt, bounds: params.bounds
+            };
             let get_position_result = self.get_position(pool_key, position_key);
 
             let position_liquidity_next: u128 = add_delta(
@@ -663,10 +665,12 @@ mod Core {
             delta
         }
 
-        fn collect_fees(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> Delta {
+        fn collect_fees(
+            ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
+        ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let position_key = PositionKey { owner: locker, bounds };
+            let position_key = PositionKey { owner: locker, salt, bounds };
             let result = self.get_position(pool_key, position_key);
 
             // update the position

@@ -188,7 +188,11 @@ fn update_position(
         .locker
         .call(
             Action::UpdatePosition(
-                (setup.pool_key, UpdatePositionParameters { bounds, liquidity_delta }, recipient)
+                (
+                    setup.pool_key, UpdatePositionParameters {
+                        bounds, liquidity_delta, salt: 0
+                    }, recipient
+                )
             )
         ) {
         ActionResult::AssertLockerId(_) => {

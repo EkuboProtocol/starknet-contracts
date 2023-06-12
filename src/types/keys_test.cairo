@@ -27,12 +27,33 @@ fn test_position_key_hash() {
     let hash = LegacyHash::<PositionKey>::hash(
         0,
         PositionKey {
-            owner: contract_address_const::<1>(), bounds: Bounds {
+            salt: 0, owner: contract_address_const::<1>(), bounds: Bounds {
                 tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
             },
         }
     );
-    assert(
-        hash == 1411812989538278467630150792407132233026760638173269385928914869656690555734, 'id'
+
+    let hash_with_diff_salt = LegacyHash::<PositionKey>::hash(
+        0,
+        PositionKey {
+            salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
+                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
+            },
+        }
     );
+
+    let hash_with_diff_state = LegacyHash::<PositionKey>::hash(
+        1,
+        PositionKey {
+            salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
+                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
+            },
+        }
+    );
+
+    assert(
+        hash == 2002598252687967151219363562011409882048622533754935628534834756348593060442, 'id'
+    );
+    assert(hash != hash_with_diff_salt, 'not equal');
+    assert(hash != hash_with_diff_state, 'not equal');
 }
