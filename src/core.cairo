@@ -3,7 +3,7 @@ mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait
+        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult
     };
     use zeroable::Zeroable;
     use starknet::{
@@ -19,7 +19,6 @@ mod Core {
     use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
     use ekubo::math::swap::{swap_result, is_price_increasing};
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
-    use ekubo::math::muldiv::muldiv;
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
@@ -260,8 +259,48 @@ mod Core {
 
         fn get_position(
             self: @ContractState, pool_key: PoolKey, position_key: PositionKey
-        ) -> Position {
-            self.positions.read((pool_key, position_key))
+        ) -> GetPositionResult {
+            let position: Position = self.positions.read((pool_key, position_key));
+
+            if (position.liquidity.is_zero()) {
+                GetPositionResult {
+                    position: position,
+                    fees0: Default::default(),
+                    fees1: Default::default(),
+                    // we can return 0 because it's irrelevant for an empty position
+                    fee_growth_inside_token0: Default::default(),
+                    fee_growth_inside_token1: Default::default()
+                }
+            } else {
+                let (fee_growth_inside_token0, fee_growth_inside_token1) = self
+                    .get_pool_fee_growth_inside(pool_key, position_key.bounds);
+
+                // WARNING: we only use the lower 128 bits from this calculation, and if accumulated fees overflow a u128 they are simply discarded
+                // we discard the fees instead of asserting because we do not want to fail a withdrawal due to too many fees
+                let amount0_fees = (unsafe_sub(
+                    fee_growth_inside_token0, position.fee_growth_inside_last_token0
+                )
+                    / u256 {
+                    low: position.liquidity, high: 0
+                })
+                    .high;
+
+                let amount1_fees = (unsafe_sub(
+                    fee_growth_inside_token1, position.fee_growth_inside_last_token1
+                )
+                    / u256 {
+                    low: position.liquidity, high: 0
+                })
+                    .high;
+
+                GetPositionResult {
+                    position: position,
+                    fees0: amount0_fees,
+                    fees1: amount1_fees,
+                    fee_growth_inside_token0,
+                    fee_growth_inside_token1
+                }
+            }
         }
 
         fn get_saved_balance(
@@ -528,12 +567,12 @@ mod Core {
                 tick_to_sqrt_ratio(params.bounds.tick_upper)
             );
 
-            // first compute the amount deltas due to the liquidity delta
+            // compute the amount deltas due to the liquidity delta
             let mut delta = liquidity_delta_to_amount_delta(
                 pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
             );
 
-            // first, account the withdrawal protocol fee, because it's based on the deltas
+            // account the withdrawal protocol fee, because it's based on the deltas
             if (params.liquidity_delta.sign) {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
@@ -564,7 +603,7 @@ mod Core {
                     );
             }
 
-            let (fee_growth_inside_token0, fee_growth_inside_token1, add_delta) = self
+            let (mut fee_growth_inside_token0, mut fee_growth_inside_token1, add_delta) = self
                 .get_fee_growth_inside(
                     pool_key,
                     pool.tick,
@@ -583,26 +622,49 @@ mod Core {
             let position_key = PositionKey { owner: locker, bounds: params.bounds };
             let position: Position = self.positions.read((pool_key, position_key));
 
-            let (amount0_fees, _) = muldiv(
-                unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
-                u256 { low: position.liquidity, high: 0 },
-                u256 { low: 0, high: 1 },
-                false
-            );
-            let (amount1_fees, _) = muldiv(
-                unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
-                u256 { low: position.liquidity, high: 0 },
-                u256 { low: 0, high: 1 },
-                false
+            let position_liquidity_next: u128 = add_delta(
+                position.liquidity, params.liquidity_delta
             );
 
-            delta += Delta {
-                amount0: i129 {
-                    mag: amount0_fees.low, sign: true
-                    }, amount1: i129 {
-                    mag: amount1_fees.low, sign: true
-                },
+            let (amount0_fees, amount1_fees) = if position.liquidity.is_zero() {
+                (Default::default(), Default::default())
+            } else {
+                (
+                    (unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0)
+                        / u256 {
+                        low: position.liquidity, high: 0
+                    })
+                        .high,
+                    (unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1)
+                        / u256 {
+                        low: position.liquidity, high: 0
+                    })
+                        .high
+                )
             };
+
+            if (position_liquidity_next.is_zero()) {
+                assert((amount0_fees.is_zero()) & (amount1_fees.is_zero()), 'NONZERO_FEES');
+            } else {
+                fee_growth_inside_token0 =
+                    unsafe_sub(
+                        fee_growth_inside_token0,
+                        u256 {
+                            high: amount0_fees, low: 0
+                            } / u256 {
+                            low: position_liquidity_next, high: 0
+                        }
+                    );
+                fee_growth_inside_token1 =
+                    unsafe_sub(
+                        fee_growth_inside_token1,
+                        u256 {
+                            high: amount1_fees, low: 0
+                            } / u256 {
+                            low: position_liquidity_next, high: 0
+                        }
+                    );
+            }
 
             // update the position
             self
@@ -610,9 +672,9 @@ mod Core {
                 .write(
                     (pool_key, position_key),
                     Position {
-                        liquidity: add_delta(position.liquidity, params.liquidity_delta),
+                        liquidity: position_liquidity_next,
                         fee_growth_inside_last_token0: fee_growth_inside_token0,
-                        fee_growth_inside_last_token1: fee_growth_inside_token1
+                        fee_growth_inside_last_token1: fee_growth_inside_token1,
                     }
                 );
 
@@ -646,6 +708,38 @@ mod Core {
                     contract_address: pool_key.extension
                 }.after_update_position(pool_key, params, delta);
             }
+
+            delta
+        }
+
+        fn collect_fees(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> Delta {
+            let (id, locker) = self.require_locker();
+
+            let position_key = PositionKey { owner: locker, bounds };
+            let result = self.get_position(pool_key, position_key);
+
+            // update the position
+            self
+                .positions
+                .write(
+                    (pool_key, position_key),
+                    Position {
+                        liquidity: result.position.liquidity,
+                        fee_growth_inside_last_token0: result.fee_growth_inside_token0,
+                        fee_growth_inside_last_token1: result.fee_growth_inside_token1,
+                    }
+                );
+
+            let delta = Delta {
+                amount0: i129 {
+                    mag: result.fees0, sign: true
+                    }, amount1: i129 {
+                    mag: result.fees1, sign: true
+                },
+            };
+
+            self.account_delta(id, pool_key.token0, delta.amount0);
+            self.account_delta(id, pool_key.token1, delta.amount1);
 
             delta
         }

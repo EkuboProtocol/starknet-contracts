@@ -33,6 +33,15 @@ struct SwapParameters {
     skip_ahead: u128,
 }
 
+#[derive(Copy, Drop, Serde)]
+struct GetPositionResult {
+    position: Position,
+    fees0: u128,
+    fees1: u128,
+    fee_growth_inside_token0: u256,
+    fee_growth_inside_token1: u256,
+}
+
 // The current state of the queried locker
 #[derive(Copy, Drop, Serde)]
 struct LockerState {
@@ -84,7 +93,9 @@ trait ICore<TStorage> {
     fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
 
     // Get the state of a given position for the given pool
-    fn get_position(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> Position;
+    fn get_position(
+        self: @TStorage, pool_key: PoolKey, position_key: PositionKey
+    ) -> GetPositionResult;
 
     // Get the last recorded balance of a token for core, used by core for computing payment amounts
     fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
@@ -129,10 +140,13 @@ trait ICore<TStorage> {
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
-    // Note you must call this within a lock callback
+    // Note you must call this within a lock callback. Note also that a position cannot be burned to 0 unless all fees have been collected
     fn update_position(
         ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
     ) -> Delta;
+
+    // Collect the fees owed on a position
+    fn collect_fees(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> Delta;
 
     // Make a swap against a pool.
     // Note you must call this within a lock callback
