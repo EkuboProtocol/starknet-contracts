@@ -22,3 +22,16 @@ impl DefaultDelta of Default<Delta> {
         Delta { amount0: Default::default(), amount1: Default::default(),  }
     }
 }
+
+impl AddDelta of Add<Delta> {
+    fn add(lhs: Delta, rhs: Delta) -> Delta {
+        Delta { amount0: lhs.amount0 + rhs.amount0, amount1: lhs.amount1 + rhs.amount1,  }
+    }
+}
+
+impl DeltaAddEq of AddEq<Delta> {
+    #[inline(always)]
+    fn add_eq(ref self: Delta, other: Delta) {
+        self = Add::add(self, other);
+    }
+}

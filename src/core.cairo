@@ -538,10 +538,10 @@ mod Core {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
-                delta = Delta {
-                    amount0: delta.amount0 + i129 {
+                delta += Delta {
+                    amount0: i129 {
                         mag: amount0_fee, sign: false
-                        }, amount1: delta.amount1 + i129 {
+                        }, amount1: i129 {
                         mag: amount1_fee, sign: false
                     },
                 };
@@ -596,10 +596,10 @@ mod Core {
                 false
             );
 
-            delta = Delta {
-                amount0: delta.amount0 + i129 {
+            delta += Delta {
+                amount0: i129 {
                     mag: amount0_fees.low, sign: true
-                    }, amount1: delta.amount1 + i129 {
+                    }, amount1: i129 {
                     mag: amount1_fees.low, sign: true
                 },
             };
