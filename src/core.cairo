@@ -177,60 +177,6 @@ mod Core {
                 }
             };
         }
-
-        fn get_fee_growth_inside(
-            self: @ContractState,
-            pool_key: PoolKey,
-            pool_tick: i129,
-            pool_fee_growth_global_token0: u256,
-            pool_fee_growth_global_token1: u256,
-            bounds: Bounds,
-        ) -> (u256, u256, bool) {
-            if (pool_tick < bounds.tick_lower) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
-                (
-                    unsafe_sub(
-                        pool_fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
-                    ),
-                    unsafe_sub(
-                        pool_fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
-                    ),
-                    false
-                )
-            } else if (pool_tick < bounds.tick_upper) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
-                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
-
-                (
-                    unsafe_sub(
-                        unsafe_sub(
-                            pool_fee_growth_global_token0,
-                            tick_lower_state.fee_growth_outside_token0
-                        ),
-                        tick_upper_state.fee_growth_outside_token0
-                    ),
-                    unsafe_sub(
-                        unsafe_sub(
-                            pool_fee_growth_global_token1,
-                            tick_lower_state.fee_growth_outside_token1
-                        ),
-                        tick_upper_state.fee_growth_outside_token1
-                    ),
-                    true
-                )
-            } else {
-                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
-                (
-                    unsafe_sub(
-                        pool_fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
-                    ),
-                    unsafe_sub(
-                        pool_fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
-                    ),
-                    false
-                )
-            }
-        }
     }
 
     #[external(v0)]
@@ -532,16 +478,47 @@ mod Core {
             let pool = self.pools.read(pool_key);
             assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
 
-            let (fee_growth_inside_token0, fee_growth_inside_token1, _) = self
-                .get_fee_growth_inside(
-                    pool_key,
-                    pool.tick,
-                    pool.fee_growth_global_token0,
-                    pool.fee_growth_global_token1,
-                    bounds
-                );
+            if (pool.tick < bounds.tick_lower) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
+                (
+                    unsafe_sub(
+                        pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
+                    ),
+                    unsafe_sub(
+                        pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
+                    )
+                )
+            } else if (pool.tick < bounds.tick_upper) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
+                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
 
-            (fee_growth_inside_token0, fee_growth_inside_token1)
+                (
+                    unsafe_sub(
+                        unsafe_sub(
+                            pool.fee_growth_global_token0,
+                            tick_lower_state.fee_growth_outside_token0
+                        ),
+                        tick_upper_state.fee_growth_outside_token0
+                    ),
+                    unsafe_sub(
+                        unsafe_sub(
+                            pool.fee_growth_global_token1,
+                            tick_lower_state.fee_growth_outside_token1
+                        ),
+                        tick_upper_state.fee_growth_outside_token1
+                    )
+                )
+            } else {
+                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
+                (
+                    unsafe_sub(
+                        pool.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
+                    ),
+                    unsafe_sub(
+                        pool.fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
+                    )
+                )
+            }
         }
 
         fn update_position(
@@ -603,21 +580,6 @@ mod Core {
                     );
             }
 
-            let (mut fee_growth_inside_token0, mut fee_growth_inside_token1, add_delta) = self
-                .get_fee_growth_inside(
-                    pool_key,
-                    pool.tick,
-                    pool.fee_growth_global_token0,
-                    pool.fee_growth_global_token1,
-                    params.bounds,
-                );
-
-            let pool_liquidity_next: u128 = if (add_delta) {
-                add_delta(pool.liquidity, params.liquidity_delta)
-            } else {
-                pool.liquidity
-            };
-
             // here we are accumulating fees owed to the position based on its current liquidity
             let position_key = PositionKey { owner: locker, bounds: params.bounds };
             let get_position_result = self.get_position(pool_key, position_key);
@@ -637,7 +599,7 @@ mod Core {
             } else {
                 (
                     unsafe_sub(
-                        fee_growth_inside_token0,
+                        get_position_result.fee_growth_inside_token0,
                         u256 {
                             high: get_position_result.fees0, low: 0
                             } / u256 {
@@ -645,7 +607,7 @@ mod Core {
                         }
                     ),
                     unsafe_sub(
-                        fee_growth_inside_token1,
+                        get_position_result.fee_growth_inside_token1,
                         u256 {
                             high: get_position_result.fees1, low: 0
                             } / u256 {
@@ -662,8 +624,8 @@ mod Core {
                     (pool_key, position_key),
                     Position {
                         liquidity: position_liquidity_next,
-                        fee_growth_inside_last_token0: fee_growth_inside_token0,
-                        fee_growth_inside_last_token1: fee_growth_inside_token1,
+                        fee_growth_inside_last_token0: get_position_result.fee_growth_inside_token0,
+                        fee_growth_inside_last_token1: get_position_result.fee_growth_inside_token1,
                     }
                 );
 
@@ -671,7 +633,7 @@ mod Core {
             self.update_tick(pool_key, params.bounds.tick_upper, params.liquidity_delta, true);
 
             // update pool liquidity if it changed
-            if (pool_liquidity_next != pool.liquidity) {
+            if ((pool.tick >= params.bounds.tick_lower) & (pool.tick < params.bounds.tick_upper)) {
                 self
                     .pools
                     .write(
@@ -679,7 +641,7 @@ mod Core {
                         Pool {
                             sqrt_ratio: pool.sqrt_ratio,
                             tick: pool.tick,
-                            liquidity: pool_liquidity_next,
+                            liquidity: add_delta(pool.liquidity, params.liquidity_delta),
                             fee_growth_global_token0: pool.fee_growth_global_token0,
                             fee_growth_global_token1: pool.fee_growth_global_token1
                         }
