@@ -9,8 +9,6 @@ struct TokenInfo {
     liquidity: u128,
     fee_growth_inside_last_token0: u256,
     fee_growth_inside_last_token1: u256,
-    fees_token0: u128,
-    fees_token1: u128,
 }
 
 #[starknet::interface]

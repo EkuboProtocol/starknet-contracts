@@ -17,8 +17,10 @@ mod Positions {
     use traits::{Into, TryInto};
     use option::{Option, OptionTrait};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::math::liquidity::{max_liquidity};
     use ekubo::interfaces::positions::{TokenInfo};
+    use ekubo::types::delta::{Delta};
+    use ekubo::math::liquidity::{max_liquidity};
+    use ekubo::math::utils::{add_delta};
     use serde::Serde;
 
     #[storage]
@@ -54,11 +56,21 @@ mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct Deposit {
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        liquidity: u128,
+        delta: Delta
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
+        Deposit: Deposit,
     }
 
     #[constructor]
@@ -77,31 +89,10 @@ mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct DepositCallbackData {
+    struct LockCallbackData {
         pool_key: PoolKey,
         bounds: Bounds,
-        liquidity: u128
-    }
-    #[derive(Serde, Copy, Drop)]
-    struct WithdrawCallbackData {
-        bounds: Bounds,
-        min_token0: u128,
-        min_token1: u128
-    }
-    #[derive(Serde, Copy, Drop)]
-    enum LockCallbackData {
-        Deposit: DepositCallbackData,
-        Withdraw: WithdrawCallbackData
-    }
-    #[derive(Serde, Copy, Drop)]
-    struct WithdrawCallbackResult {
-        token0_amount: u128,
-        token1_amount: u128
-    }
-    #[derive(Serde, Copy, Drop)]
-    enum LockCallbackResult {
-        Deposit: (),
-        Withdraw: WithdrawCallbackResult
+        liquidity_delta: i129,
     }
 
     #[generate_trait]
@@ -150,6 +141,46 @@ mod Positions {
             }.balance_of(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
+        }
+
+        // Update the position liquidity and return the fees newly accumulated to it
+        fn update_position_liquidity(
+            ref self: ContractState,
+            token_id: u256,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            info: TokenInfo,
+            liquidity_delta: i129
+        ) -> (u128, u128) {
+            // first update the position
+            let (fee_growth_inside_token0, fee_growth_inside_token1) = ICoreDispatcher {
+                contract_address: self.core.read()
+            }.get_pool_fee_growth_inside(pool_key, bounds);
+
+            let fees0 = (unsafe_sub(fee_growth_inside_token0, info.fee_growth_inside_last_token0)
+                * u256 {
+                low: info.liquidity, high: 0
+            })
+                .high;
+            let fees1 = (unsafe_sub(fee_growth_inside_token1, info.fee_growth_inside_last_token1)
+                * u256 {
+                low: info.liquidity, high: 0
+            })
+                .high;
+
+            self
+                .token_info
+                .write(
+                    token_id.low,
+                    TokenInfo {
+                        key_hash: info.key_hash,
+                        liquidity: add_delta(info.liquidity, liquidity_delta),
+                        fee_growth_inside_last_token0: fee_growth_inside_token0,
+                        fee_growth_inside_last_token1: fee_growth_inside_token1,
+                    }
+                );
+
+            (fees0, fees1)
         }
     }
 
@@ -204,60 +235,32 @@ mod Positions {
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-            // first update the position
-            {
-                let (fee_growth_inside_token0, fee_growth_inside_token1) = ICoreDispatcher {
-                    contract_address: self.core.read()
-                }.get_pool_fee_growth_inside(pool_key, bounds);
-
-                let fees0 = (unsafe_sub(
-                    fee_growth_inside_token0, info.fee_growth_inside_last_token0
-                )
-                    * u256 {
-                    low: info.liquidity, high: 0
-                })
-                    .high;
-                let fees1 = (unsafe_sub(
-                    fee_growth_inside_token1, info.fee_growth_inside_last_token1
-                )
-                    * u256 {
-                    low: info.liquidity, high: 0
-                })
-                    .high;
-
-                let token_info_next = TokenInfo {
-                    key_hash: info.key_hash,
-                    liquidity: info.liquidity + liquidity,
-                    fee_growth_inside_last_token0: fee_growth_inside_token0,
-                    fee_growth_inside_last_token1: fee_growth_inside_token1,
-                    fees_token0: info.fees_token0 + fees0,
-                    fees_token1: info.fees_token1 + fees1,
-                };
-
-                self.token_info.write(token_id.low, token_info_next);
-            }
-
-            // do the deposit (never expected to fail because we pre-computed liquidity)
-            {
-                let mut data: Array<felt252> = ArrayTrait::new();
-                // make the deposit to the pool
-                Serde::<LockCallbackData>::serialize(
-                    @LockCallbackData::Deposit(DepositCallbackData { pool_key, bounds, liquidity }),
-                    ref data
+            // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
+            // we can simply subtract computed fees/new liquidity from the snapshot to do this.
+            let (_, _) = self
+                // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
+                // we can simply subtract computed fees/new liquidity from the snapshot to do this.
+                .update_position_liquidity(
+                    token_id, pool_key, bounds, info, i129 { mag: liquidity, sign: false }
                 );
 
-                let mut result = ICoreDispatcher {
-                    contract_address: self.core.read()
-                }.lock(data).span();
+            // do the deposit (never expected to fail because we pre-computed liquidity)
+            let mut data: Array<felt252> = ArrayTrait::new();
+            Serde::<LockCallbackData>::serialize(
+                @LockCallbackData {
+                    pool_key, bounds, liquidity_delta: i129 { mag: liquidity, sign: false }
+                },
+                ref data
+            );
 
-                match Serde::<LockCallbackResult>::deserialize(ref result)
-                    .expect('CALLBACK_RESULT_DESERIALIZE') {
-                    LockCallbackResult::Deposit(_) => {},
-                    LockCallbackResult::Withdraw(_) => {
-                        assert(false, 'INVALID_DEPOSIT_RESULT');
-                    }
-                };
-            }
+            let mut result = ICoreDispatcher {
+                contract_address: self.core.read()
+            }.lock(data).span();
+
+            let delta = Serde::<Delta>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE');
+
+            self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
 
             liquidity
         }
@@ -275,14 +278,19 @@ mod Positions {
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let pool = ICoreDispatcher { contract_address: self.core.read() }.get_pool(pool_key);
+
+            // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
+            // we can simply subtract computed fees/new liquidity from the snapshot to do this.
+            self
+                .update_position_liquidity(
+                    token_id, pool_key, bounds, info, i129 { mag: liquidity, sign: true }
+                );
 
             let mut data: Array<felt252> = ArrayTrait::new();
-            // make the withdrawal from the pool
             Serde::<LockCallbackData>::serialize(
-                @LockCallbackData::Withdraw(
-                    WithdrawCallbackData { bounds, min_token0, min_token1 }
-                ),
+                @LockCallbackData {
+                    bounds, pool_key, liquidity_delta: i129 { mag: liquidity, sign: true }
+                },
                 ref data
             );
 
@@ -290,20 +298,13 @@ mod Positions {
                 contract_address: self.core.read()
             }.lock(data).span();
 
-            let (token0_amount, token1_amount) =
-                match Serde::<LockCallbackResult>::deserialize(ref result)
-                    .expect('CALLBACK_RESULT_DESERIALIZE') {
-                LockCallbackResult::Deposit(_) => {
-                    assert(false, 'INVALID_WITHDRAW_RESULT');
-                    (Default::<u128>::default(), Default::<u128>::default())
-                },
-                LockCallbackResult::Withdraw(result) => {
-                    assert(false, 'TODO');
-                    (Default::<u128>::default(), Default::<u128>::default())
-                }
-            };
+            let delta = Serde::<Delta>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE');
 
-            (token0_amount, token1_amount)
+            assert((delta.amount0.mag >= min_token0) & delta.amount0.sign, 'MIN_AMOUNT0');
+            assert((delta.amount1.mag >= min_token1) & delta.amount1.sign, 'MIN_AMOUNT1');
+
+            (delta.amount0.mag, delta.amount1.mag)
         }
 
         // This contract only holds tokens for the duration of a transaction.
@@ -323,52 +324,57 @@ mod Positions {
             assert(caller == self.core.read(), 'CORE');
 
             let mut data_span = data.span();
-            let result: LockCallbackResult =
-                match Serde::<LockCallbackData>::deserialize(ref data_span)
-                    .expect('DESERIALIZE_CALLBACK_FAILED') {
-                LockCallbackData::Deposit(deposit) => {
-                    let delta = ICoreDispatcher {
+            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
+                .expect('DESERIALIZE_CALLBACK_FAILED');
+
+            let delta = ICoreDispatcher {
+                contract_address: caller
+            }
+                .update_position(
+                    callback_data.pool_key,
+                    UpdatePositionParameters {
+                        bounds: callback_data.bounds, liquidity_delta: callback_data.liquidity_delta
+                    }
+                );
+
+            if delta.amount0.mag != 0 {
+                if (delta.amount0.sign) {
+                    // withdrawn to the contract to be moved via clear
+                    ICoreDispatcher {
                         contract_address: caller
                     }
-                        .update_position(
-                            deposit.pool_key,
-                            UpdatePositionParameters {
-                                bounds: deposit.bounds, liquidity_delta: i129 {
-                                    mag: deposit.liquidity, sign: false
-                                }
-                            }
+                        .withdraw(
+                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
                         );
-
-                    if delta.amount0.mag != 0 {
-                        IERC20Dispatcher {
-                            contract_address: deposit.pool_key.token0
-                        }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
-                        ICoreDispatcher {
-                            contract_address: caller
-                        }.deposit(deposit.pool_key.token0);
-                    }
-                    if (delta.amount1.mag != 0) {
-                        IERC20Dispatcher {
-                            contract_address: deposit.pool_key.token1
-                        }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
-                        ICoreDispatcher {
-                            contract_address: caller
-                        }.deposit(deposit.pool_key.token1);
-                    }
-
-                    LockCallbackResult::Deposit(())
-                },
-                LockCallbackData::Withdraw(withdraw) => {
-                    LockCallbackResult::Withdraw(
-                        WithdrawCallbackResult {
-                            token0_amount: Default::default(), token1_amount: Default::default()
-                        }
-                    )
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token0
+                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token0);
                 }
-            };
+            }
+            if (delta.amount1.mag != 0) {
+                if (delta.amount0.sign) {
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }
+                        .withdraw(
+                            callback_data.pool_key.token1, get_contract_address(), delta.amount0.mag
+                        );
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token1
+                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token1);
+                }
+            }
 
             let mut result_data: Array<felt252> = ArrayTrait::new();
-            Serde::<LockCallbackResult>::serialize(@result, ref result_data);
+            Serde::<Delta>::serialize(@delta, ref result_data);
             result_data
         }
 
@@ -453,8 +459,6 @@ mod Positions {
                         liquidity: Default::default(),
                         fee_growth_inside_last_token0: Default::default(),
                         fee_growth_inside_last_token1: Default::default(),
-                        fees_token0: Default::default(),
-                        fees_token1: Default::default(),
                     }
                 );
 
