@@ -4,6 +4,7 @@ use hash::pedersen;
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
 use hash::LegacyHash;
+use zeroable::Zeroable;
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)
@@ -15,7 +16,8 @@ struct PoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
     fee: u128,
-    tick_spacing: u128
+    tick_spacing: u128,
+    extension: ContractAddress,
 }
 
 impl DefaultPoolKey of Default<PoolKey> {
@@ -24,7 +26,8 @@ impl DefaultPoolKey of Default<PoolKey> {
             token0: contract_address_const::<0>(),
             token1: contract_address_const::<0>(),
             fee: 0,
-            tick_spacing: 0
+            tick_spacing: 0,
+            extension: Zeroable::zero()
         }
     }
 }

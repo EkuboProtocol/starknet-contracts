@@ -11,7 +11,8 @@ fn test_pool_key_hash() {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: 1
+            tick_spacing: 1,
+            extension: Zeroable::zero(),
         }
     );
     assert(

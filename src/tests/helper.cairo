@@ -77,7 +77,11 @@ fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
 }
 
 fn setup_pool(
-    owner: ContractAddress, fee: u128, tick_spacing: u128, initial_tick: i129
+    owner: ContractAddress,
+    fee: u128,
+    tick_spacing: u128,
+    initial_tick: i129,
+    extension: ContractAddress
 ) -> SetupPoolResult {
     let mut token0 = deploy_mock_token();
     let mut token1 = deploy_mock_token();
@@ -88,7 +92,11 @@ fn setup_pool(
     }
 
     let pool_key: PoolKey = PoolKey {
-        token0: token0.contract_address, token1: token1.contract_address, fee, tick_spacing
+        token0: token0.contract_address,
+        token1: token1.contract_address,
+        fee,
+        tick_spacing,
+        extension
     };
 
     let core = deploy_core(owner);

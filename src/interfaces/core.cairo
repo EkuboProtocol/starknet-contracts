@@ -55,6 +55,29 @@ struct LockerState {
     nonzero_delta_count: felt252
 }
 
+// An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
+#[starknet::interface]
+trait IExtension<TStorage> {
+    // Called before a pool is initialized
+    fn before_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    // Called after a pool is initialized
+    fn after_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+
+    // Called before a swap happens, allowing the extension to modify the swap parameters
+    fn before_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> SwapParameters;
+    // Called after a swap happens with the result of the swap and the modified swap parameters
+    fn after_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters, delta: Delta);
+
+    // Called before an update to a position, allowing the extension to modify the update position parameters
+    fn before_update_position(
+        ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
+    ) -> UpdatePositionParameters;
+    // Called after the update position with the result of the update and the modified update position parameters
+    fn after_update_position(
+        ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters, delta: Delta
+    );
+}
+
 #[starknet::interface]
 trait ICore<TStorage> {
     // The address that has the right to any fees collected by this contract

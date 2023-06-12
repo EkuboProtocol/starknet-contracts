@@ -3,8 +3,9 @@ mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         Delta, SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore
+        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait
     };
+    use zeroable::Zeroable;
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address
     };
@@ -53,7 +54,6 @@ mod Core {
         saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
     }
 
-
     #[derive(starknet::Event, Drop)]
     struct OwnerChanged {
         old_owner: ContractAddress,
@@ -76,8 +76,15 @@ mod Core {
     #[derive(starknet::Event, Drop)]
     struct PositionUpdated {
         pool_key: PoolKey,
-        position_key: PositionKey,
-        liquidity_delta: i129
+        params: UpdatePositionParameters,
+        delta: Delta,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct Swapped {
+        pool_key: PoolKey,
+        params: SwapParameters,
+        delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -87,6 +94,7 @@ mod Core {
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
+        Swapped: Swapped
     }
 
     #[constructor]
@@ -377,6 +385,12 @@ mod Core {
             let pool = self.pools.read(pool_key);
             assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
 
+            if (pool_key.extension.is_non_zero()) {
+                IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.before_initialize_pool(pool_key, initial_tick);
+            }
+
             self
                 .pools
                 .write(
@@ -389,6 +403,12 @@ mod Core {
                         fee_growth_global_token1: Default::default(),
                     }
                 );
+
+            if (pool_key.extension.is_non_zero()) {
+                IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.after_initialize_pool(pool_key, initial_tick);
+            }
 
             self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
         }
@@ -486,9 +506,15 @@ mod Core {
         }
 
         fn update_position(
-            ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
+            ref self: ContractState, pool_key: PoolKey, mut params: UpdatePositionParameters
         ) -> Delta {
             let (id, locker) = self.require_locker();
+
+            if (pool_key.extension.is_non_zero()) {
+                params = IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.before_update_position(pool_key, params);
+            }
 
             assert(params.tick_lower < params.tick_upper, 'ORDER');
             assert(params.tick_lower >= min_tick(), 'MIN');
@@ -612,26 +638,33 @@ mod Core {
             self.account_delta(id, pool_key.token0, amount0_delta);
             self.account_delta(id, pool_key.token1, amount1_delta);
 
-            self
-                .emit(
-                    Event::PositionUpdated(
-                        PositionUpdated {
-                            pool_key, position_key, liquidity_delta: params.liquidity_delta
-                        }
-                    )
-                );
+            let delta = Delta { amount0_delta, amount1_delta };
 
-            Delta { amount0_delta, amount1_delta }
+            self.emit(Event::PositionUpdated(PositionUpdated { pool_key, params, delta }));
+
+            if (pool_key.extension.is_non_zero()) {
+                IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.after_update_position(pool_key, params, delta);
+            }
+
+            delta
         }
 
 
-        fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
+        fn swap(ref self: ContractState, pool_key: PoolKey, mut params: SwapParameters) -> Delta {
             let (id, _) = self.require_locker();
 
             let pool = self.pools.read(pool_key);
 
             // pool must be initialized
             assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+
+            if (pool_key.extension.is_non_zero()) {
+                params = IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.before_swap(pool_key, params);
+            }
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
@@ -799,7 +832,17 @@ mod Core {
             self.account_delta(id, pool_key.token0, amount0_delta);
             self.account_delta(id, pool_key.token1, amount1_delta);
 
-            Delta { amount0_delta, amount1_delta }
+            let delta = Delta { amount0_delta, amount1_delta };
+
+            self.emit(Event::Swapped(Swapped { pool_key, params, delta }));
+
+            if (pool_key.extension.is_non_zero()) {
+                IExtensionDispatcher {
+                    contract_address: pool_key.extension
+                }.after_swap(pool_key, params, delta);
+            }
+
+            delta
         }
     }
 }

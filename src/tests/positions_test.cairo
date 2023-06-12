@@ -1,4 +1,4 @@
-use starknet::{contract_address_const};
+use starknet::{contract_address_const, get_contract_address};
 use starknet::testing::{set_contract_address};
 use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -7,6 +7,8 @@ use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTra
 use ekubo::types::keys::{PoolKey};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::i129::{i129};
+use zeroable::Zeroable;
+
 use debug::PrintTrait;
 
 #[test]
@@ -19,6 +21,7 @@ fn test_maybe_initialize_pool_twice() {
         token1: contract_address_const::<2>(),
         fee: Default::default(),
         tick_spacing: 1,
+        extension: Zeroable::zero(),
     };
     positions.maybe_initialize_pool(pool_key, i129 { mag: 0, sign: false });
     positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
@@ -44,6 +47,7 @@ fn test_nft_balance_of() {
                     token1: contract_address_const::<0>(),
                     fee: Default::default(),
                     tick_spacing: Default::default(),
+                    extension: Zeroable::zero(),
                 },
                 bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
             ) == 1,
@@ -55,11 +59,18 @@ fn test_nft_balance_of() {
 #[test]
 #[available_gas(20000000)]
 fn test_deposit_liquidity_full_range() {
-    let caller = contract_address_const::<1>();
-    set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 0, sign: false },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: Default::default());
+    let token_id = positions
+        .mint(
+            recipient: get_contract_address(), pool_key: setup.pool_key, bounds: Default::default()
+        );
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
@@ -74,7 +85,13 @@ fn test_deposit_liquidity_full_range() {
 fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 0, sign: false });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 0, sign: false },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
         tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
@@ -109,7 +126,13 @@ fn test_deposit_liquidity_concentrated() {
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 500, sign: false });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 500, sign: false },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
         tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
@@ -143,7 +166,13 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 500, sign: true });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 500, sign: true },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
         tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
@@ -177,7 +206,13 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 1000, sign: false });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 1000, sign: false },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
         tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
@@ -211,7 +246,13 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
 fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
-    let setup = setup_pool(caller, FEE_ONE_PERCENT, 1, i129 { mag: 1000, sign: true });
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: i129 { mag: 1000, sign: true },
+        extension: Zeroable::zero(),
+    );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
         tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
