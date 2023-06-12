@@ -60,8 +60,8 @@ fn test_nft_approve_succeeds_after_mint() {
         .mint(
             contract_address_const::<1>(),
             pool_key: PoolKey {
-                token0: contract_address_const::<0>(),
-                token1: contract_address_const::<0>(),
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
                 fee: Default::default(),
                 tick_spacing: Default::default(),
                 extension: Zeroable::zero(),
@@ -88,8 +88,8 @@ fn test_nft_approve_only_owner_can_approve() {
         .mint(
             contract_address_const::<1>(),
             pool_key: PoolKey {
-                token0: contract_address_const::<0>(),
-                token1: contract_address_const::<0>(),
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
                 fee: Default::default(),
                 tick_spacing: Default::default(),
                 extension: Zeroable::zero(),
@@ -115,8 +115,8 @@ fn test_nft_balance_of() {
             .mint(
                 recipient,
                 pool_key: PoolKey {
-                    token0: contract_address_const::<0>(),
-                    token1: contract_address_const::<0>(),
+                    token0: Zeroable::zero(),
+                    token1: Zeroable::zero(),
                     fee: Default::default(),
                     tick_spacing: Default::default(),
                     extension: Zeroable::zero(),

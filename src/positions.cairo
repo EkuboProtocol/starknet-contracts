@@ -22,6 +22,7 @@ mod Positions {
     use ekubo::math::liquidity::{max_liquidity};
     use ekubo::math::utils::{add_delta};
     use serde::Serde;
+    use zeroable::Zeroable;
 
     #[storage]
     struct Storage {
@@ -93,6 +94,8 @@ mod Positions {
         pool_key: PoolKey,
         bounds: Bounds,
         liquidity_delta: i129,
+        collect_fees: bool,
+        salt: felt252,
     }
 
     #[generate_trait]
@@ -121,7 +124,7 @@ mod Positions {
             self.check_is_caller_authorized(owner, token_id.low);
 
             self.owners.write(token_id.low, to);
-            self.approvals.write(token_id.low, contract_address_const::<0>());
+            self.approvals.write(token_id.low, Zeroable::zero());
             self.balances.write(from, self.balances.read(from) - 1);
             self.balances.write(to, self.balances.read(to) + 1);
             self.emit(Event::Transfer(Transfer { from, to, token_id }));
@@ -141,46 +144,6 @@ mod Positions {
             }.balance_of(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
-        }
-
-        // Update the position liquidity and return the fees newly accumulated to it
-        fn update_position_liquidity(
-            ref self: ContractState,
-            token_id: u256,
-            pool_key: PoolKey,
-            bounds: Bounds,
-            info: TokenInfo,
-            liquidity_delta: i129
-        ) -> (u128, u128) {
-            // first update the position
-            let (fee_growth_inside_token0, fee_growth_inside_token1) = ICoreDispatcher {
-                contract_address: self.core.read()
-            }.get_pool_fee_growth_inside(pool_key, bounds);
-
-            let fees0 = (unsafe_sub(fee_growth_inside_token0, info.fee_growth_inside_last_token0)
-                * u256 {
-                low: info.liquidity, high: 0
-            })
-                .high;
-            let fees1 = (unsafe_sub(fee_growth_inside_token1, info.fee_growth_inside_last_token1)
-                * u256 {
-                low: info.liquidity, high: 0
-            })
-                .high;
-
-            self
-                .token_info
-                .write(
-                    token_id.low,
-                    TokenInfo {
-                        key_hash: info.key_hash,
-                        liquidity: add_delta(info.liquidity, liquidity_delta),
-                        fee_growth_inside_last_token0: fee_growth_inside_token0,
-                        fee_growth_inside_last_token1: fee_growth_inside_token1,
-                    }
-                );
-
-            (fees0, fees1)
         }
     }
 
@@ -209,199 +172,6 @@ mod Positions {
             assert(token_id.high == 0, 'INVALID_ID');
             self.owners.read(token_id.low)
         }
-
-
-        // Deposits the tokens held by this contract for the given token ID, using the balances transiently held by this contract
-        fn deposit(
-            ref self: ContractState,
-            token_id: u256,
-            pool_key: PoolKey,
-            bounds: Bounds,
-            min_liquidity: u128
-        ) -> u128 {
-            validate_token_id(token_id);
-            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
-
-            let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let pool = ICoreDispatcher { contract_address: self.core.read() }.get_pool(pool_key);
-
-            // compute how much liquidity we can deposit based on token balances
-            let liquidity: u128 = max_liquidity(
-                pool.sqrt_ratio,
-                tick_to_sqrt_ratio(bounds.tick_lower),
-                tick_to_sqrt_ratio(bounds.tick_upper),
-                self.balance_of_token(pool_key.token0),
-                self.balance_of_token(pool_key.token1)
-            );
-            assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
-
-            // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
-            // we can simply subtract computed fees/new liquidity from the snapshot to do this.
-            let (_, _) = self
-                // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
-                // we can simply subtract computed fees/new liquidity from the snapshot to do this.
-                .update_position_liquidity(
-                    token_id, pool_key, bounds, info, i129 { mag: liquidity, sign: false }
-                );
-
-            // do the deposit (never expected to fail because we pre-computed liquidity)
-            let mut data: Array<felt252> = ArrayTrait::new();
-            Serde::<LockCallbackData>::serialize(
-                @LockCallbackData {
-                    pool_key, bounds, liquidity_delta: i129 { mag: liquidity, sign: false }
-                },
-                ref data
-            );
-
-            let mut result = ICoreDispatcher {
-                contract_address: self.core.read()
-            }.lock(data).span();
-
-            let delta = Serde::<Delta>::deserialize(ref result)
-                .expect('CALLBACK_RESULT_DESERIALIZE');
-
-            self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
-
-            liquidity
-        }
-
-        fn withdraw(
-            ref self: ContractState,
-            token_id: u256,
-            pool_key: PoolKey,
-            bounds: Bounds,
-            liquidity: u128,
-            min_token0: u128,
-            min_token1: u128
-        ) -> (u128, u128) {
-            validate_token_id(token_id);
-            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
-
-            let info = self.get_token_info(token_id.low, pool_key, bounds);
-
-            // todo: something with fees. would be great if we could just accumulate to fee growth inside! 
-            // we can simply subtract computed fees/new liquidity from the snapshot to do this.
-            self
-                .update_position_liquidity(
-                    token_id, pool_key, bounds, info, i129 { mag: liquidity, sign: true }
-                );
-
-            let mut data: Array<felt252> = ArrayTrait::new();
-            Serde::<LockCallbackData>::serialize(
-                @LockCallbackData {
-                    bounds, pool_key, liquidity_delta: i129 { mag: liquidity, sign: true }
-                },
-                ref data
-            );
-
-            let mut result = ICoreDispatcher {
-                contract_address: self.core.read()
-            }.lock(data).span();
-
-            let delta = Serde::<Delta>::deserialize(ref result)
-                .expect('CALLBACK_RESULT_DESERIALIZE');
-
-            assert((delta.amount0.mag >= min_token0) & delta.amount0.sign, 'MIN_AMOUNT0');
-            assert((delta.amount1.mag >= min_token1) & delta.amount1.sign, 'MIN_AMOUNT1');
-
-            (delta.amount0.mag, delta.amount1.mag)
-        }
-
-        // This contract only holds tokens for the duration of a transaction.
-        fn clear(
-            ref self: ContractState, token: ContractAddress, recipient: ContractAddress
-        ) -> u256 {
-            let dispatcher = IERC20Dispatcher { contract_address: token };
-            let balance = dispatcher.balance_of(get_contract_address());
-            if (balance != u256 { low: 0, high: 0 }) {
-                dispatcher.transfer(recipient, balance);
-            }
-            balance
-        }
-
-        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
-            let caller = get_caller_address();
-            assert(caller == self.core.read(), 'CORE');
-
-            let mut data_span = data.span();
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
-                .expect('DESERIALIZE_CALLBACK_FAILED');
-
-            let delta = ICoreDispatcher {
-                contract_address: caller
-            }
-                .update_position(
-                    callback_data.pool_key,
-                    UpdatePositionParameters {
-                        salt: 0,
-                        bounds: callback_data.bounds,
-                        liquidity_delta: callback_data.liquidity_delta
-                    }
-                );
-
-            if delta.amount0.mag != 0 {
-                if (delta.amount0.sign) {
-                    // withdrawn to the contract to be moved via clear
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
-                        .withdraw(
-                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token0
-                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token0);
-                }
-            }
-            if (delta.amount1.mag != 0) {
-                if (delta.amount0.sign) {
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
-                        .withdraw(
-                            callback_data.pool_key.token1, get_contract_address(), delta.amount0.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token1
-                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token1);
-                }
-            }
-
-            let mut result_data: Array<felt252> = ArrayTrait::new();
-            Serde::<Delta>::serialize(@delta, ref result_data);
-            result_data
-        }
-
-        // Initializes a pool only if it's not already initialized
-        // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
-        fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
-            let core_dispatcher = ICoreDispatcher { contract_address: self.core.read() };
-            let pool = core_dispatcher.get_pool(pool_key);
-            if (pool.sqrt_ratio == Default::default()) {
-                core_dispatcher.initialize_pool(pool_key, initial_tick);
-            }
-        }
-
-        fn deposit_last(
-            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
-        ) -> u128 {
-            self
-                .deposit(
-                    u256 { low: self.next_token_id.read() - 1, high: 0 },
-                    pool_key,
-                    bounds,
-                    min_liquidity
-                )
-        }
-
 
         fn transfer_from(
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
@@ -442,7 +212,6 @@ mod Positions {
             'https://nft.ekubo.org/'
         }
 
-        // Creates the NFT and returns the token ID. Does not add any liquidity.
         fn mint(
             ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
         ) -> u128 {
@@ -457,10 +226,7 @@ mod Positions {
                 .write(
                     id,
                     TokenInfo {
-                        key_hash: hash_key(pool_key, bounds),
-                        liquidity: Default::default(),
-                        fee_growth_inside_last_token0: Default::default(),
-                        fee_growth_inside_last_token1: Default::default(),
+                        key_hash: hash_key(pool_key, bounds), liquidity: Default::default(), 
                     }
                 );
 
@@ -468,7 +234,7 @@ mod Positions {
                 .emit(
                     Event::Transfer(
                         Transfer {
-                            from: contract_address_const::<0>(), to: recipient, token_id: u256 {
+                            from: Zeroable::zero(), to: recipient, token_id: u256 {
                                 low: id, high: 0
                             }
                         }
@@ -476,6 +242,235 @@ mod Positions {
                 );
 
             id
+        }
+
+        fn burn(ref self: ContractState, token_id: u256) {
+            validate_token_id(token_id);
+            let owner = self.owners.read(token_id.low);
+            self.check_is_caller_authorized(owner, token_id.low);
+
+            let info = self.token_info.read(token_id.low);
+            assert(info.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
+
+            // delete the storage variables
+            self.owners.write(token_id.low, Zeroable::zero());
+            self.balances.write(owner, self.balances.read(owner) - 1);
+            self
+                .token_info
+                .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Default::default() });
+
+            self.emit(Event::Transfer(Transfer { from: owner, to: Zeroable::zero(), token_id }));
+        }
+
+        fn deposit(
+            ref self: ContractState,
+            token_id: u256,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            min_liquidity: u128,
+            collect_fees: bool
+        ) -> u128 {
+            validate_token_id(token_id);
+            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
+
+            let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let pool = ICoreDispatcher { contract_address: self.core.read() }.get_pool(pool_key);
+
+            // compute how much liquidity we can deposit based on token balances
+            let liquidity: u128 = max_liquidity(
+                pool.sqrt_ratio,
+                tick_to_sqrt_ratio(bounds.tick_lower),
+                tick_to_sqrt_ratio(bounds.tick_upper),
+                self.balance_of_token(pool_key.token0),
+                self.balance_of_token(pool_key.token1)
+            );
+            assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
+
+            let liquidity_delta = i129 { mag: liquidity, sign: false };
+
+            self
+                .token_info
+                .write(
+                    token_id.low,
+                    TokenInfo {
+                        key_hash: info.key_hash,
+                        liquidity: add_delta(info.liquidity, liquidity_delta),
+                    }
+                );
+
+            // do the deposit (never expected to fail because we pre-computed liquidity)
+            let mut data: Array<felt252> = ArrayTrait::new();
+            Serde::<LockCallbackData>::serialize(
+                @LockCallbackData {
+                    pool_key, bounds, liquidity_delta, salt: token_id.low.into(), collect_fees
+                },
+                ref data
+            );
+
+            let mut result = ICoreDispatcher {
+                contract_address: self.core.read()
+            }.lock(data).span();
+
+            let delta = Serde::<Delta>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE');
+
+            self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
+
+            liquidity
+        }
+
+        fn withdraw(
+            ref self: ContractState,
+            token_id: u256,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            liquidity: u128,
+            min_token0: u128,
+            min_token1: u128,
+            collect_fees: bool,
+        ) -> (u128, u128) {
+            validate_token_id(token_id);
+            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
+
+            let info = self.get_token_info(token_id.low, pool_key, bounds);
+
+            let liquidity_delta: i129 = i129 { mag: liquidity, sign: true };
+
+            self
+                .token_info
+                .write(
+                    token_id.low,
+                    TokenInfo {
+                        key_hash: info.key_hash,
+                        liquidity: add_delta(info.liquidity, liquidity_delta),
+                    }
+                );
+
+            let mut data: Array<felt252> = ArrayTrait::new();
+            Serde::<LockCallbackData>::serialize(
+                @LockCallbackData {
+                    bounds, pool_key, liquidity_delta, salt: token_id.low.into(), collect_fees, 
+                },
+                ref data
+            );
+
+            let mut result = ICoreDispatcher {
+                contract_address: self.core.read()
+            }.lock(data).span();
+
+            let delta = Serde::<Delta>::deserialize(ref result)
+                .expect('CALLBACK_RESULT_DESERIALIZE');
+
+            assert((delta.amount0.mag >= min_token0) & delta.amount0.sign, 'MIN_AMOUNT0');
+            assert((delta.amount1.mag >= min_token1) & delta.amount1.sign, 'MIN_AMOUNT1');
+
+            (delta.amount0.mag, delta.amount1.mag)
+        }
+
+        fn clear(
+            ref self: ContractState, token: ContractAddress, recipient: ContractAddress
+        ) -> u256 {
+            let dispatcher = IERC20Dispatcher { contract_address: token };
+            let balance = dispatcher.balance_of(get_contract_address());
+            if (balance != u256 { low: 0, high: 0 }) {
+                dispatcher.transfer(recipient, balance);
+            }
+            balance
+        }
+
+        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
+            let caller = get_caller_address();
+            assert(caller == self.core.read(), 'CORE');
+
+            let mut data_span = data.span();
+            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
+                .expect('DESERIALIZE_CALLBACK_FAILED');
+
+            let mut delta: Delta = Default::default();
+            if callback_data.collect_fees {
+                delta += ICoreDispatcher {
+                    contract_address: caller
+                }
+                    .collect_fees(
+                        pool_key: callback_data.pool_key,
+                        salt: callback_data.salt,
+                        bounds: callback_data.bounds
+                    );
+            }
+
+            delta += ICoreDispatcher {
+                contract_address: caller
+            }
+                .update_position(
+                    callback_data.pool_key,
+                    UpdatePositionParameters {
+                        salt: callback_data.salt,
+                        bounds: callback_data.bounds,
+                        liquidity_delta: callback_data.liquidity_delta
+                    }
+                );
+
+            if delta.amount0.mag != 0 {
+                if (delta.amount0.sign) {
+                    // withdrawn to the contract to be returned to caller via #clear
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }
+                        .withdraw(
+                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
+                        );
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token0
+                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token0);
+                }
+            }
+            if (delta.amount1.mag != 0) {
+                // withdrawn to the contract to be returned to caller via #clear
+                if (delta.amount0.sign) {
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }
+                        .withdraw(
+                            callback_data.pool_key.token1, get_contract_address(), delta.amount0.mag
+                        );
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token1
+                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token1);
+                }
+            }
+
+            let mut result_data: Array<felt252> = ArrayTrait::new();
+            Serde::<Delta>::serialize(@delta, ref result_data);
+            result_data
+        }
+
+        fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+            let core_dispatcher = ICoreDispatcher { contract_address: self.core.read() };
+            let pool = core_dispatcher.get_pool(pool_key);
+            if (pool.sqrt_ratio == Default::default()) {
+                core_dispatcher.initialize_pool(pool_key, initial_tick);
+            }
+        }
+
+        fn deposit_last(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ) -> u128 {
+            self
+                .deposit(
+                    u256 { low: self.next_token_id.read() - 1, high: 0 },
+                    pool_key,
+                    bounds,
+                    min_liquidity,
+                    false
+                )
         }
     }
 }

@@ -139,7 +139,7 @@ mod initialize_pool_tests {
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core(contract_address_const::<1>());
         let pool_key = PoolKey {
-            token0: contract_address_const::<0>(),
+            token0: Zeroable::zero(),
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,

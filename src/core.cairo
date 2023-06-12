@@ -288,7 +288,7 @@ mod Core {
             assert(self.nonzero_delta_counts.read(id) == 0, 'NOT_ZEROED');
 
             self.lock_count.write(id);
-            self.locker_addresses.write(id, contract_address_const::<0>());
+            self.locker_addresses.write(id, Zeroable::zero());
 
             result
         }
@@ -361,7 +361,7 @@ mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
-            assert(pool_key.token0 != contract_address_const::<0>(), 'TOKEN_ZERO');
+            assert(pool_key.token0 != Zeroable::zero(), 'TOKEN_ZERO');
             assert(
                 (pool_key.tick_spacing != Default::default())
                     & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),

@@ -7,12 +7,11 @@ use ekubo::types::bounds::{Bounds};
 struct TokenInfo {
     key_hash: felt252,
     liquidity: u128,
-    fee_growth_inside_last_token0: u256,
-    fee_growth_inside_last_token1: u256,
 }
 
 #[starknet::interface]
 trait IPositions<TStorage> {
+    // See IERC721
     fn name(self: @TStorage) -> felt252;
     fn symbol(self: @TStorage) -> felt252;
     fn approve(ref self: TStorage, to: ContractAddress, token_id: u256);
@@ -35,24 +34,37 @@ trait IPositions<TStorage> {
     ) -> bool;
     fn token_uri(self: @TStorage, token_id: u256) -> felt252;
 
+    // See ILocker
     fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 
+    // Initializes a pool only if it's not already initialized
+    // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
     fn maybe_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
+    // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(
         ref self: TStorage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
     ) -> u128;
 
+    // Delete the NFT. The NFT must have zero liquidity. Must be called by an operator, approved address or the owner
+    fn burn(ref self: TStorage, token_id: u256);
+
+    // Deposit in the most recently created token ID. Must be called by an operator, approved address or the owner
     fn deposit_last(
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
+    // Deposit in a specific token ID. Must be called by an operator, approved address or the owner
     fn deposit(
-        ref self: TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ref self: TStorage,
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        min_liquidity: u128,
+        collect_fees: bool
     ) -> u128;
 
-    fn clear(ref self: TStorage, token: ContractAddress, recipient: ContractAddress) -> u256;
-
+    // Withdraw liquidity from a specific token ID. Must be called by an operator, approved address or the owner
     fn withdraw(
         ref self: TStorage,
         token_id: u256,
@@ -60,6 +72,10 @@ trait IPositions<TStorage> {
         bounds: Bounds,
         liquidity: u128,
         min_token0: u128,
-        min_token1: u128
+        min_token1: u128,
+        collect_fees: bool
     ) -> (u128, u128);
+
+    // Clear the balance held by this contract. Used for collecting remaining tokens after doing a deposit, or collecting withdrawn tokens/fees
+    fn clear(ref self: TStorage, token: ContractAddress, recipient: ContractAddress) -> u256;
 }

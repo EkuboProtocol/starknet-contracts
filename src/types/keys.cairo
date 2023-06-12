@@ -24,8 +24,8 @@ struct PoolKey {
 impl DefaultPoolKey of Default<PoolKey> {
     fn default() -> PoolKey {
         PoolKey {
-            token0: contract_address_const::<0>(),
-            token1: contract_address_const::<0>(),
+            token0: Zeroable::zero(),
+            token1: Zeroable::zero(),
             fee: 0,
             tick_spacing: 0,
             extension: Zeroable::zero()
