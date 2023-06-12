@@ -620,51 +620,40 @@ mod Core {
 
             // here we are accumulating fees owed to the position based on its current liquidity
             let position_key = PositionKey { owner: locker, bounds: params.bounds };
-            let position: Position = self.positions.read((pool_key, position_key));
+            let get_position_result = self.get_position(pool_key, position_key);
 
             let position_liquidity_next: u128 = add_delta(
-                position.liquidity, params.liquidity_delta
+                get_position_result.position.liquidity, params.liquidity_delta
             );
 
-            let (amount0_fees, amount1_fees) = if position.liquidity.is_zero() {
+            let (fee_growth_inside_token0_next, fee_growth_inside_token1_next) =
+                if (position_liquidity_next
+                .is_zero()) {
+                assert(
+                    (get_position_result.fees0.is_zero()) & (get_position_result.fees0.is_zero()),
+                    'MUST_COLLECT_FEES'
+                );
                 (Default::default(), Default::default())
             } else {
                 (
-                    (unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0)
-                        / u256 {
-                        low: position.liquidity, high: 0
-                    })
-                        .high,
-                    (unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1)
-                        / u256 {
-                        low: position.liquidity, high: 0
-                    })
-                        .high
-                )
-            };
-
-            if (position_liquidity_next.is_zero()) {
-                assert((amount0_fees.is_zero()) & (amount1_fees.is_zero()), 'NONZERO_FEES');
-            } else {
-                fee_growth_inside_token0 =
                     unsafe_sub(
                         fee_growth_inside_token0,
                         u256 {
-                            high: amount0_fees, low: 0
+                            high: get_position_result.fees0, low: 0
                             } / u256 {
                             low: position_liquidity_next, high: 0
                         }
-                    );
-                fee_growth_inside_token1 =
+                    ),
                     unsafe_sub(
                         fee_growth_inside_token1,
                         u256 {
-                            high: amount1_fees, low: 0
+                            high: get_position_result.fees1, low: 0
                             } / u256 {
                             low: position_liquidity_next, high: 0
                         }
-                    );
-            }
+                    )
+                )
+            };
 
             // update the position
             self
