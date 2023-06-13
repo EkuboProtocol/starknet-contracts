@@ -6,7 +6,7 @@ use starknet::testing::{set_contract_address};
 use integer::u256;
 use integer::u256_from_felt252;
 use integer::BoundedInt;
-use traits::Into;
+use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
 use ekubo::types::storage::{Pool};
 use ekubo::types::i129::{i129, i129OptionPartialEq};
@@ -15,8 +15,7 @@ use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
 use array::{ArrayTrait};
-use option::OptionTrait;
-use option::Option;
+use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use zeroable::Zeroable;
 
@@ -43,8 +42,10 @@ impl EqualTickBool of traits::PartialEq<(i129, bool)> {
 mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address
+        set_contract_address, MockERC20, TryInto, OptionTrait
     };
+
+    use starknet::class_hash::Felt252TryIntoClassHash;
 
     #[test]
     #[available_gas(2000000)]
@@ -70,6 +71,35 @@ mod owner_tests {
         let core = deploy_core(contract_address_const::<101>());
         set_contract_address(contract_address_const::<1>());
         core.set_owner(contract_address_const::<42>());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    fn test_replace_class_hash_cannot_be_called_by_non_owner() {
+        let core = deploy_core(contract_address_const::<101>());
+        set_contract_address(contract_address_const::<1>());
+        core.replace_class_hash(Zeroable::zero());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    #[ignore]
+    fn test_replace_class_hash_can_be_called_by_owner() {
+        let core = deploy_core(contract_address_const::<101>());
+        set_contract_address(contract_address_const::<101>());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    #[ignore]
+    fn test_after_replacing_class_hash_calls_fail() {
+        let core = deploy_core(contract_address_const::<101>());
+        set_contract_address(contract_address_const::<101>());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 }
 
