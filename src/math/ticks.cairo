@@ -19,7 +19,7 @@ mod constants {
 
 mod internal {
     use ekubo::math::bits::{msb};
-    use ekubo::math::exp2::{exp2_big};
+    use ekubo::math::exp2::{exp2};
     use integer::downcast;
     use option::{OptionTrait, Option};
     use traits::{Into, TryInto};
@@ -76,12 +76,10 @@ mod internal {
         }
 
         // high is always non-zero because we inverse it above
-        let msb_x = 128_u8 + msb(x.high);
-
-        // msb always greater than 128 because we checked for less than 128 above and recursed with the inverse
+        let msb_high = msb(x.high);
 
         let (mut r, mut log_2) = (
-            x / exp2_big(msb_x - 127), (msb_x - 128).into() * 0x10000000000000000
+            x / u256 { low: exp2(msb_high + 1), high: 0 }, msb_high.into() * 0x10000000000000000
         );
 
         // 63

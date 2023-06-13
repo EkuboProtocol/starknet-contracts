@@ -49,6 +49,6 @@ impl NegU128 of Neg<u128> {
 
 // Return the index of the least set bit
 fn lsb(x: u128) -> u8 {
-    // errors if x == 0
+    // msb throws if x == 0
     msb((-x) & x)
 }

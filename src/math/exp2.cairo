@@ -511,12 +511,3 @@ fn exp2(n: u8) -> u128 {
         }
     }
 }
-
-// Returns 2**n for n > 127
-fn exp2_big(n: u8) -> u256 {
-    if (n > 127) {
-        u256 { high: exp2(n - 128), low: 0 }
-    } else {
-        u256 { high: 0, low: exp2(n) }
-    }
-}

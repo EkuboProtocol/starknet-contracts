@@ -511,12 +511,3 @@ fn mask(n: u8) -> u128 {
         }
     }
 }
-
-// Returns (2**n) - 1 for n > 127
-fn mask_big(n: u8) -> u256 {
-    if (n > 127) {
-        u256 { high: mask(n - 128), low: 0xffffffffffffffffffffffffffffffff }
-    } else {
-        u256 { high: 0, low: mask(n) }
-    }
-}

@@ -1,4 +1,4 @@
-use ekubo::math::exp2::{exp2, exp2_big};
+use ekubo::math::exp2::{exp2};
 
 #[test]
 fn test_exp2_0() {
@@ -36,12 +36,3 @@ fn test_exp2_128() {
     assert(exp2(128) == 1, '2**128');
 }
 
-#[test]
-fn test_exp2_big_128() {
-    assert(exp2_big(128) == u256 { high: 1, low: 0 }, '2**128');
-}
-
-#[test]
-fn test_exp2_big_255() {
-    assert(exp2_big(255) == u256 { high: 0x80000000000000000000000000000000, low: 0 }, '2**128');
-}
