@@ -60,6 +60,17 @@ fn test_add_delta_panics_underflow_max() {
 }
 
 #[test]
+fn test_add_delta_max_inputs() {
+    assert(
+        add_delta(
+            0xffffffffffffffffffffffffffffffff,
+            i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }
+        ) == 0,
+        'max-max'
+    );
+}
+
+#[test]
 #[should_panic(expected: ('u128_add Overflow', ))]
 fn test_add_delta_panics_overflow() {
     add_delta(0xffffffffffffffffffffffffffffffff, i129 { mag: 1, sign: false });

@@ -8,7 +8,6 @@ fn unsafe_sub(x: u256, y: u256) -> u256 {
     res
 }
 
-
 #[inline(always)]
 fn add_delta(x: u128, y: i129) -> u128 {
     let sum = i129 { mag: x, sign: false } + y;

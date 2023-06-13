@@ -42,7 +42,7 @@ const TWO_129: felt252 = 0x100000000000000000000000000000000; // == 2**129
 // Converts a i129 into a felt252 wrapper for storage
 impl i129IntoFelt252 of Into<i129, felt252> {
     fn into(self: i129) -> felt252 {
-        if (self.sign) {
+        if (self.sign & (self.mag != 0)) {
             return self.mag.into() + TWO_129;
         }
         return self.mag.into();

@@ -6,6 +6,15 @@ use option::{Option, OptionTrait};
 fn test_into_felt252_0() {
     let x: felt252 = i129 { mag: 0, sign: false }.into();
     assert(x == 0, 'x');
+
+    let y: i129 = x.into();
+    assert(y == i129 { mag: 0, sign: false }, 'back');
+}
+
+#[test]
+fn test_into_felt252_negative_0() {
+    let x: felt252 = i129 { mag: 0, sign: true }.into();
+    assert(x == 0, 'x');
 }
 
 #[test]
