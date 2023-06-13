@@ -475,18 +475,33 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 19, 'fees0 withdrawn');
     assert(amount1 == 8, 'fees1 withdrawn');
 
-    // withdraw fees only
+    // withdraw quarter
     let (amount0, amount1) = positions
         .withdraw(
             token_id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
-            liquidity: (liquidity / 2),
+            liquidity: (liquidity / 4),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: true,
+            collect_fees: false,
         );
 
-    assert(amount0 == 49500494, 'other half');
-    assert(amount1 == 49499505, 'other half');
+    assert(amount0 == 24750246, 'quarter');
+    assert(amount1 == 24749752, 'quarter');
+
+    // withdraw remainder
+    let (amount0, amount1) = positions
+        .withdraw(
+            token_id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: liquidity - (liquidity / 2) - (liquidity / 4),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+        );
+
+    assert(amount0 == 24750246, 'remainder');
+    assert(amount1 == 24749752, 'remainder');
 }
