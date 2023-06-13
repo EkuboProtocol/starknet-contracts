@@ -75,7 +75,8 @@ mod internal {
             return (mag, !sign);
         }
 
-        let msb_x = msb(x);
+        // high is always non-zero because we inverse it above
+        let msb_x = 128_u8 + msb(x.high);
 
         // msb always greater than 128 because we checked for less than 128 above and recursed with the inverse
 

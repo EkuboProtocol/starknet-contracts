@@ -1,7 +1,5 @@
-use ekubo::math::exp2::{exp2, exp2_big};
-
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
-fn msb_low(mut x: u128) -> u8 {
+fn msb(mut x: u128) -> u8 {
     assert(x != 0, 'MSB_NONZERO');
 
     let mut res: u8 = 0;
@@ -37,15 +35,6 @@ fn msb_low(mut x: u128) -> u8 {
     res
 }
 
-// Computes and returns the index of the most significant bit in the given integer, s.t. ratio >= 2**msb(integer)
-fn msb(x: u256) -> u8 {
-    if x.high == 0 {
-        msb_low(x.low)
-    } else {
-        128_u8 + msb_low(x.high)
-    }
-}
-
 
 impl NegU128 of Neg<u128> {
     #[inline]
@@ -59,17 +48,7 @@ impl NegU128 of Neg<u128> {
 }
 
 // Return the index of the least set bit
-fn lsb_low(x: u128) -> u8 {
+fn lsb(x: u128) -> u8 {
     // errors if x == 0
-    msb_low((-x) & x)
-}
-
-// Return the index of the least set bit
-fn lsb(x: u256) -> u8 {
-    if (x.low == 0) {
-        // if high is 0, this will revert
-        128 + lsb_low(x.high)
-    } else {
-        lsb_low(x.low)
-    }
+    msb((-x) & x)
 }

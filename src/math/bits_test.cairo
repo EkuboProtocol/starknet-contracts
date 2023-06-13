@@ -1,128 +1,87 @@
-use ekubo::math::bits::{msb, lsb, lsb_low};
+use ekubo::math::bits::{msb, lsb};
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO', ))]
 fn msb_0_panics() {
-    msb(u256 { high: 0, low: 0 });
+    msb(0);
 }
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO', ))]
 fn lsb_0_panics() {
-    lsb(u256 { high: 0, low: 0 });
+    lsb(0);
 }
 
 
 #[test]
 fn msb_1() {
-    let res = msb(u256 { high: 0, low: 1 });
+    let res = msb(1);
     assert(res == 0_u8, 'msb of one is zero');
 }
 
 #[test]
 fn lsb_1() {
-    let res = lsb(u256 { high: 0, low: 1 });
+    let res = lsb(1);
     assert(res == 0_u8, 'lsb');
 }
 
 #[test]
 fn lsb_2() {
-    let res = lsb(u256 { high: 0, low: 2 });
+    let res = lsb(2);
     assert(res == 1_u8, 'lsb');
 }
 
 #[test]
 fn lsb_3() {
-    let res = lsb(u256 { high: 0, low: 3 });
+    let res = lsb(3);
     assert(res == 0_u8, 'lsb');
 }
 
 #[test]
-fn lsb_2_128() {
-    let res = lsb(u256 { high: 1, low: 0 });
-    assert(res == 128_u8, 'lsb');
-}
-
-#[test]
-fn lsb_2_128_plus_one() {
-    let res = lsb(u256 { high: 1, low: 1 });
+fn lsb_2_127_plus_one() {
+    let res = lsb(0x80000000000000000000000000000001);
     assert(res == 0_u8, 'lsb');
 }
 
 #[test]
-fn lsb_2_128_plus_two() {
-    let res = lsb(u256 { high: 1, low: 2 });
+fn lsb_2_127_plus_two() {
+    let res = lsb(0x80000000000000000000000000000002);
     assert(res == 1_u8, 'lsb');
 }
 
 #[test]
-fn lsb_2_255() {
-    let res = lsb(u256 { high: 0x80000000000000000000000000000000, low: 0 });
-    assert(res == 255_u8, 'lsb');
-}
-
-#[test]
-fn lsb_2_255_plus_one() {
-    let res = lsb(u256 { high: 0x80000000000000000000000000000000, low: 1 });
-    assert(res == 0_u8, 'lsb');
-}
-
-#[test]
-fn lsb_2_255_plus_one_high() {
-    let res = lsb(u256 { high: 0x80000000000000000000000000000001, low: 0 });
-    assert(res == 128_u8, 'lsb');
-}
-
-#[test]
 fn msb_2() {
-    let res = msb(u256 { high: 0, low: 2 });
+    let res = msb(2);
     assert(res == 1_u8, 'msb of two is one');
 }
 
 #[test]
 fn msb_3() {
-    let res = msb(u256 { high: 0, low: 3 });
+    let res = msb(3);
     assert(res == 1_u8, 'msb of three is one');
 }
 
 #[test]
 fn msb_4() {
-    let res = msb(u256 { high: 0, low: 4 });
+    let res = msb(4);
     assert(res == 2_u8, 'msb of four is two');
 }
 
-#[test]
-fn msb_high() {
-    let res = msb(u256 { high: 1, low: 0 });
-    assert(res == 128, 'msb of 2**128 is 128');
-}
 
 #[test]
 fn msb_high_plus_four() {
-    let res = msb(u256 { high: 1, low: 4 });
-    assert(res == 128, 'msb of 2**128 + 4 is 128');
+    let res = msb(0x80000000000000000000000000000004);
+    assert(res == 127, 'msb of 2**127 + 4 is 127');
 }
 
 #[test]
 fn msb_2_96_less_one() {
-    let res = msb(u256 { high: 0, low: 79228162514264337589248983040 });
-    assert(res == 95, 'msb of 2**96 - a bit == 95');
+    let res = msb(0xffffffffffffffffffffffff);
+    assert(res == 95, 'msb of 2**96 - 1 == 95');
 }
 
 #[test]
-fn msb_2_255() {
-    let res = msb(u256 { high: 0x80000000000000000000000000000000, low: 0 });
-    assert(res == 255, 'msb of 2**255 is 255');
-}
-
-#[test]
-fn msb_2_255_plus_one() {
-    let res = msb(u256 { high: 0x80000000000000000000000000000000, low: 1 });
-    assert(res == 255, 'msb of 2**255 + 1 is 255');
-}
-
-#[test]
-#[available_gas(85000000)]
+#[available_gas(80000000)]
 fn msb_many_iterations_min_gas() {
     let mut i: u128 = 0;
     loop {
@@ -130,11 +89,7 @@ fn msb_many_iterations_min_gas() {
             break ();
         }
 
-        if ((i % 2) == 0) {
-            msb(u256 { high: i + 1, low: 0 });
-        } else {
-            msb(u256 { high: 0, low: i + 1 });
-        };
+        msb(i + 1);
 
         i += 1;
     };
@@ -143,14 +98,13 @@ fn msb_many_iterations_min_gas() {
 
 #[test]
 fn msb_max() {
-    let res = msb(
-        u256 { high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff }
-    );
-    assert(res == 255, 'msb of max uint256');
+    let res = msb(0xffffffffffffffffffffffffffffffff);
+    assert(res == 127, 'msb of max u128');
 }
 
 #[test]
-fn msb_min_value_max() {
-    let res = msb(u256 { high: 0x80000000000000000000000000000000, low: 0 });
-    assert(res == 255, 'msb of max');
+fn lsb_max() {
+    let res = lsb(0xffffffffffffffffffffffffffffffff);
+    assert(res == 0, 'lsb of max u128');
 }
+

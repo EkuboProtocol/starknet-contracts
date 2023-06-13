@@ -23,7 +23,7 @@ mod Core {
     use ekubo::math::mask::{mask};
     use ekubo::math::muldiv::{muldiv};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
-    use ekubo::math::bits::{msb_low, lsb_low};
+    use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
@@ -427,12 +427,7 @@ mod Core {
                     self.next_initialized_tick(pool_key, next, skip_ahead - 1)
                 }
             } else {
-                (
-                    word_and_bit_index_to_tick(
-                        (word_index, msb_low(masked)), pool_key.tick_spacing
-                    ),
-                    true
-                )
+                (word_and_bit_index_to_tick((word_index, msb(masked)), pool_key.tick_spacing), true)
             }
         }
 
@@ -464,12 +459,7 @@ mod Core {
                         )
                 }
             } else {
-                (
-                    word_and_bit_index_to_tick(
-                        (word_index, lsb_low(masked)), pool_key.tick_spacing
-                    ),
-                    true
-                )
+                (word_and_bit_index_to_tick((word_index, lsb(masked)), pool_key.tick_spacing), true)
             }
         }
 
