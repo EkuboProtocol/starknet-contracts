@@ -397,3 +397,66 @@ fn test_deposit_then_withdraw_with_fees() {
     assert(get_position_result.fees0 == 20, 'fees0');
     assert(get_position_result.fees1 == 9, 'fees1');
 }
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_then_partial_withdraw_with_fees() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        owner: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Default::default(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+
+    setup.token0.increase_balance(setup.locker.contract_address, 100000000000);
+    setup.token1.increase_balance(setup.locker.contract_address, 100000000000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 1000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: max_sqrt_ratio(),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 2000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: min_sqrt_ratio(),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let (amount0, amount1) = positions
+        .withdraw(
+            token_id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: (liquidity / 2),
+            min_token0: 1000,
+            min_token1: 1000,
+            collect_fees: false,
+        );
+
+    assert(amount0 == 49500494, 'amount0 less 1%');
+    assert(amount1 == 49499505, 'amount1 less 1%');
+
+    // fees are not withdrawn with the principal
+    let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(get_position_result.fees0 == 19, 'fees0');
+    assert(get_position_result.fees1 == 8, 'fees1');
+}

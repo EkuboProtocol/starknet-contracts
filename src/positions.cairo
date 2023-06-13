@@ -456,7 +456,7 @@ mod Positions {
                         contract_address: caller
                     }
                         .withdraw(
-                            callback_data.pool_key.token1, get_contract_address(), delta.amount0.mag
+                            callback_data.pool_key.token1, get_contract_address(), delta.amount1.mag
                         );
                 } else {
                     IERC20Dispatcher {

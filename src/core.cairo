@@ -602,7 +602,7 @@ mod Core {
             } else {
                 (
                     unsafe_sub(
-                        get_position_result.fee_growth_inside_token0,
+                        pool.fee_growth_global_token0,
                         u256 {
                             high: get_position_result.fees0, low: 0
                             } / u256 {
@@ -610,7 +610,7 @@ mod Core {
                         }
                     ),
                     unsafe_sub(
-                        get_position_result.fee_growth_inside_token1,
+                        pool.fee_growth_global_token1,
                         u256 {
                             high: get_position_result.fees1, low: 0
                             } / u256 {
@@ -627,8 +627,8 @@ mod Core {
                     (pool_key, position_key),
                     Position {
                         liquidity: position_liquidity_next,
-                        fee_growth_inside_last_token0: get_position_result.fee_growth_inside_token0,
-                        fee_growth_inside_last_token1: get_position_result.fee_growth_inside_token1,
+                        fee_growth_inside_last_token0: fee_growth_inside_token0_next,
+                        fee_growth_inside_last_token1: fee_growth_inside_token1_next,
                     }
                 );
 
