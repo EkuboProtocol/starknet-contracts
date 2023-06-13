@@ -92,10 +92,12 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct LockCallbackData {
         pool_key: PoolKey,
+        salt: felt252,
         bounds: Bounds,
         liquidity_delta: i129,
         collect_fees: bool,
-        salt: felt252,
+        min_token0: u128,
+        min_token1: u128,
     }
 
     #[generate_trait]
@@ -323,7 +325,13 @@ mod Positions {
             let mut data: Array<felt252> = ArrayTrait::new();
             Serde::<LockCallbackData>::serialize(
                 @LockCallbackData {
-                    pool_key, bounds, liquidity_delta, salt: token_id.low.into(), collect_fees
+                    pool_key,
+                    bounds,
+                    liquidity_delta,
+                    salt: token_id.low.into(),
+                    collect_fees,
+                    min_token0: 0,
+                    min_token1: 0
                 },
                 ref data
             );
@@ -370,7 +378,13 @@ mod Positions {
             let mut data: Array<felt252> = ArrayTrait::new();
             Serde::<LockCallbackData>::serialize(
                 @LockCallbackData {
-                    bounds, pool_key, liquidity_delta, salt: token_id.low.into(), collect_fees, 
+                    bounds,
+                    pool_key,
+                    liquidity_delta,
+                    salt: token_id.low.into(),
+                    collect_fees,
+                    min_token0,
+                    min_token1
                 },
                 ref data
             );
@@ -381,9 +395,6 @@ mod Positions {
 
             let delta = Serde::<Delta>::deserialize(ref result)
                 .expect('CALLBACK_RESULT_DESERIALIZE');
-
-            assert((delta.amount0.mag >= min_token0) & delta.amount0.sign, 'MIN_AMOUNT0');
-            assert((delta.amount1.mag >= min_token1) & delta.amount1.sign, 'MIN_AMOUNT1');
 
             (delta.amount0.mag, delta.amount1.mag)
         }
@@ -419,17 +430,25 @@ mod Positions {
                     );
             }
 
-            delta += ICoreDispatcher {
-                contract_address: caller
+            if callback_data.liquidity_delta != Default::default() {
+                let update = ICoreDispatcher {
+                    contract_address: caller
+                }
+                    .update_position(
+                        callback_data.pool_key,
+                        UpdatePositionParameters {
+                            salt: callback_data.salt,
+                            bounds: callback_data.bounds,
+                            liquidity_delta: callback_data.liquidity_delta
+                        }
+                    );
+                delta += update;
+
+                if (callback_data.liquidity_delta.sign) {
+                    assert(update.amount0.mag >= callback_data.min_token0, 'MIN_TOKEN0');
+                    assert(update.amount1.mag >= callback_data.min_token1, 'MIN_TOKEN1');
+                }
             }
-                .update_position(
-                    callback_data.pool_key,
-                    UpdatePositionParameters {
-                        salt: callback_data.salt,
-                        bounds: callback_data.bounds,
-                        liquidity_delta: callback_data.liquidity_delta
-                    }
-                );
 
             if delta.amount0.mag != 0 {
                 if (delta.amount0.sign) {

@@ -459,4 +459,19 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert(get_position_result.fees0 == 19, 'fees0');
     assert(get_position_result.fees1 == 8, 'fees1');
+
+    // withdraw fees only
+    let (amount0, amount1) = positions
+        .withdraw(
+            token_id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: 0,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: true,
+        );
+
+    assert(amount0 == 19, 'fees0 withdrawn');
+    assert(amount1 == 8, 'fees1 withdrawn');
 }
