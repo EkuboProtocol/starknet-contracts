@@ -10,8 +10,11 @@ mod Positions {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::utils::{unsafe_sub};
     use array::{ArrayTrait};
-    use ekubo::interfaces::core::{ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait};
+    use ekubo::interfaces::core::{
+        ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
+    };
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
+    use ekubo::interfaces::erc721::{IERC721};
     use ekubo::types::keys::{PoolKey};
     use hash::LegacyHash;
     use traits::{Into, TryInto};
@@ -150,7 +153,7 @@ mod Positions {
     }
 
     #[external(v0)]
-    impl Positions of IPositions<ContractState> {
+    impl ERC721Impl of IERC721<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             'Ekubo Position NFT'
         }
@@ -213,7 +216,95 @@ mod Positions {
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
             'https://nft.ekubo.org/'
         }
+    }
 
+    #[external(v0)]
+    impl ILockerImpl of ILocker<ContractState> {
+        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
+            let caller = get_caller_address();
+            assert(caller == self.core.read(), 'CORE');
+
+            let mut data_span = data.span();
+            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
+                .expect('DESERIALIZE_CALLBACK_FAILED');
+
+            let mut delta: Delta = Default::default();
+            if callback_data.collect_fees {
+                delta += ICoreDispatcher {
+                    contract_address: caller
+                }
+                    .collect_fees(
+                        pool_key: callback_data.pool_key,
+                        salt: callback_data.salt,
+                        bounds: callback_data.bounds
+                    );
+            }
+
+            if callback_data.liquidity_delta != Default::default() {
+                let update = ICoreDispatcher {
+                    contract_address: caller
+                }
+                    .update_position(
+                        callback_data.pool_key,
+                        UpdatePositionParameters {
+                            salt: callback_data.salt,
+                            bounds: callback_data.bounds,
+                            liquidity_delta: callback_data.liquidity_delta
+                        }
+                    );
+                delta += update;
+
+                if (callback_data.liquidity_delta.sign) {
+                    assert(update.amount0.mag >= callback_data.min_token0, 'MIN_TOKEN0');
+                    assert(update.amount1.mag >= callback_data.min_token1, 'MIN_TOKEN1');
+                }
+            }
+
+            if delta.amount0.mag != 0 {
+                if (delta.amount0.sign) {
+                    // withdrawn to the contract to be returned to caller via #clear
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }
+                        .withdraw(
+                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
+                        );
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token0
+                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token0);
+                }
+            }
+            if (delta.amount1.mag != 0) {
+                // withdrawn to the contract to be returned to caller via #clear
+                if (delta.amount0.sign) {
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }
+                        .withdraw(
+                            callback_data.pool_key.token1, get_contract_address(), delta.amount1.mag
+                        );
+                } else {
+                    IERC20Dispatcher {
+                        contract_address: callback_data.pool_key.token1
+                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
+                    ICoreDispatcher {
+                        contract_address: caller
+                    }.deposit(callback_data.pool_key.token1);
+                }
+            }
+
+            let mut result_data: Array<felt252> = ArrayTrait::new();
+            Serde::<Delta>::serialize(@delta, ref result_data);
+            result_data
+        }
+    }
+
+    #[external(v0)]
+    impl PositionsImpl of IPositions<ContractState> {
         fn mint(
             ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
         ) -> u256 {
@@ -408,88 +499,6 @@ mod Positions {
                 dispatcher.transfer(recipient, balance);
             }
             balance
-        }
-
-        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
-            let caller = get_caller_address();
-            assert(caller == self.core.read(), 'CORE');
-
-            let mut data_span = data.span();
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
-                .expect('DESERIALIZE_CALLBACK_FAILED');
-
-            let mut delta: Delta = Default::default();
-            if callback_data.collect_fees {
-                delta += ICoreDispatcher {
-                    contract_address: caller
-                }
-                    .collect_fees(
-                        pool_key: callback_data.pool_key,
-                        salt: callback_data.salt,
-                        bounds: callback_data.bounds
-                    );
-            }
-
-            if callback_data.liquidity_delta != Default::default() {
-                let update = ICoreDispatcher {
-                    contract_address: caller
-                }
-                    .update_position(
-                        callback_data.pool_key,
-                        UpdatePositionParameters {
-                            salt: callback_data.salt,
-                            bounds: callback_data.bounds,
-                            liquidity_delta: callback_data.liquidity_delta
-                        }
-                    );
-                delta += update;
-
-                if (callback_data.liquidity_delta.sign) {
-                    assert(update.amount0.mag >= callback_data.min_token0, 'MIN_TOKEN0');
-                    assert(update.amount1.mag >= callback_data.min_token1, 'MIN_TOKEN1');
-                }
-            }
-
-            if delta.amount0.mag != 0 {
-                if (delta.amount0.sign) {
-                    // withdrawn to the contract to be returned to caller via #clear
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
-                        .withdraw(
-                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token0
-                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token0);
-                }
-            }
-            if (delta.amount1.mag != 0) {
-                // withdrawn to the contract to be returned to caller via #clear
-                if (delta.amount0.sign) {
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
-                        .withdraw(
-                            callback_data.pool_key.token1, get_contract_address(), delta.amount1.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token1
-                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token1);
-                }
-            }
-
-            let mut result_data: Array<felt252> = ArrayTrait::new();
-            Serde::<Delta>::serialize(@delta, ref result_data);
-            result_data
         }
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {

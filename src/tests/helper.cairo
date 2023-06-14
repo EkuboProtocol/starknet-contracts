@@ -11,8 +11,9 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Core};
-use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, Delta};
+use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::locker::{
@@ -64,6 +65,18 @@ fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
         .expect('locker deploy failed');
 
     ICoreLockerDispatcher { contract_address: locker_address }
+}
+
+impl IPositionsDispatcherIntoIERC721Dispatcher of Into<IPositionsDispatcher, IERC721Dispatcher> {
+    fn into(self: IPositionsDispatcher) -> IERC721Dispatcher {
+        IERC721Dispatcher { contract_address: self.contract_address }
+    }
+}
+
+impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILockerDispatcher> {
+    fn into(self: IPositionsDispatcher) -> ILockerDispatcher {
+        ILockerDispatcher { contract_address: self.contract_address }
+    }
 }
 
 fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {

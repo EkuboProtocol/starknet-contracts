@@ -1,14 +1,21 @@
 use starknet::{contract_address_const, get_contract_address};
 use starknet::testing::{set_contract_address};
-use ekubo::tests::helper::{deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT, swap};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+use ekubo::interfaces::core::{
+    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
+};
+use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
 use ekubo::types::keys::{PoolKey};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::i129::{i129};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use zeroable::Zeroable;
+
+use ekubo::tests::helper::{
+    deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT, swap,
+    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher
+};
 
 use debug::PrintTrait;
 
@@ -34,7 +41,7 @@ fn test_maybe_initialize_pool_twice() {
 #[available_gas(300000000)]
 fn test_nft_name_symbol() {
     let core = deploy_core(contract_address_const::<1>());
-    let positions = deploy_positions(core);
+    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
     assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://nft.ekubo.org/', 'token_uri');
@@ -45,7 +52,7 @@ fn test_nft_name_symbol() {
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
 fn test_nft_approve_fails_id_not_exists() {
     let core = deploy_core(contract_address_const::<1>());
-    let positions = deploy_positions(core);
+    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     set_contract_address(contract_address_const::<1>());
     positions.approve(contract_address_const::<2>(), 1);
 }
@@ -70,8 +77,13 @@ fn test_nft_approve_succeeds_after_mint() {
             bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
         );
 
-    positions.approve(contract_address_const::<2>(), token_id);
-    assert(positions.get_approved(token_id) == contract_address_const::<2>(), 'approved');
+    IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
+        .approve(contract_address_const::<2>(), token_id);
+    assert(
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
+            .get_approved(token_id) == contract_address_const::<2>(),
+        'approved'
+    );
 }
 
 #[test]
@@ -95,7 +107,8 @@ fn test_nft_approve_only_owner_can_approve() {
         );
 
     set_contract_address(contract_address_const::<2>());
-    positions.approve(contract_address_const::<2>(), token_id);
+    IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
+        .approve(contract_address_const::<2>(), token_id);
 }
 
 #[test]
@@ -105,7 +118,11 @@ fn test_nft_balance_of() {
     let positions = deploy_positions(core);
 
     let recipient = contract_address_const::<2>();
-    assert(positions.balance_of(recipient) == Default::default(), 'balance check');
+    assert(
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
+            .balance_of(recipient) == Default::default(),
+        'balance check'
+    );
     // note we do not check the validity of the position key, it only comes into play when trying to add liquidity fails
     assert(
         positions
@@ -122,8 +139,15 @@ fn test_nft_balance_of() {
             ) == 1,
         'token id'
     );
-    assert(positions.owner_of(1) == recipient, 'owner');
-    assert(positions.balance_of(recipient) == u256 { low: 1, high: 0 }, 'balance check after');
+    assert(
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).owner_of(1) == recipient, 'owner'
+    );
+    assert(
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).balance_of(recipient) == u256 {
+            low: 1, high: 0
+        },
+        'balance check after'
+    );
 }
 
 #[test]
