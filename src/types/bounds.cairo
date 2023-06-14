@@ -11,23 +11,28 @@ struct Bounds {
     tick_upper: i129
 }
 
-fn bounded_tick_to_u128(x: i129) -> u128 {
-    if (x.mag == 0) {
-        0
-    } else {
-        (x.mag + if x.sign {
-            0x80000000
-        } else {
+mod internal {
+    use super::i129;
+
+    fn bounded_tick_to_u128(x: i129) -> u128 {
+        assert(x.mag < 0x80000000, 'BOUNDS_MAG');
+        if (x.mag == 0) {
             0
-        })
+        } else {
+            (x.mag + if x.sign {
+                0x80000000
+            } else {
+                0
+            })
+        }
     }
 }
 
 // Converts the bounds into a felt for hashing
 impl BoundsIntoFelt252 of Into<Bounds, felt252> {
     fn into(self: Bounds) -> felt252 {
-        ((bounded_tick_to_u128(self.tick_lower) * 0x100000000)
-            + bounded_tick_to_u128(self.tick_upper))
+        ((internal::bounded_tick_to_u128(self.tick_lower) * 0x100000000)
+            + internal::bounded_tick_to_u128(self.tick_upper))
             .into()
     }
 }
@@ -45,14 +50,16 @@ impl DefaultBounds of Default<Bounds> {
     }
 }
 
-// Checks that the bounds are valid for the given tick spacing
-fn check_bounds_valid(bounds: Bounds, tick_spacing: u128) {
-    assert(bounds.tick_lower < bounds.tick_upper, 'BOUNDS_ORDER');
-    assert(bounds.tick_lower >= min_tick(), 'BOUNDS_MIN');
-    assert(bounds.tick_upper <= max_tick(), 'BOUNDS_MAX');
-    assert(
-        ((bounds.tick_lower.mag % tick_spacing) == 0)
-            & ((bounds.tick_upper.mag % tick_spacing) == 0),
-        'BOUNDS_TICK_SPACING'
-    );
+#[generate_trait]
+impl CheckBoundsValidImpl of CheckBoundsValidTrait {
+    fn check_valid(self: Bounds, tick_spacing: u128) {
+        assert(self.tick_lower < self.tick_upper, 'BOUNDS_ORDER');
+        assert(self.tick_lower >= min_tick(), 'BOUNDS_MIN');
+        assert(self.tick_upper <= max_tick(), 'BOUNDS_MAX');
+        assert(
+            ((self.tick_lower.mag % tick_spacing) == 0)
+                & ((self.tick_upper.mag % tick_spacing) == 0),
+            'BOUNDS_TICK_SPACING'
+        );
+    }
 }

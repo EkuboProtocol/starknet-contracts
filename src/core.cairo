@@ -29,7 +29,7 @@ mod Core {
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
     use ekubo::types::storage::{Tick, Position, Pool};
     use ekubo::types::keys::{PositionKey, PoolKey};
-    use ekubo::types::bounds::{Bounds, check_bounds_valid};
+    use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
 
     use debug::PrintTrait;
@@ -56,6 +56,7 @@ mod Core {
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token)
+        // note a transfer can only be effected by calling load and save to another address
         saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
     }
 
@@ -168,6 +169,7 @@ mod Core {
                             tick.liquidity_delta + liquidity_delta
                         },
                         liquidity_net: next_liquidity_net,
+                        // we don't ever set these values, because the initial value doesn't matter, only the differences of position snapshots matter
                         fee_growth_outside_token0: tick.fee_growth_outside_token0,
                         fee_growth_outside_token1: tick.fee_growth_outside_token1
                     }
@@ -406,7 +408,6 @@ mod Core {
             self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
         }
 
-        // Returns the tick > from to iterate towards that may or may not be initialized
         fn next_initialized_tick(
             ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
@@ -437,7 +438,6 @@ mod Core {
             }
         }
 
-        // Returns the next tick <= from to iterate towards
         fn prev_initialized_tick(
             ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
@@ -529,7 +529,7 @@ mod Core {
                 }.before_update_position(pool_key, params);
             }
 
-            check_bounds_valid(params.bounds, pool_key.tick_spacing);
+            params.bounds.check_valid(pool_key.tick_spacing);
 
             let pool = self.pools.read(pool_key);
 
