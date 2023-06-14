@@ -519,12 +519,12 @@ mod Core {
         }
 
         fn update_position(
-            ref self: ContractState, pool_key: PoolKey, mut params: UpdatePositionParameters
+            ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
             if (pool_key.extension.is_non_zero()) {
-                params = IExtensionDispatcher {
+                IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.before_update_position(pool_key, params);
             }
@@ -697,7 +697,7 @@ mod Core {
         }
 
 
-        fn swap(ref self: ContractState, pool_key: PoolKey, mut params: SwapParameters) -> Delta {
+        fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, _) = self.require_locker();
 
             let pool = self.pools.read(pool_key);
@@ -706,7 +706,7 @@ mod Core {
             assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             if (pool_key.extension.is_non_zero()) {
-                params = IExtensionDispatcher {
+                IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.before_swap(pool_key, params);
             }

@@ -61,16 +61,16 @@ trait IExtension<TStorage> {
     // Called after a pool is initialized
     fn after_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
-    // Called before a swap happens, allowing the extension to modify the swap parameters
-    fn before_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> SwapParameters;
-    // Called after a swap happens with the result of the swap and the modified swap parameters
+    // Called before a swap happens
+    fn before_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters);
+    // Called after a swap happens with the result of the swap
     fn after_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters, delta: Delta);
 
-    // Called before an update to a position, allowing the extension to modify the update position parameters
+    // Called before an update to a position
     fn before_update_position(
         ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
-    ) -> UpdatePositionParameters;
-    // Called after the update position with the result of the update and the modified update position parameters
+    );
+    // Called after the position is updated with the result of the update
     fn after_update_position(
         ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters, delta: Delta
     );

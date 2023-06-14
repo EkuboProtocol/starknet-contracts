@@ -43,7 +43,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
         let denominator = (numerator1 / sqrt_ratio) + u256 { high: 0, low: amount.mag };
 
         // we know denominator is non-zero because amount.mag is non-zero
-        let (quotient, remainder) = u256_safe_divmod(numerator1, u256_as_non_zero(denominator));
+        let (quotient, remainder, _) = u256_safe_divmod(numerator1, u256_as_non_zero(denominator));
         return if (remainder.is_zero()) {
             Option::Some(quotient)
         } else {
@@ -65,7 +65,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
 
     assert(liquidity != 0, 'NO_LIQUIDITY');
 
-    let (quotient, remainder) = u256_safe_divmod(
+    let (quotient, remainder, _) = u256_safe_divmod(
         u256 { low: 0, high: amount.mag }, u256_as_non_zero(u256 { low: liquidity, high: 0 })
     );
 

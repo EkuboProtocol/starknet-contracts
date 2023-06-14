@@ -7,8 +7,8 @@ use integer::{
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 fn div(x: u256, z: u256, round_up: bool) -> u256 {
-    let (quotient, remainder) = u256_safe_divmod(x, u256_as_non_zero(z));
-    return if (!round_up | (remainder.is_zero())) {
+    let (quotient, remainder, _) = u256_safe_divmod(x, u256_as_non_zero(z));
+    return if (!round_up | remainder.is_zero()) {
         quotient
     } else {
         quotient + u256 { low: 1, high: 0 }

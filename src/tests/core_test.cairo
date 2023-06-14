@@ -42,7 +42,8 @@ impl EqualTickBool of traits::PartialEq<(i129, bool)> {
 mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable
+        set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait
     };
 
     use starknet::class_hash::Felt252TryIntoClassHash;
@@ -84,7 +85,6 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[ignore]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core(contract_address_const::<101>());
         set_contract_address(contract_address_const::<101>());
@@ -93,13 +93,30 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
-    #[ignore]
+    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core(contract_address_const::<101>());
         set_contract_address(contract_address_const::<101>());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
+        let core = deploy_core(contract_address_const::<101>());
+        set_contract_address(contract_address_const::<101>());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        // these won't fail because it has a new implementation
+        IMockERC20Dispatcher {
+            contract_address: core.contract_address
+        }.increase_balance(contract_address_const::<1>(), 100);
+        assert(
+            IMockERC20Dispatcher {
+                contract_address: core.contract_address
+            }.balance_of(contract_address_const::<1>()) == 100,
+            'balance'
+        );
     }
 }
 
