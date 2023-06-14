@@ -28,7 +28,7 @@ fn test_position_key_hash() {
         0,
         PositionKey {
             salt: 0, owner: contract_address_const::<1>(), bounds: Bounds {
-                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
+                tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero()
             },
         }
     );
@@ -37,7 +37,7 @@ fn test_position_key_hash() {
         0,
         PositionKey {
             salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
-                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
+                tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero()
             },
         }
     );
@@ -46,7 +46,7 @@ fn test_position_key_hash() {
         1,
         PositionKey {
             salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
-                tick_lower: i129 { mag: 0, sign: false }, tick_upper: i129 { mag: 0, sign: false }
+                tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero()
             },
         }
     );

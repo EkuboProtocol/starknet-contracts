@@ -42,7 +42,7 @@ impl EqualTickBool of traits::PartialEq<(i129, bool)> {
 mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, TryInto, OptionTrait
+        set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable
     };
 
     use starknet::class_hash::Felt252TryIntoClassHash;
@@ -106,7 +106,7 @@ mod owner_tests {
 mod initialize_pool_tests {
     use super::{
         PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const,
-        i129OptionPartialEq
+        i129OptionPartialEq, Zeroable
     };
 
     #[test]
@@ -128,8 +128,8 @@ mod initialize_pool_tests {
         );
         assert(pool.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(pool.liquidity == 0, 'tick');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fggt0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fggt1');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fggt0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fggt1');
     }
 
     #[test]
@@ -144,7 +144,7 @@ mod initialize_pool_tests {
             tick_spacing: 1,
             extension: Zeroable::zero(),
         };
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod initialize_pool_tests {
             extension: Zeroable::zero(),
         };
 
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -175,7 +175,7 @@ mod initialize_pool_tests {
             tick_spacing: 1,
             extension: Zeroable::zero(),
         };
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -190,7 +190,7 @@ mod initialize_pool_tests {
             tick_spacing: 0,
             extension: Zeroable::zero(),
         };
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -204,7 +204,7 @@ mod initialize_pool_tests {
             tick_spacing: 1386294,
             extension: Zeroable::zero(),
         };
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -219,7 +219,7 @@ mod initialize_pool_tests {
             tick_spacing: 1386295,
             extension: Zeroable::zero(),
         };
-        core.initialize_pool(pool_key, i129 { mag: 0, sign: false });
+        core.initialize_pool(pool_key, Zeroable::zero());
     }
 
     #[test]
@@ -343,7 +343,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: 0, sign: false }, false),
+                ) == (Zeroable::zero(), false),
             'prev from 0'
         );
 
@@ -581,7 +581,7 @@ mod locks {
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool, Bounds
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool, Bounds, Zeroable
     };
 
     #[test]
@@ -784,7 +784,7 @@ mod locks {
             bounds: Bounds {
                 tick_lower: i129 { mag: 10, sign: true }, tick_upper: i129 { mag: 10, sign: false }, 
             },
-            liquidity_delta: i129 { mag: 0, sign: false },
+            liquidity_delta: Zeroable::zero(),
             recipient: contract_address_const::<42>()
         );
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
@@ -1011,8 +1011,8 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1045,8 +1045,8 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1077,8 +1077,8 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is max');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1109,8 +1109,8 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1141,8 +1141,8 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1194,7 +1194,7 @@ mod locks {
             pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
             'fgg0 == 0'
         );
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1246,7 +1246,7 @@ mod locks {
             pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
             'fgg0 == 0'
         );
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
 
@@ -1302,7 +1302,7 @@ mod locks {
             },
             'fgg0 != 0'
         );
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1357,7 +1357,7 @@ mod locks {
             },
             'fgg0 != 0'
         );
-        assert(pool.fee_growth_global_token1 == u256 { low: 0, high: 0 }, 'fgg1 == 0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1405,7 +1405,7 @@ mod locks {
             'price lower'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
             pool.fee_growth_global_token1 == u256 { low: 3402823669209384634633746074317, high: 0 },
             'fgg1 != 0'
@@ -1457,7 +1457,7 @@ mod locks {
             'price'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
             pool.fee_growth_global_token1 == u256 { low: 3402823669209384634633746074317, high: 0 },
             'fgg1 != 0'
@@ -1510,7 +1510,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
             pool.fee_growth_global_token1 == u256 {
                 low: 16980090109354829326822392910845233, high: 0
@@ -1565,7 +1565,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == u256 { low: 0, high: 0 }, 'fgg0 == 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
             pool.fee_growth_global_token1 == u256 {
                 low: 16912033635970641634129717989358880, high: 0

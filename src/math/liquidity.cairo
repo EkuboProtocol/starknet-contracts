@@ -8,6 +8,7 @@ use integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
     u256_safe_divmod, u128_overflowing_add
 };
+use zeroable::Zeroable;
 
 // Returns the token0, token1 delta owed for a given change in liquidity
 fn liquidity_delta_to_amount_delta(
@@ -20,7 +21,7 @@ fn liquidity_delta_to_amount_delta(
 
     // we always add one to the delta so that we never give more tokens than is owed or receive less than is needed
     // there may be a case where the addition overflows preventing withdrawal, but the user can always do partial withdrawals
-    let ZERO = i129 { mag: 0, sign: false };
+    let ZERO = Zeroable::zero();
     // if the pool is losing liquidity, we round the amount down
     let round_up = !liquidity_delta.sign;
 
@@ -126,7 +127,7 @@ fn max_liquidity(
     sqrt_ratio: u256, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount0: u128, amount1: u128
 ) -> u128 {
     assert(sqrt_ratio_lower < sqrt_ratio_upper, 'SQRT_RATIO_ORDER');
-    assert(sqrt_ratio_lower != u256 { low: 0, high: 0 }, 'SQRT_RATIO_ZERO');
+    assert(sqrt_ratio_lower.is_non_zero(), 'SQRT_RATIO_ZERO');
     if (sqrt_ratio <= sqrt_ratio_lower) {
         return max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount0);
     } else if (sqrt_ratio < sqrt_ratio_upper) {

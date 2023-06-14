@@ -1,3 +1,4 @@
+use zeroable::Zeroable;
 use ekubo::types::i129::i129;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
@@ -7,7 +8,7 @@ use ekubo::math::exp2::exp2;
 
 #[test]
 fn zero_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: 0, sign: false });
+    let sqrt_ratio = tick_to_sqrt_ratio(Zeroable::zero());
     assert(sqrt_ratio == u256 { high: 1, low: 0 }, 'sqrt_ratio is 1');
 }
 
@@ -187,7 +188,7 @@ fn test_internal_div_by_2_127() {
 #[available_gas(5000000)]
 fn sqrt_ratio_to_tick_zero() {
     let tick = sqrt_ratio_to_tick(u256 { high: 1, low: 0 });
-    assert(tick == i129 { mag: 0, sign: false }, 'tick is 0');
+    assert(tick.is_zero(), 'tick is 0');
 }
 
 #[test]
@@ -212,7 +213,7 @@ fn sqrt_ratio_to_tick_one_minus_one() {
     let tick = sqrt_ratio_to_tick(
         tick_to_sqrt_ratio(i129 { mag: 1, sign: false }) - u256 { low: 1, high: 0 }
     );
-    assert(tick == i129 { mag: 0, sign: false }, 'tick == expected_tick - 1');
+    assert(tick.is_zero(), 'tick == expected_tick - 1');
 }
 
 #[test]

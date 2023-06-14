@@ -473,7 +473,7 @@ mod Core {
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> (u256, u256) {
             let pool = self.pools.read(pool_key);
-            assert(pool.sqrt_ratio != u256 { low: 0, high: 0 }, 'NOT_INITIALIZED');
+            assert(pool.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
             if (pool.tick < bounds.tick_lower) {
                 let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));

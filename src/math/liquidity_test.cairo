@@ -5,6 +5,7 @@ use ekubo::math::liquidity::{
 use ekubo::math::ticks::{
     min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
 };
+use zeroable::Zeroable;
 use ekubo::types::i129::{i129};
 use debug::PrintTrait;
 
@@ -103,7 +104,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
     );
 
     assert(delta.amount0 == i129 { mag: 15000, sign: false }, 'amount0');
-    assert(delta.amount1 == i129 { mag: 0, sign: false }, 'amount1');
+    assert(delta.amount1.is_zero(), 'amount1');
 }
 
 #[test]
@@ -116,7 +117,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
         tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false })
     );
 
-    assert(delta.amount0 == i129 { mag: 0, sign: false }, 'amount0');
+    assert(delta.amount0.is_zero(), 'amount0');
     assert(delta.amount1 == i129 { mag: 15000, sign: false }, 'amount1');
 }
 
@@ -124,7 +125,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
     let delta = liquidity_delta_to_amount_delta(
-        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+        tick_to_sqrt_ratio(Zeroable::zero()),
         i129 { mag: 1000000000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: 10, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: 10, sign: false })
@@ -149,9 +150,7 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
 #[should_panic(expected: ('OVERFLOW_MLFT0', ))]
 fn test_max_liquidity_for_token0_max_lower_half_range() {
     let result = max_liquidity_for_token0(
-        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-        max_sqrt_ratio(),
-        0xffffffffffffffffffffffffffffffff
+        tick_to_sqrt_ratio(Zeroable::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
 }
 
@@ -159,9 +158,7 @@ fn test_max_liquidity_for_token0_max_lower_half_range() {
 #[available_gas(2000000)]
 fn test_max_liquidity_for_token0_max_upper_half_range() {
     let result = max_liquidity_for_token0(
-        min_sqrt_ratio(),
-        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-        0xffffffffffffffffffffffffffffffff
+        min_sqrt_ratio(), tick_to_sqrt_ratio(Zeroable::zero()), 0xffffffffffffffffffffffffffffffff
     );
     assert(result == 18446748437148339062, 'max at half range');
 }
@@ -180,9 +177,7 @@ fn test_max_liquidity_for_token1_max_at_full_range() {
 #[should_panic(expected: ('OVERFLOW_MLFT1', ))]
 fn test_max_liquidity_for_token1_max_lower_half_range() {
     let result = max_liquidity_for_token1(
-        min_sqrt_ratio(),
-        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-        0xffffffffffffffffffffffffffffffff
+        min_sqrt_ratio(), tick_to_sqrt_ratio(Zeroable::zero()), 0xffffffffffffffffffffffffffffffff
     );
 }
 
@@ -190,9 +185,7 @@ fn test_max_liquidity_for_token1_max_lower_half_range() {
 #[available_gas(2000000)]
 fn test_max_liquidity_for_token1_max_upper_half_range() {
     let result = max_liquidity_for_token1(
-        tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-        max_sqrt_ratio(),
-        0xffffffffffffffffffffffffffffffff
+        tick_to_sqrt_ratio(Zeroable::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
     assert(result == 18446748437148339062, 'max at half range');
 }

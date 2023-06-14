@@ -1,4 +1,5 @@
 use ekubo::math::muldiv::{div, muldiv};
+use zeroable::Zeroable;
 
 #[test]
 #[should_panic(expected: ('u256 is 0', ))]
@@ -24,7 +25,7 @@ fn test_muldiv_overflows_exactly() {
     let (result, overflow) = muldiv(
         u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 1, high: 0 }, false
     );
-    assert(result == u256 { low: 0, high: 0 }, 'result');
+    assert(result.is_zero(), 'result');
     assert(overflow, 'overflows');
 }
 
@@ -132,19 +133,10 @@ fn test_muldiv_up_overflow_with_rounding() {
 
 #[test]
 fn test_div() {
-    assert(
-        div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, false) == u256 { low: 0, high: 0 },
-        'floor(0/2)'
-    );
-    assert(
-        div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, true) == u256 { low: 0, high: 0 },
-        'ceil(0/2)'
-    );
+    assert(div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, false).is_zero(), 'floor(0/2)');
+    assert(div(u256 { low: 0, high: 0 }, u256 { low: 2, high: 0 }, true).is_zero(), 'ceil(0/2)');
 
-    assert(
-        div(u256 { low: 1, high: 0 }, u256 { low: 2, high: 0 }, false) == u256 { low: 0, high: 0 },
-        'floor(1/2)'
-    );
+    assert(div(u256 { low: 1, high: 0 }, u256 { low: 2, high: 0 }, false).is_zero(), 'floor(1/2)');
     assert(
         div(u256 { low: 1, high: 0 }, u256 { low: 2, high: 0 }, true) == u256 { low: 1, high: 0 },
         'ceil(1/2)'

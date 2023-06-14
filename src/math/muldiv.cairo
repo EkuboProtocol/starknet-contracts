@@ -1,5 +1,5 @@
-use option::Option;
-use option::OptionTrait;
+use option::{Option, OptionTrait};
+use zeroable::Zeroable;
 use integer::{
     u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_safe_divmod,
     u256_overflowing_add
@@ -8,7 +8,7 @@ use integer::{
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 fn div(x: u256, z: u256, round_up: bool) -> u256 {
     let (quotient, remainder) = u256_safe_divmod(x, u256_as_non_zero(z));
-    return if (!round_up | (remainder == u256 { low: 0, high: 0 })) {
+    return if (!round_up | (remainder.is_zero())) {
         quotient
     } else {
         quotient + u256 { low: 1, high: 0 }
@@ -27,7 +27,7 @@ fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> (u256, bool) {
 
     let overflows = (z <= u256 { low: numerator.limb2, high: numerator.limb3 });
 
-    return if (!round_up | (remainder == u256 { low: 0, high: 0 })) {
+    return if (!round_up | (remainder.is_zero())) {
         (u256 { low: quotient.limb0, high: quotient.limb1 }, overflows)
     } else {
         let (sum, sum_overflows) = u256_overflowing_add(

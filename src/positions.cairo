@@ -495,7 +495,7 @@ mod Positions {
         ) -> u256 {
             let dispatcher = IERC20Dispatcher { contract_address: token };
             let balance = dispatcher.balance_of(get_contract_address());
-            if (balance != u256 { low: 0, high: 0 }) {
+            if (balance.is_non_zero()) {
                 dispatcher.transfer(recipient, balance);
             }
             balance

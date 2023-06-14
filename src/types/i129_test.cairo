@@ -1,14 +1,31 @@
 use ekubo::types::i129::{i129, Felt252IntoI129, U128IntoI129};
 use traits::{Into, TryInto};
+use zeroable::Zeroable;
 use option::{Option, OptionTrait};
 
 #[test]
+fn test_zeroable() {
+    assert(Zeroable::<i129>::zero() == i129 { mag: 0, sign: false }, 'zero()');
+    assert(Zeroable::<i129>::zero().is_zero(), '0.is_zero()');
+    assert(!Zeroable::<i129>::zero().is_non_zero(), '0.is_non_zero()');
+    assert(i129 { mag: 0, sign: true }.is_zero(), '-0.is_zero()');
+    assert(!i129 { mag: 0, sign: true }.is_non_zero(), '-0.is_non_zero()');
+
+    assert(!i129 { mag: 1, sign: true }.is_zero(), '-1.is_zero()');
+    assert(i129 { mag: 1, sign: true }.is_non_zero(), '-1.is_non_zero()');
+
+    assert(!i129 { mag: 1, sign: false }.is_zero(), '1.is_zero()');
+    assert(i129 { mag: 1, sign: false }.is_non_zero(), '1.is_non_zero()');
+}
+
+
+#[test]
 fn test_into_felt252_0() {
-    let x: felt252 = i129 { mag: 0, sign: false }.into();
+    let x: felt252 = Zeroable::<felt252>::zero().into();
     assert(x == 0, 'x');
 
     let y: i129 = x.into();
-    assert(y == i129 { mag: 0, sign: false }, 'back');
+    assert(y.is_zero(), 'back');
 }
 
 #[test]
@@ -55,7 +72,7 @@ fn test_into_felt252_negative_max() {
 
 #[test]
 fn test_try_into_u128() {
-    assert(i129 { mag: 0, sign: false }.try_into().expect('') == 0, '0');
+    assert(Zeroable::<i129>::zero().try_into().expect('') == 0, '0');
     assert(i129 { mag: 123, sign: false }.try_into().expect('') == 123, '123');
     assert(
         i129 {
@@ -74,10 +91,10 @@ fn test_try_into_u128() {
 
 #[test]
 fn test_u128_into_i129() {
-    assert(0_u128.into() == i129 { mag: 0, sign: false }, '0');
-    assert(123_u128.into() == i129 { mag: 123, sign: false }, '123');
+    assert(U128IntoI129::into(0_u128).is_zero(), '0');
+    assert(U128IntoI129::into(123_u128) == i129 { mag: 123, sign: false }, '123');
     assert(
-        0xffffffffffffffffffffffffffffffff_u128.into() == i129 {
+        U128IntoI129::into(0xffffffffffffffffffffffffffffffff_u128) == i129 {
             mag: 0xffffffffffffffffffffffffffffffff, sign: false
         },
         'max'
@@ -113,38 +130,38 @@ fn test_div_i129() {
 
 #[test]
 fn test_gt() {
-    assert((i129 { mag: 0, sign: false } > i129 { mag: 0, sign: true }) == false, '0 > -0');
+    assert((Zeroable::zero() > i129 { mag: 0, sign: true }) == false, '0 > -0');
     assert((i129 { mag: 1, sign: false } > i129 { mag: 0, sign: true }) == true, '1 > -0');
     assert((i129 { mag: 1, sign: true } > i129 { mag: 0, sign: true }) == false, '-1 > -0');
-    assert((i129 { mag: 1, sign: true } > i129 { mag: 0, sign: false }) == false, '-1 > 0');
+    assert((i129 { mag: 1, sign: true } > Zeroable::zero()) == false, '-1 > 0');
     assert((i129 { mag: 1, sign: false } > i129 { mag: 1, sign: false }) == false, '1 > 1');
 }
 
 #[test]
 fn test_lt() {
-    assert((i129 { mag: 0, sign: false } < i129 { mag: 0, sign: true }) == false, '0 < -0');
-    assert((i129 { mag: 0, sign: false } < i129 { mag: 1, sign: true }) == false, '0 < -1');
+    assert((Zeroable::zero() < i129 { mag: 0, sign: true }) == false, '0 < -0');
+    assert((Zeroable::zero() < i129 { mag: 1, sign: true }) == false, '0 < -1');
     assert((i129 { mag: 1, sign: false } < i129 { mag: 1, sign: false }) == false, '1 < 1');
 
-    assert((i129 { mag: 1, sign: true } < i129 { mag: 0, sign: false }) == true, '-1 < 0');
+    assert((i129 { mag: 1, sign: true } < Zeroable::zero()) == true, '-1 < 0');
     assert((i129 { mag: 1, sign: true } < i129 { mag: 0, sign: true }) == true, '-1 < -0');
-    assert((i129 { mag: 0, sign: false } < i129 { mag: 1, sign: false }) == true, '0 < 1');
+    assert((Zeroable::zero() < i129 { mag: 1, sign: false }) == true, '0 < 1');
     assert((i129 { mag: 1, sign: false } < i129 { mag: 2, sign: false }) == true, '1 < 2');
 }
 
 #[test]
 fn test_gte() {
-    assert((i129 { mag: 0, sign: false } >= i129 { mag: 0, sign: true }) == true, '0 >= -0');
+    assert((Zeroable::zero() >= i129 { mag: 0, sign: true }) == true, '0 >= -0');
     assert((i129 { mag: 1, sign: false } >= i129 { mag: 0, sign: true }) == true, '1 >= -0');
     assert((i129 { mag: 1, sign: true } >= i129 { mag: 0, sign: true }) == false, '-1 >= -0');
-    assert((i129 { mag: 1, sign: true } >= i129 { mag: 0, sign: false }) == false, '-1 >= 0');
-    assert((i129 { mag: 0, sign: false } >= i129 { mag: 0, sign: false }) == true, '0 >= 0');
+    assert((i129 { mag: 1, sign: true } >= Zeroable::zero()) == false, '-1 >= 0');
+    assert((Zeroable::<i129>::zero() >= Zeroable::zero()) == true, '0 >= 0');
 }
 
 #[test]
 fn test_eq() {
-    assert((i129 { mag: 0, sign: false } == i129 { mag: 0, sign: true }) == true, '0 == -0');
-    assert((i129 { mag: 0, sign: false } == i129 { mag: 1, sign: true }) == false, '0 != -1');
+    assert((Zeroable::zero() == i129 { mag: 0, sign: true }) == true, '0 == -0');
+    assert((Zeroable::zero() == i129 { mag: 1, sign: true }) == false, '0 != -1');
     assert((i129 { mag: 1, sign: false } == i129 { mag: 1, sign: true }) == false, '1 != -1');
     assert((i129 { mag: 1, sign: true } == i129 { mag: 1, sign: true }) == true, '-1 = -1');
     assert((i129 { mag: 1, sign: false } == i129 { mag: 1, sign: false }) == true, '1 = 1');
@@ -152,11 +169,11 @@ fn test_eq() {
 
 #[test]
 fn test_lte() {
-    assert((i129 { mag: 0, sign: false } <= i129 { mag: 0, sign: true }) == true, '0 <= -0');
+    assert((Zeroable::zero() <= i129 { mag: 0, sign: true }) == true, '0 <= -0');
     assert((i129 { mag: 1, sign: false } <= i129 { mag: 0, sign: true }) == false, '1 <= -0');
     assert((i129 { mag: 1, sign: true } <= i129 { mag: 0, sign: true }) == true, '-1 <= -0');
-    assert((i129 { mag: 1, sign: true } <= i129 { mag: 0, sign: false }) == true, '-1 <= 0');
-    assert((i129 { mag: 0, sign: false } <= i129 { mag: 0, sign: false }) == true, '0 <= 0');
+    assert((i129 { mag: 1, sign: true } <= Zeroable::zero()) == true, '-1 <= 0');
+    assert((Zeroable::<i129>::zero() <= Zeroable::zero()) == true, '0 <= 0');
 }
 
 #[test]

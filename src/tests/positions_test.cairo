@@ -31,7 +31,7 @@ fn test_maybe_initialize_pool_twice() {
         tick_spacing: 1,
         extension: Zeroable::zero(),
     };
-    positions.maybe_initialize_pool(pool_key, i129 { mag: 0, sign: false });
+    positions.maybe_initialize_pool(pool_key, Zeroable::zero());
     positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
 
     assert(core.get_pool(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
@@ -157,7 +157,7 @@ fn test_deposit_liquidity_full_range() {
         owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
-        initial_tick: i129 { mag: 0, sign: false },
+        initial_tick: Zeroable::zero(),
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);
@@ -183,7 +183,7 @@ fn test_deposit_liquidity_concentrated() {
         owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
-        initial_tick: i129 { mag: 0, sign: false },
+        initial_tick: Zeroable::zero(),
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);

@@ -1,5 +1,6 @@
 use ekubo::math::swap::{swap_result, is_price_increasing, SwapResult};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use zeroable::Zeroable;
 use ekubo::types::i129::i129;
 use ekubo::math::exp2::exp2;
 use debug::PrintTrait;
@@ -27,12 +28,12 @@ fn test_swap_zero_amount_token0() {
         sqrt_ratio: u256 { high: 1, low: 0 },
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 0, low: 0 },
-        amount: i129 { mag: 0, sign: false },
+        amount: Zeroable::zero(),
         is_token1: false,
         fee: 0,
     );
 
-    assert(result.consumed_amount == i129 { mag: 0, sign: false }, 'consumed_amount');
+    assert(result.consumed_amount.is_zero(), 'consumed_amount');
     assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
     assert(result.calculated_amount == 0, 'calculated_amount');
     assert(result.fee_amount == 0, 'fee');
@@ -44,12 +45,12 @@ fn test_swap_zero_amount_token1() {
         sqrt_ratio: u256 { high: 1, low: 0 },
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 2, low: 0 },
-        amount: i129 { mag: 0, sign: false },
+        amount: Zeroable::zero(),
         is_token1: true,
         fee: 0,
     );
 
-    assert(result.consumed_amount == i129 { mag: 0, sign: false }, 'consumed_amount');
+    assert(result.consumed_amount.is_zero(), 'consumed_amount');
     assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
     assert(result.calculated_amount == 0, 'calculated_amount');
     assert(result.fee_amount == 0, 'fee');
@@ -66,7 +67,7 @@ fn test_swap_ratio_equal_limit_token0() {
         fee: 0,
     );
 
-    assert(result.consumed_amount == i129 { mag: 0, sign: false }, 'consumed_amount');
+    assert(result.consumed_amount.is_zero(), 'consumed_amount');
     assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
     assert(result.calculated_amount == 0, 'calculated_amount');
     assert(result.fee_amount == 0, 'fee');
@@ -83,7 +84,7 @@ fn test_swap_ratio_equal_limit_token1() {
         fee: 0,
     );
 
-    assert(result.consumed_amount == i129 { mag: 0, sign: false }, 'consumed_amount');
+    assert(result.consumed_amount.is_zero(), 'consumed_amount');
     assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
     assert(result.calculated_amount == 0, 'calculated_amount');
     assert(result.fee_amount == 0, 'fee');

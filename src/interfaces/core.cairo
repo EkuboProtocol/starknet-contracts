@@ -5,6 +5,7 @@ use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::delta::{Delta};
 
+// This interface must be implemented by any contract that intends to call ICore#lock
 #[starknet::interface]
 trait ILocker<TStorage> {
     // This function is called on the caller of lock, i.e. a callback
@@ -12,10 +13,9 @@ trait ILocker<TStorage> {
     fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
 }
 
-// Passed as an argument to update a position. The owner of the position is implicit in the locker.
-// tick_lower is the lower bound of the position's price range
-// tick_upper is the upper bound of the position's price range
-// liquidity_delta is how the position's liquidity should be modified.
+// Passed as an argument to update a position. The owner of the position is implicitly the locker.
+// bounds is the lower and upper price range of the position, expressed in terms of log base sqrt 1.000001 of token1/token0.
+// liquidity_delta is how the position's liquidity should be updated.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
     salt: felt252,
@@ -26,6 +26,7 @@ struct UpdatePositionParameters {
 // The amount is the amount of token0 or token1 to swap, depending on is_token1. A negative amount implies an exact-output swap.
 // is_token1 Indicates whether the amount is in terms of token0 or token1.
 // sqrt_ratio_limit is a limit on how far the price can move as part of the swap. Note this must always be specified, and must be between the maximum and minimum sqrt ratio.
+// skip_ahead is an optimization parameter for large swaps across many uninitialized ticks to reduce the number of swap iterations that must be performed
 #[derive(Copy, Drop, Serde)]
 struct SwapParameters {
     amount: i129,
@@ -34,6 +35,7 @@ struct SwapParameters {
     skip_ahead: u128,
 }
 
+// Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
 #[derive(Copy, Drop, Serde)]
 struct GetPositionResult {
     position: Position,
@@ -153,15 +155,16 @@ trait ICore<TStorage> {
     fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: felt252, bounds: Bounds) -> Delta;
 
     // Make a swap against a pool.
-    // Note you must call this within a lock callback
+    // You must call this within a lock callback.
     fn swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> Delta;
 
-    // Return the next initialized tick from the given tick
+    // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
         ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
-    // Return the previous initialized tick from the given tick
+    // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
+    // Note this can also be used to check if the tick is initialized
     fn prev_initialized_tick(
         ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);

@@ -1,13 +1,11 @@
 use ekubo::types::i129::i129;
 use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
 use starknet::{contract_address_const};
+use zeroable::Zeroable;
 
 #[test]
 fn test_unsafe_sub() {
-    assert(
-        unsafe_sub(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }) == u256 { low: 0, high: 0 },
-        'regular sub'
-    );
+    assert(unsafe_sub(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }).is_zero(), 'regular sub');
 
     assert(
         unsafe_sub(u256 { low: 0, high: 0 }, u256 { low: 0, high: 1 }) == u256 {
@@ -38,7 +36,7 @@ fn test_add_delta_no_overflow() {
     );
     assert(
         add_delta(
-            0xffffffffffffffffffffffffffffffff, i129 { mag: 0, sign: false }
+            0xffffffffffffffffffffffffffffffff, Zeroable::zero()
         ) == 0xffffffffffffffffffffffffffffffff,
         'max+0'
     );
