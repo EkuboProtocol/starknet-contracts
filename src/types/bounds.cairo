@@ -39,7 +39,8 @@ impl BoundsIntoFelt252 of Into<Bounds, felt252> {
 
 // Returns the max usable bounds given the tick spacing
 fn max_bounds(tick_spacing: u128) -> Bounds {
-    assert(tick_spacing != 0, 'TICK_SPACING_MAX_BOUNDS');
+    assert(tick_spacing != 0, 'MAX_BOUNDS_TICK_SPACING_ZERO');
+    assert(tick_spacing <= tick_constants::MAX_TICK_MAGNITUDE, 'MAX_BOUNDS_TICK_SPACING_LARGE');
     let mag = (tick_constants::MAX_TICK_MAGNITUDE / tick_spacing) * tick_spacing;
     Bounds { tick_lower: i129 { mag, sign: true }, tick_upper: i129 { mag, sign: false } }
 }
