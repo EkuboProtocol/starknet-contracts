@@ -42,37 +42,3 @@ struct Tick {
     fee_growth_outside_token0: u256,
     fee_growth_outside_token1: u256,
 }
-
-impl PoolDefault of Default<Pool> {
-    fn default() -> Pool {
-        Pool {
-            sqrt_ratio: Default::default(),
-            tick: Default::default(),
-            liquidity: Default::default(),
-            fee_growth_global_token0: Default::default(),
-            fee_growth_global_token1: Default::default(),
-        }
-    }
-}
-
-impl PositionDefault of Default<Position> {
-    fn default() -> Position {
-        Position {
-            liquidity: Default::default(),
-            fee_growth_inside_last_token0: Default::default(),
-            fee_growth_inside_last_token1: Default::default(),
-        }
-    }
-}
-
-impl TickDefault of Default<Tick> {
-    fn default() -> Tick {
-        Tick {
-            liquidity_delta: Default::default(),
-            liquidity_net: Default::default(),
-            fee_growth_outside_token0: Default::default(),
-            fee_growth_outside_token1: Default::default(),
-        }
-    }
-}
-

@@ -217,11 +217,11 @@ mod Core {
             if (position.liquidity.is_zero()) {
                 GetPositionResult {
                     position: position,
-                    fees0: Default::default(),
-                    fees1: Default::default(),
+                    fees0: Zeroable::zero(),
+                    fees1: Zeroable::zero(),
                     // we can return 0 because it's irrelevant for an empty position
-                    fee_growth_inside_token0: Default::default(),
-                    fee_growth_inside_token1: Default::default()
+                    fee_growth_inside_token0: Zeroable::zero(),
+                    fee_growth_inside_token1: Zeroable::zero()
                 }
             } else {
                 let (fee_growth_inside_token0, fee_growth_inside_token1) = self
@@ -372,13 +372,13 @@ mod Core {
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0 != Zeroable::zero(), 'TOKEN_ZERO');
             assert(
-                (pool_key.tick_spacing != Default::default())
+                (pool_key.tick_spacing != Zeroable::zero())
                     & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
                 'TICK_SPACING'
             );
 
             let pool = self.pools.read(pool_key);
-            assert(pool.sqrt_ratio == Default::default(), 'ALREADY_INITIALIZED');
+            assert(pool.sqrt_ratio == Zeroable::zero(), 'ALREADY_INITIALIZED');
 
             if (pool_key.extension.is_non_zero()) {
                 IExtensionDispatcher {
@@ -393,9 +393,9 @@ mod Core {
                     Pool {
                         sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
                         tick: initial_tick,
-                        liquidity: Default::default(),
-                        fee_growth_global_token0: Default::default(),
-                        fee_growth_global_token1: Default::default(),
+                        liquidity: Zeroable::zero(),
+                        fee_growth_global_token0: Zeroable::zero(),
+                        fee_growth_global_token1: Zeroable::zero(),
                     }
                 );
 
@@ -534,7 +534,7 @@ mod Core {
             let pool = self.pools.read(pool_key);
 
             // pool must be initialized
-            assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+            assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
                 tick_to_sqrt_ratio(params.bounds.tick_lower),
@@ -594,7 +594,7 @@ mod Core {
                     (get_position_result.fees0.is_zero()) & (get_position_result.fees0.is_zero()),
                     'MUST_COLLECT_FEES'
                 );
-                (Default::default(), Default::default())
+                (Zeroable::zero(), Zeroable::zero())
             } else {
                 (
                     unsafe_sub(
@@ -703,7 +703,7 @@ mod Core {
             let pool = self.pools.read(pool_key);
 
             // pool must be initialized
-            assert(pool.sqrt_ratio != Default::default(), 'NOT_INITIALIZED');
+            assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             if (pool_key.extension.is_non_zero()) {
                 params = IExtensionDispatcher {
@@ -725,7 +725,7 @@ mod Core {
             let mut amount_remaining = params.amount;
             let mut sqrt_ratio = pool.sqrt_ratio;
             let mut liquidity = pool.liquidity;
-            let mut calculated_amount: u128 = Default::default();
+            let mut calculated_amount: u128 = Zeroable::zero();
             let mut fee_growth_global = if params.is_token1 {
                 pool.fee_growth_global_token1
             } else {
@@ -733,7 +733,7 @@ mod Core {
             };
 
             loop {
-                if (amount_remaining == Default::default()) {
+                if (amount_remaining == Zeroable::zero()) {
                     break ();
                 }
 

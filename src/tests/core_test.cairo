@@ -255,7 +255,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -275,7 +275,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -297,7 +297,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -311,7 +311,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -334,7 +334,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -342,7 +342,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
                 ) == (i129 { mag: 0, sign: false }, false),
             'prev from 0'
         );
@@ -351,7 +351,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 2
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2
                 ) == (i129 { mag: 2547200, sign: true }, false),
             'prev from 0, skip 1'
         );
@@ -360,7 +360,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
                 ) == (i129 { mag: 6368000, sign: true }, false),
             'prev from 0, skip 5'
         );
@@ -369,7 +369,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
                 ) == (i129 { mag: 1263650, sign: false }, false),
             'next from 0'
         );
@@ -378,7 +378,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 1
                 ) == (i129 { mag: 2537250, sign: false }, false),
             'next from 0, skip 1'
         );
@@ -387,7 +387,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Default::default(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
                 ) == (i129 { mag: 7631650, sign: false }, false),
             'next from 0, skip 5'
         );
@@ -400,7 +400,7 @@ mod initialized_ticks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -591,7 +591,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
         setup.locker.call(Action::AssertLockerId(0));
@@ -604,7 +604,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
         setup.locker.call(Action::Relock((0, 5)));
@@ -622,7 +622,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
         setup.locker.call(Action::AssertLockerId(1));
@@ -640,7 +640,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
         setup.locker.call(Action::Relock((1, 5)));
@@ -653,7 +653,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
         update_position(
@@ -665,7 +665,7 @@ mod locks {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 }
             },
-            liquidity_delta: Default::default(),
+            liquidity_delta: Zeroable::zero(),
             recipient: contract_address_const::<42>()
         );
         assert(
@@ -706,7 +706,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -740,7 +740,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -775,7 +775,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -787,8 +787,8 @@ mod locks {
             liquidity_delta: i129 { mag: 0, sign: false },
             recipient: contract_address_const::<42>()
         );
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1');
     }
 
 
@@ -799,7 +799,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -826,7 +826,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -857,7 +857,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -886,7 +886,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -939,7 +939,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -992,21 +992,21 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
         let delta = swap(
             setup,
-            amount: Default::default(), // input 0 token0, price decreasing
+            amount: Zeroable::zero(), // input 0 token0, price decreasing
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
@@ -1022,7 +1022,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1039,8 +1039,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
@@ -1056,7 +1056,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1071,8 +1071,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is max');
@@ -1088,7 +1088,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1103,8 +1103,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
@@ -1120,7 +1120,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1135,8 +1135,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Default::default(), 'amount0');
-        assert(delta.amount1 == Default::default(), 'amount1_delta');
+        assert(delta.amount0 == Zeroable::zero(), 'amount0');
+        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
@@ -1152,7 +1152,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1204,7 +1204,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1257,7 +1257,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1312,7 +1312,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1367,7 +1367,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1419,7 +1419,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1471,7 +1471,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 
@@ -1526,7 +1526,7 @@ mod locks {
             owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Default::default(),
+            initial_tick: Zeroable::zero(),
             extension: Zeroable::zero(),
         );
 

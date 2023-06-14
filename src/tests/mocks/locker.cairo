@@ -61,7 +61,7 @@ mod CoreLocker {
             delta: i129,
             recipient: ContractAddress
         ) {
-            if (delta > Default::default()) {
+            if (delta > Zeroable::zero()) {
                 // transfer the token from self (assumes we have the balance)
                 IERC20Dispatcher {
                     contract_address: token
@@ -71,7 +71,7 @@ mod CoreLocker {
                     ICoreDispatcher { contract_address: core }.deposit(token) == delta.mag,
                     'DEPOSIT_FAILED'
                 );
-            } else if (delta < Default::default()) {
+            } else if (delta < Zeroable::zero()) {
                 // withdraw to recipient
                 ICoreDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
             }
@@ -134,7 +134,7 @@ mod CoreLocker {
                         assert(prev_state.nonzero_delta_count == 0, 'no deltas');
                     }
 
-                    if (relock_count != Default::default()) {
+                    if (relock_count != Zeroable::zero()) {
                         // relock
                         ICoreLockerDispatcher {
                             contract_address: get_contract_address()
@@ -162,12 +162,12 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0 == Default::default() {
+                            .nonzero_delta_count == ((if delta.amount0 == Zeroable::zero() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1 == Default::default() {
+                                + (if delta.amount1 == Zeroable::zero() {
                                     0
                                 } else {
                                     1
@@ -180,7 +180,7 @@ mod CoreLocker {
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1 == Default::default() {
+                            .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
                                 0
                             } else {
                                 1
@@ -213,12 +213,12 @@ mod CoreLocker {
 
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0 == Default::default() {
+                            .nonzero_delta_count == ((if delta.amount0 == Zeroable::zero() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1 == Default::default() {
+                                + (if delta.amount1 == Zeroable::zero() {
                                     0
                                 } else {
                                     1
@@ -231,7 +231,7 @@ mod CoreLocker {
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1 == Default::default() {
+                            .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
                                 0
                             } else {
                                 1

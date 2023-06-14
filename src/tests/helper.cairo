@@ -210,11 +210,11 @@ fn update_position(
         ) {
         ActionResult::AssertLockerId(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
         ActionResult::Relock(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
         ActionResult::UpdatePosition(delta) => {
             let after: Balances = get_balances(setup, recipient);
@@ -223,7 +223,7 @@ fn update_position(
         },
         ActionResult::Swap(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
     }
 }
@@ -251,15 +251,15 @@ fn swap(
         ) {
         ActionResult::AssertLockerId(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
         ActionResult::Relock(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
         ActionResult::UpdatePosition(_) => {
             assert(false, 'unexpected');
-            Default::default()
+            Zeroable::zero()
         },
         ActionResult::Swap(delta) => {
             let after: Balances = get_balances(setup, recipient);

@@ -21,18 +21,6 @@ struct PoolKey {
     extension: ContractAddress,
 }
 
-impl DefaultPoolKey of Default<PoolKey> {
-    fn default() -> PoolKey {
-        PoolKey {
-            token0: Zeroable::zero(),
-            token1: Zeroable::zero(),
-            fee: 0,
-            tick_spacing: 0,
-            extension: Zeroable::zero()
-        }
-    }
-}
-
 impl PoolKeyHash of LegacyHash<PoolKey> {
     fn hash(state: felt252, value: PoolKey) -> felt252 {
         pedersen(

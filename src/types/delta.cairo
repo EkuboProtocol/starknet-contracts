@@ -1,4 +1,5 @@
 use ekubo::types::i129::{i129};
+use zeroable::Zeroable;
 use debug::PrintTrait;
 
 impl DeltaPrint of PrintTrait<Delta> {
@@ -17,15 +18,21 @@ struct Delta {
     amount1: i129,
 }
 
-impl DefaultDelta of Default<Delta> {
-    fn default() -> Delta {
-        Delta { amount0: Default::default(), amount1: Default::default(),  }
+impl ZeroableDelta of Zeroable<Delta> {
+    fn zero() -> Delta {
+        Delta { amount0: Zeroable::zero(), amount1: Zeroable::zero() }
+    }
+    fn is_zero(self: Delta) -> bool {
+        self.amount0.is_zero() & self.amount1.is_zero()
+    }
+    fn is_non_zero(self: Delta) -> bool {
+        self.amount0.is_non_zero() | self.amount1.is_non_zero()
     }
 }
 
-impl AddDelta of Add<Delta> {
+impl DeltaAdd of Add<Delta> {
     fn add(lhs: Delta, rhs: Delta) -> Delta {
-        Delta { amount0: lhs.amount0 + rhs.amount0, amount1: lhs.amount1 + rhs.amount1,  }
+        Delta { amount0: lhs.amount0 + rhs.amount0, amount1: lhs.amount1 + rhs.amount1 }
     }
 }
 

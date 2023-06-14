@@ -14,8 +14,8 @@ fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
 ) -> Delta {
     // handle the 0 case so we do not return 1 for 0 liquidity delta
-    if (liquidity_delta == Default::default()) {
-        return Default::default();
+    if (liquidity_delta == Zeroable::zero()) {
+        return Zeroable::zero();
     }
 
     // we always add one to the delta so that we never give more tokens than is owed or receive less than is needed

@@ -27,7 +27,7 @@ fn test_maybe_initialize_pool_twice() {
     let pool_key = PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
-        fee: Default::default(),
+        fee: Zeroable::zero(),
         tick_spacing: 1,
         extension: Zeroable::zero(),
     };
@@ -70,11 +70,11 @@ fn test_nft_approve_succeeds_after_mint() {
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
-                fee: Default::default(),
-                tick_spacing: Default::default(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
         );
 
     IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
@@ -99,11 +99,11 @@ fn test_nft_approve_only_owner_can_approve() {
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
-                fee: Default::default(),
-                tick_spacing: Default::default(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<2>());
@@ -120,7 +120,7 @@ fn test_nft_balance_of() {
     let recipient = contract_address_const::<2>();
     assert(
         IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-            .balance_of(recipient) == Default::default(),
+            .balance_of(recipient) == Zeroable::zero(),
         'balance check'
     );
     // note we do not check the validity of the position key, it only comes into play when trying to add liquidity fails
@@ -131,11 +131,11 @@ fn test_nft_balance_of() {
                 pool_key: PoolKey {
                     token0: Zeroable::zero(),
                     token1: Zeroable::zero(),
-                    fee: Default::default(),
-                    tick_spacing: Default::default(),
+                    fee: Zeroable::zero(),
+                    tick_spacing: Zeroable::zero(),
                     extension: Zeroable::zero(),
                 },
-                bounds: Bounds { tick_lower: Default::default(), tick_upper: Default::default(),  }
+                bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
             ) == 1,
         'token id'
     );
@@ -201,16 +201,16 @@ fn test_deposit_liquidity_concentrated() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
-    assert(balance0 == Default::default(), 'balance0');
-    assert(balance1 == Default::default(), 'balance1');
+    assert(balance0 == Zeroable::zero(), 'balance0');
+    assert(balance1 == Zeroable::zero(), 'balance1');
 
     assert(liquidity == 200050104166, 'liquidity');
 }
@@ -246,12 +246,12 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
     assert(balance0 == u256 { low: 66674999, high: 0 }, 'balance0');
-    assert(balance1 == Default::default(), 'balance1');
+    assert(balance1 == Zeroable::zero(), 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
 }
 
@@ -282,7 +282,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
@@ -290,7 +290,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
         'balance1 transfer'
     );
 
-    assert(balance0 == Default::default(), 'balance0');
+    assert(balance0 == Zeroable::zero(), 'balance0');
     assert(balance1 == u256 { low: 66674999, high: 0 }, 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
 }
@@ -326,12 +326,12 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
     assert(balance0 == u256 { low: 100000000, high: 0 }, 'balance0');
-    assert(balance1 == Default::default(), 'balance1');
+    assert(balance1 == Zeroable::zero(), 'balance1');
     assert(liquidity == 100000045833, 'liquidity');
 }
 
@@ -362,7 +362,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Default::default(),
+        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
@@ -370,7 +370,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
         'balance1 transfer'
     );
 
-    assert(balance0 == Default::default(), 'balance0');
+    assert(balance0 == Zeroable::zero(), 'balance0');
     assert(balance1 == u256 { low: 100000000, high: 0 }, 'balance1');
     assert(liquidity == 100000045833, 'liquidity');
 }
@@ -384,7 +384,7 @@ fn test_deposit_then_withdraw_with_fees() {
         owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
-        initial_tick: Default::default(),
+        initial_tick: Zeroable::zero(),
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);
@@ -431,7 +431,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
         owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
-        initial_tick: Default::default(),
+        initial_tick: Zeroable::zero(),
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);

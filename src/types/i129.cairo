@@ -7,6 +7,7 @@ use starknet::storage_access::{
 };
 use hash::LegacyHash;
 use integer::{u128_safe_divmod, u128_as_non_zero};
+use zeroable::Zeroable;
 
 // Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128 bits are magnitude
 // Note the sign can be true while mag is 0, meaning 1 value is wasted 
@@ -23,9 +24,17 @@ fn i129_new(mag: u128, sign: bool) -> i129 {
     i129 { mag, sign: sign & (mag != 0) }
 }
 
-impl i129Default of Default<i129> {
-    fn default() -> i129 {
+impl i129Zeroable of Zeroable<i129> {
+    fn zero() -> i129 {
         i129_new(0, false)
+    }
+
+    fn is_zero(self: i129) -> bool {
+        self.mag == 0
+    }
+
+    fn is_non_zero(self: i129) -> bool {
+        self.mag != 0
     }
 }
 

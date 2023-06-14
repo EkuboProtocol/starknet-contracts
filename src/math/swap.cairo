@@ -35,7 +35,7 @@ fn swap_result(
     // note sqrt_ratio_limit is the sqrt_ratio_next in both cases
     if ((liquidity == 0) | (sqrt_ratio == sqrt_ratio_limit)) {
         return SwapResult {
-            consumed_amount: Default::default(),
+            consumed_amount: Zeroable::zero(),
             calculated_amount: 0,
             fee_amount: 0,
             sqrt_ratio_next: sqrt_ratio_limit
@@ -45,7 +45,7 @@ fn swap_result(
     // no amount traded means no-op, price doesn't move
     if (amount.mag == 0) {
         return SwapResult {
-            consumed_amount: Default::default(),
+            consumed_amount: Zeroable::zero(),
             calculated_amount: 0,
             fee_amount: 0,
             sqrt_ratio_next: sqrt_ratio

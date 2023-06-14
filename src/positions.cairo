@@ -228,7 +228,7 @@ mod Positions {
             let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('DESERIALIZE_CALLBACK_FAILED');
 
-            let mut delta: Delta = Default::default();
+            let mut delta: Delta = Zeroable::zero();
             if callback_data.collect_fees {
                 delta += ICoreDispatcher {
                     contract_address: caller
@@ -240,7 +240,7 @@ mod Positions {
                     );
             }
 
-            if callback_data.liquidity_delta != Default::default() {
+            if callback_data.liquidity_delta != Zeroable::zero() {
                 let update = ICoreDispatcher {
                     contract_address: caller
                 }
@@ -319,7 +319,7 @@ mod Positions {
                 .write(
                     id,
                     TokenInfo {
-                        key_hash: hash_key(pool_key, bounds), liquidity: Default::default(), 
+                        key_hash: hash_key(pool_key, bounds), liquidity: Zeroable::zero(), 
                     }
                 );
 
@@ -350,7 +350,7 @@ mod Positions {
             self.balances.write(owner, self.balances.read(owner) - 1);
             self
                 .token_info
-                .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Default::default() });
+                .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
 
             self.emit(Event::Transfer(Transfer { from: owner, to: Zeroable::zero(), token_id }));
         }
@@ -504,7 +504,7 @@ mod Positions {
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             let core_dispatcher = ICoreDispatcher { contract_address: self.core.read() };
             let pool = core_dispatcher.get_pool(pool_key);
-            if (pool.sqrt_ratio == Default::default()) {
+            if (pool.sqrt_ratio == Zeroable::zero()) {
                 core_dispatcher.initialize_pool(pool_key, initial_tick);
             }
         }

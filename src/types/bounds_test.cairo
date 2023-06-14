@@ -16,14 +16,14 @@ fn test_check_valid_fails_default_123() {
 #[test]
 #[should_panic(expected: ('BOUNDS_ORDER', ))]
 fn test_check_valid_fails_zero() {
-    Bounds { tick_lower: Default::default(), tick_upper: Default::default() }.check_valid(123);
+    Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero() }.check_valid(123);
 }
 
 #[test]
 #[should_panic(expected: ('BOUNDS_MAX', ))]
 fn test_check_valid_fails_exceed_max_tick() {
     Bounds {
-        tick_lower: Default::default(), tick_upper: max_tick() + i129 { mag: 1, sign: false }
+        tick_lower: Zeroable::zero(), tick_upper: max_tick() + i129 { mag: 1, sign: false }
     }.check_valid(1);
 }
 
@@ -32,7 +32,7 @@ fn test_check_valid_fails_exceed_max_tick() {
 #[should_panic(expected: ('BOUNDS_MIN', ))]
 fn test_check_valid_fails_below_min_tick() {
     Bounds {
-        tick_lower: min_tick() - i129 { mag: 1, sign: false }, tick_upper: Default::default()
+        tick_lower: min_tick() - i129 { mag: 1, sign: false }, tick_upper: Zeroable::zero()
     }.check_valid(1);
 }
 
