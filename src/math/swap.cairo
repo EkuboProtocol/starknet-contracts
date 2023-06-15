@@ -5,6 +5,21 @@ use ekubo::math::delta::{
 use ekubo::math::fee::{compute_fee, amount_with_fee};
 use traits::Into;
 
+use debug::PrintTrait;
+
+impl SwapResultPrintTrait of PrintTrait<SwapResult> {
+    fn print(self: SwapResult) {
+        'consumed_amount:'.print();
+        self.consumed_amount.print();
+        'sqrt_ratio_next:'.print();
+        self.sqrt_ratio_next.print();
+        'calculated_amount:'.print();
+        self.calculated_amount.print();
+        'fee_amount:'.print();
+        self.fee_amount.print();
+    }
+}
+
 // consumed_amount is how much of the amount was used in this step
 // calculated_amount is how much of the other token is given
 // sqrt_ratio_next is the next ratio, limited to the given sqrt_ratio_limit
