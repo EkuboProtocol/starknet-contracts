@@ -1,5 +1,6 @@
 use ekubo::tests::helper::{
-    deploy_mock_extension, deploy_core, deploy_locker, deploy_mock_token, swap_inner
+    deploy_mock_extension, deploy_core, deploy_locker, deploy_mock_token, swap_inner,
+    update_position_inner
 };
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait, ExtensionCalled
@@ -10,6 +11,7 @@ use ekubo::interfaces::core::{
 };
 use ekubo::tests::mocks::locker::{ICoreLockerDispatcher, ICoreLockerDispatcherTrait};
 use ekubo::types::keys::PoolKey;
+use ekubo::types::bounds::Bounds;
 use ekubo::types::i129::i129;
 use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
@@ -104,5 +106,31 @@ fn test_mock_extension_swap_is_called() {
 
     let after = mock.get_call(3);
     assert(after.call_point == 3, 'called after');
+    check_matches_pool_key(before, pool_key);
+}
+
+#[test]
+#[available_gas(30000000)]
+fn test_mock_extension_update_position_is_called() {
+    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    core.initialize_pool(pool_key, Zeroable::zero());
+    let delta = update_position_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        bounds: Default::default(),
+        liquidity_delta: Zeroable::zero(),
+        recipient: Zeroable::zero(),
+    );
+    assert(delta.is_zero(), 'no change');
+
+    assert(mock.get_num_calls() == 4, '4 calls made');
+
+    let before = mock.get_call(2);
+    assert(before.call_point == 4, 'called before');
+    check_matches_pool_key(before, pool_key);
+
+    let after = mock.get_call(3);
+    assert(after.call_point == 5, 'called after');
     check_matches_pool_key(before, pool_key);
 }

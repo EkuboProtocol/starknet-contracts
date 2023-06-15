@@ -211,25 +211,25 @@ fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     }
 }
 
-fn update_position(
-    setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
+fn update_position_inner(
+    core: ICoreDispatcher,
+    pool_key: PoolKey,
+    locker: ICoreLockerDispatcher,
+    bounds: Bounds,
+    liquidity_delta: i129,
+    recipient: ContractAddress
 ) -> Delta {
     let before: Balances = get_balances(
-        token0: setup.token0,
-        token1: setup.token1,
-        core: setup.core,
-        locker: setup.locker,
+        token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
+        token1: IMockERC20Dispatcher { contract_address: pool_key.token1 },
+        core: core,
+        locker: locker,
         recipient: recipient,
     );
-    match setup
-        .locker
+    match locker
         .call(
             Action::UpdatePosition(
-                (
-                    setup.pool_key, UpdatePositionParameters {
-                        bounds, liquidity_delta, salt: 0
-                    }, recipient
-                )
+                (pool_key, UpdatePositionParameters { bounds, liquidity_delta, salt: 0 }, recipient)
             )
         ) {
         ActionResult::AssertLockerId(_) => {
@@ -242,10 +242,10 @@ fn update_position(
         },
         ActionResult::UpdatePosition(delta) => {
             let after: Balances = get_balances(
-                token0: setup.token0,
-                token1: setup.token1,
-                core: setup.core,
-                locker: setup.locker,
+                token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
+                token1: IMockERC20Dispatcher { contract_address: pool_key.token1 },
+                core: core,
+                locker: locker,
                 recipient: recipient,
             );
             assert_balances_delta(before, after, delta);
@@ -256,6 +256,19 @@ fn update_position(
             Zeroable::zero()
         },
     }
+}
+
+fn update_position(
+    setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
+) -> Delta {
+    update_position_inner(
+        setup.core,
+        setup.pool_key,
+        setup.locker,
+        bounds: bounds,
+        liquidity_delta: liquidity_delta,
+        recipient: recipient
+    )
 }
 
 fn swap_inner(
