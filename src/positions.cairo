@@ -214,6 +214,8 @@ mod Positions {
         }
 
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+            // todo: this is too long, it takes up 22 characters and only leaves ~10 for the decimal token id, 
+            // need to shorten this more
             'https://nft.ekubo.org/'
         }
     }
