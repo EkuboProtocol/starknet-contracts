@@ -148,13 +148,19 @@ struct Balances {
     token0_balance_locker: u256,
     token1_balance_locker: u256,
 }
-fn get_balances(_setup: SetupPoolResult, recipient: ContractAddress) -> Balances {
-    let token0_balance_core = _setup.token0.balance_of(_setup.core.contract_address);
-    let token1_balance_core = _setup.token1.balance_of(_setup.core.contract_address);
-    let token0_balance_recipient = _setup.token0.balance_of(recipient);
-    let token1_balance_recipient = _setup.token1.balance_of(recipient);
-    let token0_balance_locker = _setup.token0.balance_of(_setup.locker.contract_address);
-    let token1_balance_locker = _setup.token1.balance_of(_setup.locker.contract_address);
+fn get_balances(
+    token0: IMockERC20Dispatcher,
+    token1: IMockERC20Dispatcher,
+    core: ICoreDispatcher,
+    locker: ICoreLockerDispatcher,
+    recipient: ContractAddress
+) -> Balances {
+    let token0_balance_core = token0.balance_of(core.contract_address);
+    let token1_balance_core = token1.balance_of(core.contract_address);
+    let token0_balance_recipient = token0.balance_of(recipient);
+    let token1_balance_recipient = token1.balance_of(recipient);
+    let token0_balance_locker = token0.balance_of(locker.contract_address);
+    let token1_balance_locker = token1.balance_of(locker.contract_address);
     Balances {
         token0_balance_core,
         token1_balance_core,
@@ -213,7 +219,13 @@ fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
 fn update_position(
     setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
 ) -> Delta {
-    let before: Balances = get_balances(setup, recipient);
+    let before: Balances = get_balances(
+        token0: setup.token0,
+        token1: setup.token1,
+        core: setup.core,
+        locker: setup.locker,
+        recipient: recipient,
+    );
     match setup
         .locker
         .call(
@@ -234,7 +246,13 @@ fn update_position(
             Zeroable::zero()
         },
         ActionResult::UpdatePosition(delta) => {
-            let after: Balances = get_balances(setup, recipient);
+            let after: Balances = get_balances(
+                token0: setup.token0,
+                token1: setup.token1,
+                core: setup.core,
+                locker: setup.locker,
+                recipient: recipient,
+            );
             assert_balances_delta(before, after, delta);
             delta
         },
@@ -245,22 +263,29 @@ fn update_position(
     }
 }
 
-fn swap(
-    setup: SetupPoolResult,
+fn swap_inner(
+    core: ICoreDispatcher,
+    pool_key: PoolKey,
+    locker: ICoreLockerDispatcher,
     amount: i129,
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
     skip_ahead: u128
 ) -> Delta {
-    let before: Balances = get_balances(setup, recipient);
+    let before: Balances = get_balances(
+        token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
+        token1: IMockERC20Dispatcher { contract_address: pool_key.token1 },
+        core: core,
+        locker: locker,
+        recipient: recipient,
+    );
 
-    match setup
-        .locker
+    match locker
         .call(
             Action::Swap(
                 (
-                    setup.pool_key, SwapParameters {
+                    pool_key, SwapParameters {
                         amount, is_token1, sqrt_ratio_limit, skip_ahead
                     }, recipient
                 )
@@ -279,9 +304,35 @@ fn swap(
             Zeroable::zero()
         },
         ActionResult::Swap(delta) => {
-            let after: Balances = get_balances(setup, recipient);
+            let after: Balances = get_balances(
+                token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
+                token1: IMockERC20Dispatcher { contract_address: pool_key.token1 },
+                core: core,
+                locker: locker,
+                recipient: recipient,
+            );
             assert_balances_delta(before, after, delta);
             delta
         },
     }
+}
+
+fn swap(
+    setup: SetupPoolResult,
+    amount: i129,
+    is_token1: bool,
+    sqrt_ratio_limit: u256,
+    recipient: ContractAddress,
+    skip_ahead: u128
+) -> Delta {
+    swap_inner(
+        setup.core,
+        setup.pool_key,
+        setup.locker,
+        amount,
+        is_token1,
+        sqrt_ratio_limit,
+        recipient,
+        skip_ahead
+    )
 }

@@ -216,7 +216,7 @@ mod Core {
 
             if (position.liquidity.is_zero()) {
                 GetPositionResult {
-                    position: position,
+                    liquidity: Zeroable::zero(),
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
                     // we can return 0 because it's irrelevant for an empty position
@@ -244,7 +244,7 @@ mod Core {
                 );
 
                 GetPositionResult {
-                    position: position,
+                    liquidity: position.liquidity,
                     fees0: amount0_fees.low,
                     fees1: amount1_fees.low,
                     fee_growth_inside_token0,
@@ -584,7 +584,7 @@ mod Core {
             let get_position_result = self.get_position(pool_key, position_key);
 
             let position_liquidity_next: u128 = add_delta(
-                get_position_result.position.liquidity, params.liquidity_delta
+                get_position_result.liquidity, params.liquidity_delta
             );
 
             let (fee_growth_inside_token0_next, fee_growth_inside_token1_next) =
@@ -676,7 +676,7 @@ mod Core {
                 .write(
                     (pool_key, position_key),
                     Position {
-                        liquidity: result.position.liquidity,
+                        liquidity: result.liquidity,
                         fee_growth_inside_last_token0: result.fee_growth_inside_token0,
                         fee_growth_inside_last_token1: result.fee_growth_inside_token1,
                     }

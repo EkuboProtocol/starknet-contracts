@@ -1,13 +1,19 @@
-use ekubo::tests::helper::{deploy_mock_extension, deploy_core, deploy_locker, deploy_mock_token};
+use ekubo::tests::helper::{
+    deploy_mock_extension, deploy_core, deploy_locker, deploy_mock_token, swap_inner
+};
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait, ExtensionCalled
 };
 use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait
+    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
+    SwapParameters, UpdatePositionParameters
 };
 use ekubo::tests::mocks::locker::{ICoreLockerDispatcher, ICoreLockerDispatcherTrait};
 use ekubo::types::keys::PoolKey;
+use ekubo::types::i129::i129;
+use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
+use zeroable::Zeroable;
 
 fn setup(
     fee: u128, tick_spacing: u128
@@ -58,7 +64,7 @@ fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
 
 #[test]
 #[available_gas(30000000)]
-fn test_mock_extension_can_be_used_in_initialized_pool() {
+fn test_mock_extension_initialize_pool_is_called() {
     let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
     core.initialize_pool(pool_key, Zeroable::zero());
     assert(mock.get_num_calls() == 2, '2 calls made');
@@ -69,5 +75,34 @@ fn test_mock_extension_can_be_used_in_initialized_pool() {
 
     let after = mock.get_call(1);
     assert(after.call_point == 1, 'called after');
+    check_matches_pool_key(before, pool_key);
+}
+
+
+#[test]
+#[available_gas(30000000)]
+fn test_mock_extension_swap_is_called() {
+    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    core.initialize_pool(pool_key, Zeroable::zero());
+    let delta = swap_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        amount: i129 { mag: 1, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0,
+    );
+    assert(delta.is_zero(), 'no change');
+
+    assert(mock.get_num_calls() == 4, '4 calls made');
+
+    let before = mock.get_call(2);
+    assert(before.call_point == 2, 'called before');
+    check_matches_pool_key(before, pool_key);
+
+    let after = mock.get_call(3);
+    assert(after.call_point == 3, 'called after');
     check_matches_pool_key(before, pool_key);
 }

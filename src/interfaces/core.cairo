@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::storage::{Tick, Position, Pool};
+use ekubo::types::storage::{Tick, Pool};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
@@ -36,9 +36,10 @@ struct SwapParameters {
 }
 
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
+// Note you should not rely on fee growth inside for consistency across calls, since it also is used to track accumulated fees over time
 #[derive(Copy, Drop, Serde)]
 struct GetPositionResult {
-    position: Position,
+    liquidity: u128,
     fees0: u128,
     fees1: u128,
     fee_growth_inside_token0: u256,
