@@ -34,6 +34,7 @@ mod Core {
 
     use debug::PrintTrait;
 
+
     #[storage]
     struct Storage {
         // the owner is the one who controls withdrawal fees
@@ -103,9 +104,11 @@ mod Core {
         Swapped: Swapped,
     }
 
+
     #[constructor]
-    fn constructor(ref self: ContractState, _owner: ContractAddress) {
-        self.owner.write(_owner);
+    fn constructor(ref self: ContractState) {
+        // todo: choose the value for this constant, ideally a multisig and/or timelock
+        self.owner.write(contract_address_const::<0x01234567>());
     }
 
     #[generate_trait]

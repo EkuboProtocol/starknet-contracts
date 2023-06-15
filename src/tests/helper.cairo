@@ -61,12 +61,11 @@ struct SetupPoolResult {
     locker: ICoreLockerDispatcher
 }
 
-fn deploy_core(owner: ContractAddress) -> ICoreDispatcher {
+fn deploy_core() -> ICoreDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    constructor_args.append(owner.into());
 
     let (core_address, _) = deploy_syscall(
-        Core::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Core::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('core deploy failed');
 
@@ -108,11 +107,7 @@ fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
 }
 
 fn setup_pool(
-    owner: ContractAddress,
-    fee: u128,
-    tick_spacing: u128,
-    initial_tick: i129,
-    extension: ContractAddress
+    fee: u128, tick_spacing: u128, initial_tick: i129, extension: ContractAddress
 ) -> SetupPoolResult {
     let mut token0 = deploy_mock_token();
     let mut token1 = deploy_mock_token();
@@ -130,7 +125,7 @@ fn setup_pool(
         extension
     };
 
-    let core = deploy_core(owner);
+    let core = deploy_core();
     core.initialize_pool(pool_key, initial_tick);
 
     let locker = deploy_locker(core);

@@ -20,7 +20,7 @@ fn setup(
 ) -> (
     ICoreDispatcher, IMockExtensionDispatcher, IExtensionDispatcher, ICoreLockerDispatcher, PoolKey
 ) {
-    let core = deploy_core(Zeroable::zero());
+    let core = deploy_core();
     let locker = deploy_locker(core);
     let extension = deploy_mock_extension(core, locker);
     let token0 = deploy_mock_token();

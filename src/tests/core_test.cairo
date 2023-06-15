@@ -51,16 +51,15 @@ mod owner_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_constructor_sets_owner() {
-        let core = deploy_core(contract_address_const::<101>());
-        assert(core.get_owner() == contract_address_const::<101>(), 'owner');
+        let core = deploy_core();
+        assert(core.get_owner().is_non_zero(), 'owner');
     }
 
     #[test]
     #[available_gas(2000000)]
     fn test_owner_can_be_changed_by_owner() {
-        let core = deploy_core(contract_address_const::<101>());
-        assert(core.get_owner() == contract_address_const::<101>(), 'owner');
-        set_contract_address(contract_address_const::<101>());
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
         core.set_owner(contract_address_const::<102>());
         assert(core.get_owner() == contract_address_const::<102>(), 'owner');
     }
@@ -69,7 +68,7 @@ mod owner_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
     fn test_owner_cannot_be_changed_by_other() {
-        let core = deploy_core(contract_address_const::<101>());
+        let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
         core.set_owner(contract_address_const::<42>());
     }
@@ -78,7 +77,7 @@ mod owner_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
-        let core = deploy_core(contract_address_const::<101>());
+        let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
         core.replace_class_hash(Zeroable::zero());
     }
@@ -86,8 +85,8 @@ mod owner_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
-        let core = deploy_core(contract_address_const::<101>());
-        set_contract_address(contract_address_const::<101>());
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 
@@ -95,8 +94,8 @@ mod owner_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
     fn test_after_replacing_class_hash_calls_fail() {
-        let core = deploy_core(contract_address_const::<101>());
-        set_contract_address(contract_address_const::<101>());
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
@@ -104,8 +103,8 @@ mod owner_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
-        let core = deploy_core(contract_address_const::<101>());
-        set_contract_address(contract_address_const::<101>());
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         // these won't fail because it has a new implementation
         IMockERC20Dispatcher {
@@ -129,7 +128,7 @@ mod initialize_pool_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_initialize_pool_works_uninitialized() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -153,7 +152,7 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_same_token() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<1>(),
@@ -168,7 +167,7 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<2>(),
             token1: contract_address_const::<1>(),
@@ -184,7 +183,7 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ZERO', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_zero_token() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: Zeroable::zero(),
             token1: contract_address_const::<1>(),
@@ -199,7 +198,7 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -213,7 +212,7 @@ mod initialize_pool_tests {
     #[test]
     #[available_gas(3000000)]
     fn test_initialize_pool_succeeds_max_tick_spacing_minus_one() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -228,7 +227,7 @@ mod initialize_pool_tests {
     #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_max_tick_spacing() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -243,7 +242,7 @@ mod initialize_pool_tests {
     #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_already_initialized() {
-        let core = deploy_core(contract_address_const::<1>());
+        let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -269,7 +268,6 @@ mod initialized_ticks {
     #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED', ))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -289,7 +287,6 @@ mod initialized_ticks {
     #[available_gas(30000000)]
     fn test_prev_initialized_tick_min_tick() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -311,7 +308,6 @@ mod initialized_ticks {
     #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED', ))]
     fn test_next_initialized_tick_max_tick() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -325,7 +321,6 @@ mod initialized_ticks {
     #[available_gas(30000000)]
     fn test_next_initialized_tick_max_tick_minus_one() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -348,7 +343,6 @@ mod initialized_ticks {
     #[available_gas(30000000)]
     fn test_next_prev_initialized_tick_none_initialized() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -414,7 +408,6 @@ mod initialized_ticks {
     #[available_gas(300000000)]
     fn test_next_prev_initialized_tick_several_initialized() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -605,7 +598,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -618,7 +610,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_relock_call() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -636,7 +627,6 @@ mod locks {
     )]
     fn test_assert_locker_id_call_wrong() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -654,7 +644,6 @@ mod locks {
     )]
     fn test_relock_call_fails_invalid_id() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -667,7 +656,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -720,7 +708,6 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -754,7 +741,6 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -789,7 +775,6 @@ mod locks {
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -813,7 +798,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
             initial_tick: Zeroable::zero(),
@@ -840,7 +824,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_larger_amount_liquidity_add() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -871,7 +854,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
             initial_tick: Zeroable::zero(),
@@ -900,7 +882,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_half_burn() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
             initial_tick: Zeroable::zero(),
@@ -953,7 +934,6 @@ mod locks {
     #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_full_burn() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
             initial_tick: Zeroable::zero(),
@@ -1006,7 +986,6 @@ mod locks {
     #[available_gas(8000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1036,7 +1015,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_no_liquidity() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1070,7 +1048,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_no_liquidity() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1102,7 +1079,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_no_liquidity() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1134,7 +1110,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_no_liquidity() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1166,7 +1141,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1218,7 +1192,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1271,7 +1244,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1326,7 +1298,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1381,7 +1352,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1433,7 +1403,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1485,7 +1454,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),
@@ -1540,7 +1508,6 @@ mod locks {
     #[available_gas(30000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
-            owner: contract_address_const::<1>(),
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
             initial_tick: Zeroable::zero(),

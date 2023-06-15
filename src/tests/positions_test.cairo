@@ -22,7 +22,7 @@ use debug::PrintTrait;
 #[test]
 #[available_gas(300000000)]
 fn test_maybe_initialize_pool_twice() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = deploy_positions(core);
     let pool_key = PoolKey {
         token0: contract_address_const::<1>(),
@@ -40,7 +40,7 @@ fn test_maybe_initialize_pool_twice() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_name_symbol() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
@@ -51,7 +51,7 @@ fn test_nft_name_symbol() {
 #[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
 fn test_nft_approve_fails_id_not_exists() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     set_contract_address(contract_address_const::<1>());
     positions.approve(contract_address_const::<2>(), 1);
@@ -60,7 +60,7 @@ fn test_nft_approve_fails_id_not_exists() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_approve_succeeds_after_mint() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = deploy_positions(core);
     set_contract_address(contract_address_const::<1>());
 
@@ -90,7 +90,7 @@ fn test_nft_approve_succeeds_after_mint() {
 #[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
 fn test_nft_approve_only_owner_can_approve() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = deploy_positions(core);
 
     let token_id = positions
@@ -114,7 +114,7 @@ fn test_nft_approve_only_owner_can_approve() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_balance_of() {
-    let core = deploy_core(contract_address_const::<1>());
+    let core = deploy_core();
     let positions = deploy_positions(core);
 
     let recipient = contract_address_const::<2>();
@@ -154,7 +154,6 @@ fn test_nft_balance_of() {
 #[available_gas(20000000)]
 fn test_deposit_liquidity_full_range() {
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: Zeroable::zero(),
@@ -180,7 +179,6 @@ fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: Zeroable::zero(),
@@ -221,7 +219,6 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 500, sign: false },
@@ -261,7 +258,6 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 500, sign: true },
@@ -301,7 +297,6 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 1000, sign: false },
@@ -341,7 +336,6 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 1000, sign: true },
@@ -381,7 +375,6 @@ fn test_deposit_then_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: Zeroable::zero(),
@@ -428,7 +421,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        owner: Zeroable::zero(),
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: Zeroable::zero(),
