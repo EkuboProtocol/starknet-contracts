@@ -8,7 +8,7 @@ use ekubo::math::bits::{msb};
 // Convert a u128 number to a decimal string in a felt252
 fn to_decimal(mut x: u128) -> Option<felt252> {
     // a number greater than this to decimal is going to exceed 31 digits
-    if (x >= 10000000000000000000000000000000) {
+    if (x > 9999999999999999999999999999999) {
         return Option::None(());
     }
 
