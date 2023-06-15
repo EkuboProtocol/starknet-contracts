@@ -24,6 +24,7 @@ mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::math::liquidity::{max_liquidity};
     use ekubo::math::utils::{add_delta};
+    use ekubo::math::string::{to_decimal, append};
     use serde::Serde;
     use zeroable::Zeroable;
 
@@ -214,9 +215,11 @@ mod Positions {
         }
 
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+            validate_token_id(token_id);
             // todo: this is too long, it takes up 22 characters and only leaves ~10 for the decimal token id, 
             // need to shorten this more
-            'https://nft.ekubo.org/'
+            append('https://nft.ekubo.org/', to_decimal(token_id.low).expect('TOKEN_ID'))
+                .expect('URI_LENGTH')
         }
     }
 

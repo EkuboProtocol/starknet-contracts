@@ -88,6 +88,28 @@ fn test_nft_approve_succeeds_after_mint() {
 
 #[test]
 #[available_gas(300000000)]
+fn test_nft_token_uri() {
+    let core = deploy_core();
+    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
+    set_contract_address(contract_address_const::<1>());
+
+    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://nft.ekubo.org/1', 'token_uri');
+    assert(
+        positions.token_uri(u256 { low: 9999999, high: 0 }) == 'https://nft.ekubo.org/9999999',
+        'token_uri'
+    );
+    assert(
+        positions.token_uri(u256 { low: 239020510, high: 0 }) == 'https://nft.ekubo.org/239020510',
+        'token_uri'
+    );
+    assert(
+        positions.token_uri(u256 { low: 999999999, high: 0 }) == 'https://nft.ekubo.org/999999999',
+        'max token_uri'
+    );
+}
+
+#[test]
+#[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
 fn test_nft_approve_only_owner_can_approve() {
     let core = deploy_core();
