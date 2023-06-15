@@ -16,6 +16,9 @@ use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_extension::{
+    MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
+};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
@@ -33,6 +36,20 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
+}
+
+fn deploy_mock_extension(
+    core: ICoreDispatcher, core_locker: ICoreLockerDispatcher
+) -> IMockExtensionDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    constructor_args.append(core.contract_address.into());
+    constructor_args.append(core_locker.contract_address.into());
+    let (address, _) = deploy_syscall(
+        MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 2, constructor_args.span(), true
+    )
+        .expect('mockext deploy failed');
+
+    IMockExtensionDispatcher { contract_address: address }
 }
 
 #[derive(Copy, Drop)]
