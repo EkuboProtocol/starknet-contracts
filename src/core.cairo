@@ -45,13 +45,13 @@ mod Core {
         // the last recorded balance of each token, used for checking payment
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
-        lock_count: felt252,
-        locker_addresses: LegacyMap<felt252, ContractAddress>,
-        nonzero_delta_counts: LegacyMap::<felt252, felt252>,
+        lock_count: u32,
+        locker_addresses: LegacyMap<u32, ContractAddress>,
+        nonzero_delta_counts: LegacyMap::<u32, u32>,
         // locker_id, token_address => delta
         // delta is from the perspective of the core contract, thus:
         // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
-        deltas: LegacyMap::<(felt252, ContractAddress), i129>,
+        deltas: LegacyMap::<(u32, ContractAddress), i129>,
         // the persistent state of all the pools is stored in these structs
         pools: LegacyMap::<PoolKey, Pool>,
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
@@ -114,7 +114,7 @@ mod Core {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn require_locker(ref self: ContractState) -> (felt252, ContractAddress) {
+        fn require_locker(ref self: ContractState) -> (u32, ContractAddress) {
             let id = self.lock_count.read() - 1;
             let locker = self.locker_addresses.read(id);
             assert(locker == get_caller_address(), 'NOT_LOCKER');
@@ -122,7 +122,7 @@ mod Core {
         }
 
         fn account_delta(
-            ref self: ContractState, id: felt252, token_address: ContractAddress, delta: i129
+            ref self: ContractState, id: u32, token_address: ContractAddress, delta: i129
         ) {
             let key = (id, token_address);
             let current = self.deltas.read(key);
@@ -195,7 +195,7 @@ mod Core {
             self.owner.read()
         }
 
-        fn get_locker_state(self: @ContractState, id: felt252) -> LockerState {
+        fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
             LockerState { id, address, nonzero_delta_count }

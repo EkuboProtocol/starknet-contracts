@@ -9,8 +9,8 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 #[derive(Copy, Drop, Serde)]
 enum Action {
-    AssertLockerId: felt252,
-    Relock: (felt252, felt252), // expected id, number of relocks
+    AssertLockerId: u32,
+    Relock: (u32, u32), // expected id, number of relocks
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
     Swap: (PoolKey, SwapParameters, ContractAddress)
 }
@@ -26,7 +26,7 @@ enum ActionResult {
 #[starknet::interface]
 trait ICoreLocker<TStorage> {
     fn call(ref self: TStorage, action: Action) -> ActionResult;
-    fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
+    fn locked(ref self: TStorage, id: u32, data: Array<felt252>) -> Array<felt252>;
 }
 
 #[starknet::contract]
@@ -95,7 +95,7 @@ mod CoreLocker {
             action_result
         }
 
-        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let caller = get_caller_address();
             assert(caller == self.core.read(), 'UNAUTHORIZED_CALLBACK');
 

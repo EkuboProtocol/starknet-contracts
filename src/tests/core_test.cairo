@@ -983,7 +983,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(8000000)]
+    #[available_gas(9000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,

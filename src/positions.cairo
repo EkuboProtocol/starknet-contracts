@@ -225,7 +225,7 @@ mod Positions {
 
     #[external(v0)]
     impl ILockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: felt252, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let caller = get_caller_address();
             assert(caller == self.core.read(), 'CORE');
 

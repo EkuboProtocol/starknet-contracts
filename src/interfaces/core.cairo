@@ -11,7 +11,7 @@ use ekubo::types::call_points::{CallPoints};
 trait ILocker<TStorage> {
     // This function is called on the caller of lock, i.e. a callback
     // The input is the data passed to ICore#lock, the output is passed back through as the return value of #lock
-    fn locked(ref self: TStorage, id: felt252, data: Array<felt252>) -> Array<felt252>;
+    fn locked(ref self: TStorage, id: u32, data: Array<felt252>) -> Array<felt252>;
 }
 
 // Passed as an argument to update a position. The owner of the position is implicitly the locker.
@@ -50,9 +50,9 @@ struct GetPositionResult {
 // The current state of the queried locker
 #[derive(Copy, Drop, Serde)]
 struct LockerState {
-    id: felt252,
+    id: u32,
     address: ContractAddress,
-    nonzero_delta_count: felt252
+    nonzero_delta_count: u32
 }
 
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
@@ -86,7 +86,7 @@ trait ICore<TStorage> {
     fn get_owner(self: @TStorage) -> ContractAddress;
 
     // Get the state of the locker with the given ID
-    fn get_locker_state(self: @TStorage, id: felt252) -> LockerState;
+    fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
 
     // Get the current state of the given pool
     fn get_pool(self: @TStorage, pool_key: PoolKey) -> Pool;
