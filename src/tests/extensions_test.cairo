@@ -16,15 +16,16 @@ use ekubo::types::i129::i129;
 use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
 use zeroable::Zeroable;
+use ekubo::types::call_points::{CallPoints, all_call_points};
 
 fn setup(
-    fee: u128, tick_spacing: u128
+    fee: u128, tick_spacing: u128, call_points: CallPoints
 ) -> (
     ICoreDispatcher, IMockExtensionDispatcher, IExtensionDispatcher, ICoreLockerDispatcher, PoolKey
 ) {
     let core = deploy_core();
     let locker = deploy_locker(core);
-    let extension = deploy_mock_extension(core, locker);
+    let extension = deploy_mock_extension(core, locker, call_points);
     let token0 = deploy_mock_token();
     let token1 = deploy_mock_token();
     (
@@ -44,14 +45,18 @@ fn setup(
 #[available_gas(30000000)]
 #[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
 fn test_mock_extension_cannot_be_called_directly() {
-    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
     extension.before_initialize_pool(pool_key, Zeroable::zero());
 }
 
 #[test]
 #[available_gas(30000000)]
 fn test_mock_extension_can_be_called_by_core() {
-    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
     set_contract_address(core.contract_address);
     extension.before_initialize_pool(pool_key, Zeroable::zero());
 }
@@ -67,7 +72,9 @@ fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
 #[test]
 #[available_gas(30000000)]
 fn test_mock_extension_initialize_pool_is_called() {
-    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
     core.initialize_pool(pool_key, Zeroable::zero());
     assert(mock.get_num_calls() == 2, '2 calls made');
 
@@ -84,7 +91,9 @@ fn test_mock_extension_initialize_pool_is_called() {
 #[test]
 #[available_gas(30000000)]
 fn test_mock_extension_swap_is_called() {
-    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
     core.initialize_pool(pool_key, Zeroable::zero());
     let delta = swap_inner(
         core: core,
@@ -112,7 +121,9 @@ fn test_mock_extension_swap_is_called() {
 #[test]
 #[available_gas(30000000)]
 fn test_mock_extension_update_position_is_called() {
-    let (core, mock, extension, locker, pool_key) = setup(fee: 0, tick_spacing: 1);
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
     core.initialize_pool(pool_key, Zeroable::zero());
     let delta = update_position_inner(
         core: core,

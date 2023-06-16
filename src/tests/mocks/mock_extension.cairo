@@ -25,6 +25,8 @@ mod MockExtension {
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use starknet::{get_caller_address};
     use zeroable::Zeroable;
+    use ekubo::types::call_points::{CallPoints, all_call_points};
+    use traits::{Into};
 
 
     #[storage]
@@ -33,6 +35,7 @@ mod MockExtension {
         core_locker: ContractAddress,
         num_calls: felt252,
         calls: LegacyMap<felt252, ExtensionCalled>,
+        call_points: CallPoints
     }
 
     #[generate_trait]
@@ -60,14 +63,22 @@ mod MockExtension {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, _core: ContractAddress, _core_locker: ContractAddress) {
+    fn constructor(
+        ref self: ContractState,
+        _core: ContractAddress,
+        _core_locker: ContractAddress,
+        _call_points_u8: u8
+    ) {
         self.core.write(_core);
         self.core_locker.write(_core_locker);
+        self.call_points.write(_call_points_u8.into());
     }
 
     #[external(v0)]
     impl ExtensionImpl of IExtension<ContractState> {
-        fn before_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+        fn before_initialize_pool(
+            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
+        ) -> CallPoints {
             self.check_caller_is_core();
 
             let pool = ICoreDispatcher {
@@ -77,6 +88,8 @@ mod MockExtension {
             assert(pool.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(0, pool_key);
+
+            all_call_points()
         }
         fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             self.check_caller_is_core();

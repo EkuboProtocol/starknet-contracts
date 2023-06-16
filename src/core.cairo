@@ -31,6 +31,7 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
+    use ekubo::types::call_points::{CallPoints};
 
     use debug::PrintTrait;
 
@@ -373,21 +374,23 @@ mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
-            assert(pool_key.token0 != Zeroable::zero(), 'TOKEN_ZERO');
+            assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
             assert(
-                (pool_key.tick_spacing != Zeroable::zero())
+                (pool_key.tick_spacing.is_non_zero())
                     & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
                 'TICK_SPACING'
             );
 
             let pool = self.pools.read(pool_key);
-            assert(pool.sqrt_ratio == Zeroable::zero(), 'ALREADY_INITIALIZED');
+            assert(pool.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
-            if (pool_key.extension.is_non_zero()) {
+            let call_points = if (pool_key.extension.is_non_zero()) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
-                }.before_initialize_pool(pool_key, initial_tick);
-            }
+                }.before_initialize_pool(pool_key, initial_tick)
+            } else {
+                Default::<CallPoints>::default()
+            };
 
             self
                 .pools
@@ -396,13 +399,14 @@ mod Core {
                     Pool {
                         sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
                         tick: initial_tick,
+                        call_points,
                         liquidity: Zeroable::zero(),
                         fee_growth_global_token0: Zeroable::zero(),
                         fee_growth_global_token1: Zeroable::zero(),
                     }
                 );
 
-            if (pool_key.extension.is_non_zero()) {
+            if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.after_initialize_pool(pool_key, initial_tick);
@@ -526,15 +530,15 @@ mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            if (pool_key.extension.is_non_zero()) {
+            let pool = self.pools.read(pool_key);
+
+            if (pool.call_points.before_update_position) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.before_update_position(pool_key, params);
             }
 
             params.bounds.check_valid(pool_key.tick_spacing);
-
-            let pool = self.pools.read(pool_key);
 
             // pool must be initialized
             assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
@@ -643,6 +647,7 @@ mod Core {
                         Pool {
                             sqrt_ratio: pool.sqrt_ratio,
                             tick: pool.tick,
+                            call_points: pool.call_points,
                             liquidity: add_delta(pool.liquidity, params.liquidity_delta),
                             fee_growth_global_token0: pool.fee_growth_global_token0,
                             fee_growth_global_token1: pool.fee_growth_global_token1
@@ -656,7 +661,7 @@ mod Core {
 
             self.emit(Event::PositionUpdated(PositionUpdated { pool_key, params, delta }));
 
-            if (pool_key.extension.is_non_zero()) {
+            if (pool.call_points.after_update_position) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.after_update_position(pool_key, params, delta);
@@ -708,7 +713,7 @@ mod Core {
             // pool must be initialized
             assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
-            if (pool_key.extension.is_non_zero()) {
+            if (pool.call_points.before_swap) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.before_swap(pool_key, params);
@@ -871,6 +876,7 @@ mod Core {
                     Pool {
                         sqrt_ratio,
                         tick,
+                        call_points: pool.call_points,
                         liquidity,
                         fee_growth_global_token0: fee_growth_global_token0_next,
                         fee_growth_global_token1: fee_growth_global_token1_next,
@@ -882,7 +888,7 @@ mod Core {
 
             self.emit(Event::Swapped(Swapped { pool_key, params, delta }));
 
-            if (pool_key.extension.is_non_zero()) {
+            if (pool.call_points.after_swap) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.after_swap(pool_key, params, delta);

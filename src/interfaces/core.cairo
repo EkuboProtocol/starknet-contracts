@@ -4,6 +4,7 @@ use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::delta::{Delta};
+use ekubo::types::call_points::{CallPoints};
 
 // This interface must be implemented by any contract that intends to call ICore#lock
 #[starknet::interface]
@@ -57,8 +58,10 @@ struct LockerState {
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
 #[starknet::interface]
 trait IExtension<TStorage> {
-    // Called before a pool is initialized
-    fn before_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    // Called before a pool is initialized, and returns where the extension should be called in future operations
+    fn before_initialize_pool(
+        ref self: TStorage, pool_key: PoolKey, initial_tick: i129
+    ) -> CallPoints;
     // Called after a pool is initialized
     fn after_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 

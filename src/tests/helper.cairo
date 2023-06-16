@@ -23,6 +23,7 @@ use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
+use ekubo::types::call_points::{CallPoints};
 
 use starknet::{deploy_syscall, ClassHash, contract_address_const, ContractAddress};
 use starknet::class_hash::Felt252TryIntoClassHash;
@@ -39,13 +40,14 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
 }
 
 fn deploy_mock_extension(
-    core: ICoreDispatcher, core_locker: ICoreLockerDispatcher
+    core: ICoreDispatcher, core_locker: ICoreLockerDispatcher, call_points: CallPoints
 ) -> IMockExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     constructor_args.append(core.contract_address.into());
     constructor_args.append(core_locker.contract_address.into());
+    constructor_args.append(Into::<CallPoints, u8>::into(call_points.into()).into());
     let (address, _) = deploy_syscall(
-        MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 2, constructor_args.span(), true
+        MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 3, constructor_args.span(), true
     )
         .expect('mockext deploy failed');
 

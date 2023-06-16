@@ -126,7 +126,7 @@ mod initialize_pool_tests {
     };
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(3000000)]
     fn test_initialize_pool_works_uninitialized() {
         let core = deploy_core();
         let pool_key = PoolKey {
