@@ -175,7 +175,6 @@ fn test_mock_extension_no_call_points() {
     );
     assert(delta.is_zero(), 'no change');
 
-    mock.get_num_calls().print();
     assert(mock.get_num_calls() == 1, '1 call made');
 
     let before = mock.get_call(0);
