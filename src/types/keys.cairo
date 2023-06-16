@@ -35,13 +35,15 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
 
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
-    salt: felt252,
+    salt: u32,
     owner: ContractAddress,
     bounds: Bounds,
 }
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        pedersen(state, pedersen(value.salt, pedersen(value.owner.into(), value.bounds.into())))
+        pedersen(
+            state, pedersen(value.salt.into(), pedersen(value.owner.into(), value.bounds.into()))
+        )
     }
 }

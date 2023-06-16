@@ -669,7 +669,7 @@ mod Core {
         }
 
         fn collect_fees(
-            ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
+            ref self: ContractState, pool_key: PoolKey, salt: u32, bounds: Bounds
         ) -> Delta {
             let (id, locker) = self.require_locker();
 

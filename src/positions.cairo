@@ -96,7 +96,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct LockCallbackData {
         pool_key: PoolKey,
-        salt: felt252,
+        salt: u32,
         bounds: Bounds,
         liquidity_delta: i129,
         collect_fees: bool,
@@ -371,7 +371,11 @@ mod Positions {
             }
                 .get_position(
                     pool_key,
-                    PositionKey { owner: get_contract_address(), salt: token_id.low.into(), bounds }
+                    PositionKey {
+                        owner: get_contract_address(),
+                        salt: token_id.low.try_into().unwrap(),
+                        bounds
+                    }
                 );
 
             GetPositionInfoResult {
@@ -424,7 +428,7 @@ mod Positions {
                     pool_key,
                     bounds,
                     liquidity_delta,
-                    salt: token_id.low.into(),
+                    salt: token_id.low.try_into().unwrap(),
                     collect_fees,
                     min_token0: 0,
                     min_token1: 0
@@ -477,7 +481,7 @@ mod Positions {
                     bounds,
                     pool_key,
                     liquidity_delta,
-                    salt: token_id.low.into(),
+                    salt: token_id.low.try_into().unwrap(),
                     collect_fees,
                     min_token0,
                     min_token1
