@@ -2,7 +2,7 @@ use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, storage_access::StorageAccess)]
 struct ExtensionCalled {
-    call_point: felt252,
+    call_point: u32,
     token0: ContractAddress,
     token1: ContractAddress,
     fee: u128,
@@ -11,8 +11,8 @@ struct ExtensionCalled {
 
 #[starknet::interface]
 trait IMockExtension<TStorage> {
-    fn get_num_calls(self: @TStorage) -> felt252;
-    fn get_call(self: @TStorage, call_id: felt252) -> ExtensionCalled;
+    fn get_num_calls(self: @TStorage) -> u32;
+    fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 }
 
 #[starknet::contract]
@@ -33,8 +33,8 @@ mod MockExtension {
     struct Storage {
         core: ContractAddress,
         core_locker: ContractAddress,
-        num_calls: felt252,
-        calls: LegacyMap<felt252, ExtensionCalled>,
+        num_calls: u32,
+        calls: LegacyMap<u32, ExtensionCalled>,
         call_points: CallPoints
     }
 
@@ -44,7 +44,7 @@ mod MockExtension {
             assert(get_caller_address() == self.core.read(), 'CORE_ONLY');
         }
 
-        fn insert_call(ref self: ContractState, call_point: felt252, pool_key: PoolKey) {
+        fn insert_call(ref self: ContractState, call_point: u32, pool_key: PoolKey) {
             let num_calls = self.num_calls.read();
             self
                 .calls
@@ -132,11 +132,11 @@ mod MockExtension {
 
     #[external(v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
-        fn get_num_calls(self: @ContractState) -> felt252 {
+        fn get_num_calls(self: @ContractState) -> u32 {
             self.num_calls.read()
         }
 
-        fn get_call(self: @ContractState, call_id: felt252) -> ExtensionCalled {
+        fn get_call(self: @ContractState, call_id: u32) -> ExtensionCalled {
             self.calls.read(call_id)
         }
     }

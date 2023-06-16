@@ -33,8 +33,6 @@ mod Core {
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
 
-    use debug::PrintTrait;
-
 
     #[storage]
     struct Storage {
