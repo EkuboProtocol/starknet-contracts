@@ -145,3 +145,40 @@ fn test_mock_extension_update_position_is_called() {
     assert(after.call_point == 5, 'called after');
     check_matches_pool_key(before, pool_key);
 }
+
+use debug::PrintTrait;
+#[test]
+#[available_gas(30000000)]
+fn test_mock_extension_no_call_points() {
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: Default::default()
+    );
+    core.initialize_pool(pool_key, Zeroable::zero());
+    let delta = update_position_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        bounds: Default::default(),
+        liquidity_delta: Zeroable::zero(),
+        recipient: Zeroable::zero(),
+    );
+    assert(delta.is_zero(), 'no change');
+    let delta = swap_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        amount: i129 { mag: 1, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0,
+    );
+    assert(delta.is_zero(), 'no change');
+
+    mock.get_num_calls().print();
+    assert(mock.get_num_calls() == 1, '1 call made');
+
+    let before = mock.get_call(0);
+    assert(before.call_point == 0, 'called before initialize');
+    check_matches_pool_key(before, pool_key);
+}

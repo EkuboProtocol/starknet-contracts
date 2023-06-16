@@ -27,7 +27,7 @@ mod MockExtension {
     use zeroable::Zeroable;
     use ekubo::types::call_points::{CallPoints, all_call_points};
     use traits::{Into};
-
+    use debug::PrintTrait;
 
     #[storage]
     struct Storage {
@@ -89,7 +89,7 @@ mod MockExtension {
 
             self.insert_call(0, pool_key);
 
-            all_call_points()
+            self.call_points.read()
         }
         fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             self.check_caller_is_core();
