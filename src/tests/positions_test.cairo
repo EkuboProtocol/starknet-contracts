@@ -44,7 +44,7 @@ fn test_nft_name_symbol() {
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
-    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://nft.ekubo.org/1', 'token_uri');
+    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
 }
 
 #[test]
@@ -92,17 +92,18 @@ fn test_nft_token_uri() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
 
-    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://nft.ekubo.org/1', 'token_uri');
+    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
     assert(
-        positions.token_uri(u256 { low: 9999999, high: 0 }) == 'https://nft.ekubo.org/9999999',
+        positions.token_uri(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999',
         'token_uri'
     );
     assert(
-        positions.token_uri(u256 { low: 239020510, high: 0 }) == 'https://nft.ekubo.org/239020510',
+        positions.token_uri(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
         'token_uri'
     );
     assert(
-        positions.token_uri(u256 { low: 999999999, high: 0 }) == 'https://nft.ekubo.org/999999999',
+        positions
+            .token_uri(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
         'max token_uri'
     );
 }
@@ -114,7 +115,7 @@ fn test_nft_token_uri_reverts_too_long() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
 
-    positions.token_uri(u256 { low: 9999999999, high: 0 });
+    positions.token_uri(u256 { low: 999999999999, high: 0 });
 }
 
 #[test]

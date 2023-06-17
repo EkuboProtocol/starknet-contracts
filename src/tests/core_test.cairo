@@ -8,7 +8,7 @@ use integer::u256_from_felt252;
 use integer::BoundedInt;
 use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
-use ekubo::types::storage::{Pool};
+use ekubo::types::pool::{Pool};
 use ekubo::types::i129::{i129, i129OptionPartialEq};
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{

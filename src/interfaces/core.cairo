@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::storage::{Tick, Pool};
+use ekubo::types::pool::{Pool};
+use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};

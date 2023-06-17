@@ -216,9 +216,9 @@ mod Positions {
 
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
             validate_token_id(token_id);
-            // todo: this is too long, it takes up 22 characters and only leaves ~10 for the decimal token id, 
-            // need to shorten this more
-            append('https://nft.ekubo.org/', to_decimal(token_id.low).expect('TOKEN_ID'))
+            // the prefix takes up 20 characters and leaves 11 for the decimal token id
+            // 10^11 == ~2**36 tokens can be supported by this method
+            append('https://z.ekubo.org/', to_decimal(token_id.low).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
     }

@@ -27,7 +27,9 @@ mod Core {
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
-    use ekubo::types::storage::{Tick, Position, Pool};
+    use ekubo::types::pool::{Pool};
+    use ekubo::types::position::{Position};
+    use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
