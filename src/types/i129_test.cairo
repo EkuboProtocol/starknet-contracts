@@ -18,58 +18,6 @@ fn test_zeroable() {
     assert(i129 { mag: 1, sign: false }.is_non_zero(), '1.is_non_zero()');
 }
 
-
-#[test]
-fn test_into_felt252_0() {
-    let x: felt252 = Zeroable::<felt252>::zero().into();
-    assert(x == 0, 'x');
-
-    let y: i129 = x.into();
-    assert(y.is_zero(), 'back');
-}
-
-#[test]
-fn test_into_felt252_negative_0() {
-    let x: felt252 = i129 { mag: 0, sign: true }.into();
-    assert(x == 0, 'x');
-}
-
-#[test]
-fn test_into_felt252_one() {
-    let x: felt252 = i129 { mag: 1, sign: false }.into();
-    assert(x == 1, 'x');
-
-    let y: i129 = x.into();
-    assert(y == i129 { mag: 1, sign: false }, 'y');
-}
-
-#[test]
-fn test_into_felt252_negative_one() {
-    let x: felt252 = i129 { mag: 1, sign: true }.into();
-    assert(x == 0x100000000000000000000000000000001, 'x');
-
-    let y: i129 = x.into();
-    assert(y == i129 { mag: 1, sign: true }, 'y');
-}
-
-#[test]
-fn test_into_felt252_max() {
-    let x: felt252 = i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false }.into();
-    assert(x == 0xffffffffffffffffffffffffffffffff, 'x');
-
-    let y: i129 = x.into();
-    assert(y == i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false }, 'y');
-}
-
-#[test]
-fn test_into_felt252_negative_max() {
-    let x: felt252 = i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }.into();
-    assert(x == 0x1ffffffffffffffffffffffffffffffff, 'x');
-
-    let y: i129 = x.into();
-    assert(y == i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }, 'y');
-}
-
 #[test]
 fn test_div_i129() {
     assert(

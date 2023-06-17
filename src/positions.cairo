@@ -5,7 +5,7 @@ mod Positions {
         StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall,
         storage_write_syscall, storage_address_from_base_and_offset
     };
-    use ekubo::types::i129::{i129, i129IntoFelt252};
+    use ekubo::types::i129::{i129};
     use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::utils::{unsafe_sub};

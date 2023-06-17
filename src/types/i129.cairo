@@ -46,35 +46,16 @@ impl i129PrintTrait of PrintTrait<i129> {
     }
 }
 
-const TWO_129: felt252 = 0x100000000000000000000000000000000; // == 2**129
-
-// Converts a i129 into a felt252 wrapper for storage
-impl i129IntoFelt252 of Into<i129, felt252> {
-    fn into(self: i129) -> felt252 {
-        if (self.sign & (self.mag != 0)) {
-            return self.mag.into() + TWO_129;
-        }
-        return self.mag.into();
-    }
-}
-
-impl Felt252IntoI129 of Into<felt252, i129> {
-    fn into(self: felt252) -> i129 {
-        let res: u256 = self.into();
-        let bit: u256 = u256 { high: 1, low: 0 };
-        if (res > bit) {
-            return i129 { mag: (res - bit).low, sign: true };
-        }
-        return i129 { mag: res.low, sign: false };
-    }
-}
-
 impl i129LegacyHash of LegacyHash<i129> {
     fn hash(state: felt252, value: i129) -> felt252 {
-        pedersen(state, value.into())
+        let mut hashable: felt252 = value.mag.into();
+        if ((value.mag != 0) & value.sign) {
+            hashable += 0x100000000000000000000000000000000; // 2**128
+        }
+
+        pedersen(state, hashable)
     }
 }
-
 
 impl i129StorageAccess of StorageAccess<i129> {
     fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<i129> {
@@ -86,16 +67,31 @@ impl i129StorageAccess of StorageAccess<i129> {
     fn read_at_offset_internal(
         address_domain: u32, base: StorageBaseAddress, offset: u8
     ) -> SyscallResult<i129> {
-        let x: felt252 = StorageAccess::<felt252>::read_at_offset_internal(
-            address_domain, base, offset
-        )?;
-        Result::Ok(x.into())
+        let x: u128 = StorageAccess::<u128>::read_at_offset_internal(address_domain, base, offset)?;
+
+        Result::Ok(
+            if x >= 0x80000000000000000000000000000000 {
+                i129_new(x - 0x80000000000000000000000000000000, true)
+            } else {
+                i129_new(x, false)
+            }
+        )
     }
     fn write_at_offset_internal(
         address_domain: u32, base: StorageBaseAddress, offset: u8, value: i129
     ) -> SyscallResult<()> {
-        StorageAccess::<felt252>::write_at_offset_internal(
-            address_domain, base, offset, value.into()
+        // i129 is limited to 127 bits and we use the most significant bit to store the sign in storage
+        assert(value.mag < 0x80000000000000000000000000000000, 'i129_storage_overflow');
+
+        StorageAccess::<u128>::write_at_offset_internal(
+            address_domain,
+            base,
+            offset,
+            if (value.sign & (value.mag != 0)) {
+                0x80000000000000000000000000000000 + value.mag
+            } else {
+                value.mag
+            }
         )
     }
     fn size_internal(value: i129) -> u8 {
