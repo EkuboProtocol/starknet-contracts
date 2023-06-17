@@ -38,7 +38,6 @@ impl i129Zeroable of Zeroable<i129> {
     }
 }
 
-
 impl i129PrintTrait of PrintTrait<i129> {
     fn print(self: i129) {
         self.sign.print();

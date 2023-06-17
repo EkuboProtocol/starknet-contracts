@@ -2,6 +2,9 @@ use ekubo::types::i129::{i129};
 use traits::{Into};
 use zeroable::Zeroable;
 use option::{Option, OptionTrait};
+use starknet::storage_access::{storage_base_address_const, StorageAccess};
+use starknet::{SyscallResult, SyscallResultTrait};
+
 
 #[test]
 fn test_zeroable() {
@@ -108,4 +111,127 @@ fn test_mul_negative_positive() {
 fn test_mul_positive_negative() {
     let x: i129 = i129 { mag: 0x1, sign: false } * i129 { mag: 0x1, sign: true };
     assert(x == i129 { mag: 0x1, sign: true }, '1 * -1 = -1');
+}
+
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_1() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: false }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 1, sign: false }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_negative_1() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: true }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 1, sign: true }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_0() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: false }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_negative_0() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: true }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_max_value() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 0_u8,
+        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+fn test_storage_access_write_read_min_value() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 0_u8,
+        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }
+    )
+        .unwrap_syscall();
+    let read = StorageAccess::<i129>::read_at_offset_internal(
+        address_domain: 0, base: base, offset: 0_u8
+    )
+        .unwrap_syscall();
+    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }, 'read==write');
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('i129_storage_overflow', ))]
+fn test_storage_access_write_min_value_minus_one() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 0_u8,
+        value: i129 { mag: 0x80000000000000000000000000000000, sign: true }
+    );
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('i129_storage_overflow', ))]
+fn test_storage_access_write_max_value_plus_one() {
+    let base = storage_base_address_const::<0>();
+    let write = StorageAccess::<i129>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 0_u8,
+        value: i129 { mag: 0x80000000000000000000000000000000, sign: false }
+    );
 }
