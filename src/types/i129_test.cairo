@@ -1,5 +1,5 @@
-use ekubo::types::i129::{i129, Felt252IntoI129, U128IntoI129};
-use traits::{Into, TryInto};
+use ekubo::types::i129::{i129};
+use traits::{Into};
 use zeroable::Zeroable;
 use option::{Option, OptionTrait};
 
@@ -69,38 +69,6 @@ fn test_into_felt252_negative_max() {
     let y: i129 = x.into();
     assert(y == i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }, 'y');
 }
-
-#[test]
-fn test_try_into_u128() {
-    assert(Zeroable::<i129>::zero().try_into().expect('') == 0, '0');
-    assert(i129 { mag: 123, sign: false }.try_into().expect('') == 123, '123');
-    assert(
-        i129 {
-            mag: 0xffffffffffffffffffffffffffffffff, sign: false
-        }.try_into().expect('') == 0xffffffffffffffffffffffffffffffff,
-        'max'
-    );
-
-    assert(i129 { mag: 0, sign: true }.try_into().is_none(), '-0');
-    assert(i129 { mag: 123, sign: true }.try_into().is_none(), '-123');
-    assert(
-        i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }.try_into().is_none(), '-max'
-    );
-}
-
-
-#[test]
-fn test_u128_into_i129() {
-    assert(U128IntoI129::into(0_u128).is_zero(), '0');
-    assert(U128IntoI129::into(123_u128) == i129 { mag: 123, sign: false }, '123');
-    assert(
-        U128IntoI129::into(0xffffffffffffffffffffffffffffffff_u128) == i129 {
-            mag: 0xffffffffffffffffffffffffffffffff, sign: false
-        },
-        'max'
-    );
-}
-
 
 #[test]
 fn test_div_i129() {

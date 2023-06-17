@@ -58,21 +58,6 @@ impl i129IntoFelt252 of Into<i129, felt252> {
     }
 }
 
-impl i129TryIntoU128 of TryInto<i129, u128> {
-    fn try_into(self: i129) -> Option<u128> {
-        if (self.sign) {
-            return Option::None(());
-        }
-        return Option::Some(self.mag);
-    }
-}
-
-impl U128IntoI129 of Into<u128, i129> {
-    fn into(self: u128) -> i129 {
-        i129 { mag: self, sign: false }
-    }
-}
-
 impl Felt252IntoI129 of Into<felt252, i129> {
     fn into(self: felt252) -> i129 {
         let res: u256 = self.into();
