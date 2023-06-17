@@ -25,7 +25,10 @@ use ekubo::tests::mocks::locker::{
 };
 use ekubo::types::call_points::{CallPoints};
 
-use starknet::{deploy_syscall, ClassHash, contract_address_const, ContractAddress};
+use starknet::{
+    get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
+};
+use starknet::testing::{set_contract_address};
 use starknet::class_hash::Felt252TryIntoClassHash;
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
@@ -128,6 +131,13 @@ fn setup_pool(
     };
 
     let core = deploy_core();
+
+    let address = get_contract_address();
+    set_contract_address(contract_address_const::<0x01234567>());
+    core.set_reserves_limit(token0.contract_address, 0xffffffffffffffffffffffffffffffff);
+    core.set_reserves_limit(token1.contract_address, 0xffffffffffffffffffffffffffffffff);
+    set_contract_address(address);
+
     core.initialize_pool(pool_key, initial_tick);
 
     let locker = deploy_locker(core);

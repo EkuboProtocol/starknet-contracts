@@ -59,25 +59,32 @@ mod Core {
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token)
         // note a transfer can only be effected by calling load and save to another address
         saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
+        // the limit on reserves for each token
+        reserves_limit: LegacyMap<ContractAddress, u128>,
     }
 
     #[derive(starknet::Event, Drop)]
     struct OwnerChanged {
-        old_owner: ContractAddress,
-        new_owner: ContractAddress
+        new_owner: ContractAddress, 
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct ReservesLimitUpdated {
+        token: ContractAddress,
+        new_limit: u128,
     }
 
     #[derive(starknet::Event, Drop)]
     struct FeesWithdrawn {
         recipient: ContractAddress,
         token: ContractAddress,
-        amount: u128
+        amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
     struct PoolInitialized {
         pool_key: PoolKey,
-        initial_tick: i129
+        initial_tick: i129,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -98,12 +105,12 @@ mod Core {
     #[event]
     enum Event {
         OwnerChanged: OwnerChanged,
+        ReservesLimitUpdated: ReservesLimitUpdated,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
         Swapped: Swapped,
     }
-
 
     #[constructor]
     fn constructor(ref self: ContractState) {
@@ -118,6 +125,10 @@ mod Core {
             let locker = self.locker_addresses.read(id);
             assert(locker == get_caller_address(), 'NOT_LOCKER');
             (id, locker)
+        }
+
+        fn check_owner_only(self: @ContractState) {
+            assert(get_caller_address() == self.owner.read(), 'OWNER_ONLY');
         }
 
         fn account_delta(
@@ -262,11 +273,25 @@ mod Core {
             self.saved_balances.read((owner, token))
         }
 
+        fn get_reserves_limit(self: @ContractState, token: ContractAddress) -> u128 {
+            self.reserves_limit.read(token)
+        }
+
         fn set_owner(ref self: ContractState, new_owner: ContractAddress) {
-            let old_owner = self.owner.read();
-            assert(get_caller_address() == old_owner, 'OWNER_ONLY');
+            self.check_owner_only();
             self.owner.write(new_owner);
-            self.emit(Event::OwnerChanged(OwnerChanged { old_owner, new_owner }));
+            self.emit(Event::OwnerChanged(OwnerChanged { new_owner }));
+        }
+
+        fn set_reserves_limit(ref self: ContractState, token: ContractAddress, limit: u128) {
+            self.check_owner_only();
+            self.reserves_limit.write(token, limit);
+            self
+                .emit(
+                    Event::ReservesLimitUpdated(
+                        ReservesLimitUpdated { token: token, new_limit: limit }
+                    )
+                );
         }
 
         fn withdraw_fees_collected(
@@ -275,6 +300,8 @@ mod Core {
             token: ContractAddress,
             amount: u128
         ) {
+            self.check_owner_only();
+
             let collected: u128 = self.fees_collected.read(token);
             self.fees_collected.write(token, collected - amount);
             IERC20Dispatcher {
@@ -350,8 +377,12 @@ mod Core {
             assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
 
             self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
-
             self.reserves.write(token_address, balance);
+
+            assert(
+                balance <= u256 { low: self.get_reserves_limit(token_address), high: 0 },
+                'MAX_RESERVES'
+            );
 
             delta.low
         }

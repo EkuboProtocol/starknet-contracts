@@ -108,11 +108,17 @@ trait ICore<TStorage> {
     // Get the last recorded balance of a token for core, used by core for computing payment amounts
     fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
 
+    // Gets the reserves limit for the given token
+    fn get_reserves_limit(self: @TStorage, token: ContractAddress) -> u128;
+
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
     fn get_saved_balance(self: @TStorage, owner: ContractAddress, token: ContractAddress) -> u128;
 
     // Set the owner of the contract to a new owner (only the current owner can call the function)
     fn set_owner(ref self: TStorage, new_owner: ContractAddress);
+
+    // Sets a new limit for the reserves of a given token
+    fn set_reserves_limit(ref self: TStorage, token: ContractAddress, limit: u128);
 
     // Withdraw any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
