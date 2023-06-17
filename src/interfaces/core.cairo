@@ -114,9 +114,6 @@ trait ICore<TStorage> {
     // Set the owner of the contract to a new owner (only the current owner can call the function)
     fn set_owner(ref self: TStorage, new_owner: ContractAddress);
 
-    // The owner can update the class hash of the contract.
-    fn replace_class_hash(ref self: TStorage, class_hash: ClassHash);
-
     // Withdraw any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128

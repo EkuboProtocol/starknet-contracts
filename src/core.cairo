@@ -7,8 +7,7 @@ mod Core {
     };
     use zeroable::Zeroable;
     use starknet::{
-        ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall
+        ContractAddress, ClassHash, contract_address_const, get_caller_address, get_contract_address
     };
     use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
@@ -268,11 +267,6 @@ mod Core {
             assert(get_caller_address() == old_owner, 'OWNER_ONLY');
             self.owner.write(new_owner);
             self.emit(Event::OwnerChanged(OwnerChanged { old_owner, new_owner }));
-        }
-
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            assert(get_caller_address() == self.owner.read(), 'OWNER_ONLY');
-            replace_class_syscall(class_hash);
         }
 
         fn withdraw_fees_collected(
