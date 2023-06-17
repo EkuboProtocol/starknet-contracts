@@ -114,6 +114,19 @@ trait ICore<TStorage> {
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
     fn get_saved_balance(self: @TStorage, owner: ContractAddress, token: ContractAddress) -> u128;
 
+    // todo: these next 2 functions are actually view functions, but we can't mark them as such because of a bug in the compiler
+
+    // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
+    fn next_initialized_tick(
+        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+    ) -> (i129, bool);
+
+    // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
+    // Note this can also be used to check if the tick is initialized
+    fn prev_initialized_tick(
+        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+    ) -> (i129, bool);
+
     // Set the owner of the contract to a new owner (only the current owner can call the function)
     fn set_owner(ref self: TStorage, new_owner: ContractAddress);
 
@@ -165,15 +178,4 @@ trait ICore<TStorage> {
     // Make a swap against a pool.
     // You must call this within a lock callback.
     fn swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> Delta;
-
-    // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
-    fn next_initialized_tick(
-        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
-    ) -> (i129, bool);
-
-    // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
-    // Note this can also be used to check if the tick is initialized
-    fn prev_initialized_tick(
-        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
-    ) -> (i129, bool);
 }

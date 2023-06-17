@@ -102,6 +102,20 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct SavedBalance {
+        to: ContractAddress,
+        token: ContractAddress,
+        amount: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct LoadedBalance {
+        from: ContractAddress,
+        token: ContractAddress,
+        amount: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         OwnerChanged: OwnerChanged,
@@ -110,6 +124,8 @@ mod Core {
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
         Swapped: Swapped,
+        SavedBalance: SavedBalance,
+        LoadedBalance: LoadedBalance,
     }
 
     #[constructor]
@@ -273,6 +289,68 @@ mod Core {
             self.saved_balances.read((owner, token))
         }
 
+
+        fn next_initialized_tick(
+            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            assert(from < max_tick(), 'NEXT_FROM_MAX');
+
+            let (word_index, bit_index) = tick_to_word_and_bit_index(
+                from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
+            );
+
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
+            // now the next tick is at the most significant bit in the masked bitmap
+            let masked = bitmap & mask(bit_index);
+
+            // if it's 0, we know there is no set bit in this word
+            if (masked == 0) {
+                let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+                if (next > max_tick()) {
+                    return (max_tick(), false);
+                }
+                if (skip_ahead == 0) {
+                    (next, false)
+                } else {
+                    self.next_initialized_tick(pool_key, next, skip_ahead - 1)
+                }
+            } else {
+                (word_and_bit_index_to_tick((word_index, msb(masked)), pool_key.tick_spacing), true)
+            }
+        }
+
+        fn prev_initialized_tick(
+            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            assert(from >= min_tick(), 'PREV_FROM_MIN');
+            let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
+
+            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+
+            let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
+
+            let masked = bitmap & mask;
+
+            // if it's 0, we know there is no set bit in this word
+            if (masked == 0) {
+                let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
+                if (prev < min_tick()) {
+                    return (min_tick(), false);
+                }
+                if (skip_ahead == 0) {
+                    (prev, false)
+                } else {
+                    self
+                        .prev_initialized_tick(
+                            pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
+                        )
+                }
+            } else {
+                (word_and_bit_index_to_tick((word_index, lsb(masked)), pool_key.tick_spacing), true)
+            }
+        }
+
         fn get_reserves_limit(self: @ContractState, token: ContractAddress) -> u128 {
             self.reserves_limit.read(token)
         }
@@ -360,6 +438,13 @@ mod Core {
 
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
+
+            self
+                .emit(
+                    Event::SavedBalance(
+                        SavedBalance { to: recipient, token: token_address, amount: amount,  }
+                    )
+                );
         }
 
         fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
@@ -394,6 +479,13 @@ mod Core {
             self.saved_balances.write((locker, token_address), saved_balance - amount);
 
             self.account_delta(id, token_address, i129 { mag: amount, sign: true });
+
+            self
+                .emit(
+                    Event::LoadedBalance(
+                        LoadedBalance { from: locker, token: token_address, amount: amount,  }
+                    )
+                );
         }
 
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
@@ -438,67 +530,6 @@ mod Core {
             }
 
             self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
-        }
-
-        fn next_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
-        ) -> (i129, bool) {
-            assert(from < max_tick(), 'NEXT_FROM_MAX');
-
-            let (word_index, bit_index) = tick_to_word_and_bit_index(
-                from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
-            );
-
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-            // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
-            // now the next tick is at the most significant bit in the masked bitmap
-            let masked = bitmap & mask(bit_index);
-
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
-                if (next > max_tick()) {
-                    return (max_tick(), false);
-                }
-                if (skip_ahead == 0) {
-                    (next, false)
-                } else {
-                    self.next_initialized_tick(pool_key, next, skip_ahead - 1)
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, msb(masked)), pool_key.tick_spacing), true)
-            }
-        }
-
-        fn prev_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
-        ) -> (i129, bool) {
-            assert(from >= min_tick(), 'PREV_FROM_MIN');
-            let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
-
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-
-            let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
-
-            let masked = bitmap & mask;
-
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
-                if (prev < min_tick()) {
-                    return (min_tick(), false);
-                }
-                if (skip_ahead == 0) {
-                    (prev, false)
-                } else {
-                    self
-                        .prev_initialized_tick(
-                            pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
-                        )
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, lsb(masked)), pool_key.tick_spacing), true)
-            }
         }
 
         fn get_pool_fee_growth_inside(
