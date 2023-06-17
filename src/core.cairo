@@ -531,9 +531,11 @@ mod Core {
             let pool = self.pools.read(pool_key);
 
             if (pool.call_points.before_update_position) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.before_update_position(pool_key, params);
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher {
+                        contract_address: pool_key.extension
+                    }.before_update_position(pool_key, params);
+                }
             }
 
             params.bounds.check_valid(pool_key.tick_spacing);
@@ -660,9 +662,11 @@ mod Core {
             self.emit(Event::PositionUpdated(PositionUpdated { pool_key, params, delta }));
 
             if (pool.call_points.after_update_position) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.after_update_position(pool_key, params, delta);
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher {
+                        contract_address: pool_key.extension
+                    }.after_update_position(pool_key, params, delta);
+                }
             }
 
             delta
@@ -704,7 +708,7 @@ mod Core {
 
 
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
-            let (id, _) = self.require_locker();
+            let (id, locker) = self.require_locker();
 
             let pool = self.pools.read(pool_key);
 
@@ -712,9 +716,11 @@ mod Core {
             assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             if (pool.call_points.before_swap) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.before_swap(pool_key, params);
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher {
+                        contract_address: pool_key.extension
+                    }.before_swap(pool_key, params);
+                }
             }
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
@@ -887,9 +893,11 @@ mod Core {
             self.emit(Event::Swapped(Swapped { pool_key, params, delta }));
 
             if (pool.call_points.after_swap) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.after_swap(pool_key, params, delta);
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher {
+                        contract_address: pool_key.extension
+                    }.after_swap(pool_key, params, delta);
+                }
             }
 
             delta
