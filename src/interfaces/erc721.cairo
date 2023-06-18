@@ -2,6 +2,21 @@ use starknet::{ContractAddress};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
 
+// must be checked to support interface first
+const IERC721_RECEIVER_INTERFACE_ID: u32 = 0x150b7a02;
+const IACCOUNT_INTERFACE_ID: u32 = 0xa66bd575;
+
+#[starknet::interface]
+trait IERC721Receiver<TStorage> {
+    fn on_erc721_received(
+        ref self: TStorage,
+        operator: ContractAddress,
+        from: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    ) -> u32;
+}
+
 #[starknet::interface]
 trait IERC721<TStorage> {
     fn name(self: @TStorage) -> felt252;

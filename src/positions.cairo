@@ -1,32 +1,38 @@
 #[starknet::contract]
 mod Positions {
+    use hash::LegacyHash;
+    use traits::{Into, TryInto};
+    use option::{Option, OptionTrait};
+    use serde::Serde;
+    use zeroable::Zeroable;
+    use array::{ArrayTrait};
+
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address,
         StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall,
         storage_write_syscall, storage_address_from_base_and_offset
     };
+
     use ekubo::types::i129::{i129};
     use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::utils::{unsafe_sub};
-    use array::{ArrayTrait};
+    use ekubo::math::liquidity::{max_liquidity};
+    use ekubo::math::utils::{add_delta};
+    use ekubo::math::string::{to_decimal, append};
+    use ekubo::types::keys::{PoolKey};
+    use ekubo::types::delta::{Delta};
+    use ekubo::types::keys::{PositionKey};
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::interfaces::erc165::{IERC165Dispatcher, IERC165DispatcherTrait};
+    use ekubo::interfaces::erc721::{
+        IERC721_RECEIVER_INTERFACE_ID, IACCOUNT_INTERFACE_ID, IERC721, IERC721ReceiverDispatcher,
+        IERC721ReceiverDispatcherTrait
+    };
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
-    use ekubo::interfaces::erc721::{IERC721};
-    use ekubo::types::keys::{PoolKey};
-    use hash::LegacyHash;
-    use traits::{Into, TryInto};
-    use option::{Option, OptionTrait};
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::types::delta::{Delta};
-    use ekubo::types::keys::{PositionKey};
-    use ekubo::math::liquidity::{max_liquidity};
-    use ekubo::math::utils::{add_delta};
-    use ekubo::math::string::{to_decimal, append};
-    use serde::Serde;
-    use zeroable::Zeroable;
 
     #[storage]
     struct Storage {
@@ -193,7 +199,27 @@ mod Positions {
             data: Span<felt252>
         ) {
             self.transfer(from, to, token_id);
-            assert(false, 'todo');
+            if (IERC165Dispatcher {
+                contract_address: to
+            }.supports_interface(IERC721_RECEIVER_INTERFACE_ID)) {
+                // todo add casing fallback mechanism
+                assert(
+                    IERC721ReceiverDispatcher {
+                        contract_address: to
+                    }
+                        .on_erc721_received(
+                            get_caller_address(), from, token_id, data
+                        ) == IERC721_RECEIVER_INTERFACE_ID,
+                    'CALLBACK_FAILED'
+                );
+            } else {
+                assert(
+                    IERC165Dispatcher {
+                        contract_address: to
+                    }.supports_interface(IACCOUNT_INTERFACE_ID),
+                    'SAFE_TRANSFER_TO_NON_ACCOUNT'
+                );
+            }
         }
 
         fn set_approval_for_all(

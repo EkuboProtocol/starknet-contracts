@@ -88,6 +88,118 @@ fn test_nft_approve_succeeds_after_mint() {
 
 #[test]
 #[available_gas(300000000)]
+fn test_nft_transfer_from() {
+    let core = deploy_core();
+    let positions = deploy_positions(core);
+
+    let token_id = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+        );
+
+    set_contract_address(contract_address_const::<1>());
+    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
+
+    nft.approve(contract_address_const::<3>(), token_id);
+    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+
+    assert(nft.balance_of(contract_address_const::<1>()) == u256 { low: 0, high: 0 }, 'bal from');
+    assert(nft.balance_of(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'bal to');
+    assert(nft.owner_of(token_id) == contract_address_const::<2>(), 'owner');
+    assert(nft.get_approved(token_id) == Zeroable::zero(), 'zeroed approval');
+}
+
+#[test]
+#[available_gas(300000000)]
+#[should_panic(expected: ('UNAUTHORIZED', 'ENTRYPOINT_FAILED'))]
+fn test_nft_transfer_from_fails_not_from_owner() {
+    let core = deploy_core();
+    let positions = deploy_positions(core);
+
+    let token_id = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+        );
+
+    set_contract_address(contract_address_const::<2>());
+
+    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
+
+    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_transfer_from_succeeds_from_approved() {
+    let core = deploy_core();
+    let positions = deploy_positions(core);
+
+    let token_id = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+        );
+
+    set_contract_address(contract_address_const::<1>());
+    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
+    nft.approve(contract_address_const::<2>(), token_id);
+
+    set_contract_address(contract_address_const::<2>());
+    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_transfer_from_succeeds_from_approved_for_all() {
+    let core = deploy_core();
+    let positions = deploy_positions(core);
+    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
+
+    set_contract_address(contract_address_const::<1>());
+    nft.set_approval_for_all(contract_address_const::<2>(), true);
+
+    let token_id = positions
+        .mint(
+            contract_address_const::<1>(),
+            pool_key: PoolKey {
+                token0: Zeroable::zero(),
+                token1: Zeroable::zero(),
+                fee: Zeroable::zero(),
+                tick_spacing: Zeroable::zero(),
+                extension: Zeroable::zero(),
+            },
+            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+        );
+
+    set_contract_address(contract_address_const::<2>());
+    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+}
+
+#[test]
+#[available_gas(300000000)]
 fn test_nft_token_uri() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
