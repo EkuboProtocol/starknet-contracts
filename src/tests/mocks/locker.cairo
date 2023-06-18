@@ -26,7 +26,6 @@ enum ActionResult {
 #[starknet::interface]
 trait ICoreLocker<TStorage> {
     fn call(ref self: TStorage, action: Action) -> ActionResult;
-    fn locked(ref self: TStorage, id: u32, data: Array<felt252>) -> Array<felt252>;
 }
 
 #[starknet::contract]
@@ -38,7 +37,7 @@ mod CoreLocker {
     use serde::Serde;
     use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use array::ArrayTrait;
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use option::{Option, OptionTrait};
 
@@ -79,22 +78,7 @@ mod CoreLocker {
     }
 
     #[external(v0)]
-    impl CoreLockerImpl of ICoreLocker<ContractState> {
-        fn call(ref self: ContractState, action: Action) -> ActionResult {
-            let mut arr: Array<felt252> = ArrayTrait::new();
-            Serde::<Action>::serialize(@action, ref arr);
-
-            let result = ICoreDispatcher { contract_address: self.core.read() }.lock(arr);
-
-            let mut result_data = result.span();
-            let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(
-                ref result_data
-            )
-                .expect('DESERIALIZE_RESULT_FAILED');
-
-            action_result
-        }
-
+    impl CoreLockerLockedImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let caller = get_caller_address();
             assert(caller == self.core.read(), 'UNAUTHORIZED_CALLBACK');
@@ -251,6 +235,24 @@ mod CoreLocker {
             let mut arr: Array<felt252> = ArrayTrait::new();
             Serde::<ActionResult>::serialize(@result, ref arr);
             arr
+        }
+    }
+
+    #[external(v0)]
+    impl CoreLockerImpl of ICoreLocker<ContractState> {
+        fn call(ref self: ContractState, action: Action) -> ActionResult {
+            let mut arr: Array<felt252> = ArrayTrait::new();
+            Serde::<Action>::serialize(@action, ref arr);
+
+            let result = ICoreDispatcher { contract_address: self.core.read() }.lock(arr);
+
+            let mut result_data = result.span();
+            let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(
+                ref result_data
+            )
+                .expect('DESERIALIZE_RESULT_FAILED');
+
+            action_result
         }
     }
 }

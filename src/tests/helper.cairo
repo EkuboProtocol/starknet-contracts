@@ -13,6 +13,7 @@ use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::route_finder::{IRouteFinderDispatcher, RouteFinder};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -75,6 +76,17 @@ fn deploy_core() -> ICoreDispatcher {
         .expect('core deploy failed');
 
     ICoreDispatcher { contract_address: core_address }
+}
+
+fn deploy_route_finder() -> IRouteFinderDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+
+    let (address, _) = deploy_syscall(
+        RouteFinder::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('rf deploy failed');
+
+    IRouteFinderDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
