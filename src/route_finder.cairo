@@ -1,4 +1,5 @@
 use ekubo::types::i129::i129;
+use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde)]
@@ -6,6 +7,7 @@ struct FindParameters {
     amount: i129,
     specified_token: ContractAddress,
     other_token: ContractAddress,
+    pool_keys: Span<PoolKey>,
 }
 
 #[derive(Drop, Copy, Serde)]
@@ -21,13 +23,13 @@ trait IRouteFinder<TStorage> {
 
 #[starknet::contract]
 mod RouteFinder {
-    use array::{ArrayTrait};
+    use array::{Array, ArrayTrait, SpanTrait};
     use option::{OptionTrait};
     use result::{ResultTrait};
     use zeroable::{Zeroable};
 
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use super::{i129, ContractAddress, IRouteFinder, FindParameters, FindResult};
+    use super::{i129, ContractAddress, IRouteFinder, FindParameters, FindResult, PoolKey};
 
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
@@ -43,6 +45,26 @@ mod RouteFinder {
         self.core.write(_core);
     }
 
+    // Filter the pools in the span to those that contain the specified token
+    fn filter_to_relevant_pools(mut x: Span<PoolKey>, token: ContractAddress) -> Array<PoolKey> {
+        let mut res: Array<PoolKey> = Default::default();
+
+        loop {
+            match x.pop_front() {
+                Option::Some(pool_key) => {
+                    if ((*pool_key.token0 == token) | (*pool_key.token1 == token)) {
+                        res.append(*pool_key);
+                    }
+                },
+                Option::None(()) => {
+                    break ();
+                },
+            };
+        };
+
+        res
+    }
+
     impl RouteFinderLockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             assert(get_caller_address() == self.core.read(), 'UNAUTHORIZED');
@@ -51,7 +73,7 @@ mod RouteFinder {
             let mut params: FindParameters = Serde::<FindParameters>::deserialize(ref input_span)
                 .expect('LOCKED_DESERIALIZE_FAILED');
 
-            // todo: do stuff to compute result
+            // todo: compute a route across all the pools
             let result = FindResult { found: params.amount.is_zero() };
 
             let mut output: Array<felt252> = ArrayTrait::new();
