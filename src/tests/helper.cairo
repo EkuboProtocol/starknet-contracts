@@ -78,11 +78,12 @@ fn deploy_core() -> ICoreDispatcher {
     ICoreDispatcher { contract_address: core_address }
 }
 
-fn deploy_route_finder() -> IRouteFinderDispatcher {
+fn deploy_route_finder(core: ICoreDispatcher) -> IRouteFinderDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    constructor_args.append(core.contract_address.into());
 
     let (address, _) = deploy_syscall(
-        RouteFinder::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+        RouteFinder::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('rf deploy failed');
 

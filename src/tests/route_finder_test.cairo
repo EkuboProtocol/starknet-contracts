@@ -9,11 +9,10 @@ use zeroable::Zeroable;
 #[available_gas(300000000)]
 fn test_route_finder_empty() {
     let core = deploy_core();
-    let route_finder = deploy_route_finder();
+    let route_finder = deploy_route_finder(core);
 
     let result = route_finder
         .find(
-            core.contract_address,
             FindParameters {
                 amount: Zeroable::zero(),
                 specified_token: Zeroable::zero(),
