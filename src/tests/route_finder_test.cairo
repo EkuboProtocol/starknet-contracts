@@ -173,8 +173,6 @@ fn setup_for_routing() -> (IRouteFinderDispatcher, PoolKey) {
 }
 
 
-use debug::PrintTrait;
-
 #[test]
 #[available_gas(300000000)]
 fn test_route_finder_quote_initialized_pool_with_liquidity() {
@@ -192,7 +190,6 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
-    amount.print();
     assert(amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
     amount = route_finder
         .quote(
