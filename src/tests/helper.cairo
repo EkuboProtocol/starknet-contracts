@@ -43,6 +43,18 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     return IMockERC20Dispatcher { contract_address: token_address };
 }
 
+fn deploy_two_mock_tokens() -> (IMockERC20Dispatcher, IMockERC20Dispatcher) {
+    let mut token0 = deploy_mock_token();
+    let mut token1 = deploy_mock_token();
+    if (token0.contract_address > token1.contract_address) {
+        let temp = token1;
+        token1 = token0;
+        token0 = temp;
+    }
+
+    (token0, token1)
+}
+
 fn deploy_mock_extension(
     core: ICoreDispatcher, core_locker: ICoreLockerDispatcher, call_points: CallPoints
 ) -> IMockExtensionDispatcher {
@@ -127,13 +139,7 @@ fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
 fn setup_pool(
     fee: u128, tick_spacing: u128, initial_tick: i129, extension: ContractAddress
 ) -> SetupPoolResult {
-    let mut token0 = deploy_mock_token();
-    let mut token1 = deploy_mock_token();
-    if (token0.contract_address > token1.contract_address) {
-        let temp = token1;
-        token1 = token0;
-        token0 = temp;
-    }
+    let (token0, token1) = deploy_two_mock_tokens();
 
     let pool_key: PoolKey = PoolKey {
         token0: token0.contract_address,

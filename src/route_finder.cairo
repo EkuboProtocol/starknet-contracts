@@ -12,7 +12,8 @@ struct FindParameters {
 
 #[derive(Drop, Copy, Serde)]
 struct FindResult {
-    found: bool, 
+    found: bool,
+    relevant_pool_count: u32,
 }
 
 #[starknet::interface]
@@ -33,6 +34,24 @@ mod RouteFinder {
 
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
+
+    use debug::PrintTrait;
+
+    impl PrintSpanFelt252 of PrintTrait<Span<felt252>> {
+        fn print(self: Span<felt252>) {
+            let mut span = self.slice(0, self.len());
+            loop {
+                match span.pop_front() {
+                    Option::Some(x) => {
+                        (*x).print();
+                    },
+                    Option::None(()) => {
+                        break ();
+                    },
+                };
+            };
+        }
+    }
 
     #[storage]
     struct Storage {
@@ -65,6 +84,7 @@ mod RouteFinder {
         res
     }
 
+    #[external(v0)]
     impl RouteFinderLockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             assert(get_caller_address() == self.core.read(), 'UNAUTHORIZED');
@@ -74,7 +94,13 @@ mod RouteFinder {
                 .expect('LOCKED_DESERIALIZE_FAILED');
 
             // todo: compute a route across all the pools
-            let result = FindResult { found: params.amount.is_zero() };
+            let result = FindResult {
+                found: params.amount.is_zero(),
+                relevant_pool_count: filter_to_relevant_pools(
+                    params.pool_keys, params.specified_token
+                )
+                    .len()
+            };
 
             let mut output: Array<felt252> = ArrayTrait::new();
             Serde::<FindResult>::serialize(@result, ref output);
@@ -90,12 +116,15 @@ mod RouteFinder {
         fn find(ref self: ContractState, params: FindParameters) -> FindResult {
             let mut input: Array<felt252> = ArrayTrait::new();
             Serde::<FindParameters>::serialize(@params, ref input);
-            Serde::<FindParameters>::serialize(@params, ref input);
+
+            // todo: we can do a little better by just appending the length of the array to input before serializing params to input instead of another round of serialization
+            let mut lock_call_arguments: Array<felt252> = ArrayTrait::new();
+            Serde::<Array<felt252>>::serialize(@input, ref lock_call_arguments);
 
             let output = call_contract_syscall(
                 self.core.read(),
                 0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
-                input.span()
+                lock_call_arguments.span()
             )
                 .unwrap_err();
 
