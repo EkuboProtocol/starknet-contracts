@@ -25,7 +25,6 @@ struct FindResult {
 struct QuoteParameters {
     amount: i129,
     specified_token: ContractAddress,
-    other_token: ContractAddress,
     route: Route,
 }
 
