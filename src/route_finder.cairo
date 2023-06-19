@@ -197,62 +197,44 @@ mod RouteFinder {
         }
     }
 
+    fn call_core_with_callback<
+        TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>, 
+    >(
+        core: ContractAddress, input: @TInput
+    ) -> TOutput {
+        let mut input_data: Array<felt252> = ArrayTrait::new();
+        Serde::serialize(input, ref input_data);
+
+        // todo: we can do a little better by just appending the length of the array to input before serializing params to input instead of another round of serialization
+        let mut lock_call_arguments: Array<felt252> = ArrayTrait::new();
+        Serde::<Array<felt252>>::serialize(@input_data, ref lock_call_arguments);
+
+        let output = call_contract_syscall(
+            core,
+            0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
+            lock_call_arguments.span()
+        )
+            .unwrap_err();
+
+        if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
+            // whole output is an internal panic
+            panic(output);
+        }
+
+        let mut output_span = output.span().slice(1, output.len() - 1);
+        let mut result: TOutput = Serde::deserialize(ref output_span)
+            .expect('DESERIALIZE_RESULT_FAILED');
+        result
+    }
+
     #[external(v0)]
     impl RouteFinderImpl of IRouteFinder<ContractState> {
         fn find(ref self: ContractState, params: FindParameters) -> FindResult {
-            let mut input: Array<felt252> = ArrayTrait::new();
-            Serde::<CallbackParameters>::serialize(
-                @CallbackParameters::FindParameters(params), ref input
-            );
-
-            // todo: we can do a little better by just appending the length of the array to input before serializing params to input instead of another round of serialization
-            let mut lock_call_arguments: Array<felt252> = ArrayTrait::new();
-            Serde::<Array<felt252>>::serialize(@input, ref lock_call_arguments);
-
-            let output = call_contract_syscall(
-                self.core.read(),
-                0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
-                lock_call_arguments.span()
-            )
-                .unwrap_err();
-
-            if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
-                // whole output is an internal panic
-                panic(output);
-            }
-
-            let mut output_span = output.span().slice(1, output.len() - 1);
-            let mut result: FindResult = Serde::<FindResult>::deserialize(ref output_span)
-                .expect('DESERIALIZE_RESULT_FAILED');
-            result
+            call_core_with_callback(self.core.read(), @CallbackParameters::FindParameters(params))
         }
 
         fn quote(ref self: ContractState, params: QuoteParameters) -> i129 {
-            let mut input: Array<felt252> = ArrayTrait::new();
-            Serde::<CallbackParameters>::serialize(
-                @CallbackParameters::QuoteParameters(params), ref input
-            );
-
-            // todo: we can do a little better by just appending the length of the array to input before serializing params to input instead of another round of serialization
-            let mut lock_call_arguments: Array<felt252> = ArrayTrait::new();
-            Serde::<Array<felt252>>::serialize(@input, ref lock_call_arguments);
-
-            let output = call_contract_syscall(
-                self.core.read(),
-                0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
-                lock_call_arguments.span()
-            )
-                .unwrap_err();
-
-            if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
-                // whole output is an internal panic
-                panic(output);
-            }
-
-            let mut output_span = output.span().slice(1, output.len() - 1);
-            let mut result: i129 = Serde::<i129>::deserialize(ref output_span)
-                .expect('DESERIALIZE_RESULT_FAILED');
-            result
+            call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
         }
     }
 }
