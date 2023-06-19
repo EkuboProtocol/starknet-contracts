@@ -129,9 +129,7 @@ fn test_route_finder_quote_initialized_pool_no_liquidity() {
 }
 
 
-#[test]
-#[available_gas(300000000)]
-fn test_route_finder_quote_initialized_pool_with_liquidity() {
+fn setup_for_routing() -> (IRouteFinderDispatcher, PoolKey) {
     let core = deploy_core();
     let route_finder = deploy_route_finder(core);
     let positions = deploy_positions(core);
@@ -171,21 +169,53 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
             collect_fees: false
         );
 
+    (route_finder, pool_key)
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_route_finder_quote_initialized_pool_with_liquidity() {
+    let (route_finder, pool_key) = setup_for_routing();
+
     let mut pool_keys: Array<PoolKey> = Default::default();
     pool_keys.append(pool_key);
     let route = Route { pool_keys: pool_keys.span() };
 
-    let result = route_finder
+    let mut result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
                     mag: 100, sign: false
-                },
-                specified_token: token0.contract_address,
-                other_token: token1.contract_address,
-                route: route,
+                }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
+    assert(result.is_non_zero(), 'nonzero');
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
+            }
+        );
+    assert(result.is_non_zero(), 'nonzero');
 
-    assert(result.is_non_zero(), 'nonzero output');
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: false
+                }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
+            }
+        );
+    assert(result.is_non_zero(), 'nonzero');
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
+            }
+        );
+    assert(result.is_non_zero(), 'nonzero');
 }
