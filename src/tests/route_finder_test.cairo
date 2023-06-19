@@ -208,6 +208,7 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
             }
         );
     assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
+    assert(result.other_token == pool_key.token1, 'tokena');
     result = route_finder
         .quote(
             QuoteParameters {
@@ -217,25 +218,28 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
             }
         );
     assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
+    assert(result.other_token == pool_key.token1, 'tokenb');
 
     result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
                     mag: 100, sign: false
-                }, specified_token: pool_key.token0, route: route,
+                }, specified_token: pool_key.token1, route: route,
             }
         );
-    assert(result.amount == i129 { mag: 0x61, sign: true }, '100 token1 in');
+    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token1 in');
+    assert(result.other_token == pool_key.token0, 'tokenc');
     result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
                     mag: 100, sign: true
-                }, specified_token: pool_key.token0, route: route,
+                }, specified_token: pool_key.token1, route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token1 out');
+    assert(result.other_token == pool_key.token0, 'tokend');
 }
 
 #[test]
