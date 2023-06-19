@@ -28,13 +28,19 @@ struct QuoteParameters {
     route: Route,
 }
 
+#[derive(Drop, Copy, Serde)]
+struct QuoteResult {
+    amount: i129,
+    other_token: ContractAddress,
+}
+
 #[starknet::interface]
 trait IRouteFinder<TStorage> {
     // Finds a route between the specified token amount and the other token
     fn find(ref self: TStorage, params: FindParameters) -> FindResult;
 
     // Compute the quote for executing the given route
-    fn quote(ref self: TStorage, params: QuoteParameters) -> i129;
+    fn quote(ref self: TStorage, params: QuoteParameters) -> QuoteResult;
 }
 
 #[starknet::contract]
@@ -49,7 +55,7 @@ mod RouteFinder {
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use super::{
         i129, ContractAddress, IRouteFinder, FindParameters, FindResult, PoolKey, Route,
-        QuoteParameters
+        QuoteParameters, QuoteResult
     };
 
     use starknet::{get_caller_address};
@@ -174,10 +180,12 @@ mod RouteFinder {
                                         }
                                     );
 
-                                amount = if is_token1 {
-                                    delta.amount0
+                                if is_token1 {
+                                    amount = delta.amount0;
+                                    current_token = *pool_key.token0;
                                 } else {
-                                    delta.amount1
+                                    amount = delta.amount1;
+                                    current_token = *pool_key.token1;
                                 };
 
                                 if (pool_keys.len() != 0) {
@@ -190,7 +198,9 @@ mod RouteFinder {
                         };
                     };
 
-                    Serde::<i129>::serialize(@amount, ref output);
+                    Serde::<QuoteResult>::serialize(
+                        @QuoteResult { amount, other_token: current_token }, ref output
+                    );
                     panic(output);
                 }
             };
@@ -236,7 +246,7 @@ mod RouteFinder {
             call_core_with_callback(self.core.read(), @CallbackParameters::FindParameters(params))
         }
 
-        fn quote(ref self: ContractState, params: QuoteParameters) -> i129 {
+        fn quote(ref self: ContractState, params: QuoteParameters) -> QuoteResult {
             call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
         }
     }

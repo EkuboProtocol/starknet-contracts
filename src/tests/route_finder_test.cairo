@@ -1,3 +1,4 @@
+use core::debug::PrintTrait;
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;
 use ekubo::tests::mocks::mock_erc20::IMockERC20DispatcherTrait;
 use ekubo::interfaces::core::ICoreDispatcherTrait;
@@ -119,7 +120,8 @@ fn test_route_finder_quote_initialized_pool_no_liquidity() {
             }
         );
 
-    assert(result.is_zero(), 'no output');
+    assert(result.amount.is_zero(), 'no output');
+    assert(result.other_token == pool_key.token1, 'token');
 }
 
 
@@ -197,7 +199,7 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
     pool_keys.append(pool_key);
     let route = Route { pool_keys: pool_keys.span() };
 
-    let mut amount = route_finder
+    let mut result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -205,8 +207,8 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, route: route,
             }
         );
-    assert(amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
-    amount = route_finder
+    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
+    result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -214,9 +216,9 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, route: route,
             }
         );
-    assert(amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
+    assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
 
-    amount = route_finder
+    result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -224,8 +226,8 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, route: route,
             }
         );
-    assert(amount == i129 { mag: 0x61, sign: true }, '100 token1 in');
-    amount = route_finder
+    assert(result.amount == i129 { mag: 0x61, sign: true }, '100 token1 in');
+    result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -233,7 +235,7 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, route: route,
             }
         );
-    assert(amount == i129 { mag: 0x64, sign: false }, '100 token1 out');
+    assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token1 out');
 }
 
 #[test]
@@ -244,10 +246,14 @@ fn test_route_finder_quote_multihop_routes() {
     let mut pool_keys: Array<PoolKey> = Default::default();
     pool_keys.append(pool_key_a);
     pool_keys.append(pool_key_b);
-
     let route = Route { pool_keys: pool_keys.span() };
 
-    let mut amount = route_finder
+    let mut pool_keys_reverse: Array<PoolKey> = Default::default();
+    pool_keys_reverse.append(pool_key_b);
+    pool_keys_reverse.append(pool_key_a);
+    let route_reverse = Route { pool_keys: pool_keys.span() };
+
+    let mut result = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -255,5 +261,17 @@ fn test_route_finder_quote_multihop_routes() {
                 }, specified_token: pool_key_a.token0, route: route,
             }
         );
-    assert(amount == i129 { mag: 0x60, sign: true }, '100 token0 in');
+    assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token0 in');
+    assert(result.other_token == pool_key_b.token1, '100 token0 in');
+
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key_a.token0, route: route,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
+    assert(result.other_token == pool_key_b.token1, '100 token0 out');
 }
