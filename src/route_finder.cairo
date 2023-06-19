@@ -161,7 +161,13 @@ mod RouteFinder {
 
                         match next {
                             Option::Some(pool_key) => {
-                                let is_token1 = current_token == *pool_key.token1;
+                                let is_token1 = if (*pool_key.token0 == current_token) {
+                                    false
+                                } else {
+                                    assert(*pool_key.token1 == current_token, 'INVALID_ROUTE');
+                                    true
+                                };
+
                                 let sqrt_ratio_limit = if is_price_increasing(
                                     amount.sign, is_token1
                                 ) {
@@ -169,6 +175,7 @@ mod RouteFinder {
                                 } else {
                                     min_sqrt_ratio()
                                 };
+
                                 let delta = core
                                     .swap(
                                         *pool_key,

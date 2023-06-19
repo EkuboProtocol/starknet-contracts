@@ -255,7 +255,7 @@ fn test_route_finder_quote_multihop_routes() {
     let mut pool_keys_reverse: Array<PoolKey> = Default::default();
     pool_keys_reverse.append(pool_key_b);
     pool_keys_reverse.append(pool_key_a);
-    let route_reverse = Route { pool_keys: pool_keys.span() };
+    let route_reverse = Route { pool_keys: pool_keys_reverse.span() };
 
     let mut result = route_finder
         .quote(
@@ -266,7 +266,7 @@ fn test_route_finder_quote_multihop_routes() {
             }
         );
     assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token0 in');
-    assert(result.other_token == pool_key_b.token1, '100 token0 in');
+    assert(result.other_token == pool_key_b.token1, '100 token0 in other');
 
     result = route_finder
         .quote(
@@ -277,5 +277,27 @@ fn test_route_finder_quote_multihop_routes() {
             }
         );
     assert(result.amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
-    assert(result.other_token == pool_key_b.token1, '100 token0 out');
+    assert(result.other_token == pool_key_b.token1, '100 token0 out other');
+
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: false
+                }, specified_token: pool_key_b.token1, route: route_reverse,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token2 in');
+    assert(result.other_token == pool_key_a.token0, '100 token2 in other');
+
+    result = route_finder
+        .quote(
+            QuoteParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key_b.token1, route: route_reverse,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x62, sign: false }, '100 token2 out');
+    assert(result.other_token == pool_key_a.token0, '100 token2 out other');
 }
