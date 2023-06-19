@@ -148,7 +148,7 @@ mod RouteFinder {
                 },
                 CallbackParameters::QuoteParameters(params) => {
                     let mut pool_keys = params.route.pool_keys;
-                    let mut result: i129 = params.amount;
+                    let mut amount: i129 = params.amount;
                     let mut current_token: ContractAddress = params.specified_token;
 
                     loop {
@@ -158,7 +158,7 @@ mod RouteFinder {
                             Option::Some(pool_key) => {
                                 let is_token1 = current_token == *pool_key.token1;
                                 let sqrt_ratio_limit = if is_price_increasing(
-                                    result.sign, is_token1
+                                    amount.sign, is_token1
                                 ) {
                                     max_sqrt_ratio()
                                 } else {
@@ -168,17 +168,21 @@ mod RouteFinder {
                                     .swap(
                                         *pool_key,
                                         SwapParameters {
-                                            amount: result,
+                                            amount: amount,
                                             is_token1: is_token1,
                                             sqrt_ratio_limit: sqrt_ratio_limit,
                                             skip_ahead: 0,
                                         }
                                     );
 
-                                result = if is_token1 {
+                                amount = if is_token1 {
                                     delta.amount0
                                 } else {
                                     delta.amount1
+                                };
+
+                                if (pool_keys.len() != 0) {
+                                    amount = -amount;
                                 };
                             },
                             Option::None(_) => {
@@ -187,7 +191,7 @@ mod RouteFinder {
                         };
                     };
 
-                    Serde::<i129>::serialize(@result, ref output);
+                    Serde::<i129>::serialize(@amount, ref output);
                     panic(output);
                 }
             };

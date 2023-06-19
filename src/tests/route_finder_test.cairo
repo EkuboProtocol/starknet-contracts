@@ -172,6 +172,9 @@ fn setup_for_routing() -> (IRouteFinderDispatcher, PoolKey) {
     (route_finder, pool_key)
 }
 
+
+use debug::PrintTrait;
+
 #[test]
 #[available_gas(300000000)]
 fn test_route_finder_quote_initialized_pool_with_liquidity() {
@@ -181,7 +184,7 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
     pool_keys.append(pool_key);
     let route = Route { pool_keys: pool_keys.span() };
 
-    let mut result = route_finder
+    let mut amount = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -189,8 +192,9 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
-    assert(result.is_non_zero(), 'nonzero');
-    result = route_finder
+    amount.print();
+    assert(amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
+    amount = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -198,9 +202,9 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
-    assert(result.is_non_zero(), 'nonzero');
+    assert(amount == i129 { mag: 0x64, sign: false }, '100 token0 out');
 
-    result = route_finder
+    amount = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -208,8 +212,8 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
-    assert(result.is_non_zero(), 'nonzero');
-    result = route_finder
+    assert(amount == i129 { mag: 0x61, sign: true }, '100 token1 in');
+    amount = route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -217,5 +221,5 @@ fn test_route_finder_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, other_token: pool_key.token1, route: route,
             }
         );
-    assert(result.is_non_zero(), 'nonzero');
+    assert(amount == i129 { mag: 0x64, sign: false }, '100 token1 out');
 }
