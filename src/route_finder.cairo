@@ -45,7 +45,9 @@ mod RouteFinder {
     use result::{ResultTrait};
     use zeroable::{Zeroable};
 
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
+    use ekubo::math::swap::{is_price_increasing};
+    use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use super::{
         i129, ContractAddress, IRouteFinder, FindParameters, FindResult, PoolKey, Route,
         QuoteParameters
@@ -109,16 +111,24 @@ mod RouteFinder {
         QuoteParameters: QuoteParameters,
     }
 
+    const FUNCTION_DID_NOT_ERROR_FLAG: felt252 =
+        0x3f532df6e73f94d604f4eb8c661635595c91adc1d387931451eacd418cfbd14; // hash of function_did_not_error
+
     #[external(v0)]
     impl RouteFinderLockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            assert(get_caller_address() == self.core.read(), 'UNAUTHORIZED');
+            let core = ICoreDispatcher { contract_address: self.core.read() };
+
+            assert(get_caller_address() == core.contract_address, 'UNAUTHORIZED');
 
             let mut input_span = data.span();
             let mut params_enum: CallbackParameters = Serde::<CallbackParameters>::deserialize(
                 ref input_span
             )
                 .expect('LOCKED_DESERIALIZE_FAILED');
+
+            let mut output: Array<felt252> = ArrayTrait::new();
+            Serde::<felt252>::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
 
             match params_enum {
                 CallbackParameters::FindParameters(params) => {
@@ -133,14 +143,51 @@ mod RouteFinder {
                         route: route, other_token_amount: Zeroable::zero(), 
                     };
 
-                    let mut output: Array<felt252> = ArrayTrait::new();
                     Serde::<FindResult>::serialize(@result, ref output);
-
                     panic(output);
                 },
-                CallbackParameters::QuoteParameters(quote) => {
-                    let mut output: Array<felt252> = ArrayTrait::new();
-                    Serde::<i129>::serialize(@i129 { mag: 0, sign: false }, ref output);
+                CallbackParameters::QuoteParameters(params) => {
+                    let mut pool_keys = params.route.pool_keys;
+                    let mut result: i129 = params.amount;
+                    let mut current_token: ContractAddress = params.specified_token;
+
+                    loop {
+                        let next = pool_keys.pop_front();
+
+                        match next {
+                            Option::Some(pool_key) => {
+                                let is_token1 = current_token == *pool_key.token1;
+                                let sqrt_ratio_limit = if is_price_increasing(
+                                    result.sign, is_token1
+                                ) {
+                                    max_sqrt_ratio()
+                                } else {
+                                    min_sqrt_ratio()
+                                };
+                                let delta = core
+                                    .swap(
+                                        *pool_key,
+                                        SwapParameters {
+                                            amount: result,
+                                            is_token1: is_token1,
+                                            sqrt_ratio_limit: sqrt_ratio_limit,
+                                            skip_ahead: 0,
+                                        }
+                                    );
+
+                                result = if is_token1 {
+                                    delta.amount0
+                                } else {
+                                    delta.amount1
+                                };
+                            },
+                            Option::None(_) => {
+                                break ();
+                            },
+                        };
+                    };
+
+                    Serde::<i129>::serialize(@result, ref output);
                     panic(output);
                 }
             };
@@ -169,7 +216,12 @@ mod RouteFinder {
             )
                 .unwrap_err();
 
-            let mut output_span = output.span();
+            if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
+                // whole output is an internal panic
+                panic(output);
+            }
+
+            let mut output_span = output.span().slice(1, output.len() - 1);
             let mut result: FindResult = Serde::<FindResult>::deserialize(ref output_span)
                 .expect('DESERIALIZE_RESULT_FAILED');
             result
@@ -192,7 +244,12 @@ mod RouteFinder {
             )
                 .unwrap_err();
 
-            let mut output_span = output.span();
+            if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
+                // whole output is an internal panic
+                panic(output);
+            }
+
+            let mut output_span = output.span().slice(1, output.len() - 1);
             let mut result: i129 = Serde::<i129>::deserialize(ref output_span)
                 .expect('DESERIALIZE_RESULT_FAILED');
             result

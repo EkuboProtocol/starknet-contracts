@@ -45,7 +45,16 @@ fn test_route_finder_find_empty() {
 
 #[test]
 #[available_gas(300000000)]
-fn test_route_finder_quote() {
+#[should_panic(
+    expected: (
+        'NOT_INITIALIZED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_route_finder_quote_not_initialized_pool() {
     let core = deploy_core();
     let route_finder = deploy_route_finder(core);
     let locker = deploy_locker(core);
@@ -63,7 +72,7 @@ fn test_route_finder_quote() {
     pool_keys.append(pool_key);
     let route = Route { pool_keys: pool_keys.span() };
 
-    let result = route_finder
+    route_finder
         .quote(
             QuoteParameters {
                 amount: i129 {
@@ -74,5 +83,4 @@ fn test_route_finder_quote() {
                 route: route,
             }
         );
-    assert(result.is_zero(), 'quote==0');
 }
