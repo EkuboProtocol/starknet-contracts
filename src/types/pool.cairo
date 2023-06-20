@@ -48,7 +48,7 @@ impl PoolStorageAccess of StorageAccess<Pool> {
         );
 
         let tick = if (tick_raw >= 0x100000000) {
-            i129 { mag: tick_raw - 0x100000000, sign: true & (tick_raw != 0x100000000) }
+            i129 { mag: tick_raw - 0x100000000, sign: (tick_raw != 0x100000000) }
         } else {
             i129 { mag: tick_raw, sign: false }
         };

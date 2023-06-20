@@ -49,19 +49,19 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
     fn into(self: CallPoints) -> u8 {
         let mut res: u8 = 0;
         if (self.after_initialize_pool) {
-            res += 16;
+            res += 128;
         }
         if (self.before_swap) {
-            res += 8;
+            res += 64;
         }
         if (self.after_swap) {
-            res += 4;
+            res += 32;
         }
         if (self.before_update_position) {
-            res += 2;
+            res += 16;
         }
         if (self.after_update_position) {
-            res += 1;
+            res += 8;
         }
         res
     }
@@ -70,44 +70,36 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
 impl U8IntoCallPoints of Into<u8, CallPoints> {
     fn into(mut self: u8) -> CallPoints {
         // these are unused, but we need to remove them from the u8 and this is cheaper than masking
-        if (self >= 128) {
+        let after_initialize_pool = if (self >= 128) {
             self -= 128;
-        }
-        if (self >= 64) {
-            self -= 64;
-        }
-        if (self >= 32) {
-            self -= 32;
-        }
+            true
+        } else {
+            false
+        };
 
-        let after_initialize_pool = if (self >= 16) {
+        let before_swap = if (self >= 64) {
+            self -= 64;
+            true
+        } else {
+            false
+        };
+
+        let after_swap = if (self >= 32) {
+            self -= 32;
+            true
+        } else {
+            false
+        };
+
+        let before_update_position = if (self >= 16) {
             self -= 16;
             true
         } else {
             false
         };
 
-        let before_swap = if (self >= 8) {
+        let after_update_position = if (self >= 8) {
             self -= 8;
-            true
-        } else {
-            false
-        };
-        let after_swap = if (self >= 4) {
-            self -= 4;
-            true
-        } else {
-            false
-        };
-
-        let before_update_position = if (self >= 2) {
-            self -= 2;
-            true
-        } else {
-            false
-        };
-        let after_update_position = if (self >= 1) {
-            self -= 1;
             true
         } else {
             false
