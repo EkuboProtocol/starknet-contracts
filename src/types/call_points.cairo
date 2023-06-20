@@ -1,5 +1,8 @@
+use core::array::ArrayTrait;
+use serde::Serde;
+
 // The points at which an extension should be called
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop)]
 struct CallPoints {
     after_initialize_pool: bool,
     before_swap: bool,
@@ -111,6 +114,22 @@ impl U8IntoCallPoints of Into<u8, CallPoints> {
             after_swap,
             before_update_position,
             after_update_position,
+        }
+    }
+}
+
+// Allows for call points to be efficiently passed as an argument and return value by using the u8 representation
+impl CallPointsSerde of Serde<CallPoints> {
+    fn serialize(self: @CallPoints, ref output: Array<felt252>) {
+        Serde::<u8>::serialize(@CallPointsIntoU8::into(*self), ref output);
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<CallPoints> {
+        match Serde::<u8>::deserialize(ref serialized) {
+            Option::Some(value) => {
+                let call_points: CallPoints = U8IntoCallPoints::into(value);
+                Option::Some(call_points)
+            },
+            Option::None(_) => Option::None(()),
         }
     }
 }

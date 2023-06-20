@@ -47,8 +47,8 @@ mod CoreLocker {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, _core: ContractAddress) {
-        self.core.write(_core);
+    fn constructor(ref self: ContractState, core: ContractAddress) {
+        self.core.write(core);
     }
 
     #[generate_trait]

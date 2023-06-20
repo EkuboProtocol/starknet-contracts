@@ -35,9 +35,9 @@ use starknet::class_hash::Felt252TryIntoClassHash;
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
 fn deploy_mock_token() -> IMockERC20Dispatcher {
-    let constructor_calldata: Array<felt252> = ArrayTrait::new();
+    let constructor_args: Array<felt252> = ArrayTrait::new();
     let (token_address, _) = deploy_syscall(
-        MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_calldata.span(), true
+        MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
@@ -59,9 +59,9 @@ fn deploy_mock_extension(
     core: ICoreDispatcher, core_locker: ICoreLockerDispatcher, call_points: CallPoints
 ) -> IMockExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    constructor_args.append(core.contract_address.into());
-    constructor_args.append(core_locker.contract_address.into());
-    constructor_args.append(Into::<CallPoints, u8>::into(call_points.into()).into());
+    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@core_locker.contract_address, ref constructor_args);
+    Serde::serialize(@call_points, ref constructor_args);
     let (address, _) = deploy_syscall(
         MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 3, constructor_args.span(), true
     )
@@ -82,17 +82,17 @@ struct SetupPoolResult {
 fn deploy_core() -> ICoreDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
 
-    let (core_address, _) = deploy_syscall(
+    let (address, _) = deploy_syscall(
         Core::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('core deploy failed');
 
-    ICoreDispatcher { contract_address: core_address }
+    ICoreDispatcher { contract_address: address }
 }
 
 fn deploy_route_finder(core: ICoreDispatcher) -> IRouteFinderDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    constructor_args.append(core.contract_address.into());
+    Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         RouteFinder::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
@@ -104,13 +104,14 @@ fn deploy_route_finder(core: ICoreDispatcher) -> IRouteFinderDispatcher {
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    constructor_args.append(core.contract_address.into());
-    let (locker_address, _) = deploy_syscall(
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
         CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('locker deploy failed');
 
-    ICoreLockerDispatcher { contract_address: locker_address }
+    ICoreLockerDispatcher { contract_address: address }
 }
 
 impl IPositionsDispatcherIntoIERC721Dispatcher of Into<IPositionsDispatcher, IERC721Dispatcher> {
@@ -127,7 +128,8 @@ impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILo
 
 fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    constructor_args.append(core.contract_address.into());
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
     let (address, _) = deploy_syscall(
         Positions::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )

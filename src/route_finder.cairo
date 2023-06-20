@@ -86,8 +86,8 @@ mod RouteFinder {
 
 
     #[constructor]
-    fn constructor(ref self: ContractState, _core: ContractAddress) {
-        self.core.write(_core);
+    fn constructor(ref self: ContractState, core: ContractAddress) {
+        self.core.write(core);
     }
 
     // Filter the pools in the span to those that contain the specified token

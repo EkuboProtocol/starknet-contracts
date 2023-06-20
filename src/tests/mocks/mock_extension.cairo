@@ -69,13 +69,13 @@ mod MockExtension {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        _core: ContractAddress,
-        _core_locker: ContractAddress,
-        _call_points_u8: u8
+        core: ContractAddress,
+        core_locker: ContractAddress,
+        call_points: CallPoints
     ) {
-        self.core.write(_core);
-        self.core_locker.write(_core_locker);
-        self.call_points.write(_call_points_u8);
+        self.core.write(core);
+        self.core_locker.write(core_locker);
+        self.call_points.write(call_points.into());
     }
 
     #[external(v0)]
