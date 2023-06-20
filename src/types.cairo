@@ -10,5 +10,6 @@ mod tick;
 #[cfg(test)]
 mod bounds_test;
 mod call_points_test;
+mod delta_test;
 mod i129_test;
 mod keys_test;
