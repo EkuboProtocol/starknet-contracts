@@ -109,3 +109,31 @@ fn test_u8_into_after_update_position_call_points() {
         'after_initialize_pool'
     );
 }
+
+#[test]
+#[available_gas(3000000000)]
+fn test_conversion_all_values() {
+    let mut i: usize = 0;
+
+    loop {
+        if (i == 32) {
+            break ();
+        };
+
+        let call_points = CallPoints {
+            after_initialize_pool: (i & 16) != 0,
+            before_swap: (i & 8) != 0,
+            after_swap: (i & 4) != 0,
+            before_update_position: (i & 2) != 0,
+            after_update_position: (i & 1) != 0,
+        };
+
+        let converted: u8 = call_points.into();
+
+        let round_tripped: CallPoints = converted.into();
+
+        assert(round_tripped == call_points, 'round trip');
+
+        i += 1;
+    };
+}
