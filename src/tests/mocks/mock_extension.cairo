@@ -35,11 +35,15 @@ mod MockExtension {
         core_locker: ContractAddress,
         num_calls: u32,
         calls: LegacyMap<u32, ExtensionCalled>,
-        call_points: CallPoints
+        call_points: u8
     }
 
     #[generate_trait]
     impl InternalMethods of InternalTrait {
+        fn get_call_points(self: @ContractState) -> CallPoints {
+            self.call_points.read().into()
+        }
+
         fn check_caller_is_core(self: @ContractState) {
             assert(get_caller_address() == self.core.read(), 'CORE_ONLY');
         }
@@ -71,7 +75,7 @@ mod MockExtension {
     ) {
         self.core.write(_core);
         self.core_locker.write(_core_locker);
-        self.call_points.write(_call_points_u8.into());
+        self.call_points.write(_call_points_u8);
     }
 
     #[external(v0)]
@@ -89,7 +93,7 @@ mod MockExtension {
 
             self.insert_call(0, pool_key);
 
-            self.call_points.read()
+            self.get_call_points()
         }
         fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             self.check_caller_is_core();

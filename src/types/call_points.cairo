@@ -1,5 +1,5 @@
 // The points at which an extension should be called
-#[derive(Copy, Drop, Serde, storage_access::StorageAccess)]
+#[derive(Copy, Drop, Serde)]
 struct CallPoints {
     after_initialize_pool: bool,
     before_swap: bool,
@@ -69,6 +69,17 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
 
 impl U8IntoCallPoints of Into<u8, CallPoints> {
     fn into(mut self: u8) -> CallPoints {
+        // these are unused, but we need to remove them from the u8 and this is cheaper than masking
+        if (self >= 128) {
+            self -= 128;
+        }
+        if (self >= 64) {
+            self -= 64;
+        }
+        if (self >= 32) {
+            self -= 32;
+        }
+
         let after_initialize_pool = if (self >= 16) {
             self -= 16;
             true
