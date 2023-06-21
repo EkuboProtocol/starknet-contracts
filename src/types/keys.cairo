@@ -36,7 +36,7 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
 
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
-    salt: u32,
+    salt: u64,
     owner: ContractAddress,
     bounds: Bounds,
 }

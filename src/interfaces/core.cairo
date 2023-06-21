@@ -20,7 +20,7 @@ trait ILocker<TStorage> {
 // liquidity_delta is how the position's liquidity should be updated.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
-    salt: u32,
+    salt: u64,
     bounds: Bounds,
     liquidity_delta: i129,
 }
@@ -112,7 +112,9 @@ trait ICore<TStorage> {
     fn get_reserves_limit(self: @TStorage, token: ContractAddress) -> u128;
 
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
-    fn get_saved_balance(self: @TStorage, owner: ContractAddress, token: ContractAddress) -> u128;
+    fn get_saved_balance(
+        self: @TStorage, owner: ContractAddress, token: ContractAddress, cache_key: u64
+    ) -> u128;
 
     // todo: these next 2 functions are actually view functions, but we can't mark them as such because of a bug in the compiler
 
@@ -133,47 +135,50 @@ trait ICore<TStorage> {
     // Sets a new limit for the reserves of a given token
     fn set_reserves_limit(ref self: TStorage, token: ContractAddress, limit: u128);
 
-    // Withdraw any fees collected by the contract (only the owner can call this function)
+    // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
     );
 
-    // Main entrypoint for any actions, which must be called before any other pool functions can be called.
-    // Other functions must be called within the callback to lock. The lock callback is called with the input data, and the returned array is passed through to the caller.
+    // Locks the core contract, allowing other functions to be called that require locking.
+    // The lock callback is called with the input data, and the returned array is passed through to the caller.
     fn lock(ref self: TStorage, data: Array<felt252>) -> Array<felt252>;
 
-    // Withdraw a given token from core. This is used to withdraw the output of swaps or burnt liquidity, and also for flash loans.
-    // Note you must call this within a lock callback
+    // Withdraws a given token from core. This is used to withdraw the output of swaps or burnt liquidity, and also for flash loans.
+    // Must be called within a ILocker#locked
     fn withdraw(
         ref self: TStorage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
     );
 
     // Save a given token balance in core for a given account for use in a future lock. It can be recalled by calling load.
-    // Note you must call this within a lock callback
+    // Must be called within a ILocker#locked by the locker
     fn save(
-        ref self: TStorage, token_address: ContractAddress, recipient: ContractAddress, amount: u128
+        ref self: TStorage,
+        token_address: ContractAddress,
+        cache_key: u64,
+        recipient: ContractAddress,
+        amount: u128
     );
 
-    // Deposit a given token into core. This is how payments are made to core. First send the token to core, and then call deposit to account the delta.
-    // Note this is how reserves are used.
-    // Note you must call this within a lock callback
+    // Deposit a given token into core. This is how payments are made. First send the token to core, and then call deposit to account the delta.
+    // Must be called within a ILocker#locked
     fn deposit(ref self: TStorage, token_address: ContractAddress) -> u128;
 
     // Recall a balance previously saved via #save
-    // Note you must call this within a lock callback
-    fn load(ref self: TStorage, token_address: ContractAddress, amount: u128);
+    // Must be called within a ILocker#locked, but it can be called by addresses other than the locker
+    fn load(ref self: TStorage, token_address: ContractAddress, cache_key: u64, amount: u128);
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
-    // Note you must call this within a lock callback. Note also that a position cannot be burned to 0 unless all fees have been collected
+    // Must be called within a ILocker#locked. Note also that a position cannot be burned to 0 unless all fees have been collected
     fn update_position(
         ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
     ) -> Delta;
 
     // Collect the fees owed on a position
-    fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: u32, bounds: Bounds) -> Delta;
+    fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: u64, bounds: Bounds) -> Delta;
 
     // Make a swap against a pool.
     // You must call this within a lock callback.

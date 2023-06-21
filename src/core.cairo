@@ -56,9 +56,8 @@ mod Core {
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
-        // users may save balances in the singleton to avoid transfers, keyed by (owner, token)
-        // note a transfer can only be effected by calling load and save to another address
-        saved_balances: LegacyMap<(ContractAddress, ContractAddress), u128>,
+        // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
+        saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
         // the limit on reserves for each token
         reserves_limit: LegacyMap<ContractAddress, u128>,
     }
@@ -136,9 +135,20 @@ mod Core {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn require_locker(ref self: ContractState) -> (u32, ContractAddress) {
-            let id = self.lock_count.read() - 1;
+        #[inline(always)]
+        fn get_current_locker_id(self: @ContractState) -> u32 {
+            self.lock_count.read() - 1
+        }
+
+        #[inline(always)]
+        fn get_locker(self: @ContractState) -> (u32, ContractAddress) {
+            let id = self.get_current_locker_id();
             let locker = self.locker_addresses.read(id);
+            (id, locker)
+        }
+
+        fn require_locker(self: @ContractState) -> (u32, ContractAddress) {
+            let (id, locker) = self.get_locker();
             assert(locker == get_caller_address(), 'NOT_LOCKER');
             (id, locker)
         }
@@ -284,9 +294,9 @@ mod Core {
         }
 
         fn get_saved_balance(
-            self: @ContractState, owner: ContractAddress, token: ContractAddress
+            self: @ContractState, owner: ContractAddress, token: ContractAddress, cache_key: u64
         ) -> u128 {
-            self.saved_balances.read((owner, token))
+            self.saved_balances.read((owner, token, cache_key))
         }
 
 
@@ -428,13 +438,16 @@ mod Core {
         fn save(
             ref self: ContractState,
             token_address: ContractAddress,
+            cache_key: u64,
             recipient: ContractAddress,
             amount: u128
         ) {
             let (id, _) = self.require_locker();
 
-            let saved_balance = self.saved_balances.read((recipient, token_address));
-            self.saved_balances.write((recipient, token_address), saved_balance + amount);
+            let saved_balance = self.saved_balances.read((recipient, token_address, cache_key));
+            self
+                .saved_balances
+                .write((recipient, token_address, cache_key), saved_balance + amount);
 
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
@@ -472,18 +485,22 @@ mod Core {
             delta.low
         }
 
-        fn load(ref self: ContractState, token_address: ContractAddress, amount: u128) {
-            let (id, locker) = self.require_locker();
+        fn load(
+            ref self: ContractState, token_address: ContractAddress, cache_key: u64, amount: u128
+        ) {
+            let id = self.get_current_locker_id();
+            let caller = get_caller_address();
 
-            let saved_balance = self.saved_balances.read((locker, token_address));
-            self.saved_balances.write((locker, token_address), saved_balance - amount);
+            let saved_balance = self.saved_balances.read((caller, token_address, cache_key));
+            assert(amount <= saved_balance, 'INSUFFICIENT_SAVED_BALANCE');
+            self.saved_balances.write((caller, token_address, cache_key), saved_balance - amount);
 
             self.account_delta(id, token_address, i129 { mag: amount, sign: true });
 
             self
                 .emit(
                     Event::LoadedBalance(
-                        LoadedBalance { from: locker, token: token_address, amount: amount,  }
+                        LoadedBalance { from: caller, token: token_address, amount: amount,  }
                     )
                 );
         }
@@ -731,7 +748,7 @@ mod Core {
         }
 
         fn collect_fees(
-            ref self: ContractState, pool_key: PoolKey, salt: u32, bounds: Bounds
+            ref self: ContractState, pool_key: PoolKey, salt: u64, bounds: Bounds
         ) -> Delta {
             let (id, locker) = self.require_locker();
 

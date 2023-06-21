@@ -102,7 +102,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct LockCallbackData {
         pool_key: PoolKey,
-        salt: u32,
+        salt: u64,
         bounds: Bounds,
         liquidity_delta: i129,
         collect_fees: bool,
