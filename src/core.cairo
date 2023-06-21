@@ -234,7 +234,7 @@ mod Core {
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
-            LockerState { id, address, nonzero_delta_count }
+            LockerState { address, nonzero_delta_count }
         }
 
         fn get_pool(self: @ContractState, pool_key: PoolKey) -> Pool {
@@ -441,13 +441,12 @@ mod Core {
             cache_key: u64,
             recipient: ContractAddress,
             amount: u128
-        ) {
+        ) -> u128 {
             let (id, _) = self.require_locker();
 
             let saved_balance = self.saved_balances.read((recipient, token_address, cache_key));
-            self
-                .saved_balances
-                .write((recipient, token_address, cache_key), saved_balance + amount);
+            let balance_next = saved_balance + amount;
+            self.saved_balances.write((recipient, token_address, cache_key), balance_next);
 
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
@@ -455,9 +454,11 @@ mod Core {
             self
                 .emit(
                     Event::SavedBalance(
-                        SavedBalance { to: recipient, token: token_address, amount: amount,  }
+                        SavedBalance { to: recipient, token: token_address, amount: amount }
                     )
                 );
+
+            balance_next
         }
 
         fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
@@ -487,22 +488,25 @@ mod Core {
 
         fn load(
             ref self: ContractState, token_address: ContractAddress, cache_key: u64, amount: u128
-        ) {
+        ) -> u128 {
             let id = self.get_current_locker_id();
             let caller = get_caller_address();
 
             let saved_balance = self.saved_balances.read((caller, token_address, cache_key));
             assert(amount <= saved_balance, 'INSUFFICIENT_SAVED_BALANCE');
-            self.saved_balances.write((caller, token_address, cache_key), saved_balance - amount);
+            let balance_next = saved_balance - amount;
+            self.saved_balances.write((caller, token_address, cache_key), balance_next);
 
             self.account_delta(id, token_address, i129 { mag: amount, sign: true });
 
             self
                 .emit(
                     Event::LoadedBalance(
-                        LoadedBalance { from: caller, token: token_address, amount: amount,  }
+                        LoadedBalance { from: caller, token: token_address, amount: amount }
                     )
                 );
+
+            balance_next
         }
 
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {

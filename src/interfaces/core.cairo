@@ -51,7 +51,6 @@ struct GetPositionResult {
 // The current state of the queried locker
 #[derive(Copy, Drop, Serde)]
 struct LockerState {
-    id: u32,
     address: ContractAddress,
     nonzero_delta_count: u32
 }
@@ -152,13 +151,14 @@ trait ICore<TStorage> {
 
     // Save a given token balance in core for a given account for use in a future lock. It can be recalled by calling load.
     // Must be called within a ILocker#locked by the locker
+    // Returns the next saved balance for that token, cache_key, recipient tuple
     fn save(
         ref self: TStorage,
         token_address: ContractAddress,
         cache_key: u64,
         recipient: ContractAddress,
         amount: u128
-    );
+    ) -> u128;
 
     // Deposit a given token into core. This is how payments are made. First send the token to core, and then call deposit to account the delta.
     // Must be called within a ILocker#locked
@@ -166,7 +166,10 @@ trait ICore<TStorage> {
 
     // Recall a balance previously saved via #save
     // Must be called within a ILocker#locked, but it can be called by addresses other than the locker
-    fn load(ref self: TStorage, token_address: ContractAddress, cache_key: u64, amount: u128);
+    // Returns the next saved balance for that token, cache_key, spender tuple
+    fn load(
+        ref self: TStorage, token_address: ContractAddress, cache_key: u64, amount: u128
+    ) -> u128;
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);

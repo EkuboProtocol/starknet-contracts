@@ -288,6 +288,14 @@ fn update_position_inner(
             assert(false, 'unexpected');
             Zeroable::zero()
         },
+        ActionResult::SaveBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::LoadBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
     }
 }
 
@@ -354,6 +362,14 @@ fn swap_inner(
             );
             assert_balances_delta(before, after, delta);
             delta
+        },
+        ActionResult::SaveBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::LoadBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
         },
     }
 }

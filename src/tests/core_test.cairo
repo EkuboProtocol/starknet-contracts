@@ -20,7 +20,8 @@ use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC2
 use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
-    FEE_ONE_PERCENT, deploy_core, setup_pool, swap, update_position, SetupPoolResult
+    FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
+    update_position, SetupPoolResult
 };
 
 use ekubo::tests::mocks::locker::{
@@ -1511,5 +1512,90 @@ mod locks {
             },
             'fgg1 != 0'
         );
+    }
+}
+
+
+mod save_load_tests {
+    use super::{
+        deploy_core, deploy_mock_token, deploy_locker, IMockERC20DispatcherTrait,
+        ICoreLockerDispatcherTrait, ICoreDispatcherTrait, contract_address_const,
+        set_contract_address
+    };
+
+    use ekubo::tests::mocks::locker::{Action, ActionResult};
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_save_load_1_token() {
+        let core = deploy_core();
+        let token = deploy_mock_token();
+        let locker = deploy_locker(core);
+
+        token.increase_balance(locker.contract_address, 1);
+        let cache_key: u64 = 5678;
+
+        set_contract_address(core.get_owner());
+        core.set_reserves_limit(token.contract_address, 1);
+
+        // important because it allows us to load later
+        let recipient = locker.contract_address;
+
+        match locker.call(Action::SaveBalance((token.contract_address, cache_key, recipient, 1))) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::Relock(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::UpdatePosition(delta) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::SaveBalance(balance_next) => {
+                assert(balance_next == 1, 'balance_next');
+            },
+            ActionResult::LoadBalance(_) => {
+                assert(false, 'unexpected');
+            },
+        };
+
+        assert(
+            core
+                .get_saved_balance(
+                    owner: recipient, token: token.contract_address, cache_key: cache_key
+                ) == 1,
+            'saved 1'
+        );
+        assert(
+            core
+                .get_saved_balance(
+                    owner: recipient, token: token.contract_address, cache_key: 0
+                ) == 0,
+            'other cache key'
+        );
+
+        match locker.call(Action::LoadBalance((token.contract_address, cache_key, recipient, 1))) {
+            ActionResult::AssertLockerId(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::Relock(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::UpdatePosition(delta) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::Swap(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::SaveBalance(_) => {
+                assert(false, 'unexpected');
+            },
+            ActionResult::LoadBalance(balance_next) => {
+                assert(balance_next == 0, 'balance_next');
+            },
+        };
     }
 }

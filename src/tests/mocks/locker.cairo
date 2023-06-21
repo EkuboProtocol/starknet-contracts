@@ -11,7 +11,11 @@ enum Action {
     AssertLockerId: u32,
     Relock: (u32, u32), // expected id, number of relocks
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
-    Swap: (PoolKey, SwapParameters, ContractAddress)
+    Swap: (PoolKey, SwapParameters, ContractAddress),
+    // save that amount of balance to the given address
+    SaveBalance: (ContractAddress, u64, ContractAddress, u128),
+    // loads the balance to the address
+    LoadBalance: (ContractAddress, u64, ContractAddress, u128),
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -19,7 +23,9 @@ enum ActionResult {
     AssertLockerId: (),
     Relock: (),
     UpdatePosition: Delta,
-    Swap: Delta
+    Swap: Delta,
+    SaveBalance: u128,
+    LoadBalance: u128,
 }
 
 #[starknet::interface]
@@ -94,7 +100,6 @@ mod CoreLocker {
 
                     let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
 
-                    assert(state.id == locker_id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
@@ -106,7 +111,6 @@ mod CoreLocker {
                     assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
 
                     let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                    assert(state.id == locker_id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
@@ -114,7 +118,6 @@ mod CoreLocker {
                         let prev_state = ICoreDispatcher {
                             contract_address: caller
                         }.get_locker_state(id - 1);
-                        assert(prev_state.id == locker_id - 1, 'locker id');
                         assert(prev_state.address == get_contract_address(), 'is locker');
                         assert(prev_state.nonzero_delta_count == 0, 'no deltas');
                     }
@@ -134,7 +137,6 @@ mod CoreLocker {
                     let mut state = ICoreDispatcher {
                         contract_address: caller
                     }.get_locker_state(id);
-                    assert(state.id == id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
@@ -143,7 +145,6 @@ mod CoreLocker {
                     }.update_position(pool_key, params);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                    assert(state.id == id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(
                         state
@@ -186,14 +187,12 @@ mod CoreLocker {
                     let mut state = ICoreDispatcher {
                         contract_address: caller
                     }.get_locker_state(id);
-                    assert(state.id == id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
                     let delta = ICoreDispatcher { contract_address: caller }.swap(pool_key, params);
 
                     state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
-                    assert(state.id == id, 'locker id');
                     assert(state.address == get_contract_address(), 'is locker');
 
                     assert(
@@ -230,6 +229,46 @@ mod CoreLocker {
                     assert(state.nonzero_delta_count == 0, 'deltas');
 
                     ActionResult::Swap(delta)
+                },
+                Action::SaveBalance((
+                    token, cache_key, recipient, amount
+                )) => {
+                    let balance_next = ICoreDispatcher {
+                        contract_address: caller
+                    }.save(token, cache_key, recipient, amount);
+
+                    let mut state = ICoreDispatcher {
+                        contract_address: caller
+                    }.get_locker_state(id);
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 1, '1 delta');
+
+                    self.handle_delta(caller, token, i129 { mag: amount, sign: false }, recipient);
+
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.nonzero_delta_count == 0, '0 delta');
+
+                    ActionResult::SaveBalance(balance_next)
+                },
+                Action::LoadBalance((
+                    token, cache_key, recipient, amount
+                )) => {
+                    let balance_next = ICoreDispatcher {
+                        contract_address: caller
+                    }.load(token, cache_key, amount);
+
+                    let mut state = ICoreDispatcher {
+                        contract_address: caller
+                    }.get_locker_state(id);
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 1, '1 delta');
+
+                    self.handle_delta(caller, token, i129 { mag: amount, sign: true }, recipient);
+
+                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    assert(state.nonzero_delta_count == 0, '0 delta');
+
+                    ActionResult::LoadBalance(balance_next)
                 }
             };
 
