@@ -112,11 +112,11 @@ fn test_u8_into_after_update_position_call_points() {
 
 #[test]
 #[available_gas(3000000000)]
-fn test_conversion_all_values() {
+fn test_conversion_all_possible_values() {
     let mut i: usize = 0;
 
     loop {
-        if (i == 32) {
+        if (i == 256) {
             break ();
         };
 
@@ -128,7 +128,17 @@ fn test_conversion_all_values() {
             after_update_position: (i & 1) != 0,
         };
 
-        let converted: u8 = call_points.into();
+        let mut converted: u8 = call_points.into();
+        // these values are ignored but we should try them
+        if ((i & 128) != 0) {
+            converted += 4;
+        }
+        if ((i & 64) != 0) {
+            converted += 2;
+        }
+        if ((i & 32) != 0) {
+            converted += 1;
+        }
 
         let round_tripped: CallPoints = converted.into();
 
