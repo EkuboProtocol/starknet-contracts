@@ -78,15 +78,66 @@ fn test_storage_access_write_read_valid_example_at_random_base_address_plus_offs
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_error_if_tick_exceeds_min_max() {
+#[should_panic(expected: ('u8_add Overflow', ))]
+fn test_write_fails_if_offset_too_large_to_fit() {
+    let base = storage_base_address_const::<123456>();
+    let call_points = CallPoints {
+        after_initialize_pool: false,
+        before_swap: true,
+        after_swap: false,
+        before_update_position: true,
+        after_update_position: false,
+    };
+    StorageAccess::<Pool>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 253_u8,
+        value: Pool {
+            sqrt_ratio: min_sqrt_ratio(),
+            tick: min_tick(),
+            call_points: call_points,
+            liquidity: 123456789,
+            fee_growth_global_token0: 45678,
+            fee_growth_global_token1: 910234,
+        }
+    )
+        .unwrap_syscall();
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+fn test_storage_access_write_error_if_tick_less_than_min_by_2() {
     let base = storage_base_address_const::<123456>();
     let write = StorageAccess::<Pool>::write_at_offset_internal(
         address_domain: 0,
         base: base,
         offset: 8_u8,
         value: Pool {
-            sqrt_ratio: min_sqrt_ratio(),
-            tick: min_tick(),
+            sqrt_ratio: min_sqrt_ratio(), tick: min_tick() - i129 {
+                mag: 2, sign: false
+            },
+            call_points: Default::default(),
+            liquidity: 123456789,
+            fee_growth_global_token0: 45678,
+            fee_growth_global_token1: 910234,
+        }
+    );
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+fn test_storage_access_write_error_if_tick_greater_than_max_by_1() {
+    let base = storage_base_address_const::<123456>();
+    let write = StorageAccess::<Pool>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 8_u8,
+        value: Pool {
+            sqrt_ratio: min_sqrt_ratio(), tick: max_tick() + i129 {
+                mag: 1, sign: false
+            },
             call_points: Default::default(),
             liquidity: 123456789,
             fee_growth_global_token0: 45678,
