@@ -9,7 +9,7 @@ use zeroable::Zeroable;
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
 // An empty option is returned on overflow/underflow which means the price exceeded the u256 bounds
 fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129) -> Option<u256> {
-    if (amount.mag.is_zero()) {
+    if (amount.is_zero()) {
         return Option::Some(sqrt_ratio);
     }
 
@@ -58,7 +58,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
 // Compute the next ratio from a delta amount1, always rounded towards starting price for input, and away from starting price for output
 // An empty option is returned on overflow/underflow which means the price exceeded the u256 bounds
 fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129) -> Option<u256> {
-    if (amount.mag.is_zero()) {
+    if (amount.is_zero()) {
         return Option::Some(sqrt_ratio);
     }
 

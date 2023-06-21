@@ -21,7 +21,24 @@ fn test_mask_3() {
 }
 
 #[test]
+fn test_mask_4() {
+    assert(mask(4) == 31, 'mask');
+}
+
+#[test]
 #[should_panic(expected: ('mask', ))]
 fn test_mask_128() {
     mask(128);
+}
+
+#[test]
+#[should_panic(expected: ('mask', ))]
+fn test_mask_129() {
+    mask(129);
+}
+
+#[test]
+#[should_panic(expected: ('mask', ))]
+fn test_mask_255() {
+    mask(255);
 }

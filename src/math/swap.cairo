@@ -3,21 +3,7 @@ use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_with_fee};
 use traits::Into;
-
-use debug::PrintTrait;
-
-impl SwapResultPrintTrait of PrintTrait<SwapResult> {
-    fn print(self: SwapResult) {
-        'consumed_amount:'.print();
-        self.consumed_amount.print();
-        'sqrt_ratio_next:'.print();
-        self.sqrt_ratio_next.print();
-        'calculated_amount:'.print();
-        self.calculated_amount.print();
-        'fee_amount:'.print();
-        self.fee_amount.print();
-    }
-}
+use zeroable::Zeroable;
 
 // consumed_amount is how much of the amount was used in this step
 // calculated_amount is how much of the other token is given
@@ -33,7 +19,22 @@ struct SwapResult {
 
 #[inline(always)]
 fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
+    // sqrt_ratio is expressed in token1/token0, thus:
+    // negative token0 = true ^ false = true = increasing
+    // positive token0 = false ^ false = false = decreasing
+    // negative token1 = true ^ true = false = decreasing
+    // negative token0 = true ^ false = true = increasing
     exact_output ^ is_token1
+}
+
+#[inline(always)]
+fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
+    SwapResult {
+        consumed_amount: Zeroable::zero(),
+        calculated_amount: Zeroable::zero(),
+        fee_amount: Zeroable::zero(),
+        sqrt_ratio_next: next_sqrt_ratio
+    }
 }
 
 // Compute the result of swapping some amount in/out of either token0/token1 against the liquidity
@@ -47,36 +48,23 @@ fn swap_result(
 ) -> SwapResult {
     // if we are at the final price already, or the liquidity is 0, early exit with the next price
     // note sqrt_ratio_limit is the sqrt_ratio_next in both cases
-    if ((liquidity == 0) | (sqrt_ratio == sqrt_ratio_limit)) {
-        return SwapResult {
-            consumed_amount: Zeroable::zero(),
-            calculated_amount: 0,
-            fee_amount: 0,
-            sqrt_ratio_next: sqrt_ratio_limit
-        };
+    if (liquidity.is_zero() | (sqrt_ratio == sqrt_ratio_limit)) {
+        return no_op_swap_result(sqrt_ratio_limit);
     }
 
     // no amount traded means no-op, price doesn't move
-    if (amount.mag == 0) {
-        return SwapResult {
-            consumed_amount: Zeroable::zero(),
-            calculated_amount: 0,
-            fee_amount: 0,
-            sqrt_ratio_next: sqrt_ratio
-        };
+    if (amount.is_zero()) {
+        return no_op_swap_result(sqrt_ratio);
     }
 
-    // sqrt_ratio is token1/token0, thus:
-    // negative token0 = true ^ false = true = increasing
-    // positive token0 = false ^ false = false = decreasing
-    // negative token1 = true ^ true = false = decreasing
-    // negative token0 = true ^ false = true = increasing
     let increasing = is_price_increasing(amount.sign, is_token1);
 
     // we know limit != sqrt_ratio because of the early return, so this ensures that the limit is in the correct direction
     assert((sqrt_ratio_limit > sqrt_ratio) == increasing, 'DIRECTION');
 
     // this amount is what moves the price. fee is always taken on the specified amount
+    // if the user is buying a token, then they pay a fee on the purchased amount
+    // if the user is selling a token, then they pay a fee on the sold amount
     let with_fee = amount_with_fee(amount, fee);
 
     // compute the next sqrt_ratio resulting from trading the entire input/output amount

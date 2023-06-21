@@ -5,6 +5,19 @@ use ekubo::types::i129::i129;
 use ekubo::math::exp2::exp2;
 use debug::PrintTrait;
 
+impl SwapResultPrintTrait of PrintTrait<SwapResult> {
+    fn print(self: SwapResult) {
+        'consumed_amount:'.print();
+        self.consumed_amount.print();
+        'sqrt_ratio_next:'.print();
+        self.sqrt_ratio_next.print();
+        'calculated_amount:'.print();
+        self.calculated_amount.print();
+        'fee_amount:'.print();
+        self.fee_amount.print();
+    }
+}
+
 // no-op test cases first
 
 #[test]
