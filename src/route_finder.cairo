@@ -241,7 +241,8 @@ mod RouteFinder {
             panic(output);
         }
 
-        let mut output_span = output.span().slice(1, output.len() - 1);
+        let mut output_span = output.span();
+        output_span.pop_front();
         let mut result: TOutput = Serde::deserialize(ref output_span)
             .expect('DESERIALIZE_RESULT_FAILED');
         result
