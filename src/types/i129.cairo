@@ -94,7 +94,7 @@ impl i129StorageAccess of StorageAccess<i129> {
         )
     }
     fn size_internal(value: i129) -> u8 {
-        1
+        StorageAccess::<u128>::size_internal(0xffffffffffffffffffffffffffffffff)
     }
 }
 
