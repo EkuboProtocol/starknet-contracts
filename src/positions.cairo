@@ -32,6 +32,7 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
+    use ekubo::shared_locker::call_core_with_callback;
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
 
     #[storage]
@@ -423,7 +424,8 @@ mod Positions {
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let pool = ICoreDispatcher { contract_address: self.core.read() }.get_pool(pool_key);
+            let core = ICoreDispatcher { contract_address: self.core.read() };
+            let pool = core.get_pool(pool_key);
 
             // compute how much liquidity we can deposit based on token balances
             let liquidity: u128 = max_liquidity(
@@ -447,9 +449,8 @@ mod Positions {
                     }
                 );
 
-            // do the deposit (never expected to fail because we pre-computed liquidity)
-            let mut data: Array<felt252> = ArrayTrait::new();
-            Serde::<LockCallbackData>::serialize(
+            let delta: Delta = call_core_with_callback(
+                core.contract_address,
                 @LockCallbackData {
                     pool_key,
                     bounds,
@@ -458,16 +459,8 @@ mod Positions {
                     collect_fees,
                     min_token0: 0,
                     min_token1: 0
-                },
-                ref data
+                }
             );
-
-            let mut result = ICoreDispatcher {
-                contract_address: self.core.read()
-            }.lock(data).span();
-
-            let delta = Serde::<Delta>::deserialize(ref result)
-                .expect('CALLBACK_RESULT_DESERIALIZE');
 
             self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
 
@@ -501,8 +494,8 @@ mod Positions {
                     }
                 );
 
-            let mut data: Array<felt252> = ArrayTrait::new();
-            Serde::<LockCallbackData>::serialize(
+            let delta: Delta = call_core_with_callback(
+                self.core.read(),
                 @LockCallbackData {
                     bounds,
                     pool_key,
@@ -511,16 +504,8 @@ mod Positions {
                     collect_fees,
                     min_token0,
                     min_token1
-                },
-                ref data
+                }
             );
-
-            let mut result = ICoreDispatcher {
-                contract_address: self.core.read()
-            }.lock(data).span();
-
-            let delta = Serde::<Delta>::deserialize(ref result)
-                .expect('CALLBACK_RESULT_DESERIALIZE');
 
             (delta.amount0.mag, delta.amount1.mag)
         }

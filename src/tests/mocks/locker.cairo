@@ -6,7 +6,6 @@ use serde::Serde;
 use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
-
 #[derive(Copy, Drop, Serde)]
 enum Action {
     AssertLockerId: u32,
@@ -39,6 +38,8 @@ mod CoreLocker {
     use array::ArrayTrait;
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::shared_locker::call_core_with_callback;
+
     use option::{Option, OptionTrait};
 
     #[storage]
@@ -241,18 +242,7 @@ mod CoreLocker {
     #[external(v0)]
     impl CoreLockerImpl of ICoreLocker<ContractState> {
         fn call(ref self: ContractState, action: Action) -> ActionResult {
-            let mut arr: Array<felt252> = ArrayTrait::new();
-            Serde::<Action>::serialize(@action, ref arr);
-
-            let result = ICoreDispatcher { contract_address: self.core.read() }.lock(arr);
-
-            let mut result_data = result.span();
-            let mut action_result: ActionResult = Serde::<ActionResult>::deserialize(
-                ref result_data
-            )
-                .expect('DESERIALIZE_RESULT_FAILED');
-
-            action_result
+            call_core_with_callback(self.core.read(), @action)
         }
     }
 }

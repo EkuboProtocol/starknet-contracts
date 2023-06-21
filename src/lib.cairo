@@ -1,9 +1,10 @@
-mod math;
 mod core;
-mod types;
-mod positions;
 mod interfaces;
+mod math;
+mod positions;
 mod route_finder;
+mod shared_locker;
+mod types;
 
 #[cfg(test)]
 mod tests;
