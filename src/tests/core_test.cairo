@@ -1538,7 +1538,7 @@ mod save_load_tests {
         set_contract_address(core.get_owner());
         core.set_reserves_limit(token.contract_address, 1);
 
-        // important because it allows us to load later
+        // important because it allows us to load
         let recipient = locker.contract_address;
 
         match locker.call(Action::SaveBalance((token.contract_address, cache_key, recipient, 1))) {
