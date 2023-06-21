@@ -145,3 +145,43 @@ fn test_storage_access_write_error_if_tick_greater_than_max_by_1() {
         }
     );
 }
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_storage_access_write_error_if_sqrt_ratio_less_than_min() {
+    let base = storage_base_address_const::<123456>();
+    let write = StorageAccess::<Pool>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 8_u8,
+        value: Pool {
+            sqrt_ratio: min_sqrt_ratio() - 1,
+            tick: min_tick(),
+            call_points: Default::default(),
+            liquidity: 123456789,
+            fee_growth_global_token0: 45678,
+            fee_growth_global_token1: 910234,
+        }
+    );
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_storage_access_write_error_if_sqrt_ratio_gt_max() {
+    let base = storage_base_address_const::<123456>();
+    let write = StorageAccess::<Pool>::write_at_offset_internal(
+        address_domain: 0,
+        base: base,
+        offset: 8_u8,
+        value: Pool {
+            sqrt_ratio: max_sqrt_ratio() + 1,
+            tick: max_tick(),
+            call_points: Default::default(),
+            liquidity: 123456789,
+            fee_growth_global_token0: 45678,
+            fee_growth_global_token1: 910234,
+        }
+    );
+}
