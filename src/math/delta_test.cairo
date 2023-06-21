@@ -13,6 +13,17 @@ fn test_amount0_delta_price_down() {
 
 
 #[test]
+fn test_amount0_delta_price_down_reverse() {
+    let delta = amount0_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 339942424496442021441932674757011200255, high: 0 },
+        1000000,
+        false
+    );
+    assert(delta == 1000, 'delta');
+}
+
+#[test]
 fn test_amount0_delta_price_example_down() {
     let delta = amount0_delta(
         u256 { high: 1, low: 0 },
@@ -46,7 +57,6 @@ fn test_amount0_delta_price_up() {
     assert(delta == 999, 'delta');
 }
 
-
 #[test]
 fn test_amount0_delta_price_down_round_up() {
     let delta = amount0_delta(
@@ -74,6 +84,17 @@ fn test_amount1_delta_price_down() {
     let delta = amount1_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
         u256 { high: 1, low: 0 },
+        1000000,
+        false
+    );
+    assert(delta == 999, 'delta');
+}
+
+#[test]
+fn test_amount1_delta_price_down_reverse() {
+    let delta = amount1_delta(
+        u256 { high: 1, low: 0 },
+        u256 { low: 339942424496442021441932674757011200255, high: 0 },
         1000000,
         false
     );

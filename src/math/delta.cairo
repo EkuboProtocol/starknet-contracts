@@ -3,17 +3,30 @@ use ekubo::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul};
 use zeroable::{Zeroable};
 
+fn ordered_non_zero<
+    T,
+    impl TPartialEq: PartialOrd<T>,
+    impl TZeroable: Zeroable<T>,
+    impl TDrop: Drop<T>,
+    impl TCopy: Copy<T>
+>(
+    x: T, y: T
+) -> (T, T) {
+    let (lower, upper) = if x < y {
+        (x, y)
+    } else {
+        (y, x)
+    };
+    assert(x.is_non_zero(), 'NONZERO');
+    (lower, upper)
+}
+
 // Compute the difference in amount of token0 between two ratios, rounded as specified
 fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
-    let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
-        (sqrt_ratio_a, sqrt_ratio_b)
-    } else {
-        (sqrt_ratio_b, sqrt_ratio_a)
-    };
+    // we do this ordering here because it's easier
+    let (sqrt_ratio_lower, sqrt_ratio_upper) = ordered_non_zero(sqrt_ratio_a, sqrt_ratio_b);
 
-    assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO_RATIO');
-
-    if (liquidity.is_zero() | (sqrt_ratio_a == sqrt_ratio_b)) {
+    if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
         return Zeroable::zero();
     }
 
@@ -33,15 +46,10 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
 
 // Compute the difference in amount of token1 between two ratios, rounded as specified
 fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
-    let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
-        (sqrt_ratio_a, sqrt_ratio_b)
-    } else {
-        (sqrt_ratio_b, sqrt_ratio_a)
-    };
+    // we do this ordering here because it's easier than branching in 
+    let (sqrt_ratio_lower, sqrt_ratio_upper) = ordered_non_zero(sqrt_ratio_a, sqrt_ratio_b);
 
-    assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO_RATIO');
-
-    if (liquidity.is_zero() | (sqrt_ratio_a == sqrt_ratio_b)) {
+    if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
         return Zeroable::zero();
     }
 
