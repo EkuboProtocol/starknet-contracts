@@ -26,7 +26,7 @@ fn test_before_initialize_incentives() {
     assert(
         pool.call_points == CallPoints {
             after_initialize_pool: false,
-            before_swap: false,
+            before_swap: true,
             after_swap: true,
             before_update_position: true,
             after_update_position: false,
