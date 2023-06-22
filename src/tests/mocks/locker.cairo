@@ -50,11 +50,11 @@ mod CoreLocker {
 
     #[storage]
     struct Storage {
-        core: ContractAddress
+        core: ICoreDispatcher
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ContractAddress) {
+    fn constructor(ref self: ContractState, core: ICoreDispatcher) {
         self.core.write(core);
     }
 
@@ -62,7 +62,7 @@ mod CoreLocker {
     impl Internal of CoreLocker {
         fn handle_delta(
             ref self: ContractState,
-            core: ContractAddress,
+            core: ICoreDispatcher,
             token: ContractAddress,
             delta: i129,
             recipient: ContractAddress
@@ -71,15 +71,12 @@ mod CoreLocker {
                 // transfer the token from self (assumes we have the balance)
                 IERC20Dispatcher {
                     contract_address: token
-                }.transfer(core, u256 { low: delta.mag, high: 0 });
+                }.transfer(core.contract_address, u256 { low: delta.mag, high: 0 });
                 // then call pay
-                assert(
-                    ICoreDispatcher { contract_address: core }.deposit(token) == delta.mag,
-                    'DEPOSIT_FAILED'
-                );
+                assert(core.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
             } else if (delta < Zeroable::zero()) {
                 // withdraw to recipient
-                ICoreDispatcher { contract_address: core }.withdraw(token, recipient, delta.mag);
+                core.withdraw(token, recipient, delta.mag);
             }
         }
     }
@@ -87,8 +84,8 @@ mod CoreLocker {
     #[external(v0)]
     impl CoreLockerLockedImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            let caller = get_caller_address();
-            assert(caller == self.core.read(), 'UNAUTHORIZED_CALLBACK');
+            let core = self.core.read();
+            assert(core.contract_address == get_caller_address(), 'UNAUTHORIZED_CALLBACK');
 
             let mut action_data = data.span();
             let mut action: Action = Serde::<Action>::deserialize(ref action_data)
@@ -98,7 +95,7 @@ mod CoreLocker {
                 Action::AssertLockerId(locker_id) => {
                     assert(locker_id == id, 'INVALID_LOCKER_ID');
 
-                    let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    let state = core.get_locker_state(id);
 
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
@@ -110,14 +107,12 @@ mod CoreLocker {
                 )) => {
                     assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
 
-                    let state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    let state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
                     if (id != 0) {
-                        let prev_state = ICoreDispatcher {
-                            contract_address: caller
-                        }.get_locker_state(id - 1);
+                        let prev_state = core.get_locker_state(id - 1);
                         assert(prev_state.address == get_contract_address(), 'is locker');
                         assert(prev_state.nonzero_delta_count == 0, 'no deltas');
                     }
@@ -134,17 +129,13 @@ mod CoreLocker {
                 Action::UpdatePosition((
                     pool_key, params, recipient
                 )) => {
-                    let mut state = ICoreDispatcher {
-                        contract_address: caller
-                    }.get_locker_state(id);
+                    let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                    let delta = ICoreDispatcher {
-                        contract_address: caller
-                    }.update_position(pool_key, params);
+                    let delta = core.update_position(pool_key, params);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(
                         state
@@ -161,9 +152,9 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token0, delta.amount0, recipient);
+                    self.handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(
                         state
                             .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
@@ -174,9 +165,9 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token1, delta.amount1, recipient);
+                    self.handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
 
                     ActionResult::UpdatePosition(delta)
@@ -184,15 +175,13 @@ mod CoreLocker {
                 Action::Swap((
                     pool_key, params, recipient
                 )) => {
-                    let mut state = ICoreDispatcher {
-                        contract_address: caller
-                    }.get_locker_state(id);
+                    let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 0, 'no deltas');
 
-                    let delta = ICoreDispatcher { contract_address: caller }.swap(pool_key, params);
+                    let delta = core.swap(pool_key, params);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
 
                     assert(
@@ -210,9 +199,9 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token0, delta.amount0, recipient);
+                    self.handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(
                         state
                             .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
@@ -223,9 +212,9 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(caller, pool_key.token1, delta.amount1, recipient);
+                    self.handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
 
                     ActionResult::Swap(delta)
@@ -233,19 +222,15 @@ mod CoreLocker {
                 Action::SaveBalance((
                     token, cache_key, recipient, amount
                 )) => {
-                    let balance_next = ICoreDispatcher {
-                        contract_address: caller
-                    }.save(token, cache_key, recipient, amount);
+                    let balance_next = core.save(token, cache_key, recipient, amount);
 
-                    let mut state = ICoreDispatcher {
-                        contract_address: caller
-                    }.get_locker_state(id);
+                    let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    self.handle_delta(caller, token, i129 { mag: amount, sign: false }, recipient);
+                    self.handle_delta(core, token, i129 { mag: amount, sign: false }, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
 
                     ActionResult::SaveBalance(balance_next)
@@ -253,19 +238,15 @@ mod CoreLocker {
                 Action::LoadBalance((
                     token, cache_key, recipient, amount
                 )) => {
-                    let balance_next = ICoreDispatcher {
-                        contract_address: caller
-                    }.load(token, cache_key, amount);
+                    let balance_next = core.load(token, cache_key, amount);
 
-                    let mut state = ICoreDispatcher {
-                        contract_address: caller
-                    }.get_locker_state(id);
+                    let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    self.handle_delta(caller, token, i129 { mag: amount, sign: true }, recipient);
+                    self.handle_delta(core, token, i129 { mag: amount, sign: true }, recipient);
 
-                    state = ICoreDispatcher { contract_address: caller }.get_locker_state(id);
+                    state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
 
                     ActionResult::LoadBalance(balance_next)

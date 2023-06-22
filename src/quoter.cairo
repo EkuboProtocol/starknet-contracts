@@ -43,12 +43,12 @@ mod Quoter {
 
     #[storage]
     struct Storage {
-        core: ContractAddress, 
+        core: ICoreDispatcher, 
     }
 
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ContractAddress) {
+    fn constructor(ref self: ContractState, core: ICoreDispatcher) {
         self.core.write(core);
     }
 
@@ -83,7 +83,7 @@ mod Quoter {
     #[external(v0)]
     impl QuoterLockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            let core = ICoreDispatcher { contract_address: self.core.read() };
+            let core = self.core.read();
 
             assert(get_caller_address() == core.contract_address, 'UNAUTHORIZED');
 
@@ -166,7 +166,7 @@ mod Quoter {
     fn call_core_with_callback<
         TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>, 
     >(
-        core: ContractAddress, input: @TInput
+        core: ICoreDispatcher, input: @TInput
     ) -> TOutput {
         let mut input_data: Array<felt252> = ArrayTrait::new();
         Serde::serialize(input, ref input_data);
@@ -176,7 +176,7 @@ mod Quoter {
         Serde::<Array<felt252>>::serialize(@input_data, ref lock_call_arguments);
 
         let output = call_contract_syscall(
-            core,
+            core.contract_address,
             0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
             lock_call_arguments.span()
         )

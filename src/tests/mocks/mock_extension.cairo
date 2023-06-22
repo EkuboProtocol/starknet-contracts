@@ -32,7 +32,7 @@ mod MockExtension {
 
     #[storage]
     struct Storage {
-        core: ContractAddress,
+        core: ICoreDispatcher,
         core_locker: ContractAddress,
         num_calls: u32,
         calls: LegacyMap<u32, ExtensionCalled>,
@@ -45,8 +45,10 @@ mod MockExtension {
             self.call_points.read().into()
         }
 
-        fn check_caller_is_core(self: @ContractState) {
-            assert(get_caller_address() == self.core.read(), 'CORE_ONLY');
+        fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
+            let core = self.core.read();
+            assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
+            core
         }
 
         fn insert_call(
@@ -73,7 +75,7 @@ mod MockExtension {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        core: ContractAddress,
+        core: ICoreDispatcher,
         core_locker: ContractAddress,
         call_points: CallPoints
     ) {
@@ -87,27 +89,20 @@ mod MockExtension {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
-            self.check_caller_is_core();
-
-            let pool = ICoreDispatcher {
-                contract_address: get_caller_address()
-            }.get_pool(pool_key);
-
+            let core = self.check_caller_is_core();
+            let pool = core.get_pool(pool_key);
             assert(pool.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(caller, 0, pool_key);
-
             self.get_call_points()
         }
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
-            self.check_caller_is_core();
+            let core = self.check_caller_is_core();
             self.insert_call(caller, 1, pool_key);
 
-            let pool = ICoreDispatcher {
-                contract_address: get_caller_address()
-            }.get_pool(pool_key);
+            let pool = core.get_pool(pool_key);
 
             assert(pool.sqrt_ratio.is_non_zero(), 'pool is init');
         }

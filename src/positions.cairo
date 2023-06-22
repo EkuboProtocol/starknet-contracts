@@ -38,7 +38,7 @@ mod Positions {
     #[storage]
     struct Storage {
         token_uri_base: felt252,
-        core: ContractAddress,
+        core: ICoreDispatcher,
         next_token_id: u128,
         approvals: LegacyMap<u128, ContractAddress>,
         owners: LegacyMap<u128, ContractAddress>,
@@ -95,7 +95,7 @@ mod Positions {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ContractAddress, token_uri_base: felt252) {
+    fn constructor(ref self: ContractState, core: ICoreDispatcher, token_uri_base: felt252) {
         self.token_uri_base.write(token_uri_base);
         self.core.write(core);
         self.next_token_id.write(1);
@@ -263,8 +263,8 @@ mod Positions {
     #[external(v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            let caller = get_caller_address();
-            assert(caller == self.core.read(), 'CORE');
+            let core = self.core.read();
+            assert(core.contract_address == get_caller_address(), 'CORE');
 
             let mut data_span = data.span();
             let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
@@ -272,9 +272,7 @@ mod Positions {
 
             let mut delta: Delta = Zeroable::zero();
             if callback_data.collect_fees {
-                delta += ICoreDispatcher {
-                    contract_address: caller
-                }
+                delta += core
                     .collect_fees(
                         pool_key: callback_data.pool_key,
                         salt: callback_data.salt,
@@ -283,9 +281,7 @@ mod Positions {
             }
 
             if callback_data.liquidity_delta != Zeroable::zero() {
-                let update = ICoreDispatcher {
-                    contract_address: caller
-                }
+                let update = core
                     .update_position(
                         callback_data.pool_key,
                         UpdatePositionParameters {
@@ -305,37 +301,29 @@ mod Positions {
             if delta.amount0.mag != 0 {
                 if (delta.amount0.sign) {
                     // withdrawn to the contract to be returned to caller via #clear
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
+                    core
                         .withdraw(
                             callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
                         );
                 } else {
                     IERC20Dispatcher {
                         contract_address: callback_data.pool_key.token0
-                    }.transfer(caller, u256 { low: delta.amount0.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token0);
+                    }.transfer(core.contract_address, u256 { low: delta.amount0.mag, high: 0 });
+                    core.deposit(callback_data.pool_key.token0);
                 }
             }
             if (delta.amount1.mag != 0) {
                 // withdrawn to the contract to be returned to caller via #clear
                 if (delta.amount0.sign) {
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }
+                    core
                         .withdraw(
                             callback_data.pool_key.token1, get_contract_address(), delta.amount1.mag
                         );
                 } else {
                     IERC20Dispatcher {
                         contract_address: callback_data.pool_key.token1
-                    }.transfer(caller, u256 { low: delta.amount1.mag, high: 0 });
-                    ICoreDispatcher {
-                        contract_address: caller
-                    }.deposit(callback_data.pool_key.token1);
+                    }.transfer(core.contract_address, u256 { low: delta.amount1.mag, high: 0 });
+                    core.deposit(callback_data.pool_key.token1);
                 }
             }
 
@@ -413,7 +401,7 @@ mod Positions {
             validate_token_id(token_id);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let core = ICoreDispatcher { contract_address: self.core.read() };
+            let core = self.core.read();
             let get_position_result = core
                 .get_position(
                     pool_key,
@@ -453,7 +441,7 @@ mod Positions {
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let core = ICoreDispatcher { contract_address: self.core.read() };
+            let core = self.core.read();
             let pool = core.get_pool(pool_key);
 
             // compute how much liquidity we can deposit based on token balances
@@ -479,7 +467,7 @@ mod Positions {
                 );
 
             let delta: Delta = call_core_with_callback(
-                core.contract_address,
+                core,
                 @LockCallbackData {
                     pool_key,
                     bounds,
@@ -551,10 +539,10 @@ mod Positions {
         }
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
-            let core_dispatcher = ICoreDispatcher { contract_address: self.core.read() };
-            let pool = core_dispatcher.get_pool(pool_key);
+            let core = self.core.read();
+            let pool = core.get_pool(pool_key);
             if (pool.sqrt_ratio == Zeroable::zero()) {
-                core_dispatcher.initialize_pool(pool_key, initial_tick);
+                core.initialize_pool(pool_key, initial_tick);
             }
         }
 
