@@ -13,7 +13,7 @@ use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
-    deploy_core, setup_pool, deploy_positions, FEE_ONE_PERCENT, swap,
+    deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
     IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher
 };
 
@@ -45,6 +45,16 @@ fn test_nft_name_symbol() {
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
     assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_custom_uri() {
+    let core = deploy_core();
+    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(
+        deploy_positions_custom_uri(core, 'ipfs://abcdef/')
+    );
+    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
 }
 
 #[test]

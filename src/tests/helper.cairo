@@ -141,16 +141,24 @@ impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILo
     }
 }
 
-fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
+
+fn deploy_positions_custom_uri(
+    core: ICoreDispatcher, token_uri_base: felt252
+) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@token_uri_base, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Positions::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Positions::TEST_CLASS_HASH.try_into().unwrap(), 2, constructor_args.span(), true
     )
-        .expect('deploy failed');
+        .expect('positions deploy failed');
 
     IPositionsDispatcher { contract_address: address }
+}
+
+fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
+    deploy_positions_custom_uri(core, 'https://z.ekubo.org/')
 }
 
 fn setup_pool(

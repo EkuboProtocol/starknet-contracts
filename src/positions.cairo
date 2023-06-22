@@ -37,6 +37,7 @@ mod Positions {
 
     #[storage]
     struct Storage {
+        token_uri_base: felt252,
         core: ContractAddress,
         next_token_id: u128,
         approvals: LegacyMap<u128, ContractAddress>,
@@ -94,7 +95,8 @@ mod Positions {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ContractAddress) {
+    fn constructor(ref self: ContractState, core: ContractAddress, token_uri_base: felt252) {
+        self.token_uri_base.write(token_uri_base);
         self.core.write(core);
         self.next_token_id.write(1);
     }
@@ -253,7 +255,7 @@ mod Positions {
             validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
-            append('https://z.ekubo.org/', to_decimal(token_id.low).expect('TOKEN_ID'))
+            append(self.token_uri_base.read(), to_decimal(token_id.low).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
     }
