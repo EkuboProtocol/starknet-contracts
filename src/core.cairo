@@ -104,6 +104,7 @@ mod Core {
     struct SavedBalance {
         to: ContractAddress,
         token: ContractAddress,
+        cache_key: u64,
         amount: u128,
     }
 
@@ -111,6 +112,7 @@ mod Core {
     struct LoadedBalance {
         from: ContractAddress,
         token: ContractAddress,
+        cache_key: u64,
         amount: u128,
     }
 
@@ -458,7 +460,12 @@ mod Core {
             self
                 .emit(
                     Event::SavedBalance(
-                        SavedBalance { to: recipient, token: token_address, amount: amount }
+                        SavedBalance {
+                            to: recipient,
+                            token: token_address,
+                            cache_key: cache_key,
+                            amount: amount
+                        }
                     )
                 );
 
@@ -506,7 +513,9 @@ mod Core {
             self
                 .emit(
                     Event::LoadedBalance(
-                        LoadedBalance { from: caller, token: token_address, amount: amount }
+                        LoadedBalance {
+                            from: caller, token: token_address, cache_key: cache_key, amount: amount
+                        }
                     )
                 );
 
