@@ -565,6 +565,9 @@ fn test_deposit_then_withdraw_with_fees() {
 
     let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
 
+    assert(get_position_result.liquidity == 200050104166, 'liquidity');
+    assert(get_position_result.amount0 == 100000998, 'amount0');
+    assert(get_position_result.amount1 == 99999000, 'amount1');
     assert(get_position_result.fees0 == 20, 'fees0');
     assert(get_position_result.fees1 == 9, 'fees1');
 }
@@ -627,6 +630,9 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     // fees are not withdrawn with the principal
     let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
 
+    assert(get_position_result.liquidity == 100025052083, 'liquidity');
+    assert(get_position_result.amount0 == 50000499, 'amount0');
+    assert(get_position_result.amount1 == 49999500, 'amount1');
     assert(get_position_result.fees0 == 19, 'fees0');
     assert(get_position_result.fees1 == 8, 'fees1');
 

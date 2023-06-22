@@ -12,6 +12,8 @@ struct TokenInfo {
 #[derive(Copy, Drop, Serde)]
 struct GetPositionInfoResult {
     liquidity: u128,
+    amount0: u128,
+    amount1: u128,
     fees0: u128,
     fees1: u128,
 }

@@ -17,7 +17,7 @@ mod Positions {
     use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::utils::{unsafe_sub};
-    use ekubo::math::liquidity::{max_liquidity};
+    use ekubo::math::liquidity::{max_liquidity, liquidity_delta_to_amount_delta};
     use ekubo::math::utils::{add_delta};
     use ekubo::math::string::{to_decimal, append};
     use ekubo::types::keys::{PoolKey};
@@ -393,9 +393,8 @@ mod Positions {
             validate_token_id(token_id);
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
-            let get_position_result = ICoreDispatcher {
-                contract_address: self.core.read()
-            }
+            let core = ICoreDispatcher { contract_address: self.core.read() };
+            let get_position_result = core
                 .get_position(
                     pool_key,
                     PositionKey {
@@ -404,9 +403,19 @@ mod Positions {
                         bounds
                     }
                 );
+            let pool = core.get_pool(pool_key);
+
+            let delta = liquidity_delta_to_amount_delta(
+                sqrt_ratio: pool.sqrt_ratio,
+                liquidity_delta: i129 { mag: info.liquidity, sign: true },
+                sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.tick_lower),
+                sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.tick_upper),
+            );
 
             GetPositionInfoResult {
                 liquidity: info.liquidity,
+                amount0: delta.amount0.mag,
+                amount1: delta.amount1.mag,
                 fees0: get_position_result.fees0,
                 fees1: get_position_result.fees1
             }
