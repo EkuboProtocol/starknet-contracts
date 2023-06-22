@@ -171,8 +171,6 @@ fn test_amount1_delta_overflow_entire_price_range_max_liquidity() {
     );
 }
 
-
-use debug::PrintTrait;
 #[test]
 fn test_amount1_delta_no_overflow_half_price_range_half_liquidity() {
     assert(
