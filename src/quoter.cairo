@@ -3,22 +3,8 @@ use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde)]
-struct FindParameters {
-    amount: i129,
-    specified_token: ContractAddress,
-    other_token: ContractAddress,
-    pool_keys: Span<PoolKey>,
-}
-
-#[derive(Drop, Copy, Serde)]
 struct Route {
     pool_keys: Span<PoolKey>, 
-}
-
-#[derive(Drop, Copy, Serde)]
-struct FindResult {
-    route: Route,
-    other_token_amount: i129,
 }
 
 #[derive(Drop, Copy, Serde)]
@@ -35,16 +21,13 @@ struct QuoteResult {
 }
 
 #[starknet::interface]
-trait IRouteFinder<TStorage> {
-    // Finds a route between the specified token amount and the other token
-    fn find(ref self: TStorage, params: FindParameters) -> FindResult;
-
+trait IQuoter<TStorage> {
     // Compute the quote for executing the given route
     fn quote(ref self: TStorage, params: QuoteParameters) -> QuoteResult;
 }
 
 #[starknet::contract]
-mod RouteFinder {
+mod Quoter {
     use array::{Array, ArrayTrait, SpanTrait};
     use option::{OptionTrait};
     use result::{ResultTrait};
@@ -53,10 +36,7 @@ mod RouteFinder {
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-    use super::{
-        i129, ContractAddress, IRouteFinder, FindParameters, FindResult, PoolKey, Route,
-        QuoteParameters, QuoteResult
-    };
+    use super::{i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult};
 
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
@@ -112,15 +92,14 @@ mod RouteFinder {
 
     #[derive(Drop, Copy, Serde)]
     enum CallbackParameters {
-        FindParameters: FindParameters,
-        QuoteParameters: QuoteParameters,
+        QuoteParameters: QuoteParameters, 
     }
 
     const FUNCTION_DID_NOT_ERROR_FLAG: felt252 =
         0x3f532df6e73f94d604f4eb8c661635595c91adc1d387931451eacd418cfbd14; // hash of function_did_not_error
 
     #[external(v0)]
-    impl RouteFinderLockerImpl of ILocker<ContractState> {
+    impl QuoterLockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = ICoreDispatcher { contract_address: self.core.read() };
 
@@ -136,21 +115,6 @@ mod RouteFinder {
             Serde::<felt252>::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
 
             match params_enum {
-                CallbackParameters::FindParameters(params) => {
-                    let pools_containing_both_tokens = filter_to_relevant_pools(
-                        filter_to_relevant_pools(params.pool_keys, params.specified_token).span(),
-                        params.other_token
-                    );
-
-                    // todo: compute a route across all the pools
-                    let route: Route = Route { pool_keys: pools_containing_both_tokens.span() };
-                    let result = FindResult {
-                        route: route, other_token_amount: Zeroable::zero(), 
-                    };
-
-                    Serde::<FindResult>::serialize(@result, ref output);
-                    panic(output);
-                },
                 CallbackParameters::QuoteParameters(params) => {
                     let mut pool_keys = params.route.pool_keys;
                     let mut amount: i129 = params.amount;
@@ -249,11 +213,7 @@ mod RouteFinder {
     }
 
     #[external(v0)]
-    impl RouteFinderImpl of IRouteFinder<ContractState> {
-        fn find(ref self: ContractState, params: FindParameters) -> FindResult {
-            call_core_with_callback(self.core.read(), @CallbackParameters::FindParameters(params))
-        }
-
+    impl QuoterImpl of IQuoter<ContractState> {
         fn quote(ref self: ContractState, params: QuoteParameters) -> QuoteResult {
             call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
         }

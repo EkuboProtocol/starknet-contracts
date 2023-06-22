@@ -13,7 +13,8 @@ use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
-use ekubo::route_finder::{IRouteFinderDispatcher, RouteFinder};
+use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::extensions::incentives::{Incentives, IIncentivesDispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -41,6 +42,18 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
+}
+
+fn deploy_incentives(core: ICoreDispatcher) -> IIncentivesDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        Incentives::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+    )
+        .expect('incentives deploy failed');
+
+    IIncentivesDispatcher { contract_address: address }
 }
 
 fn deploy_two_mock_tokens() -> (IMockERC20Dispatcher, IMockERC20Dispatcher) {
@@ -90,16 +103,16 @@ fn deploy_core() -> ICoreDispatcher {
     ICoreDispatcher { contract_address: address }
 }
 
-fn deploy_route_finder(core: ICoreDispatcher) -> IRouteFinderDispatcher {
+fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        RouteFinder::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Quoter::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
         .expect('rf deploy failed');
 
-    IRouteFinderDispatcher { contract_address: address }
+    IQuoterDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
