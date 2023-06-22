@@ -11,10 +11,12 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::utils::ContractAddressOrder;
 use ekubo::core::{Core};
-use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta};
+use ekubo::interfaces::core::{
+    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
+};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
-use ekubo::extensions::incentives::{Incentives, IIncentivesDispatcher};
+use ekubo::extensions::incentives::{Incentives};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -44,7 +46,7 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     return IMockERC20Dispatcher { contract_address: token_address };
 }
 
-fn deploy_incentives(core: ICoreDispatcher) -> IIncentivesDispatcher {
+fn deploy_incentives(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
 
@@ -53,7 +55,7 @@ fn deploy_incentives(core: ICoreDispatcher) -> IIncentivesDispatcher {
     )
         .expect('incentives deploy failed');
 
-    IIncentivesDispatcher { contract_address: address }
+    IExtensionDispatcher { contract_address: address }
 }
 
 fn deploy_two_mock_tokens() -> (IMockERC20Dispatcher, IMockERC20Dispatcher) {

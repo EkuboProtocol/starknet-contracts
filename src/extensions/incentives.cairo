@@ -1,4 +1,5 @@
 use ekubo::types::keys::{PoolKey, PositionKey};
+use ekubo::types::i129::{i129};
 use traits::{TryInto, Into};
 use option::{Option, OptionTrait};
 use starknet::{StorageAccess, SyscallResult, StorageBaseAddress};
@@ -51,39 +52,49 @@ impl SecondsPerLiquidityStorageAccess of StorageAccess<SecondsPerLiquidity> {
 
 #[derive(Copy, Drop, storage_access::StorageAccess)]
 struct PoolState {
+    // todo: pack timestamp and tick last
+    tick_last: i129,
     block_timestamp_last: u64,
     seconds_per_liquidity_global: SecondsPerLiquidity,
 }
 
 #[starknet::interface]
 trait IIncentives<TStorage> {
-    fn create(ref self: TStorage, pool_key: PoolKey);
+    // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
+    fn get_liquidity_seconds(ref self: TStorage, pool_key: PoolKey) -> u256;
 }
 
+// This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
 #[starknet::contract]
 mod Incentives {
     use super::{IIncentives, PoolKey, PositionKey, PoolState, SecondsPerLiquidity};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::i129::{i129};
-    use ekubo::interfaces::core::{IExtension, SwapParameters, UpdatePositionParameters, Delta};
-    use starknet::{ContractAddress};
+    use ekubo::interfaces::core::{
+        ICoreDispatcher, IExtension, SwapParameters, UpdatePositionParameters, Delta
+    };
+    use starknet::{ContractAddress, get_block_timestamp};
+    use zeroable::Zeroable;
 
     #[storage]
     struct Storage {
-        core: ContractAddress,
+        core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
         position_state: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
         tick_state: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ContractAddress) {
+    fn constructor(ref self: ContractState, core: ICoreDispatcher) {
         self.core.write(core);
     }
 
     #[external(v0)]
     impl IncentivesImpl of IIncentives<ContractState> {
-        fn create(ref self: ContractState, pool_key: PoolKey) {}
+        // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
+        fn get_liquidity_seconds(ref self: ContractState, pool_key: PoolKey) -> u256 {
+            Zeroable::zero()
+        }
     }
 
     #[external(v0)]
@@ -103,9 +114,8 @@ mod Incentives {
             }
         }
 
-        fn after_initialize_pool(
-            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
-        ) { // not called
+        fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+            assert(false, 'NOT_USED');
         }
 
         fn before_swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) {}
@@ -123,6 +133,8 @@ mod Incentives {
             pool_key: PoolKey,
             params: UpdatePositionParameters,
             delta: Delta
-        ) {}
+        ) {
+            assert(false, 'NOT_USED');
+        }
     }
 }

@@ -77,12 +77,20 @@ mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct PositionMinted {
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
         Deposit: Deposit,
+        PositionMinted: PositionMinted,
     }
 
     #[constructor]
@@ -362,6 +370,16 @@ mod Positions {
                             from: Zeroable::zero(), to: recipient, token_id: u256 {
                                 low: id, high: 0
                             }
+                        }
+                    )
+                );
+
+            // contains the associated pool key and bounds which is never stored
+            self
+                .emit(
+                    Event::PositionMinted(
+                        PositionMinted {
+                            token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
                         }
                     )
                 );

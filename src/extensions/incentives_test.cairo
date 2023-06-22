@@ -1,6 +1,5 @@
 use ekubo::interfaces::core::{ICoreDispatcherTrait};
 use ekubo::tests::helper::{deploy_core, deploy_incentives, deploy_two_mock_tokens};
-use ekubo::extensions::incentives::{IIncentivesDispatcherTrait};
 use ekubo::types::keys::{PoolKey};
 use ekubo::types::call_points::{CallPoints};
 
