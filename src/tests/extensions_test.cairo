@@ -15,6 +15,7 @@ use ekubo::types::bounds::Bounds;
 use ekubo::types::i129::i129;
 use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
+use starknet::{get_contract_address};
 use zeroable::Zeroable;
 use ekubo::types::call_points::{CallPoints, all_call_points};
 
@@ -48,7 +49,7 @@ fn test_mock_extension_cannot_be_called_directly() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
     );
-    extension.before_initialize_pool(pool_key, Zeroable::zero());
+    extension.before_initialize_pool(Zeroable::zero(), pool_key, Zeroable::zero());
 }
 
 #[test]
@@ -58,7 +59,7 @@ fn test_mock_extension_can_be_called_by_core() {
         fee: 0, tick_spacing: 1, call_points: all_call_points()
     );
     set_contract_address(core.contract_address);
-    extension.before_initialize_pool(pool_key, Zeroable::zero());
+    extension.before_initialize_pool(Zeroable::zero(), pool_key, Zeroable::zero());
 }
 
 
@@ -79,10 +80,12 @@ fn test_mock_extension_initialize_pool_is_called() {
     assert(mock.get_num_calls() == 2, '2 calls made');
 
     let before = mock.get_call(0);
+    assert(before.caller == get_contract_address(), 'caller');
     assert(before.call_point == 0, 'called before');
     check_matches_pool_key(before, pool_key);
 
     let after = mock.get_call(1);
+    assert(after.caller == get_contract_address(), 'caller');
     assert(after.call_point == 1, 'called after');
     check_matches_pool_key(before, pool_key);
 }
@@ -110,10 +113,12 @@ fn test_mock_extension_swap_is_called() {
     assert(mock.get_num_calls() == 4, '4 calls made');
 
     let before = mock.get_call(2);
+    assert(before.caller == locker.contract_address, 'caller');
     assert(before.call_point == 2, 'called before');
     check_matches_pool_key(before, pool_key);
 
     let after = mock.get_call(3);
+    assert(after.caller == locker.contract_address, 'caller');
     assert(after.call_point == 3, 'called after');
     check_matches_pool_key(before, pool_key);
 }
@@ -138,10 +143,12 @@ fn test_mock_extension_update_position_is_called() {
     assert(mock.get_num_calls() == 4, '4 calls made');
 
     let before = mock.get_call(2);
+    assert(before.caller == locker.contract_address, 'caller');
     assert(before.call_point == 4, 'called before');
     check_matches_pool_key(before, pool_key);
 
     let after = mock.get_call(3);
+    assert(after.caller == locker.contract_address, 'caller');
     assert(after.call_point == 5, 'called after');
     check_matches_pool_key(before, pool_key);
 }
@@ -177,6 +184,7 @@ fn test_mock_extension_no_call_points() {
     assert(mock.get_num_calls() == 1, '1 call made');
 
     let call = mock.get_call(0);
+    assert(call.caller == get_contract_address(), 'caller');
     assert(call.call_point == 0, 'called');
     check_matches_pool_key(call, pool_key);
 }
@@ -221,6 +229,7 @@ fn test_mock_extension_after_initialize_pool_only() {
     assert(mock.get_num_calls() == 2, '2 call made');
 
     let call = mock.get_call(1);
+    assert(call.caller == get_contract_address(), 'caller');
     assert(call.call_point == 1, 'called');
     check_matches_pool_key(call, pool_key);
 }
@@ -266,6 +275,7 @@ fn test_mock_extension_before_swap_only() {
     assert(mock.get_num_calls() == 2, '2 call made');
 
     let call = mock.get_call(1);
+    assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 2, 'called');
     check_matches_pool_key(call, pool_key);
 }
@@ -310,6 +320,7 @@ fn test_mock_extension_after_swap_only() {
     assert(mock.get_num_calls() == 2, '2 call made');
 
     let call = mock.get_call(1);
+    assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 3, 'called');
     check_matches_pool_key(call, pool_key);
 }
@@ -355,6 +366,7 @@ fn test_mock_extension_before_update_position_only() {
     assert(mock.get_num_calls() == 2, '2 call made');
 
     let call = mock.get_call(1);
+    assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 4, 'called');
     check_matches_pool_key(call, pool_key);
 }
@@ -399,6 +411,7 @@ fn test_mock_extension_after_update_position_only() {
     assert(mock.get_num_calls() == 2, '2 call made');
 
     let call = mock.get_call(1);
+    assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 5, 'called');
     check_matches_pool_key(call, pool_key);
 }

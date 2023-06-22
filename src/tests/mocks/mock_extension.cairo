@@ -2,6 +2,7 @@ use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, storage_access::StorageAccess)]
 struct ExtensionCalled {
+    caller: ContractAddress,
     call_point: u32,
     token0: ContractAddress,
     token1: ContractAddress,
@@ -48,13 +49,16 @@ mod MockExtension {
             assert(get_caller_address() == self.core.read(), 'CORE_ONLY');
         }
 
-        fn insert_call(ref self: ContractState, call_point: u32, pool_key: PoolKey) {
+        fn insert_call(
+            ref self: ContractState, caller: ContractAddress, call_point: u32, pool_key: PoolKey
+        ) {
             let num_calls = self.num_calls.read();
             self
                 .calls
                 .write(
                     num_calls,
                     ExtensionCalled {
+                        caller: caller,
                         call_point: call_point,
                         token0: pool_key.token0,
                         token1: pool_key.token1,
@@ -81,7 +85,7 @@ mod MockExtension {
     #[external(v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
             self.check_caller_is_core();
 
@@ -91,13 +95,15 @@ mod MockExtension {
 
             assert(pool.sqrt_ratio.is_zero(), 'pool is not init');
 
-            self.insert_call(0, pool_key);
+            self.insert_call(caller, 0, pool_key);
 
             self.get_call_points()
         }
-        fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+        fn after_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ) {
             self.check_caller_is_core();
-            self.insert_call(1, pool_key);
+            self.insert_call(caller, 1, pool_key);
 
             let pool = ICoreDispatcher {
                 contract_address: get_caller_address()
@@ -106,31 +112,44 @@ mod MockExtension {
             assert(pool.sqrt_ratio.is_non_zero(), 'pool is init');
         }
 
-        fn before_swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) {
-            self.check_caller_is_core();
-            self.insert_call(2, pool_key);
-        }
-        fn after_swap(
-            ref self: ContractState, pool_key: PoolKey, params: SwapParameters, delta: Delta
+        fn before_swap(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters
         ) {
             self.check_caller_is_core();
-            self.insert_call(3, pool_key);
+            self.insert_call(caller, 2, pool_key);
+        }
+        fn after_swap(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters,
+            delta: Delta
+        ) {
+            self.check_caller_is_core();
+            self.insert_call(caller, 3, pool_key);
         }
 
         fn before_update_position(
-            ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: UpdatePositionParameters
         ) {
             self.check_caller_is_core();
-            self.insert_call(4, pool_key);
+            self.insert_call(caller, 4, pool_key);
         }
         fn after_update_position(
             ref self: ContractState,
+            caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
             delta: Delta
         ) {
             self.check_caller_is_core();
-            self.insert_call(5, pool_key);
+            self.insert_call(caller, 5, pool_key);
         }
     }
 

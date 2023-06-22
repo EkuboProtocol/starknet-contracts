@@ -538,7 +538,7 @@ mod Core {
             let call_points = if (pool_key.extension.is_non_zero()) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
-                }.before_initialize_pool(pool_key, initial_tick)
+                }.before_initialize_pool(get_caller_address(), pool_key, initial_tick)
             } else {
                 Default::<CallPoints>::default()
             };
@@ -560,7 +560,7 @@ mod Core {
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
-                }.after_initialize_pool(pool_key, initial_tick);
+                }.after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
 
             self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
@@ -626,7 +626,7 @@ mod Core {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
-                    }.before_update_position(pool_key, params);
+                    }.before_update_position(locker, pool_key, params);
                 }
             }
 
@@ -757,7 +757,7 @@ mod Core {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
-                    }.after_update_position(pool_key, params, delta);
+                    }.after_update_position(locker, pool_key, params, delta);
                 }
             }
 
@@ -811,7 +811,7 @@ mod Core {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
-                    }.before_swap(pool_key, params);
+                    }.before_swap(locker, pool_key, params);
                 }
             }
 
@@ -988,7 +988,7 @@ mod Core {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
-                    }.after_swap(pool_key, params, delta);
+                    }.after_swap(locker, pool_key, params, delta);
                 }
             }
 

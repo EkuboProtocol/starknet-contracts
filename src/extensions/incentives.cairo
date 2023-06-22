@@ -100,7 +100,7 @@ mod Incentives {
     #[external(v0)]
     impl IncentivesExtension of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
             CallPoints {
                 after_initialize_pool: false,
@@ -114,22 +114,37 @@ mod Incentives {
             }
         }
 
-        fn after_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+        fn after_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ) {
             assert(false, 'NOT_USED');
         }
 
-        fn before_swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) {}
+        fn before_swap(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters
+        ) {}
 
         fn after_swap(
-            ref self: ContractState, pool_key: PoolKey, params: SwapParameters, delta: Delta
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters,
+            delta: Delta
         ) {}
 
         fn before_update_position(
-            ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: UpdatePositionParameters
         ) {}
 
         fn after_update_position(
             ref self: ContractState,
+            caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
             delta: Delta

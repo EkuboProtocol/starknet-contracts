@@ -60,23 +60,40 @@ struct LockerState {
 trait IExtension<TStorage> {
     // Called before a pool is initialized, and returns where the extension should be called in future operations
     fn before_initialize_pool(
-        ref self: TStorage, pool_key: PoolKey, initial_tick: i129
+        ref self: TStorage, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
     ) -> CallPoints;
     // Called after a pool is initialized
-    fn after_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    fn after_initialize_pool(
+        ref self: TStorage, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+    );
 
     // Called before a swap happens
-    fn before_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters);
+    fn before_swap(
+        ref self: TStorage, caller: ContractAddress, pool_key: PoolKey, params: SwapParameters
+    );
     // Called after a swap happens with the result of the swap
-    fn after_swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters, delta: Delta);
+    fn after_swap(
+        ref self: TStorage,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        params: SwapParameters,
+        delta: Delta
+    );
 
     // Called before an update to a position
     fn before_update_position(
-        ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters
+        ref self: TStorage,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        params: UpdatePositionParameters
     );
     // Called after the position is updated with the result of the update
     fn after_update_position(
-        ref self: TStorage, pool_key: PoolKey, params: UpdatePositionParameters, delta: Delta
+        ref self: TStorage,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        params: UpdatePositionParameters,
+        delta: Delta
     );
 }
 
