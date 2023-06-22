@@ -1,3 +1,4 @@
+use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
 use traits::{TryInto, Into};
@@ -71,10 +72,12 @@ mod Incentives {
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::i129::{i129};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, IExtension, SwapParameters, UpdatePositionParameters, Delta
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
+        Delta
     };
-    use starknet::{ContractAddress, get_block_timestamp};
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use zeroable::Zeroable;
+    use traits::{Into};
 
     #[storage]
     struct Storage {
@@ -87,6 +90,64 @@ mod Incentives {
     #[constructor]
     fn constructor(ref self: ContractState, core: ICoreDispatcher) {
         self.core.write(core);
+    }
+
+    #[generate_trait]
+    impl Internal of InternalTrait {
+        fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
+            let core = self.core.read();
+            assert(core.contract_address == get_caller_address(), 'CALLER_NOT_CORE');
+            core
+        }
+
+        fn update_seconds_per_liquidity_global(
+            ref self: ContractState, core: ICoreDispatcher, pool_key: PoolKey
+        ) {
+            let state = self.pool_state.read(pool_key);
+
+            let time = get_block_timestamp();
+
+            if (state.block_timestamp_last == time) {
+                return ();
+            }
+
+            let pool = core.get_pool(pool_key);
+
+            if (pool.liquidity.is_non_zero()) {
+                let seconds_per_liquidity_global_next = SecondsPerLiquidity {
+                    inner: state.seconds_per_liquidity_global.inner
+                        + (u256 {
+                            low: 0, high: (time - state.block_timestamp_last).into()
+                            } / u256 {
+                            low: pool.liquidity, high: 0
+                        })
+                };
+
+                self
+                    .pool_state
+                    .write(
+                        pool_key,
+                        PoolState {
+                            tick_last: state.tick_last,
+                            block_timestamp_last: time,
+                            seconds_per_liquidity_global: seconds_per_liquidity_global_next,
+                        }
+                    );
+            } else {
+                self
+                    .pool_state
+                    .write(
+                        pool_key,
+                        PoolState {
+                            tick_last: state.tick_last,
+                            block_timestamp_last: time,
+                            // we don't increment it at all with 0 liquidity,
+                            // which makes it seem like time stopped from a rewards perspective
+                            seconds_per_liquidity_global: state.seconds_per_liquidity_global,
+                        }
+                    );
+            }
+        }
     }
 
     #[external(v0)]
@@ -125,7 +186,11 @@ mod Incentives {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: SwapParameters
-        ) {}
+        ) {
+            // update seconds per liquidity
+            let core = self.check_caller_is_core();
+            self.update_seconds_per_liquidity_global(core, pool_key);
+        }
 
         fn after_swap(
             ref self: ContractState,
@@ -133,14 +198,47 @@ mod Incentives {
             pool_key: PoolKey,
             params: SwapParameters,
             delta: Delta
-        ) {}
+        ) {
+            let core = self.check_caller_is_core();
+
+            let pool = core.get_pool(pool_key);
+            let state = self.pool_state.read(pool_key);
+
+            let mut tick = state.tick_last;
+
+            loop {
+                if (tick == pool.tick) {
+                    break ();
+                }
+
+                let next_initialized = if (tick < pool.tick) {
+                    core.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                } else {
+                    core.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                };
+            };
+
+            self
+                .pool_state
+                .write(
+                    pool_key,
+                    PoolState {
+                        tick_last: pool.tick,
+                        block_timestamp_last: state.block_timestamp_last,
+                        seconds_per_liquidity_global: state.seconds_per_liquidity_global
+                    }
+                );
+        }
 
         fn before_update_position(
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters
-        ) {}
+        ) {
+            let core = self.check_caller_is_core();
+            self.update_seconds_per_liquidity_global(core, pool_key);
+        }
 
         fn after_update_position(
             ref self: ContractState,

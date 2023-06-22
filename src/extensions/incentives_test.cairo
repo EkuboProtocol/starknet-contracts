@@ -18,7 +18,7 @@ fn test_before_initialize_incentives() {
         extension: incentives.contract_address,
     };
 
-    core.initialize_pool(key, Zeroable::zero(), );
+    core.initialize_pool(key, Zeroable::zero());
 
     let pool = core.get_pool(key);
 
