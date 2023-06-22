@@ -1,4 +1,5 @@
 use ekubo::math::delta::{amount0_delta, amount1_delta};
+use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 
 #[test]
 fn test_amount0_delta_price_down() {
@@ -157,4 +158,30 @@ fn test_amount1_delta_price_up_round_up() {
         true
     );
     assert(delta == 1002, 'delta');
+}
+
+#[test]
+#[should_panic(expected: ('OVERFLOW_AMOUNT1_DELTA', ))]
+fn test_amount1_delta_overflow_entire_price_range_max_liquidity() {
+    amount1_delta(
+        sqrt_ratio_a: min_sqrt_ratio(),
+        sqrt_ratio_b: max_sqrt_ratio(),
+        liquidity: 0xffffffffffffffffffffffffffffffff,
+        round_up: false
+    );
+}
+
+
+use debug::PrintTrait;
+#[test]
+fn test_amount1_delta_no_overflow_half_price_range_half_liquidity() {
+    assert(
+        amount1_delta(
+            sqrt_ratio_a: u256 { low: 0, high: 1 },
+            sqrt_ratio_b: max_sqrt_ratio(),
+            liquidity: 0xffffffffffffffff,
+            round_up: false
+        ) == 0xfffffc080ed7b4536f352cf617ac4df5,
+        'delta'
+    );
 }
