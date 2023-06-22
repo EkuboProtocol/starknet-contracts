@@ -41,24 +41,6 @@ mod Quoter {
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
 
-    use debug::PrintTrait;
-
-    impl PrintSpanFelt252 of PrintTrait<Span<felt252>> {
-        fn print(self: Span<felt252>) {
-            let mut span = self.slice(0, self.len());
-            loop {
-                match span.pop_front() {
-                    Option::Some(x) => {
-                        (*x).print();
-                    },
-                    Option::None(()) => {
-                        break ();
-                    },
-                };
-            };
-        }
-    }
-
     #[storage]
     struct Storage {
         core: ContractAddress, 
