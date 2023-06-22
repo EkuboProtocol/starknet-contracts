@@ -85,6 +85,9 @@ trait ICore<TStorage> {
     // The address that has the right to any fees collected by this contract
     fn get_owner(self: @TStorage) -> ContractAddress;
 
+    // Get the amount of withdrawal fees collected for the protocol
+    fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
+
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
 

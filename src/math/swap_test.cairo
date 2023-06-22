@@ -1,4 +1,4 @@
-use ekubo::math::swap::{swap_result, is_price_increasing, SwapResult};
+use ekubo::math::swap::{no_op_swap_result, swap_result, is_price_increasing, SwapResult};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use zeroable::Zeroable;
 use ekubo::types::i129::i129;
@@ -18,23 +18,74 @@ impl SwapResultPrintTrait of PrintTrait<SwapResult> {
     }
 }
 
+
+impl SwapResultEq of PartialEq<SwapResult> {
+    fn eq(lhs: @SwapResult, rhs: @SwapResult) -> bool {
+        (*lhs.consumed_amount == *rhs.consumed_amount)
+            & (*lhs.sqrt_ratio_next == *rhs.sqrt_ratio_next)
+            & (*lhs.calculated_amount == *rhs.calculated_amount)
+            & (*lhs.fee_amount == *rhs.fee_amount)
+    }
+    fn ne(lhs: @SwapResult, rhs: @SwapResult) -> bool {
+        !PartialEq::<SwapResult>::eq(lhs, rhs)
+    }
+}
+
 // no-op test cases first
 
 #[test]
-fn test_swap_zero_amount_token0() {
-    let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
-        liquidity: 100000,
-        sqrt_ratio_limit: u256 { high: 0, low: 0 },
-        amount: Zeroable::zero(),
-        is_token1: false,
-        fee: 0,
+fn test_no_op_swap_result() {
+    assert(
+        no_op_swap_result(u256 { low: 0, high: 0 }) == SwapResult {
+            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
+                low: 0, high: 0
+            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        },
+        'no-op'
     );
+    assert(
+        no_op_swap_result(u256 { low: 1, high: 0 }) == SwapResult {
+            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
+                low: 1, high: 0
+            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        },
+        'no-op'
+    );
+    assert(
+        no_op_swap_result(u256 { low: 0, high: 1 }) == SwapResult {
+            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
+                low: 0, high: 1
+            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        },
+        'no-op'
+    );
+    assert(
+        no_op_swap_result(u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff }) == SwapResult {
+            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
+                low: 0, high: 0xffffffffffffffffffffffffffffffff
+            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        },
+        'no-op'
+    );
+}
 
-    assert(result.consumed_amount.is_zero(), 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
-    assert(result.calculated_amount == 0, 'calculated_amount');
-    assert(result.fee_amount == 0, 'fee');
+#[test]
+fn test_swap_zero_amount_token0() {
+    assert(
+        swap_result(
+            sqrt_ratio: u256 { high: 1, low: 0 },
+            liquidity: 100000,
+            sqrt_ratio_limit: u256 { high: 0, low: 0 },
+            amount: Zeroable::zero(),
+            is_token1: false,
+            fee: 0,
+        ) == SwapResult {
+            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
+                high: 1, low: 0
+            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        },
+        'result'
+    );
 }
 
 #[test]
@@ -185,7 +236,6 @@ fn test_swap_against_liquidity_max_limit_token0_minimum_input() {
 }
 
 #[test]
-#[available_gas(10000000)]
 fn test_swap_against_liquidity_min_limit_token0_output() {
     let result = swap_result(
         sqrt_ratio: u256 { high: 1, low: 0 },

@@ -231,6 +231,10 @@ mod Core {
             self.owner.read()
         }
 
+        fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
+            self.fees_collected.read(token)
+        }
+
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
