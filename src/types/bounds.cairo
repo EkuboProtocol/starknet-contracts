@@ -4,11 +4,11 @@ use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use traits::Into;
 
-// Bounds for a position
+// Tick bounds for a position
 #[derive(Copy, Drop, Serde)]
 struct Bounds {
-    tick_lower: i129,
-    tick_upper: i129
+    lower: i129,
+    upper: i129
 }
 
 mod internal {
@@ -31,8 +31,8 @@ mod internal {
 // Converts the bounds into a felt for hashing
 impl BoundsIntoFelt252 of Into<Bounds, felt252> {
     fn into(self: Bounds) -> felt252 {
-        ((internal::bounded_tick_to_u128(self.tick_lower) * 0x100000000)
-            + internal::bounded_tick_to_u128(self.tick_upper))
+        ((internal::bounded_tick_to_u128(self.lower) * 0x100000000)
+            + internal::bounded_tick_to_u128(self.upper))
             .into()
     }
 }
@@ -42,24 +42,23 @@ fn max_bounds(tick_spacing: u128) -> Bounds {
     assert(tick_spacing != 0, 'MAX_BOUNDS_TICK_SPACING_ZERO');
     assert(tick_spacing <= tick_constants::MAX_TICK_MAGNITUDE, 'MAX_BOUNDS_TICK_SPACING_LARGE');
     let mag = (tick_constants::MAX_TICK_MAGNITUDE / tick_spacing) * tick_spacing;
-    Bounds { tick_lower: i129 { mag, sign: true }, tick_upper: i129 { mag, sign: false } }
+    Bounds { lower: i129 { mag, sign: true }, upper: i129 { mag, sign: false } }
 }
 
 impl DefaultBounds of Default<Bounds> {
     fn default() -> Bounds {
-        Bounds { tick_lower: min_tick(), tick_upper: max_tick() }
+        Bounds { lower: min_tick(), upper: max_tick() }
     }
 }
 
 #[generate_trait]
 impl CheckBoundsValidImpl of CheckBoundsValidTrait {
     fn check_valid(self: Bounds, tick_spacing: u128) {
-        assert(self.tick_lower < self.tick_upper, 'BOUNDS_ORDER');
-        assert(self.tick_lower >= min_tick(), 'BOUNDS_MIN');
-        assert(self.tick_upper <= max_tick(), 'BOUNDS_MAX');
+        assert(self.lower < self.upper, 'BOUNDS_ORDER');
+        assert(self.lower >= min_tick(), 'BOUNDS_MIN');
+        assert(self.upper <= max_tick(), 'BOUNDS_MAX');
         assert(
-            ((self.tick_lower.mag % tick_spacing) == 0)
-                & ((self.tick_upper.mag % tick_spacing) == 0),
+            ((self.lower.mag % tick_spacing) == 0) & ((self.upper.mag % tick_spacing) == 0),
             'BOUNDS_TICK_SPACING'
         );
     }

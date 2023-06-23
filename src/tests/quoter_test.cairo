@@ -112,7 +112,7 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
     };
 
     let bounds = Bounds {
-        tick_lower: i129 { mag: 5982, sign: true }, tick_upper: i129 { mag: 5982, sign: false }
+        lower: i129 { mag: 5982, sign: true }, upper: i129 { mag: 5982, sign: false }
     };
 
     core.initialize_pool(pool_key_a, Zeroable::zero());

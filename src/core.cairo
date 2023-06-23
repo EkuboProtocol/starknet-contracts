@@ -572,8 +572,8 @@ mod Core {
             let pool = self.pools.read(pool_key);
             assert(pool.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
-            if (pool.tick < bounds.tick_lower) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
+            if (pool.tick < bounds.lower) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
                 (
                     unsafe_sub(
                         pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
@@ -582,9 +582,9 @@ mod Core {
                         pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
                     )
                 )
-            } else if (pool.tick < bounds.tick_upper) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.tick_lower));
-                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
+            } else if (pool.tick < bounds.upper) {
+                let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
+                let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
 
                 (
                     unsafe_sub(
@@ -603,7 +603,7 @@ mod Core {
                     )
                 )
             } else {
-                let tick_upper_state = self.ticks.read((pool_key, bounds.tick_upper));
+                let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
                 (
                     unsafe_sub(
                         pool.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
@@ -636,8 +636,7 @@ mod Core {
             assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
-                tick_to_sqrt_ratio(params.bounds.tick_lower),
-                tick_to_sqrt_ratio(params.bounds.tick_upper)
+                tick_to_sqrt_ratio(params.bounds.lower), tick_to_sqrt_ratio(params.bounds.upper)
             );
 
             // compute the amount deltas due to the liquidity delta
@@ -727,11 +726,11 @@ mod Core {
                     }
                 );
 
-            self.update_tick(pool_key, params.bounds.tick_lower, params.liquidity_delta, false);
-            self.update_tick(pool_key, params.bounds.tick_upper, params.liquidity_delta, true);
+            self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
+            self.update_tick(pool_key, params.bounds.upper, params.liquidity_delta, true);
 
             // update pool liquidity if it changed
-            if ((pool.tick >= params.bounds.tick_lower) & (pool.tick < params.bounds.tick_upper)) {
+            if ((pool.tick >= params.bounds.lower) & (pool.tick < params.bounds.upper)) {
                 self
                     .pools
                     .write(

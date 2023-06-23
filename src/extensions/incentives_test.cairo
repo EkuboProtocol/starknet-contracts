@@ -1,11 +1,16 @@
-use ekubo::interfaces::core::{ICoreDispatcherTrait};
-use ekubo::tests::helper::{deploy_core, deploy_incentives, deploy_two_mock_tokens};
+use ekubo::interfaces::positions::IPositionsDispatcherTrait;
+use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
+use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::helper::{
+    deploy_core, deploy_positions, deploy_incentives, deploy_two_mock_tokens
+};
 use ekubo::types::keys::{PoolKey};
+use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
+use starknet::{get_contract_address};
 
-#[test]
-#[available_gas(300000000)]
-fn test_before_initialize_incentives() {
+fn setup_pool_with_extension() -> (ICoreDispatcher, PoolKey) {
     let core = deploy_core();
     let incentives = deploy_incentives(core);
     let (token0, token1) = deploy_two_mock_tokens();
@@ -20,6 +25,14 @@ fn test_before_initialize_incentives() {
 
     core.initialize_pool(key, Zeroable::zero());
 
+    (core, key)
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_before_initialize_call_points() {
+    let (core, key) = setup_pool_with_extension();
+
     let pool = core.get_pool(key);
 
     assert(
@@ -32,4 +45,21 @@ fn test_before_initialize_incentives() {
         },
         'call points'
     );
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_add_liquidity() {
+    let (core, key) = setup_pool_with_extension();
+
+    let positions = deploy_positions(core);
+
+    positions
+        .mint(
+            recipient: get_contract_address(),
+            pool_key: key,
+            bounds: Bounds {
+                lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
+            }
+        );
 }

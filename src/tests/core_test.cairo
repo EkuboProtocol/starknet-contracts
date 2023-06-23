@@ -376,9 +376,9 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false
                 },
             },
@@ -388,9 +388,9 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false
                 },
             },
@@ -400,9 +400,9 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false
                 },
             },
@@ -620,9 +620,9 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 }
             },
@@ -673,9 +673,9 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: 12, sign: false
                 },
             },
@@ -706,9 +706,9 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: 10, sign: false
                 },
             },
@@ -740,7 +740,7 @@ mod locks {
         let delta = update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 { mag: 10, sign: true }, tick_upper: i129 { mag: 10, sign: false }, 
+                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }, 
             },
             liquidity_delta: Zeroable::zero(),
             recipient: contract_address_const::<42>()
@@ -766,7 +766,7 @@ mod locks {
         let delta = update_position(
             setup: setup,
             bounds: Bounds {
-                tick_lower: i129 { mag: 10, sign: true }, tick_upper: i129 { mag: 10, sign: false }, 
+                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }, 
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -792,9 +792,9 @@ mod locks {
         let delta = update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1109,9 +1109,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1160,9 +1160,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1212,9 +1212,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1266,9 +1266,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1320,9 +1320,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1371,9 +1371,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1422,9 +1422,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },
@@ -1476,9 +1476,9 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                tick_lower: i129 {
+                lower: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, tick_upper: i129 {
+                    }, upper: i129 {
                     mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
                 },
             },

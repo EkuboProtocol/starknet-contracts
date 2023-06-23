@@ -416,8 +416,8 @@ mod Positions {
             let delta = liquidity_delta_to_amount_delta(
                 sqrt_ratio: pool.sqrt_ratio,
                 liquidity_delta: i129 { mag: info.liquidity, sign: true },
-                sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.tick_lower),
-                sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.tick_upper),
+                sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.lower),
+                sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
             );
 
             GetPositionInfoResult {
@@ -447,8 +447,8 @@ mod Positions {
             // compute how much liquidity we can deposit based on token balances
             let liquidity: u128 = max_liquidity(
                 pool.sqrt_ratio,
-                tick_to_sqrt_ratio(bounds.tick_lower),
-                tick_to_sqrt_ratio(bounds.tick_upper),
+                tick_to_sqrt_ratio(bounds.lower),
+                tick_to_sqrt_ratio(bounds.upper),
                 self.balance_of_token(pool_key.token0),
                 self.balance_of_token(pool_key.token1)
             );

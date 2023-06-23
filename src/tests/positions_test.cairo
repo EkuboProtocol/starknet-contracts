@@ -84,7 +84,7 @@ fn test_nft_approve_succeeds_after_mint() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
@@ -112,7 +112,7 @@ fn test_nft_transfer_from() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<1>());
@@ -144,7 +144,7 @@ fn test_nft_transfer_from_fails_not_from_owner() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<2>());
@@ -170,7 +170,7 @@ fn test_nft_transfer_from_succeeds_from_approved() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<1>());
@@ -201,7 +201,7 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<2>());
@@ -267,7 +267,7 @@ fn test_nft_approve_only_owner_can_approve() {
                 tick_spacing: Zeroable::zero(),
                 extension: Zeroable::zero(),
             },
-            bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
     set_contract_address(contract_address_const::<2>());
@@ -299,7 +299,7 @@ fn test_nft_balance_of() {
                     tick_spacing: Zeroable::zero(),
                     extension: Zeroable::zero(),
                 },
-                bounds: Bounds { tick_lower: Zeroable::zero(), tick_upper: Zeroable::zero(),  }
+                bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
             ) == 1,
         'token id'
     );
@@ -350,7 +350,7 @@ fn test_deposit_liquidity_concentrated() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -390,7 +390,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -429,7 +429,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -468,7 +468,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -507,7 +507,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -546,7 +546,7 @@ fn test_deposit_then_withdraw_with_fees() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
 
@@ -595,7 +595,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        tick_lower: i129 { mag: 1000, sign: true }, tick_upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
 
