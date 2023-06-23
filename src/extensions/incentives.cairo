@@ -6,58 +6,17 @@ use traits::{TryInto, Into};
 use option::{Option, OptionTrait};
 use starknet::{StorageAccess, SyscallResult, StorageBaseAddress};
 
-// Constraints to 192 bits, used for seconds per liquidity
-#[derive(Copy, Drop)]
-struct SecondsPerLiquidity {
-    inner: u256, 
-}
-
-impl SecondsPerLiquidityStorageAccess of StorageAccess<SecondsPerLiquidity> {
-    fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<SecondsPerLiquidity> {
-        StorageAccess::<SecondsPerLiquidity>::read_at_offset_internal(address_domain, base, 0_u8)
-    }
-    fn write(
-        address_domain: u32, base: StorageBaseAddress, value: SecondsPerLiquidity
-    ) -> SyscallResult<()> {
-        StorageAccess::<SecondsPerLiquidity>::write_at_offset_internal(
-            address_domain, base, 0_u8, value
-        )
-    }
-    fn read_at_offset_internal(
-        address_domain: u32, base: StorageBaseAddress, offset: u8
-    ) -> SyscallResult<SecondsPerLiquidity> {
-        let x: felt252 = StorageAccess::read_at_offset_internal(address_domain, base, offset)?;
-
-        SyscallResult::Ok(SecondsPerLiquidity { inner: x.into() })
-    }
-    fn write_at_offset_internal(
-        address_domain: u32, base: StorageBaseAddress, offset: u8, value: SecondsPerLiquidity
-    ) -> SyscallResult<()> {
-        let maybe_felt: Option<felt252> = value.inner.try_into();
-
-        match maybe_felt {
-            Option::Some(value) => {
-                StorageAccess::<felt252>::write_at_offset_internal(
-                    address_domain, base, offset, value
-                )
-            },
-            Option::None(_) => {
-                assert(false, 'OVERFLOW_FELT252');
-                SyscallResult::Ok(())
-            },
-        }
-    }
-    fn size_internal(value: SecondsPerLiquidity) -> u8 {
-        1
-    }
-}
-
+// todo: pack this struct better!
 #[derive(Copy, Drop, storage_access::StorageAccess)]
 struct PoolState {
+    // 64 bits
     block_timestamp_last: u64,
+    // 96 bits
     tick_cumulative_last: i129,
+    // 32 bits
     tick_last: i129,
-    seconds_per_liquidity_global: SecondsPerLiquidity,
+    // 192 bits
+    seconds_per_liquidity_global: u256,
 }
 
 #[starknet::interface]
@@ -73,7 +32,7 @@ trait IIncentives<TStorage> {
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
 #[starknet::contract]
 mod Incentives {
-    use super::{IIncentives, PoolKey, PositionKey, PoolState, SecondsPerLiquidity};
+    use super::{IIncentives, PoolKey, PositionKey, PoolState};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::i129::{i129};
@@ -84,14 +43,14 @@ mod Incentives {
     };
 
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
-    use zeroable::Zeroable;
+    use zeroable::{Zeroable};
     use traits::{Into};
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
-        tick_state: LegacyMap<(PoolKey, i129), SecondsPerLiquidity>,
+        tick_state: LegacyMap<(PoolKey, i129), u256>,
     }
 
     #[constructor]
@@ -120,14 +79,8 @@ mod Incentives {
             let pool = core.get_pool(pool_key);
 
             let seconds_per_liquidity_global_next = if (pool.liquidity.is_non_zero()) {
-                SecondsPerLiquidity {
-                    inner: state.seconds_per_liquidity_global.inner
-                        + (u256 {
-                            low: 0, high: time_passed
-                            } / u256 {
-                            low: pool.liquidity, high: 0
-                        })
-                }
+                state.seconds_per_liquidity_global
+                    + (u256 { low: 0, high: time_passed } / u256 { low: pool.liquidity, high: 0 })
             } else {
                 state.seconds_per_liquidity_global
             };
@@ -159,8 +112,8 @@ mod Incentives {
             let pool = self.core.read().get_pool(pool_key);
 
             // subtract the lower and upper tick of the bounds based on the price
-            let lower = self.tick_state.read((pool_key, bounds.lower)).inner;
-            let upper = self.tick_state.read((pool_key, bounds.upper)).inner;
+            let lower = self.tick_state.read((pool_key, bounds.lower));
+            let upper = self.tick_state.read((pool_key, bounds.upper));
 
             if (pool.tick < bounds.lower) {
                 unsafe_sub(upper, lower)
@@ -168,12 +121,12 @@ mod Incentives {
                 // get the global seconds per liquidity
                 let state = self.pool_state.read(pool_key);
                 let seconds_per_liquidity_global = if (time == state.block_timestamp_last) {
-                    state.seconds_per_liquidity_global.inner
+                    state.seconds_per_liquidity_global
                 } else {
                     if (pool.liquidity == 0) {
-                        state.seconds_per_liquidity_global.inner
+                        state.seconds_per_liquidity_global
                     } else {
-                        state.seconds_per_liquidity_global.inner
+                        state.seconds_per_liquidity_global
                             + (u256 {
                                 low: 0, high: (time - state.block_timestamp_last).into()
                                 } / u256 {
@@ -216,13 +169,10 @@ mod Incentives {
                 .write(
                     pool_key,
                     PoolState {
-                        block_timestamp_last: get_block_timestamp(), tick_cumulative_last: i129 {
-                            mag: 0, sign: false
-                            },
-                            tick_last: initial_tick,
-                            seconds_per_liquidity_global: SecondsPerLiquidity {
-                            inner: 0
-                        },
+                        block_timestamp_last: get_block_timestamp(),
+                        tick_cumulative_last: Zeroable::zero(),
+                        tick_last: initial_tick,
+                        seconds_per_liquidity_global: Zeroable::zero(),
                     }
                 );
 
@@ -290,11 +240,7 @@ mod Incentives {
                         .tick_state
                         .write(
                             (pool_key, tick),
-                            SecondsPerLiquidity {
-                                inner: unsafe_sub(
-                                    state.seconds_per_liquidity_global.inner, current.inner
-                                )
-                            }
+                            unsafe_sub(state.seconds_per_liquidity_global, current)
                         );
                 }
 
