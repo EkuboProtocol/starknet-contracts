@@ -13,8 +13,12 @@ use starknet::{get_contract_address, get_block_timestamp};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
 use traits::{TryInto};
+use zeroable::{Zeroable};
+use debug::PrintTrait;
 
-fn setup_pool_with_extension() -> (ICoreDispatcher, IIncentivesDispatcher, PoolKey) {
+fn setup_pool_with_extension(
+    initial_tick: i129
+) -> (ICoreDispatcher, IIncentivesDispatcher, PoolKey) {
     let core = deploy_core();
     let incentives = deploy_incentives(core);
     let (token0, token1) = deploy_two_mock_tokens();
@@ -27,7 +31,7 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, IIncentivesDispatcher, PoolK
         extension: incentives.contract_address,
     };
 
-    core.initialize_pool(key, Zeroable::zero());
+    core.initialize_pool(key, initial_tick);
     let old = get_contract_address();
     set_contract_address(core.get_owner());
     core.set_reserves_limit(key.token0, 0xffffffffffffffffffffffffffffffff);
@@ -40,7 +44,7 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, IIncentivesDispatcher, PoolK
 #[test]
 #[available_gas(300000000)]
 fn test_before_initialize_call_points() {
-    let (core, _, key) = setup_pool_with_extension();
+    let (core, _, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
 
     let pool = core.get_pool(key);
 
@@ -56,11 +60,12 @@ fn test_before_initialize_call_points() {
     );
 }
 
-use debug::PrintTrait;
 #[test]
 #[available_gas(300000000)]
 fn test_add_liquidity() {
-    let (core, incentives, key) = setup_pool_with_extension();
+    let (core, incentives, key) = setup_pool_with_extension(
+        initial_tick: i129 { mag: 5, sign: true }
+    );
 
     let positions = deploy_positions(core);
 
@@ -84,8 +89,9 @@ fn test_add_liquidity() {
 
     assert(
         incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
-        '0 liquidity seconds'
+        'seconds_per_liquidity'
     );
+    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 
     set_block_timestamp(get_block_timestamp() + 100);
 
@@ -93,7 +99,8 @@ fn test_add_liquidity() {
         incentives
             .get_seconds_per_liquidity_inside(
                 pool_key: key, bounds: bounds
-            ) == 0x8636dcba4112e455cdaa5005928,
-        '100 liquidity seconds'
+            ) == 0x8cecd9bbcf132ce54865c3086aa,
+        'seconds_per_liquidity'
     );
+    assert(incentives.get_tick_cumulative(key) == i129 { mag: 500, sign: true }, 'tick_cumulative');
 }
