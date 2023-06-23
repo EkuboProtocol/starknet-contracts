@@ -233,6 +233,8 @@ fn diff(x: u256, y: u256) -> i129 {
     i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
 }
 
+use debug::PrintTrait;
+
 fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     assert(
         diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0,

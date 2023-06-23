@@ -36,6 +36,7 @@ mod Incentives {
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::i129::{i129};
+    use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::utils::{unsafe_sub};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
@@ -156,6 +157,8 @@ mod Incentives {
         }
     }
 
+    use debug::PrintTrait;
+
     #[external(v0)]
     impl IncentivesExtension of IExtension<ContractState> {
         fn before_initialize_pool(
@@ -216,21 +219,21 @@ mod Incentives {
             let pool = core.get_pool(pool_key);
             let state = self.pool_state.read(pool_key);
 
+            let increasing = is_price_increasing(params.amount.sign, params.is_token1);
+
             let mut tick = state.tick_last;
 
             // update all the ticks between the last updated tick to the starting tick
             loop {
-                if (tick == pool.tick) {
-                    break ();
-                }
-
-                let increasing = tick < pool.tick;
-
                 let (next, initialized) = if (increasing) {
                     core.next_initialized_tick(pool_key, tick, params.skip_ahead)
                 } else {
                     core.prev_initialized_tick(pool_key, tick, params.skip_ahead)
                 };
+
+                if ((next > pool.tick) == increasing) {
+                    break ();
+                }
 
                 if (initialized) {
                     let current = self.tick_state.read((pool_key, tick));

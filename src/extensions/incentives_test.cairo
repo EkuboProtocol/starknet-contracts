@@ -3,13 +3,14 @@ use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::extensions::incentives::{IIncentivesDispatcher, IIncentivesDispatcherTrait};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
-    deploy_core, deploy_positions, deploy_incentives, deploy_two_mock_tokens
+    deploy_core, deploy_positions, deploy_incentives, deploy_two_mock_tokens, swap_inner,
+    deploy_locker
 };
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
-use starknet::{get_contract_address, get_block_timestamp};
+use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
 use traits::{TryInto};
@@ -211,4 +212,58 @@ fn test_time_passed_position_out_of_range_only() {
         'seconds_per_liquidity'
     );
     assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+}
+
+
+#[test]
+#[available_gas(300000000)]
+fn test_swap_into_liquidity_time_passed() {
+    let (core, incentives, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let locker = deploy_locker(core);
+    let positions = deploy_positions(core);
+
+    let bounds = Bounds {
+        lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
+    };
+
+    let (token_id_1, _) = deposit(
+        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
+    );
+
+    IMockERC20Dispatcher {
+        contract_address: key.token1
+    }.increase_balance(locker.contract_address, 10000000);
+
+    set_block_timestamp(get_block_timestamp() + 75);
+
+    swap_inner(
+        core: core,
+        pool_key: key,
+        locker: locker,
+        amount: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 50, sign: false }),
+        recipient: contract_address_const::<23456>(),
+        skip_ahead: 0
+    );
+
+    assert(
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        'seconds_per_liquidity'
+    );
+    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+
+    set_block_timestamp(get_block_timestamp() + 100);
+
+    assert(
+        incentives
+            .get_seconds_per_liquidity_inside(
+                pool_key: key, bounds: bounds
+            ) == 0x8ceb28181e1775c7aa9c4f8a190,
+        'seconds_per_liquidity after'
+    );
+    assert(
+        incentives.get_tick_cumulative(key) == i129 { mag: 5000, sign: false },
+        'tick_cumulative after'
+    );
 }
