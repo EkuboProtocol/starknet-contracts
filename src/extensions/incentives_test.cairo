@@ -44,7 +44,9 @@ fn setup_pool_with_extension(
 #[test]
 #[available_gas(300000000)]
 fn test_before_initialize_call_points() {
-    let (core, _, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, incentives, key) = setup_pool_with_extension(
+        initial_tick: i129 { mag: 3, sign: true }
+    );
 
     let pool = core.get_pool(key);
 
@@ -58,11 +60,26 @@ fn test_before_initialize_call_points() {
         },
         'call points'
     );
+
+    assert(incentives.get_tick_cumulative(key).is_zero(), '0 cumulative');
+    // no position here
+    assert(
+        incentives
+            .get_seconds_per_liquidity_inside(
+                key,
+                Bounds { lower: i129 { mag: 3, sign: true }, upper: i129 { mag: 3, sign: false } }
+            )
+            .is_zero(),
+        '0 seconds per liquidity'
+    );
+
+    set_block_timestamp(get_block_timestamp() + 10);
+    assert(incentives.get_tick_cumulative(key) == i129 { mag: 30, sign: true }, '30 cumulative');
 }
 
 #[test]
 #[available_gas(300000000)]
-fn test_add_liquidity() {
+fn test_time_passes_seconds_per_liquidity_global() {
     let (core, incentives, key) = setup_pool_with_extension(
         initial_tick: i129 { mag: 5, sign: true }
     );
@@ -83,9 +100,8 @@ fn test_add_liquidity() {
     }.increase_balance(address: positions.contract_address, amount: 10000);
     positions.deposit_last(pool_key: key, bounds: bounds, min_liquidity: 100);
 
-    let position_key = PositionKey {
-        salt: token_id.try_into().unwrap(), owner: positions.contract_address, bounds: bounds, 
-    };
+    let info = positions.get_position_info(token_id, key, bounds);
+    assert(info.liquidity == 0xb5a81a9, 'liquidity');
 
     assert(
         incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
@@ -99,7 +115,7 @@ fn test_add_liquidity() {
         incentives
             .get_seconds_per_liquidity_inside(
                 pool_key: key, bounds: bounds
-            ) == 0x8cecd9bbcf132ce54865c3086aa,
+            ) == 0x8cecd9bbcf132ce54865c3086aa, // 100 * 2**128 / 0xb5a81a9
         'seconds_per_liquidity'
     );
     assert(incentives.get_tick_cumulative(key) == i129 { mag: 500, sign: true }, 'tick_cumulative');
