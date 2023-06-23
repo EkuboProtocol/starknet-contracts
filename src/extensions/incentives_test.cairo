@@ -1,16 +1,20 @@
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
+use ekubo::extensions::incentives::{IIncentivesDispatcher, IIncentivesDispatcherTrait};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_incentives, deploy_two_mock_tokens
 };
-use ekubo::types::keys::{PoolKey};
+use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
-use starknet::{get_contract_address};
+use starknet::{get_contract_address, get_block_timestamp};
+use starknet::testing::{set_contract_address, set_block_timestamp};
+use option::{OptionTrait};
+use traits::{TryInto};
 
-fn setup_pool_with_extension() -> (ICoreDispatcher, PoolKey) {
+fn setup_pool_with_extension() -> (ICoreDispatcher, IIncentivesDispatcher, PoolKey) {
     let core = deploy_core();
     let incentives = deploy_incentives(core);
     let (token0, token1) = deploy_two_mock_tokens();
@@ -24,14 +28,19 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, PoolKey) {
     };
 
     core.initialize_pool(key, Zeroable::zero());
+    let old = get_contract_address();
+    set_contract_address(core.get_owner());
+    core.set_reserves_limit(key.token0, 0xffffffffffffffffffffffffffffffff);
+    core.set_reserves_limit(key.token1, 0xffffffffffffffffffffffffffffffff);
+    set_contract_address(old);
 
-    (core, key)
+    (core, IIncentivesDispatcher { contract_address: incentives.contract_address }, key)
 }
 
 #[test]
 #[available_gas(300000000)]
 fn test_before_initialize_call_points() {
-    let (core, key) = setup_pool_with_extension();
+    let (core, _, key) = setup_pool_with_extension();
 
     let pool = core.get_pool(key);
 
@@ -47,19 +56,42 @@ fn test_before_initialize_call_points() {
     );
 }
 
+use debug::PrintTrait;
 #[test]
 #[available_gas(300000000)]
 fn test_add_liquidity() {
-    let (core, key) = setup_pool_with_extension();
+    let (core, incentives, key) = setup_pool_with_extension();
 
     let positions = deploy_positions(core);
 
-    positions
-        .mint(
-            recipient: get_contract_address(),
-            pool_key: key,
-            bounds: Bounds {
-                lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
-            }
-        );
+    let bounds = Bounds {
+        lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
+    };
+    let token_id = positions
+        .mint(recipient: get_contract_address(), pool_key: key, bounds: bounds, );
+
+    IMockERC20Dispatcher {
+        contract_address: key.token0
+    }.increase_balance(address: positions.contract_address, amount: 10000);
+    IMockERC20Dispatcher {
+        contract_address: key.token1
+    }.increase_balance(address: positions.contract_address, amount: 10000);
+    positions.deposit_last(pool_key: key, bounds: bounds, min_liquidity: 100);
+
+    let position_key = PositionKey {
+        salt: token_id.try_into().unwrap(), owner: positions.contract_address, bounds: bounds, 
+    };
+
+    assert(
+        incentives.get_liquidity_seconds(pool_key: key, position_key: position_key, ) == 0,
+        '0 liquidity seconds'
+    );
+
+    set_block_timestamp(get_block_timestamp() + 100);
+
+    incentives.get_liquidity_seconds(pool_key: key, position_key: position_key).print();
+    assert(
+        incentives.get_liquidity_seconds(pool_key: key, position_key: position_key) == 100,
+        '100 liquidity seconds'
+    );
 }

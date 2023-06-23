@@ -62,7 +62,7 @@ struct PoolState {
 #[starknet::interface]
 trait IIncentives<TStorage> {
     // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
-    fn get_liquidity_seconds(ref self: TStorage, pool_key: PoolKey) -> u256;
+    fn get_liquidity_seconds(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> u256;
 }
 
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
@@ -71,6 +71,7 @@ mod Incentives {
     use super::{IIncentives, PoolKey, PositionKey, PoolState, SecondsPerLiquidity};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::i129::{i129};
+    use ekubo::math::utils::{unsafe_sub};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
@@ -83,8 +84,8 @@ mod Incentives {
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
-        position_state: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
-        tick_state: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
+        position_snapshots: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
+        tick_state: LegacyMap<(PoolKey, i129), SecondsPerLiquidity>,
     }
 
     #[constructor]
@@ -153,8 +154,49 @@ mod Incentives {
     #[external(v0)]
     impl IncentivesImpl of IIncentives<ContractState> {
         // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
-        fn get_liquidity_seconds(ref self: ContractState, pool_key: PoolKey) -> u256 {
-            Zeroable::zero()
+        fn get_liquidity_seconds(
+            self: @ContractState, pool_key: PoolKey, position_key: PositionKey
+        ) -> u256 {
+            let time = get_block_timestamp();
+            let pool = self.core.read().get_pool(pool_key);
+
+            // subtract the lower and upper tick of the bounds based on the price
+            let seconds_per_liquiidty_inside = if (pool.tick < position_key.bounds.lower) {
+                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
+                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
+
+                unsafe_sub(upper.inner, lower.inner)
+            } else if (pool.tick < position_key.bounds.upper) {
+                // get the global seconds per liquidity
+                let state = self.pool_state.read(pool_key);
+                let seconds_per_liquidity_global = if (time == state.block_timestamp_last) {
+                    state.seconds_per_liquidity_global.inner
+                } else {
+                    if (pool.liquidity == 0) {
+                        state.seconds_per_liquidity_global.inner
+                    } else {
+                        state.seconds_per_liquidity_global.inner
+                            + (u256 {
+                                low: 0, high: (time - state.block_timestamp_last).into()
+                                } / u256 {
+                                low: pool.liquidity, high: 0
+                            })
+                    }
+                };
+
+                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
+                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
+
+                unsafe_sub(unsafe_sub(seconds_per_liquidity_global, lower.inner), upper.inner)
+            } else {
+                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
+                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
+                unsafe_sub(upper.inner, lower.inner)
+            };
+
+            let snapshot = self.position_snapshots.read((pool_key, position_key));
+
+            unsafe_sub(snapshot.inner, seconds_per_liquiidty_inside)
         }
     }
 
