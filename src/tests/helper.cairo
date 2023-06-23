@@ -277,6 +277,9 @@ fn update_position_inner(
     liquidity_delta: i129,
     recipient: ContractAddress
 ) -> Delta {
+    assert(recipient != core.contract_address, 'recipient is core');
+    assert(recipient != locker.contract_address, 'recipient is locker');
+
     let before: Balances = get_balances(
         token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
         token1: IMockERC20Dispatcher { contract_address: pool_key.token1 },
