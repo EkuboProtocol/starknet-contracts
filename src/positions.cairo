@@ -111,14 +111,28 @@ mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct LockCallbackData {
+    struct DepositCallbackData {
         pool_key: PoolKey,
         salt: u64,
         bounds: Bounds,
-        liquidity_delta: i129,
+        liquidity: u128,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct WithdrawCallbackData {
+        pool_key: PoolKey,
+        salt: u64,
+        bounds: Bounds,
+        liquidity: u128,
         collect_fees: bool,
         min_token0: u128,
         min_token1: u128,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    enum LockCallbackData {
+        Deposit: DepositCallbackData,
+        Withdraw: WithdrawCallbackData,
     }
 
     #[generate_trait]
@@ -270,62 +284,82 @@ mod Positions {
             let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('DESERIALIZE_CALLBACK_FAILED');
 
-            let mut delta: Delta = Zeroable::zero();
-            if callback_data.collect_fees {
-                delta += core
-                    .collect_fees(
-                        pool_key: callback_data.pool_key,
-                        salt: callback_data.salt,
-                        bounds: callback_data.bounds
-                    );
-            }
+            let delta = match callback_data {
+                LockCallbackData::Deposit(data) => {
+                    let delta: Delta = if data.liquidity.is_non_zero() {
+                        core
+                            .update_position(
+                                data.pool_key,
+                                UpdatePositionParameters {
+                                    salt: data.salt, bounds: data.bounds, liquidity_delta: i129 {
+                                        mag: data.liquidity, sign: false
+                                    },
+                                }
+                            )
+                    } else {
+                        Zeroable::zero()
+                    };
 
-            if callback_data.liquidity_delta != Zeroable::zero() {
-                let update = core
-                    .update_position(
-                        callback_data.pool_key,
-                        UpdatePositionParameters {
-                            salt: callback_data.salt,
-                            bounds: callback_data.bounds,
-                            liquidity_delta: callback_data.liquidity_delta
-                        }
-                    );
-                delta += update;
+                    if delta.amount0.is_non_zero() {
+                        IERC20Dispatcher {
+                            contract_address: data.pool_key.token0
+                        }.transfer(core.contract_address, u256 { low: delta.amount0.mag, high: 0 });
+                        core.deposit(data.pool_key.token0);
+                    }
 
-                if (callback_data.liquidity_delta.sign) {
-                    assert(update.amount0.mag >= callback_data.min_token0, 'MIN_TOKEN0');
-                    assert(update.amount1.mag >= callback_data.min_token1, 'MIN_TOKEN1');
-                }
-            }
+                    if delta.amount1.is_non_zero() {
+                        IERC20Dispatcher {
+                            contract_address: data.pool_key.token1
+                        }.transfer(core.contract_address, u256 { low: delta.amount1.mag, high: 0 });
+                        core.deposit(data.pool_key.token1);
+                    }
 
-            if delta.amount0.mag != 0 {
-                if (delta.amount0.sign) {
-                    // withdrawn to the contract to be returned to caller via #clear
-                    core
-                        .withdraw(
-                            callback_data.pool_key.token0, get_contract_address(), delta.amount0.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token0
-                    }.transfer(core.contract_address, u256 { low: delta.amount0.mag, high: 0 });
-                    core.deposit(callback_data.pool_key.token0);
-                }
-            }
-            if (delta.amount1.mag != 0) {
-                // withdrawn to the contract to be returned to caller via #clear
-                if (delta.amount0.sign) {
-                    core
-                        .withdraw(
-                            callback_data.pool_key.token1, get_contract_address(), delta.amount1.mag
-                        );
-                } else {
-                    IERC20Dispatcher {
-                        contract_address: callback_data.pool_key.token1
-                    }.transfer(core.contract_address, u256 { low: delta.amount1.mag, high: 0 });
-                    core.deposit(callback_data.pool_key.token1);
-                }
-            }
+                    delta
+                },
+                LockCallbackData::Withdraw(data) => {
+                    let mut delta: Delta = if data.collect_fees {
+                        core
+                            .collect_fees(
+                                pool_key: data.pool_key, salt: data.salt, bounds: data.bounds
+                            )
+                    } else {
+                        Zeroable::zero()
+                    };
+
+                    if data.liquidity.is_non_zero() {
+                        let update = core
+                            .update_position(
+                                data.pool_key,
+                                UpdatePositionParameters {
+                                    salt: data.salt, bounds: data.bounds, liquidity_delta: i129 {
+                                        mag: data.liquidity, sign: true
+                                    },
+                                }
+                            );
+                        delta += update;
+
+                        assert(update.amount0.mag >= data.min_token0, 'MIN_TOKEN0');
+                        assert(update.amount1.mag >= data.min_token1, 'MIN_TOKEN1');
+                    }
+
+                    if delta.amount0.is_non_zero() {
+                        // withdrawn to the contract to be returned to caller via #clear
+                        core
+                            .withdraw(
+                                data.pool_key.token0, get_contract_address(), delta.amount0.mag
+                            );
+                    }
+
+                    if delta.amount1.is_non_zero() {
+                        core
+                            .withdraw(
+                                data.pool_key.token1, get_contract_address(), delta.amount1.mag
+                            );
+                    }
+
+                    delta
+                },
+            };
 
             let mut result_data: Array<felt252> = ArrayTrait::new();
             Serde::<Delta>::serialize(@delta, ref result_data);
@@ -435,7 +469,6 @@ mod Positions {
             pool_key: PoolKey,
             bounds: Bounds,
             min_liquidity: u128,
-            collect_fees: bool
         ) -> u128 {
             validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
@@ -454,29 +487,23 @@ mod Positions {
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-            let liquidity_delta = i129 { mag: liquidity, sign: false };
-
             self
                 .token_info
                 .write(
                     token_id.low,
-                    TokenInfo {
-                        key_hash: info.key_hash,
-                        liquidity: add_delta(info.liquidity, liquidity_delta),
-                    }
+                    TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity + liquidity,  }
                 );
 
             let delta: Delta = call_core_with_callback(
                 core,
-                @LockCallbackData {
-                    pool_key,
-                    bounds,
-                    liquidity_delta,
-                    salt: token_id.low.try_into().unwrap(),
-                    collect_fees,
-                    min_token0: 0,
-                    min_token1: 0
-                }
+                @LockCallbackData::Deposit(
+                    DepositCallbackData {
+                        pool_key,
+                        bounds,
+                        liquidity: liquidity,
+                        salt: token_id.low.try_into().unwrap(),
+                    }
+                )
             );
 
             self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
@@ -499,29 +526,26 @@ mod Positions {
 
             let info = self.get_token_info(token_id.low, pool_key, bounds);
 
-            let liquidity_delta: i129 = i129 { mag: liquidity, sign: true };
-
             self
                 .token_info
                 .write(
                     token_id.low,
-                    TokenInfo {
-                        key_hash: info.key_hash,
-                        liquidity: add_delta(info.liquidity, liquidity_delta),
-                    }
+                    TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity - liquidity,  }
                 );
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
-                @LockCallbackData {
-                    bounds,
-                    pool_key,
-                    liquidity_delta,
-                    salt: token_id.low.try_into().unwrap(),
-                    collect_fees,
-                    min_token0,
-                    min_token1
-                }
+                @LockCallbackData::Withdraw(
+                    WithdrawCallbackData {
+                        bounds,
+                        pool_key,
+                        liquidity: liquidity,
+                        salt: token_id.low.try_into().unwrap(),
+                        collect_fees,
+                        min_token0,
+                        min_token1
+                    }
+                )
             );
 
             (delta.amount0.mag, delta.amount1.mag)
@@ -554,8 +578,7 @@ mod Positions {
                     u256 { low: self.next_token_id.read() - 1, high: 0 },
                     pool_key,
                     bounds,
-                    min_liquidity,
-                    false
+                    min_liquidity
                 )
         }
     }

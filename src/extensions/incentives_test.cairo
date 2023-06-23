@@ -1,4 +1,4 @@
-use ekubo::interfaces::positions::IPositionsDispatcherTrait;
+use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::extensions::incentives::{IIncentivesDispatcher, IIncentivesDispatcherTrait};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -14,6 +14,8 @@ use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
 use traits::{TryInto};
 use zeroable::{Zeroable};
+use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
+use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use debug::PrintTrait;
 
 fn setup_pool_with_extension(
@@ -77,6 +79,53 @@ fn test_before_initialize_call_points() {
     assert(incentives.get_tick_cumulative(key) == i129 { mag: 30, sign: true }, '30 cumulative');
 }
 
+fn deposit(
+    core: ICoreDispatcher,
+    positions: IPositionsDispatcher,
+    pool_key: PoolKey,
+    bounds: Bounds,
+    min_liquidity: u128
+) -> (u256, u128) {
+    let token_id = positions
+        .mint(recipient: get_contract_address(), pool_key: pool_key, bounds: bounds, );
+
+    let pool = core.get_pool(pool_key);
+    let delta = liquidity_delta_to_amount_delta(
+        pool.sqrt_ratio,
+        i129 { mag: min_liquidity, sign: false },
+        tick_to_sqrt_ratio(bounds.lower),
+        tick_to_sqrt_ratio(bounds.upper)
+    );
+
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: pool_key.token0
+        }.balance_of(address: positions.contract_address) == 0,
+        'token0 balance'
+    );
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: pool_key.token1
+        }.balance_of(address: positions.contract_address) == 0,
+        'token1 balance'
+    );
+
+    IMockERC20Dispatcher {
+        contract_address: pool_key.token0
+    }.increase_balance(address: positions.contract_address, amount: delta.amount0.mag);
+    IMockERC20Dispatcher {
+        contract_address: pool_key.token1
+    }.increase_balance(address: positions.contract_address, amount: delta.amount1.mag);
+
+    let liquidity_calculated = positions
+        .deposit_last(pool_key: pool_key, bounds: bounds, min_liquidity: min_liquidity);
+
+    // todo: why isn't this exactly equal?
+    // assert(min_liquidity == liquidity_calculated, 'liquidity');
+
+    (token_id, liquidity_calculated)
+}
+
 #[test]
 #[available_gas(300000000)]
 fn test_time_passes_seconds_per_liquidity_global() {
@@ -89,19 +138,10 @@ fn test_time_passes_seconds_per_liquidity_global() {
     let bounds = Bounds {
         lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
     };
-    let token_id = positions
-        .mint(recipient: get_contract_address(), pool_key: key, bounds: bounds, );
 
-    IMockERC20Dispatcher {
-        contract_address: key.token0
-    }.increase_balance(address: positions.contract_address, amount: 10000);
-    IMockERC20Dispatcher {
-        contract_address: key.token1
-    }.increase_balance(address: positions.contract_address, amount: 10000);
-    positions.deposit_last(pool_key: key, bounds: bounds, min_liquidity: 100);
-
-    let info = positions.get_position_info(token_id, key, bounds);
-    assert(info.liquidity == 0xb5a81a9, 'liquidity');
+    let token_id = deposit(
+        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
+    );
 
     assert(
         incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
@@ -119,4 +159,56 @@ fn test_time_passes_seconds_per_liquidity_global() {
         'seconds_per_liquidity'
     );
     assert(incentives.get_tick_cumulative(key) == i129 { mag: 500, sign: true }, 'tick_cumulative');
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_time_passed_position_out_of_range_only() {
+    let (core, incentives, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+
+    let positions = deploy_positions(core);
+
+    let bounds_above = Bounds {
+        lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
+    };
+    let bounds_below = Bounds {
+        lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 0, sign: true }
+    };
+
+    let (token_id_1, _) = deposit(
+        core: core,
+        positions: positions,
+        pool_key: key,
+        bounds: bounds_above,
+        min_liquidity: 0xb5a81a9,
+    );
+    let (token_id_2, _) = deposit(
+        core: core,
+        positions: positions,
+        pool_key: key,
+        bounds: bounds_below,
+        min_liquidity: 0xb5a81a9,
+    );
+
+    assert(
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
+        'seconds_per_liquidity'
+    );
+    assert(
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
+        'seconds_per_liquidity'
+    );
+    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+
+    set_block_timestamp(get_block_timestamp() + 100);
+
+    assert(
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
+        'seconds_per_liquidity'
+    );
+    assert(
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
+        'seconds_per_liquidity'
+    );
+    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 }

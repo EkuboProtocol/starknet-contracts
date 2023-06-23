@@ -15,7 +15,7 @@ struct PoolState {
     tick_cumulative_last: i129,
     // 32 bits
     tick_last: i129,
-    // 192 bits
+    // 192 bits, but need to handle overflow/underflow correctly if we want to pack it
     seconds_per_liquidity_global: u256,
 }
 
@@ -41,7 +41,6 @@ mod Incentives {
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
     };
-
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use zeroable::{Zeroable};
     use traits::{Into};

@@ -129,25 +129,13 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
     token1.increase_balance(positions.contract_address, 10000);
     let token_id_a = positions.mint(recipient: caller, pool_key: pool_key_a, bounds: bounds);
     let deposited_liquidity_a = positions
-        .deposit(
-            token_id: token_id_a,
-            pool_key: pool_key_a,
-            bounds: bounds,
-            min_liquidity: 0,
-            collect_fees: false
-        );
+        .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0, );
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
     let token_id_b = positions.mint(recipient: caller, pool_key: pool_key_b, bounds: bounds);
     let deposited_liquidity_b = positions
-        .deposit(
-            token_id: token_id_b,
-            pool_key: pool_key_b,
-            bounds: bounds,
-            min_liquidity: 0,
-            collect_fees: false
-        );
+        .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0, );
 
     (quoter, pool_key_a, pool_key_b)
 }

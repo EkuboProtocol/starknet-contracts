@@ -44,12 +44,7 @@ trait IPositions<TStorage> {
 
     // Deposit in a specific token ID. Must be called by an operator, approved address or the owner
     fn deposit(
-        ref self: TStorage,
-        token_id: u256,
-        pool_key: PoolKey,
-        bounds: Bounds,
-        min_liquidity: u128,
-        collect_fees: bool
+        ref self: TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
     // Withdraw liquidity from a specific token ID. Must be called by an operator, approved address or the owner
