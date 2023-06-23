@@ -83,15 +83,17 @@ fn test_add_liquidity() {
     };
 
     assert(
-        incentives.get_liquidity_seconds(pool_key: key, position_key: position_key, ) == 0,
+        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
         '0 liquidity seconds'
     );
 
     set_block_timestamp(get_block_timestamp() + 100);
 
-    incentives.get_liquidity_seconds(pool_key: key, position_key: position_key).print();
     assert(
-        incentives.get_liquidity_seconds(pool_key: key, position_key: position_key) == 100,
+        incentives
+            .get_seconds_per_liquidity_inside(
+                pool_key: key, bounds: bounds
+            ) == 0x8636dcba4112e455cdaa5005928,
         '100 liquidity seconds'
     );
 }

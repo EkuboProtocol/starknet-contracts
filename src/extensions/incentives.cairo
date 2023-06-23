@@ -1,6 +1,7 @@
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
 use traits::{TryInto, Into};
 use option::{Option, OptionTrait};
 use starknet::{StorageAccess, SyscallResult, StorageBaseAddress};
@@ -62,7 +63,7 @@ struct PoolState {
 #[starknet::interface]
 trait IIncentives<TStorage> {
     // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
-    fn get_liquidity_seconds(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> u256;
+    fn get_seconds_per_liquidity_inside(self: @TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
 }
 
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
@@ -70,6 +71,7 @@ trait IIncentives<TStorage> {
 mod Incentives {
     use super::{IIncentives, PoolKey, PositionKey, PoolState, SecondsPerLiquidity};
     use ekubo::types::call_points::{CallPoints};
+    use ekubo::types::bounds::{Bounds};
     use ekubo::types::i129::{i129};
     use ekubo::math::utils::{unsafe_sub};
     use ekubo::interfaces::core::{
@@ -84,7 +86,6 @@ mod Incentives {
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
-        position_snapshots: LegacyMap<(PoolKey, PositionKey), SecondsPerLiquidity>,
         tick_state: LegacyMap<(PoolKey, i129), SecondsPerLiquidity>,
     }
 
@@ -93,6 +94,7 @@ mod Incentives {
         self.core.write(core);
     }
 
+    use debug::PrintTrait;
     #[generate_trait]
     impl Internal of InternalTrait {
         fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
@@ -124,6 +126,8 @@ mod Incentives {
                         })
                 };
 
+                seconds_per_liquidity_global_next.inner.print();
+
                 self
                     .pool_state
                     .write(
@@ -143,7 +147,7 @@ mod Incentives {
                             tick_last: state.tick_last,
                             block_timestamp_last: time,
                             // we don't increment it at all with 0 liquidity,
-                            // which makes it seem like time stopped from a rewards perspective
+                            // which makes it seem like rewards are paused
                             seconds_per_liquidity_global: state.seconds_per_liquidity_global,
                         }
                     );
@@ -154,19 +158,19 @@ mod Incentives {
     #[external(v0)]
     impl IncentivesImpl of IIncentives<ContractState> {
         // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
-        fn get_liquidity_seconds(
-            self: @ContractState, pool_key: PoolKey, position_key: PositionKey
+        fn get_seconds_per_liquidity_inside(
+            self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> u256 {
             let time = get_block_timestamp();
             let pool = self.core.read().get_pool(pool_key);
 
             // subtract the lower and upper tick of the bounds based on the price
-            let seconds_per_liquiidty_inside = if (pool.tick < position_key.bounds.lower) {
-                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
-                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
+            let lower = self.tick_state.read((pool_key, bounds.lower)).inner;
+            let upper = self.tick_state.read((pool_key, bounds.upper)).inner;
 
-                unsafe_sub(upper.inner, lower.inner)
-            } else if (pool.tick < position_key.bounds.upper) {
+            if (pool.tick < bounds.lower) {
+                unsafe_sub(upper, lower)
+            } else if (pool.tick < bounds.upper) {
                 // get the global seconds per liquidity
                 let state = self.pool_state.read(pool_key);
                 let seconds_per_liquidity_global = if (time == state.block_timestamp_last) {
@@ -184,19 +188,10 @@ mod Incentives {
                     }
                 };
 
-                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
-                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
-
-                unsafe_sub(unsafe_sub(seconds_per_liquidity_global, lower.inner), upper.inner)
+                unsafe_sub(unsafe_sub(seconds_per_liquidity_global, lower), upper)
             } else {
-                let lower = self.tick_state.read((pool_key, position_key.bounds.lower));
-                let upper = self.tick_state.read((pool_key, position_key.bounds.upper));
-                unsafe_sub(upper.inner, lower.inner)
-            };
-
-            let snapshot = self.position_snapshots.read((pool_key, position_key));
-
-            unsafe_sub(snapshot.inner, seconds_per_liquiidty_inside)
+                unsafe_sub(upper, lower)
+            }
         }
     }
 
