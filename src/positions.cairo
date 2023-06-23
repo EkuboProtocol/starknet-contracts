@@ -127,6 +127,7 @@ mod Positions {
         collect_fees: bool,
         min_token0: u128,
         min_token1: u128,
+        recipient: ContractAddress,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -344,17 +345,11 @@ mod Positions {
 
                     if delta.amount0.is_non_zero() {
                         // withdrawn to the contract to be returned to caller via #clear
-                        core
-                            .withdraw(
-                                data.pool_key.token0, get_contract_address(), delta.amount0.mag
-                            );
+                        core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
                     }
 
                     if delta.amount1.is_non_zero() {
-                        core
-                            .withdraw(
-                                data.pool_key.token1, get_contract_address(), delta.amount1.mag
-                            );
+                        core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
                     delta
@@ -520,6 +515,7 @@ mod Positions {
             min_token0: u128,
             min_token1: u128,
             collect_fees: bool,
+            recipient: ContractAddress
         ) -> (u128, u128) {
             validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
@@ -543,7 +539,8 @@ mod Positions {
                         salt: token_id.low.try_into().unwrap(),
                         collect_fees,
                         min_token0,
-                        min_token1
+                        min_token1,
+                        recipient,
                     }
                 )
             );
@@ -560,6 +557,10 @@ mod Positions {
                 dispatcher.transfer(recipient, balance);
             }
             balance
+        }
+
+        fn refund(ref self: ContractState, token: ContractAddress) -> u256 {
+            self.clear(token, get_caller_address())
         }
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {

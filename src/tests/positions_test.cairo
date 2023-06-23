@@ -438,8 +438,10 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
-    let balance0 = positions.clear(setup.token0.contract_address, contract_address_const::<2>());
-    let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
+    set_contract_address(contract_address_const::<2>());
+
+    let balance0 = positions.refund(setup.token0.contract_address);
+    let balance1 = positions.refund(setup.token1.contract_address);
 
     assert(
         setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
@@ -599,6 +601,8 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     };
     let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
 
+    let recipient = contract_address_const::<80085>();
+
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
@@ -632,10 +636,23 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 1000,
             min_token1: 1000,
             collect_fees: false,
+            recipient: recipient,
         );
 
     assert(amount0 == 49500494, 'amount0 less 1%');
     assert(amount1 == 49499505, 'amount1 less 1%');
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token0
+        }.balance_of(recipient) == 49500494,
+        'balance0'
+    );
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token1
+        }.balance_of(recipient) == 49499505,
+        'balance1'
+    );
 
     // fees are not withdrawn with the principal
     let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
@@ -656,10 +673,24 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: true,
+            recipient: recipient,
         );
 
     assert(amount0 == 19, 'fees0 withdrawn');
     assert(amount1 == 8, 'fees1 withdrawn');
+
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token0
+        }.balance_of(recipient) == (49500494 + 19),
+        'balance0'
+    );
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token1
+        }.balance_of(recipient) == (49499505 + 8),
+        'balance1'
+    );
 
     // withdraw quarter
     let (amount0, amount1) = positions
@@ -671,10 +702,24 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
+            recipient: recipient,
         );
 
     assert(amount0 == 24750246, 'quarter');
     assert(amount1 == 24749752, 'quarter');
+
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token0
+        }.balance_of(recipient) == (49500494 + 19 + 24750246),
+        'balance0'
+    );
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token1
+        }.balance_of(recipient) == (49499505 + 8 + 24749752),
+        'balance1'
+    );
 
     // withdraw remainder
     let (amount0, amount1) = positions
@@ -686,8 +731,22 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
+            recipient: recipient,
         );
 
     assert(amount0 == 24750246, 'remainder');
     assert(amount1 == 24749752, 'remainder');
+
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token0
+        }.balance_of(recipient) == (49500494 + 19 + 24750246 + 24750246),
+        'balance0'
+    );
+    assert(
+        IMockERC20Dispatcher {
+            contract_address: setup.pool_key.token1
+        }.balance_of(recipient) == (49499505 + 8 + 24749752 + 24749752),
+        'balance1'
+    );
 }
