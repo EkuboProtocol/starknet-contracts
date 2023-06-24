@@ -18,7 +18,7 @@ fn zero_tick() {
 fn sqrt_ratio_of_max_tick_spacing() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: false });
     assert(
-        sqrt_ratio == u256 { high: 1, low: 0x6a09e0270c68dd1ee7e1c288434a71a6 },
+        sqrt_ratio == u256 { high: 1, low: 0x6a09ec040c2369e15dce90e9f15668da },
         'sqrt_ratio is ~= sqrt(2)'
     );
 }
@@ -27,7 +27,7 @@ fn sqrt_ratio_of_max_tick_spacing() {
 fn sqrt_ratio_of_double_max_tick_spacing() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: false });
     assert(
-        sqrt_ratio == u256 { high: 1, low: 0xffffee4ff61bcc673f7a3cee14f2f19c },
+        sqrt_ratio == u256 { high: 2, low: 0xfdde43478607c0af52ed8d4de41 },
         'sqrt_ratio is ~= sqrt(4)'
     );
 }
@@ -36,7 +36,7 @@ fn sqrt_ratio_of_double_max_tick_spacing() {
 fn sqrt_ratio_of_max_tick_spacing_negative() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: true });
     assert(
-        sqrt_ratio == u256 { high: 0, low: 0xb504f6546d962e00c9b15a07b7c61b84 },
+        sqrt_ratio == u256 { high: 0, low: 0xb504f065edb6345da9e39ee5dc758249 },
         'sqrt_ratio is ~= sqrt(1/2)'
     );
 }
@@ -45,7 +45,7 @@ fn sqrt_ratio_of_max_tick_spacing_negative() {
 fn sqrt_ratio_of_double_max_tick_spacing_negative() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: true });
     assert(
-        sqrt_ratio == u256 { high: 0, low: 0x8000046c02a02833471c06458c77765c },
+        sqrt_ratio == u256 { high: 0, low: 0x7ffffc0887125a0925d8fce4c4ea9fcc },
         'sqrt_ratio is ~= sqrt(1/4)'
     );
 }

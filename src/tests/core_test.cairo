@@ -315,7 +315,7 @@ mod initialized_ticks {
             'max tick limited'
         );
     }
-    use debug::PrintTrait;
+
     #[test]
     #[available_gas(30000000)]
     fn test_prev_initialized_tick_exceeds_min_tick_spacing() {
@@ -340,7 +340,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: i129 { mag: 1, sign: true }, skip_ahead: 0
-                ) == (i129 { mag: (tick_constants::MAX_TICK_SPACING * 128), sign: true }, false),
+                ) == (min_tick(), false),
             'min tick'
         );
     }
