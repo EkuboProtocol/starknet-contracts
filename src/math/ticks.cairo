@@ -2,12 +2,15 @@ use ekubo::types::i129::i129;
 use integer::u128_wide_mul;
 
 mod constants {
+    // price may not exceed 2**128 or 2**-128
+    // floor(log base 1.000001 of (2**128))
     const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
     // doubling of sqrt ratio => quadrupling of price
+    // floor(log base 1.000001 of 4)
     const TICKS_IN_DOUBLE_SQRT_RATIO: u128 = 1386295;
 
-    // one percent
+    // floor(log base 1.000001 of 1.01)
     const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
     const MAX_SQRT_RATIO: u256 = 6277100250585753475930931601400621808602321654880405518632;
