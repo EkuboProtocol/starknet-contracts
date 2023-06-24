@@ -528,7 +528,7 @@ mod Core {
             assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
             assert(
                 (pool_key.tick_spacing.is_non_zero())
-                    & (pool_key.tick_spacing < tick_constants::TICKS_IN_DOUBLE_SQRT_RATIO),
+                    & (pool_key.tick_spacing < tick_constants::MAX_TICK_SPACING),
                 'TICK_SPACING'
             );
 

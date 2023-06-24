@@ -6,6 +6,8 @@ use ekubo::math::ticks::{
 };
 use ekubo::math::exp2::exp2;
 
+use debug::PrintTrait;
+
 #[test]
 fn zero_tick() {
     let sqrt_ratio = tick_to_sqrt_ratio(Zeroable::zero());
@@ -13,46 +15,38 @@ fn zero_tick() {
 }
 
 #[test]
-fn sqrt_ratio_of_two_sqrt_ratio_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(
-        i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false }
-    );
+fn sqrt_ratio_of_max_tick_spacing() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: false });
     assert(
-        sqrt_ratio == u256 { high: 1, low: 340282348454859831384279095459210930051 },
-        'sqrt_ratio is ~= 2'
+        sqrt_ratio == u256 { high: 1, low: 0x6a09e0270c68dd1ee7e1c288434a71a6 },
+        'sqrt_ratio is ~= sqrt(2)'
     );
 }
 
 #[test]
-fn sqrt_ratio_of_four_sqrt_ratio_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(
-        i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO * 2, sign: false }
-    );
+fn sqrt_ratio_of_double_max_tick_spacing() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: false });
     assert(
-        sqrt_ratio == u256 { high: 3, low: 340282293056624937244348151744516807171 },
-        'sqrt_ratio is ~= 4'
+        sqrt_ratio == u256 { high: 1, low: 0xffffee4ff61bcc673f7a3cee14f2f19c },
+        'sqrt_ratio is ~= sqrt(4)'
     );
 }
 
 #[test]
-fn sqrt_ratio_of_one_half_sqrt_ratio_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(
-        i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true }
-    );
+fn sqrt_ratio_of_max_tick_spacing_negative() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: true });
     assert(
-        sqrt_ratio == u256 { high: 0, low: 170141188076989015013634029531039680095 },
-        'sqrt_ratio is ~= 1/2'
+        sqrt_ratio == u256 { high: 0, low: 0xb504f6546d962e00c9b15a07b7c61b84 },
+        'sqrt_ratio is ~= sqrt(1/2)'
     );
 }
 
 #[test]
-fn sqrt_ratio_of_one_quarter_sqrt_ratio_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(
-        i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO * 2, sign: true }
-    );
+fn sqrt_ratio_of_double_max_tick_spacing_negative() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: true });
     assert(
-        sqrt_ratio == u256 { high: 0, low: 85070596346754461778878500982473884228 },
-        'sqrt_ratio is ~= 1/4'
+        sqrt_ratio == u256 { high: 0, low: 0x8000046c02a02833471c06458c77765c },
+        'sqrt_ratio is ~= sqrt(1/4)'
     );
 }
 
@@ -244,7 +238,7 @@ fn sqrt_ratio_to_tick_negative_one_plus_one() {
 #[test]
 #[available_gas(5000000)]
 fn sqrt_ratio_to_tick_double() {
-    let expected_tick = i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: false };
+    let expected_tick = i129 { mag: constants::MAX_TICK_SPACING, sign: false };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
     assert(tick == expected_tick, 'tick == expected_tick');
 }
@@ -252,7 +246,7 @@ fn sqrt_ratio_to_tick_double() {
 #[test]
 #[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_double() {
-    let expected_tick = i129 { mag: constants::TICKS_IN_DOUBLE_SQRT_RATIO, sign: true };
+    let expected_tick = i129 { mag: constants::MAX_TICK_SPACING, sign: true };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
     assert(tick == expected_tick, 'tick == expected_tick');
 }

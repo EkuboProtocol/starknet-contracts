@@ -80,6 +80,7 @@ mod initialize_pool_tests {
         PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const,
         i129OptionPartialEq, Zeroable
     };
+    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
     #[available_gas(3000000)]
@@ -173,7 +174,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: 1386294,
+            tick_spacing: MAX_TICK_SPACING - 1,
             extension: Zeroable::zero(),
         };
         core.initialize_pool(pool_key, Zeroable::zero());
@@ -188,7 +189,7 @@ mod initialize_pool_tests {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: 1386295,
+            tick_spacing: MAX_TICK_SPACING,
             extension: Zeroable::zero(),
         };
         core.initialize_pool(pool_key, Zeroable::zero());
