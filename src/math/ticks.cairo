@@ -10,11 +10,8 @@ mod constants {
     // one percent
     const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
-    const MAX_SQRT_RATIO_HIGH: u128 = 18446739710271796309;
-    const MAX_SQRT_RATIO_LOW: u128 = 147820330697885451836970967903133202728;
-
-    const MIN_SQRT_RATIO_HIGH: u128 = 0;
-    const MIN_SQRT_RATIO_LOW: u128 = 18446748437148339061;
+    const MAX_SQRT_RATIO: u256 = 6277100250585753475930931601400621808602321654880405518632;
+    const MIN_SQRT_RATIO: u256 = 18446748437148339061;
 }
 
 mod internal {
@@ -273,14 +270,13 @@ fn max_tick() -> i129 {
 
 #[inline(always)]
 fn max_sqrt_ratio() -> u256 {
-    u256 { high: constants::MAX_SQRT_RATIO_HIGH, low: constants::MAX_SQRT_RATIO_LOW }
+    constants::MAX_SQRT_RATIO
 }
 
 #[inline(always)]
 fn min_sqrt_ratio() -> u256 {
-    u256 { high: constants::MIN_SQRT_RATIO_HIGH, low: constants::MIN_SQRT_RATIO_LOW }
+    constants::MIN_SQRT_RATIO
 }
-
 
 // Computes the value sqrt(1.000001)^tick as a binary fixed point 128.128 number
 fn tick_to_sqrt_ratio(tick: i129) -> u256 {
