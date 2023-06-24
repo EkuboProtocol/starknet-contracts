@@ -1,5 +1,5 @@
 use ekubo::types::i129::i129;
-use integer::{u256_overflow_sub, u256_from_felt252};
+use integer::{u256_overflow_sub, u256_from_felt252, u128_wrapping_sub};
 use starknet::{ContractAddress, ContractAddressIntoFelt252};
 
 #[inline(always)]
