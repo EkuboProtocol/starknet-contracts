@@ -168,13 +168,13 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    fn test_initialize_pool_succeeds_max_tick_spacing_minus_one() {
+    fn test_initialize_pool_succeeds_max_tick_spacing() {
         let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: MAX_TICK_SPACING - 1,
+            tick_spacing: MAX_TICK_SPACING,
             extension: Zeroable::zero(),
         };
         core.initialize_pool(pool_key, Zeroable::zero());
@@ -183,13 +183,13 @@ mod initialize_pool_tests {
     #[test]
     #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
-    fn test_initialize_pool_fails_max_tick_spacing() {
+    fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
         let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
             fee: 0,
-            tick_spacing: MAX_TICK_SPACING,
+            tick_spacing: MAX_TICK_SPACING + 1,
             extension: Zeroable::zero(),
         };
         core.initialize_pool(pool_key, Zeroable::zero());
@@ -293,6 +293,55 @@ mod initialized_ticks {
                     skip_ahead: 5
                 ) == (max_tick(), false),
             'max tick always limited'
+        );
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_next_initialized_tick_exceeds_max_tick_spacing() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::MAX_TICK_SPACING,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        assert(
+            setup
+                .core
+                .next_initialized_tick(
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                ) == (i129 { mag: tick_constants::MAX_TICK_SPACING * 127, sign: false }, false),
+            'max tick limited'
+        );
+    }
+    use debug::PrintTrait;
+    #[test]
+    #[available_gas(30000000)]
+    fn test_prev_initialized_tick_exceeds_min_tick_spacing() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::MAX_TICK_SPACING,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                ) == (i129 { mag: Zeroable::zero(), sign: false }, false),
+            'min tick 0'
+        );
+
+        assert(
+            setup
+                .core
+                .prev_initialized_tick(
+                    pool_key: setup.pool_key, from: i129 { mag: 1, sign: true }, skip_ahead: 0
+                ) == (i129 { mag: (tick_constants::MAX_TICK_SPACING * 128), sign: true }, false),
+            'min tick'
         );
     }
 
