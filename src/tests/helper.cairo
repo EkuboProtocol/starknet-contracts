@@ -16,7 +16,7 @@ use ekubo::interfaces::core::{
 };
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
-use ekubo::extensions::incentives::{Incentives};
+use ekubo::extensions::oracle::{Oracle};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -46,14 +46,14 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     return IMockERC20Dispatcher { contract_address: token_address };
 }
 
-fn deploy_incentives(core: ICoreDispatcher) -> IExtensionDispatcher {
+fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Incentives::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Oracle::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
     )
-        .expect('incentives deploy failed');
+        .expect('oracle deploy failed');
 
     IExtensionDispatcher { contract_address: address }
 }

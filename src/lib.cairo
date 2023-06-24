@@ -6,6 +6,7 @@ mod positions;
 mod shared_locker;
 mod quoter;
 mod types;
+mod option_incentives;
 
 #[cfg(test)]
 mod tests;

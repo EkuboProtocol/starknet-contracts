@@ -1,10 +1,9 @@
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
-use ekubo::extensions::incentives::{IIncentivesDispatcher, IIncentivesDispatcherTrait};
+use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
-    deploy_core, deploy_positions, deploy_incentives, deploy_two_mock_tokens, swap_inner,
-    deploy_locker
+    deploy_core, deploy_positions, deploy_oracle, deploy_two_mock_tokens, swap_inner, deploy_locker
 };
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
@@ -19,11 +18,9 @@ use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use debug::PrintTrait;
 
-fn setup_pool_with_extension(
-    initial_tick: i129
-) -> (ICoreDispatcher, IIncentivesDispatcher, PoolKey) {
+fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {
     let core = deploy_core();
-    let incentives = deploy_incentives(core);
+    let oracle = deploy_oracle(core);
     let (token0, token1) = deploy_two_mock_tokens();
 
     let key = PoolKey {
@@ -31,7 +28,7 @@ fn setup_pool_with_extension(
         token1: token1.contract_address,
         fee: 0,
         tick_spacing: 1,
-        extension: incentives.contract_address,
+        extension: oracle.contract_address,
     };
 
     core.initialize_pool(key, initial_tick);
@@ -41,15 +38,13 @@ fn setup_pool_with_extension(
     core.set_reserves_limit(key.token1, 0xffffffffffffffffffffffffffffffff);
     set_contract_address(old);
 
-    (core, IIncentivesDispatcher { contract_address: incentives.contract_address }, key)
+    (core, IOracleDispatcher { contract_address: oracle.contract_address }, key)
 }
 
 #[test]
 #[available_gas(300000000)]
 fn test_before_initialize_call_points() {
-    let (core, incentives, key) = setup_pool_with_extension(
-        initial_tick: i129 { mag: 3, sign: true }
-    );
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 3, sign: true });
 
     let pool = core.get_pool(key);
 
@@ -64,10 +59,10 @@ fn test_before_initialize_call_points() {
         'call points'
     );
 
-    assert(incentives.get_tick_cumulative(key).is_zero(), '0 cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), '0 cumulative');
     // no position here
     assert(
-        incentives
+        oracle
             .get_seconds_per_liquidity_inside(
                 key,
                 Bounds { lower: i129 { mag: 3, sign: true }, upper: i129 { mag: 3, sign: false } }
@@ -77,7 +72,7 @@ fn test_before_initialize_call_points() {
     );
 
     set_block_timestamp(get_block_timestamp() + 10);
-    assert(incentives.get_tick_cumulative(key) == i129 { mag: 30, sign: true }, '30 cumulative');
+    assert(oracle.get_tick_cumulative(key) == i129 { mag: 30, sign: true }, '30 cumulative');
 }
 
 fn deposit(
@@ -130,9 +125,7 @@ fn deposit(
 #[test]
 #[available_gas(300000000)]
 fn test_time_passes_seconds_per_liquidity_global() {
-    let (core, incentives, key) = setup_pool_with_extension(
-        initial_tick: i129 { mag: 5, sign: true }
-    );
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 5, sign: true });
 
     let positions = deploy_positions(core);
 
@@ -145,27 +138,27 @@ fn test_time_passes_seconds_per_liquidity_global() {
     );
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 
     set_block_timestamp(get_block_timestamp() + 100);
 
     assert(
-        incentives
+        oracle
             .get_seconds_per_liquidity_inside(
                 pool_key: key, bounds: bounds
             ) == 0x8cecd9bbcf132ce54865c3086aa, // 100 * 2**128 / 0xb5a81a9
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key) == i129 { mag: 500, sign: true }, 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key) == i129 { mag: 500, sign: true }, 'tick_cumulative');
 }
 
 #[test]
 #[available_gas(300000000)]
 fn test_time_passed_position_out_of_range_only() {
-    let (core, incentives, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
 
     let positions = deploy_positions(core);
 
@@ -192,33 +185,33 @@ fn test_time_passed_position_out_of_range_only() {
     );
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
         'seconds_per_liquidity'
     );
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 
     set_block_timestamp(get_block_timestamp() + 100);
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_above) == 0,
         'seconds_per_liquidity'
     );
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds_below) == 0,
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 }
 
 
 #[test]
 #[available_gas(300000000)]
 fn test_swap_into_liquidity_time_passed() {
-    let (core, incentives, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
     let locker = deploy_locker(core);
     let positions = deploy_positions(core);
 
@@ -248,30 +241,29 @@ fn test_swap_into_liquidity_time_passed() {
     );
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 
     set_block_timestamp(get_block_timestamp() + 100);
 
     assert(
-        incentives
+        oracle
             .get_seconds_per_liquidity_inside(
                 pool_key: key, bounds: bounds
             ) == 0x8ceb28181e1775c7aa9c4f8a190,
         'seconds_per_liquidity after'
     );
     assert(
-        incentives.get_tick_cumulative(key) == i129 { mag: 5000, sign: false },
-        'tick_cumulative after'
+        oracle.get_tick_cumulative(key) == i129 { mag: 5000, sign: false }, 'tick_cumulative after'
     );
 }
 
 #[test]
 #[available_gas(300000000)]
 fn test_swap_through_liquidity_time_passed() {
-    let (core, incentives, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
     let locker = deploy_locker(core);
     let positions = deploy_positions(core);
 
@@ -301,19 +293,47 @@ fn test_swap_through_liquidity_time_passed() {
     );
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
         'seconds_per_liquidity'
     );
-    assert(incentives.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
+    assert(oracle.get_tick_cumulative(key).is_zero(), 'tick_cumulative');
 
     set_block_timestamp(get_block_timestamp() + 100);
 
     assert(
-        incentives.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
         'seconds_per_liquidity after'
     );
     assert(
-        incentives.get_tick_cumulative(key) == i129 { mag: 10000, sign: false },
-        'tick_cumulative after'
+        oracle.get_tick_cumulative(key) == i129 { mag: 10000, sign: false }, 'tick_cumulative after'
     );
+
+    IMockERC20Dispatcher {
+        contract_address: key.token0
+    }.increase_balance(locker.contract_address, 10000000);
+    swap_inner(
+        core: core,
+        pool_key: key,
+        locker: locker,
+        amount: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 100, sign: true }),
+        recipient: contract_address_const::<23456>(),
+        skip_ahead: 0
+    );
+
+    assert(
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        'seconds_per_liquidity 2'
+    );
+    assert(
+        oracle.get_tick_cumulative(key) == i129 { mag: 10000, sign: false }, 'cumulative tick 2'
+    );
+    set_block_timestamp(get_block_timestamp() + 10);
+
+    assert(
+        oracle.get_seconds_per_liquidity_inside(pool_key: key, bounds: bounds) == 0,
+        'seconds_per_liquidity 3'
+    );
+    assert(oracle.get_tick_cumulative(key) == i129 { mag: 9000, sign: false }, 'cumulative tick 3');
 }

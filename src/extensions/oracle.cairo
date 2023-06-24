@@ -20,7 +20,7 @@ struct PoolState {
 }
 
 #[starknet::interface]
-trait IIncentives<TStorage> {
+trait IOracle<TStorage> {
     // Returns the seconds per liquidity within the given bounds. Must be used only as a snapshot
     // You cannot rely on this snapshot to be consistent across positions
     fn get_seconds_per_liquidity_inside(self: @TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
@@ -31,8 +31,8 @@ trait IIncentives<TStorage> {
 
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
 #[starknet::contract]
-mod Incentives {
-    use super::{IIncentives, PoolKey, PositionKey, PoolState};
+mod Oracle {
+    use super::{IOracle, PoolKey, PositionKey, PoolState};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::i129::{i129};
@@ -103,7 +103,7 @@ mod Incentives {
     }
 
     #[external(v0)]
-    impl IncentivesImpl of IIncentives<ContractState> {
+    impl OracleImpl of IOracle<ContractState> {
         // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
         fn get_seconds_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
@@ -160,7 +160,7 @@ mod Incentives {
     use debug::PrintTrait;
 
     #[external(v0)]
-    impl IncentivesExtension of IExtension<ContractState> {
+    impl OracleExtension of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {

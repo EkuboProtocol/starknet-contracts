@@ -1,4 +1,4 @@
-mod incentives;
+mod oracle;
 
 #[cfg(test)]
-mod incentives_test;
+mod oracle_test;
