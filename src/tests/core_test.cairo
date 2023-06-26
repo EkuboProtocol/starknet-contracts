@@ -1586,7 +1586,6 @@ mod save_load_tests {
         let cache_key: u64 = 5678;
 
         set_contract_address(core.get_owner());
-        core.set_reserves_limit(token.contract_address, 1);
 
         // important because it allows us to load
         let recipient = locker.contract_address;

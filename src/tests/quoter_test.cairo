@@ -118,9 +118,6 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
     core.initialize_pool(pool_key_a, Zeroable::zero());
     core.initialize_pool(pool_key_b, Zeroable::zero());
     set_contract_address(core.get_owner());
-    core.set_reserves_limit(token0.contract_address, 0xffffffffffffffffffffffffffffffff);
-    core.set_reserves_limit(token1.contract_address, 0xffffffffffffffffffffffffffffffff);
-    core.set_reserves_limit(token2.contract_address, 0xffffffffffffffffffffffffffffffff);
 
     let caller = contract_address_const::<1>();
     set_contract_address(caller);

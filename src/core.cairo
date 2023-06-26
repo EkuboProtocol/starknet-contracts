@@ -58,19 +58,11 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
-        // the limit on reserves for each token
-        reserves_limit: LegacyMap<ContractAddress, u128>,
     }
 
     #[derive(starknet::Event, Drop)]
     struct OwnerChanged {
         new_owner: ContractAddress, 
-    }
-
-    #[derive(starknet::Event, Drop)]
-    struct ReservesLimitUpdated {
-        token: ContractAddress,
-        new_limit: u128,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -120,7 +112,6 @@ mod Core {
     #[event]
     enum Event {
         OwnerChanged: OwnerChanged,
-        ReservesLimitUpdated: ReservesLimitUpdated,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
@@ -367,25 +358,10 @@ mod Core {
             }
         }
 
-        fn get_reserves_limit(self: @ContractState, token: ContractAddress) -> u128 {
-            self.reserves_limit.read(token)
-        }
-
         fn set_owner(ref self: ContractState, new_owner: ContractAddress) {
             self.check_owner_only();
             self.owner.write(new_owner);
             self.emit(Event::OwnerChanged(OwnerChanged { new_owner }));
-        }
-
-        fn set_reserves_limit(ref self: ContractState, token: ContractAddress, limit: u128) {
-            self.check_owner_only();
-            self.reserves_limit.write(token, limit);
-            self
-                .emit(
-                    Event::ReservesLimitUpdated(
-                        ReservesLimitUpdated { token: token, new_limit: limit }
-                    )
-                );
         }
 
         fn withdraw_fees_collected(
@@ -488,11 +464,6 @@ mod Core {
 
             self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
             self.reserves.write(token_address, balance);
-
-            assert(
-                balance <= u256 { low: self.get_reserves_limit(token_address), high: 0 },
-                'MAX_RESERVES'
-            );
 
             delta.low
         }
