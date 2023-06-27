@@ -1,3 +1,8 @@
-# ekubo contracts
+# Ekubo Protocol
 
-This repo contains the code for a set of Cairo 1.x smart contracts that facilitate concentrated liquidity automated market making, focused on maintaining returns for passive liquidity providers.
+Contracts for an AMM featuring:
+
+- concentrated liquidity (tick size of 1.000001)
+- extensions
+- singleton design
+- withdrawal protocol fee
