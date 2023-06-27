@@ -298,7 +298,7 @@ mod Core {
 
 
         fn next_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             assert(from < max_tick(), 'NEXT_FROM_MAX');
 
@@ -328,7 +328,7 @@ mod Core {
         }
 
         fn prev_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             assert(from >= min_tick(), 'PREV_FROM_MIN');
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
@@ -806,6 +806,9 @@ mod Core {
                 pool.fee_growth_global_token0
             };
 
+            // we need to take a snapshot to call view methods within the loop
+            let self_snap = @self;
+
             loop {
                 if (amount_remaining == Zeroable::zero()) {
                     break ();
@@ -816,9 +819,9 @@ mod Core {
                 }
 
                 let (next_tick, is_initialized) = if (increasing) {
-                    self.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap.next_initialized_tick(pool_key, tick, params.skip_ahead)
                 } else {
-                    self.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap.prev_initialized_tick(pool_key, tick, params.skip_ahead)
                 };
 
                 let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
