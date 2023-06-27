@@ -835,6 +835,9 @@ mod Core {
                 pool.fee_growth_global_token0
             };
 
+            // we need to take a snapshot to call view methods within the loop
+            let self_snap = @self;
+
             loop {
                 if (amount_remaining == Zeroable::zero()) {
                     break ();
@@ -845,9 +848,9 @@ mod Core {
                 }
 
                 let (next_tick, is_initialized) = if (increasing) {
-                    self.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap.next_initialized_tick(pool_key, tick, params.skip_ahead)
                 } else {
-                    self.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap.prev_initialized_tick(pool_key, tick, params.skip_ahead)
                 };
 
                 let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
