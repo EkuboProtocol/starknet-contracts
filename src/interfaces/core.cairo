@@ -135,8 +135,6 @@ trait ICore<TStorage> {
         self: @TStorage, owner: ContractAddress, token: ContractAddress, cache_key: u64
     ) -> u128;
 
-    // todo: these next 2 functions are actually view functions, but we can't mark them as such because of a bug in the compiler
-
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
         self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
