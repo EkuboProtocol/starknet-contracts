@@ -307,7 +307,7 @@ mod Core {
 
 
         fn next_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             assert(from < max_tick(), 'NEXT_FROM_MAX');
 
@@ -337,7 +337,7 @@ mod Core {
         }
 
         fn prev_initialized_tick(
-            ref self: ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
             assert(from >= min_tick(), 'PREV_FROM_MIN');
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
