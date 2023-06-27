@@ -139,13 +139,13 @@ trait ICore<TStorage> {
 
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
-        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
     // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
     // Note this can also be used to check if the tick is initialized
     fn prev_initialized_tick(
-        ref self: TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
     // Set the owner of the contract to a new owner (only the current owner can call the function)
