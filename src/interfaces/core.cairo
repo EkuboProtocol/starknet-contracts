@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, ClassHash};
+use starknet::{ContractAddress};
 use ekubo::types::pool::{Pool};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};

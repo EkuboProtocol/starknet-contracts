@@ -51,7 +51,7 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
     Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Oracle::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Oracle::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('oracle deploy failed');
 
@@ -78,7 +78,7 @@ fn deploy_mock_extension(
     Serde::serialize(@core_locker.contract_address, ref constructor_args);
     Serde::serialize(@call_points, ref constructor_args);
     let (address, _) = deploy_syscall(
-        MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 3, constructor_args.span(), true
+        MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('mockext deploy failed');
 
@@ -110,7 +110,7 @@ fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
     Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Quoter::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        Quoter::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('rf deploy failed');
 
@@ -122,7 +122,7 @@ fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
     Serde::serialize(@core.contract_address, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 1, constructor_args.span(), true
+        CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('locker deploy failed');
 
@@ -150,7 +150,7 @@ fn deploy_positions_custom_uri(
     Serde::serialize(@token_uri_base, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Positions::TEST_CLASS_HASH.try_into().unwrap(), 2, constructor_args.span(), true
+        Positions::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('positions deploy failed');
 
