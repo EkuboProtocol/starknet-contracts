@@ -1563,6 +1563,174 @@ mod locks {
             'fgg1 != 0'
         );
     }
+
+    #[test]
+    #[available_gas(300000000)]
+    fn test_swap_exact_input_token0_multiple_ticks_crossed_hit_limit() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
+
+        // in range liquidity
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // out of range liquidity in the direction of the price movement
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // out of range liquidity in the OPPOSITE direction that cancels out the delta
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                    }, upper: i129 {
+                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // right above the tick price
+        let sqrt_ratio_limit = tick_to_sqrt_ratio(
+            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true }
+        )
+            + 1;
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 100000000, sign: false },
+            is_token1: false,
+            sqrt_ratio_limit: sqrt_ratio_limit,
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 0
+        );
+
+        assert(delta.amount0 == i129 { mag: 0x1869d, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 0x182be, sign: true }, 'amount1');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(
+            pool.tick == i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true },
+            'tick after'
+        );
+        assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(pool.fee_growth_global_token0 == 0x68f6639f0bc961de416956dbaee7d, 'fgg0');
+        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 != 0');
+    }
+
+    #[test]
+    #[available_gas(300000000)]
+    fn test_swap_exact_input_token1_multiple_ticks_crossed_hit_limit() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
+
+        // in range liquidity
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // out of range liquidity in the OPPOSITE direction
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                    }, upper: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // out of range liquidity in the direction
+        update_position(
+            setup,
+            bounds: Bounds {
+                lower: i129 {
+                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                    }, upper: i129 {
+                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false
+                },
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        // right above the tick price
+        let sqrt_ratio_limit = tick_to_sqrt_ratio(
+            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: false }
+        )
+            - 1;
+
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 100000000, sign: false },
+            is_token1: true,
+            sqrt_ratio_limit: sqrt_ratio_limit,
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 0
+        );
+
+        assert(delta.amount0 == i129 { mag: 0x182be, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 0x1869d, sign: false }, 'amount1');
+
+        let pool = setup.core.get_pool(setup.pool_key);
+        assert(
+            pool.tick == i129 { mag: (tick_constants::TICKS_IN_ONE_PERCENT * 5) - 1, sign: false },
+            'tick after'
+        );
+        assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0');
+        assert(pool.fee_growth_global_token1 == 0x68f6639f0bc961de416956dbaee7d, 'fgg1 != 0');
+    }
 }
 
 
