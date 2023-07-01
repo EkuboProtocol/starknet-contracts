@@ -34,8 +34,6 @@ fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDis
     core.initialize_pool(key, initial_tick);
     let old = get_contract_address();
     set_contract_address(core.get_owner());
-    core.set_reserves_limit(key.token0, 0xffffffffffffffffffffffffffffffff);
-    core.set_reserves_limit(key.token1, 0xffffffffffffffffffffffffffffffff);
     set_contract_address(old);
 
     (core, IOracleDispatcher { contract_address: oracle.contract_address }, key)

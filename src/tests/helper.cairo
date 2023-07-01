@@ -178,8 +178,6 @@ fn setup_pool(
 
     let address = get_contract_address();
     set_contract_address(contract_address_const::<0x01234567>());
-    core.set_reserves_limit(token0.contract_address, 0xffffffffffffffffffffffffffffffff);
-    core.set_reserves_limit(token1.contract_address, 0xffffffffffffffffffffffffffffffff);
     set_contract_address(address);
 
     core.initialize_pool(pool_key, initial_tick);
