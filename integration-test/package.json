@@ -1,0 +1,15 @@
+{
+  "name": "@ekubo/contracts-integration-test",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Integration tests for the core contracts of Ekubo Protocol",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Moody Salem",
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.3.3",
+    "ts-jest": "^29.1.1"
+  }
+}
