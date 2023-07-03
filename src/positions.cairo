@@ -165,7 +165,7 @@ mod Positions {
             self.approvals.write(token_id.low, Zeroable::zero());
             self.balances.write(from, self.balances.read(from) - 1);
             self.balances.write(to, self.balances.read(to) + 1);
-            self.emit(Event::Transfer(Transfer { from, to, token_id }));
+            self.emit(Transfer { from, to, token_id });
         }
 
         fn get_token_info(
@@ -199,7 +199,7 @@ mod Positions {
             let caller = get_caller_address();
             assert(caller == self.owner_of(token_id), 'OWNER');
             self.approvals.write(token_id.low, to);
-            self.emit(Event::Approval(Approval { owner: caller, approved: to, token_id }));
+            self.emit(Approval { owner: caller, approved: to, token_id });
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -253,7 +253,7 @@ mod Positions {
         ) {
             let owner = get_caller_address();
             self.operators.write((owner, operator), approved);
-            self.emit(Event::ApprovalForAll(ApprovalForAll { owner, operator, approved }));
+            self.emit(ApprovalForAll { owner, operator, approved });
         }
 
         fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -421,7 +421,7 @@ mod Positions {
                 .token_info
                 .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
 
-            self.emit(Event::Transfer(Transfer { from: owner, to: Zeroable::zero(), token_id }));
+            self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id });
         }
 
         fn get_position_info(
@@ -501,7 +501,7 @@ mod Positions {
                 )
             );
 
-            self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
+            self.emit(Deposit { token_id, pool_key, bounds, liquidity, delta });
 
             liquidity
         }

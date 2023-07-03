@@ -171,7 +171,7 @@ mod OptionIncentives {
                     }
                 );
 
-            self.emit(Event::Staked(Staked { token_id: token_id, owner: owner }));
+            self.emit(Staked { token_id: token_id, owner: owner });
         }
 
         fn get_exercisable_amount(
@@ -308,7 +308,7 @@ mod OptionIncentives {
                 contract_address: self.positions.read().contract_address
             }.transfer_from(get_contract_address(), recipient, token_id);
 
-            self.emit(Event::Unstaked(Unstaked { token_id: token_id, recipient: recipient }));
+            self.emit(Unstaked { token_id: token_id, recipient: recipient });
         }
     }
 }
