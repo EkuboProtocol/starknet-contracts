@@ -61,7 +61,7 @@ mod owner_tests {
     fn test_owner_can_be_changed_by_owner() {
         let core = deploy_core();
         set_contract_address(core.get_owner());
-        core.set_owner(contract_address_const::<102>());
+        core.change_owner(contract_address_const::<102>());
         assert(core.get_owner() == contract_address_const::<102>(), 'owner');
     }
 
@@ -71,7 +71,7 @@ mod owner_tests {
     fn test_owner_cannot_be_changed_by_other() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        core.set_owner(contract_address_const::<42>());
+        core.change_owner(contract_address_const::<42>());
     }
 }
 

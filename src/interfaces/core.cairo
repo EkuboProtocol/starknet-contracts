@@ -144,7 +144,7 @@ trait ICore<TStorage> {
     ) -> (i129, bool);
 
     // Set the owner of the contract to a new owner (only the current owner can call the function)
-    fn set_owner(ref self: TStorage, new_owner: ContractAddress);
+    fn change_owner(ref self: TStorage, new_owner: ContractAddress);
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(

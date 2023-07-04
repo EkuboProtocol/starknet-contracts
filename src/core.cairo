@@ -362,10 +362,10 @@ mod Core {
             }
         }
 
-        fn set_owner(ref self: ContractState, new_owner: ContractAddress) {
+        fn change_owner(ref self: ContractState, new_owner: ContractAddress) {
             self.check_owner_only();
             self.owner.write(new_owner);
-            self.emit(Event::OwnerChanged(OwnerChanged { new_owner }));
+            self.emit(OwnerChanged { new_owner });
         }
 
         fn withdraw_fees_collected(
@@ -381,7 +381,7 @@ mod Core {
             IERC20Dispatcher {
                 contract_address: token
             }.transfer(recipient, u256 { low: amount, high: 0 });
-            self.emit(Event::FeesWithdrawn(FeesWithdrawn { recipient, token, amount }));
+            self.emit(FeesWithdrawn { recipient, token, amount });
         }
 
         fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
@@ -439,14 +439,9 @@ mod Core {
 
             self
                 .emit(
-                    Event::SavedBalance(
-                        SavedBalance {
-                            to: recipient,
-                            token: token_address,
-                            cache_key: cache_key,
-                            amount: amount
-                        }
-                    )
+                    SavedBalance {
+                        to: recipient, token: token_address, cache_key: cache_key, amount: amount
+                    }
                 );
 
             balance_next
@@ -487,11 +482,9 @@ mod Core {
 
             self
                 .emit(
-                    Event::LoadedBalance(
-                        LoadedBalance {
-                            from: caller, token: token_address, cache_key: cache_key, amount: amount
-                        }
-                    )
+                    LoadedBalance {
+                        from: caller, token: token_address, cache_key: cache_key, amount: amount
+                    }
                 );
 
             balance_next
@@ -538,7 +531,7 @@ mod Core {
                 }.after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
 
-            self.emit(Event::PoolInitialized(PoolInitialized { pool_key, initial_tick }));
+            self.emit(PoolInitialized { pool_key, initial_tick });
         }
 
         fn get_pool_fee_growth_inside(
@@ -725,7 +718,7 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(Event::PositionUpdated(PositionUpdated { pool_key, params, delta }));
+            self.emit(PositionUpdated { pool_key, params, delta });
 
             if (pool.call_points.after_update_position) {
                 if (pool_key.extension != locker) {
@@ -959,7 +952,7 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(Event::Swapped(Swapped { pool_key, params, delta }));
+            self.emit(Swapped { pool_key, params, delta });
 
             if (pool.call_points.after_swap) {
                 if (pool_key.extension != locker) {

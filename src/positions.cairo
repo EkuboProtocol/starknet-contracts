@@ -85,6 +85,7 @@ mod Positions {
         liquidity: u128,
         delta: Delta,
         collect_fees: bool,
+        recipient: ContractAddress
     }
 
     #[derive(starknet::Event, Drop)]
@@ -176,7 +177,7 @@ mod Positions {
             self.approvals.write(token_id.low, Zeroable::zero());
             self.balances.write(from, self.balances.read(from) - 1);
             self.balances.write(to, self.balances.read(to) + 1);
-            self.emit(Event::Transfer(Transfer { from, to, token_id }));
+            self.emit(Transfer { from, to, token_id });
         }
 
         fn get_token_info(
@@ -210,7 +211,7 @@ mod Positions {
             let caller = get_caller_address();
             assert(caller == self.owner_of(token_id), 'OWNER');
             self.approvals.write(token_id.low, to);
-            self.emit(Event::Approval(Approval { owner: caller, approved: to, token_id }));
+            self.emit(Approval { owner: caller, approved: to, token_id });
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -264,7 +265,7 @@ mod Positions {
         ) {
             let owner = get_caller_address();
             self.operators.write((owner, operator), approved);
-            self.emit(Event::ApprovalForAll(ApprovalForAll { owner, operator, approved }));
+            self.emit(ApprovalForAll { owner, operator, approved });
         }
 
         fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -394,23 +395,17 @@ mod Positions {
 
             self
                 .emit(
-                    Event::Transfer(
-                        Transfer {
-                            from: Zeroable::zero(), to: recipient, token_id: u256 {
-                                low: id, high: 0
-                            }
-                        }
-                    )
+                    Transfer {
+                        from: Zeroable::zero(), to: recipient, token_id: u256 { low: id, high: 0 }
+                    }
                 );
 
-            // contains the associated pool key and bounds which is never stored
+            // contains the associated pool key and bounds which is never stored, which is important for indexing
             self
                 .emit(
-                    Event::PositionMinted(
-                        PositionMinted {
-                            token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
-                        }
-                    )
+                    PositionMinted {
+                        token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
+                    }
                 );
 
             u256 { low: id, high: 0 }
@@ -431,7 +426,7 @@ mod Positions {
                 .token_info
                 .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
 
-            self.emit(Event::Transfer(Transfer { from: owner, to: Zeroable::zero(), token_id }));
+            self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id });
         }
 
         fn get_position_info(
@@ -511,7 +506,7 @@ mod Positions {
                 )
             );
 
-            self.emit(Event::Deposit(Deposit { token_id, pool_key, bounds, liquidity, delta }));
+            self.emit(Deposit { token_id, pool_key, bounds, liquidity, delta });
 
             liquidity
         }
@@ -555,7 +550,12 @@ mod Positions {
                 )
             );
 
-            self.emit(Withdraw { token_id, pool_key, bounds, liquidity, delta, collect_fees });
+            self
+                .emit(
+                    Withdraw {
+                        token_id, pool_key, bounds, liquidity, delta, collect_fees, recipient
+                    }
+                );
 
             (delta.amount0.mag, delta.amount1.mag)
         }
