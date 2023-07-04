@@ -8,8 +8,10 @@ import {
   CompiledContract,
   hash,
 } from "starknet";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import CoreCompiledContract from "../out/core.json";
+import CoreCasmCompiledContract from "../out/core.casm.json";
+import QuoterCompiledContract from "../out/quoter.json";
+import PositionsCompiledContract from "../out/positions.json";
 
 function numberToFixedPoint128(x: number): bigint {
   let power = 0;
@@ -105,31 +107,16 @@ describe("core tests", () => {
   let rpcUrl: string;
   let accounts: Account[];
   let provider: RpcProvider;
-  let coreArtifact: CompiledContract;
-  let coreArtifactClassHash: string;
-  let quoterArtifact: CompiledContract;
-  let quoterArtifactClassHash: string;
-  let positionsArtifact: CompiledContract;
+  let coreClassHash: string;
+  let quoterClassHash: string;
   let positionsClassHash: string;
 
-  function readAndGetClassHash(relativeFilePath: string): {
-    artifact: CompiledContract;
-    classHash: string;
-  } {
-    const artifact = JSON.parse(
-      readFileSync(resolve(__dirname, relativeFilePath), "utf8")
-    );
-    const classHash = hash.computeContractClassHash(artifact);
-    return { artifact, classHash };
-  }
-
   beforeAll(() => {
-    ({ artifact: quoterArtifact, classHash: quoterArtifactClassHash } =
-      readAndGetClassHash("../out/quoter.json"));
-    ({ artifact: coreArtifact, classHash: coreArtifactClassHash } =
-      readAndGetClassHash("../out/core.json"));
-    ({ artifact: positionsArtifact, classHash: positionsClassHash } =
-      readAndGetClassHash("../out/positions.json"));
+    coreClassHash = hash.computeContractClassHash(CoreCompiledContract);
+    quoterClassHash = hash.computeContractClassHash(QuoterCompiledContract);
+    positionsClassHash = hash.computeContractClassHash(
+      PositionsCompiledContract
+    );
   });
 
   beforeAll(() => {
@@ -167,32 +154,26 @@ describe("core tests", () => {
     });
   });
 
-  let coreFactory: ContractFactory;
   let core: Contract;
-  let quoterFactory: ContractFactory;
   let quoter: Contract;
-  let positionsFactory: ContractFactory;
   let positions: Contract;
 
   beforeEach(async () => {
-    coreFactory = new ContractFactory(
-      coreArtifact,
-      coreArtifactClassHash,
+    core = await new ContractFactory(
+      CoreCompiledContract,
+      coreClassHash,
       accounts[0]
-    );
-    core = await coreFactory.deploy();
-    quoterFactory = new ContractFactory(
-      quoterArtifact,
-      quoterArtifactClassHash,
+    ).deploy();
+    quoter = await new ContractFactory(
+      QuoterCompiledContract,
+      quoterClassHash,
       accounts[0]
-    );
-    quoter = await quoterFactory.deploy();
-    positionsFactory = new ContractFactory(
-      quoterArtifact,
-      quoterArtifactClassHash,
+    ).deploy(core.address);
+    positions = await new ContractFactory(
+      PositionsCompiledContract,
+      positionsClassHash,
       accounts[0]
-    );
-    positions = await positionsFactory.deploy();
+    ).deploy(core.address);
   });
 
   for (const poolCase of POOL_CASES) {
