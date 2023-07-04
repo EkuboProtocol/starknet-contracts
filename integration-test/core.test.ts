@@ -2,6 +2,95 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import { Account, RpcProvider, Contract, ContractFactory } from "starknet";
 
+function numberToFixedPoint128(x: number): bigint {
+  let power = 0;
+  while (x % 1 !== 0) {
+    power++;
+    x *= 10;
+  }
+
+  return (BigInt(x) * 2n ** 128n) / 10n ** BigInt(power);
+}
+
+const MAX_TICK_SPACING = 693148;
+const MAX_TICK = 88722883;
+const MIN_TICK = -88722883;
+
+const POOL_CASES: Array<{
+  name: string;
+  pool: {
+    starting_price: number;
+    tick_spacing: number;
+    fee: number;
+  };
+  positions: {
+    bounds: {
+      lower: number;
+      upper: number;
+    };
+    liquidity: bigint;
+  }[];
+}> = [
+  {
+    name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
+    pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
+    positions: [],
+  },
+  {
+    name: "single position, full range liquidity, starting at price 1",
+    pool: {
+      starting_price: 1,
+      tick_spacing: 1,
+      fee: 0.003,
+    },
+    positions: [
+      { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
+    ],
+  },
+];
+
+const MAX_U128 = 2n ** 128n - 1n;
+
+const SWAP_CASES: Array<{
+  amount: bigint;
+  isToken1: boolean;
+  priceLimit?: bigint;
+  skipAhead?: number;
+}> = [
+  {
+    amount: 10000n,
+    isToken1: true,
+  },
+  {
+    amount: 10000n,
+    isToken1: false,
+  },
+  {
+    amount: -10000n,
+    isToken1: true,
+  },
+  {
+    amount: -10000n,
+    isToken1: false,
+  },
+  {
+    amount: MAX_U128,
+    isToken1: true,
+  },
+  {
+    amount: MAX_U128,
+    isToken1: false,
+  },
+  {
+    amount: -MAX_U128,
+    isToken1: true,
+  },
+  {
+    amount: -MAX_U128,
+    isToken1: false,
+  },
+];
+
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
   let rpcUrl: string;
@@ -47,18 +136,29 @@ describe("core tests", () => {
   let core: Contract;
 
   beforeEach(async () => {
-    factory = new ContractFactory({}, contract_address, accounts[0]);
-    core = await factory.deploy();
+    // factory = new ContractFactory(, , accounts[0]);
+    // core = await factory.deploy();
   });
 
-  it("works", () => {});
+  for (const poolCase of POOL_CASES) {
+    describe(poolCase.name, () => {
+      // set up the pool according to the pool case
+      beforeEach(async () => {});
+
+      // then test swap for each swap case
+      for (const swapCase of SWAP_CASES) {
+        it(`swap ${swapCase.amount} ${
+          swapCase.isToken1 ? "token1" : "token0"
+        }`, async () => {
+          expect("result").toMatchSnapshot();
+        });
+      }
+    });
+  }
 
   afterAll(async () => {
-    console.log("killing devnet");
-
     return new Promise((resolve) => {
       starknetProcess.on("close", () => {
-        console.log("closed");
         resolve(null);
       });
       starknetProcess.kill();

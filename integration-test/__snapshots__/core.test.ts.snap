@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap -10000 token0 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap -10000 token1 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap -340282366920938463463374607431768211455 token0 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap -340282366920938463463374607431768211455 token1 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap 10000 token0 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap 10000 token1 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap 340282366920938463463374607431768211455 token0 1`] = `"result"`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing==1, fee=0.003 swap 340282366920938463463374607431768211455 token1 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap -10000 token0 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap -10000 token1 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap -340282366920938463463374607431768211455 token0 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap -340282366920938463463374607431768211455 token1 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap 10000 token0 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap 10000 token1 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap 340282366920938463463374607431768211455 token0 1`] = `"result"`;
+
+exports[`core tests single position, full range liquidity, starting at price 1 swap 340282366920938463463374607431768211455 token1 1`] = `"result"`;
