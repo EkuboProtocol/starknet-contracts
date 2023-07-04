@@ -6,7 +6,7 @@ use ekubo::types::delta::Delta;
 use ekubo::math::ticks::tick_to_sqrt_ratio;
 use integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
-    u256_safe_divmod, u128_overflowing_add
+    u128_overflowing_add
 };
 use zeroable::Zeroable;
 
