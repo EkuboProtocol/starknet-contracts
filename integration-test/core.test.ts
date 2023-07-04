@@ -107,14 +107,29 @@ describe("core tests", () => {
   let provider: RpcProvider;
   let coreArtifact: CompiledContract;
   let coreArtifactClassHash: string;
+  let quoterArtifact: CompiledContract;
+  let quoterArtifactClassHash: string;
+  let positionsArtifact: CompiledContract;
+  let positionsClassHash: string;
+
+  function readAndGetClassHash(relativeFilePath: string): {
+    artifact: CompiledContract;
+    classHash: string;
+  } {
+    const artifact = JSON.parse(
+      readFileSync(resolve(__dirname, relativeFilePath), "utf8")
+    );
+    const classHash = hash.computeContractClassHash(artifact);
+    return { artifact, classHash };
+  }
 
   beforeAll(() => {
-    const CORE = readFileSync(resolve(__dirname, "../out/core.json"), "utf8");
-    coreArtifact = JSON.parse(CORE);
-  });
-
-  beforeAll(() => {
-    coreArtifactClassHash = hash.computeContractClassHash(coreArtifact);
+    ({ artifact: quoterArtifact, classHash: quoterArtifactClassHash } =
+      readAndGetClassHash("../out/quoter.json"));
+    ({ artifact: coreArtifact, classHash: coreArtifactClassHash } =
+      readAndGetClassHash("../out/core.json"));
+    ({ artifact: positionsArtifact, classHash: positionsClassHash } =
+      readAndGetClassHash("../out/positions.json"));
   });
 
   beforeAll(() => {
@@ -152,16 +167,32 @@ describe("core tests", () => {
     });
   });
 
-  let factory: ContractFactory;
+  let coreFactory: ContractFactory;
   let core: Contract;
+  let quoterFactory: ContractFactory;
+  let quoter: Contract;
+  let positionsFactory: ContractFactory;
+  let positions: Contract;
 
   beforeEach(async () => {
-    factory = new ContractFactory(
+    coreFactory = new ContractFactory(
       coreArtifact,
       coreArtifactClassHash,
       accounts[0]
     );
-    core = await factory.deploy();
+    core = await coreFactory.deploy();
+    quoterFactory = new ContractFactory(
+      quoterArtifact,
+      quoterArtifactClassHash,
+      accounts[0]
+    );
+    quoter = await quoterFactory.deploy();
+    positionsFactory = new ContractFactory(
+      quoterArtifact,
+      quoterArtifactClassHash,
+      accounts[0]
+    );
+    positions = await positionsFactory.deploy();
   });
 
   for (const poolCase of POOL_CASES) {
