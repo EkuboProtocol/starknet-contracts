@@ -123,7 +123,11 @@ mod Core {
     #[constructor]
     fn constructor(ref self: ContractState) {
         // todo: choose the value for this constant, ideally a multisig and/or timelock
-        self.owner.write(contract_address_const::<0x01234567>());
+        self
+            .owner
+            .write(
+                contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
+            );
     }
 
     #[generate_trait]

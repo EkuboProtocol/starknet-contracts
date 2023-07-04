@@ -78,6 +78,16 @@ mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct Withdraw {
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        liquidity: u128,
+        delta: Delta,
+        collect_fees: bool,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct PositionMinted {
         token_id: u256,
         pool_key: PoolKey,
@@ -91,6 +101,7 @@ mod Positions {
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
         Deposit: Deposit,
+        Withdraw: Withdraw,
         PositionMinted: PositionMinted,
     }
 
@@ -344,7 +355,6 @@ mod Positions {
                     }
 
                     if delta.amount0.is_non_zero() {
-                        // withdrawn to the contract to be returned to caller via #clear
                         core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
                     }
 
@@ -544,6 +554,8 @@ mod Positions {
                     }
                 )
             );
+
+            self.emit(Withdraw { token_id, pool_key, bounds, liquidity, delta, collect_fees });
 
             (delta.amount0.mag, delta.amount1.mag)
         }
