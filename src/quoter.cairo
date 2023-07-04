@@ -15,6 +15,13 @@ struct QuoteParameters {
 }
 
 #[derive(Drop, Copy, Serde)]
+struct QuoteSingleParameters {
+    amount: i129,
+    specified_token: ContractAddress,
+    pool_key: PoolKey,
+}
+
+#[derive(Drop, Copy, Serde)]
 struct QuoteResult {
     amount: i129,
     other_token: ContractAddress,
@@ -24,6 +31,8 @@ struct QuoteResult {
 trait IQuoter<TStorage> {
     // Compute the quote for executing the given route
     fn quote(ref self: TStorage, params: QuoteParameters) -> QuoteResult;
+    // Quote for a single pool
+    fn quote_single(ref self: TStorage, params: QuoteSingleParameters) -> QuoteResult;
 }
 
 #[starknet::contract]
@@ -36,7 +45,10 @@ mod Quoter {
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-    use super::{i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult};
+    use super::{
+        i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult,
+        QuoteSingleParameters
+    };
 
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
@@ -198,6 +210,20 @@ mod Quoter {
     impl QuoterImpl of IQuoter<ContractState> {
         fn quote(ref self: ContractState, params: QuoteParameters) -> QuoteResult {
             call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
+        }
+
+        fn quote_single(ref self: ContractState, params: QuoteSingleParameters) -> QuoteResult {
+            let mut arr: Array<PoolKey> = ArrayTrait::new();
+            arr.append(params.pool_key);
+
+            self
+                .quote(
+                    QuoteParameters {
+                        route: Route {
+                            pool_keys: arr.span(), 
+                        }, amount: params.amount, specified_token: params.specified_token,
+                    }
+                )
         }
     }
 }

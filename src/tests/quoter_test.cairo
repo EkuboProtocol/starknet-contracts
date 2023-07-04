@@ -5,7 +5,9 @@ use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::tests::helper::{
     deploy_core, deploy_quoter, deploy_two_mock_tokens, deploy_positions, deploy_mock_token
 };
-use ekubo::quoter::{IQuoterDispatcher, IQuoterDispatcherTrait, Route, QuoteParameters, };
+use ekubo::quoter::{
+    IQuoterDispatcher, IQuoterDispatcherTrait, Route, QuoteParameters, QuoteSingleParameters
+};
 use ekubo::types::i129::i129;
 use ekubo::types::bounds::Bounds;
 use zeroable::Zeroable;
@@ -184,6 +186,55 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
                 amount: i129 {
                     mag: 100, sign: true
                 }, specified_token: pool_key.token1, route: route,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token1 out');
+    assert(result.other_token == pool_key.token0, 'tokend');
+}
+
+
+#[test]
+#[available_gas(300000000)]
+fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
+    let (quoter, pool_key, _) = setup_for_routing();
+
+    let mut result = quoter
+        .quote_single(
+            QuoteSingleParameters {
+                amount: i129 {
+                    mag: 100, sign: false
+                }, specified_token: pool_key.token0, pool_key: pool_key,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
+    assert(result.other_token == pool_key.token1, 'tokena');
+    result = quoter
+        .quote_single(
+            QuoteSingleParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key.token0, pool_key: pool_key,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token0 out');
+    assert(result.other_token == pool_key.token1, 'tokenb');
+
+    result = quoter
+        .quote_single(
+            QuoteSingleParameters {
+                amount: i129 {
+                    mag: 100, sign: false
+                }, specified_token: pool_key.token1, pool_key: pool_key,
+            }
+        );
+    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token1 in');
+    assert(result.other_token == pool_key.token0, 'tokenc');
+    result = quoter
+        .quote_single(
+            QuoteSingleParameters {
+                amount: i129 {
+                    mag: 100, sign: true
+                }, specified_token: pool_key.token1, pool_key: pool_key,
             }
         );
     assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token1 out');
