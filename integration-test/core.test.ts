@@ -173,7 +173,7 @@ describe("core tests", () => {
       PositionsCompiledContract,
       positionsClassHash,
       accounts[0]
-    ).deploy(core.address);
+    ).deploy(core.address, "https://f.ekubo.org/");
   });
 
   for (const poolCase of POOL_CASES) {
