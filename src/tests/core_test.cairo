@@ -14,6 +14,7 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
+use ekubo::math::muldiv::{div};
 use array::{ArrayTrait};
 use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
