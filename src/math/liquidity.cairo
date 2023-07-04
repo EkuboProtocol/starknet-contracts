@@ -1,6 +1,6 @@
 use result::ResultTrait;
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::muldiv::{muldiv};
+use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::i129;
 use ekubo::types::delta::Delta;
 use ekubo::math::ticks::tick_to_sqrt_ratio;
@@ -117,7 +117,7 @@ fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
     if (amount == 0) {
         return 0;
     }
-    let result = (u256 { high: amount, low: 0 } / (sqrt_ratio_upper - sqrt_ratio_lower));
+    let result = div(u256 { high: amount, low: 0 }, (sqrt_ratio_upper - sqrt_ratio_lower), false);
     assert(result.high == 0, 'OVERFLOW_MLFT1');
     result.low
 }

@@ -1,4 +1,5 @@
 use ekubo::types::i129::i129;
+use ekubo::math::muldiv::{div};
 use integer::u128_wide_mul;
 
 mod constants {
@@ -23,7 +24,8 @@ mod constants {
 mod internal {
     use ekubo::math::bits::{msb};
     use ekubo::math::exp2::{exp2};
-    use integer::downcast;
+    use ekubo::math::muldiv::{div};
+    use integer::{downcast, u256_as_non_zero};
     use option::{OptionTrait, Option};
     use traits::{Into, TryInto};
     use ekubo::types::i129::{i129, i129_min, i129_max};
@@ -70,10 +72,14 @@ mod internal {
         // negative result, compute log 2 of reciprocal
         if (x.high == 0) {
             let (mag, sign) = log2(
-                u256 {
-                    high: 0xffffffffffffffffffffffffffffffff,
-                    low: 0xffffffffffffffffffffffffffffffff
-                } / x
+                div(
+                    u256 {
+                        high: 0xffffffffffffffffffffffffffffffff,
+                        low: 0xffffffffffffffffffffffffffffffff
+                    },
+                    x,
+                    false
+                )
             );
             return (mag, !sign);
         }
@@ -82,7 +88,8 @@ mod internal {
         let msb_high = msb(x.high);
 
         let (mut r, mut log_2) = (
-            x / u256 { low: exp2(msb_high + 1), high: 0 }, msb_high.into() * 0x10000000000000000
+            div(x, u256 { low: exp2(msb_high + 1), high: 0 }, false),
+            msb_high.into() * 0x10000000000000000
         );
 
         // 63
@@ -90,7 +97,7 @@ mod internal {
         let mut f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x8000000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 62
@@ -98,7 +105,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x4000000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 61
@@ -106,7 +113,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x2000000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 60
@@ -114,7 +121,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x1000000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 59
@@ -122,7 +129,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x800000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 58
@@ -130,7 +137,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x400000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 57
@@ -138,7 +145,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x200000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 56
@@ -146,7 +153,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x100000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 55
@@ -154,7 +161,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x80000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 54
@@ -162,7 +169,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x40000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 53
@@ -170,7 +177,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x20000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 52
@@ -178,7 +185,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x10000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 51
@@ -186,7 +193,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x8000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 50
@@ -194,7 +201,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x4000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 49
@@ -202,7 +209,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x2000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 48
@@ -210,7 +217,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x1000000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 47
@@ -218,7 +225,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x800000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 46
@@ -226,7 +233,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x400000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 45
@@ -234,7 +241,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x200000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 44
@@ -242,7 +249,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x100000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 43
@@ -250,7 +257,7 @@ mod internal {
         f = r.high;
         if f != 0 {
             log_2 = log_2 + 0x80000000000;
-            r /= u256 { low: 2, high: 0 };
+            r = div(r, 2, false);
         }
 
         // 42
@@ -374,9 +381,15 @@ fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     // if positive and non-zero, invert, because we were computng a negative value
     if (!tick.sign) {
         if (tick.mag != 0) {
-            ratio = u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
-            } / ratio;
+            ratio =
+                div(
+                    u256 {
+                        high: 0xffffffffffffffffffffffffffffffff,
+                        low: 0xffffffffffffffffffffffffffffffff
+                    },
+                    ratio,
+                    false
+                );
         }
     }
 

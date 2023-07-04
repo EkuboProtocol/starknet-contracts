@@ -38,6 +38,7 @@ mod Oracle {
     use ekubo::types::i129::{i129};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::utils::{unsafe_sub};
+    use ekubo::math::muldiv::{div};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
@@ -80,7 +81,11 @@ mod Oracle {
 
             let seconds_per_liquidity_global_next = if (pool.liquidity.is_non_zero()) {
                 state.seconds_per_liquidity_global
-                    + (u256 { low: 0, high: time_passed } / u256 { low: pool.liquidity, high: 0 })
+                    + div(
+                        u256 { low: 0, high: time_passed },
+                        u256 { low: pool.liquidity, high: 0 },
+                        false
+                    )
             } else {
                 state.seconds_per_liquidity_global
             };
@@ -127,11 +132,11 @@ mod Oracle {
                         state.seconds_per_liquidity_global
                     } else {
                         state.seconds_per_liquidity_global
-                            + (u256 {
-                                low: 0, high: (time - state.block_timestamp_last).into()
-                                } / u256 {
-                                low: pool.liquidity, high: 0
-                            })
+                            + (div(
+                                u256 { low: 0, high: (time - state.block_timestamp_last).into() },
+                                u256 { low: pool.liquidity, high: 0 },
+                                false
+                            ))
                     }
                 };
 

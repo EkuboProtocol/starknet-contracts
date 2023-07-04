@@ -1122,7 +1122,7 @@ mod locks {
             extension: Zeroable::zero(),
         );
 
-        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
+        let sqrt_ratio_limit = div(u256 { low: 0, high: 1 }, u256 { low: 2, high: 0 }, false);
 
         let delta = swap(
             setup,

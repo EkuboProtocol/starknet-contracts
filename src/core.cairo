@@ -21,7 +21,7 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
-    use ekubo::math::muldiv::{muldiv};
+    use ekubo::math::muldiv::{muldiv, div};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
@@ -665,19 +665,19 @@ mod Core {
                 (
                     unsafe_sub(
                         pool.fee_growth_global_token0,
-                        u256 {
-                            high: get_position_result.fees0, low: 0
-                            } / u256 {
-                            low: position_liquidity_next, high: 0
-                        }
+                        div(
+                            u256 { high: get_position_result.fees0, low: 0 },
+                            u256 { low: position_liquidity_next, high: 0 },
+                            false
+                        )
                     ),
                     unsafe_sub(
                         pool.fee_growth_global_token1,
-                        u256 {
-                            high: get_position_result.fees1, low: 0
-                            } / u256 {
-                            low: position_liquidity_next, high: 0
-                        }
+                        div(
+                            u256 { high: get_position_result.fees1, low: 0 },
+                            u256 { low: position_liquidity_next, high: 0 },
+                            false
+                        )
                     )
                 )
             };
@@ -852,11 +852,12 @@ mod Core {
 
                 // this only happens when liquidity != 0
                 if (swap_result.fee_amount != 0) {
-                    fee_growth_global += u256 {
-                        low: 0, high: swap_result.fee_amount
-                        } / u256 {
-                        low: liquidity, high: 0
-                    };
+                    fee_growth_global +=
+                        div(
+                            u256 { low: 0, high: swap_result.fee_amount },
+                            u256 { low: liquidity, high: 0 },
+                            false
+                        );
                 }
 
                 if (sqrt_ratio == next_tick_sqrt_ratio) {

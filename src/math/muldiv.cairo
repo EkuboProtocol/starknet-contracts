@@ -1,13 +1,23 @@
 use option::{Option, OptionTrait};
 use zeroable::Zeroable;
 use integer::{
-    u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_safe_divmod,
-    u256_overflowing_add
+    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_overflowing_add
 };
+
+// Workaround because u256_safe_divmod is not audited
+// todo: replace with u256_safe_divmod
+#[inline(always)]
+fn u256_safe_divmod_audited(lhs: u256, rhs: NonZero<u256>) -> (u256, u256) {
+    let (quotient, remainder) = u512_safe_div_rem_by_u256(
+        u512 { limb0: lhs.low, limb1: lhs.high, limb2: 0, limb3: 0 }, rhs
+    );
+    (u256 { low: quotient.limb0, high: quotient.limb1 }, remainder)
+}
+
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 fn div(x: u256, z: u256, round_up: bool) -> u256 {
-    let (quotient, remainder, _) = u256_safe_divmod(x, u256_as_non_zero(z));
+    let (quotient, remainder) = u256_safe_divmod_audited(x, u256_as_non_zero(z));
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {

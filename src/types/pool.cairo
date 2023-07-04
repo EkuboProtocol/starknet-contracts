@@ -4,8 +4,9 @@ use starknet::{StorageAccess, StorageBaseAddress, SyscallResult};
 use zeroable::Zeroable;
 use traits::{Into, TryInto};
 use option::{OptionTrait, Option};
-use integer::{u256_safe_divmod, u256_as_non_zero, u128_safe_divmod, u128_as_non_zero};
+use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
+use ekubo::math::muldiv::{u256_safe_divmod_audited};
 
 #[derive(Copy, Drop, Serde)]
 struct Pool {
@@ -38,7 +39,7 @@ impl PoolStorageAccess of StorageAccess<Pool> {
         let packed_first_slot_u256: u256 = packed_first_slot.into();
 
         // quotient, remainder
-        let (tick_call_points, sqrt_ratio, _) = u256_safe_divmod(
+        let (tick_call_points, sqrt_ratio) = u256_safe_divmod_audited(
             packed_first_slot_u256,
             u256_as_non_zero(0x1000000000000000000000000000000000000000000000000) // 2n ** 192n
         );
