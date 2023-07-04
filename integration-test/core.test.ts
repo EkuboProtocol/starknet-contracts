@@ -1,6 +1,15 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
-import { Account, RpcProvider, Contract, ContractFactory } from "starknet";
+import {
+  Account,
+  RpcProvider,
+  Contract,
+  ContractFactory,
+  CompiledContract,
+  hash,
+} from "starknet";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
 function numberToFixedPoint128(x: number): bigint {
   let power = 0;
@@ -96,6 +105,17 @@ describe("core tests", () => {
   let rpcUrl: string;
   let accounts: Account[];
   let provider: RpcProvider;
+  let coreArtifact: CompiledContract;
+  let coreArtifactClassHash: string;
+
+  beforeAll(() => {
+    const CORE = readFileSync(resolve(__dirname, "../out/core.json"), "utf8");
+    coreArtifact = JSON.parse(CORE);
+  });
+
+  beforeAll(() => {
+    coreArtifactClassHash = hash.computeContractClassHash(coreArtifact);
+  });
 
   beforeAll(() => {
     starknetProcess = spawn("katana", ["--seed", "0"]);
@@ -136,8 +156,12 @@ describe("core tests", () => {
   let core: Contract;
 
   beforeEach(async () => {
-    // factory = new ContractFactory(, , accounts[0]);
-    // core = await factory.deploy();
+    factory = new ContractFactory(
+      coreArtifact,
+      coreArtifactClassHash,
+      accounts[0]
+    );
+    core = await factory.deploy();
   });
 
   for (const poolCase of POOL_CASES) {
