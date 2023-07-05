@@ -113,7 +113,7 @@ fn test_u8_into_after_update_position_call_points() {
 #[test]
 #[available_gas(3000000000)]
 fn test_conversion_all_possible_values() {
-    let mut i: usize = 0;
+    let mut i: u128 = 0;
 
     loop {
         if (i == 256) {

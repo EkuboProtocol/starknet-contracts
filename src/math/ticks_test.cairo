@@ -136,7 +136,7 @@ fn tick_magnitude_exceeds_max() {
 }
 
 #[test]
-#[available_gas(1000000)]
+#[available_gas(2000000)]
 fn test_log2_2_128() {
     let (log2, sign) = ticks_internal::log2(u256 { high: 1, low: 0 });
     assert(log2 == 0, 'log2(2**128).mag');

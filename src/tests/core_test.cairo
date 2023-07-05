@@ -594,7 +594,7 @@ mod locks {
     use ekubo::types::i129::{i129OptionPartialEq};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use super::{
-        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants,
+        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants, div,
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
@@ -1248,7 +1248,7 @@ mod locks {
 
 
     #[test]
-    #[available_gas(30000000)]
+    #[available_gas(40000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1512,7 +1512,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
+    #[available_gas(40000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
