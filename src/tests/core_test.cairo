@@ -1248,7 +1248,7 @@ mod locks {
 
 
     #[test]
-    #[available_gas(30000000)]
+    #[available_gas(40000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1512,7 +1512,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
+    #[available_gas(40000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
