@@ -1,4 +1,3 @@
-#[cfg(test)]
 mod core_test;
 mod extensions_test;
 mod helper;

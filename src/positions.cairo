@@ -78,6 +78,17 @@ mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct Withdraw {
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        liquidity: u128,
+        delta: Delta,
+        collect_fees: bool,
+        recipient: ContractAddress
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct PositionMinted {
         token_id: u256,
         pool_key: PoolKey,
@@ -91,6 +102,7 @@ mod Positions {
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
         Deposit: Deposit,
+        Withdraw: Withdraw,
         PositionMinted: PositionMinted,
     }
 
@@ -344,7 +356,6 @@ mod Positions {
                     }
 
                     if delta.amount0.is_non_zero() {
-                        // withdrawn to the contract to be returned to caller via #clear
                         core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
                     }
 
@@ -384,23 +395,17 @@ mod Positions {
 
             self
                 .emit(
-                    Event::Transfer(
-                        Transfer {
-                            from: Zeroable::zero(), to: recipient, token_id: u256 {
-                                low: id, high: 0
-                            }
-                        }
-                    )
+                    Transfer {
+                        from: Zeroable::zero(), to: recipient, token_id: u256 { low: id, high: 0 }
+                    }
                 );
 
-            // contains the associated pool key and bounds which is never stored
+            // contains the associated pool key and bounds which is never stored, which is important for indexing
             self
                 .emit(
-                    Event::PositionMinted(
-                        PositionMinted {
-                            token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
-                        }
-                    )
+                    PositionMinted {
+                        token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
+                    }
                 );
 
             u256 { low: id, high: 0 }
@@ -544,6 +549,13 @@ mod Positions {
                     }
                 )
             );
+
+            self
+                .emit(
+                    Withdraw {
+                        token_id, pool_key, bounds, liquidity, delta, collect_fees, recipient
+                    }
+                );
 
             (delta.amount0.mag, delta.amount1.mag)
         }

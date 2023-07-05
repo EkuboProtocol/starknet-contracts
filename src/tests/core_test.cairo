@@ -14,6 +14,7 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
+use ekubo::math::muldiv::{div};
 use array::{ArrayTrait};
 use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -61,7 +62,7 @@ mod owner_tests {
     fn test_owner_can_be_changed_by_owner() {
         let core = deploy_core();
         set_contract_address(core.get_owner());
-        core.set_owner(contract_address_const::<102>());
+        core.change_owner(contract_address_const::<102>());
         assert(core.get_owner() == contract_address_const::<102>(), 'owner');
     }
 
@@ -71,7 +72,7 @@ mod owner_tests {
     fn test_owner_cannot_be_changed_by_other() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        core.set_owner(contract_address_const::<42>());
+        core.change_owner(contract_address_const::<42>());
     }
 }
 
@@ -1122,7 +1123,7 @@ mod locks {
             extension: Zeroable::zero(),
         );
 
-        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
+        let sqrt_ratio_limit = div(u256 { low: 0, high: 1 }, u256 { low: 2, high: 0 }, false);
 
         let delta = swap(
             setup,

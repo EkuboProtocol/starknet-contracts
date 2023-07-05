@@ -278,12 +278,7 @@ mod OptionIncentives {
             reward_token.transfer(recipient, u256 { low: purchased, high: 0 });
             quote_token.transfer(self.benefactor.read(), paid_amount);
 
-            self
-                .emit(
-                    Event::Exercised(
-                        Exercised { token_id, paid: paid_amount.low, purchased, recipient }
-                    )
-                );
+            self.emit(Exercised { token_id, paid: paid_amount.low, purchased, recipient });
 
             purchased
         }
