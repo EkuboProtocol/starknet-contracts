@@ -8,10 +8,9 @@ import {
   CompiledContract,
   hash,
 } from "starknet";
-import CoreCompiledContract from "../out/core.json";
-import CoreCasmCompiledContract from "../out/core.casm.json";
-import QuoterCompiledContract from "../out/quoter.json";
-import PositionsCompiledContract from "../out/positions.json";
+import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
+import QuoterCompiledContract from "../target/dev/ekubo_Quoter.sierra.json";
+import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
 
 function numberToFixedPoint128(x: number): bigint {
   let power = 0;
@@ -42,23 +41,23 @@ const POOL_CASES: Array<{
     liquidity: bigint;
   }[];
 }> = [
-  {
-    name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
-    pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
-    positions: [],
-  },
-  {
-    name: "single position, full range liquidity, starting at price 1",
-    pool: {
-      starting_price: 1,
-      tick_spacing: 1,
-      fee: 0.003,
+    {
+      name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
+      pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
+      positions: [],
     },
-    positions: [
-      { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
-    ],
-  },
-];
+    {
+      name: "single position, full range liquidity, starting at price 1",
+      pool: {
+        starting_price: 1,
+        tick_spacing: 1,
+        fee: 0.003,
+      },
+      positions: [
+        { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
+      ],
+    },
+  ];
 
 const MAX_U128 = 2n ** 128n - 1n;
 
@@ -68,39 +67,39 @@ const SWAP_CASES: Array<{
   priceLimit?: bigint;
   skipAhead?: number;
 }> = [
-  {
-    amount: 10000n,
-    isToken1: true,
-  },
-  {
-    amount: 10000n,
-    isToken1: false,
-  },
-  {
-    amount: -10000n,
-    isToken1: true,
-  },
-  {
-    amount: -10000n,
-    isToken1: false,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: false,
-  },
-  {
-    amount: -MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: -MAX_U128,
-    isToken1: false,
-  },
-];
+    {
+      amount: 10000n,
+      isToken1: true,
+    },
+    {
+      amount: 10000n,
+      isToken1: false,
+    },
+    {
+      amount: -10000n,
+      isToken1: true,
+    },
+    {
+      amount: -10000n,
+      isToken1: false,
+    },
+    {
+      amount: MAX_U128,
+      isToken1: true,
+    },
+    {
+      amount: MAX_U128,
+      isToken1: false,
+    },
+    {
+      amount: -MAX_U128,
+      isToken1: true,
+    },
+    {
+      amount: -MAX_U128,
+      isToken1: false,
+    },
+  ];
 
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
@@ -112,10 +111,10 @@ describe("core tests", () => {
   let positionsClassHash: string;
 
   beforeAll(() => {
-    coreClassHash = hash.computeContractClassHash(CoreCompiledContract);
-    quoterClassHash = hash.computeContractClassHash(QuoterCompiledContract);
+    coreClassHash = hash.computeContractClassHash(CoreCompiledContract as any);
+    quoterClassHash = hash.computeContractClassHash(QuoterCompiledContract as any);
     positionsClassHash = hash.computeContractClassHash(
-      PositionsCompiledContract
+      PositionsCompiledContract as any
     );
   });
 
@@ -160,34 +159,36 @@ describe("core tests", () => {
 
   beforeEach(async () => {
     core = await new ContractFactory(
-      CoreCompiledContract,
+      CoreCompiledContract as any,
       coreClassHash,
-      accounts[0]
+      accounts[0],
+      CoreCompiledContract.abi,
     ).deploy();
     quoter = await new ContractFactory(
-      QuoterCompiledContract,
+      QuoterCompiledContract as any,
       quoterClassHash,
-      accounts[0]
+      accounts[0],
+      QuoterCompiledContract.abi,
     ).deploy(core.address);
     positions = await new ContractFactory(
-      PositionsCompiledContract,
+      PositionsCompiledContract as any,
       positionsClassHash,
-      accounts[0]
+      accounts[0],
+      PositionsCompiledContract.abi,
     ).deploy(core.address, "https://f.ekubo.org/");
   });
 
   for (const poolCase of POOL_CASES) {
     describe(poolCase.name, () => {
       // set up the pool according to the pool case
-      beforeEach(async () => {});
+      beforeEach(async () => { });
 
       // then test swap for each swap case
       for (const swapCase of SWAP_CASES) {
-        it(`swap ${swapCase.amount} ${
-          swapCase.isToken1 ? "token1" : "token0"
-        }`, async () => {
-          expect("result").toMatchSnapshot();
-        });
+        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"
+          }`, async () => {
+            expect("result").toMatchSnapshot();
+          });
       }
     });
   }
