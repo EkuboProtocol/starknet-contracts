@@ -104,7 +104,7 @@ fn deploy_once_upgradeable(owner: ContractAddress) -> IOnceUpgradeableDispatcher
     let (address, _) = deploy_syscall(
         OnceUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
-        .expect('token deploy failed');
+        .expect('OU deploy failed');
     return IOnceUpgradeableDispatcher { contract_address: address };
 }
 
