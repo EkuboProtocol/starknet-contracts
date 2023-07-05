@@ -120,18 +120,14 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
-    #[constructor]
-    fn constructor(ref self: ContractState) {
-        // todo: choose the value for this constant, ideally a multisig and/or timelock
-        self
-            .owner
-            .write(
-                contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
-            );
-    }
-
     #[generate_trait]
     impl Internal of InternalTrait {
+        fn drm(
+            self: @ContractState
+        ) { // todo: uncomment the below line and set to the correct address
+        // assert(get_contract_address() == contract_address_const::<1234>(), 'BYE');
+        }
+
         #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
             self.lock_count.read() - 1
@@ -491,6 +487,8 @@ mod Core {
         }
 
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+            self.drm();
+
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
