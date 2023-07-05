@@ -14,6 +14,7 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
+use ekubo::math::muldiv::{div};
 use array::{ArrayTrait};
 use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -1122,7 +1123,7 @@ mod locks {
             extension: Zeroable::zero(),
         );
 
-        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
+        let sqrt_ratio_limit = div(u256 { low: 0, high: 1 }, u256 { low: 2, high: 0 }, false);
 
         let delta = swap(
             setup,

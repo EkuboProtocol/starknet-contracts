@@ -1,9 +1,7 @@
 use ekubo::types::i129::i129;
-use ekubo::math::muldiv::{muldiv, div};
+use ekubo::math::muldiv::{muldiv, div, u256_safe_divmod_audited};
 use option::Option;
-use integer::{
-    u256_safe_divmod, u256_as_non_zero, u256_overflow_mul, u256_overflow_sub, u256_overflowing_add
-};
+use integer::{u256_as_non_zero, u256_overflow_mul, u256_overflow_sub, u256_overflowing_add};
 use zeroable::Zeroable;
 
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
@@ -39,10 +37,15 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
         return Option::Some(result);
     } else {
         // adding amount0, taking out amount1, price is less than sqrt_ratio and should round up
-        let denominator = (numerator1 / sqrt_ratio) + u256 { high: 0, low: amount.mag };
+        let (denominator_p1, _) = u256_safe_divmod_audited(
+            numerator1, u256_as_non_zero(sqrt_ratio)
+        );
+        let denominator = (denominator_p1) + u256 { high: 0, low: amount.mag };
 
         // we know denominator is non-zero because amount.mag is non-zero
-        let (quotient, remainder, _) = u256_safe_divmod(numerator1, u256_as_non_zero(denominator));
+        let (quotient, remainder) = u256_safe_divmod_audited(
+            numerator1, u256_as_non_zero(denominator)
+        );
         return if (remainder.is_zero()) {
             Option::Some(quotient)
         } else {
@@ -64,7 +67,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
 
     assert(liquidity.is_non_zero(), 'NO_LIQUIDITY');
 
-    let (quotient, remainder, _) = u256_safe_divmod(
+    let (quotient, remainder) = u256_safe_divmod_audited(
         u256 { low: 0, high: amount.mag }, u256_as_non_zero(u256 { low: liquidity, high: 0 })
     );
 
