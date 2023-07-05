@@ -594,7 +594,7 @@ mod locks {
     use ekubo::types::i129::{i129OptionPartialEq};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use super::{
-        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants,
+        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants, div,
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
