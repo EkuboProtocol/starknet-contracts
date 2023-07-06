@@ -16,6 +16,9 @@ use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
     IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher
 };
+use array::ArrayTrait;
+use option::OptionTrait;
+use traits::{Into};
 
 use debug::PrintTrait;
 
@@ -45,6 +48,44 @@ fn test_nft_name_symbol() {
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
     assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_indexing_token_ids() {
+    let core = deploy_core();
+    let positions = deploy_positions(core);
+    let positions_721 = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
+
+    let pool_key = PoolKey {
+        token0: Zeroable::zero(),
+        token1: Zeroable::zero(),
+        fee: Zeroable::zero(),
+        tick_spacing: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    };
+
+    let bounds = Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() };
+
+    let owner = contract_address_const::<912345>();
+    let other = contract_address_const::<9123456>();
+
+    assert(positions_721.balance_of(owner) == 0, 'balance start');
+    let mut all = positions.get_all_positions(owner);
+    assert(all.len() == 0, 'len before');
+
+    positions.mint(owner, pool_key: pool_key, bounds: bounds);
+
+    assert(positions_721.balance_of(owner) == 1, 'balance after');
+    all = positions.get_all_positions(owner);
+    assert(all.len() == 1, 'len after');
+
+    set_contract_address(owner);
+    positions_721.transfer_from(owner, other, all.pop_front().unwrap().into());
+
+    assert(positions_721.balance_of(owner) == 0, 'balance after transfer');
+    all = positions.get_all_positions(owner);
+    assert(all.len() == 0, 'len after transfer');
 }
 
 #[test]

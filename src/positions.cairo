@@ -429,6 +429,23 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        fn get_all_positions(self: @ContractState, account: ContractAddress) -> Array<u64> {
+            let mut arr: Array<u64> = ArrayTrait::new();
+
+            let mut curr = self.tokens_by_owner.read((account, 0));
+            loop {
+                if (curr == 0) {
+                    break ();
+                }
+
+                arr.append(curr);
+
+                curr = self.tokens_by_owner.read((account, curr));
+            };
+
+            arr
+        }
+
         fn mint(
             ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
         ) -> u256 {
