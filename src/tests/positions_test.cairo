@@ -74,7 +74,7 @@ fn test_nft_indexing_token_ids() {
     let mut all = positions.get_all_positions(owner);
     assert(all.len() == 0, 'len before');
 
-    positions.mint(owner, pool_key: pool_key, bounds: bounds);
+    let token_id = positions.mint(owner, pool_key: pool_key, bounds: bounds);
 
     assert(positions_721.balance_of(owner) == 1, 'balance after');
     all = positions.get_all_positions(owner);
@@ -86,6 +86,20 @@ fn test_nft_indexing_token_ids() {
     assert(positions_721.balance_of(owner) == 0, 'balance after transfer');
     all = positions.get_all_positions(owner);
     assert(all.len() == 0, 'len after transfer');
+
+    assert(positions_721.balance_of(other) == 1, 'balance other transfer');
+    all = positions.get_all_positions(other);
+    assert(all.len() == 1, 'len other');
+    assert(all.pop_front().unwrap().into() == token_id.low, 'token other');
+
+    let token_id_2 = positions.mint(owner, pool_key: pool_key, bounds: bounds);
+    set_contract_address(other);
+    positions_721.transfer_from(other, owner, token_id);
+
+    all = positions.get_all_positions(owner);
+    assert(all.len() == 2, 'len final');
+    assert(all.pop_front().unwrap().into() == token_id.low, 'token1');
+    assert(all.pop_front().unwrap().into() == token_id_2.low, 'token2');
 }
 
 #[test]
