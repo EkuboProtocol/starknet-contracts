@@ -42,7 +42,9 @@ mod Positions {
         next_token_id: u64,
         approvals: LegacyMap<u64, ContractAddress>,
         owners: LegacyMap<u64, ContractAddress>,
-        balances: LegacyMap<ContractAddress, u64>,
+        // address, id -> next
+        // address, 0 contains the first token id
+        tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
         token_info: LegacyMap<u64, TokenInfo>,
     }
@@ -164,6 +166,57 @@ mod Positions {
             }
         }
 
+        fn count_tokens_for_owner(self: @ContractState, owner: ContractAddress) -> u64 {
+            let mut count: u64 = 0;
+
+            let mut curr = self.tokens_by_owner.read((owner, 0));
+
+            loop {
+                if (curr == 0) {
+                    break count;
+                };
+                count += 1;
+                curr = self.tokens_by_owner.read((owner, curr));
+            }
+        }
+
+        fn tokens_by_owner_insert(ref self: ContractState, owner: ContractAddress, id: u64) {
+            let mut curr = self.tokens_by_owner.read((owner, 0));
+
+            loop {
+                if (curr < id) {
+                    let next = self.tokens_by_owner.read((owner, curr));
+                    if (next == 0 || next > id) {
+                        self.tokens_by_owner.write((owner, curr), id);
+                        self.tokens_by_owner.write((owner, id), next);
+                        break ();
+                    }
+                    curr = next;
+                } else {
+                    curr = self.tokens_by_owner.read((owner, curr));
+                };
+            };
+        }
+
+        fn tokens_by_owner_remove(ref self: ContractState, owner: ContractAddress, id: u64) {
+            let mut curr: u64 = 0;
+
+            loop {
+                let next = self.tokens_by_owner.read((owner, curr));
+                assert(next <= id, 'TOKEN_NOT_FOUND');
+
+                if (next == id) {
+                    self
+                        .tokens_by_owner
+                        .write((owner, curr), self.tokens_by_owner.read((owner, next)));
+                    self.tokens_by_owner.write((owner, next), 0);
+                    break ();
+                } else {
+                    curr = next;
+                };
+            };
+        }
+
         fn transfer(
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
@@ -176,8 +229,8 @@ mod Positions {
 
             self.owners.write(id, to);
             self.approvals.write(id, Zeroable::zero());
-            self.balances.write(from, self.balances.read(from) - 1);
-            self.balances.write(to, self.balances.read(to) + 1);
+            self.tokens_by_owner_insert(to, id);
+            self.tokens_by_owner_remove(from, id);
             self.emit(Transfer { from, to, token_id });
         }
 
@@ -217,7 +270,7 @@ mod Positions {
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-            u256 { low: self.balances.read(account).into(), high: 0 }
+            u256 { low: self.count_tokens_for_owner(account).into(), high: 0 }
         }
 
         fn owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -384,7 +437,7 @@ mod Positions {
 
             // effect the mint by updating storage
             self.owners.write(id, recipient);
-            self.balances.write(recipient, self.balances.read(recipient) + 1);
+            self.tokens_by_owner_insert(recipient, id);
             self
                 .token_info
                 .write(
@@ -426,7 +479,7 @@ mod Positions {
 
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
-            self.balances.write(owner, self.balances.read(owner) - 1);
+            self.tokens_by_owner_remove(owner, id);
             self.token_info.write(id, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id });
