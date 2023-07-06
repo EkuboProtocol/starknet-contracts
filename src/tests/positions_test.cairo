@@ -242,7 +242,7 @@ fn test_nft_token_uri_reverts_too_long() {
 
 #[test]
 #[available_gas(300000000)]
-#[should_panic(expected: ('TOKEN_ID', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
 fn test_nft_token_uri_reverts_token_id_too_big() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
