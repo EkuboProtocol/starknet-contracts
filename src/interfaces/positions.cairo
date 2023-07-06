@@ -20,6 +20,9 @@ struct GetPositionInfoResult {
 
 #[starknet::interface]
 trait IPositions<TStorage> {
+    // Get the preimage of a key hash that is known to this contract. It is known if a position has ever been minted with the key hash.
+    fn get_known_key_hash_preimage(self: @TStorage, key_hash: felt252) -> (PoolKey, Bounds);
+
     // Get a full list of all the position IDs held by an account
     fn get_all_positions(self: @TStorage, account: ContractAddress) -> Array<u64>;
 

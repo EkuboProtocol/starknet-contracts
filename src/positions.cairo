@@ -35,6 +35,12 @@ mod Positions {
     use ekubo::shared_locker::call_core_with_callback;
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
 
+    #[derive(Drop, Copy, Serde)]
+    struct RememberedKeyHash {
+        pool_key: PoolKey,
+        bounds: Bounds
+    }
+
     #[storage]
     struct Storage {
         token_uri_base: felt252,
@@ -47,6 +53,7 @@ mod Positions {
         tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
         token_info: LegacyMap<u64, TokenInfo>,
+        known_key_hashes: LegacyMap<felt252, RememberedKeyHash>,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -429,6 +436,13 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        fn get_known_key_hash_preimage(
+            self: @ContractState, key_hash: felt252
+        ) -> (PoolKey, Bounds) {
+            let result = self.known_key_hashes.read(key_hash);
+            (result.pool_key, result.bounds)
+        }
+
         fn get_all_positions(self: @ContractState, account: ContractAddress) -> Array<u64> {
             let mut arr: Array<u64> = ArrayTrait::new();
 
@@ -455,14 +469,15 @@ mod Positions {
             // effect the mint by updating storage
             self.owners.write(id, recipient);
             self.tokens_by_owner_insert(recipient, id);
+            let key_hash = hash_key(pool_key, bounds);
+
+            self
+                .known_key_hashes
+                .write(key_hash, RememberedKeyHash { pool_key: pool_key, bounds: bounds,  });
+
             self
                 .token_info
-                .write(
-                    id,
-                    TokenInfo {
-                        key_hash: hash_key(pool_key, bounds), liquidity: Zeroable::zero(), 
-                    }
-                );
+                .write(id, TokenInfo { key_hash: key_hash, liquidity: Zeroable::zero(),  });
 
             self
                 .emit(
