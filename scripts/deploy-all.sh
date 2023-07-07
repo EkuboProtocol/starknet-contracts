@@ -39,5 +39,9 @@ declare_class_hash() {
 
 ONCE_UPGRADEABLE_CLASS_HASH=$(declare_class_hash OnceUpgradeable)
 CORE_CLASS_HASH=$(declare_class_hash Core)
+POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
 QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
+
+CORE_ADDRESS=$(starkli deploy --network "$NETWORK" $CORE_CLASS_HASH)
+POSITIONS_ADDRESS=$(starkli deploy --network "$NETWORK" $$POSITIONS_CLASS_HASH $CORE_ADDRESS)
 

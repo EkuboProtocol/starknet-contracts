@@ -25,7 +25,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
-    use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
+    use ekubo::types::i129::{i129};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
     use ekubo::types::tick::{Tick};
@@ -448,7 +448,7 @@ mod Core {
 
             let balance = IERC20Dispatcher {
                 contract_address: token_address
-            }.balance_of(get_contract_address());
+            }.balanceOf(get_contract_address());
 
             let reserve = self.reserves.read(token_address);
             // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender

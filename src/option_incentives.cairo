@@ -246,12 +246,12 @@ mod OptionIncentives {
 
             let address = get_contract_address();
 
-            let paid_amount = quote_token.balance_of(address);
+            let paid_amount = quote_token.balanceOf(address);
 
             // strike price is Q128, paid amount is raw, total should not exceed Q128
             let mut purchased = (paid_amount * exercisable.strike_price).high;
 
-            let max_purchase_amount = reward_token.balance_of(address);
+            let max_purchase_amount = reward_token.balanceOf(address);
             assert(max_purchase_amount.high.is_zero(), 'REWARD_TOKEN_OVERFLOW');
 
             if (purchased > max_purchase_amount.low) {

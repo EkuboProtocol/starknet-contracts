@@ -252,7 +252,7 @@ mod Positions {
         fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
             let balance = IERC20Dispatcher {
                 contract_address: token
-            }.balance_of(get_contract_address());
+            }.balanceOf(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
         }
@@ -644,7 +644,7 @@ mod Positions {
             ref self: ContractState, token: ContractAddress, recipient: ContractAddress
         ) -> u256 {
             let dispatcher = IERC20Dispatcher { contract_address: token };
-            let balance = dispatcher.balance_of(get_contract_address());
+            let balance = dispatcher.balanceOf(get_contract_address());
             if (balance.is_non_zero()) {
                 dispatcher.transfer(recipient, balance);
             }
@@ -658,7 +658,7 @@ mod Positions {
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             let core = self.core.read();
             let pool = core.get_pool(pool_key);
-            if (pool.sqrt_ratio == Zeroable::zero()) {
+            if (pool.sqrt_ratio.is_zero()) {
                 core.initialize_pool(pool_key, initial_tick);
             }
         }

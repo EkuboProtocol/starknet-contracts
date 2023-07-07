@@ -223,12 +223,12 @@ fn get_balances(
     locker: ICoreLockerDispatcher,
     recipient: ContractAddress
 ) -> Balances {
-    let token0_balance_core = token0.balance_of(core.contract_address);
-    let token1_balance_core = token1.balance_of(core.contract_address);
-    let token0_balance_recipient = token0.balance_of(recipient);
-    let token1_balance_recipient = token1.balance_of(recipient);
-    let token0_balance_locker = token0.balance_of(locker.contract_address);
-    let token1_balance_locker = token1.balance_of(locker.contract_address);
+    let token0_balance_core = token0.balanceOf(core.contract_address);
+    let token1_balance_core = token1.balanceOf(core.contract_address);
+    let token0_balance_recipient = token0.balanceOf(recipient);
+    let token1_balance_recipient = token1.balanceOf(recipient);
+    let token0_balance_locker = token0.balanceOf(locker.contract_address);
+    let token1_balance_locker = token1.balanceOf(locker.contract_address);
     Balances {
         token0_balance_core,
         token1_balance_core,

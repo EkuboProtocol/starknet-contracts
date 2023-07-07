@@ -28,7 +28,7 @@ mod internal {
     use integer::{downcast, u256_as_non_zero};
     use option::{OptionTrait, Option};
     use traits::{Into, TryInto};
-    use ekubo::types::i129::{i129, i129_min, i129_max};
+    use ekubo::types::i129::{i129};
     use integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
 
 

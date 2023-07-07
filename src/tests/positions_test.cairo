@@ -418,11 +418,11 @@ fn test_deposit_liquidity_concentrated() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
@@ -458,11 +458,11 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
+        setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
@@ -499,11 +499,11 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let balance1 = positions.refund(setup.token1.contract_address);
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
+        setup.token1.balanceOf(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
         'balance1 transfer'
     );
 
@@ -538,11 +538,11 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
+        setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance1 transfer'
     );
 
@@ -577,11 +577,11 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
 
     assert(
-        setup.token0.balance_of(contract_address_const::<2>()) == Zeroable::zero(),
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
         'balance0 transfer'
     );
     assert(
-        setup.token1.balance_of(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
+        setup.token1.balanceOf(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
         'balance1 transfer'
     );
 
@@ -699,13 +699,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balance_of(recipient) == 49500494,
+        }.balanceOf(recipient) == 49500494,
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balance_of(recipient) == 49499505,
+        }.balanceOf(recipient) == 49499505,
         'balance1'
     );
 
@@ -737,13 +737,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balance_of(recipient) == (49500494 + 19),
+        }.balanceOf(recipient) == (49500494 + 19),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balance_of(recipient) == (49499505 + 8),
+        }.balanceOf(recipient) == (49499505 + 8),
         'balance1'
     );
 
@@ -766,13 +766,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balance_of(recipient) == (49500494 + 19 + 24750246),
+        }.balanceOf(recipient) == (49500494 + 19 + 24750246),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balance_of(recipient) == (49499505 + 8 + 24749752),
+        }.balanceOf(recipient) == (49499505 + 8 + 24749752),
         'balance1'
     );
 
@@ -795,13 +795,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balance_of(recipient) == (49500494 + 19 + 24750246 + 24750246),
+        }.balanceOf(recipient) == (49500494 + 19 + 24750246 + 24750246),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balance_of(recipient) == (49499505 + 8 + 24749752 + 24749752),
+        }.balanceOf(recipient) == (49499505 + 8 + 24749752 + 24749752),
         'balance1'
     );
 }
