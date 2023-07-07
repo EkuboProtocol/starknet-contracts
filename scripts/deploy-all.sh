@@ -37,7 +37,10 @@ declare_class_hash() {
     starkli declare --network "$NETWORK" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
 }
 
-ONCE_UPGRADEABLE_CLASS_HASH=$(declare_class_hash OnceUpgradeable)
-CORE_CLASS_HASH=$(declare_class_hash Core)
-QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
+# ONCE_UPGRADEABLE_CLASS_HASH=$(declare_class_hash OnceUpgradeable)
+# CORE_CLASS_HASH=$(declare_class_hash Core)
+POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
+# QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
 
+
+starkli deploy --network "$NETWORK" $CORE_CLASS_HASH
