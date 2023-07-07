@@ -94,13 +94,13 @@ fn deposit(
     assert(
         IMockERC20Dispatcher {
             contract_address: pool_key.token0
-        }.balance_of(address: positions.contract_address) == 0,
+        }.balanceOf(address: positions.contract_address) == 0,
         'token0 balance'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: pool_key.token1
-        }.balance_of(address: positions.contract_address) == 0,
+        }.balanceOf(address: positions.contract_address) == 0,
         'token1 balance'
     );
 

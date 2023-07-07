@@ -448,7 +448,7 @@ mod Core {
 
             let balance = IERC20Dispatcher {
                 contract_address: token_address
-            }.balance_of(get_contract_address());
+            }.balanceOf(get_contract_address());
 
             let reserve = self.reserves.read(token_address);
             // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
