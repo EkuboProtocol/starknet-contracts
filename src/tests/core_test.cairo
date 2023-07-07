@@ -9,7 +9,7 @@ use integer::BoundedInt;
 use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
 use ekubo::types::pool::{Pool};
-use ekubo::types::i129::{i129, i129OptionPartialEq};
+use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
@@ -77,10 +77,7 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use super::{
-        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const,
-        i129OptionPartialEq, Zeroable
-    };
+    use super::{PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
@@ -591,7 +588,6 @@ mod initialized_ticks {
 mod locks {
     use debug::PrintTrait;
 
-    use ekubo::types::i129::{i129OptionPartialEq};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use super::{
         setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants, div,
