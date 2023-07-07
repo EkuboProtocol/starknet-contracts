@@ -25,7 +25,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
-    use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
+    use ekubo::types::i129::{i129, i129OptionPartialEq};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
     use ekubo::types::tick::{Tick};

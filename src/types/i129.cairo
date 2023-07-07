@@ -280,21 +280,3 @@ fn i129_le(a: i129, b: i129) -> bool {
 fn i129_neg(x: i129) -> i129 {
     i129_new(x.mag, !x.sign)
 }
-
-#[inline(always)]
-fn i129_max(a: i129, b: i129) -> i129 {
-    if (a > b) {
-        a
-    } else {
-        b
-    }
-}
-
-#[inline(always)]
-fn i129_min(a: i129, b: i129) -> i129 {
-    if (a < b) {
-        a
-    } else {
-        b
-    }
-}
