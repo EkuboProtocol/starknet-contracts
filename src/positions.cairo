@@ -39,12 +39,14 @@ mod Positions {
     struct Storage {
         token_uri_base: felt252,
         core: ICoreDispatcher,
-        next_token_id: u128,
-        approvals: LegacyMap<u128, ContractAddress>,
-        owners: LegacyMap<u128, ContractAddress>,
-        balances: LegacyMap<ContractAddress, u128>,
+        next_token_id: u64,
+        approvals: LegacyMap<u64, ContractAddress>,
+        owners: LegacyMap<u64, ContractAddress>,
+        // address, id -> next
+        // address, 0 contains the first token id
+        tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-        token_info: LegacyMap<u128, TokenInfo>,
+        token_info: LegacyMap<u64, TokenInfo>,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -113,8 +115,9 @@ mod Positions {
         self.next_token_id.write(1);
     }
 
-    fn validate_token_id(token_id: u256) {
+    fn validate_token_id(token_id: u256) -> u64 {
         assert(token_id.high == 0, 'INVALID_ID');
+        token_id.low.try_into().expect('INVALID_ID')
     }
 
     // Compute the hash for a given position key
@@ -151,7 +154,7 @@ mod Positions {
     #[generate_trait]
     impl Internal of InternalTrait {
         fn check_is_caller_authorized(
-            ref self: ContractState, owner: ContractAddress, token_id: u128
+            ref self: ContractState, owner: ContractAddress, token_id: u64
         ) {
             let caller = get_caller_address();
             if (caller != owner) {
@@ -163,27 +166,78 @@ mod Positions {
             }
         }
 
+        fn count_tokens_for_owner(self: @ContractState, owner: ContractAddress) -> u64 {
+            let mut count: u64 = 0;
+
+            let mut curr = self.tokens_by_owner.read((owner, 0));
+
+            loop {
+                if (curr == 0) {
+                    break count;
+                };
+                count += 1;
+                curr = self.tokens_by_owner.read((owner, curr));
+            }
+        }
+
+        fn tokens_by_owner_insert(ref self: ContractState, owner: ContractAddress, id: u64) {
+            let mut curr = self.tokens_by_owner.read((owner, 0));
+
+            loop {
+                if (curr < id) {
+                    let next = self.tokens_by_owner.read((owner, curr));
+                    if (next == 0 || next > id) {
+                        self.tokens_by_owner.write((owner, curr), id);
+                        self.tokens_by_owner.write((owner, id), next);
+                        break ();
+                    }
+                    curr = next;
+                } else {
+                    curr = self.tokens_by_owner.read((owner, curr));
+                };
+            };
+        }
+
+        fn tokens_by_owner_remove(ref self: ContractState, owner: ContractAddress, id: u64) {
+            let mut curr: u64 = 0;
+
+            loop {
+                let next = self.tokens_by_owner.read((owner, curr));
+                assert(next <= id, 'TOKEN_NOT_FOUND');
+
+                if (next == id) {
+                    self
+                        .tokens_by_owner
+                        .write((owner, curr), self.tokens_by_owner.read((owner, next)));
+                    self.tokens_by_owner.write((owner, next), 0);
+                    break ();
+                } else {
+                    curr = next;
+                };
+            };
+        }
+
         fn transfer(
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
-            validate_token_id(token_id);
+            let id = validate_token_id(token_id);
 
-            let owner = self.owners.read(token_id.low);
+            let owner = self.owners.read(id);
             assert(owner == from, 'OWNER');
 
-            self.check_is_caller_authorized(owner, token_id.low);
+            self.check_is_caller_authorized(owner, id);
 
-            self.owners.write(token_id.low, to);
-            self.approvals.write(token_id.low, Zeroable::zero());
-            self.balances.write(from, self.balances.read(from) - 1);
-            self.balances.write(to, self.balances.read(to) + 1);
+            self.owners.write(id, to);
+            self.approvals.write(id, Zeroable::zero());
+            self.tokens_by_owner_insert(to, id);
+            self.tokens_by_owner_remove(from, id);
             self.emit(Transfer { from, to, token_id });
         }
 
         fn get_token_info(
-            self: @ContractState, token_id: u128, pool_key: PoolKey, bounds: Bounds
+            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> TokenInfo {
-            let info = self.token_info.read(token_id);
+            let info = self.token_info.read(id);
             assert(info.key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
             info
         }
@@ -209,18 +263,18 @@ mod Positions {
 
         fn approve(ref self: ContractState, to: ContractAddress, token_id: u256) {
             let caller = get_caller_address();
-            assert(caller == self.owner_of(token_id), 'OWNER');
-            self.approvals.write(token_id.low, to);
+            let id = validate_token_id(token_id);
+            assert(caller == self.owners.read(id), 'OWNER');
+            self.approvals.write(id, to);
             self.emit(Approval { owner: caller, approved: to, token_id });
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-            u256 { low: self.balances.read(account), high: 0 }
+            u256 { low: self.count_tokens_for_owner(account).into(), high: 0 }
         }
 
         fn owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
-            assert(token_id.high == 0, 'INVALID_ID');
-            self.owners.read(token_id.low)
+            self.owners.read(validate_token_id(token_id))
         }
 
         fn transfer_from(
@@ -269,7 +323,7 @@ mod Positions {
         }
 
         fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
-            self.approvals.read(token_id.low)
+            self.approvals.read(validate_token_id(token_id))
         }
 
         fn is_approved_for_all(
@@ -279,10 +333,10 @@ mod Positions {
         }
 
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
-            validate_token_id(token_id);
+            let id = validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
-            append(self.token_uri_base.read(), to_decimal(token_id.low).expect('TOKEN_ID'))
+            append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
     }
@@ -375,6 +429,23 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        fn get_all_positions(self: @ContractState, account: ContractAddress) -> Array<u64> {
+            let mut arr: Array<u64> = ArrayTrait::new();
+
+            let mut curr = self.tokens_by_owner.read((account, 0));
+            loop {
+                if (curr == 0) {
+                    break ();
+                }
+
+                arr.append(curr);
+
+                curr = self.tokens_by_owner.read((account, curr));
+            };
+
+            arr
+        }
+
         fn mint(
             ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
         ) -> u256 {
@@ -383,20 +454,19 @@ mod Positions {
 
             // effect the mint by updating storage
             self.owners.write(id, recipient);
-            self.balances.write(recipient, self.balances.read(recipient) + 1);
+            self.tokens_by_owner_insert(recipient, id);
+            let key_hash = hash_key(pool_key, bounds);
+
             self
                 .token_info
-                .write(
-                    id,
-                    TokenInfo {
-                        key_hash: hash_key(pool_key, bounds), liquidity: Zeroable::zero(), 
-                    }
-                );
+                .write(id, TokenInfo { key_hash: key_hash, liquidity: Zeroable::zero(),  });
 
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(), to: recipient, token_id: u256 { low: id, high: 0 }
+                        from: Zeroable::zero(), to: recipient, token_id: u256 {
+                            low: id.into(), high: 0
+                        }
                     }
                 );
 
@@ -404,27 +474,27 @@ mod Positions {
             self
                 .emit(
                     PositionMinted {
-                        token_id: u256 { low: id, high: 0 }, pool_key: pool_key, bounds: bounds, 
+                        token_id: u256 {
+                            low: id.into(), high: 0
+                        }, pool_key: pool_key, bounds: bounds,
                     }
                 );
 
-            u256 { low: id, high: 0 }
+            u256 { low: id.into(), high: 0 }
         }
 
         fn burn(ref self: ContractState, token_id: u256) {
-            validate_token_id(token_id);
-            let owner = self.owners.read(token_id.low);
-            self.check_is_caller_authorized(owner, token_id.low);
+            let id = validate_token_id(token_id);
+            let owner = self.owners.read(id);
+            self.check_is_caller_authorized(owner, id);
 
-            let info = self.token_info.read(token_id.low);
+            let info = self.token_info.read(id);
             assert(info.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
 
             // delete the storage variables
-            self.owners.write(token_id.low, Zeroable::zero());
-            self.balances.write(owner, self.balances.read(owner) - 1);
-            self
-                .token_info
-                .write(token_id.low, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
+            self.owners.write(id, Zeroable::zero());
+            self.tokens_by_owner_remove(owner, id);
+            self.token_info.write(id, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id });
         }
@@ -432,18 +502,13 @@ mod Positions {
         fn get_position_info(
             self: @ContractState, token_id: u256, pool_key: PoolKey, bounds: Bounds
         ) -> GetPositionInfoResult {
-            validate_token_id(token_id);
+            let id = validate_token_id(token_id);
 
-            let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let info = self.get_token_info(id, pool_key, bounds);
             let core = self.core.read();
             let get_position_result = core
                 .get_position(
-                    pool_key,
-                    PositionKey {
-                        owner: get_contract_address(),
-                        salt: token_id.low.try_into().unwrap(),
-                        bounds
-                    }
+                    pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
             let pool = core.get_pool(pool_key);
 
@@ -470,10 +535,10 @@ mod Positions {
             bounds: Bounds,
             min_liquidity: u128,
         ) -> u128 {
-            validate_token_id(token_id);
-            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
+            let id = validate_token_id(token_id);
+            self.check_is_caller_authorized(self.owners.read(id), id);
 
-            let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let info = self.get_token_info(id, pool_key, bounds);
             let core = self.core.read();
             let pool = core.get_pool(pool_key);
 
@@ -490,7 +555,7 @@ mod Positions {
             self
                 .token_info
                 .write(
-                    token_id.low,
+                    id,
                     TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity + liquidity,  }
                 );
 
@@ -498,10 +563,7 @@ mod Positions {
                 core,
                 @LockCallbackData::Deposit(
                     DepositCallbackData {
-                        pool_key,
-                        bounds,
-                        liquidity: liquidity,
-                        salt: token_id.low.try_into().unwrap(),
+                        pool_key, bounds, liquidity: liquidity, salt: id.into(), 
                     }
                 )
             );
@@ -522,15 +584,15 @@ mod Positions {
             collect_fees: bool,
             recipient: ContractAddress
         ) -> (u128, u128) {
-            validate_token_id(token_id);
-            self.check_is_caller_authorized(self.owners.read(token_id.low), token_id.low);
+            let id = validate_token_id(token_id);
+            self.check_is_caller_authorized(self.owners.read(id), id);
 
-            let info = self.get_token_info(token_id.low, pool_key, bounds);
+            let info = self.get_token_info(id, pool_key, bounds);
 
             self
                 .token_info
                 .write(
-                    token_id.low,
+                    id,
                     TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity - liquidity,  }
                 );
 
@@ -541,7 +603,7 @@ mod Positions {
                         bounds,
                         pool_key,
                         liquidity: liquidity,
-                        salt: token_id.low.try_into().unwrap(),
+                        salt: id.into(),
                         collect_fees,
                         min_token0,
                         min_token1,
@@ -588,7 +650,7 @@ mod Positions {
         ) -> u128 {
             self
                 .deposit(
-                    u256 { low: self.next_token_id.read() - 1, high: 0 },
+                    u256 { low: (self.next_token_id.read() - 1_u64).into(), high: 0 },
                     pool_key,
                     bounds,
                     min_liquidity
