@@ -14,9 +14,6 @@ use ekubo::core::{Core};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
-use ekubo::once_upgradeable::{
-    OnceUpgradeable, IOnceUpgradeableDispatcher, IOnceUpgradeableDispatcherTrait
-};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
 use ekubo::extensions::oracle::{Oracle};
@@ -98,29 +95,13 @@ struct SetupPoolResult {
 }
 
 
-fn deploy_once_upgradeable(owner: ContractAddress) -> IOnceUpgradeableDispatcher {
-    let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@owner, ref constructor_args);
-    let (address, _) = deploy_syscall(
-        OnceUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('OU deploy failed');
-    return IOnceUpgradeableDispatcher { contract_address: address };
-}
-
-
 fn deploy_core() -> ICoreDispatcher {
-    let core_owner_in_tests =
-        contract_address_const::<0x2016836a56b71f0d02689e69e326f4f4c1b9057164ef592671cf0d37c8040c0>();
-
-    let upgradeable = deploy_once_upgradeable(core_owner_in_tests);
-
-    let old = get_contract_address();
-    set_contract_address(core_owner_in_tests);
-    upgradeable.replace(Core::TEST_CLASS_HASH.try_into().unwrap());
-    set_contract_address(old);
-
-    ICoreDispatcher { contract_address: upgradeable.contract_address }
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    let (address, _) = deploy_syscall(
+        Core::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('core deploy failed');
+    return ICoreDispatcher { contract_address: address };
 }
 
 

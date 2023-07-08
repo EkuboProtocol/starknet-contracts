@@ -7,7 +7,8 @@ mod Core {
     };
     use zeroable::Zeroable;
     use starknet::{
-        ContractAddress, ClassHash, contract_address_const, get_caller_address, get_contract_address
+        ContractAddress, ClassHash, contract_address_const, get_caller_address,
+        get_contract_address, replace_class_syscall
     };
     use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
@@ -37,8 +38,6 @@ mod Core {
 
     #[storage]
     struct Storage {
-        // the owner is the one who controls withdrawal fees
-        owner: ContractAddress,
         // withdrawal fees collected, controlled by the owner
         fees_collected: LegacyMap<ContractAddress, u128>,
         // the last recorded balance of each token, used for checking payment
@@ -61,8 +60,8 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct OwnerChanged {
-        new_owner: ContractAddress, 
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash, 
     }
 
     #[derive(starknet::Event, Drop)]
@@ -111,7 +110,7 @@ mod Core {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        OwnerChanged: OwnerChanged,
+        ClassHashReplaced: ClassHashReplaced,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
@@ -120,14 +119,10 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
+    use debug::PrintTrait;
+
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn drm(
-            self: @ContractState
-        ) { // todo: uncomment the below line and set to the correct address
-        // assert(get_contract_address() == contract_address_const::<1234>(), 'BYE');
-        }
-
         #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
             self.lock_count.read() - 1
@@ -147,7 +142,8 @@ mod Core {
         }
 
         fn check_owner_only(self: @ContractState) {
-            assert(get_caller_address() == self.owner.read(), 'OWNER_ONLY');
+            self.get_owner().print();
+            assert(get_caller_address() == self.get_owner(), 'OWNER_ONLY');
         }
 
         fn account_delta(
@@ -221,7 +217,7 @@ mod Core {
     #[external(v0)]
     impl Core of ICore<ContractState> {
         fn get_owner(self: @ContractState) -> ContractAddress {
-            self.owner.read()
+            contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
         }
 
         fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
@@ -358,10 +354,10 @@ mod Core {
             }
         }
 
-        fn change_owner(ref self: ContractState, new_owner: ContractAddress) {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
             self.check_owner_only();
-            self.owner.write(new_owner);
-            self.emit(OwnerChanged { new_owner });
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
 
         fn withdraw_fees_collected(
@@ -487,8 +483,6 @@ mod Core {
         }
 
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
-            self.drm();
-
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');

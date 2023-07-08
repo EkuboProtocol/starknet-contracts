@@ -52,27 +52,55 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
-    fn test_constructor_sets_owner() {
+    fn test_get_owner_is_set() {
         let core = deploy_core();
         assert(core.get_owner().is_non_zero(), 'owner');
     }
 
-    #[test]
-    #[available_gas(2000000)]
-    fn test_owner_can_be_changed_by_owner() {
-        let core = deploy_core();
-        set_contract_address(core.get_owner());
-        core.change_owner(contract_address_const::<102>());
-        assert(core.get_owner() == contract_address_const::<102>(), 'owner');
-    }
 
     #[test]
     #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
-    fn test_owner_cannot_be_changed_by_other() {
+    fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        core.change_owner(contract_address_const::<42>());
+        core.replace_class_hash(Zeroable::zero());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_replace_class_hash_can_be_called_by_owner() {
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
+    fn test_after_replacing_class_hash_calls_fail() {
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
+        let core = deploy_core();
+        set_contract_address(core.get_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        // these won't fail because it has a new implementation
+        IMockERC20Dispatcher {
+            contract_address: core.contract_address
+        }.increase_balance(contract_address_const::<1>(), 100);
+        assert(
+            IMockERC20Dispatcher {
+                contract_address: core.contract_address
+            }.balanceOf(contract_address_const::<1>()) == 100,
+            'balance'
+        );
     }
 }
 

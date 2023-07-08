@@ -1,4 +1,5 @@
 #!/bin/bash
+scarb build
 
 # Function to print usage and exit
 print_usage_and_exit() {
@@ -37,8 +38,13 @@ declare_class_hash() {
     starkli declare --network "$NETWORK" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
 }
 
+echo "Declaring core"
 CORE_CLASS_HASH=$(declare_class_hash Core)
+echo "Declaring positions"
 POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
+echo "Declaring quoter"
 QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
-ONCE_UPGRADEABLE=$(declare_class_hash OnceUpgradeable)
 
+echo "Declared core @ $CORE_CLASS_HASH"
+echo "Declared positions @ $POSITIONS_CLASS_HASH"
+echo "Declared quoter @ $QUOTER_CLASS_HASH"
