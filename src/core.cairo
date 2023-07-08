@@ -119,8 +119,6 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
-    use debug::PrintTrait;
-
     #[generate_trait]
     impl Internal of InternalTrait {
         #[inline(always)]
@@ -142,7 +140,6 @@ mod Core {
         }
 
         fn check_owner_only(self: @ContractState) {
-            self.get_owner().print();
             assert(get_caller_address() == self.get_owner(), 'OWNER_ONLY');
         }
 
