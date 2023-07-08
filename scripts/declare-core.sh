@@ -35,7 +35,7 @@ fi
 
 declare_class_hash() {
     local class_name=$1
-    starkli declare --network "$NETWORK" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
+    starkli declare --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
 }
 
 echo "Declaring core"
