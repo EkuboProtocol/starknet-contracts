@@ -45,18 +45,30 @@ mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait
+        IMockERC20DispatcherTrait, ContractAddress, Into
     };
+    use debug::PrintTrait;
 
     use starknet::class_hash::Felt252TryIntoClassHash;
 
-    #[test]
-    #[available_gas(2000000)]
-    fn test_get_owner_is_set() {
-        let core = deploy_core();
-        assert(core.get_owner().is_non_zero(), 'owner');
+    // this is only shown in the tests, but hidden in the deployed code since we only check against the hash
+    fn core_owner() -> ContractAddress {
+        contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
     }
 
+    fn owner_hash(owner: ContractAddress) -> felt252 {
+        pedersen(0, owner.into())
+    }
+
+    #[test]
+    fn test_owner_hash() {
+        assert(
+            owner_hash(
+                core_owner()
+            ) == 837561471110941821100419169210891021611909325647604720668114707183008847010,
+            'owner_hash'
+        );
+    }
 
     #[test]
     #[available_gas(2000000)]
@@ -71,7 +83,7 @@ mod owner_tests {
     #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
-        set_contract_address(core.get_owner());
+        set_contract_address(core_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 
@@ -80,7 +92,7 @@ mod owner_tests {
     #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core();
-        set_contract_address(core.get_owner());
+        set_contract_address(core_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
@@ -89,7 +101,7 @@ mod owner_tests {
     #[available_gas(2000000)]
     fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
         let core = deploy_core();
-        set_contract_address(core.get_owner());
+        set_contract_address(core_owner());
         core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         // these won't fail because it has a new implementation
         IMockERC20Dispatcher {
@@ -1778,7 +1790,7 @@ mod save_load_tests {
         token.increase_balance(locker.contract_address, 1);
         let cache_key: u64 = 5678;
 
-        set_contract_address(core.get_owner());
+        set_contract_address(contract_address_const::<1234567>());
 
         // important because it allows us to load
         let recipient = locker.contract_address;

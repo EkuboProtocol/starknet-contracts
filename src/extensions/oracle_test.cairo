@@ -32,9 +32,6 @@ fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDis
     };
 
     core.initialize_pool(key, initial_tick);
-    let old = get_contract_address();
-    set_contract_address(core.get_owner());
-    set_contract_address(old);
 
     (core, IOracleDispatcher { contract_address: oracle.contract_address }, key)
 }

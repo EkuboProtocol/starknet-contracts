@@ -119,7 +119,6 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
 
     core.initialize_pool(pool_key_a, Zeroable::zero());
     core.initialize_pool(pool_key_b, Zeroable::zero());
-    set_contract_address(core.get_owner());
 
     let caller = contract_address_const::<1>();
     set_contract_address(caller);

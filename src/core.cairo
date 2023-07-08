@@ -34,6 +34,7 @@ mod Core {
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
+    use traits::{Into};
 
 
     #[storage]
@@ -140,7 +141,12 @@ mod Core {
         }
 
         fn check_owner_only(self: @ContractState) {
-            assert(get_caller_address() == self.get_owner(), 'OWNER_ONLY');
+            assert(
+                pedersen(
+                    0, get_caller_address().into()
+                ) == 837561471110941821100419169210891021611909325647604720668114707183008847010,
+                'OWNER_ONLY'
+            );
         }
 
         fn account_delta(
@@ -213,10 +219,6 @@ mod Core {
 
     #[external(v0)]
     impl Core of ICore<ContractState> {
-        fn get_owner(self: @ContractState) -> ContractAddress {
-            contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
-        }
-
         fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
             self.fees_collected.read(token)
         }
