@@ -47,6 +47,7 @@ mod owner_tests {
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
         IMockERC20DispatcherTrait, ContractAddress, Into
     };
+    use ekubo::core::Core::hash_for_owner_check;
     use debug::PrintTrait;
 
     use starknet::class_hash::Felt252TryIntoClassHash;
@@ -56,16 +57,12 @@ mod owner_tests {
         contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
     }
 
-    fn owner_hash(owner: ContractAddress) -> felt252 {
-        pedersen(0, owner.into())
-    }
-
     #[test]
     fn test_owner_hash() {
         assert(
-            owner_hash(
+            hash_for_owner_check(
                 core_owner()
-            ) == 837561471110941821100419169210891021611909325647604720668114707183008847010,
+            ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
             'owner_hash'
         );
     }

@@ -120,6 +120,10 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
+    fn hash_for_owner_check(caller: ContractAddress) -> felt252 {
+        pedersen('OWNER_ONLY', caller.into())
+    }
+
     #[generate_trait]
     impl Internal of InternalTrait {
         #[inline(always)]
@@ -142,9 +146,9 @@ mod Core {
 
         fn check_owner_only(self: @ContractState) {
             assert(
-                pedersen(
-                    0, get_caller_address().into()
-                ) == 837561471110941821100419169210891021611909325647604720668114707183008847010,
+                hash_for_owner_check(
+                    get_caller_address()
+                ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
                 'OWNER_ONLY'
             );
         }
