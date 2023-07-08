@@ -1,5 +1,4 @@
 #!/bin/bash
-scarb build
 
 # Function to print usage and exit
 print_usage_and_exit() {
@@ -33,6 +32,25 @@ if [ "$NETWORK" != "goerli-1" -a "$NETWORK" != "goerli-2" -a "$NETWORK" != "main
     print_usage_and_exit
 fi
 
+
+case $NETWORK in
+    "goerli-1")
+        METADATA_URL="0x68747470733a2f2f782e656b75626f2e6f72672f" # "https://x.ekubo.org/"
+        ;;
+    "goerli-2")
+        METADATA_URL="0x68747470733a2f2f792e656b75626f2e6f72672f" # "https://y.ekubo.org"
+        ;;
+    "mainnet")
+        METADATA_URL="0x68747470733a2f2f7a2e656b75626f2e6f72672f" # "https://z.ekubo.org"
+        ;;
+    *)
+        echo "Error: Unsupported network"
+        exit 1
+        ;;
+esac
+
+scarb build
+
 declare_class_hash() {
     local class_name=$1
     starkli declare --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
@@ -49,7 +67,6 @@ echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"
 echo "Declared quoter @ $QUOTER_CLASS_HASH"
 
-# example commands below if starkli is fixed
 # CORE_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $CORE_CLASS_HASH)
-# POSITIONS_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $POSITIONS_CLASS_HASH $CORE_ADDRESS 0x68747470733a2f2f782e656b75626f2e6f72672f)
+# POSITIONS_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $POSITIONS_CLASS_HASH $CORE_ADDRESS $METADATA_URL)
 # QUOTER_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $QUOTER_CLASS_HASH $CORE_ADDRESS)
