@@ -7,6 +7,7 @@ trait IOnceUpgradeable<TStorage> {
 
 #[starknet::contract]
 mod OnceUpgradeable {
+    use ekubo::core::Core::{Event, OwnerChanged};
     use super::{IOnceUpgradeable, ContractAddress, ClassHash};
     use starknet::{get_caller_address};
     use starknet::syscalls::{replace_class_syscall};
@@ -16,21 +17,10 @@ mod OnceUpgradeable {
         owner: ContractAddress, 
     }
 
-    #[derive(starknet::Event, Drop)]
-    struct OwnerChanged {
-        new_owner: ContractAddress, 
-    }
-
-    #[derive(starknet::Event, Drop)]
-    #[event]
-    enum Event {
-        OwnerChanged: OwnerChanged
-    }
-
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         self.owner.write(owner);
-        self.emit(OwnerChanged { new_owner: owner });
+        self.emit(Event::OwnerChanged(OwnerChanged { new_owner: owner }));
     }
 
     #[external(v0)]
