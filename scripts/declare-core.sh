@@ -48,3 +48,8 @@ QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
 echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"
 echo "Declared quoter @ $QUOTER_CLASS_HASH"
+
+# example commands below if starkli is fixed
+# CORE_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $CORE_CLASS_HASH)
+# POSITIONS_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $POSITIONS_CLASS_HASH $CORE_ADDRESS 0x68747470733a2f2f782e656b75626f2e6f72672f)
+# QUOTER_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $QUOTER_CLASS_HASH $CORE_ADDRESS)
