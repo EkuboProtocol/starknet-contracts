@@ -220,6 +220,13 @@ fn get_balances(
     }
 }
 
+
+// this is only shown in the tests, but hidden in the deployed code since we only check against the hash
+fn core_owner() -> ContractAddress {
+    contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
+}
+
+
 fn diff(x: u256, y: u256) -> i129 {
     let (lower, upper) = if x < y {
         (x, y)

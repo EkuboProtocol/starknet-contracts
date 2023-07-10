@@ -22,7 +22,7 @@ use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
-    update_position, SetupPoolResult
+    update_position, SetupPoolResult, core_owner
 };
 
 use ekubo::tests::mocks::locker::{
@@ -45,17 +45,13 @@ mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, ContractAddress, Into
+        IMockERC20DispatcherTrait, ContractAddress, Into, core_owner
     };
     use ekubo::core::Core::hash_for_owner_check;
     use debug::PrintTrait;
 
     use starknet::class_hash::Felt252TryIntoClassHash;
 
-    // this is only shown in the tests, but hidden in the deployed code since we only check against the hash
-    fn core_owner() -> ContractAddress {
-        contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
-    }
 
     #[test]
     fn test_owner_hash() {

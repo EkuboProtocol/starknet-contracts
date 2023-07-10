@@ -14,7 +14,7 @@ use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
-    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher
+    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher, core_owner
 };
 use array::ArrayTrait;
 use option::OptionTrait;
@@ -804,4 +804,57 @@ fn test_deposit_then_partial_withdraw_with_fees() {
         }.balanceOf(recipient) == (49499505 + 8 + 24749752 + 24749752),
         'balance1'
     );
+}
+
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_withdraw_protocol_fee_then_deposit() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    let recipient = contract_address_const::<80085>();
+
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+
+    let withdrawn = positions
+        .withdraw(
+            token_id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: liquidity,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: recipient,
+        );
+
+    let caller = get_contract_address();
+    set_contract_address(core_owner());
+    setup
+        .core
+        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token0, amount: 1);
+    setup
+        .core
+        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token1, amount: 1);
+
+    set_contract_address(caller);
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 }

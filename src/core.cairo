@@ -267,14 +267,14 @@ mod Core {
                 // we discard the fees instead of asserting because we do not want to fail a withdrawal due to too many fees
                 let (amount0_fees, _) = muldiv(
                     unsafe_sub(fee_growth_inside_token0, position.fee_growth_inside_last_token0),
-                    u256 { low: position.liquidity, high: 0 },
+                    position.liquidity.into(),
                     u256 { high: 1, low: 0 },
                     false
                 );
 
                 let (amount1_fees, _) = muldiv(
                     unsafe_sub(fee_growth_inside_token1, position.fee_growth_inside_last_token1),
-                    u256 { low: position.liquidity, high: 0 },
+                    position.liquidity.into(),
                     u256 { high: 1, low: 0 },
                     false
                 );
@@ -373,9 +373,9 @@ mod Core {
 
             let collected: u128 = self.fees_collected.read(token);
             self.fees_collected.write(token, collected - amount);
-            IERC20Dispatcher {
-                contract_address: token
-            }.transfer(recipient, u256 { low: amount, high: 0 });
+            self.reserves.write(token, self.reserves.read(token) - amount.into());
+
+            IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
             self.emit(FeesWithdrawn { recipient, token, amount });
         }
 
@@ -405,15 +405,14 @@ mod Core {
             let (id, _) = self.require_locker();
 
             let res = self.reserves.read(token_address);
-            assert(res >= u256 { low: amount, high: 0 }, 'INSUFFICIENT_RESERVES');
-            self.reserves.write(token_address, res - u256 { high: 0, low: amount });
+            let amount_large: u256 = amount.into();
+            assert(res >= amount_large, 'INSUFFICIENT_RESERVES');
+            self.reserves.write(token_address, res - amount_large);
 
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
 
-            IERC20Dispatcher {
-                contract_address: token_address
-            }.transfer(recipient, u256 { low: amount, high: 0 });
+            IERC20Dispatcher { contract_address: token_address }.transfer(recipient, amount_large);
         }
 
         fn save(
@@ -662,7 +661,7 @@ mod Core {
                         pool.fee_growth_global_token0,
                         div(
                             u256 { high: get_position_result.fees0, low: 0 },
-                            u256 { low: position_liquidity_next, high: 0 },
+                            position_liquidity_next.into(),
                             false
                         )
                     ),
@@ -670,7 +669,7 @@ mod Core {
                         pool.fee_growth_global_token1,
                         div(
                             u256 { high: get_position_result.fees1, low: 0 },
-                            u256 { low: position_liquidity_next, high: 0 },
+                            position_liquidity_next.into(),
                             false
                         )
                     )
@@ -848,11 +847,7 @@ mod Core {
                 // this only happens when liquidity != 0
                 if (swap_result.fee_amount != 0) {
                     fee_growth_global +=
-                        div(
-                            u256 { low: 0, high: swap_result.fee_amount },
-                            u256 { low: liquidity, high: 0 },
-                            false
-                        );
+                        div(u256 { low: 0, high: swap_result.fee_amount }, liquidity.into(), false);
                 }
 
                 if (sqrt_ratio == next_tick_sqrt_ratio) {
