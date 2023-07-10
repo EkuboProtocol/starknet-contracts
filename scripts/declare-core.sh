@@ -2,7 +2,7 @@
 
 # Function to print usage and exit
 print_usage_and_exit() {
-    echo "Usage: $0 --network {goerli-1,goerli-2,mainnet}"
+    echo "Usage: $0 --network {goerli-1,mainnet}"
     exit 1
 }
 
@@ -27,27 +27,11 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Ensure network is valid
-if [ "$NETWORK" != "goerli-1" -a "$NETWORK" != "goerli-2" -a "$NETWORK" != "mainnet" ]; then
+if [ "$NETWORK" != "goerli-1" -a "$NETWORK" != "mainnet" ]; then
     echo "Invalid network: $NETWORK"
     print_usage_and_exit
 fi
 
-
-case $NETWORK in
-    "goerli-1")
-        METADATA_URL="0x68747470733a2f2f782e656b75626f2e6f72672f" # "https://x.ekubo.org/"
-        ;;
-    "goerli-2")
-        METADATA_URL="0x68747470733a2f2f792e656b75626f2e6f72672f" # "https://y.ekubo.org"
-        ;;
-    "mainnet")
-        METADATA_URL="0x68747470733a2f2f7a2e656b75626f2e6f72672f" # "https://z.ekubo.org"
-        ;;
-    *)
-        echo "Error: Unsupported network"
-        exit 1
-        ;;
-esac
 
 scarb build
 
@@ -67,6 +51,23 @@ echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"
 echo "Declared quoter @ $QUOTER_CLASS_HASH"
 
-# CORE_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $CORE_CLASS_HASH)
-# POSITIONS_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $POSITIONS_CLASS_HASH $CORE_ADDRESS $METADATA_URL)
-# QUOTER_ADDRESS=$(starkli deploy --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" $QUOTER_CLASS_HASH $CORE_ADDRESS)
+case $NETWORK in
+    "goerli-1")
+        METADATA_URL="0x68747470733a2f2f782e656b75626f2e6f72672f" # "https://x.ekubo.org/"
+        ;;
+    "mainnet")
+        METADATA_URL="0x68747470733a2f2f7a2e656b75626f2e6f72672f" # "https://z.ekubo.org"
+        ;;
+    *)
+        echo "Error: Unsupported network"
+        exit 1
+        ;;
+esac
+
+CORE_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$CORE_CLASS_HASH")
+POSITIONS_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$POSITIONS_CLASS_HASH" "$CORE_ADDRESS" "$METADATA_URL")
+QUOTER_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$QUOTER_CLASS_HASH" "$CORE_ADDRESS")
+
+echo "Core deployed @ $CORE_ADDRESS"
+echo "Positions deployed @ $POSITIONS_ADDRESS"
+echo "Quoter deployed @ $QUOTER_ADDRESS"
