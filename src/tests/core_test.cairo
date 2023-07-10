@@ -9,7 +9,7 @@ use integer::BoundedInt;
 use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
 use ekubo::types::pool::{Pool};
-use ekubo::types::i129::{i129, i129OptionPartialEq};
+use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
@@ -45,42 +45,76 @@ mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait
+        IMockERC20DispatcherTrait, ContractAddress, Into
     };
+    use ekubo::core::Core::hash_for_owner_check;
+    use debug::PrintTrait;
 
     use starknet::class_hash::Felt252TryIntoClassHash;
 
-    #[test]
-    #[available_gas(2000000)]
-    fn test_constructor_sets_owner() {
-        let core = deploy_core();
-        assert(core.get_owner().is_non_zero(), 'owner');
+    // this is only shown in the tests, but hidden in the deployed code since we only check against the hash
+    fn core_owner() -> ContractAddress {
+        contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
     }
 
     #[test]
-    #[available_gas(2000000)]
-    fn test_owner_can_be_changed_by_owner() {
-        let core = deploy_core();
-        set_contract_address(core.get_owner());
-        core.change_owner(contract_address_const::<102>());
-        assert(core.get_owner() == contract_address_const::<102>(), 'owner');
+    fn test_owner_hash() {
+        assert(
+            hash_for_owner_check(
+                core_owner()
+            ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
+            'owner_hash'
+        );
     }
 
     #[test]
     #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
-    fn test_owner_cannot_be_changed_by_other() {
+    fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        core.change_owner(contract_address_const::<42>());
+        core.replace_class_hash(Zeroable::zero());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_replace_class_hash_can_be_called_by_owner() {
+        let core = deploy_core();
+        set_contract_address(core_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
+    fn test_after_replacing_class_hash_calls_fail() {
+        let core = deploy_core();
+        set_contract_address(core_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
+        let core = deploy_core();
+        set_contract_address(core_owner());
+        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        // these won't fail because it has a new implementation
+        IMockERC20Dispatcher {
+            contract_address: core.contract_address
+        }.increase_balance(contract_address_const::<1>(), 100);
+        assert(
+            IMockERC20Dispatcher {
+                contract_address: core.contract_address
+            }.balanceOf(contract_address_const::<1>()) == 100,
+            'balance'
+        );
     }
 }
 
 mod initialize_pool_tests {
-    use super::{
-        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const,
-        i129OptionPartialEq, Zeroable
-    };
+    use super::{PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
@@ -591,7 +625,6 @@ mod initialized_ticks {
 mod locks {
     use debug::PrintTrait;
 
-    use ekubo::types::i129::{i129OptionPartialEq};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use super::{
         setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants, div,
@@ -1754,7 +1787,7 @@ mod save_load_tests {
         token.increase_balance(locker.contract_address, 1);
         let cache_key: u64 = 5678;
 
-        set_contract_address(core.get_owner());
+        set_contract_address(contract_address_const::<1234567>());
 
         // important because it allows us to load
         let recipient = locker.contract_address;

@@ -12,7 +12,6 @@ use ekubo::types::bounds::Bounds;
 // token1 is the token with the larger address (sorted by integer value)
 // fee is specified as a 0.128 number, so 1% == 2**128 / 100
 // tick_spacing is the minimum spacing between initialized ticks, i.e. ticks that positions may use
-// extension is the address of a contract that is called at certain points in a pool lifecycle
 #[derive(Copy, Drop, Serde)]
 struct PoolKey {
     token0: ContractAddress,

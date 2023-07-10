@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool::{Pool};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
@@ -99,9 +99,6 @@ trait IExtension<TStorage> {
 
 #[starknet::interface]
 trait ICore<TStorage> {
-    // The address that has the right to any fees collected by this contract
-    fn get_owner(self: @TStorage) -> ContractAddress;
-
     // Get the amount of withdrawal fees collected for the protocol
     fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
@@ -143,8 +140,8 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
-    // Set the owner of the contract to a new owner (only the current owner can call the function)
-    fn change_owner(ref self: TStorage, new_owner: ContractAddress);
+    // The owner can update the class hash of the contract.
+    fn replace_class_hash(ref self: TStorage, class_hash: ClassHash);
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(

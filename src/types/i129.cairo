@@ -160,35 +160,6 @@ impl i129PartialEq of PartialEq<i129> {
     }
 }
 
-fn i129_option_eq(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
-    match lhs {
-        Option::Some(lhs_value) => {
-            match rhs {
-                Option::Some(rhs_value) => {
-                    lhs_value == rhs_value
-                },
-                Option::None(_) => false
-            }
-        },
-        Option::None(_) => {
-            match rhs {
-                Option::Some(_) => false,
-                Option::None(_) => true
-            }
-        }
-    }
-}
-
-impl i129OptionPartialEq of PartialEq<Option<i129>> {
-    fn eq(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
-        i129_option_eq(lhs, rhs)
-    }
-
-    fn ne(lhs: @Option<i129>, rhs: @Option<i129>) -> bool {
-        !i129_option_eq(lhs, rhs)
-    }
-}
-
 impl i129PartialOrd of PartialOrd<i129> {
     fn le(lhs: i129, rhs: i129) -> bool {
         i129_le(lhs, rhs)
@@ -279,22 +250,4 @@ fn i129_le(a: i129, b: i129) -> bool {
 #[inline(always)]
 fn i129_neg(x: i129) -> i129 {
     i129_new(x.mag, !x.sign)
-}
-
-#[inline(always)]
-fn i129_max(a: i129, b: i129) -> i129 {
-    if (a > b) {
-        a
-    } else {
-        b
-    }
-}
-
-#[inline(always)]
-fn i129_min(a: i129, b: i129) -> i129 {
-    if (a < b) {
-        a
-    } else {
-        b
-    }
 }

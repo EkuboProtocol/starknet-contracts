@@ -7,7 +7,8 @@ mod Core {
     };
     use zeroable::Zeroable;
     use starknet::{
-        ContractAddress, ClassHash, contract_address_const, get_caller_address, get_contract_address
+        ContractAddress, ClassHash, contract_address_const, get_caller_address,
+        get_contract_address, replace_class_syscall
     };
     use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
@@ -25,7 +26,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
-    use ekubo::types::i129::{i129, i129_min, i129_max, i129OptionPartialEq};
+    use ekubo::types::i129::{i129};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
     use ekubo::types::tick::{Tick};
@@ -33,12 +34,11 @@ mod Core {
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
+    use traits::{Into};
 
 
     #[storage]
     struct Storage {
-        // the owner is the one who controls withdrawal fees
-        owner: ContractAddress,
         // withdrawal fees collected, controlled by the owner
         fees_collected: LegacyMap<ContractAddress, u128>,
         // the last recorded balance of each token, used for checking payment
@@ -61,8 +61,8 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct OwnerChanged {
-        new_owner: ContractAddress, 
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash, 
     }
 
     #[derive(starknet::Event, Drop)]
@@ -111,7 +111,7 @@ mod Core {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        OwnerChanged: OwnerChanged,
+        ClassHashReplaced: ClassHashReplaced,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
@@ -120,14 +120,8 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
-    #[constructor]
-    fn constructor(ref self: ContractState) {
-        // todo: choose the value for this constant, ideally a multisig and/or timelock
-        self
-            .owner
-            .write(
-                contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
-            );
+    fn hash_for_owner_check(caller: ContractAddress) -> felt252 {
+        pedersen('OWNER_ONLY', caller.into())
     }
 
     #[generate_trait]
@@ -151,7 +145,12 @@ mod Core {
         }
 
         fn check_owner_only(self: @ContractState) {
-            assert(get_caller_address() == self.owner.read(), 'OWNER_ONLY');
+            assert(
+                hash_for_owner_check(
+                    get_caller_address()
+                ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
+                'OWNER_ONLY'
+            );
         }
 
         fn account_delta(
@@ -224,10 +223,6 @@ mod Core {
 
     #[external(v0)]
     impl Core of ICore<ContractState> {
-        fn get_owner(self: @ContractState) -> ContractAddress {
-            self.owner.read()
-        }
-
         fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
             self.fees_collected.read(token)
         }
@@ -362,10 +357,10 @@ mod Core {
             }
         }
 
-        fn change_owner(ref self: ContractState, new_owner: ContractAddress) {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
             self.check_owner_only();
-            self.owner.write(new_owner);
-            self.emit(OwnerChanged { new_owner });
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
 
         fn withdraw_fees_collected(
@@ -452,7 +447,7 @@ mod Core {
 
             let balance = IERC20Dispatcher {
                 contract_address: token_address
-            }.balance_of(get_contract_address());
+            }.balanceOf(get_contract_address());
 
             let reserve = self.reserves.read(token_address);
             // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
