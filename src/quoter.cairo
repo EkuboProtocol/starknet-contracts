@@ -30,9 +30,9 @@ struct QuoteResult {
 #[starknet::interface]
 trait IQuoter<TStorage> {
     // Compute the quote for executing the given route
-    fn quote(ref self: TStorage, params: QuoteParameters) -> QuoteResult;
+    fn quote(self: @TStorage, params: QuoteParameters) -> QuoteResult;
     // Quote for a single pool
-    fn quote_single(ref self: TStorage, params: QuoteSingleParameters) -> QuoteResult;
+    fn quote_single(self: @TStorage, params: QuoteSingleParameters) -> QuoteResult;
 }
 
 #[starknet::contract]
@@ -208,11 +208,11 @@ mod Quoter {
 
     #[external(v0)]
     impl QuoterImpl of IQuoter<ContractState> {
-        fn quote(ref self: ContractState, params: QuoteParameters) -> QuoteResult {
+        fn quote(self: @ContractState, params: QuoteParameters) -> QuoteResult {
             call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
         }
 
-        fn quote_single(ref self: ContractState, params: QuoteSingleParameters) -> QuoteResult {
+        fn quote_single(self: @ContractState, params: QuoteSingleParameters) -> QuoteResult {
             let mut arr: Array<PoolKey> = ArrayTrait::new();
             arr.append(params.pool_key);
 
