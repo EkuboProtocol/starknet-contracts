@@ -26,9 +26,12 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
         pedersen(
             state,
             pedersen(
-                pedersen(value.token0.into(), value.token1.into()),
-                pedersen(value.fee.into(), value.tick_spacing.into())
-            ),
+                pedersen(
+                    pedersen(value.token0.into(), value.token1.into()),
+                    pedersen(value.fee.into(), value.tick_spacing.into())
+                ),
+                value.extension.into()
+            )
         )
     }
 }
