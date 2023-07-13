@@ -76,6 +76,7 @@ mod Core {
     struct PoolInitialized {
         pool_key: PoolKey,
         initial_tick: i129,
+        sqrt_ratio: u256,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -90,6 +91,8 @@ mod Core {
         pool_key: PoolKey,
         params: SwapParameters,
         delta: Delta,
+        sqrt_ratio_after: u256,
+        tick_after: i129,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -484,7 +487,7 @@ mod Core {
             balance_next
         }
 
-        fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+        fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
@@ -505,12 +508,14 @@ mod Core {
                 Default::<CallPoints>::default()
             };
 
+            let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
+
             self
                 .pools
                 .write(
                     pool_key,
                     Pool {
-                        sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
+                        sqrt_ratio,
                         tick: initial_tick,
                         call_points,
                         liquidity: Zeroable::zero(),
@@ -519,13 +524,15 @@ mod Core {
                     }
                 );
 
+            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
+
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
 
-            self.emit(PoolInitialized { pool_key, initial_tick });
+            sqrt_ratio
         }
 
         fn get_pool_fee_growth_inside(
@@ -943,7 +950,12 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(Swapped { pool_key, params, delta });
+            self
+                .emit(
+                    Swapped {
+                        pool_key, params, delta, sqrt_ratio_after: sqrt_ratio, tick_after: tick
+                    }
+                );
 
             if (pool.call_points.after_swap) {
                 if (pool_key.extension != locker) {

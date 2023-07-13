@@ -181,7 +181,7 @@ trait ICore<TStorage> {
     ) -> u128;
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
-    fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129) -> u256;
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
     // Must be called within a ILocker#locked. Note also that a position cannot be burned to 0 unless all fees have been collected
