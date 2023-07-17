@@ -632,6 +632,21 @@ mod locks {
 
     #[test]
     #[available_gas(500000000)]
+    #[should_panic(expected: ('NOT_LOCKED', 'ENTRYPOINT_FAILED'))]
+    fn test_error_from_action_not_locked() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+        // should fail because not locked at all
+        setup.core.deposit(contract_address_const::<1>());
+    }
+
+
+    #[test]
+    #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,

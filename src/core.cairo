@@ -131,7 +131,9 @@ mod Core {
     impl Internal of InternalTrait {
         #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
-            self.lock_count.read() - 1
+            let lock_count = self.lock_count.read();
+            assert(lock_count > 0, 'NOT_LOCKED');
+            lock_count - 1
         }
 
         #[inline(always)]
