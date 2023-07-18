@@ -87,13 +87,22 @@ mod Core {
 
     #[derive(starknet::Event, Drop)]
     struct PositionUpdated {
+        locker: ContractAddress,
         pool_key: PoolKey,
         params: UpdatePositionParameters,
         delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
+    struct PositionFeesCollected {
+        pool_key: PoolKey,
+        position_key: PositionKey,
+        delta: Delta,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct Swapped {
+        locker: ContractAddress,
         pool_key: PoolKey,
         params: SwapParameters,
         delta: Delta,
@@ -125,6 +134,7 @@ mod Core {
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
+        PositionFeesCollected: PositionFeesCollected,
         Swapped: Swapped,
         SavedBalance: SavedBalance,
         LoadedBalance: LoadedBalance,
@@ -734,7 +744,7 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(PositionUpdated { pool_key, params, delta });
+            self.emit(PositionUpdated { locker, pool_key, params, delta });
 
             if (pool.call_points.after_update_position) {
                 if (pool_key.extension != locker) {
@@ -777,6 +787,8 @@ mod Core {
 
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
+
+            self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
             delta
         }
@@ -968,7 +980,12 @@ mod Core {
             self
                 .emit(
                     Swapped {
-                        pool_key, params, delta, sqrt_ratio_after: sqrt_ratio, tick_after: tick
+                        locker,
+                        pool_key,
+                        params,
+                        delta,
+                        sqrt_ratio_after: sqrt_ratio,
+                        tick_after: tick
                     }
                 );
 
