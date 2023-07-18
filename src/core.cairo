@@ -73,6 +73,12 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct FeesPaid {
+        token: ContractAddress,
+        amount: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct PoolInitialized {
         pool_key: PoolKey,
         initial_tick: i129,
@@ -115,6 +121,7 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
+        FeesPaid: FeesPaid,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
@@ -628,22 +635,28 @@ mod Core {
                     },
                 };
 
-                self
-                    .fees_collected
-                    .write(
-                        pool_key.token0,
-                        accumulate_fee_amount(
-                            self.fees_collected.read(pool_key.token0), amount0_fee
-                        )
-                    );
-                self
-                    .fees_collected
-                    .write(
-                        pool_key.token1,
-                        accumulate_fee_amount(
-                            self.fees_collected.read(pool_key.token1), amount1_fee
-                        )
-                    );
+                if (amount0_fee.is_non_zero()) {
+                    self
+                        .fees_collected
+                        .write(
+                            pool_key.token0,
+                            accumulate_fee_amount(
+                                self.fees_collected.read(pool_key.token0), amount0_fee
+                            )
+                        );
+                    self.emit(FeesPaid { token: pool_key.token0, amount: amount0_fee });
+                }
+                if (amount1_fee.is_non_zero()) {
+                    self
+                        .fees_collected
+                        .write(
+                            pool_key.token1,
+                            accumulate_fee_amount(
+                                self.fees_collected.read(pool_key.token1), amount1_fee
+                            )
+                        );
+                    self.emit(FeesPaid { token: pool_key.token1, amount: amount1_fee });
+                }
             }
 
             // here we are accumulating fees owed to the position based on its current liquidity
