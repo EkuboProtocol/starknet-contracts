@@ -36,7 +36,7 @@ mod Positions {
     };
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use ekubo::owner::{check_owner_only, ClassHashReplaced};
+    use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::call_core_with_callback;
 
     #[storage]
@@ -51,6 +51,11 @@ mod Positions {
         tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
         token_info: LegacyMap<u64, TokenInfo>,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash, 
     }
 
     #[derive(starknet::Event, Drop)]

@@ -1,11 +1,6 @@
 use starknet::{ContractAddress, get_caller_address, contract_address_const, ClassHash};
 use traits::{Into};
 
-#[derive(starknet::Event, Drop)]
-struct ClassHashReplaced {
-    new_class_hash: ClassHash, 
-}
-
 // The owner is hard coded, but the owner checks are obfuscated in the contract code.
 fn owner() -> ContractAddress {
     contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()

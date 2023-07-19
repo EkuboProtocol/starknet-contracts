@@ -27,7 +27,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
-    use ekubo::owner::{check_owner_only, ClassHashReplaced};
+    use ekubo::owner::{check_owner_only};
     use ekubo::types::i129::{i129};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
@@ -60,6 +60,11 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash, 
     }
 
     #[derive(starknet::Event, Drop)]
