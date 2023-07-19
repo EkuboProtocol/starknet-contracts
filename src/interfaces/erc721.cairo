@@ -36,4 +36,25 @@ trait IERC721<TStorage> {
     fn getApproved(self: @TStorage, token_id: u256) -> ContractAddress;
     fn isApprovedForAll(self: @TStorage, owner: ContractAddress, operator: ContractAddress) -> bool;
     fn tokenUri(self: @TStorage, token_id: u256) -> felt252;
+
+
+    // camel case entry points
+    fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
+    fn owner_of(self: @TStorage, token_id: u256) -> ContractAddress;
+    fn transfer_from(
+        ref self: TStorage, from: ContractAddress, to: ContractAddress, token_id: u256
+    );
+    fn safe_transfer_from(
+        ref self: TStorage,
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    );
+    fn set_approval_for_all(ref self: TStorage, operator: ContractAddress, approved: bool);
+    fn get_approved(self: @TStorage, token_id: u256) -> ContractAddress;
+    fn is_approved_for_all(
+        self: @TStorage, owner: ContractAddress, operator: ContractAddress
+    ) -> bool;
+    fn token_uri(self: @TStorage, token_id: u256) -> felt252;
 }

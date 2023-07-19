@@ -347,6 +347,44 @@ mod Positions {
             append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
+
+
+        fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
+            self.balanceOf(account)
+        }
+        fn owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
+            self.ownerOf(token_id)
+        }
+        fn transfer_from(
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+        ) {
+            self.transferFrom(from, to, token_id)
+        }
+        fn safe_transfer_from(
+            ref self: ContractState,
+            from: ContractAddress,
+            to: ContractAddress,
+            token_id: u256,
+            data: Span<felt252>
+        ) {
+            self.safeTransferFrom(from, to, token_id, data)
+        }
+        fn set_approval_for_all(
+            ref self: ContractState, operator: ContractAddress, approved: bool
+        ) {
+            self.setApprovalForAll(operator, approved)
+        }
+        fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
+            self.getApproved(token_id)
+        }
+        fn is_approved_for_all(
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress
+        ) -> bool {
+            self.isApprovedForAll(owner, operator)
+        }
+        fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+            self.tokenUri(token_id)
+        }
     }
 
     #[external(v0)]
