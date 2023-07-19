@@ -638,9 +638,9 @@ mod Core {
 
                 let withdrawal_fee_delta = Delta {
                     amount0: i129 {
-                        mag: amount0_fee, sign: false
+                        mag: amount0_fee, sign: true
                         }, amount1: i129 {
-                        mag: amount1_fee, sign: false
+                        mag: amount1_fee, sign: true
                     },
                 };
 
@@ -665,7 +665,7 @@ mod Core {
                         );
                 }
 
-                delta += withdrawal_fee_delta;
+                delta -= withdrawal_fee_delta;
                 self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
