@@ -36,6 +36,7 @@ trait IERC721<TStorage> {
     fn getApproved(self: @TStorage, token_id: u256) -> ContractAddress;
     fn isApprovedForAll(self: @TStorage, owner: ContractAddress, operator: ContractAddress) -> bool;
     fn tokenUri(self: @TStorage, token_id: u256) -> felt252;
+    fn supportsInterface(self: @TStorage, interfaceId: felt252) -> bool;
 
 
     // camel case entry points
@@ -57,4 +58,5 @@ trait IERC721<TStorage> {
         self: @TStorage, owner: ContractAddress, operator: ContractAddress
     ) -> bool;
     fn token_uri(self: @TStorage, token_id: u256) -> felt252;
+    fn supports_interface(self: @TStorage, interface_id: felt252) -> bool;
 }

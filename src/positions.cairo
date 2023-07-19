@@ -347,6 +347,12 @@ mod Positions {
             append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
+        fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
+            // 721
+            interfaceId == 0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943
+                // 721 metadata
+                || interfaceId == 0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd
+        }
 
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -384,6 +390,9 @@ mod Positions {
         }
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
             self.tokenUri(token_id)
+        }
+        fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
+            self.supportsInterface(interface_id)
         }
     }
 
