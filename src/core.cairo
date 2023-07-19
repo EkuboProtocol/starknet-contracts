@@ -76,8 +76,9 @@ mod Core {
 
     #[derive(starknet::Event, Drop)]
     struct FeesPaid {
-        token: ContractAddress,
-        amount: u128,
+        pool_key: PoolKey,
+        position_key: PositionKey,
+        delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -110,6 +111,7 @@ mod Core {
         delta: Delta,
         sqrt_ratio_after: u256,
         tick_after: i129,
+        liquidity_after: u128,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -624,12 +626,17 @@ mod Core {
                 pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
             );
 
+            // here we are accumulating fees owed to the position based on its current liquidity
+            let position_key = PositionKey {
+                owner: locker, salt: params.salt, bounds: params.bounds
+            };
+
             // account the withdrawal protocol fee, because it's based on the deltas
             if (params.liquidity_delta.sign) {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
-                delta += Delta {
+                let withdrawal_fee_delta = Delta {
                     amount0: i129 {
                         mag: amount0_fee, sign: false
                         }, amount1: i129 {
@@ -646,7 +653,6 @@ mod Core {
                                 self.fees_collected.read(pool_key.token0), amount0_fee
                             )
                         );
-                    self.emit(FeesPaid { token: pool_key.token0, amount: amount0_fee });
                 }
                 if (amount1_fee.is_non_zero()) {
                     self
@@ -657,14 +663,12 @@ mod Core {
                                 self.fees_collected.read(pool_key.token1), amount1_fee
                             )
                         );
-                    self.emit(FeesPaid { token: pool_key.token1, amount: amount1_fee });
                 }
+
+                delta += withdrawal_fee_delta;
+                self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
-            // here we are accumulating fees owed to the position based on its current liquidity
-            let position_key = PositionKey {
-                owner: locker, salt: params.salt, bounds: params.bounds
-            };
             let get_position_result = self.get_position(pool_key, position_key);
 
             let position_liquidity_next: u128 = add_delta(
@@ -977,7 +981,8 @@ mod Core {
                         params,
                         delta,
                         sqrt_ratio_after: sqrt_ratio,
-                        tick_after: tick
+                        tick_after: tick,
+                        liquidity_after: liquidity
                     }
                 );
 
