@@ -10,8 +10,10 @@ mod Positions {
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address,
         StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall,
-        storage_write_syscall, storage_address_from_base_and_offset
+        storage_write_syscall, storage_address_from_base_and_offset, ClassHash,
+        replace_class_syscall
     };
+
 
     use ekubo::types::i129::{i129};
     use ekubo::types::bounds::{Bounds};
@@ -32,8 +34,10 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::shared_locker::call_core_with_callback;
     use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
+    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::owner::{check_owner_only, ClassHashReplaced};
+    use ekubo::shared_locker::call_core_with_callback;
 
     #[storage]
     struct Storage {
@@ -100,6 +104,7 @@ mod Positions {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
+        ClassHashReplaced: ClassHashReplaced,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
@@ -269,21 +274,21 @@ mod Positions {
             self.emit(Approval { owner: caller, approved: to, token_id });
         }
 
-        fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
+        fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
             u256 { low: self.count_tokens_for_owner(account).into(), high: 0 }
         }
 
-        fn owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
+        fn ownerOf(self: @ContractState, token_id: u256) -> ContractAddress {
             self.owners.read(validate_token_id(token_id))
         }
 
-        fn transfer_from(
+        fn transferFrom(
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
             self.transfer(from, to, token_id);
         }
 
-        fn safe_transfer_from(
+        fn safeTransferFrom(
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
@@ -314,25 +319,23 @@ mod Positions {
             }
         }
 
-        fn set_approval_for_all(
-            ref self: ContractState, operator: ContractAddress, approved: bool
-        ) {
+        fn setApprovalForAll(ref self: ContractState, operator: ContractAddress, approved: bool) {
             let owner = get_caller_address();
             self.operators.write((owner, operator), approved);
             self.emit(ApprovalForAll { owner, operator, approved });
         }
 
-        fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
+        fn getApproved(self: @ContractState, token_id: u256) -> ContractAddress {
             self.approvals.read(validate_token_id(token_id))
         }
 
-        fn is_approved_for_all(
+        fn isApprovedForAll(
             self: @ContractState, owner: ContractAddress, operator: ContractAddress
         ) -> bool {
             self.operators.read((owner, operator))
         }
 
-        fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+        fn tokenUri(self: @ContractState, token_id: u256) -> felt252 {
             let id = validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
@@ -424,6 +427,15 @@ mod Positions {
             let mut result_data: Array<felt252> = ArrayTrait::new();
             Serde::<Delta>::serialize(@delta, ref result_data);
             result_data
+        }
+    }
+
+    #[external(v0)]
+    impl Upgradeable of IUpgradeable<ContractState> {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
+            check_owner_only();
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 

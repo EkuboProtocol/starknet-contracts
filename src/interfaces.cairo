@@ -3,3 +3,4 @@ mod erc165;
 mod erc721;
 mod core;
 mod positions;
+mod upgradeable;

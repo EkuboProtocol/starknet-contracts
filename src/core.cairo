@@ -5,6 +5,7 @@ mod Core {
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult
     };
+    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use zeroable::Zeroable;
     use starknet::{
         ContractAddress, ClassHash, contract_address_const, get_caller_address,
@@ -26,6 +27,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
+    use ekubo::owner::{check_owner_only, ClassHashReplaced};
     use ekubo::types::i129::{i129};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
@@ -58,11 +60,6 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
-    }
-
-    #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash, 
     }
 
     #[derive(starknet::Event, Drop)]
@@ -140,10 +137,6 @@ mod Core {
         LoadedBalance: LoadedBalance,
     }
 
-    fn hash_for_owner_check(caller: ContractAddress) -> felt252 {
-        pedersen('OWNER_ONLY', caller.into())
-    }
-
     #[generate_trait]
     impl Internal of InternalTrait {
         #[inline(always)]
@@ -164,15 +157,6 @@ mod Core {
             let (id, locker) = self.get_locker();
             assert(locker == get_caller_address(), 'NOT_LOCKER');
             (id, locker)
-        }
-
-        fn check_owner_only(self: @ContractState) {
-            assert(
-                hash_for_owner_check(
-                    get_caller_address()
-                ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
-                'OWNER_ONLY'
-            );
         }
 
         fn account_delta(
@@ -240,6 +224,15 @@ mod Core {
                     self.insert_initialized_tick(pool_key, index);
                 }
             };
+        }
+    }
+
+    #[external(v0)]
+    impl Upgradeable of IUpgradeable<ContractState> {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
+            check_owner_only();
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 
@@ -379,19 +372,13 @@ mod Core {
             }
         }
 
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            self.check_owner_only();
-            replace_class_syscall(class_hash);
-            self.emit(ClassHashReplaced { new_class_hash: class_hash });
-        }
-
         fn withdraw_fees_collected(
             ref self: ContractState,
             recipient: ContractAddress,
             token: ContractAddress,
             amount: u128
         ) {
-            self.check_owner_only();
+            check_owner_only();
 
             let collected: u128 = self.fees_collected.read(token);
             self.fees_collected.write(token, collected - amount);

@@ -140,9 +140,6 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
-    // The owner can update the class hash of the contract.
-    fn replace_class_hash(ref self: TStorage, class_hash: ClassHash);
-
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
