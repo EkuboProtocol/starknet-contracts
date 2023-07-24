@@ -140,9 +140,6 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
-    // The owner can update the class hash of the contract.
-    fn replace_class_hash(ref self: TStorage, class_hash: ClassHash);
-
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
@@ -181,7 +178,7 @@ trait ICore<TStorage> {
     ) -> u128;
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
-    fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129) -> u256;
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
     // Must be called within a ILocker#locked. Note also that a position cannot be burned to 0 unless all fees have been collected

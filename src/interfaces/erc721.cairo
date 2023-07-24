@@ -22,6 +22,24 @@ trait IERC721<TStorage> {
     fn name(self: @TStorage) -> felt252;
     fn symbol(self: @TStorage) -> felt252;
     fn approve(ref self: TStorage, to: ContractAddress, token_id: u256);
+    fn balanceOf(self: @TStorage, account: ContractAddress) -> u256;
+    fn ownerOf(self: @TStorage, token_id: u256) -> ContractAddress;
+    fn transferFrom(ref self: TStorage, from: ContractAddress, to: ContractAddress, token_id: u256);
+    fn safeTransferFrom(
+        ref self: TStorage,
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    );
+    fn setApprovalForAll(ref self: TStorage, operator: ContractAddress, approved: bool);
+    fn getApproved(self: @TStorage, token_id: u256) -> ContractAddress;
+    fn isApprovedForAll(self: @TStorage, owner: ContractAddress, operator: ContractAddress) -> bool;
+    fn tokenUri(self: @TStorage, token_id: u256) -> felt252;
+    fn supportsInterface(self: @TStorage, interfaceId: felt252) -> bool;
+
+
+    // camel case entry points
     fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
     fn owner_of(self: @TStorage, token_id: u256) -> ContractAddress;
     fn transfer_from(
@@ -40,4 +58,5 @@ trait IERC721<TStorage> {
         self: @TStorage, owner: ContractAddress, operator: ContractAddress
     ) -> bool;
     fn token_uri(self: @TStorage, token_id: u256) -> felt252;
+    fn supports_interface(self: @TStorage, interface_id: felt252) -> bool;
 }

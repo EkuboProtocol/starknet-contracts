@@ -64,6 +64,9 @@ case $NETWORK in
         ;;
 esac
 
+echo "Waiting 15 seconds for the class hashes to be indexed"
+sleep 15;
+
 CORE_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$CORE_CLASS_HASH")
 POSITIONS_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$POSITIONS_CLASS_HASH" "$CORE_ADDRESS" "$METADATA_URL")
 QUOTER_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$QUOTER_CLASS_HASH" "$CORE_ADDRESS")

@@ -47,7 +47,7 @@ fn test_nft_name_symbol() {
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
     assert(positions.name() == 'Ekubo Position NFT', 'name');
     assert(positions.symbol() == 'EpNFT', 'symbol');
-    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
 }
 
 #[test]
@@ -70,31 +70,31 @@ fn test_nft_indexing_token_ids() {
     let owner = contract_address_const::<912345>();
     let other = contract_address_const::<9123456>();
 
-    assert(positions_721.balance_of(owner) == 0, 'balance start');
+    assert(positions_721.balanceOf(owner) == 0, 'balance start');
     let mut all = positions.get_all_positions(owner);
     assert(all.len() == 0, 'len before');
 
     let token_id = positions.mint(owner, pool_key: pool_key, bounds: bounds);
 
-    assert(positions_721.balance_of(owner) == 1, 'balance after');
+    assert(positions_721.balanceOf(owner) == 1, 'balance after');
     all = positions.get_all_positions(owner);
     assert(all.len() == 1, 'len after');
 
     set_contract_address(owner);
-    positions_721.transfer_from(owner, other, all.pop_front().unwrap().into());
+    positions_721.transferFrom(owner, other, all.pop_front().unwrap().into());
 
-    assert(positions_721.balance_of(owner) == 0, 'balance after transfer');
+    assert(positions_721.balanceOf(owner) == 0, 'balance after transfer');
     all = positions.get_all_positions(owner);
     assert(all.len() == 0, 'len after transfer');
 
-    assert(positions_721.balance_of(other) == 1, 'balance other transfer');
+    assert(positions_721.balanceOf(other) == 1, 'balance other transfer');
     all = positions.get_all_positions(other);
     assert(all.len() == 1, 'len other');
     assert(all.pop_front().unwrap().into() == token_id.low, 'token other');
 
     let token_id_2 = positions.mint(owner, pool_key: pool_key, bounds: bounds);
     set_contract_address(other);
-    positions_721.transfer_from(other, owner, token_id);
+    positions_721.transferFrom(other, owner, token_id);
 
     all = positions.get_all_positions(owner);
     assert(all.len() == 2, 'len final');
@@ -109,7 +109,7 @@ fn test_nft_custom_uri() {
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(
         deploy_positions_custom_uri(core, 'ipfs://abcdef/')
     );
-    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
+    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn test_nft_approve_succeeds_after_mint() {
         .approve(contract_address_const::<2>(), token_id);
     assert(
         IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-            .get_approved(token_id) == contract_address_const::<2>(),
+            .getApproved(token_id) == contract_address_const::<2>(),
         'approved'
     );
 }
@@ -174,12 +174,12 @@ fn test_nft_transfer_from() {
     let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
 
     nft.approve(contract_address_const::<3>(), token_id);
-    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
 
-    assert(nft.balance_of(contract_address_const::<1>()) == u256 { low: 0, high: 0 }, 'bal from');
-    assert(nft.balance_of(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'bal to');
-    assert(nft.owner_of(token_id) == contract_address_const::<2>(), 'owner');
-    assert(nft.get_approved(token_id) == Zeroable::zero(), 'zeroed approval');
+    assert(nft.balanceOf(contract_address_const::<1>()) == u256 { low: 0, high: 0 }, 'bal from');
+    assert(nft.balanceOf(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'bal to');
+    assert(nft.ownerOf(token_id) == contract_address_const::<2>(), 'owner');
+    assert(nft.getApproved(token_id) == Zeroable::zero(), 'zeroed approval');
 }
 
 #[test]
@@ -206,7 +206,7 @@ fn test_nft_transfer_from_fails_not_from_owner() {
 
     let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
 
-    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
 }
 
 #[test]
@@ -233,7 +233,7 @@ fn test_nft_transfer_from_succeeds_from_approved() {
     nft.approve(contract_address_const::<2>(), token_id);
 
     set_contract_address(contract_address_const::<2>());
-    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
 }
 
 #[test]
@@ -244,7 +244,7 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
     let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
 
     set_contract_address(contract_address_const::<1>());
-    nft.set_approval_for_all(contract_address_const::<2>(), true);
+    nft.setApprovalForAll(contract_address_const::<2>(), true);
 
     let token_id = positions
         .mint(
@@ -260,7 +260,7 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
         );
 
     set_contract_address(contract_address_const::<2>());
-    nft.transfer_from(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
+    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
 }
 
 #[test]
@@ -269,18 +269,17 @@ fn test_nft_token_uri() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
 
-    assert(positions.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
     assert(
-        positions.token_uri(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999',
+        positions.tokenUri(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999',
         'token_uri'
     );
     assert(
-        positions.token_uri(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
+        positions.tokenUri(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
         'token_uri'
     );
     assert(
-        positions
-            .token_uri(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
+        positions.tokenUri(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
         'max token_uri'
     );
 }
@@ -292,7 +291,7 @@ fn test_nft_token_uri_reverts_too_long() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
 
-    positions.token_uri(u256 { low: 999999999999, high: 0 });
+    positions.tokenUri(u256 { low: 999999999999, high: 0 });
 }
 
 #[test]
@@ -302,7 +301,7 @@ fn test_nft_token_uri_reverts_token_id_too_big() {
     let core = deploy_core();
     let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
 
-    positions.token_uri(u256 { low: 10000000000000000000000000000000, high: 0 });
+    positions.tokenUri(u256 { low: 10000000000000000000000000000000, high: 0 });
 }
 
 #[test]
@@ -339,7 +338,7 @@ fn test_nft_balance_of() {
     let recipient = contract_address_const::<2>();
     assert(
         IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-            .balance_of(recipient) == Zeroable::zero(),
+            .balanceOf(recipient) == Zeroable::zero(),
         'balance check'
     );
     // note we do not check the validity of the position key, it only comes into play when trying to add liquidity fails
@@ -359,10 +358,10 @@ fn test_nft_balance_of() {
         'token id'
     );
     assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).owner_of(1) == recipient, 'owner'
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).ownerOf(1) == recipient, 'owner'
     );
     assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).balance_of(recipient) == u256 {
+        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).balanceOf(recipient) == u256 {
             low: 1, high: 0
         },
         'balance check after'

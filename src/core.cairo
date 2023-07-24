@@ -5,6 +5,7 @@ mod Core {
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult
     };
+    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use zeroable::Zeroable;
     use starknet::{
         ContractAddress, ClassHash, contract_address_const, get_caller_address,
@@ -26,6 +27,7 @@ mod Core {
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
+    use ekubo::owner::{check_owner_only};
     use ekubo::types::i129::{i129};
     use ekubo::types::pool::{Pool};
     use ekubo::types::position::{Position};
@@ -73,23 +75,43 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct FeesPaid {
+        pool_key: PoolKey,
+        position_key: PositionKey,
+        delta: Delta,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct PoolInitialized {
         pool_key: PoolKey,
         initial_tick: i129,
+        sqrt_ratio: u256,
     }
 
     #[derive(starknet::Event, Drop)]
     struct PositionUpdated {
+        locker: ContractAddress,
         pool_key: PoolKey,
         params: UpdatePositionParameters,
         delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
+    struct PositionFeesCollected {
+        pool_key: PoolKey,
+        position_key: PositionKey,
+        delta: Delta,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct Swapped {
+        locker: ContractAddress,
         pool_key: PoolKey,
         params: SwapParameters,
         delta: Delta,
+        sqrt_ratio_after: u256,
+        tick_after: i129,
+        liquidity_after: u128,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -112,23 +134,23 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
+        FeesPaid: FeesPaid,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
+        PositionFeesCollected: PositionFeesCollected,
         Swapped: Swapped,
         SavedBalance: SavedBalance,
         LoadedBalance: LoadedBalance,
-    }
-
-    fn hash_for_owner_check(caller: ContractAddress) -> felt252 {
-        pedersen('OWNER_ONLY', caller.into())
     }
 
     #[generate_trait]
     impl Internal of InternalTrait {
         #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
-            self.lock_count.read() - 1
+            let lock_count = self.lock_count.read();
+            assert(lock_count > 0, 'NOT_LOCKED');
+            lock_count - 1
         }
 
         #[inline(always)]
@@ -142,15 +164,6 @@ mod Core {
             let (id, locker) = self.get_locker();
             assert(locker == get_caller_address(), 'NOT_LOCKER');
             (id, locker)
-        }
-
-        fn check_owner_only(self: @ContractState) {
-            assert(
-                hash_for_owner_check(
-                    get_caller_address()
-                ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
-                'OWNER_ONLY'
-            );
         }
 
         fn account_delta(
@@ -218,6 +231,15 @@ mod Core {
                     self.insert_initialized_tick(pool_key, index);
                 }
             };
+        }
+    }
+
+    #[external(v0)]
+    impl Upgradeable of IUpgradeable<ContractState> {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
+            check_owner_only();
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 
@@ -357,19 +379,13 @@ mod Core {
             }
         }
 
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            self.check_owner_only();
-            replace_class_syscall(class_hash);
-            self.emit(ClassHashReplaced { new_class_hash: class_hash });
-        }
-
         fn withdraw_fees_collected(
             ref self: ContractState,
             recipient: ContractAddress,
             token: ContractAddress,
             amount: u128
         ) {
-            self.check_owner_only();
+            check_owner_only();
 
             let collected: u128 = self.fees_collected.read(token);
             self.fees_collected.write(token, collected - amount);
@@ -484,7 +500,7 @@ mod Core {
             balance_next
         }
 
-        fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
+        fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
             assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
@@ -505,12 +521,14 @@ mod Core {
                 Default::<CallPoints>::default()
             };
 
+            let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
+
             self
                 .pools
                 .write(
                     pool_key,
                     Pool {
-                        sqrt_ratio: tick_to_sqrt_ratio(initial_tick),
+                        sqrt_ratio,
                         tick: initial_tick,
                         call_points,
                         liquidity: Zeroable::zero(),
@@ -519,13 +537,15 @@ mod Core {
                     }
                 );
 
+            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
+
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {
                     contract_address: pool_key.extension
                 }.after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
 
-            self.emit(PoolInitialized { pool_key, initial_tick });
+            sqrt_ratio
         }
 
         fn get_pool_fee_growth_inside(
@@ -606,41 +626,49 @@ mod Core {
                 pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
             );
 
+            // here we are accumulating fees owed to the position based on its current liquidity
+            let position_key = PositionKey {
+                owner: locker, salt: params.salt, bounds: params.bounds
+            };
+
             // account the withdrawal protocol fee, because it's based on the deltas
             if (params.liquidity_delta.sign) {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
-                delta += Delta {
+                let withdrawal_fee_delta = Delta {
                     amount0: i129 {
-                        mag: amount0_fee, sign: false
+                        mag: amount0_fee, sign: true
                         }, amount1: i129 {
-                        mag: amount1_fee, sign: false
+                        mag: amount1_fee, sign: true
                     },
                 };
 
-                self
-                    .fees_collected
-                    .write(
-                        pool_key.token0,
-                        accumulate_fee_amount(
-                            self.fees_collected.read(pool_key.token0), amount0_fee
-                        )
-                    );
-                self
-                    .fees_collected
-                    .write(
-                        pool_key.token1,
-                        accumulate_fee_amount(
-                            self.fees_collected.read(pool_key.token1), amount1_fee
-                        )
-                    );
+                if (amount0_fee.is_non_zero()) {
+                    self
+                        .fees_collected
+                        .write(
+                            pool_key.token0,
+                            accumulate_fee_amount(
+                                self.fees_collected.read(pool_key.token0), amount0_fee
+                            )
+                        );
+                }
+                if (amount1_fee.is_non_zero()) {
+                    self
+                        .fees_collected
+                        .write(
+                            pool_key.token1,
+                            accumulate_fee_amount(
+                                self.fees_collected.read(pool_key.token1), amount1_fee
+                            )
+                        );
+                }
+
+                delta -= withdrawal_fee_delta;
+                self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
-            // here we are accumulating fees owed to the position based on its current liquidity
-            let position_key = PositionKey {
-                owner: locker, salt: params.salt, bounds: params.bounds
-            };
             let get_position_result = self.get_position(pool_key, position_key);
 
             let position_liquidity_next: u128 = add_delta(
@@ -712,7 +740,7 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(PositionUpdated { pool_key, params, delta });
+            self.emit(PositionUpdated { locker, pool_key, params, delta });
 
             if (pool.call_points.after_update_position) {
                 if (pool_key.extension != locker) {
@@ -755,6 +783,8 @@ mod Core {
 
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
+
+            self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
             delta
         }
@@ -943,7 +973,18 @@ mod Core {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
 
-            self.emit(Swapped { pool_key, params, delta });
+            self
+                .emit(
+                    Swapped {
+                        locker,
+                        pool_key,
+                        params,
+                        delta,
+                        sqrt_ratio_after: sqrt_ratio,
+                        tick_after: tick,
+                        liquidity_after: liquidity
+                    }
+                );
 
             if (pool.call_points.after_swap) {
                 if (pool_key.extension != locker) {

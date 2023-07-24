@@ -1,5 +1,6 @@
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use starknet::contract_address_const;
 use starknet::ContractAddress;
 use starknet::testing::{set_contract_address};
@@ -45,23 +46,15 @@ mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, ContractAddress, Into, core_owner
+        IMockERC20DispatcherTrait, ContractAddress, Into, IUpgradeableDispatcher,
+        IUpgradeableDispatcherTrait
     };
-    use ekubo::core::Core::hash_for_owner_check;
+    use ekubo::owner::owner;
+
     use debug::PrintTrait;
 
     use starknet::class_hash::Felt252TryIntoClassHash;
 
-
-    #[test]
-    fn test_owner_hash() {
-        assert(
-            hash_for_owner_check(
-                core_owner()
-            ) == 2081329012068246261264209482314989835561593298919996586864094351098749398388,
-            'owner_hash'
-        );
-    }
 
     #[test]
     #[available_gas(2000000)]
@@ -69,15 +62,19 @@ mod owner_tests {
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        core.replace_class_hash(Zeroable::zero());
+        IUpgradeableDispatcher {
+            contract_address: core.contract_address
+        }.replace_class_hash(Zeroable::zero());
     }
 
     #[test]
     #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
-        set_contract_address(core_owner());
-        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        set_contract_address(owner());
+        IUpgradeableDispatcher {
+            contract_address: core.contract_address
+        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 
     #[test]
@@ -85,17 +82,23 @@ mod owner_tests {
     #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core();
-        set_contract_address(core_owner());
-        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
-        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        set_contract_address(owner());
+        IUpgradeableDispatcher {
+            contract_address: core.contract_address
+        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        IUpgradeableDispatcher {
+            contract_address: core.contract_address
+        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 
     #[test]
     #[available_gas(2000000)]
     fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
         let core = deploy_core();
-        set_contract_address(core_owner());
-        core.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        set_contract_address(owner());
+        IUpgradeableDispatcher {
+            contract_address: core.contract_address
+        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         // these won't fail because it has a new implementation
         IMockERC20Dispatcher {
             contract_address: core.contract_address
@@ -629,6 +632,21 @@ mod locks {
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool, Bounds, Zeroable
     };
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(expected: ('NOT_LOCKED', 'ENTRYPOINT_FAILED'))]
+    fn test_error_from_action_not_locked() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+        // should fail because not locked at all
+        setup.core.deposit(contract_address_const::<1>());
+    }
+
 
     #[test]
     #[available_gas(500000000)]

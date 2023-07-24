@@ -35,10 +35,21 @@ impl DeltaAdd of Add<Delta> {
         Delta { amount0: lhs.amount0 + rhs.amount0, amount1: lhs.amount1 + rhs.amount1 }
     }
 }
+impl DeltaSub of Sub<Delta> {
+    fn sub(lhs: Delta, rhs: Delta) -> Delta {
+        Delta { amount0: lhs.amount0 - rhs.amount0, amount1: lhs.amount1 - rhs.amount1 }
+    }
+}
 
 impl DeltaAddEq of AddEq<Delta> {
     #[inline(always)]
     fn add_eq(ref self: Delta, other: Delta) {
         self = Add::add(self, other);
+    }
+}
+impl DeltaSubEq of SubEq<Delta> {
+    #[inline(always)]
+    fn sub_eq(ref self: Delta, other: Delta) {
+        self = Sub::sub(self, other);
     }
 }
