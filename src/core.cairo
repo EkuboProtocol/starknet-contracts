@@ -259,6 +259,7 @@ mod Core {
         fn get_pool(self: @ContractState, pool_key: PoolKey) -> Pool {
             combine_pool_states(self.get_pool_small(pool_key), self.get_pool_big(pool_key))
         }
+
         fn get_pool_small(self: @ContractState, pool_key: PoolKey) -> PoolSmallState {
             self.pools_small.read(pool_key)
         }
@@ -533,7 +534,7 @@ mod Core {
 
             self
                 .pools_small
-                .write(pool_key, PoolSmallState { sqrt_ratio, tick: initial_tick, call_points,  });
+                .write(pool_key, PoolSmallState { sqrt_ratio, tick: initial_tick, call_points  });
 
             self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
