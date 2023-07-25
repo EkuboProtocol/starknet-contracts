@@ -29,7 +29,7 @@ mod Core {
     use ekubo::math::utils::{unsafe_sub, add_delta, ContractAddressOrder, u128_max};
     use ekubo::owner::{check_owner_only};
     use ekubo::types::i129::{i129};
-    use ekubo::types::pool::{Pool};
+    use ekubo::types::pool::{PoolSmallState, PoolBigState, Pool, combine_pool_states};
     use ekubo::types::position::{Position};
     use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};
@@ -54,7 +54,8 @@ mod Core {
         // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
         deltas: LegacyMap::<(u32, ContractAddress), i129>,
         // the persistent state of all the pools is stored in these structs
-        pools: LegacyMap::<PoolKey, Pool>,
+        pools_small: LegacyMap::<PoolKey, PoolSmallState>,
+        pools_big: LegacyMap::<PoolKey, PoolBigState>,
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
@@ -256,7 +257,14 @@ mod Core {
         }
 
         fn get_pool(self: @ContractState, pool_key: PoolKey) -> Pool {
-            self.pools.read(pool_key)
+            combine_pool_states(self.get_pool_small(pool_key), self.get_pool_big(pool_key))
+        }
+        fn get_pool_small(self: @ContractState, pool_key: PoolKey) -> PoolSmallState {
+            self.pools_small.read(pool_key)
+        }
+
+        fn get_pool_big(self: @ContractState, pool_key: PoolKey) -> PoolBigState {
+            self.pools_big.read(pool_key)
         }
 
         fn get_reserves(self: @ContractState, token: ContractAddress) -> u256 {
@@ -510,8 +518,8 @@ mod Core {
                 'TICK_SPACING'
             );
 
-            let pool = self.pools.read(pool_key);
-            assert(pool.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
+            let small = self.pools_small.read(pool_key);
+            assert(small.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
             let call_points = if (pool_key.extension.is_non_zero()) {
                 IExtensionDispatcher {
@@ -524,18 +532,8 @@ mod Core {
             let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
 
             self
-                .pools
-                .write(
-                    pool_key,
-                    Pool {
-                        sqrt_ratio,
-                        tick: initial_tick,
-                        call_points,
-                        liquidity: Zeroable::zero(),
-                        fee_growth_global_token0: Zeroable::zero(),
-                        fee_growth_global_token1: Zeroable::zero(),
-                    }
-                );
+                .pools_small
+                .write(pool_key, PoolSmallState { sqrt_ratio, tick: initial_tick, call_points,  });
 
             self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
@@ -551,35 +549,34 @@ mod Core {
         fn get_pool_fee_growth_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> (u256, u256) {
-            let pool = self.pools.read(pool_key);
-            assert(pool.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
+            let small = self.pools_small.read(pool_key);
+            assert(small.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
-            if (pool.tick < bounds.lower) {
+            let big = self.pools_big.read(pool_key);
+            if (small.tick < bounds.lower) {
                 let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
                 (
                     unsafe_sub(
-                        pool.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
+                        big.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
                     ),
                     unsafe_sub(
-                        pool.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
+                        big.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
                     )
                 )
-            } else if (pool.tick < bounds.upper) {
+            } else if (small.tick < bounds.upper) {
                 let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
                 let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
 
                 (
                     unsafe_sub(
                         unsafe_sub(
-                            pool.fee_growth_global_token0,
-                            tick_lower_state.fee_growth_outside_token0
+                            big.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
                         ),
                         tick_upper_state.fee_growth_outside_token0
                     ),
                     unsafe_sub(
                         unsafe_sub(
-                            pool.fee_growth_global_token1,
-                            tick_lower_state.fee_growth_outside_token1
+                            big.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
                         ),
                         tick_upper_state.fee_growth_outside_token1
                     )
@@ -588,10 +585,10 @@ mod Core {
                 let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
                 (
                     unsafe_sub(
-                        pool.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
+                        big.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
                     ),
                     unsafe_sub(
-                        pool.fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
+                        big.fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
                     )
                 )
             }
@@ -602,9 +599,9 @@ mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let pool = self.pools.read(pool_key);
+            let small = self.pools_small.read(pool_key);
 
-            if (pool.call_points.before_update_position) {
+            if (small.call_points.before_update_position) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
@@ -615,7 +612,7 @@ mod Core {
             params.bounds.check_valid(pool_key.tick_spacing);
 
             // pool must be initialized
-            assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
+            assert(small.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
                 tick_to_sqrt_ratio(params.bounds.lower), tick_to_sqrt_ratio(params.bounds.upper)
@@ -623,7 +620,7 @@ mod Core {
 
             // compute the amount deltas due to the liquidity delta
             let mut delta = liquidity_delta_to_amount_delta(
-                pool.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
+                small.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper
             );
 
             // here we are accumulating fees owed to the position based on its current liquidity
@@ -675,6 +672,8 @@ mod Core {
                 get_position_result.liquidity, params.liquidity_delta
             );
 
+            let big = self.pools_big.read(pool_key);
+
             let (fee_growth_inside_token0_next, fee_growth_inside_token1_next) =
                 if (position_liquidity_next
                 .is_zero()) {
@@ -686,7 +685,7 @@ mod Core {
             } else {
                 (
                     unsafe_sub(
-                        pool.fee_growth_global_token0,
+                        big.fee_growth_global_token0,
                         div(
                             u256 { high: get_position_result.fees0, low: 0 },
                             position_liquidity_next.into(),
@@ -694,7 +693,7 @@ mod Core {
                         )
                     ),
                     unsafe_sub(
-                        pool.fee_growth_global_token1,
+                        big.fee_growth_global_token1,
                         div(
                             u256 { high: get_position_result.fees1, low: 0 },
                             position_liquidity_next.into(),
@@ -720,18 +719,15 @@ mod Core {
             self.update_tick(pool_key, params.bounds.upper, params.liquidity_delta, true);
 
             // update pool liquidity if it changed
-            if ((pool.tick >= params.bounds.lower) & (pool.tick < params.bounds.upper)) {
+            if ((small.tick >= params.bounds.lower) & (small.tick < params.bounds.upper)) {
                 self
-                    .pools
+                    .pools_big
                     .write(
                         pool_key,
-                        Pool {
-                            sqrt_ratio: pool.sqrt_ratio,
-                            tick: pool.tick,
-                            call_points: pool.call_points,
-                            liquidity: add_delta(pool.liquidity, params.liquidity_delta),
-                            fee_growth_global_token0: pool.fee_growth_global_token0,
-                            fee_growth_global_token1: pool.fee_growth_global_token1
+                        PoolBigState {
+                            liquidity: add_delta(big.liquidity, params.liquidity_delta),
+                            fee_growth_global_token0: big.fee_growth_global_token0,
+                            fee_growth_global_token1: big.fee_growth_global_token1
                         }
                     );
             }
@@ -742,7 +738,7 @@ mod Core {
 
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
-            if (pool.call_points.after_update_position) {
+            if (small.call_points.after_update_position) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
@@ -793,12 +789,12 @@ mod Core {
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let pool = self.pools.read(pool_key);
+            let small = self.pools_small.read(pool_key);
 
             // pool must be initialized
-            assert(pool.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
+            assert(small.sqrt_ratio != Zeroable::zero(), 'NOT_INITIALIZED');
 
-            if (pool.call_points.before_swap) {
+            if (small.call_points.before_swap) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension
@@ -809,22 +805,24 @@ mod Core {
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
             // check the limit is not in the wrong direction and is within the price bounds
-            assert((params.sqrt_ratio_limit > pool.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
+            assert((params.sqrt_ratio_limit > small.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
             assert(
                 (params.sqrt_ratio_limit >= min_sqrt_ratio())
                     & (params.sqrt_ratio_limit <= max_sqrt_ratio()),
                 'LIMIT_MAG'
             );
 
-            let mut tick = pool.tick;
+            let mut tick = small.tick;
             let mut amount_remaining = params.amount;
-            let mut sqrt_ratio = pool.sqrt_ratio;
-            let mut liquidity = pool.liquidity;
+            let mut sqrt_ratio = small.sqrt_ratio;
+
+            let big = self.pools_big.read(pool_key);
+            let mut liquidity = big.liquidity;
             let mut calculated_amount: u128 = Zeroable::zero();
             let mut fee_growth_global = if params.is_token1 {
-                pool.fee_growth_global_token1
+                big.fee_growth_global_token1
             } else {
-                pool.fee_growth_global_token0
+                big.fee_growth_global_token0
             };
 
             // we need to take a snapshot to call view methods within the loop
@@ -902,7 +900,7 @@ mod Core {
                             .is_token1) {
                             (
                                 unsafe_sub(
-                                    pool.fee_growth_global_token0,
+                                    big.fee_growth_global_token0,
                                     tick_data.fee_growth_outside_token0
                                 ),
                                 unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token1)
@@ -911,7 +909,7 @@ mod Core {
                             (
                                 unsafe_sub(fee_growth_global, tick_data.fee_growth_outside_token0),
                                 unsafe_sub(
-                                    pool.fee_growth_global_token1,
+                                    big.fee_growth_global_token1,
                                     tick_data.fee_growth_outside_token1
                                 )
                             )
@@ -951,19 +949,22 @@ mod Core {
 
             let (fee_growth_global_token0_next, fee_growth_global_token1_next) = if params
                 .is_token1 {
-                (pool.fee_growth_global_token0, fee_growth_global)
+                (big.fee_growth_global_token0, fee_growth_global)
             } else {
-                (fee_growth_global, pool.fee_growth_global_token1)
+                (fee_growth_global, big.fee_growth_global_token1)
             };
 
             self
-                .pools
+                .pools_small
+                .write(
+                    pool_key, PoolSmallState { sqrt_ratio, tick, call_points: small.call_points,  }
+                );
+
+            self
+                .pools_big
                 .write(
                     pool_key,
-                    Pool {
-                        sqrt_ratio,
-                        tick,
-                        call_points: pool.call_points,
+                    PoolBigState {
                         liquidity,
                         fee_growth_global_token0: fee_growth_global_token0_next,
                         fee_growth_global_token1: fee_growth_global_token1_next,
@@ -986,7 +987,7 @@ mod Core {
                     }
                 );
 
-            if (pool.call_points.after_swap) {
+            if (small.call_points.after_swap) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher {
                         contract_address: pool_key.extension

@@ -1,25 +1,115 @@
 use ekubo::types::i129::{i129};
 use ekubo::types::call_points::{CallPoints};
-use starknet::{StorageBaseAddress, SyscallResult};
+use starknet::{StorageBaseAddress, StorePacking};
 use zeroable::Zeroable;
 use traits::{Into, TryInto};
 use option::{OptionTrait, Option};
-use integer::{u256_as_non_zero, u128_safe_divmod};
+use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
 use ekubo::math::muldiv::{u256_safe_divmod_audited};
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct Pool {
+#[derive(Copy, Drop, Serde)]
+struct PoolSmallState {
     // the current ratio, up to 192 bits
     sqrt_ratio: u256,
     // the current tick, up to 32 bits
     tick: i129,
-    // the places where specified extension should be called
+    // the places where specified extension should be called, 5 bits
     call_points: CallPoints,
+}
+
+impl SmallStateStorePacking of StorePacking<PoolSmallState, felt252> {
+    fn pack(value: PoolSmallState) -> felt252 {
+        if (value.sqrt_ratio.is_non_zero()) {
+            assert(
+                (value.sqrt_ratio >= min_sqrt_ratio()) & (value.sqrt_ratio <= max_sqrt_ratio()),
+                'SQRT_RATIO'
+            );
+        }
+
+        // todo: when trading to the minimum tick, the tick is crossed and the pool tick is set to the minimum tick minus one
+        // thus the value stored in pool.tick is between min_tick() - 1 and max_tick()
+        assert(
+            value
+                .tick
+                .mag <= (tick_constants::MAX_TICK_MAGNITUDE
+                    + if (value.tick.sign) {
+                        1
+                    } else {
+                        0
+                    }),
+            'TICK_MAGNITUDE'
+        );
+
+        let tick_raw_shifted: u128 = if (value.tick.sign & (value.tick.mag != 0)) {
+            (value.tick.mag + 0x100000000) * 0x100
+        } else {
+            value.tick.mag * 0x100
+        };
+
+        let packed = value.sqrt_ratio
+            + ((u256 {
+                low: tick_raw_shifted, high: 0
+            } + Into::<u8, u256>::into(value.call_points.into()))
+                * 0x1000000000000000000000000000000000000000000000000);
+
+        packed.try_into().unwrap()
+    }
+    fn unpack(value: felt252) -> PoolSmallState {
+        let packed_first_slot_u256: u256 = value.into();
+
+        // quotient, remainder
+        let (tick_call_points, sqrt_ratio) = u256_safe_divmod_audited(
+            packed_first_slot_u256,
+            u256_as_non_zero(0x1000000000000000000000000000000000000000000000000) // 2n ** 192n
+        );
+
+        let (tick_raw, call_points_raw) = u128_safe_divmod(
+            tick_call_points.low, u128_as_non_zero(0x100)
+        );
+
+        let tick = if (tick_raw >= 0x100000000) {
+            i129 { mag: tick_raw - 0x100000000, sign: (tick_raw != 0x100000000) }
+        } else {
+            i129 { mag: tick_raw, sign: false }
+        };
+
+        let call_points: CallPoints = TryInto::<u128, u8>::try_into(call_points_raw)
+            .unwrap()
+            .into();
+
+        PoolSmallState { sqrt_ratio, tick, call_points }
+    }
+}
+
+#[derive(Copy, Drop, Serde, starknet::Store)]
+struct PoolBigState {
     // the current liquidity, i.e. between tick_prev and tick_next
     liquidity: u128,
-    /// the fee growth, all time fees collected per liquidity, full 128x128
+    // the fee growth, all time fees collected per liquidity, full 128x128
     fee_growth_global_token0: u256,
     fee_growth_global_token1: u256,
 }
 
+
+fn combine_pool_states(small: PoolSmallState, big: PoolBigState) -> Pool {
+    Pool {
+        sqrt_ratio: small.sqrt_ratio,
+        tick: small.tick,
+        call_points: small.call_points,
+        liquidity: big.liquidity,
+        fee_growth_global_token0: big.fee_growth_global_token0,
+        fee_growth_global_token1: big.fee_growth_global_token1,
+    }
+}
+
+// this is just for compatibility
+#[derive(Copy, Drop, Serde)]
+struct Pool {
+    sqrt_ratio: u256,
+    tick: i129,
+    call_points: CallPoints,
+    liquidity: u128,
+    fee_growth_global_token0: u256,
+    fee_growth_global_token1: u256,
+}

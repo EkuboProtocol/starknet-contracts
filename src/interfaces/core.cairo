@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::pool::{Pool};
+use ekubo::types::pool::{Pool, PoolSmallState, PoolBigState};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
@@ -107,6 +107,13 @@ trait ICore<TStorage> {
 
     // Get the current state of the given pool
     fn get_pool(self: @TStorage, pool_key: PoolKey) -> Pool;
+
+    // Get the small state of the pool
+    fn get_pool_small(self: @TStorage, pool_key: PoolKey) -> PoolSmallState;
+
+    // Get the big state of the pool
+    fn get_pool_big(self: @TStorage, pool_key: PoolKey) -> PoolBigState;
+
 
     // Get the fee growth inside for a given tick range
     fn get_pool_fee_growth_inside(
