@@ -61,7 +61,7 @@ mod OptionIncentives {
     use ekubo::math::muldiv::{muldiv};
     use traits::{Into};
 
-    #[derive(Drop, Copy, storage_access::StorageAccess)]
+    #[derive(Drop, Copy, starknet::Store)]
     struct StakedTokenInfo {
         timestamp_last: u64,
         owner: ContractAddress,

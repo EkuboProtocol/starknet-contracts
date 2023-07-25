@@ -1,7 +1,7 @@
 use ekubo::types::i129::{i129};
 
 // The state that is stored for each active tick
-#[derive(Copy, Drop, Serde, storage_access::StorageAccess)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct Tick {
     // how liquidity changes when this tick is crossed
     liquidity_delta: i129,

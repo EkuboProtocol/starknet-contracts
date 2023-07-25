@@ -1,5 +1,5 @@
 // Represents a liquidity position
-#[derive(Copy, Drop, Serde, storage_access::StorageAccess)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct Position {
     // the amount of liquidity owned by the position
     liquidity: u128,

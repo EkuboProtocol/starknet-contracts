@@ -1,6 +1,6 @@
 use starknet::{ContractAddress};
 
-#[derive(Drop, Copy, Serde, storage_access::StorageAccess)]
+#[derive(Drop, Copy, Serde, starknet::Store)]
 struct ExtensionCalled {
     caller: ContractAddress,
     call_point: u32,

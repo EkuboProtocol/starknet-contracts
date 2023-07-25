@@ -7,7 +7,7 @@ use option::{Option, OptionTrait};
 use starknet::{StorageAccess, SyscallResult, StorageBaseAddress};
 
 // todo: pack this struct better!
-#[derive(Copy, Drop, storage_access::StorageAccess)]
+#[derive(Copy, Drop, starknet::Store)]
 struct PoolState {
     // 64 bits
     block_timestamp_last: u64,
