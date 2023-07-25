@@ -1,4 +1,4 @@
-use starknet::{storage_base_address_const, StorageAccess, SyscallResult, SyscallResultTrait};
+use starknet::{storage_base_address_const, Store, SyscallResult, SyscallResultTrait};
 use ekubo::types::pool::Pool;
 use ekubo::types::i129::i129;
 use traits::{Into};
@@ -10,7 +10,7 @@ use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
 #[available_gas(3000000)]
 fn test_storage_access_write_read_empty() {
     let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 0_u8,
@@ -24,9 +24,7 @@ fn test_storage_access_write_read_empty() {
         }
     )
         .unwrap_syscall();
-    let read = StorageAccess::<Pool>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
+    let read = Store::<Pool>::read_at_offset(address_domain: 0, base: base, offset: 0_u8)
         .unwrap_syscall();
 
     assert(read.sqrt_ratio.is_zero(), 'sqrt_ratio');
@@ -49,7 +47,7 @@ fn test_storage_access_write_read_valid_example_at_random_base_address_plus_offs
         before_update_position: true,
         after_update_position: false,
     };
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 8_u8,
@@ -63,9 +61,7 @@ fn test_storage_access_write_read_valid_example_at_random_base_address_plus_offs
         }
     )
         .unwrap_syscall();
-    let read = StorageAccess::<Pool>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 8_u8
-    )
+    let read = Store::<Pool>::read_at_offset(address_domain: 0, base: base, offset: 8_u8)
         .unwrap_syscall();
 
     assert(read.sqrt_ratio == min_sqrt_ratio(), 'sqrt_ratio');
@@ -88,7 +84,7 @@ fn test_write_fails_if_offset_too_large_to_fit() {
         before_update_position: true,
         after_update_position: false,
     };
-    StorageAccess::<Pool>::write_at_offset_internal(
+    Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 253_u8,
@@ -109,7 +105,7 @@ fn test_write_fails_if_offset_too_large_to_fit() {
 #[should_panic(expected: ('TICK_MAGNITUDE', ))]
 fn test_storage_access_write_error_if_tick_less_than_min_by_2() {
     let base = storage_base_address_const::<123456>();
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 8_u8,
@@ -130,7 +126,7 @@ fn test_storage_access_write_error_if_tick_less_than_min_by_2() {
 #[should_panic(expected: ('TICK_MAGNITUDE', ))]
 fn test_storage_access_write_error_if_tick_greater_than_max_by_1() {
     let base = storage_base_address_const::<123456>();
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 8_u8,
@@ -151,7 +147,7 @@ fn test_storage_access_write_error_if_tick_greater_than_max_by_1() {
 #[should_panic(expected: ('SQRT_RATIO', ))]
 fn test_storage_access_write_error_if_sqrt_ratio_less_than_min() {
     let base = storage_base_address_const::<123456>();
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 8_u8,
@@ -171,7 +167,7 @@ fn test_storage_access_write_error_if_sqrt_ratio_less_than_min() {
 #[should_panic(expected: ('SQRT_RATIO', ))]
 fn test_storage_access_write_error_if_sqrt_ratio_gt_max() {
     let base = storage_base_address_const::<123456>();
-    let write = StorageAccess::<Pool>::write_at_offset_internal(
+    let write = Store::<Pool>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 8_u8,

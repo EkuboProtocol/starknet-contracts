@@ -31,17 +31,6 @@ use ekubo::tests::mocks::locker::{
     UpdatePositionParameters, SwapParameters
 };
 
-impl EqualTickBool of traits::PartialEq<(i129, bool)> {
-    fn eq(lhs: @(i129, bool), rhs: @(i129, bool)) -> bool {
-        let (a, b) = *lhs;
-        let (c, d) = *rhs;
-        (a == c) & (b == d)
-    }
-    fn ne(lhs: @(i129, bool), rhs: @(i129, bool)) -> bool {
-        !EqualTickBool::eq(lhs, rhs)
-    }
-}
-
 mod owner_tests {
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
@@ -250,8 +239,7 @@ mod initialize_pool_tests {
 mod initialized_ticks {
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, EqualTickBool, min_tick, max_tick,
-        Bounds
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds
     };
 
     #[test]
@@ -630,7 +618,7 @@ mod locks {
         contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, EqualTickBool, Bounds, Zeroable
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable
     };
 
     #[test]

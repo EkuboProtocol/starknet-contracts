@@ -1,5 +1,7 @@
 use core::array::ArrayTrait;
 use serde::Serde;
+use starknet::storage_access::{StorePacking};
+use traits::{Into};
 
 // The points at which an extension should be called
 #[derive(Copy, Drop, Serde)]
@@ -9,6 +11,15 @@ struct CallPoints {
     after_swap: bool,
     before_update_position: bool,
     after_update_position: bool,
+}
+
+impl CallPointsStorePacking of StorePacking<CallPoints, u8> {
+    fn pack(value: CallPoints) -> u8 {
+        value.into()
+    }
+    fn unpack(value: u8) -> CallPoints {
+        value.into()
+    }
 }
 
 impl CallPointsPartialEq of PartialEq<CallPoints> {

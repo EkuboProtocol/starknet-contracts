@@ -4,7 +4,7 @@ use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use traits::{TryInto, Into};
 use option::{Option, OptionTrait};
-use starknet::{StorageAccess, SyscallResult, StorageBaseAddress};
+use starknet::{SyscallResult, StorageBaseAddress};
 
 // todo: pack this struct better!
 #[derive(Copy, Drop, starknet::Store)]

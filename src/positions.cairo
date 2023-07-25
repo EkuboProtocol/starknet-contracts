@@ -9,9 +9,8 @@ mod Positions {
 
     use starknet::{
         ContractAddress, contract_address_const, get_caller_address, get_contract_address,
-        StorageAccess, StorageBaseAddress, SyscallResult, storage_read_syscall,
-        storage_write_syscall, storage_address_from_base_and_offset, ClassHash,
-        replace_class_syscall
+        StorageBaseAddress, SyscallResult, storage_read_syscall, storage_write_syscall,
+        storage_address_from_base_and_offset, ClassHash, replace_class_syscall
     };
 
 

@@ -2,7 +2,7 @@ use ekubo::types::i129::{i129};
 use traits::{Into};
 use zeroable::Zeroable;
 use option::{Option, OptionTrait};
-use starknet::storage_access::{storage_base_address_const, StorageAccess};
+use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
 
 
@@ -117,97 +117,54 @@ fn test_mul_positive_negative() {
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_1() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 1, sign: false }, 'read==write');
+    let packed = StorePacking::<i129, u128>::pack(i129 { mag: 1, sign: false });
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == i129 { mag: 1, sign: false }, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_negative_1() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 1, sign: true }, 'read==write');
+    let value = i129 { mag: 1, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_0() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+    let value = i129 { mag: 0, sign: false };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_negative_0() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+    let value = i129 { mag: 0, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_max_value() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }, 'read==write');
+    let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
 fn test_storage_access_write_read_min_value() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }, 'read==write');
+    let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
@@ -215,7 +172,7 @@ fn test_storage_access_write_read_min_value() {
 #[should_panic(expected: ('i129_storage_overflow', ))]
 fn test_storage_access_write_min_value_minus_one() {
     let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
+    let write = Store::<i129>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 0_u8,
@@ -228,7 +185,7 @@ fn test_storage_access_write_min_value_minus_one() {
 #[should_panic(expected: ('i129_storage_overflow', ))]
 fn test_storage_access_write_max_value_plus_one() {
     let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
+    let write = Store::<i129>::write_at_offset(
         address_domain: 0,
         base: base,
         offset: 0_u8,
