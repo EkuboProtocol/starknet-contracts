@@ -41,23 +41,23 @@ const POOL_CASES: Array<{
     liquidity: bigint;
   }[];
 }> = [
-    {
-      name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
-      pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
-      positions: [],
+  {
+    name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
+    pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
+    positions: [],
+  },
+  {
+    name: "single position, full range liquidity, starting at price 1",
+    pool: {
+      starting_price: 1,
+      tick_spacing: 1,
+      fee: 0.003,
     },
-    {
-      name: "single position, full range liquidity, starting at price 1",
-      pool: {
-        starting_price: 1,
-        tick_spacing: 1,
-        fee: 0.003,
-      },
-      positions: [
-        { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
-      ],
-    },
-  ];
+    positions: [
+      { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
+    ],
+  },
+];
 
 const MAX_U128 = 2n ** 128n - 1n;
 
@@ -67,39 +67,39 @@ const SWAP_CASES: Array<{
   priceLimit?: bigint;
   skipAhead?: number;
 }> = [
-    {
-      amount: 10000n,
-      isToken1: true,
-    },
-    {
-      amount: 10000n,
-      isToken1: false,
-    },
-    {
-      amount: -10000n,
-      isToken1: true,
-    },
-    {
-      amount: -10000n,
-      isToken1: false,
-    },
-    {
-      amount: MAX_U128,
-      isToken1: true,
-    },
-    {
-      amount: MAX_U128,
-      isToken1: false,
-    },
-    {
-      amount: -MAX_U128,
-      isToken1: true,
-    },
-    {
-      amount: -MAX_U128,
-      isToken1: false,
-    },
-  ];
+  {
+    amount: 10000n,
+    isToken1: true,
+  },
+  {
+    amount: 10000n,
+    isToken1: false,
+  },
+  {
+    amount: -10000n,
+    isToken1: true,
+  },
+  {
+    amount: -10000n,
+    isToken1: false,
+  },
+  {
+    amount: MAX_U128,
+    isToken1: true,
+  },
+  {
+    amount: MAX_U128,
+    isToken1: false,
+  },
+  {
+    amount: -MAX_U128,
+    isToken1: true,
+  },
+  {
+    amount: -MAX_U128,
+    isToken1: false,
+  },
+];
 
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
@@ -112,7 +112,9 @@ describe("core tests", () => {
 
   beforeAll(() => {
     coreClassHash = hash.computeContractClassHash(CoreCompiledContract as any);
-    quoterClassHash = hash.computeContractClassHash(QuoterCompiledContract as any);
+    quoterClassHash = hash.computeContractClassHash(
+      QuoterCompiledContract as any
+    );
     positionsClassHash = hash.computeContractClassHash(
       PositionsCompiledContract as any
     );
@@ -158,37 +160,35 @@ describe("core tests", () => {
   let positions: Contract;
 
   beforeEach(async () => {
-    core = await new ContractFactory(
-      CoreCompiledContract as any,
-      coreClassHash,
-      accounts[0],
-      CoreCompiledContract.abi,
-    ).deploy();
-    quoter = await new ContractFactory(
-      QuoterCompiledContract as any,
-      quoterClassHash,
-      accounts[0],
-      QuoterCompiledContract.abi,
-    ).deploy(core.address);
-    positions = await new ContractFactory(
-      PositionsCompiledContract as any,
-      positionsClassHash,
-      accounts[0],
-      PositionsCompiledContract.abi,
-    ).deploy(core.address, "https://f.ekubo.org/");
+    core = await new ContractFactory({
+      compiledContract: CoreCompiledContract as any,
+      classHash: coreClassHash,
+      account: accounts[0],
+    }).deploy();
+    quoter = await new ContractFactory({
+      compiledContract: QuoterCompiledContract as any,
+      classHash: quoterClassHash,
+      account: accounts[0],
+    }).deploy(core.address);
+    positions = await new ContractFactory({
+      compiledContract: PositionsCompiledContract as any,
+      classHash: positionsClassHash,
+      account: accounts[0],
+    }).deploy(core.address, "https://f.ekubo.org/");
   });
 
   for (const poolCase of POOL_CASES) {
     describe(poolCase.name, () => {
       // set up the pool according to the pool case
-      beforeEach(async () => { });
+      beforeEach(async () => {});
 
       // then test swap for each swap case
       for (const swapCase of SWAP_CASES) {
-        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"
-          }`, async () => {
-            expect("result").toMatchSnapshot();
-          });
+        it(`swap ${swapCase.amount} ${
+          swapCase.isToken1 ? "token1" : "token0"
+        }`, async () => {
+          expect("result").toMatchSnapshot();
+        });
       }
     });
   }
