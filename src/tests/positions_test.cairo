@@ -14,7 +14,8 @@ use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
-    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher, core_owner
+    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher,
+    core_owner, SetupPoolResult
 };
 use array::ArrayTrait;
 use option::OptionTrait;
@@ -1087,10 +1088,120 @@ fn test_deposit_swap_round_trip_accounting() {
             recipient: recipient,
         );
 
+    assert(amount0 == 200, 'amount0 withdrawn');
+    assert(amount1 == 200, 'amount1 withdrawn');
     info = positions.get_position_info(token_id, setup.pool_key, bounds);
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
     assert(info.amount1 == 9999, 'amount1 after');
     assert(info.fees0 == 0, 'fees0 withdrawn');
     assert(info.fees1 == 0, 'fees1 withdrawn');
+}
+
+#[derive(Copy, Drop)]
+struct CreatePositionResult {
+    id: u256,
+    bounds: Bounds,
+    liquidity: u128,
+}
+
+fn create_position(
+    setup: SetupPoolResult,
+    positions: IPositionsDispatcher,
+    bounds: Bounds,
+    amount0: u128,
+    amount1: u128
+) -> CreatePositionResult {
+    let token_id = positions.mint(get_contract_address(), pool_key: setup.pool_key, bounds: bounds);
+    setup.token0.set_balance(positions.contract_address, amount0.into());
+    setup.token1.set_balance(positions.contract_address, amount1.into());
+
+    let liquidity = positions
+        .deposit(token_id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    CreatePositionResult { id: token_id, bounds, liquidity }
+}
+
+#[test]
+#[available_gas(1000000000)]
+fn test_deposit_swap_multiple_positions() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+    let p1 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        0
+    );
+    let p2 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 0, sign: false } },
+        0,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let p0_info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    let p1_info = positions.get_position_info(p1.id, setup.pool_key, p1.bounds);
+    let p2_info = positions.get_position_info(p2.id, setup.pool_key, p2.bounds);
+
+    assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
+    assert(p0_info.amount0 == 9999, 'p0 amount0');
+    assert(p0_info.amount1 == 9999, 'p0 amount1');
+    assert(p0_info.fees0 == 200, 'p0 fees0');
+    assert(p0_info.fees1 == 200, 'p0 fees1');
+
+    assert(p1_info.liquidity == p1.liquidity, 'p1 liquidity');
+    assert(p1_info.amount0 == 9999, 'p1 amount0');
+    assert(p1_info.amount1 == 0, 'p1 amount1');
+    assert(p1_info.fees0 == 99, 'p1 fees0');
+    assert(p1_info.fees1 == 100, 'p1 fees1');
+
+    assert(p2_info.liquidity == p2.liquidity, 'p2 liquidity');
+    assert(p2_info.amount0 == 0, 'p2 amount0');
+    assert(p2_info.amount1 == 9999, 'p2 amount1');
+    assert(p2_info.fees0 == 100, 'p2 fees0');
+    assert(p2_info.fees1 == 99, 'p2 fees1');
 }
