@@ -43,6 +43,33 @@ impl i129PrintTrait of PrintTrait<i129> {
     }
 }
 
+impl u128IntoI129 of Into<u128, i129> {
+    fn into(self: u128) -> i129 {
+        i129 { mag: self, sign: false }
+    }
+}
+
+impl i129TryIntoU128 of TryInto<i129, u128> {
+    fn try_into(self: i129) -> Option<u128> {
+        if (self.sign & (self.mag != 0)) {
+            Option::None(())
+        } else {
+            Option::Some(self.mag)
+        }
+    }
+}
+
+#[generate_trait]
+impl AddDeltaImpl of AddDeltaTrait {
+    fn add(self: u128, delta: i129) -> u128 {
+        (self.into() + delta).try_into().expect('ADD_DELTA')
+    }
+
+    fn sub(self: u128, delta: i129) -> u128 {
+        (self.into() - delta).try_into().expect('SUB_DELTA')
+    }
+}
+
 impl i129LegacyHash of LegacyHash<i129> {
     fn hash(state: felt252, value: i129) -> felt252 {
         let mut hashable: felt252 = value.mag.into();

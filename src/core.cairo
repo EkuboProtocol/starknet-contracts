@@ -27,9 +27,9 @@ mod Core {
     use ekubo::math::muldiv::{muldiv, div};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
-    use ekubo::math::utils::{add_delta, ContractAddressOrder, u128_max};
+    use ekubo::math::utils::{ContractAddressOrder, u128_max};
     use ekubo::owner::{check_owner_only};
-    use ekubo::types::i129::{i129};
+    use ekubo::types::i129::{i129, AddDeltaTrait};
     use ekubo::types::fees_per_liquidity::{
         FeesPerLiquidity, fees_per_liquidity_new, fees_per_liquidity_from_amount0,
         fees_per_liquidity_from_amount1
@@ -212,7 +212,7 @@ mod Core {
         ) {
             let tick = self.ticks.read((pool_key, index));
 
-            let next_liquidity_net = add_delta(tick.liquidity_net, liquidity_delta);
+            let next_liquidity_net = tick.liquidity_net.add(liquidity_delta);
 
             self
                 .ticks
@@ -659,9 +659,9 @@ mod Core {
 
             let get_position_result = self.get_position(pool_key, position_key);
 
-            let position_liquidity_next: u128 = add_delta(
-                get_position_result.liquidity, params.liquidity_delta
-            );
+            let position_liquidity_next: u128 = get_position_result
+                .liquidity
+                .add(params.liquidity_delta);
 
             // if the user is withdrawing everything, they must have collected all the fees
             if position_liquidity_next.is_non_zero() {
@@ -699,7 +699,7 @@ mod Core {
             // update pool liquidity if it changed
             if ((price.tick >= params.bounds.lower) & (price.tick < params.bounds.upper)) {
                 let liquidity = self.pool_liquidity.read(pool_key);
-                self.pool_liquidity.write(pool_key, add_delta(liquidity, params.liquidity_delta));
+                self.pool_liquidity.write(pool_key, liquidity.add(params.liquidity_delta));
             }
 
             // and finally account the computed deltas
@@ -864,9 +864,9 @@ mod Core {
                         let tick_data = self.ticks.read((pool_key, next_tick));
                         // update our working liquidity based on the direction we are crossing the tick
                         if (increasing) {
-                            liquidity = add_delta(liquidity, tick_data.liquidity_delta);
+                            liquidity = liquidity.add(tick_data.liquidity_delta);
                         } else {
-                            liquidity = add_delta(liquidity, -tick_data.liquidity_delta);
+                            liquidity = liquidity.sub(tick_data.liquidity_delta);
                         }
 
                         // update the tick fee state

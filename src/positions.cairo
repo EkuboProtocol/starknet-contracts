@@ -18,7 +18,6 @@ mod Positions {
     use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::liquidity::{max_liquidity, liquidity_delta_to_amount_delta};
-    use ekubo::math::utils::{add_delta};
     use ekubo::math::string::{to_decimal, append};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::delta::{Delta};
