@@ -305,11 +305,11 @@ mod Core {
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
                     // we can return 0 because it's irrelevant for an empty position
-                    fee_growth_inside_current: Zeroable::zero(),
+                    fees_per_liquidity_inside_current: Zeroable::zero(),
                 }
             } else {
                 let fees_per_liquidity_inside = self
-                    .get_pool_fee_growth_inside(pool_key, position_key.bounds);
+                    .get_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
                 let diff = fees_per_liquidity_inside - position.fees_per_liquidity_inside_last;
 
@@ -333,7 +333,7 @@ mod Core {
                     liquidity: position.liquidity,
                     fees0: amount0_fees.low,
                     fees1: amount1_fees.low,
-                    fee_growth_inside_current: fees_per_liquidity_inside,
+                    fees_per_liquidity_inside_current: fees_per_liquidity_inside,
                 }
             }
         }
@@ -565,7 +565,7 @@ mod Core {
             sqrt_ratio
         }
 
-        fn get_pool_fee_growth_inside(
+        fn get_fees_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> FeesPerLiquidity {
             let small = self.pool_price.read(pool_key);
@@ -665,8 +665,9 @@ mod Core {
 
             // if the user is withdrawing everything, they must have collected all the fees
             if position_liquidity_next.is_non_zero() {
-                // fees are implicitly stored in the fee growth inside variable
-                let fees_per_liquidity_inside_last = get_position_result.fee_growth_inside_current
+                // fees are implicitly stored in the fees per liquidity inside snapshot variable
+                let fees_per_liquidity_inside_last = get_position_result
+                    .fees_per_liquidity_inside_current
                     - fees_per_liquidity_new(
                         get_position_result.fees0,
                         get_position_result.fees1,
@@ -733,7 +734,7 @@ mod Core {
                     (pool_key, position_key),
                     Position {
                         liquidity: result.liquidity,
-                        fees_per_liquidity_inside_last: result.fee_growth_inside_current,
+                        fees_per_liquidity_inside_last: result.fees_per_liquidity_inside_current,
                     }
                 );
 

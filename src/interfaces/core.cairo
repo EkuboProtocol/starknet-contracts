@@ -39,14 +39,14 @@ struct SwapParameters {
 }
 
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
-// Note you should not rely on fee growth inside for consistency across calls, since it also is used to track accumulated fees over time
+// Note you should not rely on fees per liquidity inside to be consistent across calls, since it also is used to track accumulated fees over time
 #[derive(Copy, Drop, Serde)]
 struct GetPositionResult {
     liquidity: u128,
     fees0: u128,
     fees1: u128,
-    // the current value of fee growth inside is required to compute the fees, so this is also returned
-    fee_growth_inside_current: FeesPerLiquidity,
+    // the current value of fees per liquidity inside is required to compute the fees, so it is also returned to save computation
+    fees_per_liquidity_inside_current: FeesPerLiquidity,
 }
 
 // The current state of the queried locker
@@ -130,8 +130,8 @@ trait ICore<TStorage> {
     // Get the current all-time fees per liquidity for the pool
     fn get_pool_fees(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
 
-    // Get the fee growth inside for a given tick range
-    fn get_pool_fee_growth_inside(
+    // Get the fees per liquidity inside a given tick range for a pool
+    fn get_fees_per_liquidity_inside(
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> FeesPerLiquidity;
 
