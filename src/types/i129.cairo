@@ -56,6 +56,7 @@ impl i129LegacyHash of LegacyHash<i129> {
 
 impl i129StorePacking of StorePacking<i129, u128> {
     fn pack(value: i129) -> u128 {
+        assert(value.mag < 0x80000000000000000000000000000000, 'i129_store_overflow');
         if (value.sign & (value.mag != 0)) {
             0x80000000000000000000000000000000 + value.mag
         } else {
