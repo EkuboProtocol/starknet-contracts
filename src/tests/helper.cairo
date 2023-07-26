@@ -5,7 +5,6 @@ use array::{Array, ArrayTrait};
 use option::{Option, OptionTrait};
 
 use ekubo::types::keys::PoolKey;
-use ekubo::types::pool::{Pool};
 use ekubo::types::i129::i129;
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};

@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::pool::{Pool, PoolSmallState, PoolBigState};
+use ekubo::types::pool::{PoolPrice};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
@@ -44,10 +45,8 @@ struct GetPositionResult {
     liquidity: u128,
     fees0: u128,
     fees1: u128,
-    // These values are returned because they were queried to compute the fees
-    // It is computed via a call to get_pool_fee_growth_inside for the pool key and bounds
-    fee_growth_inside_bounds_token0_current: u256,
-    fee_growth_inside_bounds_token1_current: u256,
+    // the current value of fee growth inside is required to compute the fees, so this is also returned
+    fee_growth_inside_current: FeesPerLiquidity,
 }
 
 // The current state of the queried locker
@@ -56,6 +55,18 @@ struct LockerState {
     address: ContractAddress,
     nonzero_delta_count: u32
 }
+
+
+// The aggregate information of a pool
+#[derive(Copy, Drop, Serde)]
+struct GetPoolResult {
+    sqrt_ratio: u256,
+    tick: i129,
+    call_points: CallPoints,
+    liquidity: u128,
+    fees_per_liquidity: FeesPerLiquidity,
+}
+
 
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
 #[starknet::interface]
@@ -108,19 +119,21 @@ trait ICore<TStorage> {
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
 
     // Get the current state of the given pool
-    fn get_pool(self: @TStorage, pool_key: PoolKey) -> Pool;
+    fn get_pool(self: @TStorage, pool_key: PoolKey) -> GetPoolResult;
 
-    // Get the small state of the pool
-    fn get_pool_small(self: @TStorage, pool_key: PoolKey) -> PoolSmallState;
+    // Get the price of the pool
+    fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;
 
-    // Get the big state of the pool
-    fn get_pool_big(self: @TStorage, pool_key: PoolKey) -> PoolBigState;
+    // Get the liquidity of the pool
+    fn get_pool_liquidity(self: @TStorage, pool_key: PoolKey) -> u128;
 
+    // Get the current all-time fees per liquidity for the pool
+    fn get_pool_fees(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
 
     // Get the fee growth inside for a given tick range
     fn get_pool_fee_growth_inside(
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
-    ) -> (u256, u256);
+    ) -> FeesPerLiquidity;
 
     // Get the state of a given tick for the given pool
     fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;

@@ -3,7 +3,7 @@ use option::{OptionTrait};
 use ekubo::math::muldiv::{div};
 use zeroable::{Zeroable};
 
-#[derive(Copy, Drop, starknet::Store)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct FeesPerLiquidity {
     fees_per_liquidity_token0: felt252,
     fees_per_liquidity_token1: felt252,

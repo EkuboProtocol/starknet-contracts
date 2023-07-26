@@ -9,7 +9,7 @@ use integer::u256_from_felt252;
 use integer::BoundedInt;
 use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
-use ekubo::types::pool::{Pool};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{
@@ -124,8 +124,7 @@ mod initialize_pool_tests {
         );
         assert(pool.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(pool.liquidity == 0, 'tick');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fggt0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fggt1');
+        assert(pool.fees_per_liquidity.is_zero(), 'fpl');
     }
 
     #[test]
@@ -614,8 +613,8 @@ mod locks {
 
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use super::{
-        setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants, div,
-        contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
+        FeesPerLiquidity, setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult,
+        tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable
@@ -1025,7 +1024,7 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(9000000)]
+    #[available_gas(10000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1049,8 +1048,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
+        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1082,8 +1080,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
+        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1113,8 +1110,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is max');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
+        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1144,8 +1140,7 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
+        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1175,12 +1170,11 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
+        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
-    #[available_gas(80000000)]
+    #[available_gas(100000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1224,10 +1218,12 @@ mod locks {
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
         assert(
-            pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
-            'fgg0 == 0'
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 3402823669209384634633746074317,
+                fees_per_liquidity_token1: 0,
+            },
+            'fees'
         );
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1274,11 +1270,14 @@ mod locks {
             'price lower'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
+
         assert(
-            pool.fee_growth_global_token0 == u256 { low: 3402823669209384634633746074317, high: 0 },
-            'fgg0 == 0'
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 3402823669209384634633746074317,
+                fees_per_liquidity_token1: 0,
+            },
+            'fees'
         );
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
 
@@ -1328,12 +1327,12 @@ mod locks {
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fee_growth_global_token0 == u256 {
-                low: 17014118346046923173168730371588410, high: 0
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 17014118346046923173168730371588410,
+                fees_per_liquidity_token1: 0,
             },
-            'fgg0 != 0'
+            'fees'
         );
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1382,12 +1381,12 @@ mod locks {
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(pool.liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fee_growth_global_token0 == u256 {
-                low: 17014118346046923173168730371588410, high: 0
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 17014118346046923173168730371588410,
+                fees_per_liquidity_token1: 0,
             },
-            'fgg0 != 0'
+            'fees'
         );
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 == 0');
     }
 
     #[test]
@@ -1434,10 +1433,12 @@ mod locks {
             'price lower'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
-            pool.fee_growth_global_token1 == u256 { low: 3402823669209384634633746074317, high: 0 },
-            'fgg1 != 0'
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0,
+                fees_per_liquidity_token1: 3402823669209384634633746074317,
+            },
+            'fees'
         );
     }
 
@@ -1485,10 +1486,12 @@ mod locks {
             'price'
         );
         assert(pool.liquidity == 1000000000, 'liquidity is original');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
-            pool.fee_growth_global_token1 == u256 { low: 3402823669209384634633746074317, high: 0 },
-            'fgg1 != 0'
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0,
+                fees_per_liquidity_token1: 3402823669209384634633746074317,
+            },
+            'fees'
         );
     }
 
@@ -1537,12 +1540,12 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
-            pool.fee_growth_global_token1 == u256 {
-                low: 16980090109354829326822392910845233, high: 0
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0,
+                fees_per_liquidity_token1: 16980090109354829326822392910845233,
             },
-            'fgg1 != 0'
+            'fees'
         );
     }
 
@@ -1591,12 +1594,12 @@ mod locks {
         let pool = setup.core.get_pool(setup.pool_key);
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0 == 0');
         assert(
-            pool.fee_growth_global_token1 == u256 {
-                low: 16912033635970641634129717989358880, high: 0
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0,
+                fees_per_liquidity_token1: 16912033635970641634129717989358880,
             },
-            'fgg1 != 0'
+            'fees'
         );
     }
 
@@ -1680,8 +1683,13 @@ mod locks {
         );
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0 == 0x68f6639f0bc961de416956dbaee7d, 'fgg0');
-        assert(pool.fee_growth_global_token1.is_zero(), 'fgg1 != 0');
+        assert(
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0x68f6639f0bc961de416956dbaee7d,
+                fees_per_liquidity_token1: 0,
+            },
+            'fees'
+        );
     }
 
     #[test]
@@ -1764,8 +1772,13 @@ mod locks {
         );
         assert(pool.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fee_growth_global_token0.is_zero(), 'fgg0');
-        assert(pool.fee_growth_global_token1 == 0x68f6639f0bc961de416956dbaee7d, 'fgg1 != 0');
+        assert(
+            pool.fees_per_liquidity == FeesPerLiquidity {
+                fees_per_liquidity_token0: 0,
+                fees_per_liquidity_token1: 0x68f6639f0bc961de416956dbaee7d,
+            },
+            'fees'
+        );
     }
 }
 

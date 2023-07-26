@@ -9,7 +9,7 @@ use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_const
 use ekubo::math::muldiv::{u256_safe_divmod_audited};
 
 #[derive(Copy, Drop, Serde)]
-struct PoolSmallState {
+struct PoolPrice {
     // the current ratio, up to 192 bits
     sqrt_ratio: u256,
     // the current tick, up to 32 bits
@@ -18,8 +18,8 @@ struct PoolSmallState {
     call_points: CallPoints,
 }
 
-impl SmallStateStorePacking of StorePacking<PoolSmallState, felt252> {
-    fn pack(value: PoolSmallState) -> felt252 {
+impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
+    fn pack(value: PoolPrice) -> felt252 {
         if (value.sqrt_ratio.is_non_zero()) {
             assert(
                 (value.sqrt_ratio >= min_sqrt_ratio()) & (value.sqrt_ratio <= max_sqrt_ratio()),
@@ -55,7 +55,7 @@ impl SmallStateStorePacking of StorePacking<PoolSmallState, felt252> {
 
         packed.try_into().unwrap()
     }
-    fn unpack(value: felt252) -> PoolSmallState {
+    fn unpack(value: felt252) -> PoolPrice {
         let packed_first_slot_u256: u256 = value.into();
 
         // quotient, remainder
@@ -78,38 +78,7 @@ impl SmallStateStorePacking of StorePacking<PoolSmallState, felt252> {
             .unwrap()
             .into();
 
-        PoolSmallState { sqrt_ratio, tick, call_points }
+        PoolPrice { sqrt_ratio, tick, call_points }
     }
 }
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct PoolBigState {
-    // the current liquidity, i.e. between tick_prev and tick_next
-    liquidity: u128,
-    // the fee growth, all time fees collected per liquidity, full 128x128
-    fee_growth_global_token0: u256,
-    fee_growth_global_token1: u256,
-}
-
-
-fn combine_pool_states(small: PoolSmallState, big: PoolBigState) -> Pool {
-    Pool {
-        sqrt_ratio: small.sqrt_ratio,
-        tick: small.tick,
-        call_points: small.call_points,
-        liquidity: big.liquidity,
-        fee_growth_global_token0: big.fee_growth_global_token0,
-        fee_growth_global_token1: big.fee_growth_global_token1,
-    }
-}
-
-// this is just for compatibility
-#[derive(Copy, Drop, Serde)]
-struct Pool {
-    sqrt_ratio: u256,
-    tick: i129,
-    call_points: CallPoints,
-    liquidity: u128,
-    fee_growth_global_token0: u256,
-    fee_growth_global_token1: u256,
-}
