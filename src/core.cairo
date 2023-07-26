@@ -287,8 +287,8 @@ mod Core {
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
                     // we can return 0 because it's irrelevant for an empty position
-                    fee_growth_inside_token0: Zeroable::zero(),
-                    fee_growth_inside_token1: Zeroable::zero()
+                    fee_growth_inside_bounds_token0_current: Zeroable::zero(),
+                    fee_growth_inside_bounds_token1_current: Zeroable::zero()
                 }
             } else {
                 let (fee_growth_inside_token0, fee_growth_inside_token1) = self
@@ -314,8 +314,8 @@ mod Core {
                     liquidity: position.liquidity,
                     fees0: amount0_fees.low,
                     fees1: amount1_fees.low,
-                    fee_growth_inside_token0,
-                    fee_growth_inside_token1
+                    fee_growth_inside_bounds_token0_current: fee_growth_inside_token0,
+                    fee_growth_inside_bounds_token1_current: fee_growth_inside_token1
                 }
             }
         }
@@ -553,21 +553,21 @@ mod Core {
             let small = self.pools_small.read(pool_key);
             assert(small.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
-            let big = self.pools_big.read(pool_key);
+            let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
+            let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
+
             if (small.tick < bounds.lower) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
                 (
                     unsafe_sub(
-                        big.fee_growth_global_token0, tick_lower_state.fee_growth_outside_token0
+                        tick_lower_state.fee_growth_outside_token0,
+                        tick_upper_state.fee_growth_outside_token0
                     ),
                     unsafe_sub(
-                        big.fee_growth_global_token1, tick_lower_state.fee_growth_outside_token1
+                        tick_lower_state.fee_growth_outside_token1,
+                        tick_upper_state.fee_growth_outside_token1
                     )
                 )
             } else if (small.tick < bounds.upper) {
-                let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
-                let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
-
                 (
                     unsafe_sub(
                         unsafe_sub(
@@ -583,13 +583,14 @@ mod Core {
                     )
                 )
             } else {
-                let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
                 (
                     unsafe_sub(
-                        big.fee_growth_global_token0, tick_upper_state.fee_growth_outside_token0
+                        tick_upper_state.fee_growth_outside_token0,
+                        tick_lower_state.fee_growth_outside_token0
                     ),
                     unsafe_sub(
-                        big.fee_growth_global_token1, tick_upper_state.fee_growth_outside_token1
+                        tick_upper_state.fee_growth_outside_token1,
+                        tick_lower_state.fee_growth_outside_token1
                     )
                 )
             }
@@ -673,20 +674,12 @@ mod Core {
                 get_position_result.liquidity, params.liquidity_delta
             );
 
-            let big = self.pools_big.read(pool_key);
-
-            let (fee_growth_inside_token0_next, fee_growth_inside_token1_next) =
-                if (position_liquidity_next
-                .is_zero()) {
-                assert(
-                    (get_position_result.fees0.is_zero()) & (get_position_result.fees0.is_zero()),
-                    'MUST_COLLECT_FEES'
-                );
-                (Zeroable::zero(), Zeroable::zero())
-            } else {
-                (
+            // if the user is withdrawing everything, they must have collected all the fees
+            if position_liquidity_next.is_non_zero() {
+                // fees are implicitly stored in the fee growth inside variable
+                let (fee_growth_inside_token0_next, fee_growth_inside_token1_next) = (
                     unsafe_sub(
-                        big.fee_growth_global_token0,
+                        get_position_result.fee_growth_inside_bounds_token0_current,
                         div(
                             u256 { high: get_position_result.fees0, low: 0 },
                             position_liquidity_next.into(),
@@ -694,27 +687,34 @@ mod Core {
                         )
                     ),
                     unsafe_sub(
-                        big.fee_growth_global_token1,
+                        get_position_result.fee_growth_inside_bounds_token1_current,
                         div(
                             u256 { high: get_position_result.fees1, low: 0 },
                             position_liquidity_next.into(),
                             false
                         )
                     )
-                )
-            };
-
-            // update the position
-            self
-                .positions
-                .write(
-                    (pool_key, position_key),
-                    Position {
-                        liquidity: position_liquidity_next,
-                        fee_growth_inside_last_token0: fee_growth_inside_token0_next,
-                        fee_growth_inside_last_token1: fee_growth_inside_token1_next,
-                    }
                 );
+
+                // update the position
+                self
+                    .positions
+                    .write(
+                        (pool_key, position_key),
+                        Position {
+                            liquidity: position_liquidity_next,
+                            fee_growth_inside_last_token0: fee_growth_inside_token0_next,
+                            fee_growth_inside_last_token1: fee_growth_inside_token1_next,
+                        }
+                    );
+            } else {
+                assert(
+                    (get_position_result.fees0.is_zero()) & (get_position_result.fees1.is_zero()),
+                    'MUST_COLLECT_FEES'
+                );
+                // update the position
+                self.positions.write((pool_key, position_key), Default::default());
+            }
 
             self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
             self.update_tick(pool_key, params.bounds.upper, params.liquidity_delta, true);
@@ -765,8 +765,10 @@ mod Core {
                     (pool_key, position_key),
                     Position {
                         liquidity: result.liquidity,
-                        fee_growth_inside_last_token0: result.fee_growth_inside_token0,
-                        fee_growth_inside_last_token1: result.fee_growth_inside_token1,
+                        fee_growth_inside_last_token0: result
+                            .fee_growth_inside_bounds_token0_current,
+                        fee_growth_inside_last_token1: result
+                            .fee_growth_inside_bounds_token1_current,
                     }
                 );
 

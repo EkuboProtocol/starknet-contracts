@@ -44,8 +44,10 @@ struct GetPositionResult {
     liquidity: u128,
     fees0: u128,
     fees1: u128,
-    fee_growth_inside_token0: u256,
-    fee_growth_inside_token1: u256,
+    // These values are returned because they were queried to compute the fees
+    // It is computed via a call to get_pool_fee_growth_inside for the pool key and bounds
+    fee_growth_inside_bounds_token0_current: u256,
+    fee_growth_inside_bounds_token1_current: u256,
 }
 
 // The current state of the queried locker

@@ -652,14 +652,15 @@ mod Positions {
             let id = validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(id), id);
 
-            let info = self.get_token_info(id, pool_key, bounds);
-
-            self
-                .token_info
-                .write(
-                    id,
-                    TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity - liquidity,  }
-                );
+            if liquidity.is_non_zero() {
+                let info = self.get_token_info(id, pool_key, bounds);
+                self
+                    .token_info
+                    .write(
+                        id,
+                        TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity - liquidity }
+                    );
+            }
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
