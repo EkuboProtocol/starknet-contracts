@@ -568,6 +568,7 @@ mod Core {
                     )
                 )
             } else if (small.tick < bounds.upper) {
+                let big = self.pools_big.read(pool_key);
                 (
                     unsafe_sub(
                         unsafe_sub(
@@ -721,6 +722,7 @@ mod Core {
 
             // update pool liquidity if it changed
             if ((small.tick >= params.bounds.lower) & (small.tick < params.bounds.upper)) {
+                let big = self.pools_big.read(pool_key);
                 self
                     .pools_big
                     .write(
