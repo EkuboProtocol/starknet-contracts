@@ -17,7 +17,6 @@ mod Positions {
     use ekubo::types::i129::{i129};
     use ekubo::types::bounds::{Bounds};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::math::utils::{unsafe_sub};
     use ekubo::math::liquidity::{max_liquidity, liquidity_delta_to_amount_delta};
     use ekubo::math::utils::{add_delta};
     use ekubo::math::string::{to_decimal, append};
