@@ -57,7 +57,8 @@ struct LockerState {
 }
 
 
-// The aggregate information of a pool
+// The aggregated information of a pool returned by each of the pool getters, for efficiency in cases
+// where you need to know all the information about a pool
 #[derive(Copy, Drop, Serde)]
 struct GetPoolResult {
     sqrt_ratio: u256,
