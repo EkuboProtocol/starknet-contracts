@@ -7,3 +7,13 @@ struct Position {
     fee_growth_inside_last_token0: u256,
     fee_growth_inside_last_token1: u256,
 }
+
+impl PositionDefault of Default<Position> {
+    fn default() -> Position {
+        Position {
+            liquidity: Zeroable::zero(),
+            fee_growth_inside_last_token0: Zeroable::zero(),
+            fee_growth_inside_last_token1: Zeroable::zero(),
+        }
+    }
+}
