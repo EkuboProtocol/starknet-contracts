@@ -534,7 +534,7 @@ mod Core {
 
             self
                 .pools_small
-                .write(pool_key, PoolSmallState { sqrt_ratio, tick: initial_tick, call_points  });
+                .write(pool_key, PoolSmallState { sqrt_ratio, tick: initial_tick, call_points });
 
             self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
