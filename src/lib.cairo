@@ -1,3 +1,4 @@
+mod asset_recovery;
 mod core;
 mod extensions;
 mod interfaces;
