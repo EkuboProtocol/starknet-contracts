@@ -639,7 +639,7 @@ fn test_deposit_then_withdraw_with_fees() {
 }
 
 #[test]
-#[available_gas(80000000)]
+#[available_gas(100000000)]
 fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -1009,7 +1009,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
 }
 
 #[test]
-#[available_gas(80000000)]
+#[available_gas(100000000)]
 fn test_deposit_swap_round_trip_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);

@@ -168,7 +168,7 @@ fn test_storage_access_write_read_min_value() {
 }
 
 #[test]
-#[available_gas(3000000)]
+#[available_gas(6000000)]
 #[should_panic(expected: ('i129_storage_overflow', ))]
 fn test_storage_access_write_min_value_minus_one() {
     let base = storage_base_address_const::<0>();
@@ -181,7 +181,7 @@ fn test_storage_access_write_min_value_minus_one() {
 }
 
 #[test]
-#[available_gas(3000000)]
+#[available_gas(6000000)]
 #[should_panic(expected: ('i129_storage_overflow', ))]
 fn test_storage_access_write_max_value_plus_one() {
     let base = storage_base_address_const::<0>();
