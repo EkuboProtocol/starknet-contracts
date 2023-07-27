@@ -1203,3 +1203,109 @@ fn test_deposit_swap_multiple_positions() {
     assert(p2_info.fees0 == 100, 'p2 fees0');
     assert(p2_info.fees1 == 99, 'p2 fees1');
 }
+
+#[test]
+#[available_gas(1000000000)]
+#[should_panic(
+    expected: (
+        'MUST_COLLECT_FEES',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_withdraw_not_collected_fees_token1() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+}
+
+#[test]
+#[available_gas(1000000000)]
+#[should_panic(
+    expected: (
+        'MUST_COLLECT_FEES',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_withdraw_not_collected_fees_token0() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+}
