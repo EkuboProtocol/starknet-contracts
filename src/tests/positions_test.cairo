@@ -1309,3 +1309,55 @@ fn test_withdraw_not_collected_fees_token0() {
             recipient: contract_address_const::<80085>(),
         );
 }
+
+
+#[test]
+#[available_gas(1000000000)]
+fn test_withdraw_partial_leave_fees() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity / 3),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+
+    let info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    assert(info.liquidity == (p0.liquidity - (p0.liquidity / 3)), 'liquidity');
+    assert(info.amount0 == 13333, 'amount0'); // 2/3 of 20k
+    assert(info.amount1 == 0, 'amount1');
+    assert(info.fees0 == 99, 'fees0'); // 1% of 10k
+    assert(info.fees1 == 0, 'fees1');
+}
