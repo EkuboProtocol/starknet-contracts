@@ -4,9 +4,8 @@ use starknet::{StorageBaseAddress, StorePacking};
 use zeroable::Zeroable;
 use traits::{Into, TryInto};
 use option::{OptionTrait, Option};
-use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero};
+use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
-use ekubo::math::muldiv::{u256_safe_divmod_audited};
 
 #[derive(Copy, Drop, Serde)]
 struct PoolPrice {
@@ -59,7 +58,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         let packed_first_slot_u256: u256 = value.into();
 
         // quotient, remainder
-        let (tick_call_points, sqrt_ratio) = u256_safe_divmod_audited(
+        let (tick_call_points, sqrt_ratio, _) = u256_safe_divmod(
             packed_first_slot_u256,
             u256_as_non_zero(0x1000000000000000000000000000000000000000000000000) // 2n ** 192n
         );

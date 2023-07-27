@@ -68,6 +68,8 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
+        // in withdrawal only mode, the contract will not accept deposits
+        withdrawal_only_mode: bool,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -250,6 +252,10 @@ mod Core {
 
     #[external(v0)]
     impl Core of ICore<ContractState> {
+        fn set_withdrawal_only_mode(ref self: ContractState) {
+            self.withdrawal_only_mode.write(true);
+        }
+
         fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
             self.fees_collected.read(token)
         }
@@ -484,6 +490,8 @@ mod Core {
         }
 
         fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
+            assert(!self.withdrawal_only_mode.read(), 'WITHDRAWALS_ONLY');
+
             let (id, _) = self.require_locker();
 
             let balance = IERC20Dispatcher {

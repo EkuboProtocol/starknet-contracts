@@ -5,18 +5,9 @@ use integer::{
     u256_safe_divmod
 };
 
-// Workaround because u256_safe_divmod is not audited
-// todo: replace with u256_safe_divmod
-#[inline(always)]
-fn u256_safe_divmod_audited(lhs: u256, rhs: NonZero<u256>) -> (u256, u256) {
-    let (quotient, remainder, _) = u256_safe_divmod(lhs, rhs);
-    (quotient, remainder)
-}
-
-
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 fn div(x: u256, z: u256, round_up: bool) -> u256 {
-    let (quotient, remainder) = u256_safe_divmod_audited(x, u256_as_non_zero(z));
+    let (quotient, remainder, _) = u256_safe_divmod(x, u256_as_non_zero(z));
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {

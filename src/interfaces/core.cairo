@@ -111,6 +111,9 @@ trait IExtension<TStorage> {
 
 #[starknet::interface]
 trait ICore<TStorage> {
+    // Sets the contract to withdrawals only mode, thus preventing any new capital being sent to the contract
+    fn set_withdrawal_only_mode(ref self: TStorage);
+
     // Get the amount of withdrawal fees collected for the protocol
     fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
