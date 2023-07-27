@@ -1,5 +1,5 @@
 use starknet::{storage_base_address_const, Store, StorePacking, SyscallResult, SyscallResultTrait};
-use ekubo::types::pool::{PoolPrice};
+use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::i129::i129;
 use traits::{Into};
 use ekubo::types::call_points::CallPoints;

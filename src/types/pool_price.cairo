@@ -73,9 +73,9 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             i129 { mag: tick_raw, sign: false }
         };
 
-        let call_points: CallPoints = TryInto::<u128, u8>::try_into(call_points_raw)
-            .unwrap()
-            .into();
+        let call_points: CallPoints = TryInto::<u8,
+        CallPoints>::try_into(TryInto::<u128, u8>::try_into(call_points_raw).unwrap())
+            .unwrap();
 
         PoolPrice { sqrt_ratio, tick, call_points }
     }

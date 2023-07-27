@@ -34,7 +34,7 @@ mod Core {
         FeesPerLiquidity, fees_per_liquidity_new, fees_per_liquidity_from_amount0,
         fees_per_liquidity_from_amount1
     };
-    use ekubo::types::pool::{PoolPrice};
+    use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position};
     use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};

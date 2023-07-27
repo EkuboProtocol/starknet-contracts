@@ -27,7 +27,8 @@ mod MockExtension {
     use starknet::{get_caller_address};
     use zeroable::Zeroable;
     use ekubo::types::call_points::{CallPoints, all_call_points};
-    use traits::{Into};
+    use traits::{Into, TryInto};
+    use option::{OptionTrait};
     use debug::PrintTrait;
 
     #[storage]
@@ -42,7 +43,7 @@ mod MockExtension {
     #[generate_trait]
     impl InternalMethods of InternalTrait {
         fn get_call_points(self: @ContractState) -> CallPoints {
-            self.call_points.read().into()
+            TryInto::<u8, CallPoints>::try_into(self.call_points.read()).unwrap()
         }
 
         fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {

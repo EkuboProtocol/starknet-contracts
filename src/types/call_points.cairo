@@ -13,15 +13,6 @@ struct CallPoints {
     after_update_position: bool,
 }
 
-impl CallPointsStorePacking of StorePacking<CallPoints, u8> {
-    fn pack(value: CallPoints) -> u8 {
-        value.into()
-    }
-    fn unpack(value: u8) -> CallPoints {
-        value.into()
-    }
-}
-
 impl CallPointsPartialEq of PartialEq<CallPoints> {
     fn eq(lhs: @CallPoints, rhs: @CallPoints) -> bool {
         (lhs.after_initialize_pool == rhs.after_initialize_pool)
@@ -81,9 +72,8 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
     }
 }
 
-impl U8IntoCallPoints of Into<u8, CallPoints> {
-    fn into(mut self: u8) -> CallPoints {
-        // these are unused, but we need to remove them from the u8 and this is cheaper than masking
+impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
+    fn try_into(mut self: u8) -> Option<CallPoints> {
         let after_initialize_pool = if (self >= 128) {
             self -= 128;
             true
@@ -112,19 +102,25 @@ impl U8IntoCallPoints of Into<u8, CallPoints> {
             false
         };
 
-        let after_update_position = if (self >= 8) {
+        let after_update_position = if (self == 8) {
             self -= 8;
             true
         } else {
             false
         };
 
-        CallPoints {
-            after_initialize_pool,
-            before_swap,
-            after_swap,
-            before_update_position,
-            after_update_position,
+        if (self == 0) {
+            Option::Some(
+                CallPoints {
+                    after_initialize_pool,
+                    before_swap,
+                    after_swap,
+                    before_update_position,
+                    after_update_position,
+                }
+            )
+        } else {
+            Option::None(())
         }
     }
 }

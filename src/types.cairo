@@ -4,7 +4,7 @@ mod delta;
 mod fees_per_liquidity;
 mod i129;
 mod keys;
-mod pool;
+mod pool_price;
 mod position;
 mod tick;
 
@@ -21,4 +21,4 @@ mod i129_test;
 #[cfg(test)]
 mod keys_test;
 #[cfg(test)]
-mod pool_test;
+mod pool_price_test;

@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::pool::{PoolPrice};
+use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
