@@ -139,6 +139,9 @@ trait ICore<TStorage> {
     // Get the state of a given tick for the given pool
     fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
 
+    // Get the fees on the other side of the tick from the current tick
+    fn get_tick_fees_outside(self: @TStorage, pool_key: PoolKey, index: i129) -> FeesPerLiquidity;
+
     // Get the state of a given position for the given pool
     fn get_position(
         self: @TStorage, pool_key: PoolKey, position_key: PositionKey

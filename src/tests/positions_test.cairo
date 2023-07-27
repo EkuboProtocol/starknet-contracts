@@ -889,14 +889,20 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
         'upper.liquidity_delta'
     );
     assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
-    assert(tick_upper_state.fees_outside.is_zero(), 'upper.fees');
+    assert(
+        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false }).is_zero(),
+        'upper.fees'
+    );
 
     assert(
         tick_lower_state.liquidity_delta == i129 { mag: liquidity, sign: false },
         'lower.liquidity_delta'
     );
     assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
-    assert(tick_lower_state.fees_outside.is_zero(), 'lower.fees');
+    assert(
+        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true }).is_zero(),
+        'lower.fees'
+    );
 }
 
 #[test]

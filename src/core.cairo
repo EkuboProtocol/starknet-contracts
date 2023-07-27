@@ -63,6 +63,7 @@ mod Core {
         pool_liquidity: LegacyMap::<PoolKey, u128>,
         pool_fees: LegacyMap::<PoolKey, FeesPerLiquidity>,
         ticks: LegacyMap::<(PoolKey, i129), Tick>,
+        tick_fees_outside: LegacyMap::<(PoolKey, i129), FeesPerLiquidity>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
@@ -225,8 +226,6 @@ mod Core {
                             tick.liquidity_delta + liquidity_delta
                         },
                         liquidity_net: next_liquidity_net,
-                        // we don't ever set these values, because the initial value doesn't matter, only the differences of position snapshots matter
-                        fees_outside: tick.fees_outside,
                     }
                 );
 
@@ -292,6 +291,12 @@ mod Core {
 
         fn get_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
             self.ticks.read((pool_key, index))
+        }
+
+        fn get_tick_fees_outside(
+            self: @ContractState, pool_key: PoolKey, index: i129
+        ) -> FeesPerLiquidity {
+            self.tick_fees_outside.read((pool_key, index))
         }
 
         fn get_position(
@@ -568,20 +573,20 @@ mod Core {
         fn get_fees_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> FeesPerLiquidity {
-            let small = self.pool_price.read(pool_key);
-            assert(small.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
+            let price = self.pool_price.read(pool_key);
+            assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
-            let tick_lower_state = self.ticks.read((pool_key, bounds.lower));
-            let tick_upper_state = self.ticks.read((pool_key, bounds.upper));
+            let fees_outside_lower = self.tick_fees_outside.read((pool_key, bounds.lower));
+            let fees_outside_upper = self.tick_fees_outside.read((pool_key, bounds.upper));
 
-            if (small.tick < bounds.lower) {
-                tick_lower_state.fees_outside - tick_upper_state.fees_outside
-            } else if (small.tick < bounds.upper) {
+            if (price.tick < bounds.lower) {
+                fees_outside_lower - fees_outside_upper
+            } else if (price.tick < bounds.upper) {
                 let fees = self.pool_fees.read(pool_key);
 
-                fees - tick_lower_state.fees_outside - tick_upper_state.fees_outside
+                fees - fees_outside_lower - fees_outside_upper
             } else {
-                tick_upper_state.fees_outside - tick_lower_state.fees_outside
+                fees_outside_upper - fees_outside_lower
             }
         }
 
@@ -871,14 +876,11 @@ mod Core {
 
                         // update the tick fee state
                         self
-                            .ticks
+                            .tick_fees_outside
                             .write(
                                 (pool_key, next_tick),
-                                Tick {
-                                    liquidity_delta: tick_data.liquidity_delta,
-                                    liquidity_net: tick_data.liquidity_net,
-                                    fees_outside: fees_per_liquidity - tick_data.fees_outside
-                                }
+                                fees_per_liquidity
+                                    - self.tick_fees_outside.read((pool_key, next_tick))
                             );
                     }
                 } else {
