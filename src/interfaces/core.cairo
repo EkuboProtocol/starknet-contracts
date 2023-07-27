@@ -61,9 +61,7 @@ struct LockerState {
 // where you need to know all the information about a pool
 #[derive(Copy, Drop, Serde)]
 struct GetPoolResult {
-    sqrt_ratio: u256,
-    tick: i129,
-    call_points: CallPoints,
+    price: PoolPrice,
     liquidity: u128,
     fees_per_liquidity: FeesPerLiquidity,
 }

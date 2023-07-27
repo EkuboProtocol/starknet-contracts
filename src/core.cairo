@@ -264,13 +264,7 @@ mod Core {
             let price = self.get_pool_price(pool_key);
             let liquidity = self.get_pool_liquidity(pool_key);
             let fees_per_liquidity = self.get_pool_fees(pool_key);
-            GetPoolResult {
-                sqrt_ratio: price.sqrt_ratio,
-                tick: price.tick,
-                call_points: price.call_points,
-                liquidity: liquidity,
-                fees_per_liquidity: fees_per_liquidity,
-            }
+            GetPoolResult { price, liquidity, fees_per_liquidity,  }
         }
 
         fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
@@ -694,7 +688,7 @@ mod Core {
                     (get_position_result.fees0.is_zero()) & (get_position_result.fees1.is_zero()),
                     'MUST_COLLECT_FEES'
                 );
-                // update the position
+                // delete the position from storage
                 self.positions.write((pool_key, position_key), Default::default());
             }
 

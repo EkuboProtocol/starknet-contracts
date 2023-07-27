@@ -77,21 +77,21 @@ mod Oracle {
                 return ();
             }
 
-            let pool = core.get_pool(pool_key);
+            let liquidity = core.get_pool_liquidity(pool_key);
 
-            let seconds_per_liquidity_global_next = if (pool.liquidity.is_non_zero()) {
+            let seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
                 state.seconds_per_liquidity_global
                     + div(
-                        u256 { low: 0, high: time_passed },
-                        u256 { low: pool.liquidity, high: 0 },
-                        false
+                        u256 { low: 0, high: time_passed }, u256 { low: liquidity, high: 0 }, false
                     )
             } else {
                 state.seconds_per_liquidity_global
             };
 
+            let price = core.get_pool_price(pool_key);
+
             let tick_cumulative_next = state.tick_cumulative_last
-                + (pool.tick * i129 { mag: time_passed, sign: false });
+                + (price.tick * i129 { mag: time_passed, sign: false });
 
             self
                 .pool_state
@@ -113,28 +113,30 @@ mod Oracle {
         fn get_seconds_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> u256 {
+            let core = self.core.read();
             let time = get_block_timestamp();
-            let pool = self.core.read().get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
 
             // subtract the lower and upper tick of the bounds based on the price
             let lower = self.tick_state.read((pool_key, bounds.lower));
             let upper = self.tick_state.read((pool_key, bounds.upper));
 
-            if (pool.tick < bounds.lower) {
+            if (price.tick < bounds.lower) {
                 unsafe_sub(upper, lower)
-            } else if (pool.tick < bounds.upper) {
+            } else if (price.tick < bounds.upper) {
                 // get the global seconds per liquidity
                 let state = self.pool_state.read(pool_key);
                 let seconds_per_liquidity_global = if (time == state.block_timestamp_last) {
                     state.seconds_per_liquidity_global
                 } else {
-                    if (pool.liquidity == 0) {
+                    let liquidity = core.get_pool_liquidity(pool_key);
+                    if (liquidity.is_zero()) {
                         state.seconds_per_liquidity_global
                     } else {
                         state.seconds_per_liquidity_global
                             + (div(
                                 u256 { low: 0, high: (time - state.block_timestamp_last).into() },
-                                u256 { low: pool.liquidity, high: 0 },
+                                u256 { low: liquidity, high: 0 },
                                 false
                             ))
                     }
@@ -153,9 +155,9 @@ mod Oracle {
             if (time == state.block_timestamp_last) {
                 state.tick_cumulative_last
             } else {
-                let pool = self.core.read().get_pool(pool_key);
+                let price = self.core.read().get_pool_price(pool_key);
                 state.tick_cumulative_last
-                    + (pool.tick * i129 {
+                    + (price.tick * i129 {
                         mag: (time - state.block_timestamp_last).into(), sign: false
                     })
             }
@@ -221,7 +223,7 @@ mod Oracle {
         ) {
             let core = self.check_caller_is_core();
 
-            let pool = core.get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
             let state = self.pool_state.read(pool_key);
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
@@ -236,7 +238,7 @@ mod Oracle {
                     core.prev_initialized_tick(pool_key, tick, params.skip_ahead)
                 };
 
-                if ((next > pool.tick) == increasing) {
+                if ((next > price.tick) == increasing) {
                     break ();
                 }
 
@@ -258,7 +260,7 @@ mod Oracle {
                 };
             };
 
-            if (state.tick_last != pool.tick) {
+            if (state.tick_last != price.tick) {
                 // we are just updating tick last to indicate we processed all the ticks that were crossed in the swap
                 self
                     .pool_state
@@ -267,7 +269,7 @@ mod Oracle {
                         PoolState {
                             block_timestamp_last: state.block_timestamp_last,
                             tick_cumulative_last: state.tick_cumulative_last,
-                            tick_last: pool.tick,
+                            tick_last: price.tick,
                             seconds_per_liquidity_global: state.seconds_per_liquidity_global
                         }
                     );

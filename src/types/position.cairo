@@ -1,6 +1,7 @@
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 
 // Represents a liquidity position
+// Packed together in a single struct because whenever liquidity changes we typically change fees per liquidity as well
 #[derive(Copy, Drop, Serde, starknet::Store)]
 struct Position {
     // the amount of liquidity owned by the position

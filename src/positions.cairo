@@ -573,10 +573,10 @@ mod Positions {
                 .get_position(
                     pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
-            let pool = core.get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
 
             let delta = liquidity_delta_to_amount_delta(
-                sqrt_ratio: pool.sqrt_ratio,
+                sqrt_ratio: price.sqrt_ratio,
                 liquidity_delta: i129 { mag: info.liquidity, sign: true },
                 sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.lower),
                 sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
@@ -603,11 +603,11 @@ mod Positions {
 
             let info = self.get_token_info(id, pool_key, bounds);
             let core = self.core.read();
-            let pool = core.get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
 
             // compute how much liquidity we can deposit based on token balances
             let liquidity: u128 = max_liquidity(
-                pool.sqrt_ratio,
+                price.sqrt_ratio,
                 tick_to_sqrt_ratio(bounds.lower),
                 tick_to_sqrt_ratio(bounds.upper),
                 self.balance_of_token(pool_key.token0),
@@ -703,8 +703,8 @@ mod Positions {
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
             let core = self.core.read();
-            let pool = core.get_pool(pool_key);
-            if (pool.sqrt_ratio.is_zero()) {
+            let price = core.get_pool_price(pool_key);
+            if (price.sqrt_ratio.is_zero()) {
                 core.initialize_pool(pool_key, initial_tick);
             }
         }

@@ -90,8 +90,8 @@ mod MockExtension {
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
             let core = self.check_caller_is_core();
-            let pool = core.get_pool(pool_key);
-            assert(pool.sqrt_ratio.is_zero(), 'pool is not init');
+            let price = core.get_pool_price(pool_key);
+            assert(price.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(caller, 0, pool_key);
             self.get_call_points()
@@ -102,9 +102,9 @@ mod MockExtension {
             let core = self.check_caller_is_core();
             self.insert_call(caller, 1, pool_key);
 
-            let pool = core.get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
 
-            assert(pool.sqrt_ratio.is_non_zero(), 'pool is init');
+            assert(price.sqrt_ratio.is_non_zero(), 'pool is init');
         }
 
         fn before_swap(

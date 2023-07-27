@@ -38,7 +38,7 @@ fn test_maybe_initialize_pool_twice() {
     positions.maybe_initialize_pool(pool_key, Zeroable::zero());
     positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
 
-    assert(core.get_pool(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
+    assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
 }
 
 #[test]
