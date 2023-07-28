@@ -78,6 +78,13 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct CallPointsChanged {
+        pool_key: PoolKey,
+        old_call_points: u8,
+        new_call_points: u8,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct FeesWithdrawn {
         recipient: ContractAddress,
         token: ContractAddress,
@@ -96,6 +103,7 @@ mod Core {
         pool_key: PoolKey,
         initial_tick: i129,
         sqrt_ratio: u256,
+        call_points: u8,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -144,6 +152,7 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
+        CallPointsChanged: CallPointsChanged,
         FeesPaid: FeesPaid,
         FeesWithdrawn: FeesWithdrawn,
         PoolInitialized: PoolInitialized,
@@ -411,6 +420,33 @@ mod Core {
             }
         }
 
+        fn change_call_points(
+            ref self: ContractState, pool_key: PoolKey, new_call_points: CallPoints
+        ) {
+            assert(get_caller_address() == pool_key.extension, 'EXTENSION_ONLY');
+            assert(self.lock_count.read().is_zero(), 'NOT_WHILE_LOCKED');
+            let price = self.pool_price.read(pool_key);
+            assert(price.sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
+
+            self
+                .pool_price
+                .write(
+                    pool_key,
+                    PoolPrice {
+                        sqrt_ratio: price.sqrt_ratio, tick: price.tick, call_points: new_call_points
+                    }
+                );
+
+            self
+                .emit(
+                    CallPointsChanged {
+                        pool_key: pool_key,
+                        old_call_points: price.call_points.into(),
+                        new_call_points: new_call_points.into()
+                    }
+                );
+        }
+
         fn withdraw_fees_collected(
             ref self: ContractState,
             recipient: ContractAddress,
@@ -561,7 +597,12 @@ mod Core {
                 .pool_price
                 .write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick, call_points });
 
-            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
+            self
+                .emit(
+                    PoolInitialized {
+                        pool_key, initial_tick, sqrt_ratio, call_points: call_points.into()
+                    }
+                );
 
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {

@@ -1,3 +1,5 @@
+use ekubo::types::keys::{PoolKey};
+use ekubo::types::call_points::{CallPoints};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
@@ -12,21 +14,21 @@ struct ExtensionCalled {
 
 #[starknet::interface]
 trait IMockExtension<TStorage> {
+    fn change_call_points(self: @TStorage, pool_key: PoolKey, call_points: CallPoints);
     fn get_num_calls(self: @TStorage) -> u32;
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 }
 
 #[starknet::contract]
 mod MockExtension {
-    use super::{IMockExtension, ExtensionCalled, ContractAddress};
+    use super::{IMockExtension, ExtensionCalled, ContractAddress, PoolKey, CallPoints};
     use ekubo::interfaces::core::{IExtension, ICoreDispatcher, ICoreDispatcherTrait};
-    use ekubo::types::keys::{PoolKey};
     use ekubo::types::i129::i129;
     use ekubo::types::delta::{Delta};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use starknet::{get_caller_address};
     use zeroable::Zeroable;
-    use ekubo::types::call_points::{CallPoints, all_call_points};
+    use ekubo::types::call_points::{all_call_points};
     use traits::{Into, TryInto};
     use option::{OptionTrait};
     use debug::PrintTrait;
@@ -151,6 +153,10 @@ mod MockExtension {
 
     #[external(v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
+        fn change_call_points(self: @ContractState, pool_key: PoolKey, call_points: CallPoints) {
+            self.core.read().change_call_points(pool_key, call_points);
+        }
+
         fn get_num_calls(self: @ContractState) -> u32 {
             self.num_calls.read()
         }

@@ -167,6 +167,12 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
     ) -> (i129, bool);
 
+    // Update the call points for a given pool key. This can only happen if all of the following are true:
+    // - The pool must be initialized
+    // - There must be no active locks
+    // - The caller of this function must be the extension of the specified pool key
+    fn change_call_points(ref self: TStorage, pool_key: PoolKey, new_call_points: CallPoints);
+
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_fees_collected(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
