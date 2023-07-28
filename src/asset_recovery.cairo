@@ -5,7 +5,6 @@ trait IAssetRecovery<TStorage> {
     fn recover(ref self: TStorage, token: IERC20Dispatcher);
 }
 
-
 #[starknet::contract]
 mod AssetRecovery {
     use super::{IERC20Dispatcher, IAssetRecovery};
@@ -24,4 +23,3 @@ mod AssetRecovery {
         }
     }
 }
-

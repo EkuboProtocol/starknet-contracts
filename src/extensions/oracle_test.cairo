@@ -41,10 +41,10 @@ fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDis
 fn test_before_initialize_call_points() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 3, sign: true });
 
-    let pool = core.get_pool(key);
+    let price = core.get_pool_price(key);
 
     assert(
-        pool.call_points == CallPoints {
+        price.call_points == CallPoints {
             after_initialize_pool: false,
             before_swap: true,
             after_swap: true,
@@ -80,9 +80,9 @@ fn deposit(
     let token_id = positions
         .mint(recipient: get_contract_address(), pool_key: pool_key, bounds: bounds, );
 
-    let pool = core.get_pool(pool_key);
+    let price = core.get_pool_price(pool_key);
     let delta = liquidity_delta_to_amount_delta(
-        pool.sqrt_ratio,
+        price.sqrt_ratio,
         i129 { mag: min_liquidity, sign: false },
         tick_to_sqrt_ratio(bounds.lower),
         tick_to_sqrt_ratio(bounds.upper)
