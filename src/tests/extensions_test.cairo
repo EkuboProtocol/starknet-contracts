@@ -373,6 +373,51 @@ fn test_mock_extension_before_update_position_only() {
 
 #[test]
 #[available_gas(30000000)]
+fn test_mock_extension_after_update_position_only() {
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0,
+        tick_spacing: 1,
+        call_points: CallPoints {
+            after_initialize_pool: false,
+            before_swap: false,
+            after_swap: false,
+            before_update_position: false,
+            after_update_position: true,
+        }
+    );
+
+    core.initialize_pool(pool_key, Zeroable::zero());
+    let delta = update_position_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        bounds: Default::default(),
+        liquidity_delta: Zeroable::zero(),
+        recipient: Zeroable::zero(),
+    );
+    assert(delta.is_zero(), 'no change');
+    let delta = swap_inner(
+        core: core,
+        pool_key: pool_key,
+        locker: locker,
+        amount: i129 { mag: 1, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0,
+    );
+    assert(delta.is_zero(), 'no change');
+
+    assert(mock.get_num_calls() == 2, '2 call made');
+
+    let call = mock.get_call(1);
+    assert(call.caller == locker.contract_address, 'caller');
+    assert(call.call_point == 5, 'called');
+    check_matches_pool_key(call, pool_key);
+}
+
+#[test]
+#[available_gas(30000000)]
 #[should_panic(expected: ('POOL_NOT_INITIALIZED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
 fn test_change_call_points_from_extension_fails_not_initialized() {
     let (core, mock, extension, locker, pool_key) = setup(
