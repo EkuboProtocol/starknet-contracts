@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash};
-use ekubo::types::pool::{Pool};
+use ekubo::types::pool_price::{PoolPrice};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
@@ -38,14 +39,14 @@ struct SwapParameters {
 }
 
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
-// Note you should not rely on fee growth inside for consistency across calls, since it also is used to track accumulated fees over time
+// Note you should not rely on fees per liquidity inside to be consistent across calls, since it also is used to track accumulated fees over time
 #[derive(Copy, Drop, Serde)]
 struct GetPositionResult {
     liquidity: u128,
     fees0: u128,
     fees1: u128,
-    fee_growth_inside_token0: u256,
-    fee_growth_inside_token1: u256,
+    // the current value of fees per liquidity inside is required to compute the fees, so it is also returned to save computation
+    fees_per_liquidity_inside_current: FeesPerLiquidity,
 }
 
 // The current state of the queried locker
@@ -54,6 +55,17 @@ struct LockerState {
     address: ContractAddress,
     nonzero_delta_count: u32
 }
+
+
+// The aggregated information of a pool returned by each of the pool getters, for efficiency in cases
+// where you need to know all the information about a pool
+#[derive(Copy, Drop, Serde)]
+struct GetPoolResult {
+    price: PoolPrice,
+    liquidity: u128,
+    fees_per_liquidity: FeesPerLiquidity,
+}
+
 
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
 #[starknet::interface]
@@ -99,6 +111,9 @@ trait IExtension<TStorage> {
 
 #[starknet::interface]
 trait ICore<TStorage> {
+    // Sets the contract to withdrawals only mode, thus preventing any new capital being sent to the contract
+    fn set_withdrawal_only_mode(ref self: TStorage);
+
     // Get the amount of withdrawal fees collected for the protocol
     fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
@@ -106,15 +121,27 @@ trait ICore<TStorage> {
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
 
     // Get the current state of the given pool
-    fn get_pool(self: @TStorage, pool_key: PoolKey) -> Pool;
+    fn get_pool(self: @TStorage, pool_key: PoolKey) -> GetPoolResult;
 
-    // Get the fee growth inside for a given tick range
-    fn get_pool_fee_growth_inside(
+    // Get the price of the pool
+    fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;
+
+    // Get the liquidity of the pool
+    fn get_pool_liquidity(self: @TStorage, pool_key: PoolKey) -> u128;
+
+    // Get the current all-time fees per liquidity for the pool
+    fn get_pool_fees(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
+
+    // Get the fees per liquidity inside a given tick range for a pool
+    fn get_fees_per_liquidity_inside(
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
-    ) -> (u256, u256);
+    ) -> FeesPerLiquidity;
 
     // Get the state of a given tick for the given pool
     fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
+
+    // Get the fees on the other side of the tick from the current tick
+    fn get_tick_fees_outside(self: @TStorage, pool_key: PoolKey, index: i129) -> FeesPerLiquidity;
 
     // Get the state of a given position for the given pool
     fn get_position(

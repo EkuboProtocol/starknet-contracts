@@ -3,7 +3,7 @@ use ekubo::types::keys::{PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 
-#[derive(Copy, Drop, Serde, storage_access::StorageAccess)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct TokenInfo {
     key_hash: felt252,
     liquidity: u128,

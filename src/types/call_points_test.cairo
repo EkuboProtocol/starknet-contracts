@@ -1,5 +1,6 @@
 use ekubo::types::call_points::{CallPoints, all_call_points};
-use traits::Into;
+use traits::{Into, TryInto};
+use option::{Option, OptionTrait};
 
 #[test]
 fn test_default_call_points_into_u8() {
@@ -13,35 +14,41 @@ fn test_all_call_points_into_u8() {
 
 #[test]
 fn test_u8_empty_into_default_call_points() {
-    assert(0_u8.into() == Default::<CallPoints>::default(), 'all');
+    assert(
+        TryInto::<u8, CallPoints>::try_into(0_u8).unwrap() == Default::<CallPoints>::default(),
+        'none'
+    );
 }
 
 #[test]
-fn test_u8_max_into_all_call_points() {
-    assert(255_u8.into() == all_call_points(), 'all');
+fn test_u8_max_cannot_convert() {
+    assert(TryInto::<u8, CallPoints>::try_into(255_u8).is_none(), 'max value');
 }
 
 #[test]
 fn test_u8_into_all_call_points() {
-    assert(248_u8.into() == all_call_points(), 'all');
+    assert(TryInto::<u8, CallPoints>::try_into(248_u8).unwrap() == all_call_points(), 'all');
 }
 
 #[test]
-fn test_lower_bits_are_ignored() {
-    assert(7_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(6_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(5_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(4_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(3_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(2_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(1_u8.into() == Default::<CallPoints>::default(), 'none');
-    assert(0_u8.into() == Default::<CallPoints>::default(), 'none');
+#[available_gas(1000000)]
+fn test_lower_bits_result_in_none() {
+    let mut i = 7_u8;
+    loop {
+        assert(TryInto::<u8, CallPoints>::try_into(i).is_none(), 'lower bits');
+
+        if (i == 1) {
+            break ();
+        };
+
+        i -= 1;
+    };
 }
 
 #[test]
 fn test_u8_into_after_initialize_call_points() {
     assert(
-        128_u8.into() == CallPoints {
+        TryInto::<u8, CallPoints>::try_into(128).unwrap() == CallPoints {
             after_initialize_pool: true,
             before_swap: false,
             after_swap: false,
@@ -56,7 +63,7 @@ fn test_u8_into_after_initialize_call_points() {
 #[test]
 fn test_u8_into_before_swap_call_points() {
     assert(
-        64_u8.into() == CallPoints {
+        TryInto::<u8, CallPoints>::try_into(64).unwrap() == CallPoints {
             after_initialize_pool: false,
             before_swap: true,
             after_swap: false,
@@ -71,7 +78,7 @@ fn test_u8_into_before_swap_call_points() {
 #[test]
 fn test_u8_into_after_swap_call_points() {
     assert(
-        32_u8.into() == CallPoints {
+        TryInto::<u8, CallPoints>::try_into(32).unwrap() == CallPoints {
             after_initialize_pool: false,
             before_swap: false,
             after_swap: true,
@@ -85,7 +92,7 @@ fn test_u8_into_after_swap_call_points() {
 #[test]
 fn test_u8_into_before_update_position_call_points() {
     assert(
-        16_u8.into() == CallPoints {
+        TryInto::<u8, CallPoints>::try_into(16).unwrap() == CallPoints {
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
@@ -99,7 +106,7 @@ fn test_u8_into_before_update_position_call_points() {
 #[test]
 fn test_u8_into_after_update_position_call_points() {
     assert(
-        8_u8.into() == CallPoints {
+        TryInto::<u8, CallPoints>::try_into(8).unwrap() == CallPoints {
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
@@ -111,12 +118,12 @@ fn test_u8_into_after_update_position_call_points() {
 }
 
 #[test]
-#[available_gas(3000000000)]
+#[available_gas(300000000)]
 fn test_conversion_all_possible_values() {
     let mut i: u128 = 0;
 
     loop {
-        if (i == 256) {
+        if (i == 32) {
             break ();
         };
 
@@ -129,18 +136,8 @@ fn test_conversion_all_possible_values() {
         };
 
         let mut converted: u8 = call_points.into();
-        // these values are ignored but we should try them
-        if ((i & 128) != 0) {
-            converted += 4;
-        }
-        if ((i & 64) != 0) {
-            converted += 2;
-        }
-        if ((i & 32) != 0) {
-            converted += 1;
-        }
 
-        let round_tripped: CallPoints = converted.into();
+        let round_tripped: CallPoints = TryInto::<u8, CallPoints>::try_into(converted).unwrap();
 
         assert(round_tripped == call_points, 'round trip');
 

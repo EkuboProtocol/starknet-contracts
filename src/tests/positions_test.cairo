@@ -7,14 +7,15 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
 use ekubo::types::keys::{PoolKey};
-use ekubo::math::ticks::{constants as tick_constants};
+use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
-    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher, core_owner
+    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher,
+    core_owner, SetupPoolResult
 };
 use array::ArrayTrait;
 use option::OptionTrait;
@@ -37,7 +38,7 @@ fn test_maybe_initialize_pool_twice() {
     positions.maybe_initialize_pool(pool_key, Zeroable::zero());
     positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
 
-    assert(core.get_pool(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
+    assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
 }
 
 #[test]
@@ -639,7 +640,7 @@ fn test_deposit_then_withdraw_with_fees() {
 }
 
 #[test]
-#[available_gas(80000000)]
+#[available_gas(100000000)]
 fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -856,4 +857,513 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+}
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_liquidity_updates_tick_states_at_bounds() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    let recipient = contract_address_const::<80085>();
+
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+    let mut tick_lower_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: true });
+    let mut tick_upper_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: false });
+    assert(
+        tick_upper_state.liquidity_delta == i129 { mag: liquidity, sign: true },
+        'upper.liquidity_delta'
+    );
+    assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
+    assert(
+        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false }).is_zero(),
+        'upper.fees'
+    );
+
+    assert(
+        tick_lower_state.liquidity_delta == i129 { mag: liquidity, sign: false },
+        'lower.liquidity_delta'
+    );
+    assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
+    assert(
+        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true }).is_zero(),
+        'lower.fees'
+    );
+}
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_swap_through_upper_tick_fees_accounting() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    let recipient = contract_address_const::<80085>();
+
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity before');
+    assert(info.amount0 == 9999, 'amount0 before');
+    assert(info.amount1 == 9999, 'amount1 before');
+    assert(info.fees0 == 0, 'fees0 before');
+    assert(info.fees1 == 0, 'fees1 before');
+
+    setup.token1.increase_balance(setup.locker.contract_address, 10010);
+    let delta_swap = swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: true },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    assert(delta_swap.amount0 == i129 { mag: 10000, sign: true }, 'first swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 10000, sign: false }, 'first swap delta1');
+
+    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity after');
+    assert(info.amount0 == 0, 'amount0 after');
+    assert(info.amount1 == 20000, 'amount1 after');
+    assert(info.fees0 == 99, 'fees0 after');
+    assert(info.fees1 == 0, 'fees1 after');
+}
+
+#[test]
+#[available_gas(80000000)]
+fn test_deposit_swap_through_lower_tick_fees_accounting() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    let recipient = contract_address_const::<80085>();
+
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity before');
+    assert(info.amount0 == 9999, 'amount0 before');
+    assert(info.amount1 == 9999, 'amount1 before');
+    assert(info.fees0 == 0, 'fees0 before');
+    assert(info.fees1 == 0, 'fees1 before');
+
+    setup.token0.increase_balance(setup.locker.contract_address, 10010);
+    let delta_swap = swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: true },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    assert(delta_swap.amount0 == i129 { mag: 10000, sign: false }, 'swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 10000, sign: true }, 'swap delta1');
+
+    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity after');
+    assert(info.amount0 == 20000, 'amount0 after');
+    assert(info.amount1 == 0, 'amount1 after');
+    assert(info.fees0 == 0, 'fees0 after');
+    assert(info.fees1 == 99, 'fees1 after');
+}
+
+#[test]
+#[available_gas(100000000)]
+fn test_deposit_swap_round_trip_accounting() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+    };
+    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+
+    let recipient = contract_address_const::<80085>();
+
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    let liquidity = positions
+        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity before');
+    assert(info.amount0 == 9999, 'amount0 before');
+    assert(info.amount1 == 9999, 'amount1 before');
+    assert(info.fees0 == 0, 'fees0 before');
+    assert(info.fees1 == 0, 'fees1 before');
+
+    setup.token0.increase_balance(setup.locker.contract_address, 99999999);
+    setup.token1.increase_balance(setup.locker.contract_address, 99999999);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+
+    assert(info.liquidity == liquidity, 'liquidity after');
+    assert(info.amount0 == 9999, 'amount0 after');
+    assert(info.amount1 == 9999, 'amount1 after');
+    assert(info.fees0 == 200, 'fees0 after');
+    assert(info.fees1 == 200, 'fees1 after');
+
+    let (amount0, amount1) = positions
+        .withdraw(
+            token_id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: 0,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: true,
+            recipient: recipient,
+        );
+
+    assert(amount0 == 200, 'amount0 withdrawn');
+    assert(amount1 == 200, 'amount1 withdrawn');
+    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    assert(info.liquidity == liquidity, 'liquidity after');
+    assert(info.amount0 == 9999, 'amount0 after');
+    assert(info.amount1 == 9999, 'amount1 after');
+    assert(info.fees0 == 0, 'fees0 withdrawn');
+    assert(info.fees1 == 0, 'fees1 withdrawn');
+}
+
+#[derive(Copy, Drop)]
+struct CreatePositionResult {
+    id: u256,
+    bounds: Bounds,
+    liquidity: u128,
+}
+
+fn create_position(
+    setup: SetupPoolResult,
+    positions: IPositionsDispatcher,
+    bounds: Bounds,
+    amount0: u128,
+    amount1: u128
+) -> CreatePositionResult {
+    let token_id = positions.mint(get_contract_address(), pool_key: setup.pool_key, bounds: bounds);
+    setup.token0.set_balance(positions.contract_address, amount0.into());
+    setup.token1.set_balance(positions.contract_address, amount1.into());
+
+    let liquidity = positions
+        .deposit(token_id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    CreatePositionResult { id: token_id, bounds, liquidity }
+}
+
+#[test]
+#[available_gas(1000000000)]
+fn test_deposit_swap_multiple_positions() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+    let p1 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        0
+    );
+    let p2 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 0, sign: false } },
+        0,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let p0_info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    let p1_info = positions.get_position_info(p1.id, setup.pool_key, p1.bounds);
+    let p2_info = positions.get_position_info(p2.id, setup.pool_key, p2.bounds);
+
+    assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
+    assert(p0_info.amount0 == 9999, 'p0 amount0');
+    assert(p0_info.amount1 == 9999, 'p0 amount1');
+    assert(p0_info.fees0 == 200, 'p0 fees0');
+    assert(p0_info.fees1 == 200, 'p0 fees1');
+
+    assert(p1_info.liquidity == p1.liquidity, 'p1 liquidity');
+    assert(p1_info.amount0 == 9999, 'p1 amount0');
+    assert(p1_info.amount1 == 0, 'p1 amount1');
+    assert(p1_info.fees0 == 99, 'p1 fees0');
+    assert(p1_info.fees1 == 100, 'p1 fees1');
+
+    assert(p2_info.liquidity == p2.liquidity, 'p2 liquidity');
+    assert(p2_info.amount0 == 0, 'p2 amount0');
+    assert(p2_info.amount1 == 9999, 'p2 amount1');
+    assert(p2_info.fees0 == 100, 'p2 fees0');
+    assert(p2_info.fees1 == 99, 'p2 fees1');
+}
+
+#[test]
+#[available_gas(1000000000)]
+#[should_panic(
+    expected: (
+        'MUST_COLLECT_FEES',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_withdraw_not_collected_fees_token1() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+}
+
+#[test]
+#[available_gas(1000000000)]
+#[should_panic(
+    expected: (
+        'MUST_COLLECT_FEES',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_withdraw_not_collected_fees_token0() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+}
+
+
+#[test]
+#[available_gas(1000000000)]
+fn test_withdraw_partial_leave_fees() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            token_id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: (p0.liquidity / 3),
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: false,
+            recipient: contract_address_const::<80085>(),
+        );
+
+    let info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    assert(info.liquidity == (p0.liquidity - (p0.liquidity / 3)), 'liquidity');
+    assert(info.amount0 == 13333, 'amount0'); // 2/3 of 20k
+    assert(info.amount1 == 0, 'amount1');
+    assert(info.fees0 == 99, 'fees0'); // 1% of 10k
+    assert(info.fees1 == 0, 'fees1');
 }

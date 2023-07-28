@@ -2,9 +2,7 @@ use array::ArrayTrait;
 use debug::PrintTrait;
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
-use starknet::storage_access::{
-    StorageAccess, SyscallResult, StorageBaseAddress, storage_address_from_base_and_offset
-};
+use starknet::storage_access::{StorePacking};
 use hash::LegacyHash;
 use integer::{u128_safe_divmod, u128_as_non_zero};
 use zeroable::Zeroable;
@@ -45,6 +43,33 @@ impl i129PrintTrait of PrintTrait<i129> {
     }
 }
 
+impl u128IntoI129 of Into<u128, i129> {
+    fn into(self: u128) -> i129 {
+        i129 { mag: self, sign: false }
+    }
+}
+
+impl i129TryIntoU128 of TryInto<i129, u128> {
+    fn try_into(self: i129) -> Option<u128> {
+        if (self.sign & (self.mag != 0)) {
+            Option::None(())
+        } else {
+            Option::Some(self.mag)
+        }
+    }
+}
+
+#[generate_trait]
+impl AddDeltaImpl of AddDeltaTrait {
+    fn add(self: u128, delta: i129) -> u128 {
+        (self.into() + delta).try_into().expect('ADD_DELTA')
+    }
+
+    fn sub(self: u128, delta: i129) -> u128 {
+        (self.into() - delta).try_into().expect('SUB_DELTA')
+    }
+}
+
 impl i129LegacyHash of LegacyHash<i129> {
     fn hash(state: felt252, value: i129) -> felt252 {
         let mut hashable: felt252 = value.mag.into();
@@ -56,45 +81,21 @@ impl i129LegacyHash of LegacyHash<i129> {
     }
 }
 
-impl i129StorageAccess of StorageAccess<i129> {
-    fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<i129> {
-        StorageAccess::<i129>::read_at_offset_internal(address_domain, base, 0_u8)
+impl i129StorePacking of StorePacking<i129, u128> {
+    fn pack(value: i129) -> u128 {
+        assert(value.mag < 0x80000000000000000000000000000000, 'i129_store_overflow');
+        if (value.sign & (value.mag != 0)) {
+            0x80000000000000000000000000000000 + value.mag
+        } else {
+            value.mag
+        }
     }
-    fn write(address_domain: u32, base: StorageBaseAddress, value: i129) -> SyscallResult<()> {
-        StorageAccess::<i129>::write_at_offset_internal(address_domain, base, 0_u8, value.into())
-    }
-    fn read_at_offset_internal(
-        address_domain: u32, base: StorageBaseAddress, offset: u8
-    ) -> SyscallResult<i129> {
-        let x: u128 = StorageAccess::<u128>::read_at_offset_internal(address_domain, base, offset)?;
-
-        Result::Ok(
-            if x >= 0x80000000000000000000000000000000 {
-                i129_new(x - 0x80000000000000000000000000000000, true)
-            } else {
-                i129_new(x, false)
-            }
-        )
-    }
-    fn write_at_offset_internal(
-        address_domain: u32, base: StorageBaseAddress, offset: u8, value: i129
-    ) -> SyscallResult<()> {
-        // i129 is limited to 127 bits and we use the most significant bit to store the sign in storage
-        assert(value.mag < 0x80000000000000000000000000000000, 'i129_storage_overflow');
-
-        StorageAccess::<u128>::write_at_offset_internal(
-            address_domain,
-            base,
-            offset,
-            if (value.sign & (value.mag != 0)) {
-                0x80000000000000000000000000000000 + value.mag
-            } else {
-                value.mag
-            }
-        )
-    }
-    fn size_internal(value: i129) -> u8 {
-        StorageAccess::<u128>::size_internal(0xffffffffffffffffffffffffffffffff)
+    fn unpack(value: u128) -> i129 {
+        if value >= 0x80000000000000000000000000000000 {
+            i129_new(value - 0x80000000000000000000000000000000, true)
+        } else {
+            i129_new(value, false)
+        }
     }
 }
 

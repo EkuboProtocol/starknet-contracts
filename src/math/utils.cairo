@@ -1,4 +1,3 @@
-use ekubo::types::i129::i129;
 use integer::{u256_overflow_sub, u256_from_felt252, u128_wrapping_sub};
 use starknet::{ContractAddress, ContractAddressIntoFelt252};
 
@@ -6,13 +5,6 @@ use starknet::{ContractAddress, ContractAddressIntoFelt252};
 fn unsafe_sub(x: u256, y: u256) -> u256 {
     let (res, _) = u256_overflow_sub(x, y);
     res
-}
-
-#[inline(always)]
-fn add_delta(x: u128, y: i129) -> u128 {
-    let sum = i129 { mag: x, sign: false } + y;
-    assert((sum.mag == 0) | !sum.sign, 'DELTA_UNDERFLOW');
-    sum.mag
 }
 
 // Allows comparing contract addresses as if they are integers

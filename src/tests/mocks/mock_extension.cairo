@@ -1,6 +1,6 @@
 use starknet::{ContractAddress};
 
-#[derive(Drop, Copy, Serde, storage_access::StorageAccess)]
+#[derive(Drop, Copy, Serde, starknet::Store)]
 struct ExtensionCalled {
     caller: ContractAddress,
     call_point: u32,
@@ -27,7 +27,8 @@ mod MockExtension {
     use starknet::{get_caller_address};
     use zeroable::Zeroable;
     use ekubo::types::call_points::{CallPoints, all_call_points};
-    use traits::{Into};
+    use traits::{Into, TryInto};
+    use option::{OptionTrait};
     use debug::PrintTrait;
 
     #[storage]
@@ -42,7 +43,7 @@ mod MockExtension {
     #[generate_trait]
     impl InternalMethods of InternalTrait {
         fn get_call_points(self: @ContractState) -> CallPoints {
-            self.call_points.read().into()
+            TryInto::<u8, CallPoints>::try_into(self.call_points.read()).unwrap()
         }
 
         fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
@@ -90,8 +91,8 @@ mod MockExtension {
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
             let core = self.check_caller_is_core();
-            let pool = core.get_pool(pool_key);
-            assert(pool.sqrt_ratio.is_zero(), 'pool is not init');
+            let price = core.get_pool_price(pool_key);
+            assert(price.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(caller, 0, pool_key);
             self.get_call_points()
@@ -102,9 +103,9 @@ mod MockExtension {
             let core = self.check_caller_is_core();
             self.insert_call(caller, 1, pool_key);
 
-            let pool = core.get_pool(pool_key);
+            let price = core.get_pool_price(pool_key);
 
-            assert(pool.sqrt_ratio.is_non_zero(), 'pool is init');
+            assert(price.sqrt_ratio.is_non_zero(), 'pool is init');
         }
 
         fn before_swap(

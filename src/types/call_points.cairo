@@ -1,5 +1,7 @@
 use core::array::ArrayTrait;
 use serde::Serde;
+use starknet::storage_access::{StorePacking};
+use traits::{Into};
 
 // The points at which an extension should be called
 #[derive(Copy, Drop, Serde)]
@@ -70,9 +72,8 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
     }
 }
 
-impl U8IntoCallPoints of Into<u8, CallPoints> {
-    fn into(mut self: u8) -> CallPoints {
-        // these are unused, but we need to remove them from the u8 and this is cheaper than masking
+impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
+    fn try_into(mut self: u8) -> Option<CallPoints> {
         let after_initialize_pool = if (self >= 128) {
             self -= 128;
             true
@@ -101,19 +102,25 @@ impl U8IntoCallPoints of Into<u8, CallPoints> {
             false
         };
 
-        let after_update_position = if (self >= 8) {
+        let after_update_position = if (self == 8) {
             self -= 8;
             true
         } else {
             false
         };
 
-        CallPoints {
-            after_initialize_pool,
-            before_swap,
-            after_swap,
-            before_update_position,
-            after_update_position,
+        if (self == 0) {
+            Option::Some(
+                CallPoints {
+                    after_initialize_pool,
+                    before_swap,
+                    after_swap,
+                    before_update_position,
+                    after_update_position,
+                }
+            )
+        } else {
+            Option::None(())
         }
     }
 }

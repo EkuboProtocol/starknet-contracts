@@ -1,8 +1,8 @@
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::{i129, AddDeltaTrait};
 use traits::{Into};
 use zeroable::Zeroable;
 use option::{Option, OptionTrait};
-use starknet::storage_access::{storage_base_address_const, StorageAccess};
+use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
 
 
@@ -116,122 +116,119 @@ fn test_mul_positive_negative() {
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_1() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 1, sign: false }, 'read==write');
+fn test_store_write_read_1() {
+    let packed = StorePacking::<i129, u128>::pack(i129 { mag: 1, sign: false });
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == i129 { mag: 1, sign: false }, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_negative_1() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 1, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 1, sign: true }, 'read==write');
+fn test_store_write_read_negative_1() {
+    let value = i129 { mag: 1, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_0() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+fn test_store_write_read_0() {
+    let value = i129 { mag: 0, sign: false };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_negative_0() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8, value: i129 { mag: 0, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0, sign: false }, 'read==write');
+fn test_store_write_read_negative_0() {
+    let value = i129 { mag: 0, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_max_value() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }, 'read==write');
+fn test_store_write_read_max_value() {
+    let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-fn test_storage_access_write_read_min_value() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }
-    )
-        .unwrap_syscall();
-    let read = StorageAccess::<i129>::read_at_offset_internal(
-        address_domain: 0, base: base, offset: 0_u8
-    )
-        .unwrap_syscall();
-    assert(read == i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }, 'read==write');
+fn test_store_write_read_min_value() {
+    let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true };
+    let packed = StorePacking::<i129, u128>::pack(value);
+    let unpacked = StorePacking::<i129, u128>::unpack(packed);
+    assert(unpacked == value, 'read==write');
 }
 
 #[test]
 #[available_gas(3000000)]
-#[should_panic(expected: ('i129_storage_overflow', ))]
-fn test_storage_access_write_min_value_minus_one() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x80000000000000000000000000000000, sign: true }
+#[should_panic(expected: ('i129_store_overflow', ))]
+fn test_store_write_min_value_minus_one() {
+    StorePacking::<i129, u128>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: true });
+}
+
+#[test]
+#[available_gas(3000000)]
+#[should_panic(expected: ('i129_store_overflow', ))]
+fn test_store_write_max_value_plus_one() {
+    StorePacking::<i129, u128>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: false });
+}
+
+
+#[test]
+fn test_add_delta_no_overflow() {
+    assert(1.add(i129 { mag: 1, sign: false }) == 2, '1+1');
+    assert(1.add(i129 { mag: 1, sign: true }) == 0, '1-1');
+    assert(1.add(i129 { mag: 2, sign: false }) == 3, '1+2');
+    assert(
+        0xfffffffffffffffffffffffffffffffe
+            .add(i129 { mag: 1, sign: false }) == 0xffffffffffffffffffffffffffffffff,
+        'max-1 +1'
+    );
+    assert(
+        0xffffffffffffffffffffffffffffffff
+            .add(Zeroable::zero()) == 0xffffffffffffffffffffffffffffffff,
+        'max+0'
     );
 }
 
 #[test]
-#[available_gas(3000000)]
-#[should_panic(expected: ('i129_storage_overflow', ))]
-fn test_storage_access_write_max_value_plus_one() {
-    let base = storage_base_address_const::<0>();
-    let write = StorageAccess::<i129>::write_at_offset_internal(
-        address_domain: 0,
-        base: base,
-        offset: 0_u8,
-        value: i129 { mag: 0x80000000000000000000000000000000, sign: false }
+#[should_panic(expected: ('ADD_DELTA', ))]
+fn test_add_delta_panics_underflow() {
+    1.add(i129 { mag: 2, sign: true });
+}
+
+#[test]
+#[should_panic(expected: ('ADD_DELTA', ))]
+fn test_add_delta_panics_underflow_max() {
+    0xfffffffffffffffffffffffffffffffe
+        .add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true });
+}
+
+#[test]
+fn test_add_delta_max_inputs() {
+    assert(
+        0xffffffffffffffffffffffffffffffff
+            .add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }) == 0,
+        'max-max'
     );
+}
+
+#[test]
+#[should_panic(expected: ('u128_add Overflow', ))]
+fn test_add_delta_panics_overflow() {
+    0xffffffffffffffffffffffffffffffff.add(i129 { mag: 1, sign: false });
+}
+
+#[test]
+#[should_panic(expected: ('u128_add Overflow', ))]
+fn test_add_delta_panics_overflow_reverse() {
+    1.add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false });
 }
