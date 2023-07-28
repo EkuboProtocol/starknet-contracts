@@ -96,6 +96,7 @@ mod Core {
         pool_key: PoolKey,
         initial_tick: i129,
         sqrt_ratio: u256,
+        call_points: u8,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -561,7 +562,12 @@ mod Core {
                 .pool_price
                 .write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick, call_points });
 
-            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
+            self
+                .emit(
+                    PoolInitialized {
+                        pool_key, initial_tick, sqrt_ratio, call_points: call_points.into()
+                    }
+                );
 
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher {
