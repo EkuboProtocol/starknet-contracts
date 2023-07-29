@@ -81,20 +81,20 @@ impl i129LegacyHash of LegacyHash<i129> {
     }
 }
 
-impl i129StorePacking of StorePacking<i129, u128> {
-    fn pack(value: i129) -> u128 {
+impl i129StorePacking of StorePacking<i129, felt252> {
+    fn pack(value: i129) -> felt252 {
         assert(value.mag < 0x80000000000000000000000000000000, 'i129_store_overflow');
-        if (value.sign & (value.mag != 0)) {
-            0x80000000000000000000000000000000 + value.mag
+        if (value.sign) {
+            -value.mag.into()
         } else {
-            value.mag
+            value.mag.into()
         }
     }
-    fn unpack(value: u128) -> i129 {
-        if value >= 0x80000000000000000000000000000000 {
-            i129_new(value - 0x80000000000000000000000000000000, true)
+    fn unpack(value: felt252) -> i129 {
+        if value.into() >= 0x80000000000000000000000000000000_u256 {
+            i129_new((-value).try_into().unwrap(), true)
         } else {
-            i129_new(value, false)
+            i129_new(value.try_into().unwrap(), false)
         }
     }
 }
