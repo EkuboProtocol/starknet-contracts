@@ -120,7 +120,7 @@ mod initialize_pool_tests {
         let (price, liquidity, fees_per_liquidity) = (
             core.get_pool_price(pool_key),
             core.get_pool_liquidity(pool_key),
-            core.get_pool_fees(pool_key)
+            core.get_pool_fees_per_liquidity(pool_key)
         );
         assert(
             price.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
@@ -1052,7 +1052,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1088,7 +1088,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1122,7 +1122,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is max');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1156,7 +1156,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1190,7 +1190,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1238,7 +1238,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.sqrt_ratio == u256 { low: 340282030041728722151939677011487970083, high: 0 },
@@ -1295,7 +1295,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
@@ -1358,7 +1358,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1416,7 +1416,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1470,7 +1470,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
@@ -1527,7 +1527,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.sqrt_ratio == u256 { low: 340282023235747873315526509423414705370, high: 0 },
@@ -1588,7 +1588,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1646,7 +1646,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1735,7 +1735,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.tick == i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true },
@@ -1828,7 +1828,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
             price.tick == i129 { mag: (tick_constants::TICKS_IN_ONE_PERCENT * 5) - 1, sign: false },

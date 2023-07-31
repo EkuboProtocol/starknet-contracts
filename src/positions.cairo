@@ -546,6 +546,10 @@ mod Positions {
             u256 { low: id.into(), high: 0 }
         }
 
+        fn mint_self(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u256 {
+            self.mint(get_caller_address(), pool_key, bounds)
+        }
+
         fn burn(ref self: ContractState, token_id: u256) {
             let id = validate_token_id(token_id);
             let owner = self.owners.read(id);
@@ -583,6 +587,7 @@ mod Positions {
             );
 
             GetPositionInfoResult {
+                pool_price: price,
                 liquidity: info.liquidity,
                 amount0: delta.amount0.mag,
                 amount1: delta.amount1.mag,
@@ -686,6 +691,29 @@ mod Positions {
             (delta.amount0.mag, delta.amount1.mag)
         }
 
+        fn withdraw_self(
+            ref self: ContractState,
+            token_id: u256,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            liquidity: u128,
+            min_token0: u128,
+            min_token1: u128,
+            collect_fees: bool
+        ) -> (u128, u128) {
+            self
+                .withdraw(
+                    token_id,
+                    pool_key,
+                    bounds,
+                    liquidity,
+                    min_token0,
+                    min_token1,
+                    collect_fees,
+                    get_caller_address()
+                )
+        }
+
         fn clear(
             ref self: ContractState, token: ContractAddress, recipient: ContractAddress
         ) -> u256 {
@@ -697,7 +725,7 @@ mod Positions {
             balance
         }
 
-        fn refund(ref self: ContractState, token: ContractAddress) -> u256 {
+        fn clear_self(ref self: ContractState, token: ContractAddress) -> u256 {
             self.clear(token, get_caller_address())
         }
 

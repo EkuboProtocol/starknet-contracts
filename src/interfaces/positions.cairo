@@ -1,5 +1,6 @@
 use starknet::{ContractAddress};
 use ekubo::types::keys::{PoolKey};
+use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 
@@ -11,6 +12,7 @@ struct TokenInfo {
 
 #[derive(Copy, Drop, Serde)]
 struct GetPositionInfoResult {
+    pool_price: PoolPrice,
     liquidity: u128,
     amount0: u128,
     amount1: u128,
@@ -36,6 +38,9 @@ trait IPositions<TStorage> {
     fn mint(
         ref self: TStorage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
     ) -> u256;
+
+    // Mint a new position to self, same as above but without a recipient parameter
+    fn mint_self(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
 
     // Delete the NFT. The NFT must have zero liquidity. Must be called by an operator, approved address or the owner
     fn burn(ref self: TStorage, token_id: u256);
@@ -63,9 +68,21 @@ trait IPositions<TStorage> {
         recipient: ContractAddress
     ) -> (u128, u128);
 
+    // Same as above without a recipient parameter
+    fn withdraw_self(
+        ref self: TStorage,
+        token_id: u256,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        liquidity: u128,
+        min_token0: u128,
+        min_token1: u128,
+        collect_fees: bool
+    ) -> (u128, u128);
+
     // Clear the balance held by this contract. Used for collecting remaining tokens after doing a deposit, or collecting withdrawn tokens/fees
     fn clear(ref self: TStorage, token: ContractAddress, recipient: ContractAddress) -> u256;
 
-    // Clear to the caller, i.e. refund any extra tokens from sender
-    fn refund(ref self: TStorage, token: ContractAddress) -> u256;
+    // Clear back to the caller, same as above but without a recipient parameter
+    fn clear_self(ref self: TStorage, token: ContractAddress) -> u256;
 }

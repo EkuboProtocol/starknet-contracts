@@ -104,7 +104,7 @@ trait ICore<TStorage> {
     fn set_withdrawal_only_mode(ref self: TStorage);
 
     // Get the amount of withdrawal fees collected for the protocol
-    fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
+    fn get_protocol_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
@@ -116,18 +116,20 @@ trait ICore<TStorage> {
     fn get_pool_liquidity(self: @TStorage, pool_key: PoolKey) -> u128;
 
     // Get the current all-time fees per liquidity for the pool
-    fn get_pool_fees(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
+    fn get_pool_fees_per_liquidity(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
 
     // Get the fees per liquidity inside a given tick range for a pool
-    fn get_fees_per_liquidity_inside(
+    fn get_pool_fees_per_liquidity_inside(
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> FeesPerLiquidity;
 
     // Get the state of a given tick for the given pool
-    fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
+    fn get_pool_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
 
     // Get the fees on the other side of the tick from the current tick
-    fn get_tick_fees_outside(self: @TStorage, pool_key: PoolKey, index: i129) -> FeesPerLiquidity;
+    fn get_pool_tick_fees_outside(
+        self: @TStorage, pool_key: PoolKey, index: i129
+    ) -> FeesPerLiquidity;
 
     // Get the state of a given position for the given pool
     fn get_position(
@@ -154,7 +156,7 @@ trait ICore<TStorage> {
     ) -> (i129, bool);
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
-    fn withdraw_fees_collected(
+    fn withdraw_protocol_fees(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
     );
 

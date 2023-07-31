@@ -46,7 +46,7 @@ mod Core {
     #[storage]
     struct Storage {
         // withdrawal fees collected, controlled by the owner
-        fees_collected: LegacyMap<ContractAddress, u128>,
+        protocol_fees_collected: LegacyMap<ContractAddress, u128>,
         // the last recorded balance of each token, used for checking payment
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
@@ -256,8 +256,8 @@ mod Core {
             self.withdrawal_only_mode.write(true);
         }
 
-        fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
-            self.fees_collected.read(token)
+        fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
+            self.protocol_fees_collected.read(token)
         }
 
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
@@ -274,7 +274,9 @@ mod Core {
             self.pool_liquidity.read(pool_key)
         }
 
-        fn get_pool_fees(self: @ContractState, pool_key: PoolKey) -> FeesPerLiquidity {
+        fn get_pool_fees_per_liquidity(
+            self: @ContractState, pool_key: PoolKey
+        ) -> FeesPerLiquidity {
             self.pool_fees.read(pool_key)
         }
 
@@ -282,11 +284,11 @@ mod Core {
             self.reserves.read(token)
         }
 
-        fn get_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
+        fn get_pool_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
             self.ticks.read((pool_key, index))
         }
 
-        fn get_tick_fees_outside(
+        fn get_pool_tick_fees_outside(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> FeesPerLiquidity {
             self.tick_fees_outside.read((pool_key, index))
@@ -307,7 +309,7 @@ mod Core {
                 }
             } else {
                 let fees_per_liquidity_inside = self
-                    .get_fees_per_liquidity_inside(pool_key, position_key.bounds);
+                    .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
                 let diff = fees_per_liquidity_inside - position.fees_per_liquidity_inside_last;
 
@@ -404,7 +406,7 @@ mod Core {
             }
         }
 
-        fn withdraw_fees_collected(
+        fn withdraw_protocol_fees(
             ref self: ContractState,
             recipient: ContractAddress,
             token: ContractAddress,
@@ -412,8 +414,8 @@ mod Core {
         ) {
             check_owner_only();
 
-            let collected: u128 = self.fees_collected.read(token);
-            self.fees_collected.write(token, collected - amount);
+            let collected: u128 = self.protocol_fees_collected.read(token);
+            self.protocol_fees_collected.write(token, collected - amount);
             self.reserves.write(token, self.reserves.read(token) - amount.into());
 
             IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
@@ -570,7 +572,7 @@ mod Core {
             sqrt_ratio
         }
 
-        fn get_fees_per_liquidity_inside(
+        fn get_pool_fees_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> FeesPerLiquidity {
             let price = self.pool_price.read(pool_key);
@@ -639,21 +641,21 @@ mod Core {
 
                 if (amount0_fee.is_non_zero()) {
                     self
-                        .fees_collected
+                        .protocol_fees_collected
                         .write(
                             pool_key.token0,
                             accumulate_fee_amount(
-                                self.fees_collected.read(pool_key.token0), amount0_fee
+                                self.protocol_fees_collected.read(pool_key.token0), amount0_fee
                             )
                         );
                 }
                 if (amount1_fee.is_non_zero()) {
                     self
-                        .fees_collected
+                        .protocol_fees_collected
                         .write(
                             pool_key.token1,
                             accumulate_fee_amount(
-                                self.fees_collected.read(pool_key.token1), amount1_fee
+                                self.protocol_fees_collected.read(pool_key.token1), amount1_fee
                             )
                         );
                 }

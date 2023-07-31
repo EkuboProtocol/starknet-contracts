@@ -495,8 +495,8 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 
     set_contract_address(contract_address_const::<2>());
 
-    let balance0 = positions.refund(setup.token0.contract_address);
-    let balance1 = positions.refund(setup.token1.contract_address);
+    let balance0 = positions.clear_self(setup.token0.contract_address);
+    let balance1 = positions.clear_self(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -847,10 +847,10 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     set_contract_address(core_owner());
     setup
         .core
-        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token0, amount: 1);
+        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);
     setup
         .core
-        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token1, amount: 1);
+        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token1, amount: 1);
 
     set_contract_address(caller);
     setup.token0.increase_balance(positions.contract_address, 100000000);
@@ -882,15 +882,22 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     setup.token1.increase_balance(positions.contract_address, 10000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
-    let mut tick_lower_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: true });
-    let mut tick_upper_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: false });
+    let mut tick_lower_state = setup
+        .core
+        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: true });
+    let mut tick_upper_state = setup
+        .core
+        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: false });
     assert(
         tick_upper_state.liquidity_delta == i129 { mag: liquidity, sign: true },
         'upper.liquidity_delta'
     );
     assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
     assert(
-        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false }).is_zero(),
+        setup
+            .core
+            .get_pool_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false })
+            .is_zero(),
         'upper.fees'
     );
 
@@ -900,7 +907,10 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     );
     assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
     assert(
-        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true }).is_zero(),
+        setup
+            .core
+            .get_pool_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true })
+            .is_zero(),
         'lower.fees'
     );
 }
