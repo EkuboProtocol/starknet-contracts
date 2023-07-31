@@ -117,14 +117,18 @@ mod initialize_pool_tests {
             extension: Zeroable::zero(),
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
-        let pool = core.get_pool(pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            core.get_pool_price(pool_key),
+            core.get_pool_liquidity(pool_key),
+            core.get_pool_fees(pool_key)
+        );
         assert(
-            pool.price.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
+            price.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
             'sqrt_ratio'
         );
-        assert(pool.price.tick == i129 { mag: 1000, sign: true }, 'tick');
-        assert(pool.liquidity.is_zero(), 'tick');
-        assert(pool.fees_per_liquidity.is_zero(), 'fpl');
+        assert(price.tick == i129 { mag: 1000, sign: true }, 'tick');
+        assert(liquidity.is_zero(), 'tick');
+        assert(fees_per_liquidity.is_zero(), 'fpl');
     }
 
     #[test]
@@ -1045,10 +1049,14 @@ mod locks {
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
         assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
-        assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
+        assert(liquidity == 0, 'liquidity is 0');
+        assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1077,10 +1085,14 @@ mod locks {
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
         assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
-        assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
+        assert(liquidity == 0, 'liquidity is 0');
+        assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1107,10 +1119,14 @@ mod locks {
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
         assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price is max');
-        assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is max');
+        assert(liquidity == 0, 'liquidity is 0');
+        assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1137,10 +1153,14 @@ mod locks {
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
         assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
-        assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
+        assert(liquidity == 0, 'liquidity is 0');
+        assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1167,10 +1187,14 @@ mod locks {
         assert(delta.amount0 == Zeroable::zero(), 'amount0');
         assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
-        assert(pool.liquidity == 0, 'liquidity is 0');
-        assert(pool.fees_per_liquidity.is_zero(), 'fees is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
+        assert(liquidity == 0, 'liquidity is 0');
+        assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
 
     #[test]
@@ -1211,14 +1235,18 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 1000, sign: false }, 'amount0==1000');
         assert(delta.amount1 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.sqrt_ratio == u256 { low: 340282030041728722151939677011487970083, high: 0 },
+            price.sqrt_ratio == u256 { low: 340282030041728722151939677011487970083, high: 0 },
             'price lower'
         );
-        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(liquidity == 1000000000, 'liquidity is original');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 3402823669209384634633746074317,
                 fees_per_liquidity_token1: 0,
             },
@@ -1264,15 +1292,19 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 1000, sign: true }, 'amount0==1000');
         assert(delta.amount1 == i129 { mag: 1010, sign: false }, 'amount1_delta==989');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
+            price.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
             'price lower'
         );
-        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(liquidity == 1000000000, 'liquidity is original');
 
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 3402823669209384634633746074317,
                 fees_per_liquidity_token1: 0,
             },
@@ -1323,11 +1355,15 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 499, sign: false }, 'amount0==1000');
         assert(delta.amount1 == i129 { mag: 496, sign: true }, 'amount1_delta==987');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price min');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 17014118346046923173168730371588410,
                 fees_per_liquidity_token1: 0,
             },
@@ -1377,11 +1413,15 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 497, sign: true }, 'amount0');
         assert(delta.amount1 == i129 { mag: 498, sign: false }, 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'price min');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 17014118346046923173168730371588410,
                 fees_per_liquidity_token1: 0,
             },
@@ -1427,14 +1467,18 @@ mod locks {
         assert(delta.amount1 == i129 { mag: 1000, sign: false }, 'amount0==1000');
         assert(delta.amount0 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
+            price.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
             'price lower'
         );
-        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(liquidity == 1000000000, 'liquidity is original');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0,
                 fees_per_liquidity_token1: 3402823669209384634633746074317,
             },
@@ -1480,14 +1524,18 @@ mod locks {
         assert(delta.amount1 == i129 { mag: 1000, sign: true }, 'amount0');
         assert(delta.amount0 == i129 { mag: 1010, sign: false }, 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.sqrt_ratio == u256 { low: 340282023235747873315526509423414705370, high: 0 },
+            price.sqrt_ratio == u256 { low: 340282023235747873315526509423414705370, high: 0 },
             'price'
         );
-        assert(pool.liquidity == 1000000000, 'liquidity is original');
+        assert(liquidity == 1000000000, 'liquidity is original');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0,
                 fees_per_liquidity_token1: 3402823669209384634633746074317,
             },
@@ -1537,11 +1585,15 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 49626, sign: true }, 'amount0');
         assert(delta.amount1 == i129 { mag: 49874, sign: false }, 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0,
                 fees_per_liquidity_token1: 16980090109354829326822392910845233,
             },
@@ -1591,11 +1643,15 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 49873, sign: false }, 'amount0');
         assert(delta.amount1 == i129 { mag: 49627, sign: true }, 'amount1_delta');
 
-        let pool = setup.core.get_pool(setup.pool_key);
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0,
                 fees_per_liquidity_token1: 16912033635970641634129717989358880,
             },
@@ -1676,15 +1732,19 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 0x1869d, sign: false }, 'amount0');
         assert(delta.amount1 == i129 { mag: 0x182be, sign: true }, 'amount1');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.tick == i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true },
+            price.tick == i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true },
             'tick after'
         );
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0x68f6639f0bc961de416956dbaee7d,
                 fees_per_liquidity_token1: 0,
             },
@@ -1765,17 +1825,19 @@ mod locks {
         assert(delta.amount0 == i129 { mag: 0x182be, sign: true }, 'amount0');
         assert(delta.amount1 == i129 { mag: 0x1869d, sign: false }, 'amount1');
 
-        let pool = setup.core.get_pool(setup.pool_key);
+        let (price, liquidity, fees_per_liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+            setup.core.get_pool_fees(setup.pool_key)
+        );
         assert(
-            pool.price.tick == i129 {
-                mag: (tick_constants::TICKS_IN_ONE_PERCENT * 5) - 1, sign: false
-            },
+            price.tick == i129 { mag: (tick_constants::TICKS_IN_ONE_PERCENT * 5) - 1, sign: false },
             'tick after'
         );
-        assert(pool.price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
-        assert(pool.liquidity == 0, 'liquidity is 0');
+        assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(liquidity == 0, 'liquidity is 0');
         assert(
-            pool.fees_per_liquidity == FeesPerLiquidity {
+            fees_per_liquidity == FeesPerLiquidity {
                 fees_per_liquidity_token0: 0,
                 fees_per_liquidity_token1: 0x68f6639f0bc961de416956dbaee7d,
             },

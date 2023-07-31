@@ -56,17 +56,6 @@ struct LockerState {
     nonzero_delta_count: u32
 }
 
-
-// The aggregated information of a pool returned by each of the pool getters, for efficiency in cases
-// where you need to know all the information about a pool
-#[derive(Copy, Drop, Serde)]
-struct GetPoolResult {
-    price: PoolPrice,
-    liquidity: u128,
-    fees_per_liquidity: FeesPerLiquidity,
-}
-
-
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
 #[starknet::interface]
 trait IExtension<TStorage> {
@@ -119,9 +108,6 @@ trait ICore<TStorage> {
 
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
-
-    // Get the current state of the given pool
-    fn get_pool(self: @TStorage, pool_key: PoolKey) -> GetPoolResult;
 
     // Get the price of the pool
     fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;

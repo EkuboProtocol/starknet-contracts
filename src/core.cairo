@@ -3,8 +3,7 @@ mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult,
-        GetPoolResult
+        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult
     };
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use zeroable::Zeroable;
@@ -265,13 +264,6 @@ mod Core {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
             LockerState { address, nonzero_delta_count }
-        }
-
-        fn get_pool(self: @ContractState, pool_key: PoolKey) -> GetPoolResult {
-            let price = self.get_pool_price(pool_key);
-            let liquidity = self.get_pool_liquidity(pool_key);
-            let fees_per_liquidity = self.get_pool_fees(pool_key);
-            GetPoolResult { price, liquidity, fees_per_liquidity,  }
         }
 
         fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
