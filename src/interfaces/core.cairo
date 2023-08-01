@@ -131,6 +131,9 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, index: i129
     ) -> FeesPerLiquidity;
 
+    // Get the raw data for a position
+    fn get_position_data(self: @TStorage, pool_key: PoolKey, position_key: PositionKey);
+
     // Get the state of a given position for the given pool
     fn get_position(
         self: @TStorage, pool_key: PoolKey, position_key: PositionKey
