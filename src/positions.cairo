@@ -552,12 +552,12 @@ mod Positions {
 
             self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
-            let get_position_result = core
-                .get_position_with_fees(
+            let position = core
+                .get_position(
                     pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
 
-            assert(get_position_result.position.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
+            assert(position.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
 
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
