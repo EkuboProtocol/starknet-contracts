@@ -17,7 +17,7 @@ mod LimitOrderExtension {
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
     };
-    use ekubo::types::keys::{PoolKey};
+    use ekubo::types::keys::{PoolKey, PositionKey};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use zeroable::{Zeroable};
@@ -160,7 +160,7 @@ mod LimitOrderExtension {
 
             let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span).unwrap();
 
-            match callback_data {
+            let result = match callback_data {
                 LockCallbackData::PlaceOrderCallbackData(place_order) => {
                     let delta = core
                         .update_position(
@@ -180,10 +180,22 @@ mod LimitOrderExtension {
                     // IERC20Dispatcher { contract_address: callback_data.sell_token }
                     //  .transfer(core.contract_address, delta.amount0 | delta.amount1);
                     core.deposit(place_order.sell_token);
+
+                    LockCallbackResult {}
                 },
                 LockCallbackData::PullLimitOrderCallbackData(pull_data) => {
                     // get the position data
-                    let position_data = core.get_position_data();
+                    let position_data = core
+                        .get_position(
+                            pull_data.pool_key,
+                            PositionKey {
+                                salt: 0, owner: get_contract_address(), bounds: Bounds {
+                                    lower: pull_data.tick, upper: pull_data.tick + i129 {
+                                        mag: 1, sign: false
+                                    },
+                                }
+                            }
+                        );
 
                     let delta = core
                         .update_position(
@@ -193,11 +205,20 @@ mod LimitOrderExtension {
                                     lower: pull_data.tick, upper: pull_data.tick + i129 {
                                         mag: 1, sign: false
                                     },
-                                }, liquidity_delta: position_data.liquidity
+                                    }, liquidity_delta: i129 {
+                                    mag: position_data.liquidity, sign: true
+                                }
                             }
                         );
+                    LockCallbackResult {}
                 }
-            }
+            };
+
+            let mut result_data = ArrayTrait::<felt252>::new();
+
+            Serde::serialize(@result, ref result_data);
+
+            result_data
         }
     }
 
