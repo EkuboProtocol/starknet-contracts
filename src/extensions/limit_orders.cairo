@@ -201,6 +201,7 @@ mod LimitOrderExtension {
                             } else {
                                 delta.amount0
                             })
+                                .mag
                                 .into()
                         );
                     core.deposit(sell_token);
@@ -218,23 +219,23 @@ mod LimitOrderExtension {
                             let (next_tick, is_initialized) = if price_increasing {
                                 core
                                     .next_initialized_tick(
-                                        after_swap.pool_key, last_seen_tick, params.skip_ahead
+                                        after_swap.pool_key, last_seen_tick, after_swap.skip_ahead
                                     )
                             } else {
                                 core
                                     .prev_initialized_tick(
-                                        after_swap.pool_key, last_seen_tick, params.skip_ahead
+                                        after_swap.pool_key, last_seen_tick, after_swap.skip_ahead
                                     )
                             };
 
-                            if ((next_tick >= price.tick) == price_increasing) {
+                            if ((next_tick >= price_after_swap.tick) == price_increasing) {
                                 break ();
                             };
 
                             if (is_initialized) {
                                 let position_data = core
                                     .get_position(
-                                        pool_key,
+                                        after_swap.pool_key,
                                         PositionKey {
                                             salt: 0, owner: get_contract_address(), bounds: Bounds {
                                                 lower: next_tick, upper: next_tick + i129 {
@@ -246,7 +247,7 @@ mod LimitOrderExtension {
 
                                 core
                                     .update_position(
-                                        pool_key,
+                                        after_swap.pool_key,
                                         UpdatePositionParameters {
                                             salt: 0, bounds: Bounds {
                                                 lower: next_tick, upper: next_tick + i129 {
@@ -257,11 +258,15 @@ mod LimitOrderExtension {
                                             }
                                         }
                                     );
-                            }
+                            };
                         };
 
-                        self.last_seen_pool_key_tick.write(pool_key, price.tick);
+                        self
+                            .last_seen_pool_key_tick
+                            .write(after_swap.pool_key, price_after_swap.tick);
                     }
+
+                    LockCallbackResult {}
                 }
             };
 
