@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool_price::{PoolPrice};
+use ekubo::types::position::{Position};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
@@ -41,8 +42,8 @@ struct SwapParameters {
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
 // Note you should not rely on fees per liquidity inside to be consistent across calls, since it also is used to track accumulated fees over time
 #[derive(Copy, Drop, Serde)]
-struct GetPositionResult {
-    liquidity: u128,
+struct GetPositionWithFeesResult {
+    position: Position,
     fees0: u128,
     fees1: u128,
     // the current value of fees per liquidity inside is required to compute the fees, so it is also returned to save computation
@@ -135,9 +136,12 @@ trait ICore<TStorage> {
     fn get_position_data(self: @TStorage, pool_key: PoolKey, position_key: PositionKey);
 
     // Get the state of a given position for the given pool
-    fn get_position(
+    fn get_position(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> Position;
+
+    // Get the state of a given position for the given pool including the calculated fees
+    fn get_position_with_fees(
         self: @TStorage, pool_key: PoolKey, position_key: PositionKey
-    ) -> GetPositionResult;
+    ) -> GetPositionWithFeesResult;
 
     // Get the last recorded balance of a token for core, used by core for computing payment amounts
     fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;

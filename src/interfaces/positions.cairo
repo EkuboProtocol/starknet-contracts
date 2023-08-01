@@ -43,7 +43,7 @@ trait IPositions<TStorage> {
     fn mint_self(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
 
     // Delete the NFT. The NFT must have zero liquidity. Must be called by an operator, approved address or the owner
-    fn burn(ref self: TStorage, token_id: u256);
+    fn burn(ref self: TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds);
 
     // Deposit in the most recently created token ID. Must be called by an operator, approved address or the owner
     fn deposit_last(
@@ -68,7 +68,7 @@ trait IPositions<TStorage> {
         recipient: ContractAddress
     ) -> (u128, u128);
 
-    // Same as above without a recipient parameter
+    // Withdraw liquidity from a specific token ID. Same as above without a recipient parameter
     fn withdraw_self(
         ref self: TStorage,
         token_id: u256,

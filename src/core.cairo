@@ -3,7 +3,8 @@ mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult
+        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
+        GetPositionWithFeesResult
     };
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use zeroable::Zeroable;
@@ -296,12 +297,18 @@ mod Core {
 
         fn get_position(
             self: @ContractState, pool_key: PoolKey, position_key: PositionKey
-        ) -> GetPositionResult {
-            let position: Position = self.positions.read((pool_key, position_key));
+        ) -> Position {
+            self.positions.read((pool_key, position_key))
+        }
+
+        fn get_position_with_fees(
+            self: @ContractState, pool_key: PoolKey, position_key: PositionKey
+        ) -> GetPositionWithFeesResult {
+            let position = self.get_position(pool_key, position_key);
 
             if (position.liquidity.is_zero()) {
-                GetPositionResult {
-                    liquidity: Zeroable::zero(),
+                GetPositionWithFeesResult {
+                    position,
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
                     // we can return 0 because it's irrelevant for an empty position
@@ -329,8 +336,8 @@ mod Core {
                     false
                 );
 
-                GetPositionResult {
-                    liquidity: position.liquidity,
+                GetPositionWithFeesResult {
+                    position,
                     fees0: amount0_fees.low,
                     fees1: amount1_fees.low,
                     fees_per_liquidity_inside_current: fees_per_liquidity_inside,
@@ -664,9 +671,10 @@ mod Core {
                 self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
-            let get_position_result = self.get_position(pool_key, position_key);
+            let get_position_result = self.get_position_with_fees(pool_key, position_key);
 
             let position_liquidity_next: u128 = get_position_result
+                .position
                 .liquidity
                 .add(params.liquidity_delta);
 
@@ -732,7 +740,7 @@ mod Core {
             let (id, locker) = self.require_locker();
 
             let position_key = PositionKey { owner: locker, salt, bounds };
-            let result = self.get_position(pool_key, position_key);
+            let result = self.get_position_with_fees(pool_key, position_key);
 
             // update the position
             self
@@ -740,7 +748,7 @@ mod Core {
                 .write(
                     (pool_key, position_key),
                     Position {
-                        liquidity: result.liquidity,
+                        liquidity: result.position.liquidity,
                         fees_per_liquidity_inside_last: result.fees_per_liquidity_inside_current,
                     }
                 );
