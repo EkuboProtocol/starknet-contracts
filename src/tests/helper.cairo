@@ -352,7 +352,7 @@ fn swap_inner(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     let before: Balances = get_balances(
         token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
@@ -412,7 +412,7 @@ fn swap(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     swap_inner(
         setup.core,

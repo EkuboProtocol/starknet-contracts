@@ -36,7 +36,7 @@ struct SwapParameters {
     amount: i129,
     is_token1: bool,
     sqrt_ratio_limit: u256,
-    skip_ahead: u128,
+    skip_ahead: u32,
 }
 
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
@@ -150,13 +150,13 @@ trait ICore<TStorage> {
 
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
-        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u32
     ) -> (i129, bool);
 
     // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
     // Note this can also be used to check if the tick is initialized
     fn prev_initialized_tick(
-        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u32
     ) -> (i129, bool);
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
