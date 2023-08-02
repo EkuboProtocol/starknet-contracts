@@ -8,7 +8,8 @@ struct OrderInfo {
     epoch: u64,
 }
 
-trait ILimitOrder<TContractState> {
+#[starknet::interface]
+trait ILimitOrders<TContractState> {
     // Creates a new limit order, selling the given `sell_token` for the given `quote_token` at the specified tick
     // The size of the order is determined by the current balance of the sell token
     fn place_order(
@@ -28,8 +29,8 @@ trait ILimitOrder<TContractState> {
 }
 
 #[starknet::contract]
-mod LimitOrderExtension {
-    use super::{ILimitOrder, i129, ContractAddress, OrderInfo};
+mod LimitOrders {
+    use super::{ILimitOrders, i129, ContractAddress, OrderInfo};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
@@ -279,7 +280,7 @@ mod LimitOrderExtension {
     }
 
     #[external(v0)]
-    impl LimitOrderImpl of ILimitOrder<ContractState> {
+    impl LimitOrderImpl of ILimitOrders<ContractState> {
         fn place_order(
             ref self: ContractState,
             sell_token: ContractAddress,
