@@ -1,26 +1,8 @@
 use ekubo::types::i129::i129;
-use ekubo::math::utils::{unsafe_sub, ContractAddressOrder, u128_max};
+use ekubo::math::utils::{ContractAddressOrder, u128_max};
 use starknet::{contract_address_const};
 use zeroable::Zeroable;
 
-#[test]
-fn test_unsafe_sub() {
-    assert(unsafe_sub(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }).is_zero(), 'regular sub');
-
-    assert(
-        unsafe_sub(u256 { low: 0, high: 0 }, u256 { low: 0, high: 1 }) == u256 {
-            low: 0, high: 0xffffffffffffffffffffffffffffffff
-        },
-        'underflow sub'
-    );
-
-    assert(
-        unsafe_sub(u256 { low: 0, high: 0 }, u256 { low: 1, high: 0 }) == u256 {
-            low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff
-        },
-        'underflow sub'
-    );
-}
 
 #[test]
 fn test_contract_address_order() {

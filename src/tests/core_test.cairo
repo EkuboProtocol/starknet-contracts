@@ -1173,7 +1173,7 @@ mod locks {
             extension: Zeroable::zero(),
         );
 
-        let sqrt_ratio_limit = div(u256 { low: 0, high: 1 }, u256 { low: 2, high: 0 }, false);
+        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
 
         let delta = swap(
             setup,
@@ -1252,6 +1252,66 @@ mod locks {
             },
             'fees'
         );
+    }
+
+    #[test]
+    #[available_gas(100000000)]
+    fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross_example() {
+        let FEE_THIRTY_BIPS = 1020847100762815411640772995208708096;
+        let TICK_SPACING_60_BIPS = 5982;
+
+        let nearby_starting_tick = i129 { mag: 5553823, sign: true };
+        let upper_tick = i129 { mag: 5551296 - (5982 * 20), sign: true };
+        let lower_tick = i129 { mag: 5551296 + (5982 * 20), sign: true };
+
+        let setup = setup_pool(
+            fee: FEE_THIRTY_BIPS,
+            tick_spacing: TICK_SPACING_60_BIPS,
+            initial_tick: nearby_starting_tick,
+            extension: Zeroable::zero(),
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, 717193642384000);
+        setup.token1.increase_balance(setup.locker.contract_address, 717193642384000);
+
+        assert(
+            swap(
+                setup,
+                amount: i129 { mag: 1, sign: false },
+                is_token1: true,
+                sqrt_ratio_limit: 21175949444679574865522613902772161611,
+                recipient: contract_address_const::<42>(),
+                skip_ahead: 0
+            )
+                .is_zero(),
+            'swap to price zero'
+        );
+
+        update_position(
+            setup,
+            bounds: Bounds { lower: lower_tick, upper: upper_tick },
+            liquidity_delta: i129 { mag: 717193642384, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+
+        let (price, liquidity) = (
+            setup.core.get_pool_price(setup.pool_key),
+            setup.core.get_pool_liquidity(setup.pool_key),
+        );
+
+        assert(price.sqrt_ratio == 21175949444679574865522613902772161611, 'starting_price');
+        assert(price.tick == nearby_starting_tick, 'price tick');
+        assert(liquidity == 717193642384, 'liquidity');
+        let delta = swap(
+            setup,
+            amount: i129 { mag: 9995000000, sign: false },
+            is_token1: false,
+            sqrt_ratio_limit: min_sqrt_ratio(),
+            recipient: contract_address_const::<42>(),
+            skip_ahead: 0
+        );
+        assert(delta.amount0 == i129 { mag: 9995000000, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 38557555, sign: true }, 'amount1');
     }
 
     #[test]
