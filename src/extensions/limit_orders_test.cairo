@@ -111,7 +111,7 @@ fn test_before_initialize_pool_sets_call_points() {
 
 #[test]
 #[available_gas(3000000000)]
-fn test_place_order() {
+fn test_place_order_creates_position_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
@@ -122,9 +122,20 @@ fn test_place_order() {
         );
     assert(id == 1, 'id');
 
-    let oi = lo.get_order_info(id);
-    assert(oi.owner == get_contract_address(), 'owner');
-    assert(oi.liquidity == 200000350, 'liquidity');
+    t0.increase_balance(lo.contract_address, 200);
+    let id_2 = lo
+        .place_order(
+            sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+        );
+    assert(id_2 == 2, 'id_2');
+
+    let oi_1 = lo.get_order_info(id);
+    assert(oi_1.owner == get_contract_address(), 'owner');
+    assert(oi_1.liquidity == 200000350, 'liquidity');
+
+    let oi_2 = lo.get_order_info(id_2);
+    assert(oi_2.owner == get_contract_address(), 'owner_2');
+    assert(oi_2.liquidity == 400000700, 'liquidity_2');
 
     let position = core
         .get_position(
@@ -135,5 +146,74 @@ fn test_place_order() {
                 },
             }
         );
-    assert(position.liquidity == 200000350, 'position created');
+    assert(position.liquidity == (200000350 + 400000700), 'position liquidity sum');
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('EVEN_TICKS_ONLY', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_odd_tick() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false });
+}
+
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('PRICE_AT_TICK', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_price_at_tick() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero());
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_tick_at_wrong_side_sell_token0() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: true });
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_tick_at_wrong_side_sell_token1() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: false });
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('POOL_NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_pool_not_initialized() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo
+        .place_order(
+            sell_token: contract_address_const::<12344>(),
+            buy_token: contract_address_const::<12345>(),
+            tick: i129 { mag: 2, sign: false }
+        );
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_no_token0_transferred() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false });
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_no_token1_transferred() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    lo.place_order(sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: true });
 }

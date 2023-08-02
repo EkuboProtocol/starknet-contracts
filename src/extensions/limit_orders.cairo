@@ -3,6 +3,8 @@ use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct OrderInfo {
+    sell_token: ContractAddress,
+    buy_token: ContractAddress,
     owner: ContractAddress,
     liquidity: u128,
 }
@@ -283,7 +285,8 @@ mod LimitOrders {
         ) -> u64 {
             // orders can only be placed on even ticks
             // this means we know even ticks are always the specified price
-            assert(tick.mag % 2 == 0, 'EVEN_TICKS');
+            // this allows us to optimize iterating through ticks, by only considering even ticks
+            assert(tick.mag % 2 == 0, 'EVEN_TICKS_ONLY');
 
             let order_id = self.next_order_id.read();
             self.next_order_id.write(order_id + 1);
@@ -300,6 +303,8 @@ mod LimitOrders {
             // validate the pool key is initialized
             let core = self.core.read();
             let price = core.get_pool_price(pool_key);
+
+            assert(price.sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
 
             assert(
                 price.tick != tick, 'PRICE_AT_TICK'
@@ -326,7 +331,12 @@ mod LimitOrders {
 
             assert(liquidity > 0, 'SELL_AMOUNT_TOO_SMALL');
 
-            self.orders.write(order_id, OrderInfo { owner: get_caller_address(), liquidity });
+            self
+                .orders
+                .write(
+                    order_id,
+                    OrderInfo { sell_token, buy_token, owner: get_caller_address(), liquidity }
+                );
 
             let result: LockCallbackResult = call_core_with_callback(
                 core,
