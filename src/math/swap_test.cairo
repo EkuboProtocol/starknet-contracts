@@ -155,6 +155,19 @@ fn test_swap_ratio_wrong_direction_token0_input() {
     );
 }
 #[test]
+#[should_panic(expected: ('DIRECTION', ))]
+fn test_swap_ratio_wrong_direction_token0_input_zero_liquidity() {
+    swap_result(
+        sqrt_ratio: u256 { high: 2, low: 0 },
+        liquidity: 0,
+        sqrt_ratio_limit: u256 { high: 2, low: 1 },
+        // input of 10k token0, price decreasing
+        amount: i129 { mag: 10000, sign: false },
+        is_token1: false,
+        fee: 0,
+    );
+}
+#[test]
 fn test_swap_ratio_wrong_direction_token0_zero_input_and_liquidity() {
     assert(
         swap_result(
@@ -175,6 +188,19 @@ fn test_swap_ratio_wrong_direction_token0_output() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 100000,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        // output of 10k token0, price increasing
+        amount: i129 { mag: 10000, sign: true },
+        is_token1: false,
+        fee: 0,
+    );
+}
+#[test]
+#[should_panic(expected: ('DIRECTION', ))]
+fn test_swap_ratio_wrong_direction_token0_output_zero_liquidity() {
+    swap_result(
+        sqrt_ratio: u256 { high: 2, low: 0 },
+        liquidity: 0,
         sqrt_ratio_limit: u256 { high: 1, low: 0 },
         // output of 10k token0, price increasing
         amount: i129 { mag: 10000, sign: true },
@@ -211,6 +237,19 @@ fn test_swap_ratio_wrong_direction_token1_input() {
         fee: 0,
     );
 }
+#[test]
+#[should_panic(expected: ('DIRECTION', ))]
+fn test_swap_ratio_wrong_direction_token1_input_zero_liquidity() {
+    swap_result(
+        sqrt_ratio: u256 { high: 2, low: 0 },
+        liquidity: 0,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        // input of 10k token1, price increasing
+        amount: i129 { mag: 10000, sign: false },
+        is_token1: true,
+        fee: 0,
+    );
+}
 
 #[test]
 fn test_swap_ratio_wrong_direction_token1_zero_input_and_liquidity() {
@@ -234,6 +273,19 @@ fn test_swap_ratio_wrong_direction_token1_output() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 100000,
+        sqrt_ratio_limit: u256 { high: 2, low: 1 },
+        // input of 10k token1, price increasing
+        amount: i129 { mag: 10000, sign: true },
+        is_token1: true,
+        fee: 0,
+    );
+}
+#[test]
+#[should_panic(expected: ('DIRECTION', ))]
+fn test_swap_ratio_wrong_direction_token1_output_zero_liquidity() {
+    swap_result(
+        sqrt_ratio: u256 { high: 2, low: 0 },
+        liquidity: 0,
         sqrt_ratio_limit: u256 { high: 2, low: 1 },
         // input of 10k token1, price increasing
         amount: i129 { mag: 10000, sign: true },
