@@ -35,12 +35,7 @@ trait IPositions<TStorage> {
     fn maybe_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
 
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
-    fn mint(
-        ref self: TStorage, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
-    ) -> u256;
-
-    // Mint a new position to self, same as above but without a recipient parameter
-    fn mint_self(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
+    fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
 
     // Delete the NFT. The NFT must have zero liquidity. Must be called by an operator, approved address or the owner
     fn burn(ref self: TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds);
@@ -64,25 +59,9 @@ trait IPositions<TStorage> {
         liquidity: u128,
         min_token0: u128,
         min_token1: u128,
-        collect_fees: bool,
-        recipient: ContractAddress
-    ) -> (u128, u128);
-
-    // Withdraw liquidity from a specific token ID. Same as above without a recipient parameter
-    fn withdraw_self(
-        ref self: TStorage,
-        token_id: u256,
-        pool_key: PoolKey,
-        bounds: Bounds,
-        liquidity: u128,
-        min_token0: u128,
-        min_token1: u128,
         collect_fees: bool
     ) -> (u128, u128);
 
     // Clear the balance held by this contract. Used for collecting remaining tokens after doing a deposit, or collecting withdrawn tokens/fees
-    fn clear(ref self: TStorage, token: ContractAddress, recipient: ContractAddress) -> u256;
-
-    // Clear back to the caller, same as above but without a recipient parameter
-    fn clear_self(ref self: TStorage, token: ContractAddress) -> u256;
+    fn clear(ref self: TStorage, token: ContractAddress) -> u256;
 }

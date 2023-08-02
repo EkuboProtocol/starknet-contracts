@@ -506,15 +506,14 @@ mod Positions {
             arr
         }
 
-        fn mint(
-            ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
-        ) -> u256 {
+        fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u256 {
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
 
             // effect the mint by updating storage
-            self.owners.write(id, recipient);
-            self.tokens_by_owner_insert(recipient, id);
+            let owner = get_caller_address();
+            self.owners.write(id, owner);
+            self.tokens_by_owner_insert(owner, id);
             let key_hash = hash_key(pool_key, bounds);
 
             self.token_key_hashes.write(id, key_hash);
@@ -522,7 +521,7 @@ mod Positions {
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(), to: recipient, token_id: u256 {
+                        from: Zeroable::zero(), to: owner, token_id: u256 {
                             low: id.into(), high: 0
                         }
                     }
@@ -539,10 +538,6 @@ mod Positions {
                 );
 
             u256 { low: id.into(), high: 0 }
-        }
-
-        fn mint_self(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u256 {
-            self.mint(get_caller_address(), pool_key, bounds)
         }
 
         fn burn(ref self: ContractState, token_id: u256, pool_key: PoolKey, bounds: Bounds) {
@@ -644,11 +639,12 @@ mod Positions {
             liquidity: u128,
             min_token0: u128,
             min_token1: u128,
-            collect_fees: bool,
-            recipient: ContractAddress
+            collect_fees: bool
         ) -> (u128, u128) {
             let id = validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(id), id);
+
+            let recipient = get_caller_address();
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -676,42 +672,13 @@ mod Positions {
             (delta.amount0.mag, delta.amount1.mag)
         }
 
-        fn withdraw_self(
-            ref self: ContractState,
-            token_id: u256,
-            pool_key: PoolKey,
-            bounds: Bounds,
-            liquidity: u128,
-            min_token0: u128,
-            min_token1: u128,
-            collect_fees: bool
-        ) -> (u128, u128) {
-            self
-                .withdraw(
-                    token_id,
-                    pool_key,
-                    bounds,
-                    liquidity,
-                    min_token0,
-                    min_token1,
-                    collect_fees,
-                    get_caller_address()
-                )
-        }
-
-        fn clear(
-            ref self: ContractState, token: ContractAddress, recipient: ContractAddress
-        ) -> u256 {
+        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
             let dispatcher = IERC20Dispatcher { contract_address: token };
             let balance = dispatcher.balanceOf(get_contract_address());
             if (balance.is_non_zero()) {
-                dispatcher.transfer(recipient, balance);
+                dispatcher.transfer(get_caller_address(), balance);
             }
             balance
-        }
-
-        fn clear_self(ref self: ContractState, token: ContractAddress) -> u256 {
-            self.clear(token, get_caller_address())
         }
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
