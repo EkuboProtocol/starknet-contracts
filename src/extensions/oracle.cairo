@@ -52,7 +52,7 @@ mod Oracle {
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
-        tick_state: LegacyMap<(PoolKey, i129), felt252>,
+        tick_seconds_per_liquidity_outside: LegacyMap<(PoolKey, i129), felt252>,
     }
 
     #[constructor]
@@ -119,8 +119,8 @@ mod Oracle {
             let price = core.get_pool_price(pool_key);
 
             // subtract the lower and upper tick of the bounds based on the price
-            let lower = self.tick_state.read((pool_key, bounds.lower));
-            let upper = self.tick_state.read((pool_key, bounds.upper));
+            let lower = self.tick_seconds_per_liquidity_outside.read((pool_key, bounds.lower));
+            let upper = self.tick_seconds_per_liquidity_outside.read((pool_key, bounds.upper));
 
             if (price.tick < bounds.lower) {
                 upper - lower
@@ -233,6 +233,8 @@ mod Oracle {
 
             let mut tick = state.tick_last;
 
+            let current = self.tick_seconds_per_liquidity_outside.read((pool_key, tick));
+
             // update all the ticks between the last updated tick to the starting tick
             loop {
                 let (next, initialized) = if (increasing) {
@@ -246,11 +248,9 @@ mod Oracle {
                 }
 
                 if (initialized) {
-                    let current = self.tick_state.read((pool_key, tick));
-
                     self
-                        .tick_state
-                        .write((pool_key, tick), state.seconds_per_liquidity_global - current);
+                        .tick_seconds_per_liquidity_outside
+                        .write((pool_key, tick), current - state.seconds_per_liquidity_global);
                 }
 
                 tick = if (increasing) {
