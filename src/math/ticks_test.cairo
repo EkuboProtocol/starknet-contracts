@@ -220,6 +220,15 @@ fn sqrt_ratio_to_tick_negative_one() {
 
 #[test]
 #[available_gas(5000000)]
+fn sqrt_ratio_to_tick_within_ticks_example() {
+    let sqrt_ratio = 21175949444679574865522613902772161611_u256;
+    let tick = sqrt_ratio_to_tick(sqrt_ratio);
+    assert(sqrt_ratio >= tick_to_sqrt_ratio(tick), 'lower bound');
+    assert(sqrt_ratio < tick_to_sqrt_ratio(tick + i129 { mag: 1, sign: false }), 'upper bound');
+}
+
+#[test]
+#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_one_minus_one() {
     let tick = sqrt_ratio_to_tick(
         tick_to_sqrt_ratio(i129 { mag: 1, sign: true }) - u256 { low: 1, high: 0 }

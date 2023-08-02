@@ -710,3 +710,26 @@ fn test_swap_all_max_inputs_no_fee() {
     );
 }
 
+#[test]
+fn test_swap_result_example_usdc_wbtc() {
+    let result = swap_result(
+        sqrt_ratio: 21175949444679574865522613902772161611,
+        liquidity: 717193642384,
+        sqrt_ratio_limit: min_sqrt_ratio(),
+        amount: i129 { mag: 9995000000, sign: false },
+        is_token1: false,
+        fee: 1020847100762815411640772995208708096,
+    );
+
+    assert(
+        result == SwapResult {
+            consumed_amount: i129 {
+                mag: 9995000000, sign: false
+                }, sqrt_ratio_next: u256 {
+                low: 0xfead0f195a1008a61a0a6a34c2b5410, high: 0
+            }, calculated_amount: 38557555, fee_amount: 29985001
+        },
+        'calculated_amount'
+    );
+}
+
