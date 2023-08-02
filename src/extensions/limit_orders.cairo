@@ -9,6 +9,9 @@ struct OrderInfo {
 
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
+    // Returns the stored order state
+    fn get_order_info(self: @TContractState, order_id: u64) -> OrderInfo;
+
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
     // The size of the order is determined by the current balance of the sell token
     fn place_order(
@@ -22,9 +25,6 @@ trait ILimitOrders<TContractState> {
     fn close_order(
         ref self: TContractState, order_id: u64, recipient: ContractAddress
     ) -> (u128, u128);
-
-    // Returns the stored order state
-    fn get_order_info(self: @TContractState, order_id: u64) -> OrderInfo;
 }
 
 #[starknet::contract]
@@ -48,7 +48,6 @@ mod LimitOrders {
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use traits::{TryInto, Into};
-    use debug::{PrintTrait};
 
     #[storage]
     struct Storage {
@@ -93,8 +92,8 @@ mod LimitOrders {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
-            assert(pool_key.fee.is_zero(), 'ZERO_FEE');
-            assert(pool_key.tick_spacing == 1, 'TICK_SPACING_ONE');
+            assert(pool_key.fee.is_zero(), 'ZERO_FEE_ONLY');
+            assert(pool_key.tick_spacing == 1, 'TICK_SPACING_ONE_ONLY');
 
             self.last_seen_pool_key_tick.write(pool_key, initial_tick);
 
@@ -272,6 +271,10 @@ mod LimitOrders {
 
     #[external(v0)]
     impl LimitOrderImpl of ILimitOrders<ContractState> {
+        fn get_order_info(self: @ContractState, order_id: u64) -> OrderInfo {
+            self.orders.read(order_id)
+        }
+
         fn place_order(
             ref self: ContractState,
             sell_token: ContractAddress,
@@ -323,7 +326,7 @@ mod LimitOrders {
 
             assert(liquidity > 0, 'SELL_AMOUNT_TOO_SMALL');
 
-            self.orders.write(order_id, OrderInfo { owner: get_contract_address(), liquidity });
+            self.orders.write(order_id, OrderInfo { owner: get_caller_address(), liquidity });
 
             let result: LockCallbackResult = call_core_with_callback(
                 core,
@@ -338,11 +341,10 @@ mod LimitOrders {
         fn close_order(
             ref self: ContractState, order_id: u64, recipient: ContractAddress
         ) -> (u128, u128) {
-            (0, 0)
-        }
+            let order_info = self.orders.read(order_id);
+            assert(get_caller_address() == order_info.owner, 'OWNER_ONLY');
 
-        fn get_order_info(self: @ContractState, order_id: u64) -> OrderInfo {
-            self.orders.read(order_id)
+            (0, 0)
         }
     }
 }

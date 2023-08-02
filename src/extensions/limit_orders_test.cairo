@@ -41,8 +41,72 @@ fn setup_pool_with_extension(
 
 #[test]
 #[available_gas(3000000000)]
-fn test_deploy() {
-    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+#[should_panic(expected: ('ZERO_FEE_ONLY', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+fn test_before_initialize_pool_fee_must_be_zero() {
+    let core = deploy_core();
+    let limit_orders = deploy_limit_orders(core);
+    let (token0, token1) = deploy_two_mock_tokens();
+
+    core
+        .initialize_pool(
+            PoolKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                fee: 1,
+                tick_spacing: 1,
+                extension: limit_orders.contract_address,
+            },
+            Zeroable::zero()
+        );
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('TICK_SPACING_ONE_ONLY', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+fn test_before_initialize_pool_tick_spacing_must_be_one() {
+    let core = deploy_core();
+    let limit_orders = deploy_limit_orders(core);
+    let (token0, token1) = deploy_two_mock_tokens();
+
+    core
+        .initialize_pool(
+            PoolKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                fee: 0,
+                tick_spacing: 2,
+                extension: limit_orders.contract_address,
+            },
+            Zeroable::zero()
+        );
+}
+#[test]
+#[available_gas(3000000000)]
+fn test_before_initialize_pool_sets_call_points() {
+    let core = deploy_core();
+    let limit_orders = deploy_limit_orders(core);
+    let (token0, token1) = deploy_two_mock_tokens();
+
+    let key = PoolKey {
+        token0: token0.contract_address,
+        token1: token1.contract_address,
+        fee: 0,
+        tick_spacing: 1,
+        extension: limit_orders.contract_address,
+    };
+    core.initialize_pool(key, i129 { mag: 12345, sign: true });
+
+    let price = core.get_pool_price(key);
+    assert(
+        price.call_points == CallPoints {
+            after_initialize_pool: false,
+            before_swap: false,
+            after_swap: true,
+            before_update_position: true,
+            after_update_position: false,
+        },
+        'call_points'
+    );
 }
 
 #[test]
@@ -57,4 +121,19 @@ fn test_place_order() {
             sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
         );
     assert(id == 1, 'id');
+
+    let oi = lo.get_order_info(id);
+    assert(oi.owner == get_contract_address(), 'owner');
+    assert(oi.liquidity == 200000350, 'liquidity');
+
+    let position = core
+        .get_position(
+            pk,
+            PositionKey {
+                salt: 0, owner: lo.contract_address, bounds: Bounds {
+                    lower: i129 { mag: 2, sign: false }, upper: i129 { mag: 3, sign: false }
+                },
+            }
+        );
+    assert(position.liquidity == 200000350, 'position created');
 }
