@@ -54,9 +54,7 @@ impl FeesPerLiquidityZeroable of Zeroable<FeesPerLiquidity> {
 }
 
 fn to_fees_per_liquidity(amount: u128, liquidity: u128) -> felt252 {
-    div(u256 { low: 0, high: amount }, liquidity.into(), false)
-        .try_into()
-        .expect('to_fees_per_liquidity')
+    (u256 { low: 0, high: amount } / liquidity.into()).try_into().expect('to_fees_per_liquidity')
 }
 
 fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> FeesPerLiquidity {
