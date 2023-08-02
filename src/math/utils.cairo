@@ -1,11 +1,5 @@
-use integer::{u256_overflow_sub, u256_from_felt252, u128_wrapping_sub};
+use integer::{u256_from_felt252, u128_wrapping_sub};
 use starknet::{ContractAddress, ContractAddressIntoFelt252};
-
-#[inline(always)]
-fn unsafe_sub(x: u256, y: u256) -> u256 {
-    let (res, _) = u256_overflow_sub(x, y);
-    res
-}
 
 // Allows comparing contract addresses as if they are integers
 impl ContractAddressOrder of PartialOrd<ContractAddress> {

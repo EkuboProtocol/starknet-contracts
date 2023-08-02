@@ -9,7 +9,7 @@ struct ExercisableAmount {
     strike_price: u256,
     amount: u128,
     tick_cumulative_current: i129,
-    seconds_per_liquidity_inside_current: u256,
+    seconds_per_liquidity_inside_current: felt252,
 }
 
 #[starknet::interface]
@@ -56,7 +56,6 @@ mod OptionIncentives {
     use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
     use zeroable::{Zeroable};
     use starknet::{get_caller_address, get_contract_address, get_block_timestamp};
-    use ekubo::math::utils::{unsafe_sub};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::muldiv::{muldiv};
     use traits::{Into};
@@ -66,7 +65,7 @@ mod OptionIncentives {
         timestamp_last: u64,
         owner: ContractAddress,
         tick_cumulative_snapshot: i129,
-        seconds_per_liquidity_inside_snapshot: u256,
+        seconds_per_liquidity_inside_snapshot: felt252,
     }
 
     #[storage]
@@ -184,10 +183,8 @@ mod OptionIncentives {
             let seconds_per_liquidity_inside_current = oracle
                 .get_seconds_per_liquidity_inside(pool_key, bounds);
 
-            let seconds_per_liquidity_difference = unsafe_sub(
-                seconds_per_liquidity_inside_current,
-                staked_info.seconds_per_liquidity_inside_snapshot
-            );
+            let seconds_per_liquidity_difference = seconds_per_liquidity_inside_current
+                - staked_info.seconds_per_liquidity_inside_snapshot;
 
             let liquidity = self
                 .positions
@@ -196,7 +193,9 @@ mod OptionIncentives {
                 .liquidity;
 
             // we know if this overflows the u256 container, the result overflows a u128
-            let amount = ((seconds_per_liquidity_difference * u256 { low: liquidity, high: 0 })
+            let amount = ((seconds_per_liquidity_difference.into() * u256 {
+                low: liquidity, high: 0
+            })
                 * u256 {
                 high: 0, low: self.options_per_second.read().into()
             })
