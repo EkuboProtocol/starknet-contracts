@@ -46,15 +46,15 @@ fn swap_result(
     is_token1: bool,
     fee: u128
 ) -> SwapResult {
+    // no amount traded means no-op, price doesn't move
+    if (amount.is_zero()) {
+        return no_op_swap_result(sqrt_ratio);
+    }
+
     // if we are at the final price already, or the liquidity is 0, early exit with the next price
     // note sqrt_ratio_limit is the sqrt_ratio_next in both cases
     if (liquidity.is_zero() | (sqrt_ratio == sqrt_ratio_limit)) {
         return no_op_swap_result(sqrt_ratio_limit);
-    }
-
-    // no amount traded means no-op, price doesn't move
-    if (amount.is_zero()) {
-        return no_op_swap_result(sqrt_ratio);
     }
 
     let increasing = is_price_increasing(amount.sign, is_token1);
