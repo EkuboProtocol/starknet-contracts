@@ -5,17 +5,16 @@ use starknet::{ContractAddress};
 struct OrderInfo {
     owner: ContractAddress,
     liquidity: u128,
-    epoch: u64,
 }
 
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
-    // Creates a new limit order, selling the given `sell_token` for the given `quote_token` at the specified tick
+    // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
     // The size of the order is determined by the current balance of the sell token
     fn place_order(
         ref self: TContractState,
         sell_token: ContractAddress,
-        quote_token: ContractAddress,
+        buy_token: ContractAddress,
         tick: i129
     ) -> u64;
 
@@ -49,6 +48,7 @@ mod LimitOrders {
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use traits::{TryInto, Into};
+    use debug::{PrintTrait};
 
     #[storage]
     struct Storage {
@@ -167,7 +167,8 @@ mod LimitOrders {
 
             let mut data_span = data.span();
 
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span).unwrap();
+            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
+                .expect('LOCK_CALLBACK_DESERIALIZE');
 
             let result = match callback_data {
                 LockCallbackData::PlaceOrderCallbackData(place_order) => {
@@ -186,26 +187,16 @@ mod LimitOrders {
                             }
                         );
 
-                    let sell_token = if (place_order.is_token1) {
-                        place_order.pool_key.token1
+                    let (pay_token, pay_amount) = if place_order.is_token1 {
+                        (place_order.pool_key.token1, delta.amount1.mag)
                     } else {
-                        place_order.pool_key.token0
+                        (place_order.pool_key.token0, delta.amount0.mag)
                     };
 
                     IERC20Dispatcher {
-                        contract_address: sell_token
-                    }
-                        .transfer(
-                            core.contract_address,
-                            (if place_order.is_token1 {
-                                delta.amount1
-                            } else {
-                                delta.amount0
-                            })
-                                .mag
-                                .into()
-                        );
-                    core.deposit(sell_token);
+                        contract_address: pay_token
+                    }.transfer(core.contract_address, pay_amount.into());
+                    core.deposit(pay_token);
 
                     LockCallbackResult {}
                 },
@@ -284,8 +275,8 @@ mod LimitOrders {
         fn place_order(
             ref self: ContractState,
             sell_token: ContractAddress,
-            quote_token: ContractAddress,
-            tick: i129
+            buy_token: ContractAddress,
+            tick: i129,
         ) -> u64 {
             // orders can only be placed on even ticks
             // this means we know even ticks are always the specified price
@@ -293,10 +284,10 @@ mod LimitOrders {
 
             let order_id = self.next_order_id.read();
             self.next_order_id.write(order_id + 1);
-            let (token0, token1, is_token1) = if (sell_token < quote_token) {
-                (sell_token, quote_token, false)
+            let (token0, token1, is_token1) = if (sell_token < buy_token) {
+                (sell_token, buy_token, false)
             } else {
-                (quote_token, sell_token, true)
+                (buy_token, sell_token, true)
             };
 
             let pool_key = PoolKey {
@@ -304,7 +295,6 @@ mod LimitOrders {
             };
 
             // validate the pool key is initialized
-
             let core = self.core.read();
             let price = core.get_pool_price(pool_key);
 
@@ -312,21 +302,35 @@ mod LimitOrders {
                 price.tick != tick, 'PRICE_AT_TICK'
             ); // cannot place an order at the current tick
 
+            assert(
+                if is_token1 {
+                    tick < price.tick
+                } else {
+                    tick > price.tick
+                }, 'TICK_WRONG_SIDE'
+            );
+
             let sqrt_ratio_lower = tick_to_sqrt_ratio(tick);
             let sqrt_ratio_upper = tick_to_sqrt_ratio(tick + i129 { mag: 1, sign: false });
             let amount: u128 = IERC20Dispatcher {
                 contract_address: sell_token
-            }.balanceOf(get_contract_address()).try_into().expect('BALANCE_TOO_LARGE');
-            let liquidity = if (is_token1) {
-                max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
-            } else {
+            }.balanceOf(get_contract_address()).try_into().expect('SELL_BALANCE_TOO_LARGE');
+            let liquidity = if is_token1 {
                 max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
+            } else {
+                max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
             };
 
-            assert(liquidity > 0, 'ORDER_LIQUIDITY');
+            assert(liquidity > 0, 'SELL_AMOUNT_TOO_SMALL');
 
-            let callback_data = PlaceOrderCallbackData { pool_key, tick, is_token1, liquidity };
-            let result: LockCallbackResult = call_core_with_callback(core, @callback_data);
+            self.orders.write(order_id, OrderInfo { owner: get_contract_address(), liquidity });
+
+            let result: LockCallbackResult = call_core_with_callback(
+                core,
+                @LockCallbackData::PlaceOrderCallbackData(
+                    PlaceOrderCallbackData { pool_key, tick, is_token1, liquidity }
+                )
+            );
 
             order_id
         }

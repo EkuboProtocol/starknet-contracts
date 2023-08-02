@@ -44,3 +44,17 @@ fn setup_pool_with_extension(
 fn test_deploy() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 }
+
+#[test]
+#[available_gas(3000000000)]
+fn test_place_order() {
+    let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    t0.increase_balance(lo.contract_address, 100);
+    let id = lo
+        .place_order(
+            sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+        );
+    assert(id == 1, 'id');
+}
