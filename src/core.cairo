@@ -27,7 +27,7 @@ mod Core {
     use ekubo::math::muldiv::{muldiv, div};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
-    use ekubo::math::utils::{ContractAddressOrder, u128_max};
+    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::owner::{check_owner_only};
     use ekubo::types::i129::{i129, AddDeltaTrait};
     use ekubo::types::fees_per_liquidity::{

@@ -8,7 +8,7 @@ use ekubo::types::keys::PoolKey;
 use ekubo::types::i129::i129;
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
-use ekubo::math::utils::ContractAddressOrder;
+use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
