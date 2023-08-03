@@ -17,7 +17,7 @@ fn ordered_non_zero<
     } else {
         (y, x)
     };
-    assert(x.is_non_zero(), 'NONZERO');
+    assert(lower.is_non_zero(), 'NONZERO');
     (lower, upper)
 }
 

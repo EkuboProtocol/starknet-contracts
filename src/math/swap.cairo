@@ -46,21 +46,22 @@ fn swap_result(
     is_token1: bool,
     fee: u128
 ) -> SwapResult {
-    // if we are at the final price already, or the liquidity is 0, early exit with the next price
-    // note sqrt_ratio_limit is the sqrt_ratio_next in both cases
-    if (liquidity.is_zero() | (sqrt_ratio == sqrt_ratio_limit)) {
-        return no_op_swap_result(sqrt_ratio_limit);
-    }
-
     // no amount traded means no-op, price doesn't move
-    if (amount.is_zero()) {
+    // also if the limit is the current price, price cannot move
+    if (amount.is_zero() | (sqrt_ratio == sqrt_ratio_limit)) {
         return no_op_swap_result(sqrt_ratio);
     }
 
     let increasing = is_price_increasing(amount.sign, is_token1);
 
-    // we know limit != sqrt_ratio because of the early return, so this ensures that the limit is in the correct direction
+    // we know sqrt_ratio != sqrt_ratio_limit because of the early return,
+    // so this ensures that the limit is in the correct direction
     assert((sqrt_ratio_limit > sqrt_ratio) == increasing, 'DIRECTION');
+
+    // if liquidity is 0, early exit with the next price because there is nothing to trade against
+    if (liquidity.is_zero()) {
+        return no_op_swap_result(sqrt_ratio_limit);
+    }
 
     // this amount is what moves the price. fee is always taken on the specified amount
     // if the user is buying a token, then they pay a fee on the purchased amount

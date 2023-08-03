@@ -15,15 +15,17 @@ struct PoolState {
     tick_cumulative_last: i129,
     // 32 bits
     tick_last: i129,
-    // 192 bits, but need to handle overflow/underflow correctly if we want to pack it
-    seconds_per_liquidity_global: u256,
+    // 192 bits max, but need to handle overflow/underflow correctly if we want to pack it
+    seconds_per_liquidity_global: felt252,
 }
 
 #[starknet::interface]
 trait IOracle<TStorage> {
     // Returns the seconds per liquidity within the given bounds. Must be used only as a snapshot
     // You cannot rely on this snapshot to be consistent across positions
-    fn get_seconds_per_liquidity_inside(self: @TStorage, pool_key: PoolKey, bounds: Bounds) -> u256;
+    fn get_seconds_per_liquidity_inside(
+        self: @TStorage, pool_key: PoolKey, bounds: Bounds
+    ) -> felt252;
 
     // Returns the cumulative tick value for a given pool, useful for computing a geomean oracle for the duration of a position
     fn get_tick_cumulative(self: @TStorage, pool_key: PoolKey) -> i129;
@@ -37,21 +39,20 @@ mod Oracle {
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::i129::{i129};
     use ekubo::math::swap::{is_price_increasing};
-    use ekubo::math::utils::{unsafe_sub};
-    use ekubo::math::muldiv::{div};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
     };
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use zeroable::{Zeroable};
-    use traits::{Into};
+    use traits::{Into, TryInto};
+    use option::{OptionTrait};
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
-        tick_state: LegacyMap<(PoolKey, i129), u256>,
+        tick_seconds_per_liquidity_outside: LegacyMap<(PoolKey, i129), felt252>,
     }
 
     #[constructor]
@@ -81,9 +82,9 @@ mod Oracle {
 
             let seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
                 state.seconds_per_liquidity_global
-                    + div(
-                        u256 { low: 0, high: time_passed }, u256 { low: liquidity, high: 0 }, false
-                    )
+                    + (u256 { low: 0, high: time_passed } / u256 { low: liquidity, high: 0 })
+                        .try_into()
+                        .unwrap()
             } else {
                 state.seconds_per_liquidity_global
             };
@@ -112,17 +113,17 @@ mod Oracle {
         // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
         fn get_seconds_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
-        ) -> u256 {
+        ) -> felt252 {
             let core = self.core.read();
             let time = get_block_timestamp();
             let price = core.get_pool_price(pool_key);
 
             // subtract the lower and upper tick of the bounds based on the price
-            let lower = self.tick_state.read((pool_key, bounds.lower));
-            let upper = self.tick_state.read((pool_key, bounds.upper));
+            let lower = self.tick_seconds_per_liquidity_outside.read((pool_key, bounds.lower));
+            let upper = self.tick_seconds_per_liquidity_outside.read((pool_key, bounds.upper));
 
             if (price.tick < bounds.lower) {
-                unsafe_sub(upper, lower)
+                upper - lower
             } else if (price.tick < bounds.upper) {
                 // get the global seconds per liquidity
                 let state = self.pool_state.read(pool_key);
@@ -134,17 +135,19 @@ mod Oracle {
                         state.seconds_per_liquidity_global
                     } else {
                         state.seconds_per_liquidity_global
-                            + (div(
-                                u256 { low: 0, high: (time - state.block_timestamp_last).into() },
-                                u256 { low: liquidity, high: 0 },
-                                false
-                            ))
+                            + (u256 {
+                                low: 0, high: (time - state.block_timestamp_last).into()
+                                } / u256 {
+                                low: liquidity, high: 0
+                            })
+                                .try_into()
+                                .unwrap()
                     }
                 };
 
-                unsafe_sub(unsafe_sub(seconds_per_liquidity_global, lower), upper)
+                (seconds_per_liquidity_global - lower) - upper
             } else {
-                unsafe_sub(upper, lower)
+                upper - lower
             }
         }
 
@@ -230,6 +233,8 @@ mod Oracle {
 
             let mut tick = state.tick_last;
 
+            let current = self.tick_seconds_per_liquidity_outside.read((pool_key, tick));
+
             // update all the ticks between the last updated tick to the starting tick
             loop {
                 let (next, initialized) = if (increasing) {
@@ -243,14 +248,9 @@ mod Oracle {
                 }
 
                 if (initialized) {
-                    let current = self.tick_state.read((pool_key, tick));
-
                     self
-                        .tick_state
-                        .write(
-                            (pool_key, tick),
-                            unsafe_sub(state.seconds_per_liquidity_global, current)
-                        );
+                        .tick_seconds_per_liquidity_outside
+                        .write((pool_key, tick), current - state.seconds_per_liquidity_global);
                 }
 
                 tick = if (increasing) {

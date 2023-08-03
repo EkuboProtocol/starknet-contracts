@@ -1,5 +1,30 @@
-use ekubo::math::delta::{amount0_delta, amount1_delta};
+use ekubo::math::delta::{amount0_delta, amount1_delta, ordered_non_zero};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+
+#[test]
+fn test_ordered_non_zero() {
+    assert(ordered_non_zero(1_u128, 2) == (1, 2), '1,2');
+    assert(ordered_non_zero(2_u128, 1) == (1, 2), '2,1');
+    assert(ordered_non_zero(2_u128, 2) == (2, 2), '2,1');
+    assert(ordered_non_zero(3_u256, 2) == (2, 3), '3,2');
+    assert(ordered_non_zero(2_u256, 3) == (2, 3), '2,3');
+}
+
+#[test]
+#[should_panic(expected: ('NONZERO', ))]
+fn test_ordered_non_zero_panics_zero() {
+    ordered_non_zero(0_u128, 1);
+}
+#[test]
+#[should_panic(expected: ('NONZERO', ))]
+fn test_ordered_non_zero_panics_zero_second() {
+    ordered_non_zero(1_u128, 0);
+}
+#[test]
+#[should_panic(expected: ('NONZERO', ))]
+fn test_ordered_non_zero_panics_zero_both() {
+    ordered_non_zero(0_u128, 0);
+}
 
 #[test]
 fn test_amount0_delta_price_down() {

@@ -8,7 +8,7 @@ use ekubo::types::keys::PoolKey;
 use ekubo::types::i129::i129;
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
-use ekubo::math::utils::ContractAddressOrder;
+use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
@@ -352,7 +352,7 @@ fn swap_inner(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     let before: Balances = get_balances(
         token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
@@ -412,7 +412,7 @@ fn swap(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     swap_inner(
         setup.core,
