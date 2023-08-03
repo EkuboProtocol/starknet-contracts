@@ -76,7 +76,7 @@ fn deposit(
     pool_key: PoolKey,
     bounds: Bounds,
     min_liquidity: u128
-) -> (u256, u128) {
+) -> (u64, u128) {
     let token_id = positions.mint(pool_key: pool_key, bounds: bounds);
 
     let price = core.get_pool_price(pool_key);

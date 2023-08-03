@@ -4,7 +4,7 @@ use ekubo::types::keys::{PoolKey};
 
 // must be checked to support interface first
 const IERC721_RECEIVER_INTERFACE_ID: u32 = 0x150b7a02;
-const IACCOUNT_INTERFACE_ID: u32 = 0xa66bd575;
+const IACCOUNT_INTERFACE_ID: felt252 = 0xa66bd575;
 
 #[starknet::interface]
 trait IERC721Receiver<TStorage> {
