@@ -348,6 +348,9 @@ mod Positions {
                 || interfaceId == 0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd
                 // cairo 0 interface id?
                 || interfaceId == 0x80ac58cd
+                // SRC5 interface ID 
+                // https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-5.md#how-to-detect-if-a-contract-implements-src-5
+                || interfaceId == 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055
         }
 
 
