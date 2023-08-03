@@ -927,5 +927,33 @@ mod Core {
 
             delta
         }
+
+        fn accumulate_as_fees(
+            ref self: ContractState, pool_key: PoolKey, amount0: u128, amount1: u128
+        ) -> Delta {
+            let (id, _) = self.require_locker();
+
+            self
+                .pool_fees
+                .write(
+                    pool_key,
+                    self.pool_fees.read(pool_key)
+                        + fees_per_liquidity_new(
+                            amount0, amount1, self.pool_liquidity.read(pool_key)
+                        )
+                );
+
+            let delta = Delta {
+                amount0: i129 {
+                    mag: amount0, sign: false
+                    }, amount1: i129 {
+                    mag: amount1, sign: false
+                },
+            };
+
+            self.account_pool_delta(id, pool_key, delta);
+
+            delta
+        }
     }
 }
