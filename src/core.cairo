@@ -183,9 +183,9 @@ mod Core {
             let current = self.deltas.read(key);
             let next = current + delta;
             self.deltas.write(key, next);
-            if ((current.mag == 0) & (next.mag != 0)) {
+            if (current.is_zero() & next.is_non_zero()) {
                 self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) + 1);
-            } else if ((current.mag != 0) & (next.mag == 0)) {
+            } else if (current.is_non_zero() & next.is_zero()) {
                 self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) - 1);
             }
         }

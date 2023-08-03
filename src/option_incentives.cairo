@@ -16,16 +16,12 @@ struct ExercisableAmount {
 trait IOptionIncentives<TStorage> {
     // Stake a token from the positions NFT contract. The token must already be transferred to the contract but not staked
     fn stake(
-        ref self: TStorage,
-        token_id: u256,
-        pool_key: PoolKey,
-        bounds: Bounds,
-        owner: ContractAddress
+        ref self: TStorage, token_id: u64, pool_key: PoolKey, bounds: Bounds, owner: ContractAddress
     );
 
     // Get the number of exercisable call options for a given position
     fn get_exercisable_amount(
-        self: @TStorage, token_id: u256, pool_key: PoolKey, bounds: Bounds, 
+        self: @TStorage, token_id: u64, pool_key: PoolKey, bounds: Bounds, 
     ) -> ExercisableAmount;
 
     // Exercise options for a given staked position NFT. The quote token must already be transferred to the contract, and the
@@ -34,14 +30,14 @@ trait IOptionIncentives<TStorage> {
     // When this is exercised successfully, it clears any unexercised options.
     fn exercise(
         ref self: TStorage,
-        token_id: u256,
+        token_id: u64,
         pool_key: PoolKey,
         bounds: Bounds,
         min_output: u128,
         recipient: ContractAddress
     ) -> u128;
     // Unstake a token ID and send it to the specified recipient. This action forfeits any unexercised options.
-    fn unstake(ref self: TStorage, token_id: u256, recipient: ContractAddress);
+    fn unstake(ref self: TStorage, token_id: u64, recipient: ContractAddress);
 }
 
 // This contract is used to incentivize users to stake their liquidity position NFT with call options
@@ -79,26 +75,26 @@ mod OptionIncentives {
         // no decimal because options are expressed in terms of 1 wei of token
         options_per_second: u64,
         // the owner of a staked token
-        staked_token_info: LegacyMap<u256, StakedTokenInfo>,
+        staked_token_info: LegacyMap<u64, StakedTokenInfo>,
         // the address that receives the executed balance
         benefactor: ContractAddress,
     }
 
     #[derive(starknet::Event, Drop)]
     struct Staked {
-        token_id: u256,
+        token_id: u64,
         owner: ContractAddress,
     }
 
     #[derive(starknet::Event, Drop)]
     struct Unstaked {
-        token_id: u256,
+        token_id: u64,
         recipient: ContractAddress,
     }
 
     #[derive(starknet::Event, Drop)]
     struct Exercised {
-        token_id: u256,
+        token_id: u64,
         paid: u128,
         purchased: u128,
         recipient: ContractAddress,
@@ -135,7 +131,7 @@ mod OptionIncentives {
     impl OptionIncentivesImpl of IOptionIncentives<ContractState> {
         fn stake(
             ref self: ContractState,
-            token_id: u256,
+            token_id: u64,
             pool_key: PoolKey,
             bounds: Bounds,
             owner: ContractAddress
@@ -170,11 +166,11 @@ mod OptionIncentives {
                     }
                 );
 
-            self.emit(Staked { token_id: token_id, owner: owner });
+            self.emit(Staked { token_id, owner: owner });
         }
 
         fn get_exercisable_amount(
-            self: @ContractState, token_id: u256, pool_key: PoolKey, bounds: Bounds, 
+            self: @ContractState, token_id: u64, pool_key: PoolKey, bounds: Bounds, 
         ) -> ExercisableAmount {
             let staked_info = self.staked_token_info.read(token_id);
 
@@ -224,7 +220,7 @@ mod OptionIncentives {
 
         fn exercise(
             ref self: ContractState,
-            token_id: u256,
+            token_id: u64,
             pool_key: PoolKey,
             bounds: Bounds,
             min_output: u128,
@@ -282,7 +278,7 @@ mod OptionIncentives {
             purchased
         }
 
-        fn unstake(ref self: ContractState, token_id: u256, recipient: ContractAddress) {
+        fn unstake(ref self: ContractState, token_id: u64, recipient: ContractAddress) {
             let staked_info = self.staked_token_info.read(token_id);
             assert(staked_info.owner == get_caller_address(), 'NOT_OWNER');
 
@@ -300,7 +296,7 @@ mod OptionIncentives {
 
             IERC721Dispatcher {
                 contract_address: self.positions.read().contract_address
-            }.transferFrom(get_contract_address(), recipient, token_id);
+            }.transferFrom(get_contract_address(), recipient, token_id.into());
 
             self.emit(Unstaked { token_id: token_id, recipient: recipient });
         }
