@@ -191,6 +191,12 @@ mod Core {
             }
         }
 
+        #[inline(always)]
+        fn account_pool_delta(ref self: ContractState, id: u32, pool_key: PoolKey, delta: Delta) {
+            self.account_delta(id, pool_key.token0, delta.amount0);
+            self.account_delta(id, pool_key.token1, delta.amount1);
+        }
+
         // Remove the initialized tick for the given pool
         fn remove_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
@@ -718,8 +724,7 @@ mod Core {
             }
 
             // and finally account the computed deltas
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
@@ -761,8 +766,7 @@ mod Core {
                 },
             };
 
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
@@ -918,8 +922,7 @@ mod Core {
             self.pool_liquidity.write(pool_key, liquidity);
             self.pool_fees.write(pool_key, fees_per_liquidity);
 
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self
                 .emit(
