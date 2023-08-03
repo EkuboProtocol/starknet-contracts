@@ -21,4 +21,6 @@ mod i129_test;
 #[cfg(test)]
 mod keys_test;
 #[cfg(test)]
+mod position_test;
+#[cfg(test)]
 mod pool_price_test;
