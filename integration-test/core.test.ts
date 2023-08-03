@@ -2,15 +2,15 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import {
   Account,
-  RpcProvider,
   Contract,
   ContractFactory,
-  CompiledContract,
   hash,
+  RpcProvider,
 } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
-import QuoterCompiledContract from "../target/dev/ekubo_Quoter.sierra.json";
+import CoreCompiledContractCASM from "../target/dev/ekubo_Core.casm.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
+import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.casm.json";
 
 function numberToFixedPoint128(x: number): bigint {
   let power = 0;
@@ -106,19 +106,8 @@ describe("core tests", () => {
   let rpcUrl: string;
   let accounts: Account[];
   let provider: RpcProvider;
-  let coreClassHash: string;
-  let quoterClassHash: string;
-  let positionsClassHash: string;
-
-  beforeAll(() => {
-    coreClassHash = hash.computeContractClassHash(CoreCompiledContract as any);
-    quoterClassHash = hash.computeContractClassHash(
-      QuoterCompiledContract as any
-    );
-    positionsClassHash = hash.computeContractClassHash(
-      PositionsCompiledContract as any
-    );
-  });
+  let coreContractFactory: ContractFactory;
+  let positionsContractFactory: ContractFactory;
 
   beforeAll(() => {
     starknetProcess = spawn("katana", ["--seed", "0"]);
@@ -155,26 +144,36 @@ describe("core tests", () => {
     });
   });
 
+  beforeAll(() => {
+    coreContractFactory = new ContractFactory({
+      compiledContract: CoreCompiledContract as any,
+      classHash: hash.computeContractClassHash(CoreCompiledContract as any),
+      account: accounts[0],
+      compiledClassHash: hash.computeCompiledClassHash(
+        CoreCompiledContractCASM as any
+      ),
+    });
+    positionsContractFactory = new ContractFactory({
+      compiledContract: PositionsCompiledContract as any,
+      classHash: hash.computeContractClassHash(
+        PositionsCompiledContract as any
+      ),
+      account: accounts[0],
+      compiledClassHash: hash.computeCompiledClassHash(
+        PositionsCompiledContractCASM as any
+      ),
+    });
+  });
+
   let core: Contract;
-  let quoter: Contract;
   let positions: Contract;
 
   beforeEach(async () => {
-    core = await new ContractFactory({
-      compiledContract: CoreCompiledContract as any,
-      classHash: coreClassHash,
-      account: accounts[0],
-    }).deploy();
-    quoter = await new ContractFactory({
-      compiledContract: QuoterCompiledContract as any,
-      classHash: quoterClassHash,
-      account: accounts[0],
-    }).deploy(core.address);
-    positions = await new ContractFactory({
-      compiledContract: PositionsCompiledContract as any,
-      classHash: positionsClassHash,
-      account: accounts[0],
-    }).deploy(core.address, "https://f.ekubo.org/");
+    core = await coreContractFactory.deploy();
+    positions = await positionsContractFactory.deploy(
+      core.address,
+      "https://f.ekubo.org/"
+    );
   });
 
   for (const poolCase of POOL_CASES) {
