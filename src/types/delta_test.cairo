@@ -1,5 +1,5 @@
 use ekubo::types::i129::{i129};
-use ekubo::types::delta::{Delta, DeltaAdd};
+use ekubo::types::delta::{Delta};
 use zeroable::Zeroable;
 
 #[test]

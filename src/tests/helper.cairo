@@ -27,6 +27,7 @@ use ekubo::tests::mocks::locker::{
     UpdatePositionParameters, SwapParameters
 };
 use ekubo::types::call_points::{CallPoints};
+use ekubo::enumerable_owned_nft::{EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher};
 
 use starknet::{
     get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
@@ -43,6 +44,29 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
+}
+
+fn deploy_enumerable_owned_nft(
+    owner: ContractAddress, name: felt252, symbol: felt252, token_uri_base: felt252
+) -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+
+    Serde::serialize(@owner, ref constructor_args);
+    Serde::serialize(@name, ref constructor_args);
+    Serde::serialize(@symbol, ref constructor_args);
+    Serde::serialize(@token_uri_base, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        EnumerableOwnedNFT::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('nft deploy failed');
+    return (
+        IEnumerableOwnedNFTDispatcher {
+            contract_address: address
+            }, IERC721Dispatcher {
+            contract_address: address
+        }
+    );
 }
 
 fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
@@ -128,24 +152,19 @@ fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
     ICoreLockerDispatcher { contract_address: address }
 }
 
-impl IPositionsDispatcherIntoIERC721Dispatcher of Into<IPositionsDispatcher, IERC721Dispatcher> {
-    fn into(self: IPositionsDispatcher) -> IERC721Dispatcher {
-        IERC721Dispatcher { contract_address: self.contract_address }
-    }
-}
-
 impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILockerDispatcher> {
     fn into(self: IPositionsDispatcher) -> ILockerDispatcher {
         ILockerDispatcher { contract_address: self.contract_address }
     }
 }
 
-
 fn deploy_positions_custom_uri(
     core: ICoreDispatcher, token_uri_base: felt252
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
+    let ch: ClassHash = EnumerableOwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
+    Serde::serialize(@ch, ref constructor_args);
     Serde::serialize(@token_uri_base, ref constructor_args);
 
     let (address, _) = deploy_syscall(

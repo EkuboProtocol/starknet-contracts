@@ -374,9 +374,7 @@ fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     // if positive and non-zero, invert, because we were computng a negative value
     if (!tick.sign) {
         if (tick.mag != 0) {
-            ratio = u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
-            } / ratio;
+            ratio = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_u256 / ratio;
         }
     }
 
