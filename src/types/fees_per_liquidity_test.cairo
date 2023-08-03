@@ -1,7 +1,8 @@
 use ekubo::types::i129::{i129};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity, fees_per_liquidity_new};
-use zeroable::Zeroable;
-use debug::PrintTrait;
+use ekubo::types::fees_per_liquidity::{
+    FeesPerLiquidity, to_fees_per_liquidity, fees_per_liquidity_new
+};
+use zeroable::{Zeroable};
 
 const FELT252_MAX: felt252 =
     3618502788666131213697322783095070105623107215331596699973092056135872020480;
@@ -56,7 +57,7 @@ fn test_fpl_overflow_add() {
 }
 
 #[test]
-fn test_to_fees_per_liquidity() {
+fn test_fees_per_liquidity_new() {
     assert(
         fees_per_liquidity_new(100, 250, 10000) == FeesPerLiquidity {
             fees_per_liquidity_token0: 3402823669209384634633746074317682114,
@@ -64,6 +65,23 @@ fn test_to_fees_per_liquidity() {
         },
         'example'
     );
+}
+
+#[test]
+fn test_to_fees_per_liquidity_max_fees() {
+    to_fees_per_liquidity(10633823966279327296825105735305134080, 1);
+}
+
+#[test]
+#[should_panic(expected: ('FEES_OVERFLOW', ))]
+fn test_to_fees_per_liquidity_overflows() {
+    to_fees_per_liquidity(10633823966279327296825105735305134081, 1);
+}
+
+#[test]
+#[should_panic(expected: ('ZERO_LIQUIDITY_FEES', ))]
+fn test_to_fees_per_liquidity_div_by_zero() {
+    to_fees_per_liquidity(1, 0);
 }
 
 #[test]
