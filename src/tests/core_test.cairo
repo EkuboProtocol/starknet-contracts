@@ -862,7 +862,30 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 50, sign: false }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 50, sign: false }, 'amount1_delta');
+        assert(delta.amount1 == i129 { mag: 50, sign: false }, 'amount1');
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_accumulate_fees_per_liquidity() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
+
+        update_position(
+            setup: setup,
+            bounds: Bounds {
+                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }, 
+            },
+            liquidity_delta: i129 { mag: 10000000, sign: false },
+            recipient: contract_address_const::<42>()
+        );
     }
 
     #[test]
@@ -1950,6 +1973,9 @@ mod save_load_tests {
             ActionResult::LoadBalance(_) => {
                 assert(false, 'unexpected');
             },
+            ActionResult::AccumulateAsFees(_) => {
+                assert(false, 'unexpected')
+            },
         };
 
         assert(
@@ -1985,6 +2011,9 @@ mod save_load_tests {
             },
             ActionResult::LoadBalance(balance_next) => {
                 assert(balance_next == 0, 'balance_next');
+            },
+            ActionResult::AccumulateAsFees(_) => {
+                assert(false, 'unexpected')
             },
         };
     }
