@@ -952,7 +952,7 @@ mod Core {
             ref self: ContractState, pool_key: PoolKey, amount0: u128, amount1: u128
         ) -> Delta {
             let (id, _) = self.require_locker();
-            
+
             self
                 .pool_fees
                 .write(
@@ -971,8 +971,7 @@ mod Core {
                 },
             };
 
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             delta
         }
