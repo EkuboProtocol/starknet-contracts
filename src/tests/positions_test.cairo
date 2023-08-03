@@ -14,8 +14,7 @@ use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
-    IPositionsDispatcherIntoIERC721Dispatcher, IPositionsDispatcherIntoILockerDispatcher,
-    core_owner, SetupPoolResult
+    IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
 use array::ArrayTrait;
 use option::OptionTrait;
@@ -39,331 +38,6 @@ fn test_maybe_initialize_pool_twice() {
     positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
 
     assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_name_symbol() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
-    assert(positions.name() == 'Ekubo Position NFT', 'name');
-    assert(positions.symbol() == 'EpNFT', 'symbol');
-    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_indexing_token_ids() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-    let positions_721 = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
-
-    let pool_key = PoolKey {
-        token0: Zeroable::zero(),
-        token1: Zeroable::zero(),
-        fee: Zeroable::zero(),
-        tick_spacing: Zeroable::zero(),
-        extension: Zeroable::zero(),
-    };
-
-    let bounds = Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() };
-
-    let owner = contract_address_const::<912345>();
-    let other = contract_address_const::<9123456>();
-
-    assert(positions_721.balanceOf(owner) == 0, 'balance start');
-    let mut all = positions.get_all_positions(owner);
-    assert(all.len() == 0, 'len before');
-
-    set_contract_address(owner);
-    let token_id = positions.mint(pool_key: pool_key, bounds: bounds);
-
-    assert(positions_721.balanceOf(owner) == 1, 'balance after');
-    all = positions.get_all_positions(owner);
-    assert(all.len() == 1, 'len after');
-
-    set_contract_address(owner);
-    positions_721.transferFrom(owner, other, all.pop_front().unwrap().into());
-
-    assert(positions_721.balanceOf(owner) == 0, 'balance after transfer');
-    all = positions.get_all_positions(owner);
-    assert(all.len() == 0, 'len after transfer');
-
-    assert(positions_721.balanceOf(other) == 1, 'balance other transfer');
-    all = positions.get_all_positions(other);
-    assert(all.len() == 1, 'len other');
-    assert(all.pop_front().unwrap().into() == token_id.low, 'token other');
-
-    let token_id_2 = positions.mint(pool_key: pool_key, bounds: bounds);
-    set_contract_address(other);
-    positions_721.transferFrom(other, owner, token_id);
-
-    all = positions.get_all_positions(owner);
-    assert(all.len() == 2, 'len final');
-    assert(all.pop_front().unwrap().into() == token_id.low, 'token1');
-    assert(all.pop_front().unwrap().into() == token_id_2.low, 'token2');
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_custom_uri() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(
-        deploy_positions_custom_uri(core, 'ipfs://abcdef/')
-    );
-    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
-}
-
-#[test]
-#[available_gas(300000000)]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
-fn test_nft_approve_fails_id_not_exists() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
-    set_contract_address(contract_address_const::<1>());
-    positions.approve(contract_address_const::<2>(), 1);
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_approve_succeeds_after_mint() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-    set_contract_address(contract_address_const::<1>());
-
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-        .approve(contract_address_const::<2>(), token_id);
-    assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-            .getApproved(token_id) == contract_address_const::<2>(),
-        'approved'
-    );
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_transfer_from() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-
-    set_contract_address(contract_address_const::<1>());
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
-
-    nft.approve(contract_address_const::<3>(), token_id);
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
-
-    assert(nft.balanceOf(contract_address_const::<1>()) == u256 { low: 0, high: 0 }, 'bal from');
-    assert(nft.balanceOf(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'bal to');
-    assert(nft.ownerOf(token_id) == contract_address_const::<2>(), 'owner');
-    assert(nft.getApproved(token_id) == Zeroable::zero(), 'zeroed approval');
-}
-
-#[test]
-#[available_gas(300000000)]
-#[should_panic(expected: ('UNAUTHORIZED', 'ENTRYPOINT_FAILED'))]
-fn test_nft_transfer_from_fails_not_from_owner() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-
-    set_contract_address(contract_address_const::<1>());
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    set_contract_address(contract_address_const::<2>());
-
-    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
-
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_transfer_from_succeeds_from_approved() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-
-    set_contract_address(contract_address_const::<1>());
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
-    nft.approve(contract_address_const::<2>(), token_id);
-
-    set_contract_address(contract_address_const::<2>());
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_transfer_from_succeeds_from_approved_for_all() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-    let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
-
-    set_contract_address(contract_address_const::<1>());
-    nft.setApprovalForAll(contract_address_const::<2>(), true);
-
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    set_contract_address(contract_address_const::<2>());
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id);
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_token_uri() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
-
-    assert(positions.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
-    assert(
-        positions.tokenUri(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999',
-        'token_uri'
-    );
-    assert(
-        positions.tokenUri(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
-        'token_uri'
-    );
-    assert(
-        positions.tokenUri(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
-        'max token_uri'
-    );
-}
-
-#[test]
-#[available_gas(300000000)]
-#[should_panic(expected: ('URI_LENGTH', 'ENTRYPOINT_FAILED'))]
-fn test_nft_token_uri_reverts_too_long() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
-
-    positions.tokenUri(u256 { low: 999999999999, high: 0 });
-}
-
-#[test]
-#[available_gas(300000000)]
-#[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
-fn test_nft_token_uri_reverts_token_id_too_big() {
-    let core = deploy_core();
-    let positions = IPositionsDispatcherIntoIERC721Dispatcher::into(deploy_positions(core));
-
-    positions.tokenUri(u256 { low: 10000000000000000000000000000000, high: 0 });
-}
-
-#[test]
-#[available_gas(300000000)]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
-fn test_nft_approve_only_owner_can_approve() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-
-    let token_id = positions
-        .mint(
-            pool_key: PoolKey {
-                token0: Zeroable::zero(),
-                token1: Zeroable::zero(),
-                fee: Zeroable::zero(),
-                tick_spacing: Zeroable::zero(),
-                extension: Zeroable::zero(),
-            },
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-        );
-
-    set_contract_address(contract_address_const::<2>());
-    IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-        .approve(contract_address_const::<2>(), token_id);
-}
-
-#[test]
-#[available_gas(300000000)]
-fn test_nft_balance_of() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-
-    let recipient = contract_address_const::<2>();
-    assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions)
-            .balanceOf(recipient) == Zeroable::zero(),
-        'balance check'
-    );
-
-    set_contract_address(recipient);
-    // note we do not check the validity of the position key, it only comes into play when trying to add liquidity fails
-    assert(
-        positions
-            .mint(
-                pool_key: PoolKey {
-                    token0: Zeroable::zero(),
-                    token1: Zeroable::zero(),
-                    fee: Zeroable::zero(),
-                    tick_spacing: Zeroable::zero(),
-                    extension: Zeroable::zero(),
-                },
-                bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
-            ) == 1,
-        'token id'
-    );
-    assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).ownerOf(1) == recipient, 'owner'
-    );
-    assert(
-        IPositionsDispatcherIntoIERC721Dispatcher::into(positions).balanceOf(recipient) == u256 {
-            low: 1, high: 0
-        },
-        'balance check after'
-    );
 }
 
 #[test]
@@ -683,7 +357,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     let (amount0, amount1) = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: (liquidity / 2),
@@ -719,7 +393,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     // withdraw fees only
     let (amount0, amount1) = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: 0,
@@ -747,7 +421,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     // withdraw quarter
     let (amount0, amount1) = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: (liquidity / 4),
@@ -775,7 +449,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     // withdraw remainder
     let (amount0, amount1) = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: liquidity - (liquidity / 2) - (liquidity / 4),
@@ -828,7 +502,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
 
     let withdrawn = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: liquidity,
@@ -1086,7 +760,7 @@ fn test_deposit_swap_round_trip_accounting() {
 
     let (amount0, amount1) = positions
         .withdraw(
-            token_id: token_id,
+            id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: 0,
@@ -1107,7 +781,7 @@ fn test_deposit_swap_round_trip_accounting() {
 
 #[derive(Copy, Drop)]
 struct CreatePositionResult {
-    id: u256,
+    id: u64,
     bounds: Bounds,
     liquidity: u128,
 }
@@ -1124,7 +798,7 @@ fn create_position(
     setup.token1.set_balance(positions.contract_address, amount1.into());
 
     let liquidity = positions
-        .deposit(token_id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+        .deposit(id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
     CreatePositionResult { id: token_id, bounds, liquidity }
 }
@@ -1255,7 +929,7 @@ fn test_withdraw_not_collected_fees_token1() {
 
     positions
         .withdraw(
-            token_id: p0.id,
+            id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity),
@@ -1307,7 +981,7 @@ fn test_withdraw_not_collected_fees_token0() {
 
     positions
         .withdraw(
-            token_id: p0.id,
+            id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity),
@@ -1351,7 +1025,7 @@ fn test_withdraw_partial_leave_fees() {
 
     positions
         .withdraw(
-            token_id: p0.id,
+            id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity / 3),

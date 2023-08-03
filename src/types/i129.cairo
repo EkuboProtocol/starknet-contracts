@@ -16,6 +16,13 @@ struct i129 {
     sign: bool,
 }
 
+#[generate_trait]
+impl i129TraitImpl of i129Trait {
+    fn is_negative(self: i129) -> bool {
+        self.sign & (self.mag.is_non_zero())
+    }
+}
+
 
 #[inline(always)]
 fn i129_new(mag: u128, sign: bool) -> i129 {
@@ -24,15 +31,15 @@ fn i129_new(mag: u128, sign: bool) -> i129 {
 
 impl i129Zeroable of Zeroable<i129> {
     fn zero() -> i129 {
-        i129_new(0, false)
+        i129 { mag: 0, sign: false }
     }
 
     fn is_zero(self: i129) -> bool {
-        self.mag == 0
+        self.mag.is_zero()
     }
 
     fn is_non_zero(self: i129) -> bool {
-        self.mag != 0
+        self.mag.is_non_zero()
     }
 }
 
@@ -51,7 +58,7 @@ impl u128IntoI129 of Into<u128, i129> {
 
 impl i129TryIntoU128 of TryInto<i129, u128> {
     fn try_into(self: i129) -> Option<u128> {
-        if (self.sign & (self.mag != 0)) {
+        if (self.is_negative()) {
             Option::None(())
         } else {
             Option::Some(self.mag)
@@ -73,7 +80,7 @@ impl AddDeltaImpl of AddDeltaTrait {
 impl i129LegacyHash of LegacyHash<i129> {
     fn hash(state: felt252, value: i129) -> felt252 {
         let mut hashable: felt252 = value.mag.into();
-        if ((value.mag != 0) & value.sign) {
+        if (value.is_negative()) {
             hashable += 0x100000000000000000000000000000000; // 2**128
         }
 
@@ -223,8 +230,8 @@ fn i129_gt(a: i129, b: i129) -> bool {
         return false;
     }
     if (!a.sign & b.sign) {
-        // if both are zero, return false
-        return (a.mag != 0) | (b.mag != 0);
+        // return false iff both are zero
+        return (a.mag.is_non_zero()) | (b.mag.is_non_zero());
     }
     if (a.sign & b.sign) {
         return a.mag < b.mag;

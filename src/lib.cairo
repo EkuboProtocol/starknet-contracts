@@ -1,5 +1,6 @@
 mod asset_recovery;
 mod core;
+mod enumerable_owned_nft;
 mod extensions;
 mod interfaces;
 mod math;
