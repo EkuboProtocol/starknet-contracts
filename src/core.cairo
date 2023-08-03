@@ -24,7 +24,6 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
-    use ekubo::math::muldiv::{muldiv, div};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
@@ -35,7 +34,7 @@ mod Core {
         fees_per_liquidity_from_amount1
     };
     use ekubo::types::pool_price::{PoolPrice};
-    use ekubo::types::position::{Position};
+    use ekubo::types::position::{Position, PositionTrait};
     use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
@@ -312,41 +311,22 @@ mod Core {
         ) -> GetPositionWithFeesResult {
             let position = self.get_position(pool_key, position_key);
 
-            if (position.liquidity.is_zero()) {
+            if (position.is_zero()) {
+                // no computation needed for a zero position
                 GetPositionWithFeesResult {
                     position,
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
-                    // we can return 0 because it's irrelevant for an empty position
                     fees_per_liquidity_inside_current: Zeroable::zero(),
                 }
             } else {
-                let fees_per_liquidity_inside = self
+                let fees_per_liquidity_inside_current = self
                     .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
-                let diff = fees_per_liquidity_inside - position.fees_per_liquidity_inside_last;
-
-                // WARNING: we only use the lower 128 bits from this calculation, and if accumulated fees overflow a u128 they are simply discarded
-                // we discard the fees instead of asserting because we do not want to fail a withdrawal due to too many fees
-                let (amount0_fees, _) = muldiv(
-                    diff.fees_per_liquidity_token0.into(),
-                    position.liquidity.into(),
-                    u256 { high: 1, low: 0 },
-                    false
-                );
-
-                let (amount1_fees, _) = muldiv(
-                    diff.fees_per_liquidity_token1.into(),
-                    position.liquidity.into(),
-                    u256 { high: 1, low: 0 },
-                    false
-                );
+                let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
 
                 GetPositionWithFeesResult {
-                    position,
-                    fees0: amount0_fees.low,
-                    fees1: amount1_fees.low,
-                    fees_per_liquidity_inside_current: fees_per_liquidity_inside,
+                    position, fees0, fees1, fees_per_liquidity_inside_current, 
                 }
             }
         }
@@ -711,7 +691,7 @@ mod Core {
                     'MUST_COLLECT_FEES'
                 );
                 // delete the position from storage
-                self.positions.write((pool_key, position_key), Default::default());
+                self.positions.write((pool_key, position_key), Zeroable::zero());
             }
 
             self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
