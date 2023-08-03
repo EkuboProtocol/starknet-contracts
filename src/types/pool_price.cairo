@@ -1,4 +1,4 @@
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::call_points::{CallPoints};
 use starknet::{StorageBaseAddress, StorePacking};
 use zeroable::Zeroable;
@@ -40,7 +40,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             'TICK_MAGNITUDE'
         );
 
-        let tick_raw_shifted: u128 = if (value.tick.sign & (value.tick.mag != 0)) {
+        let tick_raw_shifted: u128 = if (value.tick.is_negative()) {
             (value.tick.mag + 0x100000000) * 0x100
         } else {
             value.tick.mag * 0x100
