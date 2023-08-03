@@ -112,17 +112,16 @@ mod EnumerableOwnedNFT {
             assert(get_caller_address() == self.controller.read(), 'CONTROLLER_ONLY');
         }
 
-        fn check_is_caller_authorized(
-            ref self: ContractState, owner: ContractAddress, token_id: u64
-        ) {
-            let caller = get_caller_address();
-            if (caller != owner) {
-                let approved = self.approvals.read(token_id);
-                if (caller != approved) {
-                    let operator = self.operators.read((owner, caller));
-                    assert(operator, 'UNAUTHORIZED');
+        fn is_account_authorized_internal(
+            self: @ContractState, id: u64, account: ContractAddress
+        ) -> (bool, ContractAddress) {
+            let owner = self.owners.read(id);
+            if (account != owner) {
+                if (account != self.approvals.read(id)) {
+                    return (self.operators.read((owner, account)), owner);
                 }
             }
+            return (true, owner);
         }
 
         fn count_tokens_for_owner(self: @ContractState, owner: ContractAddress) -> u64 {
@@ -181,10 +180,9 @@ mod EnumerableOwnedNFT {
         ) {
             let id = validate_token_id(token_id);
 
-            let owner = self.owners.read(id);
+            let (authorized, owner) = self.is_account_authorized_internal(id, get_caller_address());
             assert(owner == from, 'OWNER');
-
-            self.check_is_caller_authorized(owner, id);
+            assert(authorized, 'UNAUTHORIZED');
 
             self.owners.write(id, to);
             self.approvals.write(id, Zeroable::zero());
@@ -353,7 +351,6 @@ mod EnumerableOwnedNFT {
             arr
         }
 
-        // Create a new token, only callable by the controller
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
             self.require_controller();
 
@@ -376,7 +373,6 @@ mod EnumerableOwnedNFT {
             id
         }
 
-        // Burn the token with the given ID
         fn burn(ref self: ContractState, id: u64) {
             self.require_controller();
 
@@ -394,14 +390,8 @@ mod EnumerableOwnedNFT {
         }
 
         fn is_account_authorized(self: @ContractState, id: u64, account: ContractAddress) -> bool {
-            let owner = self.owners.read(id);
-            if (account != owner) {
-                if (account != self.approvals.read(id)) {
-                    return self.operators.read((owner, account));
-                }
-            }
-
-            return true;
+            let (authorized, _) = self.is_account_authorized_internal(id, account);
+            authorized
         }
     }
 }
