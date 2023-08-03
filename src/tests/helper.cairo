@@ -349,7 +349,11 @@ fn update_position(
 }
 
 
-fn accumulate_as_fees(
+fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) -> Delta {
+    accumulate_as_fees_inner(setup.core, setup.pool_key, setup.locker, amount0, amount1)
+}
+
+fn accumulate_as_fees_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
