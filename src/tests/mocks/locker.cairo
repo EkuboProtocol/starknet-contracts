@@ -16,6 +16,8 @@ enum Action {
     SaveBalance: (ContractAddress, u64, ContractAddress, u128),
     // loads the balance to the address
     LoadBalance: (ContractAddress, u64, ContractAddress, u128),
+    // accumulates some tokens as fees
+    AccumulateAsFees: (PoolKey, u128, u128),
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -26,6 +28,7 @@ enum ActionResult {
     Swap: Delta,
     SaveBalance: u128,
     LoadBalance: u128,
+    AccumulateAsFees: Delta,
 }
 
 #[starknet::interface]
@@ -40,7 +43,9 @@ mod CoreLocker {
         ICoreLockerDispatcherTrait, i129, ICoreLocker
     };
     use serde::Serde;
-    use starknet::{ContractAddress, get_caller_address, get_contract_address};
+    use starknet::{
+        ContractAddress, get_caller_address, get_contract_address, contract_address_const
+    };
     use array::ArrayTrait;
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -250,6 +255,27 @@ mod CoreLocker {
                     assert(state.nonzero_delta_count == 0, '0 delta');
 
                     ActionResult::LoadBalance(balance_next)
+                },
+                Action::AccumulateAsFees((
+                    pool_key, amount0, amount1
+                )) => {
+                    let delta = core.accumulate_as_fees(pool_key, amount0, amount1);
+
+                    assert(delta.amount0.mag == amount0, 'delta0.amount');
+                    assert(!delta.amount0.sign, 'delta0.sign');
+                    assert(delta.amount1.mag == amount1, 'delta1.amount');
+                    assert(!delta.amount1.sign, 'delta1.sign');
+
+                    self
+                        .handle_delta(
+                            core, pool_key.token0, delta.amount0, contract_address_const::<0>()
+                        );
+                    self
+                        .handle_delta(
+                            core, pool_key.token1, delta.amount1, contract_address_const::<0>()
+                        );
+
+                    ActionResult::AccumulateAsFees(delta)
                 }
             };
 

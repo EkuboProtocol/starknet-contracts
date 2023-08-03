@@ -23,7 +23,7 @@ use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
-    update_position, SetupPoolResult, core_owner
+    update_position, accumulate_as_fees, SetupPoolResult, core_owner
 };
 
 use ekubo::tests::mocks::locker::{
@@ -621,7 +621,7 @@ mod locks {
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, accumulate_as_fees
     };
 
     #[test]
@@ -862,7 +862,45 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 50, sign: false }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 50, sign: false }, 'amount1_delta');
+        assert(delta.amount1 == i129 { mag: 50, sign: false }, 'amount1');
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_accumulate_fees_per_liquidity() {
+        let setup = setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zeroable::zero(),
+            extension: Zeroable::zero(),
+        );
+
+        setup.token0.increase_balance(setup.locker.contract_address, 10000000);
+        setup.token1.increase_balance(setup.locker.contract_address, 10000000);
+
+        // add 1 liquidity
+        update_position(
+            setup: setup,
+            bounds: Bounds {
+                lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false }, 
+            },
+            liquidity_delta: i129 { mag: 1, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+        assert(setup.core.get_pool_liquidity(setup.pool_key) == 1, 'liquidity');
+        assert(
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key).is_zero(), 'fees_per_liquidity'
+        );
+
+        accumulate_as_fees(setup: setup, amount0: 2, amount1: 3);
+
+        assert(
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key) == FeesPerLiquidity {
+                fees_per_liquidity_token0: 680564733841876926926749214863536422912,
+                fees_per_liquidity_token1: 1020847100762815390390123822295304634368
+            },
+            'fees_per_liquidity'
+        );
     }
 
     #[test]
@@ -1950,6 +1988,9 @@ mod save_load_tests {
             ActionResult::LoadBalance(_) => {
                 assert(false, 'unexpected');
             },
+            ActionResult::AccumulateAsFees(_) => {
+                assert(false, 'unexpected')
+            },
         };
 
         assert(
@@ -1985,6 +2026,9 @@ mod save_load_tests {
             },
             ActionResult::LoadBalance(balance_next) => {
                 assert(balance_next == 0, 'balance_next');
+            },
+            ActionResult::AccumulateAsFees(_) => {
+                assert(false, 'unexpected')
             },
         };
     }
