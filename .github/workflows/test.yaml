@@ -45,5 +45,5 @@ jobs:
       
       - name: Run thoth
         run: |
-          thoth local target/dev/ekubo_Core.casm.json -a
+          thoth local target/dev/ekubo_Core.sierra.json -a
 
