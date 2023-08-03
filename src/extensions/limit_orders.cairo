@@ -43,7 +43,7 @@ mod LimitOrders {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use zeroable::{Zeroable};
     use starknet::{get_contract_address, get_caller_address};
-    use ekubo::math::utils::{ContractAddressOrder};
+    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::shared_locker::{call_core_with_callback};
     use array::{ArrayTrait};
     use option::{OptionTrait};
