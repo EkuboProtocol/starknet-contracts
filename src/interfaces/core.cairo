@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool_price::{PoolPrice};
+use ekubo::types::position::{Position};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
@@ -35,14 +36,14 @@ struct SwapParameters {
     amount: i129,
     is_token1: bool,
     sqrt_ratio_limit: u256,
-    skip_ahead: u128,
+    skip_ahead: u32,
 }
 
 // Details about a liquidity position. Note the position may not exist, i.e. a position may be returned that has never had non-zero liquidity.
 // Note you should not rely on fees per liquidity inside to be consistent across calls, since it also is used to track accumulated fees over time
 #[derive(Copy, Drop, Serde)]
-struct GetPositionResult {
-    liquidity: u128,
+struct GetPositionWithFeesResult {
+    position: Position,
     fees0: u128,
     fees1: u128,
     // the current value of fees per liquidity inside is required to compute the fees, so it is also returned to save computation
@@ -55,17 +56,6 @@ struct LockerState {
     address: ContractAddress,
     nonzero_delta_count: u32
 }
-
-
-// The aggregated information of a pool returned by each of the pool getters, for efficiency in cases
-// where you need to know all the information about a pool
-#[derive(Copy, Drop, Serde)]
-struct GetPoolResult {
-    price: PoolPrice,
-    liquidity: u128,
-    fees_per_liquidity: FeesPerLiquidity,
-}
-
 
 // An extension is an optional contract that can be specified as part of a pool key to modify pool behavior
 #[starknet::interface]
@@ -115,13 +105,10 @@ trait ICore<TStorage> {
     fn set_withdrawal_only_mode(ref self: TStorage);
 
     // Get the amount of withdrawal fees collected for the protocol
-    fn get_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
+    fn get_protocol_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TStorage, id: u32) -> LockerState;
-
-    // Get the current state of the given pool
-    fn get_pool(self: @TStorage, pool_key: PoolKey) -> GetPoolResult;
 
     // Get the price of the pool
     fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;
@@ -130,23 +117,28 @@ trait ICore<TStorage> {
     fn get_pool_liquidity(self: @TStorage, pool_key: PoolKey) -> u128;
 
     // Get the current all-time fees per liquidity for the pool
-    fn get_pool_fees(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
+    fn get_pool_fees_per_liquidity(self: @TStorage, pool_key: PoolKey) -> FeesPerLiquidity;
 
     // Get the fees per liquidity inside a given tick range for a pool
-    fn get_fees_per_liquidity_inside(
+    fn get_pool_fees_per_liquidity_inside(
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> FeesPerLiquidity;
 
     // Get the state of a given tick for the given pool
-    fn get_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
+    fn get_pool_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
 
     // Get the fees on the other side of the tick from the current tick
-    fn get_tick_fees_outside(self: @TStorage, pool_key: PoolKey, index: i129) -> FeesPerLiquidity;
+    fn get_pool_tick_fees_outside(
+        self: @TStorage, pool_key: PoolKey, index: i129
+    ) -> FeesPerLiquidity;
 
     // Get the state of a given position for the given pool
-    fn get_position(
+    fn get_position(self: @TStorage, pool_key: PoolKey, position_key: PositionKey) -> Position;
+
+    // Get the state of a given position for the given pool including the calculated fees
+    fn get_position_with_fees(
         self: @TStorage, pool_key: PoolKey, position_key: PositionKey
-    ) -> GetPositionResult;
+    ) -> GetPositionWithFeesResult;
 
     // Get the last recorded balance of a token for core, used by core for computing payment amounts
     fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
@@ -158,17 +150,17 @@ trait ICore<TStorage> {
 
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
-        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u32
     ) -> (i129, bool);
 
     // Return the previous initialized tick from the given tick, i.e. the initialized tick that is less than or equal to the given `from` tick
     // Note this can also be used to check if the tick is initialized
     fn prev_initialized_tick(
-        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TStorage, pool_key: PoolKey, from: i129, skip_ahead: u32
     ) -> (i129, bool);
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
-    fn withdraw_fees_collected(
+    fn withdraw_protocol_fees(
         ref self: TStorage, recipient: ContractAddress, token: ContractAddress, amount: u128
     );
 

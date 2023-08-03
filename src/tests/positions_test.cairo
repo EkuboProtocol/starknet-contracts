@@ -75,7 +75,8 @@ fn test_nft_indexing_token_ids() {
     let mut all = positions.get_all_positions(owner);
     assert(all.len() == 0, 'len before');
 
-    let token_id = positions.mint(owner, pool_key: pool_key, bounds: bounds);
+    set_contract_address(owner);
+    let token_id = positions.mint(pool_key: pool_key, bounds: bounds);
 
     assert(positions_721.balanceOf(owner) == 1, 'balance after');
     all = positions.get_all_positions(owner);
@@ -93,7 +94,7 @@ fn test_nft_indexing_token_ids() {
     assert(all.len() == 1, 'len other');
     assert(all.pop_front().unwrap().into() == token_id.low, 'token other');
 
-    let token_id_2 = positions.mint(owner, pool_key: pool_key, bounds: bounds);
+    let token_id_2 = positions.mint(pool_key: pool_key, bounds: bounds);
     set_contract_address(other);
     positions_721.transferFrom(other, owner, token_id);
 
@@ -132,7 +133,6 @@ fn test_nft_approve_succeeds_after_mint() {
 
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -158,9 +158,9 @@ fn test_nft_transfer_from() {
     let core = deploy_core();
     let positions = deploy_positions(core);
 
+    set_contract_address(contract_address_const::<1>());
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -171,7 +171,6 @@ fn test_nft_transfer_from() {
             bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
-    set_contract_address(contract_address_const::<1>());
     let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
 
     nft.approve(contract_address_const::<3>(), token_id);
@@ -190,9 +189,9 @@ fn test_nft_transfer_from_fails_not_from_owner() {
     let core = deploy_core();
     let positions = deploy_positions(core);
 
+    set_contract_address(contract_address_const::<1>());
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -216,9 +215,9 @@ fn test_nft_transfer_from_succeeds_from_approved() {
     let core = deploy_core();
     let positions = deploy_positions(core);
 
+    set_contract_address(contract_address_const::<1>());
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -229,7 +228,6 @@ fn test_nft_transfer_from_succeeds_from_approved() {
             bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero(),  }
         );
 
-    set_contract_address(contract_address_const::<1>());
     let nft = IPositionsDispatcherIntoIERC721Dispatcher::into(positions);
     nft.approve(contract_address_const::<2>(), token_id);
 
@@ -249,7 +247,6 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -314,7 +311,6 @@ fn test_nft_approve_only_owner_can_approve() {
 
     let token_id = positions
         .mint(
-            contract_address_const::<1>(),
             pool_key: PoolKey {
                 token0: Zeroable::zero(),
                 token1: Zeroable::zero(),
@@ -342,11 +338,12 @@ fn test_nft_balance_of() {
             .balanceOf(recipient) == Zeroable::zero(),
         'balance check'
     );
+
+    set_contract_address(recipient);
     // note we do not check the validity of the position key, it only comes into play when trying to add liquidity fails
     assert(
         positions
             .mint(
-                recipient,
                 pool_key: PoolKey {
                     token0: Zeroable::zero(),
                     token1: Zeroable::zero(),
@@ -379,10 +376,7 @@ fn test_deposit_liquidity_full_range() {
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);
-    let token_id = positions
-        .mint(
-            recipient: get_contract_address(), pool_key: setup.pool_key, bounds: Default::default()
-        );
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: Default::default());
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
@@ -407,15 +401,16 @@ fn test_deposit_liquidity_concentrated() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
-    let balance0 = positions.clear(setup.token0.contract_address, contract_address_const::<2>());
-    let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
+    set_contract_address(contract_address_const::<2>());
+    let balance0 = positions.clear(setup.token0.contract_address);
+    let balance1 = positions.clear(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -447,15 +442,16 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
-    let balance0 = positions.clear(setup.token0.contract_address, contract_address_const::<2>());
-    let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
+    set_contract_address(contract_address_const::<2>());
+    let balance0 = positions.clear(setup.token0.contract_address);
+    let balance1 = positions.clear(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
@@ -486,7 +482,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
@@ -495,8 +491,8 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 
     set_contract_address(contract_address_const::<2>());
 
-    let balance0 = positions.refund(setup.token0.contract_address);
-    let balance1 = positions.refund(setup.token1.contract_address);
+    let balance0 = positions.clear(setup.token0.contract_address);
+    let balance1 = positions.clear(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -527,15 +523,17 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
-    let balance0 = positions.clear(setup.token0.contract_address, contract_address_const::<2>());
-    let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
+    set_contract_address(contract_address_const::<2>());
+
+    let balance0 = positions.clear(setup.token0.contract_address);
+    let balance1 = positions.clear(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
@@ -566,15 +564,16 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
-    let balance0 = positions.clear(setup.token0.contract_address, contract_address_const::<2>());
-    let balance1 = positions.clear(setup.token1.contract_address, contract_address_const::<2>());
+    set_contract_address(contract_address_const::<2>());
+    let balance0 = positions.clear(setup.token0.contract_address);
+    let balance1 = positions.clear(setup.token1.contract_address);
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -605,7 +604,7 @@ fn test_deposit_then_withdraw_with_fees() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
@@ -654,7 +653,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -691,7 +690,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 1000,
             min_token1: 1000,
             collect_fees: false,
-            recipient: recipient,
         );
 
     assert(amount0 == 49500494, 'amount0 less 1%');
@@ -699,13 +697,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(recipient) == 49500494,
+        }.balanceOf(caller) == 49500494,
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(recipient) == 49499505,
+        }.balanceOf(caller) == 49499505,
         'balance1'
     );
 
@@ -728,7 +726,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: true,
-            recipient: recipient,
         );
 
     assert(amount0 == 19, 'fees0 withdrawn');
@@ -737,13 +734,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(recipient) == (49500494 + 19),
+        }.balanceOf(caller) == (49500494 + 19),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(recipient) == (49499505 + 8),
+        }.balanceOf(caller) == (49499505 + 8),
         'balance1'
     );
 
@@ -757,7 +754,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: recipient,
         );
 
     assert(amount0 == 24750246, 'quarter');
@@ -766,13 +762,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(recipient) == (49500494 + 19 + 24750246),
+        }.balanceOf(caller) == (49500494 + 19 + 24750246),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(recipient) == (49499505 + 8 + 24749752),
+        }.balanceOf(caller) == (49499505 + 8 + 24749752),
         'balance1'
     );
 
@@ -786,7 +782,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: recipient,
         );
 
     assert(amount0 == 24750246, 'remainder');
@@ -795,13 +790,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(recipient) == (49500494 + 19 + 24750246 + 24750246),
+        }.balanceOf(caller) == (49500494 + 19 + 24750246 + 24750246),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(recipient) == (49499505 + 8 + 24749752 + 24749752),
+        }.balanceOf(caller) == (49499505 + 8 + 24749752 + 24749752),
         'balance1'
     );
 }
@@ -822,7 +817,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -840,17 +835,16 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: recipient,
         );
 
     let caller = get_contract_address();
     set_contract_address(core_owner());
     setup
         .core
-        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token0, amount: 1);
+        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);
     setup
         .core
-        .withdraw_fees_collected(recipient: recipient, token: setup.pool_key.token1, amount: 1);
+        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token1, amount: 1);
 
     set_contract_address(caller);
     setup.token0.increase_balance(positions.contract_address, 100000000);
@@ -874,7 +868,7 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -882,15 +876,22 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     setup.token1.increase_balance(positions.contract_address, 10000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
-    let mut tick_lower_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: true });
-    let mut tick_upper_state = setup.core.get_tick(setup.pool_key, i129 { mag: 1, sign: false });
+    let mut tick_lower_state = setup
+        .core
+        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: true });
+    let mut tick_upper_state = setup
+        .core
+        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: false });
     assert(
         tick_upper_state.liquidity_delta == i129 { mag: liquidity, sign: true },
         'upper.liquidity_delta'
     );
     assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
     assert(
-        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false }).is_zero(),
+        setup
+            .core
+            .get_pool_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: false })
+            .is_zero(),
         'upper.fees'
     );
 
@@ -900,7 +901,10 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     );
     assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
     assert(
-        setup.core.get_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true }).is_zero(),
+        setup
+            .core
+            .get_pool_tick_fees_outside(setup.pool_key, i129 { mag: 1, sign: true })
+            .is_zero(),
         'lower.fees'
     );
 }
@@ -920,7 +924,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -974,7 +978,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -1028,7 +1032,7 @@ fn test_deposit_swap_round_trip_accounting() {
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
     };
-    let token_id = positions.mint(caller, pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     let recipient = contract_address_const::<80085>();
 
@@ -1089,7 +1093,6 @@ fn test_deposit_swap_round_trip_accounting() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: true,
-            recipient: recipient,
         );
 
     assert(amount0 == 200, 'amount0 withdrawn');
@@ -1116,7 +1119,7 @@ fn create_position(
     amount0: u128,
     amount1: u128
 ) -> CreatePositionResult {
-    let token_id = positions.mint(get_contract_address(), pool_key: setup.pool_key, bounds: bounds);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     setup.token0.set_balance(positions.contract_address, amount0.into());
     setup.token1.set_balance(positions.contract_address, amount1.into());
 
@@ -1259,7 +1262,6 @@ fn test_withdraw_not_collected_fees_token1() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: contract_address_const::<80085>(),
         );
 }
 
@@ -1312,7 +1314,6 @@ fn test_withdraw_not_collected_fees_token0() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: contract_address_const::<80085>(),
         );
 }
 
@@ -1357,7 +1358,6 @@ fn test_withdraw_partial_leave_fees() {
             min_token0: 0,
             min_token1: 0,
             collect_fees: false,
-            recipient: contract_address_const::<80085>(),
         );
 
     let info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
