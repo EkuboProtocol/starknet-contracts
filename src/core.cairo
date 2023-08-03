@@ -3,8 +3,8 @@ mod Core {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait, GetPositionResult,
-        GetPoolResult
+        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
+        GetPositionWithFeesResult
     };
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use zeroable::Zeroable;
@@ -24,10 +24,9 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
-    use ekubo::math::muldiv::{muldiv, div};
     use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
     use ekubo::math::bits::{msb, lsb};
-    use ekubo::math::utils::{ContractAddressOrder, u128_max};
+    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::owner::{check_owner_only};
     use ekubo::types::i129::{i129, AddDeltaTrait};
     use ekubo::types::fees_per_liquidity::{
@@ -35,7 +34,7 @@ mod Core {
         fees_per_liquidity_from_amount1
     };
     use ekubo::types::pool_price::{PoolPrice};
-    use ekubo::types::position::{Position};
+    use ekubo::types::position::{Position, PositionTrait};
     use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
@@ -47,7 +46,7 @@ mod Core {
     #[storage]
     struct Storage {
         // withdrawal fees collected, controlled by the owner
-        fees_collected: LegacyMap<ContractAddress, u128>,
+        protocol_fees_collected: LegacyMap<ContractAddress, u128>,
         // the last recorded balance of each token, used for checking payment
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
@@ -199,6 +198,12 @@ mod Core {
             }
         }
 
+        #[inline(always)]
+        fn account_pool_delta(ref self: ContractState, id: u32, pool_key: PoolKey, delta: Delta) {
+            self.account_delta(id, pool_key.token0, delta.amount0);
+            self.account_delta(id, pool_key.token1, delta.amount1);
+        }
+
         // Remove the initialized tick for the given pool
         fn remove_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
@@ -265,21 +270,14 @@ mod Core {
             self.withdrawal_only_mode.write(true);
         }
 
-        fn get_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
-            self.fees_collected.read(token)
+        fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
+            self.protocol_fees_collected.read(token)
         }
 
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.locker_addresses.read(id);
             let nonzero_delta_count = self.nonzero_delta_counts.read(id);
             LockerState { address, nonzero_delta_count }
-        }
-
-        fn get_pool(self: @ContractState, pool_key: PoolKey) -> GetPoolResult {
-            let price = self.get_pool_price(pool_key);
-            let liquidity = self.get_pool_liquidity(pool_key);
-            let fees_per_liquidity = self.get_pool_fees(pool_key);
-            GetPoolResult { price, liquidity, fees_per_liquidity,  }
         }
 
         fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
@@ -290,7 +288,9 @@ mod Core {
             self.pool_liquidity.read(pool_key)
         }
 
-        fn get_pool_fees(self: @ContractState, pool_key: PoolKey) -> FeesPerLiquidity {
+        fn get_pool_fees_per_liquidity(
+            self: @ContractState, pool_key: PoolKey
+        ) -> FeesPerLiquidity {
             self.pool_fees.read(pool_key)
         }
 
@@ -298,11 +298,11 @@ mod Core {
             self.reserves.read(token)
         }
 
-        fn get_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
+        fn get_pool_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
             self.ticks.read((pool_key, index))
         }
 
-        fn get_tick_fees_outside(
+        fn get_pool_tick_fees_outside(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> FeesPerLiquidity {
             self.tick_fees_outside.read((pool_key, index))
@@ -310,44 +310,31 @@ mod Core {
 
         fn get_position(
             self: @ContractState, pool_key: PoolKey, position_key: PositionKey
-        ) -> GetPositionResult {
-            let position: Position = self.positions.read((pool_key, position_key));
+        ) -> Position {
+            self.positions.read((pool_key, position_key))
+        }
 
-            if (position.liquidity.is_zero()) {
-                GetPositionResult {
-                    liquidity: Zeroable::zero(),
+        fn get_position_with_fees(
+            self: @ContractState, pool_key: PoolKey, position_key: PositionKey
+        ) -> GetPositionWithFeesResult {
+            let position = self.get_position(pool_key, position_key);
+
+            if (position.is_zero()) {
+                // no computation needed for a zero position
+                GetPositionWithFeesResult {
+                    position,
                     fees0: Zeroable::zero(),
                     fees1: Zeroable::zero(),
-                    // we can return 0 because it's irrelevant for an empty position
                     fees_per_liquidity_inside_current: Zeroable::zero(),
                 }
             } else {
-                let fees_per_liquidity_inside = self
-                    .get_fees_per_liquidity_inside(pool_key, position_key.bounds);
+                let fees_per_liquidity_inside_current = self
+                    .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
-                let diff = fees_per_liquidity_inside - position.fees_per_liquidity_inside_last;
+                let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
 
-                // WARNING: we only use the lower 128 bits from this calculation, and if accumulated fees overflow a u128 they are simply discarded
-                // we discard the fees instead of asserting because we do not want to fail a withdrawal due to too many fees
-                let (amount0_fees, _) = muldiv(
-                    diff.fees_per_liquidity_token0.into(),
-                    position.liquidity.into(),
-                    u256 { high: 1, low: 0 },
-                    false
-                );
-
-                let (amount1_fees, _) = muldiv(
-                    diff.fees_per_liquidity_token1.into(),
-                    position.liquidity.into(),
-                    u256 { high: 1, low: 0 },
-                    false
-                );
-
-                GetPositionResult {
-                    liquidity: position.liquidity,
-                    fees0: amount0_fees.low,
-                    fees1: amount1_fees.low,
-                    fees_per_liquidity_inside_current: fees_per_liquidity_inside,
+                GetPositionWithFeesResult {
+                    position, fees0, fees1, fees_per_liquidity_inside_current, 
                 }
             }
         }
@@ -360,7 +347,7 @@ mod Core {
 
 
         fn next_initialized_tick(
-            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u32
         ) -> (i129, bool) {
             assert(from < max_tick(), 'NEXT_FROM_MAX');
 
@@ -390,7 +377,7 @@ mod Core {
         }
 
         fn prev_initialized_tick(
-            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+            self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u32
         ) -> (i129, bool) {
             assert(from >= min_tick(), 'PREV_FROM_MIN');
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
@@ -447,7 +434,7 @@ mod Core {
                 );
         }
 
-        fn withdraw_fees_collected(
+        fn withdraw_protocol_fees(
             ref self: ContractState,
             recipient: ContractAddress,
             token: ContractAddress,
@@ -455,8 +442,8 @@ mod Core {
         ) {
             check_owner_only();
 
-            let collected: u128 = self.fees_collected.read(token);
-            self.fees_collected.write(token, collected - amount);
+            let collected: u128 = self.protocol_fees_collected.read(token);
+            self.protocol_fees_collected.write(token, collected - amount);
             self.reserves.write(token, self.reserves.read(token) - amount.into());
 
             IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
@@ -613,7 +600,7 @@ mod Core {
             sqrt_ratio
         }
 
-        fn get_fees_per_liquidity_inside(
+        fn get_pool_fees_per_liquidity_inside(
             self: @ContractState, pool_key: PoolKey, bounds: Bounds
         ) -> FeesPerLiquidity {
             let price = self.pool_price.read(pool_key);
@@ -682,21 +669,21 @@ mod Core {
 
                 if (amount0_fee.is_non_zero()) {
                     self
-                        .fees_collected
+                        .protocol_fees_collected
                         .write(
                             pool_key.token0,
                             accumulate_fee_amount(
-                                self.fees_collected.read(pool_key.token0), amount0_fee
+                                self.protocol_fees_collected.read(pool_key.token0), amount0_fee
                             )
                         );
                 }
                 if (amount1_fee.is_non_zero()) {
                     self
-                        .fees_collected
+                        .protocol_fees_collected
                         .write(
                             pool_key.token1,
                             accumulate_fee_amount(
-                                self.fees_collected.read(pool_key.token1), amount1_fee
+                                self.protocol_fees_collected.read(pool_key.token1), amount1_fee
                             )
                         );
                 }
@@ -705,9 +692,10 @@ mod Core {
                 self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
-            let get_position_result = self.get_position(pool_key, position_key);
+            let get_position_result = self.get_position_with_fees(pool_key, position_key);
 
             let position_liquidity_next: u128 = get_position_result
+                .position
                 .liquidity
                 .add(params.liquidity_delta);
 
@@ -738,7 +726,7 @@ mod Core {
                     'MUST_COLLECT_FEES'
                 );
                 // delete the position from storage
-                self.positions.write((pool_key, position_key), Default::default());
+                self.positions.write((pool_key, position_key), Zeroable::zero());
             }
 
             self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
@@ -751,8 +739,7 @@ mod Core {
             }
 
             // and finally account the computed deltas
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
@@ -773,7 +760,7 @@ mod Core {
             let (id, locker) = self.require_locker();
 
             let position_key = PositionKey { owner: locker, salt, bounds };
-            let result = self.get_position(pool_key, position_key);
+            let result = self.get_position_with_fees(pool_key, position_key);
 
             // update the position
             self
@@ -781,7 +768,7 @@ mod Core {
                 .write(
                     (pool_key, position_key),
                     Position {
-                        liquidity: result.liquidity,
+                        liquidity: result.position.liquidity,
                         fees_per_liquidity_inside_last: result.fees_per_liquidity_inside_current,
                     }
                 );
@@ -794,8 +781,7 @@ mod Core {
                 },
             };
 
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
@@ -951,8 +937,7 @@ mod Core {
             self.pool_liquidity.write(pool_key, liquidity);
             self.pool_fees.write(pool_key, fees_per_liquidity);
 
-            self.account_delta(id, pool_key.token0, delta.amount0);
-            self.account_delta(id, pool_key.token1, delta.amount1);
+            self.account_pool_delta(id, pool_key, delta);
 
             self
                 .emit(
@@ -974,6 +959,34 @@ mod Core {
                     }.after_swap(locker, pool_key, params, delta);
                 }
             }
+
+            delta
+        }
+
+        fn accumulate_as_fees(
+            ref self: ContractState, pool_key: PoolKey, amount0: u128, amount1: u128
+        ) -> Delta {
+            let (id, _) = self.require_locker();
+
+            self
+                .pool_fees
+                .write(
+                    pool_key,
+                    self.pool_fees.read(pool_key)
+                        + fees_per_liquidity_new(
+                            amount0, amount1, self.pool_liquidity.read(pool_key)
+                        )
+                );
+
+            let delta = Delta {
+                amount0: i129 {
+                    mag: amount0, sign: false
+                    }, amount1: i129 {
+                    mag: amount1, sign: false
+                },
+            };
+
+            self.account_pool_delta(id, pool_key, delta);
 
             delta
         }

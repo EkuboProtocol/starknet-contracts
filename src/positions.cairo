@@ -31,7 +31,7 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::interfaces::positions::{IPositions, TokenInfo, GetPositionInfoResult};
+    use ekubo::interfaces::positions::{IPositions, GetPositionInfoResult};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::call_core_with_callback;
@@ -47,7 +47,7 @@ mod Positions {
         // address, 0 contains the first token id
         tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-        token_info: LegacyMap<u64, TokenInfo>,
+        token_key_hashes: LegacyMap<u64, felt252>,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -241,12 +241,9 @@ mod Positions {
             self.emit(Transfer { from, to, token_id });
         }
 
-        fn get_token_info(
-            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
-        ) -> TokenInfo {
-            let info = self.token_info.read(id);
-            assert(info.key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
-            info
+        fn check_key_hash(self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds) {
+            let key_hash = self.token_key_hashes.read(id);
+            assert(key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
         }
 
         fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
@@ -509,25 +506,22 @@ mod Positions {
             arr
         }
 
-        fn mint(
-            ref self: ContractState, recipient: ContractAddress, pool_key: PoolKey, bounds: Bounds
-        ) -> u256 {
+        fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u256 {
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
 
             // effect the mint by updating storage
-            self.owners.write(id, recipient);
-            self.tokens_by_owner_insert(recipient, id);
+            let owner = get_caller_address();
+            self.owners.write(id, owner);
+            self.tokens_by_owner_insert(owner, id);
             let key_hash = hash_key(pool_key, bounds);
 
-            self
-                .token_info
-                .write(id, TokenInfo { key_hash: key_hash, liquidity: Zeroable::zero(),  });
+            self.token_key_hashes.write(id, key_hash);
 
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(), to: recipient, token_id: u256 {
+                        from: Zeroable::zero(), to: owner, token_id: u256 {
                             low: id.into(), high: 0
                         }
                     }
@@ -546,18 +540,24 @@ mod Positions {
             u256 { low: id.into(), high: 0 }
         }
 
-        fn burn(ref self: ContractState, token_id: u256) {
+        fn burn(ref self: ContractState, token_id: u256, pool_key: PoolKey, bounds: Bounds) {
             let id = validate_token_id(token_id);
             let owner = self.owners.read(id);
             self.check_is_caller_authorized(owner, id);
 
-            let info = self.token_info.read(id);
-            assert(info.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
+            self.check_key_hash(id, pool_key, bounds);
+            let core = self.core.read();
+            let position = core
+                .get_position(
+                    pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
+                );
+
+            assert(position.liquidity.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
 
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
             self.tokens_by_owner_remove(owner, id);
-            self.token_info.write(id, TokenInfo { key_hash: 0, liquidity: Zeroable::zero() });
+            self.token_key_hashes.write(id, 0);
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id });
         }
@@ -567,23 +567,24 @@ mod Positions {
         ) -> GetPositionInfoResult {
             let id = validate_token_id(token_id);
 
-            let info = self.get_token_info(id, pool_key, bounds);
+            self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
             let get_position_result = core
-                .get_position(
+                .get_position_with_fees(
                     pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
             let price = core.get_pool_price(pool_key);
 
             let delta = liquidity_delta_to_amount_delta(
                 sqrt_ratio: price.sqrt_ratio,
-                liquidity_delta: i129 { mag: info.liquidity, sign: true },
+                liquidity_delta: i129 { mag: get_position_result.position.liquidity, sign: true },
                 sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.lower),
                 sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
             );
 
             GetPositionInfoResult {
-                liquidity: info.liquidity,
+                pool_price: price,
+                liquidity: get_position_result.position.liquidity,
                 amount0: delta.amount0.mag,
                 amount1: delta.amount1.mag,
                 fees0: get_position_result.fees0,
@@ -601,7 +602,8 @@ mod Positions {
             let id = validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(id), id);
 
-            let info = self.get_token_info(id, pool_key, bounds);
+            self.check_key_hash(id, pool_key, bounds);
+
             let core = self.core.read();
             let price = core.get_pool_price(pool_key);
 
@@ -614,13 +616,6 @@ mod Positions {
                 self.balance_of_token(pool_key.token1)
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
-
-            self
-                .token_info
-                .write(
-                    id,
-                    TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity + liquidity,  }
-                );
 
             let delta: Delta = call_core_with_callback(
                 core,
@@ -644,21 +639,12 @@ mod Positions {
             liquidity: u128,
             min_token0: u128,
             min_token1: u128,
-            collect_fees: bool,
-            recipient: ContractAddress
+            collect_fees: bool
         ) -> (u128, u128) {
             let id = validate_token_id(token_id);
             self.check_is_caller_authorized(self.owners.read(id), id);
 
-            if liquidity.is_non_zero() {
-                let info = self.get_token_info(id, pool_key, bounds);
-                self
-                    .token_info
-                    .write(
-                        id,
-                        TokenInfo { key_hash: info.key_hash, liquidity: info.liquidity - liquidity }
-                    );
-            }
+            let recipient = get_caller_address();
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -666,7 +652,7 @@ mod Positions {
                     WithdrawCallbackData {
                         bounds,
                         pool_key,
-                        liquidity: liquidity,
+                        liquidity,
                         salt: id.into(),
                         collect_fees,
                         min_token0,
@@ -686,19 +672,13 @@ mod Positions {
             (delta.amount0.mag, delta.amount1.mag)
         }
 
-        fn clear(
-            ref self: ContractState, token: ContractAddress, recipient: ContractAddress
-        ) -> u256 {
+        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
             let dispatcher = IERC20Dispatcher { contract_address: token };
             let balance = dispatcher.balanceOf(get_contract_address());
             if (balance.is_non_zero()) {
-                dispatcher.transfer(recipient, balance);
+                dispatcher.transfer(get_caller_address(), balance);
             }
             balance
-        }
-
-        fn refund(ref self: ContractState, token: ContractAddress) -> u256 {
-            self.clear(token, get_caller_address())
         }
 
         fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {

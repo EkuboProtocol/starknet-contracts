@@ -1,5 +1,6 @@
 mod bitmap;
 mod bits;
+mod contract_address;
 mod delta;
 mod exp2;
 mod fee;
@@ -10,10 +11,11 @@ mod string;
 mod sqrt_ratio;
 mod swap;
 mod ticks;
-mod utils;
 
 #[cfg(test)]
 mod bitmap_test;
+#[cfg(test)]
+mod contract_address_test;
 #[cfg(test)]
 mod delta_test;
 #[cfg(test)]
@@ -36,5 +38,3 @@ mod sqrt_ratio_test;
 mod swap_test;
 #[cfg(test)]
 mod ticks_test;
-#[cfg(test)]
-mod utils_test;

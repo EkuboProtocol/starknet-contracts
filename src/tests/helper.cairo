@@ -8,7 +8,7 @@ use ekubo::types::keys::PoolKey;
 use ekubo::types::i129::i129;
 use ekubo::types::bounds::{Bounds};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
-use ekubo::math::utils::ContractAddressOrder;
+use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
@@ -328,6 +328,10 @@ fn update_position_inner(
             assert(false, 'unexpected');
             Zeroable::zero()
         },
+        ActionResult::AccumulateAsFees(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        }
     }
 }
 
@@ -344,6 +348,49 @@ fn update_position(
     )
 }
 
+
+fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) -> Delta {
+    accumulate_as_fees_inner(setup.core, setup.pool_key, setup.locker, amount0, amount1)
+}
+
+fn accumulate_as_fees_inner(
+    core: ICoreDispatcher,
+    pool_key: PoolKey,
+    locker: ICoreLockerDispatcher,
+    amount0: u128,
+    amount1: u128,
+) -> Delta {
+    match locker.call(Action::AccumulateAsFees((pool_key, amount0, amount1))) {
+        ActionResult::AssertLockerId(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::Relock(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::UpdatePosition(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::Swap(delta) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::SaveBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::LoadBalance(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::AccumulateAsFees(delta) => {
+            delta
+        }
+    }
+}
+
 fn swap_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
@@ -352,7 +399,7 @@ fn swap_inner(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     let before: Balances = get_balances(
         token0: IMockERC20Dispatcher { contract_address: pool_key.token0 },
@@ -403,6 +450,10 @@ fn swap_inner(
             assert(false, 'unexpected');
             Zeroable::zero()
         },
+        ActionResult::AccumulateAsFees(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        }
     }
 }
 
@@ -412,7 +463,7 @@ fn swap(
     is_token1: bool,
     sqrt_ratio_limit: u256,
     recipient: ContractAddress,
-    skip_ahead: u128
+    skip_ahead: u32
 ) -> Delta {
     swap_inner(
         setup.core,
