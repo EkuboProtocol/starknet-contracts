@@ -1,11 +1,13 @@
-use hash::pedersen;
+use hash::{pedersen};
 use starknet::{contract_address_const, ContractAddress};
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
-use hash::LegacyHash;
-use zeroable::Zeroable;
-use ekubo::types::i129::i129;
-use ekubo::types::bounds::Bounds;
+use hash::{LegacyHash};
+use zeroable::{Zeroable};
+use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
+use ekubo::math::ticks::{constants as tick_constants};
+use ekubo::math::contract_address::{ContractAddressOrder};
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)
@@ -19,6 +21,19 @@ struct PoolKey {
     fee: u128,
     tick_spacing: u128,
     extension: ContractAddress,
+}
+
+#[generate_trait]
+impl PoolKeyTraitImpl of PoolKeyTrait {
+    fn check_valid(self: PoolKey) {
+        assert(self.token0 < self.token1, 'TOKEN_ORDER');
+        assert(self.token0.is_non_zero(), 'TOKEN_NON_ZERO');
+        assert(
+            (self.tick_spacing.is_non_zero())
+                & (self.tick_spacing <= tick_constants::MAX_TICK_SPACING),
+            'TICK_SPACING'
+        );
+    }
 }
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
@@ -45,8 +60,8 @@ struct PositionKey {
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        pedersen(
-            state, pedersen(value.salt.into(), pedersen(value.owner.into(), value.bounds.into()))
+        LegacyHash::hash(
+            pedersen(state, pedersen(value.salt.into(), value.owner.into())), value.bounds
         )
     }
 }

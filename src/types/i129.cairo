@@ -80,7 +80,7 @@ impl AddDeltaImpl of AddDeltaTrait {
 impl i129LegacyHash of LegacyHash<i129> {
     fn hash(state: felt252, value: i129) -> felt252 {
         let mut hashable: felt252 = value.mag.into();
-        if (value.is_negative()) {
+        if value.is_negative() {
             hashable += 0x100000000000000000000000000000000; // 2**128
         }
 

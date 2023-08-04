@@ -34,8 +34,8 @@ mod Core {
     };
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::types::keys::{PositionKey, PoolKey};
-    use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
+    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait};
+    use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
     use traits::{Into};
@@ -537,14 +537,7 @@ mod Core {
         }
 
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
-            // token0 is always l.t. token1
-            assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
-            assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
-            assert(
-                (pool_key.tick_spacing.is_non_zero())
-                    & (pool_key.tick_spacing <= tick_constants::MAX_TICK_SPACING),
-                'TICK_SPACING'
-            );
+            pool_key.check_valid();
 
             let price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
