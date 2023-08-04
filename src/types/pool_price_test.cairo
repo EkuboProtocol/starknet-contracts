@@ -22,7 +22,9 @@ impl PoolPricePartialEq of PartialEq<PoolPrice> {
 fn test_packing_round_trip_many_values() {
     assert_round_trip(
         PoolPrice {
-            sqrt_ratio: Zeroable::zero(), tick: Zeroable::zero(), call_points: Default::default()
+            sqrt_ratio: u256 {
+                high: 1, low: 0
+            }, tick: Zeroable::zero(), call_points: Default::default()
         }
     );
     assert_round_trip(
@@ -51,6 +53,82 @@ fn test_packing_round_trip_many_values() {
                 before_update_position: true,
                 after_update_position: false,
             }
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_fails_if_sqrt_ratio_out_of_range_max() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice {
+            sqrt_ratio: max_sqrt_ratio() + 1,
+            tick: Zeroable::zero(),
+            call_points: Default::default()
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_fails_if_sqrt_ratio_zero() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice {
+            sqrt_ratio: Zeroable::zero(), tick: Zeroable::zero(), call_points: Default::default()
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_fails_if_sqrt_ratio_one() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice { sqrt_ratio: 1, tick: Zeroable::zero(), call_points: Default::default() }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('SQRT_RATIO', ))]
+fn test_fails_if_sqrt_ratio_out_of_range_min() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice {
+            sqrt_ratio: min_sqrt_ratio() - 1,
+            tick: Zeroable::zero(),
+            call_points: Default::default()
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+fn test_fails_if_tick_out_of_range_max() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice {
+            sqrt_ratio: u256 {
+                low: 0, high: 1
+                }, tick: max_tick() + i129 {
+                mag: 1, sign: false
+            }, call_points: Default::default()
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+fn test_fails_if_tick_out_of_range_min() {
+    StorePacking::<PoolPrice,
+    felt252>::pack(
+        PoolPrice {
+            sqrt_ratio: u256 {
+                low: 0, high: 1
+                }, tick: min_tick() - i129 {
+                mag: 2, sign: false
+            }, call_points: Default::default()
         }
     );
 }
