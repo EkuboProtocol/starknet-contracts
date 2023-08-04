@@ -3,8 +3,8 @@ use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::bounds::{Bounds};
 use traits::{TryInto, Into};
-use option::{Option, OptionTrait};
-use starknet::{SyscallResult, StorageBaseAddress, StorePacking};
+use option::{OptionTrait};
+use starknet::{StorePacking};
 use integer::{u256_safe_divmod, u256_as_non_zero};
 
 // 192 bits total, fits in a single felt

@@ -91,13 +91,13 @@ fn deposit(
     assert(
         IMockERC20Dispatcher {
             contract_address: pool_key.token0
-        }.balanceOf(address: positions.contract_address) == 0,
+        }.balanceOf(address: positions.contract_address).is_zero(),
         'token0 balance'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: pool_key.token1
-        }.balanceOf(address: positions.contract_address) == 0,
+        }.balanceOf(address: positions.contract_address).is_zero(),
         'token1 balance'
     );
 
@@ -108,13 +108,10 @@ fn deposit(
         contract_address: pool_key.token1
     }.increase_balance(address: positions.contract_address, amount: delta.amount1.mag);
 
-    let liquidity_calculated = positions
+    let actual_liquidity = positions
         .deposit_last(pool_key: pool_key, bounds: bounds, min_liquidity: min_liquidity);
 
-    // todo: why isn't this exactly equal?
-    // assert(min_liquidity == liquidity_calculated, 'liquidity');
-
-    (token_id, liquidity_calculated)
+    (token_id, actual_liquidity)
 }
 
 impl PoolStatePartialEq of PartialEq<PoolState> {
@@ -238,7 +235,7 @@ fn test_time_passes_seconds_per_liquidity_global() {
         lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
     };
 
-    let token_id = deposit(
+    deposit(
         core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
     );
 
@@ -274,14 +271,14 @@ fn test_time_passed_position_out_of_range_only() {
         lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 0, sign: true }
     };
 
-    let (token_id_1, _) = deposit(
+    deposit(
         core: core,
         positions: positions,
         pool_key: key,
         bounds: bounds_above,
         min_liquidity: 0xb5a81a9,
     );
-    let (token_id_2, _) = deposit(
+    deposit(
         core: core,
         positions: positions,
         pool_key: key,
@@ -324,7 +321,7 @@ fn test_swap_into_liquidity_time_passed() {
         lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
     };
 
-    let (token_id_1, _) = deposit(
+    deposit(
         core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
     );
 
@@ -376,7 +373,7 @@ fn test_swap_through_liquidity_time_passed() {
         lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
     };
 
-    let (token_id_1, _) = deposit(
+    deposit(
         core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
     );
 
