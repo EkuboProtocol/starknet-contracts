@@ -915,8 +915,8 @@ mod locks {
 
         assert(
             setup.core.get_pool_fees_per_liquidity(setup.pool_key) == FeesPerLiquidity {
-                fees_per_liquidity_token0: 680564733841876926926749214863536422912,
-                fees_per_liquidity_token1: 1020847100762815390390123822295304634368
+                value0: 680564733841876926926749214863536422912,
+                value1: 1020847100762815390390123822295304634368
             },
             'fees_per_liquidity'
         );
@@ -1304,8 +1304,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 3402823669209384634633746074317,
-                fees_per_liquidity_token1: 0,
+                value0: 3402823669209384634633746074317, value1: 0, 
             },
             'fees'
         );
@@ -1422,8 +1421,7 @@ mod locks {
 
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 3402823669209384634633746074317,
-                fees_per_liquidity_token1: 0,
+                value0: 3402823669209384634633746074317, value1: 0, 
             },
             'fees'
         );
@@ -1481,8 +1479,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 17014118346046923173168730371588410,
-                fees_per_liquidity_token1: 0,
+                value0: 17014118346046923173168730371588410, value1: 0, 
             },
             'fees'
         );
@@ -1539,8 +1536,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 17014118346046923173168730371588410,
-                fees_per_liquidity_token1: 0,
+                value0: 17014118346046923173168730371588410, value1: 0, 
             },
             'fees'
         );
@@ -1596,8 +1592,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 3402823669209384634633746074317,
+                value0: 0, value1: 3402823669209384634633746074317, 
             },
             'fees'
         );
@@ -1653,8 +1648,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 3402823669209384634633746074317,
+                value0: 0, value1: 3402823669209384634633746074317, 
             },
             'fees'
         );
@@ -1711,8 +1705,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 16980090109354829326822392910845233,
+                value0: 0, value1: 16980090109354829326822392910845233, 
             },
             'fees'
         );
@@ -1769,8 +1762,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 16912033635970641634129717989358880,
+                value0: 0, value1: 16912033635970641634129717989358880, 
             },
             'fees'
         );
@@ -1862,8 +1854,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0x68f6639f0bc961de416956dbaee7d,
-                fees_per_liquidity_token1: 0,
+                value0: 0x68f6639f0bc961de416956dbaee7d, value1: 0, 
             },
             'fees'
         );
@@ -1955,8 +1946,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 0x68f6639f0bc961de416956dbaee7d,
+                value0: 0, value1: 0x68f6639f0bc961de416956dbaee7d, 
             },
             'fees'
         );
