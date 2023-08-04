@@ -1,6 +1,6 @@
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
-use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
+use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait, PoolState};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_oracle, deploy_two_mock_tokens, swap_inner, deploy_locker
@@ -9,13 +9,14 @@ use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
-use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
+use starknet::{get_contract_address, get_block_timestamp, contract_address_const, StorePacking};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
 use traits::{TryInto};
 use zeroable::{Zeroable};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::tests::store_packing_test::{assert_round_trip};
 use debug::PrintTrait;
 
 fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {
@@ -114,6 +115,116 @@ fn deposit(
     // assert(min_liquidity == liquidity_calculated, 'liquidity');
 
     (token_id, liquidity_calculated)
+}
+
+impl PoolStatePartialEq of PartialEq<PoolState> {
+    fn eq(lhs: @PoolState, rhs: @PoolState) -> bool {
+        (lhs.block_timestamp_last == rhs.block_timestamp_last)
+            & (lhs.tick_cumulative_last == rhs.tick_cumulative_last)
+            & (lhs.tick_last == rhs.tick_last)
+    }
+    fn ne(lhs: @PoolState, rhs: @PoolState) -> bool {
+        !PartialEq::eq(lhs, rhs)
+    }
+}
+
+#[test]
+#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE', ))]
+fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
+    StorePacking::pack(
+        PoolState {
+            block_timestamp_last: Zeroable::zero(), tick_cumulative_last: i129 {
+                mag: 0x800000000000000000000000, sign: false
+            }, tick_last: Zeroable::zero(),
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE', ))]
+fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
+    StorePacking::pack(
+        PoolState {
+            block_timestamp_last: Zeroable::zero(), tick_cumulative_last: i129 {
+                mag: 0x800000000000000000000000, sign: true
+            }, tick_last: Zeroable::zero(),
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('TICK_LAST_TOO_LARGE', ))]
+fn test_pool_state_store_packing_fails_tick_last_too_large() {
+    StorePacking::pack(
+        PoolState {
+            block_timestamp_last: Zeroable::zero(),
+            tick_cumulative_last: Zeroable::zero(),
+            tick_last: i129 {
+                mag: 0x80000000, sign: false
+            },
+        }
+    );
+}
+
+#[test]
+#[should_panic(expected: ('TICK_LAST_TOO_LARGE', ))]
+fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
+    StorePacking::pack(
+        PoolState {
+            block_timestamp_last: Zeroable::zero(),
+            tick_cumulative_last: Zeroable::zero(),
+            tick_last: i129 {
+                mag: 0x80000000, sign: true
+            },
+        }
+    );
+}
+
+#[test]
+fn test_pool_state_packing_round_trip_many_values() {
+    assert_round_trip(
+        PoolState {
+            block_timestamp_last: Zeroable::zero(),
+            tick_cumulative_last: Zeroable::zero(),
+            tick_last: Zeroable::zero(),
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            block_timestamp_last: 1, tick_cumulative_last: i129 {
+                mag: 2, sign: false
+                }, tick_last: i129 {
+                mag: 3, sign: false
+            },
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            block_timestamp_last: 1, tick_cumulative_last: i129 {
+                mag: 2, sign: true
+                }, tick_last: i129 {
+                mag: 3, sign: true
+            },
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            block_timestamp_last: 0xffffffffffffffff, tick_cumulative_last: i129 {
+                mag: 0x7fffffffffffffffffffffff, sign: false
+                }, tick_last: i129 {
+                mag: 0x7fffffff, sign: false
+            },
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            block_timestamp_last: 0xffffffffffffffff, tick_cumulative_last: i129 {
+                mag: 0x7fffffffffffffffffffffff, sign: true
+                }, tick_last: i129 {
+                mag: 0x7fffffff, sign: true
+            },
+        }
+    );
 }
 
 #[test]

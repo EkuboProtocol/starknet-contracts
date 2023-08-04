@@ -1,13 +1,14 @@
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::types::keys::{PoolKey, PositionKey};
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::bounds::{Bounds};
 use traits::{TryInto, Into};
 use option::{Option, OptionTrait};
-use starknet::{SyscallResult, StorageBaseAddress};
+use starknet::{SyscallResult, StorageBaseAddress, StorePacking};
+use integer::{u256_safe_divmod, u256_as_non_zero};
 
-// todo: pack this struct better!
-#[derive(Copy, Drop, starknet::Store)]
+// 192 bits total, fits in a single felt
+#[derive(Copy, Drop)]
 struct PoolState {
     // 64 bits
     block_timestamp_last: u64,
@@ -15,8 +16,72 @@ struct PoolState {
     tick_cumulative_last: i129,
     // 32 bits
     tick_last: i129,
-    // 192 bits max, but need to handle overflow/underflow correctly if we want to pack it
-    seconds_per_liquidity_global: felt252,
+}
+
+impl PoolStatePacking of StorePacking<PoolState, felt252> {
+    fn pack(value: PoolState) -> felt252 {
+        assert(
+            value.tick_cumulative_last.mag < 0x800000000000000000000000,
+            'TICK_CUMULATIVE_LAST_TOO_LARGE'
+        );
+        assert(value.tick_last.mag < 0x80000000, 'TICK_LAST_TOO_LARGE');
+
+        let mut total: u256 = value.block_timestamp_last.into();
+
+        total +=
+            (if value.tick_cumulative_last.is_negative() {
+                value.tick_cumulative_last.mag + 0x800000000000000000000000
+            } else {
+                value.tick_cumulative_last.mag
+            })
+            .into()
+            * 0x10000000000000000;
+
+        total += u256 {
+            high: (if value.tick_last.is_negative() {
+                value.tick_last.mag + 0x80000000
+            } else {
+                value.tick_last.mag
+            })
+                * 0x100000000,
+            low: 0
+        };
+
+        total.try_into().unwrap()
+    }
+
+    fn unpack(value: felt252) -> PoolState {
+        let value: u256 = value.into();
+
+        let (tick_last_packed, value, _) = u256_safe_divmod(
+            value, u256_as_non_zero(0x10000000000000000000000000000000000000000)
+        );
+
+        let tick_last = if (tick_last_packed > 0x80000000) {
+            i129 { mag: (tick_last_packed - 0x80000000).try_into().unwrap(), sign: true }
+        } else {
+            i129 { mag: tick_last_packed.try_into().unwrap(), sign: false }
+        };
+
+        let (tick_cumulative_last_packed, block_timestamp_last, _) = u256_safe_divmod(
+            value, u256_as_non_zero(0x10000000000000000)
+        );
+
+        let tick_cumulative_last = if (tick_cumulative_last_packed > 0x800000000000000000000000) {
+            i129 {
+                mag: (tick_cumulative_last_packed - 0x800000000000000000000000).try_into().unwrap(),
+                sign: true
+            }
+        } else {
+            i129 { mag: tick_cumulative_last_packed.try_into().unwrap(), sign: false }
+        };
+
+        PoolState {
+            block_timestamp_last: block_timestamp_last.try_into().unwrap(),
+            tick_cumulative_last,
+            tick_last,
+        }
+    }
 }
 
 #[starknet::interface]
@@ -52,6 +117,7 @@ mod Oracle {
     struct Storage {
         core: ICoreDispatcher,
         pool_state: LegacyMap<PoolKey, PoolState>,
+        pool_seconds_per_liquidity: LegacyMap<PoolKey, felt252>,
         tick_seconds_per_liquidity_outside: LegacyMap<(PoolKey, i129), felt252>,
     }
 
@@ -81,12 +147,12 @@ mod Oracle {
             let liquidity = core.get_pool_liquidity(pool_key);
 
             let seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
-                state.seconds_per_liquidity_global
+                self.pool_seconds_per_liquidity.read(pool_key)
                     + (u256 { low: 0, high: time_passed } / u256 { low: liquidity, high: 0 })
                         .try_into()
                         .unwrap()
             } else {
-                state.seconds_per_liquidity_global
+                self.pool_seconds_per_liquidity.read(pool_key)
             };
 
             let price = core.get_pool_price(pool_key);
@@ -102,7 +168,6 @@ mod Oracle {
                         block_timestamp_last: time,
                         tick_cumulative_last: tick_cumulative_next,
                         tick_last: state.tick_last,
-                        seconds_per_liquidity_global: seconds_per_liquidity_global_next,
                     }
                 );
         }
@@ -128,13 +193,13 @@ mod Oracle {
                 // get the global seconds per liquidity
                 let state = self.pool_state.read(pool_key);
                 let seconds_per_liquidity_global = if (time == state.block_timestamp_last) {
-                    state.seconds_per_liquidity_global
+                    self.pool_seconds_per_liquidity.read(pool_key)
                 } else {
                     let liquidity = core.get_pool_liquidity(pool_key);
                     if (liquidity.is_zero()) {
-                        state.seconds_per_liquidity_global
+                        self.pool_seconds_per_liquidity.read(pool_key)
                     } else {
-                        state.seconds_per_liquidity_global
+                        self.pool_seconds_per_liquidity.read(pool_key)
                             + (u256 {
                                 low: 0, high: (time - state.block_timestamp_last).into()
                                 } / u256 {
@@ -184,7 +249,6 @@ mod Oracle {
                         block_timestamp_last: get_block_timestamp(),
                         tick_cumulative_last: Zeroable::zero(),
                         tick_last: initial_tick,
-                        seconds_per_liquidity_global: Zeroable::zero(),
                     }
                 );
 
@@ -229,38 +293,40 @@ mod Oracle {
             let price = core.get_pool_price(pool_key);
             let state = self.pool_state.read(pool_key);
 
-            let increasing = is_price_increasing(params.amount.sign, params.is_token1);
-
-            let mut tick = state.tick_last;
-
-            let current = self.tick_seconds_per_liquidity_outside.read((pool_key, tick));
-
-            // update all the ticks between the last updated tick to the starting tick
-            loop {
-                let (next, initialized) = if (increasing) {
-                    core.next_initialized_tick(pool_key, tick, params.skip_ahead)
-                } else {
-                    core.prev_initialized_tick(pool_key, tick, params.skip_ahead)
-                };
-
-                if ((next > price.tick) == increasing) {
-                    break ();
-                }
-
-                if (initialized) {
-                    self
-                        .tick_seconds_per_liquidity_outside
-                        .write((pool_key, tick), current - state.seconds_per_liquidity_global);
-                }
-
-                tick = if (increasing) {
-                    next
-                } else {
-                    next - i129 { mag: 1, sign: false }
-                };
-            };
-
             if (state.tick_last != price.tick) {
+                let increasing = is_price_increasing(params.amount.sign, params.is_token1);
+
+                let mut tick = state.tick_last;
+
+                let current = self.tick_seconds_per_liquidity_outside.read((pool_key, tick));
+
+                let seconds_per_liquidity_global = self.pool_seconds_per_liquidity.read(pool_key);
+
+                // update all the ticks between the last updated tick to the starting tick
+                loop {
+                    let (next, initialized) = if (increasing) {
+                        core.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                    } else {
+                        core.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                    };
+
+                    if ((next > price.tick) == increasing) {
+                        break ();
+                    }
+
+                    if (initialized) {
+                        self
+                            .tick_seconds_per_liquidity_outside
+                            .write((pool_key, tick), current - seconds_per_liquidity_global);
+                    }
+
+                    tick = if (increasing) {
+                        next
+                    } else {
+                        next - i129 { mag: 1, sign: false }
+                    };
+                };
+
                 // we are just updating tick last to indicate we processed all the ticks that were crossed in the swap
                 self
                     .pool_state
@@ -270,7 +336,6 @@ mod Oracle {
                             block_timestamp_last: state.block_timestamp_last,
                             tick_cumulative_last: state.tick_cumulative_last,
                             tick_last: price.tick,
-                            seconds_per_liquidity_global: state.seconds_per_liquidity_global
                         }
                     );
             }
