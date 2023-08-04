@@ -26,6 +26,16 @@ fn test_mask_4() {
 }
 
 #[test]
+fn test_mask_126() {
+    assert(mask(126) == 0x7fffffffffffffffffffffffffffffff, 'mask');
+}
+
+#[test]
+fn test_mask_127() {
+    assert(mask(127) == 0xffffffffffffffffffffffffffffffff, 'mask');
+}
+
+#[test]
 #[should_panic(expected: ('mask', ))]
 fn test_mask_128() {
     mask(128);
