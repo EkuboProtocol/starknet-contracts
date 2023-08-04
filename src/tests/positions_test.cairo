@@ -6,6 +6,9 @@ use ekubo::interfaces::core::{
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
+use ekubo::enumerable_owned_nft::{
+    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+};
 use ekubo::types::keys::{PoolKey};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
@@ -37,9 +40,44 @@ fn test_deposit_liquidity_full_range() {
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
-        .deposit_last(pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100);
+        .deposit_last(
+            pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100000000
+        );
 
     assert(liquidity == 100000000, 'liquidity');
+
+    let mut tokens = IEnumerableOwnedNFTDispatcher {
+        contract_address: positions.get_nft_address()
+    }.get_all_owned_tokens(get_contract_address());
+    assert(tokens.len() == 1, 'len');
+    assert(tokens.pop_front().unwrap() == 1, 'token id');
+    assert(
+        IERC721Dispatcher {
+            contract_address: positions.get_nft_address()
+        }.balance_of(get_contract_address()) == 1,
+        'balance'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
+fn test_deposit_fails_min_liquidity() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: Default::default());
+    assert(token_id == 1, 'token id');
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    positions
+        .deposit_last(
+            pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100000001
+        );
 }
 
 #[test]
