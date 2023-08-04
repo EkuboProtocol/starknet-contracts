@@ -38,6 +38,18 @@ fn test_nft_name_symbol() {
 
 #[test]
 #[available_gas(300000000)]
+fn test_nft_custom_uri() {
+    let (_, nft) = deploy_enumerable_owned_nft(
+        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
+    );
+    assert(nft.name() == 'abcde', 'name');
+    assert(nft.symbol() == 'def', 'symbol');
+    assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'tokenUri');
+    assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
+}
+
+#[test]
+#[available_gas(300000000)]
 fn test_nft_indexing_token_ids() {
     let (controller, nft) = deploy_enumerable_owned_nft(
         default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
@@ -45,46 +57,128 @@ fn test_nft_indexing_token_ids() {
 
     switch_to_controller();
 
-    let owner = contract_address_const::<912345>();
-    let other = contract_address_const::<9123456>();
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<9123456>();
 
-    assert(nft.balanceOf(owner) == 0, 'balance start');
-    let mut all = controller.get_all_owned_tokens(owner);
+    assert(nft.balanceOf(alice) == 0, 'balance start');
+    let mut all = controller.get_all_owned_tokens(alice);
     assert(all.len() == 0, 'len before');
-    let token_id = controller.mint(owner);
+    let token_id = controller.mint(alice);
 
-    assert(nft.balanceOf(owner) == 1, 'balance after');
-    all = controller.get_all_owned_tokens(owner);
+    assert(nft.balanceOf(alice) == 1, 'balance after');
+    all = controller.get_all_owned_tokens(alice);
     assert(all.len() == 1, 'len after');
-    set_contract_address(owner);
-    nft.transferFrom(owner, other, all.pop_front().unwrap().into());
+    set_contract_address(alice);
+    nft.transferFrom(alice, bob, all.pop_front().unwrap().into());
 
-    assert(nft.balanceOf(owner) == 0, 'balance after transfer');
-    all = controller.get_all_owned_tokens(owner);
+    assert(nft.balanceOf(alice) == 0, 'balance after transfer');
+    all = controller.get_all_owned_tokens(alice);
     assert(all.len() == 0, 'len after transfer');
 
-    assert(nft.balanceOf(other) == 1, 'balance other transfer');
-    all = controller.get_all_owned_tokens(other);
-    assert(all.len() == 1, 'len other');
-    assert(all.pop_front().unwrap().into() == token_id, 'token other');
+    assert(nft.balanceOf(bob) == 1, 'balance bob transfer');
+    all = controller.get_all_owned_tokens(bob);
+    assert(all.len() == 1, 'len bob');
+    assert(all.pop_front().unwrap().into() == token_id, 'token bob');
 
     switch_to_controller();
-    let token_id_2 = controller.mint(owner);
-    set_contract_address(other);
-    nft.transferFrom(other, owner, token_id.into());
+    let token_id_2 = controller.mint(alice);
+    set_contract_address(bob);
+    nft.transferFrom(bob, alice, token_id.into());
 
-    all = controller.get_all_owned_tokens(owner);
+    all = controller.get_all_owned_tokens(alice);
     assert(all.len() == 2, 'len final');
     assert(all.pop_front().unwrap().into() == token_id, 'token1');
     assert(all.pop_front().unwrap().into() == token_id_2, 'token2');
 }
+
 #[test]
 #[available_gas(300000000)]
-fn test_nft_custom_uri() {
-    let (_, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
+fn test_burn_makes_token_non_transferrable() {
+    let (controller, nft) = deploy_enumerable_owned_nft(
+        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
     );
-    assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
+
+    switch_to_controller();
+
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<9123456>();
+
+    let id = controller.mint(alice);
+    set_contract_address(alice);
+    nft.approve(bob, id.into());
+    set_contract_address(bob);
+    nft.transfer_from(alice, bob, id.into());
+
+    nft.approve(alice, id.into());
+    assert(nft.get_approved(id.into()) == alice, 'get_approved');
+    assert(nft.getApproved(id.into()) == alice, 'get_approved');
+
+    switch_to_controller();
+    controller.burn(id);
+
+    assert(nft.balance_of(alice) == 0, 'balance_of(alice)');
+    assert(nft.balance_of(bob) == 0, 'balance_of(bob)');
+    assert(nft.get_approved(id.into()).is_zero(), 'get_approved after');
+    assert(nft.getApproved(id.into()).is_zero(), 'getApproved after');
+    assert(controller.get_all_owned_tokens(alice).len() == 0, 'empty');
+    assert(controller.get_all_owned_tokens(bob).len() == 0, 'empty');
+}
+
+
+#[test]
+#[available_gas(300000000)]
+fn test_is_account_authorized() {
+    let (controller, nft) = deploy_default();
+
+    switch_to_controller();
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<12345>();
+    let id = controller.mint(alice);
+
+    assert(controller.is_account_authorized(id, alice), 'owner is authorized');
+    assert(
+        !controller.is_account_authorized(id, contract_address_const::<912344>()), 'random is not'
+    );
+    assert(!controller.is_account_authorized(id, default_controller()), 'controller is not');
+
+    set_contract_address(alice);
+    assert(!controller.is_account_authorized(id, bob), 'bob not auth');
+    nft.approve(bob, id.into());
+    assert(controller.is_account_authorized(id, bob), 'bob now auth');
+
+    nft.approve(Zeroable::zero(), id.into());
+    assert(!controller.is_account_authorized(id, bob), 'bob not auth');
+
+    nft.set_approval_for_all(bob, true);
+    assert(controller.is_account_authorized(id, bob), 'bob now auth');
+    nft.set_approval_for_all(bob, false);
+    assert(!controller.is_account_authorized(id, bob), 'bob not auth');
+}
+
+
+#[test]
+#[available_gas(300000000)]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
+fn test_burn_makes_token_non_transferrable_error() {
+    let (controller, nft) = deploy_enumerable_owned_nft(
+        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+    );
+
+    switch_to_controller();
+
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<9123456>();
+
+    let id = controller.mint(alice);
+    set_contract_address(alice);
+
+    nft.approve(bob, id.into());
+
+    switch_to_controller();
+    controller.burn(id);
+
+    set_contract_address(bob);
+    nft.transfer_from(alice, bob, id.into());
 }
 
 #[test]
