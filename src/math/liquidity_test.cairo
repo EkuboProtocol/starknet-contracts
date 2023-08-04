@@ -264,3 +264,70 @@ fn test_max_liquidity_less_than_liquidity_deltas() {
     assert(delta.amount1.mag <= amount1, 'amount1.mag');
     assert(delta.amount1.sign == false, 'amount1.sign');
 }
+
+
+#[test]
+fn test_liquidity_operations_rounding_increases_liquidity_in_range() {
+    let sqrt_ratio = u256 { low: 0, high: 1 };
+    let liquidity_delta = i129 { mag: 100, sign: false };
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
+    let delta = liquidity_delta_to_amount_delta(
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+    );
+    assert(delta.amount0 == i129 { mag: 1, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 1, sign: false }, 'amount1');
+
+    let computed_liquidity = max_liquidity(
+        sqrt_ratio,
+        sqrt_ratio_lower,
+        sqrt_ratio_upper,
+        amount0: delta.amount0.mag,
+        amount1: delta.amount1.mag
+    );
+    assert(computed_liquidity == 0x30d40, '200k times capital efficiency');
+}
+
+#[test]
+fn test_liquidity_operations_rounding_increases_liquidity_price_below() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: 10, sign: true }) - 1;
+    let liquidity_delta = i129 { mag: 100, sign: false };
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
+    let delta = liquidity_delta_to_amount_delta(
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+    );
+    assert(delta.amount0 == i129 { mag: 1, sign: false }, 'amount0');
+    assert(delta.amount1.is_zero(), 'amount1');
+
+    let computed_liquidity = max_liquidity(
+        sqrt_ratio,
+        sqrt_ratio_lower,
+        sqrt_ratio_upper,
+        amount0: delta.amount0.mag,
+        amount1: delta.amount1.mag
+    );
+    assert(computed_liquidity == 0x186a0, '100k times capital efficiency');
+}
+
+#[test]
+fn test_liquidity_operations_rounding_increases_liquidity_price_above() {
+    let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: 10, sign: false }) + 1;
+    let liquidity_delta = i129 { mag: 100, sign: false };
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
+    let delta = liquidity_delta_to_amount_delta(
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+    );
+    assert(delta.amount0.is_zero(), 'amount0');
+    assert(delta.amount1 == i129 { mag: 1, sign: false }, 'amount1');
+
+    let computed_liquidity = max_liquidity(
+        sqrt_ratio,
+        sqrt_ratio_lower,
+        sqrt_ratio_upper,
+        amount0: delta.amount0.mag,
+        amount1: delta.amount1.mag
+    );
+    assert(computed_liquidity == 0x186a0, '100k times capital efficiency');
+}
