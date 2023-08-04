@@ -121,7 +121,10 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use super::{PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable};
+    use super::{
+        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
+        OptionTrait
+    };
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
@@ -254,6 +257,34 @@ mod initialize_pool_tests {
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+    }
+
+    #[test]
+    #[available_gas(300000000)]
+    fn test_maybe_initialize_pool_twice() {
+        let core = deploy_core();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: Zeroable::zero(),
+            tick_spacing: 1,
+            extension: Zeroable::zero(),
+        };
+        assert(
+            core.maybe_initialize_pool(pool_key, Zeroable::zero()).unwrap() == u256 {
+                high: 1, low: 0
+            },
+            'price'
+        );
+        assert(
+            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false }).is_none(),
+            'second'
+        );
+        assert(
+            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: true }).is_none(), 'third'
+        );
+
+        assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
     }
 }
 

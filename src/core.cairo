@@ -525,6 +525,17 @@ mod Core {
             balance_next
         }
 
+        fn maybe_initialize_pool(
+            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
+        ) -> Option<u256> {
+            let price = self.pool_price.read(pool_key);
+            if (price.sqrt_ratio.is_zero()) {
+                Option::Some(self.initialize_pool(pool_key, initial_tick))
+            } else {
+                Option::None(())
+            }
+        }
+
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             // token0 is always l.t. token1
             assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
