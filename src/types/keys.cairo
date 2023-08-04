@@ -45,8 +45,8 @@ struct PositionKey {
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        pedersen(
-            state, pedersen(value.salt.into(), pedersen(value.owner.into(), value.bounds.into()))
+        LegacyHash::hash(
+            pedersen(state, pedersen(value.salt.into(), value.owner.into())), value.bounds
         )
     }
 }

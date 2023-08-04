@@ -5,13 +5,14 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait, Bounds};
+use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
 use ekubo::types::keys::{PoolKey};
-use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio};
+use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use zeroable::Zeroable;
 
@@ -22,6 +23,7 @@ use ekubo::tests::helper::{
 use array::ArrayTrait;
 use option::OptionTrait;
 use traits::{Into};
+
 
 use debug::PrintTrait;
 
@@ -35,14 +37,12 @@ fn test_deposit_liquidity_full_range() {
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);
-    let token_id = positions.mint(pool_key: setup.pool_key, bounds: Default::default());
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: max_bounds(1));
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     let liquidity = positions
-        .deposit_last(
-            pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100000000
-        );
+        .deposit_last(pool_key: setup.pool_key, bounds: max_bounds(1), min_liquidity: 100000000);
 
     assert(liquidity == 100000000, 'liquidity');
 
@@ -70,14 +70,12 @@ fn test_deposit_fails_min_liquidity() {
         extension: Zeroable::zero(),
     );
     let positions = deploy_positions(setup.core);
-    let token_id = positions.mint(pool_key: setup.pool_key, bounds: Default::default());
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: max_bounds(1));
     assert(token_id == 1, 'token id');
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     positions
-        .deposit_last(
-            pool_key: setup.pool_key, bounds: Default::default(), min_liquidity: 100000001
-        );
+        .deposit_last(pool_key: setup.pool_key, bounds: max_bounds(1), min_liquidity: 100000001);
 }
 
 #[test]

@@ -5,6 +5,22 @@ use option::{Option, OptionTrait};
 use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
 use ekubo::tests::store_packing_test::{assert_round_trip};
+use hash::{LegacyHash};
+use ekubo::types::keys_test::{check_hashes_differ};
+
+#[test]
+fn test_legacy_hash_i129() {
+    check_hashes_differ(i129 { mag: 0, sign: false }, i129 { mag: 1, sign: false });
+    check_hashes_differ(i129 { mag: 1, sign: true }, i129 { mag: 1, sign: false });
+    check_hashes_differ(i129 { mag: 1, sign: true }, i129 { mag: 0, sign: false });
+
+    assert(
+        LegacyHash::hash(
+            0, i129 { mag: 0, sign: false }
+        ) == LegacyHash::hash(0, i129 { mag: 0, sign: true }),
+        'hash of 0'
+    );
+}
 
 #[test]
 fn test_zeroable() {

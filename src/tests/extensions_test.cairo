@@ -10,13 +10,13 @@ use ekubo::interfaces::core::{
     SwapParameters, UpdatePositionParameters
 };
 use ekubo::tests::mocks::locker::{ICoreLockerDispatcher, ICoreLockerDispatcherTrait};
-use ekubo::types::keys::PoolKey;
-use ekubo::types::bounds::Bounds;
-use ekubo::types::i129::i129;
+use ekubo::types::keys::{PoolKey};
+use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::i129::{i129};
 use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
 use starknet::{get_contract_address};
-use zeroable::Zeroable;
+use zeroable::{Zeroable};
 use ekubo::types::call_points::{CallPoints, all_call_points};
 
 fn setup(
@@ -134,7 +134,7 @@ fn test_mock_extension_update_position_is_called() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -164,7 +164,7 @@ fn test_mock_extension_no_call_points() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -209,7 +209,7 @@ fn test_mock_extension_after_initialize_pool_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -255,7 +255,7 @@ fn test_mock_extension_before_swap_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -300,7 +300,7 @@ fn test_mock_extension_after_swap_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -346,7 +346,7 @@ fn test_mock_extension_before_update_position_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -391,7 +391,7 @@ fn test_mock_extension_after_update_position_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );

@@ -35,7 +35,7 @@ mod Core {
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
     use ekubo::types::keys::{PositionKey, PoolKey};
-    use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
+    use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
     use traits::{Into};
