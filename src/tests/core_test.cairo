@@ -11,7 +11,7 @@ use traits::{Into, TryInto};
 use ekubo::types::keys::PoolKey;
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds};
+use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
 };
@@ -19,7 +19,7 @@ use ekubo::math::muldiv::{div};
 use array::{ArrayTrait};
 use option::{Option, OptionTrait};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use zeroable::Zeroable;
+use zeroable::{Zeroable};
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
@@ -186,7 +186,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ZERO', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -671,7 +671,8 @@ mod locks {
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, accumulate_as_fees
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable,
+        accumulate_as_fees, max_bounds
     };
 
     #[test]
@@ -1002,7 +1003,7 @@ mod locks {
 
         let delta = update_position(
             setup,
-            bounds: Default::default(),
+            bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
@@ -1030,14 +1031,14 @@ mod locks {
 
         update_position(
             setup: setup,
-            bounds: Default::default(),
+            bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let delta = update_position(
             setup: setup,
-            bounds: Default::default(),
+            bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 500000000, sign: true },
             recipient: contract_address_const::<42>()
         );
@@ -1082,14 +1083,14 @@ mod locks {
 
         update_position(
             setup,
-            bounds: Default::default(),
+            bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let delta = update_position(
             setup,
-            bounds: Default::default(),
+            bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: true },
             recipient: contract_address_const::<42>()
         );

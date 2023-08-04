@@ -1,16 +1,32 @@
-use ekubo::types::bounds::{CheckBoundsValidTrait, Bounds, max_bounds};
+use ekubo::types::bounds::{BoundsTrait, Bounds, max_bounds};
 use ekubo::types::i129::i129;
 use ekubo::math::ticks::{max_tick, min_tick};
+use ekubo::types::keys_test::{check_hashes_differ};
+
+#[test]
+fn test_legacy_hash_bounds() {
+    let base: Bounds = max_bounds(1);
+
+    let mut other_lower = base;
+    other_lower.lower = i129 { mag: 1, sign: true };
+
+    let mut other_upper = base;
+    other_upper.upper = i129 { mag: 1, sign: false };
+
+    check_hashes_differ(base, other_lower);
+    check_hashes_differ(base, other_upper);
+    check_hashes_differ(other_lower, other_upper);
+}
 
 #[test]
 fn test_check_valid_succeeds_default_1() {
-    Default::<Bounds>::default().check_valid(1);
+    max_bounds(1).check_valid(1);
 }
 
 #[test]
 #[should_panic(expected: ('BOUNDS_TICK_SPACING', ))]
 fn test_check_valid_fails_default_123() {
-    Default::<Bounds>::default().check_valid(123);
+    max_bounds(1).check_valid(123);
 }
 
 #[test]
@@ -65,13 +81,6 @@ fn test_check_valid_tick_spacing_matches() {
     Bounds {
         lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 2, sign: false }
     }.check_valid(2);
-}
-
-#[test]
-fn test_default_bounds() {
-    let bounds: Bounds = Default::default();
-    assert(bounds.lower == min_tick(), 'min');
-    assert(bounds.upper == max_tick(), 'max');
 }
 
 #[test]
