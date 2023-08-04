@@ -146,7 +146,7 @@ mod OptionIncentives {
             );
 
             let positions = self.positions.read();
-            let info = positions.get_position_info(token_id, pool_key, bounds);
+            let info = positions.get_token_info(token_id, pool_key, bounds);
 
             assert(info.liquidity.is_non_zero(), 'ZERO_LIQUIDITY_STAKE');
 
@@ -185,7 +185,7 @@ mod OptionIncentives {
             let liquidity = self
                 .positions
                 .read()
-                .get_position_info(token_id, pool_key, bounds)
+                .get_token_info(token_id, pool_key, bounds)
                 .liquidity;
 
             // we know if this overflows the u256 container, the result overflows a u128

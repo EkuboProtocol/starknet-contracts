@@ -4,7 +4,7 @@ use zeroable::Zeroable;
 use option::{Option, OptionTrait};
 use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
-
+use ekubo::tests::store_packing_test::{assert_round_trip};
 
 #[test]
 fn test_zeroable() {
@@ -113,6 +113,15 @@ fn test_mul_positive_negative() {
     assert(x == i129 { mag: 0x1, sign: true }, '1 * -1 = -1');
 }
 
+#[test]
+fn test_round_trip_many_values() {
+    assert_round_trip(i129 { mag: 0, sign: false });
+    assert_round_trip(i129 { mag: 0, sign: true });
+    assert_round_trip(i129 { mag: 1, sign: false });
+    assert_round_trip(i129 { mag: 1, sign: true });
+    assert_round_trip(i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true });
+    assert_round_trip(i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false });
+}
 
 #[test]
 #[available_gas(3000000)]

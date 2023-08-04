@@ -6,7 +6,6 @@ mod i129;
 mod keys;
 mod pool_price;
 mod position;
-mod tick;
 
 #[cfg(test)]
 mod bounds_test;

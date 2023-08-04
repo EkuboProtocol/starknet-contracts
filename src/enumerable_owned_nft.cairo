@@ -44,6 +44,7 @@ mod EnumerableOwnedNFT {
 
     #[storage]
     struct Storage {
+        // set only in the constructor
         controller: ContractAddress,
         token_uri_base: felt252,
         name: felt252,
@@ -380,6 +381,7 @@ mod EnumerableOwnedNFT {
 
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
+            self.approvals.write(id, Zeroable::zero());
             self.tokens_by_owner_remove(owner, id);
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id: id.into() });
