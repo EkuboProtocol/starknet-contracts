@@ -14,7 +14,7 @@ use zeroable::{Zeroable};
 fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
 ) -> Delta {
-    // handle the 0 case so we do not return 1 for 0 liquidity delta
+    // skip the maths for the 0 case
     if (liquidity_delta.is_zero()) {
         return Zeroable::zero();
     }
