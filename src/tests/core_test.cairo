@@ -186,7 +186,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ZERO', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED', ))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
         let pool_key = PoolKey {

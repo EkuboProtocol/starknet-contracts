@@ -1,8 +1,8 @@
-use ekubo::types::keys::{PoolKey, PositionKey};
-use ekubo::types::i129::i129;
-use ekubo::types::bounds::Bounds;
-use starknet::contract_address_const;
-use hash::LegacyHash;
+use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey};
+use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
+use starknet::{contract_address_const};
+use hash::{LegacyHash};
 use debug::PrintTrait;
 
 fn check_hashes_differ<
@@ -60,6 +60,85 @@ fn test_pool_key_hash_differs_for_any_field_or_state_change() {
     check_hashes_differ(other_fee, other_extension);
 
     check_hashes_differ(other_tick_spacing, other_extension);
+}
+
+#[test]
+#[should_panic(expected: ('TOKEN_ORDER', ))]
+fn test_pool_key_check_valid_order_wrong_order() {
+    PoolKey {
+        token0: contract_address_const::<2>(),
+        token1: contract_address_const::<0>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 1,
+        extension: Zeroable::zero(),
+    }.check_valid();
+}
+
+#[test]
+#[should_panic(expected: ('TOKEN_ORDER', ))]
+fn test_pool_key_check_valid_order_same_token() {
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<1>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 1,
+        extension: Zeroable::zero(),
+    }.check_valid();
+}
+
+#[test]
+#[should_panic(expected: ('TOKEN_NON_ZERO', ))]
+fn test_pool_key_check_non_zero() {
+    PoolKey {
+        token0: contract_address_const::<0>(),
+        token1: contract_address_const::<2>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 1,
+        extension: Zeroable::zero(),
+    }.check_valid();
+}
+
+#[test]
+#[should_panic(expected: ('TICK_SPACING', ))]
+fn test_pool_key_check_tick_spacing_non_zero() {
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: Zeroable::zero(),
+        tick_spacing: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    }.check_valid();
+}
+
+#[test]
+#[should_panic(expected: ('TICK_SPACING', ))]
+fn test_pool_key_check_tick_spacing_max() {
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 693149,
+        extension: Zeroable::zero(),
+    }.check_valid();
+}
+
+#[test]
+fn test_pool_key_check_valid_is_valid() {
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 1,
+        extension: Zeroable::zero(),
+    }.check_valid();
+
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: Zeroable::zero(),
+        tick_spacing: 693148,
+        extension: Zeroable::zero(),
+    }.check_valid();
 }
 
 #[test]
