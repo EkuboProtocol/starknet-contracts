@@ -2,7 +2,6 @@ use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::position::{Position};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
@@ -124,8 +123,11 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> FeesPerLiquidity;
 
-    // Get the state of a given tick for the given pool
-    fn get_pool_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
+    // Get the liquidity delta for the tick of the given pool
+    fn get_pool_tick_liquidity_delta(self: @TStorage, pool_key: PoolKey, index: i129) -> i129;
+
+    // Get the net liquidity referencing a tick for the given pool
+    fn get_pool_tick_liquidity_net(self: @TStorage, pool_key: PoolKey, index: i129) -> u128;
 
     // Get the fees on the other side of the tick from the current tick
     fn get_pool_tick_fees_outside(

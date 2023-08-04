@@ -550,17 +550,22 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     setup.token1.increase_balance(positions.contract_address, 10000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
-    let mut tick_lower_state = setup
+    let tick_lower_liquidity_delta = setup
         .core
-        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: true });
-    let mut tick_upper_state = setup
+        .get_pool_tick_liquidity_delta(setup.pool_key, i129 { mag: 1, sign: true });
+    let tick_lower_liquidity_net = setup
         .core
-        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: false });
+        .get_pool_tick_liquidity_net(setup.pool_key, i129 { mag: 1, sign: true });
+    let tick_upper_liquidity_delta = setup
+        .core
+        .get_pool_tick_liquidity_delta(setup.pool_key, i129 { mag: 1, sign: false });
+    let tick_upper_liquidity_net = setup
+        .core
+        .get_pool_tick_liquidity_net(setup.pool_key, i129 { mag: 1, sign: false });
     assert(
-        tick_upper_state.liquidity_delta == i129 { mag: liquidity, sign: true },
-        'upper.liquidity_delta'
+        tick_upper_liquidity_delta == i129 { mag: liquidity, sign: true }, 'upper.liquidity_delta'
     );
-    assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
+    assert(tick_upper_liquidity_net == liquidity, 'upper.liquidity_net');
     assert(
         setup
             .core
@@ -570,10 +575,9 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     );
 
     assert(
-        tick_lower_state.liquidity_delta == i129 { mag: liquidity, sign: false },
-        'lower.liquidity_delta'
+        tick_lower_liquidity_delta == i129 { mag: liquidity, sign: false }, 'lower.liquidity_delta'
     );
-    assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
+    assert(tick_lower_liquidity_net == liquidity, 'lower.liquidity_net');
     assert(
         setup
             .core

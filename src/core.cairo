@@ -35,7 +35,6 @@ mod Core {
     };
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::types::tick::{Tick};
     use ekubo::types::keys::{PositionKey, PoolKey};
     use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
     use ekubo::types::delta::{Delta};
@@ -61,7 +60,8 @@ mod Core {
         pool_price: LegacyMap::<PoolKey, PoolPrice>,
         pool_liquidity: LegacyMap::<PoolKey, u128>,
         pool_fees: LegacyMap::<PoolKey, FeesPerLiquidity>,
-        ticks: LegacyMap::<(PoolKey, i129), Tick>,
+        tick_liquidity_net: LegacyMap::<(PoolKey, i129), u128>,
+        tick_liquidity_delta: LegacyMap::<(PoolKey, i129), i129>,
         tick_fees_outside: LegacyMap::<(PoolKey, i129), FeesPerLiquidity>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
@@ -219,25 +219,26 @@ mod Core {
             liquidity_delta: i129,
             is_upper: bool
         ) {
-            let tick = self.ticks.read((pool_key, index));
+            let key = (pool_key, index);
+            let liquidity_delta_current = self.tick_liquidity_delta.read(key);
 
-            let next_liquidity_net = tick.liquidity_net.add(liquidity_delta);
+            let liquidity_net_current = self.tick_liquidity_net.read(key);
+            let next_liquidity_net = liquidity_net_current.add(liquidity_delta);
 
             self
-                .ticks
+                .tick_liquidity_delta
                 .write(
-                    (pool_key, index),
-                    Tick {
-                        liquidity_delta: if is_upper {
-                            tick.liquidity_delta - liquidity_delta
-                        } else {
-                            tick.liquidity_delta + liquidity_delta
-                        },
-                        liquidity_net: next_liquidity_net,
+                    key,
+                    if is_upper {
+                        liquidity_delta_current - liquidity_delta
+                    } else {
+                        liquidity_delta_current + liquidity_delta
                     }
                 );
 
-            if ((next_liquidity_net == 0) != (tick.liquidity_net == 0)) {
+            self.tick_liquidity_net.write(key, next_liquidity_net);
+
+            if ((next_liquidity_net == 0) != (liquidity_net_current == 0)) {
                 if (next_liquidity_net == 0) {
                     self.remove_initialized_tick(pool_key, index);
                 } else {
@@ -290,8 +291,16 @@ mod Core {
             self.reserves.read(token)
         }
 
-        fn get_pool_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
-            self.ticks.read((pool_key, index))
+        fn get_pool_tick_liquidity_delta(
+            self: @ContractState, pool_key: PoolKey, index: i129
+        ) -> i129 {
+            self.tick_liquidity_delta.read((pool_key, index))
+        }
+
+        fn get_pool_tick_liquidity_net(
+            self: @ContractState, pool_key: PoolKey, index: i129
+        ) -> u128 {
+            self.tick_liquidity_net.read((pool_key, index))
         }
 
         fn get_pool_tick_fees_outside(
@@ -860,12 +869,12 @@ mod Core {
                         };
 
                     if (is_initialized) {
-                        let tick_data = self.ticks.read((pool_key, next_tick));
+                        let liquidity_delta = self.tick_liquidity_delta.read((pool_key, next_tick));
                         // update our working liquidity based on the direction we are crossing the tick
                         if (increasing) {
-                            liquidity = liquidity.add(tick_data.liquidity_delta);
+                            liquidity = liquidity.add(liquidity_delta);
                         } else {
-                            liquidity = liquidity.sub(tick_data.liquidity_delta);
+                            liquidity = liquidity.sub(liquidity_delta);
                         }
 
                         // update the tick fee state
