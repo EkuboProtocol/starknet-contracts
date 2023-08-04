@@ -58,6 +58,25 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    fn test_set_withdrawal_only_mode_owner_only() {
+        let core = deploy_core();
+        set_contract_address(contract_address_const::<1>());
+        core.set_withdrawal_only_mode();
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_set_withdrawal_only_mode_owner() {
+        let core = deploy_core();
+        assert(!core.get_withdrawal_only_mode(), 'before');
+        set_contract_address(owner());
+        core.set_withdrawal_only_mode();
+        assert(core.get_withdrawal_only_mode(), 'after');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
         set_contract_address(owner());
@@ -102,7 +121,10 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use super::{PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable};
+    use super::{
+        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
+        OptionTrait
+    };
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
@@ -235,6 +257,34 @@ mod initialize_pool_tests {
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
+    }
+
+    #[test]
+    #[available_gas(300000000)]
+    fn test_maybe_initialize_pool_twice() {
+        let core = deploy_core();
+        let pool_key = PoolKey {
+            token0: contract_address_const::<1>(),
+            token1: contract_address_const::<2>(),
+            fee: Zeroable::zero(),
+            tick_spacing: 1,
+            extension: Zeroable::zero(),
+        };
+        assert(
+            core.maybe_initialize_pool(pool_key, Zeroable::zero()).unwrap() == u256 {
+                high: 1, low: 0
+            },
+            'price'
+        );
+        assert(
+            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false }).is_none(),
+            'second'
+        );
+        assert(
+            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: true }).is_none(), 'third'
+        );
+
+        assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
     }
 }
 
@@ -896,8 +946,8 @@ mod locks {
 
         assert(
             setup.core.get_pool_fees_per_liquidity(setup.pool_key) == FeesPerLiquidity {
-                fees_per_liquidity_token0: 680564733841876926926749214863536422912,
-                fees_per_liquidity_token1: 1020847100762815390390123822295304634368
+                value0: 680564733841876926926749214863536422912,
+                value1: 1020847100762815390390123822295304634368
             },
             'fees_per_liquidity'
         );
@@ -1285,8 +1335,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 3402823669209384634633746074317,
-                fees_per_liquidity_token1: 0,
+                value0: 3402823669209384634633746074317, value1: 0, 
             },
             'fees'
         );
@@ -1403,8 +1452,7 @@ mod locks {
 
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 3402823669209384634633746074317,
-                fees_per_liquidity_token1: 0,
+                value0: 3402823669209384634633746074317, value1: 0, 
             },
             'fees'
         );
@@ -1462,8 +1510,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 17014118346046923173168730371588410,
-                fees_per_liquidity_token1: 0,
+                value0: 17014118346046923173168730371588410, value1: 0, 
             },
             'fees'
         );
@@ -1520,8 +1567,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 17014118346046923173168730371588410,
-                fees_per_liquidity_token1: 0,
+                value0: 17014118346046923173168730371588410, value1: 0, 
             },
             'fees'
         );
@@ -1577,8 +1623,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 3402823669209384634633746074317,
+                value0: 0, value1: 3402823669209384634633746074317, 
             },
             'fees'
         );
@@ -1634,8 +1679,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 3402823669209384634633746074317,
+                value0: 0, value1: 3402823669209384634633746074317, 
             },
             'fees'
         );
@@ -1692,8 +1736,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 16980090109354829326822392910845233,
+                value0: 0, value1: 16980090109354829326822392910845233, 
             },
             'fees'
         );
@@ -1750,8 +1793,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 16912033635970641634129717989358880,
+                value0: 0, value1: 16912033635970641634129717989358880, 
             },
             'fees'
         );
@@ -1843,8 +1885,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0x68f6639f0bc961de416956dbaee7d,
-                fees_per_liquidity_token1: 0,
+                value0: 0x68f6639f0bc961de416956dbaee7d, value1: 0, 
             },
             'fees'
         );
@@ -1936,8 +1977,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                fees_per_liquidity_token0: 0,
-                fees_per_liquidity_token1: 0x68f6639f0bc961de416956dbaee7d,
+                value0: 0, value1: 0x68f6639f0bc961de416956dbaee7d, 
             },
             'fees'
         );

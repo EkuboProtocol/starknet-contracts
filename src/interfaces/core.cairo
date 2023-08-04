@@ -2,7 +2,6 @@ use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::position::{Position};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::tick::{Tick};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
@@ -104,6 +103,9 @@ trait ICore<TStorage> {
     // Sets the contract to withdrawals only mode, thus preventing any new capital being sent to the contract
     fn set_withdrawal_only_mode(ref self: TStorage);
 
+    // Returns whether the contract is in withdrawal only mode
+    fn get_withdrawal_only_mode(self: @TStorage) -> bool;
+
     // Get the amount of withdrawal fees collected for the protocol
     fn get_protocol_fees_collected(self: @TStorage, token: ContractAddress) -> u128;
 
@@ -124,8 +126,11 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, bounds: Bounds
     ) -> FeesPerLiquidity;
 
-    // Get the state of a given tick for the given pool
-    fn get_pool_tick(self: @TStorage, pool_key: PoolKey, index: i129) -> Tick;
+    // Get the liquidity delta for the tick of the given pool
+    fn get_pool_tick_liquidity_delta(self: @TStorage, pool_key: PoolKey, index: i129) -> i129;
+
+    // Get the net liquidity referencing a tick for the given pool
+    fn get_pool_tick_liquidity_net(self: @TStorage, pool_key: PoolKey, index: i129) -> u128;
 
     // Get the fees on the other side of the tick from the current tick
     fn get_pool_tick_fees_outside(
@@ -196,8 +201,14 @@ trait ICore<TStorage> {
         ref self: TStorage, token_address: ContractAddress, cache_key: u64, amount: u128
     ) -> u128;
 
+
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129) -> u256;
+
+    // Initialize a pool if it's not already initialized. Useful as part of a batch of other operations.
+    fn maybe_initialize_pool(
+        ref self: TStorage, pool_key: PoolKey, initial_tick: i129
+    ) -> Option<u256>;
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
     // Must be called within a ILocker#locked. Note also that a position cannot be burned to 0 unless all fees have been collected

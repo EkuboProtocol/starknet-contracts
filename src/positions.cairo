@@ -24,7 +24,7 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::interfaces::positions::{IPositions, GetPositionInfoResult};
+    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback};
@@ -247,6 +247,10 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        fn get_nft_address(self: @ContractState) -> ContractAddress {
+            self.nft.read().contract_address
+        }
+
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
@@ -279,9 +283,9 @@ mod Positions {
             nft.burn(id);
         }
 
-        fn get_position_info(
+        fn get_token_info(
             self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
-        ) -> GetPositionInfoResult {
+        ) -> GetTokenInfoResult {
             self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
             let get_position_result = core
@@ -297,7 +301,7 @@ mod Positions {
                 sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
             );
 
-            GetPositionInfoResult {
+            GetTokenInfoResult {
                 pool_price: price,
                 liquidity: get_position_result.position.liquidity,
                 amount0: delta.amount0.mag,
@@ -389,14 +393,6 @@ mod Positions {
                 dispatcher.transfer(get_caller_address(), balance);
             }
             balance
-        }
-
-        fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
-            let core = self.core.read();
-            let price = core.get_pool_price(pool_key);
-            if (price.sqrt_ratio.is_zero()) {
-                core.initialize_pool(pool_key, initial_tick);
-            }
         }
 
         fn deposit_last(

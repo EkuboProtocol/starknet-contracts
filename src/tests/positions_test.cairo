@@ -23,24 +23,6 @@ use traits::{Into};
 use debug::PrintTrait;
 
 #[test]
-#[available_gas(300000000)]
-fn test_maybe_initialize_pool_twice() {
-    let core = deploy_core();
-    let positions = deploy_positions(core);
-    let pool_key = PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
-        tick_spacing: 1,
-        extension: Zeroable::zero(),
-    };
-    positions.maybe_initialize_pool(pool_key, Zeroable::zero());
-    positions.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false });
-
-    assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
-}
-
-#[test]
 #[available_gas(20000000)]
 fn test_deposit_liquidity_full_range() {
     let setup = setup_pool(
@@ -303,13 +285,13 @@ fn test_deposit_then_withdraw_with_fees() {
         skip_ahead: 0
     );
 
-    let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
+    let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
-    assert(get_position_result.liquidity == 200050104166, 'liquidity');
-    assert(get_position_result.amount0 == 100000998, 'amount0');
-    assert(get_position_result.amount1 == 99999000, 'amount1');
-    assert(get_position_result.fees0 == 20, 'fees0');
-    assert(get_position_result.fees1 == 9, 'fees1');
+    assert(token_info.liquidity == 200050104166, 'liquidity');
+    assert(token_info.amount0 == 100000998, 'amount0');
+    assert(token_info.amount1 == 99999000, 'amount1');
+    assert(token_info.fees0 == 20, 'fees0');
+    assert(token_info.fees1 == 9, 'fees1');
 }
 
 #[test]
@@ -382,13 +364,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
 
     // fees are not withdrawn with the principal
-    let get_position_result = positions.get_position_info(token_id, setup.pool_key, bounds);
+    let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
-    assert(get_position_result.liquidity == 100025052083, 'liquidity');
-    assert(get_position_result.amount0 == 50000499, 'amount0');
-    assert(get_position_result.amount1 == 49999500, 'amount1');
-    assert(get_position_result.fees0 == 19, 'fees0');
-    assert(get_position_result.fees1 == 8, 'fees1');
+    assert(token_info.liquidity == 100025052083, 'liquidity');
+    assert(token_info.amount0 == 50000499, 'amount0');
+    assert(token_info.amount1 == 49999500, 'amount1');
+    assert(token_info.fees0 == 19, 'fees0');
+    assert(token_info.fees1 == 8, 'fees1');
 
     // withdraw fees only
     let (amount0, amount1) = positions
@@ -550,17 +532,22 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     setup.token1.increase_balance(positions.contract_address, 10000);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
-    let mut tick_lower_state = setup
+    let tick_lower_liquidity_delta = setup
         .core
-        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: true });
-    let mut tick_upper_state = setup
+        .get_pool_tick_liquidity_delta(setup.pool_key, i129 { mag: 1, sign: true });
+    let tick_lower_liquidity_net = setup
         .core
-        .get_pool_tick(setup.pool_key, i129 { mag: 1, sign: false });
+        .get_pool_tick_liquidity_net(setup.pool_key, i129 { mag: 1, sign: true });
+    let tick_upper_liquidity_delta = setup
+        .core
+        .get_pool_tick_liquidity_delta(setup.pool_key, i129 { mag: 1, sign: false });
+    let tick_upper_liquidity_net = setup
+        .core
+        .get_pool_tick_liquidity_net(setup.pool_key, i129 { mag: 1, sign: false });
     assert(
-        tick_upper_state.liquidity_delta == i129 { mag: liquidity, sign: true },
-        'upper.liquidity_delta'
+        tick_upper_liquidity_delta == i129 { mag: liquidity, sign: true }, 'upper.liquidity_delta'
     );
-    assert(tick_upper_state.liquidity_net == liquidity, 'upper.liquidity_net');
+    assert(tick_upper_liquidity_net == liquidity, 'upper.liquidity_net');
     assert(
         setup
             .core
@@ -570,10 +557,9 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     );
 
     assert(
-        tick_lower_state.liquidity_delta == i129 { mag: liquidity, sign: false },
-        'lower.liquidity_delta'
+        tick_lower_liquidity_delta == i129 { mag: liquidity, sign: false }, 'lower.liquidity_delta'
     );
-    assert(tick_lower_state.liquidity_net == liquidity, 'lower.liquidity_net');
+    assert(tick_lower_liquidity_net == liquidity, 'lower.liquidity_net');
     assert(
         setup
             .core
@@ -607,7 +593,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -628,7 +614,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     assert(delta_swap.amount0 == i129 { mag: 10000, sign: true }, 'first swap delta0');
     assert(delta_swap.amount1 == i129 { mag: 10000, sign: false }, 'first swap delta1');
 
-    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 0, 'amount0 after');
@@ -661,7 +647,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -682,7 +668,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     assert(delta_swap.amount0 == i129 { mag: 10000, sign: false }, 'swap delta0');
     assert(delta_swap.amount1 == i129 { mag: 10000, sign: true }, 'swap delta1');
 
-    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 20000, 'amount0 after');
@@ -715,7 +701,7 @@ fn test_deposit_swap_round_trip_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -750,7 +736,7 @@ fn test_deposit_swap_round_trip_accounting() {
         skip_ahead: 0
     );
 
-    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
@@ -771,7 +757,7 @@ fn test_deposit_swap_round_trip_accounting() {
 
     assert(amount0 == 200, 'amount0 withdrawn');
     assert(amount1 == 200, 'amount1 withdrawn');
-    info = positions.get_position_info(token_id, setup.pool_key, bounds);
+    info = positions.get_token_info(token_id, setup.pool_key, bounds);
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
     assert(info.amount1 == 9999, 'amount1 after');
@@ -801,6 +787,74 @@ fn create_position(
         .deposit(id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
     CreatePositionResult { id: token_id, bounds, liquidity }
+}
+
+
+#[test]
+#[available_gas(1000000000)]
+fn test_deposit_existing_position() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.set_balance(positions.contract_address, 15000);
+    setup.token1.set_balance(positions.contract_address, 30000);
+    let liquidity = positions
+        .deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
+
+    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+
+    assert(info.liquidity == 5000015000, 'liquidity');
+    assert(info.amount0 == 24999, 'amount0');
+    assert(info.amount1 == 24999, 'amount1');
+    assert(info.fees0.is_zero(), 'fees0');
+    assert(info.fees1.is_zero(), 'fees1');
+
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+
+    assert(info.liquidity == 5000015000, 'liquidity');
+    assert(info.amount0 == 19999, 'amount0');
+    assert(info.amount1 == 30000, 'amount1');
+    assert(info.fees0.is_zero(), 'fees0');
+    assert(info.fees1 == 50, 'fees1');
+
+    setup.token0.set_balance(positions.contract_address, 15000);
+    setup.token1.set_balance(positions.contract_address, 15000);
+    let liquidity = positions
+        .deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
+
+    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+
+    assert(info.liquidity == 7500021250, 'liquidity');
+    assert(info.amount0 == 29999, 'amount0');
+    assert(info.amount1 == 45000, 'amount1');
+    assert(info.fees0.is_zero(), 'fees0');
+    assert(info.fees1 == 49, 'fees1');
 }
 
 #[test]
@@ -864,9 +918,9 @@ fn test_deposit_swap_multiple_positions() {
         skip_ahead: 0
     );
 
-    let p0_info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
-    let p1_info = positions.get_position_info(p1.id, setup.pool_key, p1.bounds);
-    let p2_info = positions.get_position_info(p2.id, setup.pool_key, p2.bounds);
+    let p0_info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let p1_info = positions.get_token_info(p1.id, setup.pool_key, p1.bounds);
+    let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
 
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
     assert(p0_info.amount0 == 9999, 'p0 amount0');
@@ -885,6 +939,100 @@ fn test_deposit_swap_multiple_positions() {
     assert(p2_info.amount1 == 9999, 'p2 amount1');
     assert(p2_info.fees0 == 100, 'p2 fees0');
     assert(p2_info.fees1 == 99, 'p2 fees1');
+}
+
+
+#[test]
+#[available_gas(1000000000)]
+fn test_create_position_in_range_after_swap_no_fees() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 5, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let p1 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false } },
+        5000,
+        5000
+    );
+    let p2 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 0, sign: false } },
+        0,
+        5000
+    );
+    let p3 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 10, sign: false } },
+        5000,
+        0
+    );
+
+    let p0_info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let p1_info = positions.get_token_info(p1.id, setup.pool_key, p1.bounds);
+    let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
+    let p3_info = positions.get_token_info(p3.id, setup.pool_key, p3.bounds);
+
+    assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
+    assert(p0_info.amount0 == 9999, 'p0 amount0');
+    assert(p0_info.amount1 == 9999, 'p0 amount1');
+    assert(p0_info.fees0 == 50, 'p0 fees0');
+    assert(p0_info.fees1 == 50, 'p0 fees1');
+
+    assert(p1_info.liquidity == p1.liquidity, 'p1 liquidity');
+    assert(p1_info.amount0 == 4999, 'p1 amount0');
+    assert(p1_info.amount1 == 4999, 'p1 amount1');
+    assert(p1_info.fees0.is_zero(), 'p1 fees0');
+    assert(p1_info.fees1.is_zero(), 'p1 fees1');
+
+    assert(p2_info.liquidity == p1.liquidity, 'p2 liquidity');
+    assert(p2_info.amount0 == 0, 'p2 amount0');
+    assert(p2_info.amount1 == 4999, 'p2 amount1');
+    assert(p2_info.fees0.is_zero(), 'p2 fees0');
+    assert(p2_info.fees1.is_zero(), 'p2 fees1');
+
+    assert(p3_info.liquidity == p1.liquidity, 'p3 liquidity');
+    assert(p3_info.amount0 == 4999, 'p3 amount0');
+    assert(p3_info.amount1 == 0, 'p3 amount1');
+    assert(p3_info.fees0.is_zero(), 'p3 fees0');
+    assert(p3_info.fees1.is_zero(), 'p3 fees1');
 }
 
 #[test]
@@ -1034,7 +1182,7 @@ fn test_withdraw_partial_leave_fees() {
             collect_fees: false,
         );
 
-    let info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
     assert(info.liquidity == (p0.liquidity - (p0.liquidity / 3)), 'liquidity');
     assert(info.amount0 == 13333, 'amount0'); // 2/3 of 20k
     assert(info.amount1 == 0, 'amount1');
