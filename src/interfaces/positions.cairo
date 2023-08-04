@@ -4,14 +4,8 @@ use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct TokenInfo {
-    key_hash: felt252,
-    liquidity: u128,
-}
-
 #[derive(Copy, Drop, Serde)]
-struct GetPositionInfoResult {
+struct GetTokenInfoResult {
     pool_price: PoolPrice,
     liquidity: u128,
     amount0: u128,
@@ -22,14 +16,12 @@ struct GetPositionInfoResult {
 
 #[starknet::interface]
 trait IPositions<TStorage> {
-    // Return the principal and fee amounts owed to a position
-    fn get_position_info(
-        self: @TStorage, id: u64, pool_key: PoolKey, bounds: Bounds
-    ) -> GetPositionInfoResult;
+    fn get_nft_address(self: @TStorage) -> ContractAddress;
 
-    // Initializes a pool only if it's not already initialized
-    // This is useful as part of a batch of operations, to avoid failing the entire batch because the pool was already initialized
-    fn maybe_initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129);
+    // Return the principal and fee amounts owed to a position
+    fn get_token_info(
+        self: @TStorage, id: u64, pool_key: PoolKey, bounds: Bounds
+    ) -> GetTokenInfoResult;
 
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u64;

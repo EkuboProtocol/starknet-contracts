@@ -39,7 +39,7 @@ trait IERC721<TStorage> {
     fn supportsInterface(self: @TStorage, interfaceId: felt252) -> bool;
 
 
-    // camel case entry points
+    // snake case entry points
     fn balance_of(self: @TStorage, account: ContractAddress) -> u256;
     fn owner_of(self: @TStorage, token_id: u256) -> ContractAddress;
     fn transfer_from(

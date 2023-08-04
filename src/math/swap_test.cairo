@@ -31,6 +31,14 @@ impl SwapResultEq of PartialEq<SwapResult> {
     }
 }
 
+#[test]
+fn test_is_price_increasing_cases() {
+    assert(!is_price_increasing(exact_output: false, is_token1: false), 'input token0');
+    assert(is_price_increasing(exact_output: true, is_token1: false), 'output token0');
+    assert(is_price_increasing(exact_output: false, is_token1: true), 'input token1');
+    assert(!is_price_increasing(exact_output: true, is_token1: true), 'output token1');
+}
+
 // no-op test cases first
 
 #[test]
