@@ -58,6 +58,25 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    fn test_set_withdrawal_only_mode_owner_only() {
+        let core = deploy_core();
+        set_contract_address(contract_address_const::<1>());
+        core.set_withdrawal_only_mode();
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_set_withdrawal_only_mode_owner() {
+        let core = deploy_core();
+        assert(!core.get_withdrawal_only_mode(), 'before');
+        set_contract_address(owner());
+        core.set_withdrawal_only_mode();
+        assert(core.get_withdrawal_only_mode(), 'after');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
         set_contract_address(owner());

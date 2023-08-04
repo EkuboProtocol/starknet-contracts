@@ -260,7 +260,12 @@ mod Core {
     #[external(v0)]
     impl Core of ICore<ContractState> {
         fn set_withdrawal_only_mode(ref self: ContractState) {
+            check_owner_only();
             self.withdrawal_only_mode.write(true);
+        }
+
+        fn get_withdrawal_only_mode(self: @ContractState) -> bool {
+            self.withdrawal_only_mode.read()
         }
 
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
