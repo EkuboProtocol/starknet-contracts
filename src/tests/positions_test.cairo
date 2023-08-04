@@ -891,6 +891,100 @@ fn test_deposit_swap_multiple_positions() {
     assert(p2_info.fees1 == 99, 'p2 fees1');
 }
 
+
+#[test]
+#[available_gas(1000000000)]
+fn test_create_position_in_range_after_swap_no_fees() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+
+    let p0 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false } },
+        10000,
+        10000
+    );
+
+    setup.token0.increase_balance(setup.locker.contract_address, 300000);
+    setup.token1.increase_balance(setup.locker.contract_address, 300000);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 5, sign: false }),
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    let p1 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false } },
+        5000,
+        5000
+    );
+    let p2 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 0, sign: false } },
+        0,
+        5000
+    );
+    let p3 = create_position(
+        setup,
+        positions,
+        Bounds { lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 10, sign: false } },
+        5000,
+        0
+    );
+
+    let p0_info = positions.get_position_info(p0.id, setup.pool_key, p0.bounds);
+    let p1_info = positions.get_position_info(p1.id, setup.pool_key, p1.bounds);
+    let p2_info = positions.get_position_info(p2.id, setup.pool_key, p2.bounds);
+    let p3_info = positions.get_position_info(p3.id, setup.pool_key, p3.bounds);
+
+    assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
+    assert(p0_info.amount0 == 9999, 'p0 amount0');
+    assert(p0_info.amount1 == 9999, 'p0 amount1');
+    assert(p0_info.fees0 == 50, 'p0 fees0');
+    assert(p0_info.fees1 == 50, 'p0 fees1');
+
+    assert(p1_info.liquidity == p1.liquidity, 'p1 liquidity');
+    assert(p1_info.amount0 == 4999, 'p1 amount0');
+    assert(p1_info.amount1 == 4999, 'p1 amount1');
+    assert(p1_info.fees0.is_zero(), 'p1 fees0');
+    assert(p1_info.fees1.is_zero(), 'p1 fees1');
+
+    assert(p2_info.liquidity == p1.liquidity, 'p2 liquidity');
+    assert(p2_info.amount0 == 0, 'p2 amount0');
+    assert(p2_info.amount1 == 4999, 'p2 amount1');
+    assert(p2_info.fees0.is_zero(), 'p2 fees0');
+    assert(p2_info.fees1.is_zero(), 'p2 fees1');
+
+    assert(p3_info.liquidity == p1.liquidity, 'p3 liquidity');
+    assert(p3_info.amount0 == 4999, 'p3 amount0');
+    assert(p3_info.amount1 == 0, 'p3 amount1');
+    assert(p3_info.fees0.is_zero(), 'p3 fees0');
+    assert(p3_info.fees1.is_zero(), 'p3 fees1');
+}
+
 #[test]
 #[available_gas(1000000000)]
 #[should_panic(

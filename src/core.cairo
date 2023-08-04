@@ -14,7 +14,6 @@ mod Core {
     };
     use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
-    use traits::{Neg};
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
@@ -28,7 +27,7 @@ mod Core {
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::owner::{check_owner_only};
-    use ekubo::types::i129::{i129, AddDeltaTrait};
+    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::fees_per_liquidity::{
         FeesPerLiquidity, fees_per_liquidity_new, fees_per_liquidity_from_amount0,
         fees_per_liquidity_from_amount1
@@ -325,23 +324,13 @@ mod Core {
         ) -> GetPositionWithFeesResult {
             let position = self.get_position(pool_key, position_key);
 
-            if (position.is_zero()) {
-                // no computation needed for a zero position
-                GetPositionWithFeesResult {
-                    position,
-                    fees0: Zeroable::zero(),
-                    fees1: Zeroable::zero(),
-                    fees_per_liquidity_inside_current: Zeroable::zero(),
-                }
-            } else {
-                let fees_per_liquidity_inside_current = self
-                    .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
+            let fees_per_liquidity_inside_current = self
+                .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
-                let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
+            let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
 
-                GetPositionWithFeesResult {
-                    position, fees0, fees1, fees_per_liquidity_inside_current, 
-                }
+            GetPositionWithFeesResult {
+                position, fees0, fees1, fees_per_liquidity_inside_current, 
             }
         }
 
@@ -634,7 +623,7 @@ mod Core {
             };
 
             // account the withdrawal protocol fee, because it's based on the deltas
-            if (params.liquidity_delta.sign) {
+            if (params.liquidity_delta.is_negative()) {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
