@@ -27,6 +27,7 @@ impl BitmapZeroable of Zeroable<Bitmap> {
 
 #[generate_trait]
 impl BitmapTraitImpl of BitmapTrait {
+    // Returns the index of the most significant bit of less or equal significance as the index bit
     fn next_set_bit(self: Bitmap, index: u8) -> Option<u8> {
         if (self.is_zero()) {
             return Option::None(());
@@ -37,26 +38,25 @@ impl BitmapTraitImpl of BitmapTrait {
         if (index < 128) {
             let masked = x.low & mask(index);
             if (masked.is_zero()) {
-                return Option::None(());
-            }
-            Option::Some(msb(masked))
-        } else {
-            assert(index < 252, 'MAX_INDEX');
-            let masked = x & u256 {
-                high: mask(index - 128), low: 0xffffffffffffffffffffffffffffffff
-            };
-
-            if (masked.is_zero()) {
-                return Option::None(());
-            }
-
-            if (masked.high > 0) {
-                Option::Some(msb(masked.high) + 128)
+                Option::None(())
             } else {
-                Option::Some(msb(masked.low))
+                Option::Some(msb(masked))
+            }
+        } else {
+            let masked_high = x.high & mask(index - 128);
+            if (masked_high.is_non_zero()) {
+                Option::Some(msb(masked_high) + 128)
+            } else {
+                if (x.low.is_zero()) {
+                    Option::None(())
+                } else {
+                    Option::Some(msb(x.low))
+                }
             }
         }
     }
+
+    // Returns the index of the least significant bit more or equally significant as the bit at index
     fn prev_set_bit(self: Bitmap, index: u8) -> Option<u8> {
         if (self.is_zero()) {
             return Option::None(());
@@ -64,46 +64,55 @@ impl BitmapTraitImpl of BitmapTrait {
 
         let x: u256 = self.value.into();
 
-        let mask: u256 = if index < 128 {
-            u256 { low: ~(exp2(index) - 1), high: 0xffffffffffffffffffffffffffffffff }
+        if (index < 128) {
+            let masked_low = x.low & (~(exp2(index) - 1));
+            if (masked_low.is_zero()) {
+                if x.high.is_non_zero() {
+                    Option::Some(lsb(x.high) + 128)
+                } else {
+                    Option::None(())
+                }
+            } else {
+                Option::Some(lsb(masked_low))
+            }
         } else {
-            assert(index < 252, 'MAX_INDEX');
-            u256 { low: 0, high: ~(exp2(index - 128) - 1) }
-        };
-
-        let masked = x & mask;
-
-        if (masked.is_zero()) {
-            Option::None(())
-        } else if (masked.low.is_non_zero()) {
-            Option::Some(lsb(masked.low))
-        } else {
-            Option::Some(lsb(masked.high) + 128)
+            let masked = x.high & (~(exp2(index - 128) - 1));
+            if (masked.is_non_zero()) {
+                Option::Some(lsb(masked) + 128)
+            } else {
+                Option::None(())
+            }
         }
     }
+
+    // Sets the bit at the given index to and returns the new bitmap.
+    // Note this method is not idempotent. You should only call it if you know the bit is not set through some external means.
     fn set_bit(self: Bitmap, index: u8) -> Bitmap {
         let mut x: u256 = self.value.into();
 
         if index < 128 {
-            x += exp2(index).into()
+            Bitmap { value: u256 { high: x.high, low: x.low + exp2(index) }.try_into().unwrap() }
         } else {
             assert(index < 252, 'MAX_INDEX');
-            x += u256 { high: exp2(index - 128), low: 0 };
+            Bitmap {
+                value: u256 { high: x.high + exp2(index - 128), low: x.low }.try_into().unwrap()
+            }
         }
-
-        Bitmap { value: x.try_into().unwrap() }
     }
+
+    // Unsets the 1 bit at the given index and returns the new bitmap.
+    // Note this method is not idempotent. You should only call it if you know the bit is set through some external means.
     fn unset_bit(self: Bitmap, index: u8) -> Bitmap {
-        let mut x: u256 = self.value.into();
+        let x: u256 = self.value.into();
 
         if index < 128 {
-            x -= exp2(index).into()
+            Bitmap { value: u256 { high: x.high, low: x.low - exp2(index) }.try_into().unwrap() }
         } else {
             assert(index < 252, 'MAX_INDEX');
-            x -= u256 { high: exp2(index - 128), low: 0 };
+            Bitmap {
+                value: u256 { high: x.high - exp2(index - 128), low: x.low }.try_into().unwrap()
+            }
         }
-
-        Bitmap { value: x.try_into().unwrap() }
     }
 }
 

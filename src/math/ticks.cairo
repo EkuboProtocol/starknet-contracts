@@ -6,12 +6,14 @@ mod constants {
     // floor(log base 1.000001 of (2**128))
     const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
-    // rationale for this value is 2 128-bit tick bitmaps can contain initialized ticks for the entire price range
+    // rationale for this value is 2 252-bit tick bitmaps can contain initialized ticks for the entire price range
     // 2 is the minimum number of bitmaps because the 0 tick is always a bitmap boundary. any tick tick_spacing
     // larger than this does not offer any gas performance benefit to swappers
     // ceil(log base 1.000001 of 2)
-    // also == ceil(MAX_TICK_MAGNITUDE / 128)
-    const MAX_TICK_SPACING: u128 = 693148;
+    // also == ceil(MAX_TICK_MAGNITUDE / 252)
+    // note that because the 0 tick is in the first bitmap, we actually do ceil(MAX_TICK_MAGNITUDE / 251) to meet this requirement
+    // that the entire tick spacing fits in 2 bitmaps
+    const MAX_TICK_SPACING: u128 = 353478;
 
     // floor(log base 1.000001 of 1.01)
     const TICKS_IN_ONE_PERCENT: u128 = 9950;

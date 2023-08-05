@@ -258,6 +258,8 @@ mod Core {
         }
     }
 
+    use debug::PrintTrait;
+
     #[external(v0)]
     impl Core of ICore<ContractState> {
         fn set_withdrawal_only_mode(ref self: ContractState) {
@@ -394,7 +396,7 @@ mod Core {
                 },
                 Option::None(_) => {
                     // if it's not set, we know there is no set bit in this word
-                    let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
+                    let prev = word_and_bit_index_to_tick((word_index, 251), pool_key.tick_spacing);
                     if (prev < min_tick()) {
                         return (min_tick(), false);
                     }

@@ -3,6 +3,7 @@ use ekubo::math::bitmap::{
 };
 use ekubo::types::i129::{i129};
 use zeroable::{Zeroable};
+use option::{OptionTrait};
 
 impl PartialEqBitmap of PartialEq<Bitmap> {
     fn eq(lhs: @Bitmap, rhs: @Bitmap) -> bool {
@@ -13,11 +14,40 @@ impl PartialEqBitmap of PartialEq<Bitmap> {
     }
 }
 
+#[test]
+fn test_zeroable() {
+    let b: Bitmap = Zeroable::zero();
+    assert(b.is_zero(), 'is_zero');
+    assert(!b.is_non_zero(), 'is_non_ero');
+    assert(b.value.is_zero(), 'value.is_zero');
+    assert(!Bitmap { value: 1 }.is_zero(), 'one is nonzero');
+    assert(Bitmap { value: 1 }.is_non_zero(), 'one is nonzero');
+}
 
 #[test]
 fn test_set_bit() {
     assert(Bitmap { value: 0 }.set_bit(0) == Bitmap { value: 1 }, 'set 0');
     assert(Bitmap { value: 0 }.set_bit(1) == Bitmap { value: 2 }, 'set 1');
+    assert(
+        Bitmap { value: 0 }.set_bit(128) == Bitmap { value: 0x100000000000000000000000000000000 },
+        'set 128'
+    );
+    assert(
+        Bitmap {
+            value: 0
+            }.set_bit(128).set_bit(129) == Bitmap {
+            value: 0x300000000000000000000000000000000
+        },
+        'set 128/129'
+    );
+    assert(
+        Bitmap {
+            value: 0
+            }.set_bit(128).set_bit(129).unset_bit(128) == Bitmap {
+            value: 0x200000000000000000000000000000000
+        },
+        'set 128/129 - unset 128'
+    );
     assert(
         Bitmap {
             value: 0
@@ -26,6 +56,7 @@ fn test_set_bit() {
         },
         'set 251'
     );
+
     assert(Bitmap { value: 0 }.set_bit(251).unset_bit(251) == Bitmap { value: 0 }, 'set/unset 251');
     assert(
         Bitmap { value: 0 }.set_bit(0).set_bit(0) == Bitmap { value: 2 }, 'set 0 twice sets next'
@@ -45,6 +76,49 @@ fn test_set_bit_fails_252() {
 fn test_unset_bit_fails_252() {
     Bitmap { value: 0 }.unset_bit(252);
 }
+
+// these errors are bad because we should never encounter these in production
+#[test]
+#[should_panic(expected: ('Option::unwrap failed.', ))]
+fn test_double_set_reverts() {
+    Bitmap { value: 0 }.set_bit(251).set_bit(251);
+}
+#[test]
+#[should_panic(expected: ('u128_sub Overflow', ))]
+fn test_unset_not_set() {
+    Bitmap { value: 0 }.unset_bit(0);
+}
+
+#[test]
+fn test_next_set_bit_zero() {
+    let b: Bitmap = Zeroable::zero();
+    assert(b.next_set_bit(0).is_none(), '0');
+    assert(b.next_set_bit(251).is_none(), '251');
+    assert(b.next_set_bit(255).is_none(), '255');
+}
+
+#[test]
+fn test_next_set_bit_only_max_bit_set() {
+    let b: Bitmap = Zeroable::zero().set_bit(251);
+    assert(b.next_set_bit(0).is_none(), '0');
+    assert(b.next_set_bit(251).unwrap() == 251, '251');
+}
+
+
+#[test]
+fn test_prev_set_bit_zero() {
+    let b: Bitmap = Zeroable::zero();
+    assert(b.prev_set_bit(0).is_none(), '0');
+    assert(b.prev_set_bit(251).is_none(), '251');
+}
+
+#[test]
+fn test_prev_set_bit_only_smallest_bit_set() {
+    let b: Bitmap = Zeroable::zero().set_bit(0);
+    assert(b.prev_set_bit(0).unwrap() == 0, '0');
+    assert(b.prev_set_bit(251).is_none(), '251');
+}
+
 
 #[test]
 fn test_word_and_bit_index_0_tick_spacing_1() {

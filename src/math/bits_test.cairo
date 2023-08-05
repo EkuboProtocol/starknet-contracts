@@ -7,7 +7,7 @@ fn msb_0_panics() {
 }
 
 #[test]
-#[should_panic(expected: ('MSB_NONZERO', ))]
+#[should_panic(expected: ('LSB_NONZERO', ))]
 fn lsb_0_panics() {
     lsb(0);
 }
