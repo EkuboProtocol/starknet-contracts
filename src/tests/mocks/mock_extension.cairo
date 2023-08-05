@@ -1,4 +1,5 @@
 use starknet::{ContractAddress};
+use ekubo::types::keys::{PoolKey};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct ExtensionCalled {
@@ -14,27 +15,32 @@ struct ExtensionCalled {
 trait IMockExtension<TStorage> {
     fn get_num_calls(self: @TStorage) -> u32;
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
+
+    fn call_into_pool(self: @TStorage, pool_key: PoolKey);
 }
 
 #[starknet::contract]
 mod MockExtension {
     use super::{IMockExtension, ExtensionCalled, ContractAddress};
-    use ekubo::interfaces::core::{IExtension, ICoreDispatcher, ICoreDispatcherTrait};
+    use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::i129::i129;
     use ekubo::types::delta::{Delta};
+    use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use starknet::{get_caller_address};
-    use zeroable::Zeroable;
+    use zeroable::{Zeroable};
     use ekubo::types::call_points::{CallPoints, all_call_points};
+    use ekubo::types::bounds::{Bounds, max_bounds};
     use traits::{Into, TryInto};
     use option::{OptionTrait};
+    use array::{ArrayTrait};
+    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
     use debug::PrintTrait;
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        core_locker: ContractAddress,
         num_calls: u32,
         calls: LegacyMap<u32, ExtensionCalled>,
         call_points: u8
@@ -74,14 +80,8 @@ mod MockExtension {
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        core: ICoreDispatcher,
-        core_locker: ContractAddress,
-        call_points: CallPoints
-    ) {
+    fn constructor(ref self: ContractState, core: ICoreDispatcher, call_points: CallPoints) {
         self.core.write(core);
-        self.core_locker.write(core_locker);
         self.call_points.write(call_points.into());
     }
 
@@ -150,7 +150,54 @@ mod MockExtension {
     }
 
     #[external(v0)]
+    impl ExtensionLocked of ILocker<ContractState> {
+        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+            let core = self.check_caller_is_core();
+
+            let mut span = data.span();
+            let data: CallbackData = Serde::deserialize(ref span).unwrap();
+
+            let mut delta: Delta = Zeroable::zero();
+
+            delta += core
+                .swap(
+                    data.pool_key,
+                    SwapParameters {
+                        amount: Zeroable::zero(),
+                        is_token1: false,
+                        sqrt_ratio_limit: min_sqrt_ratio(),
+                        skip_ahead: 0
+                    }
+                );
+
+            delta += core
+                .update_position(
+                    data.pool_key,
+                    UpdatePositionParameters {
+                        salt: Zeroable::zero(),
+                        bounds: max_bounds(data.pool_key.tick_spacing),
+                        liquidity_delta: Zeroable::zero()
+                    }
+                );
+
+            assert(delta.is_zero(), 'delta is zero');
+
+            ArrayTrait::new()
+        }
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct CallbackData {
+        pool_key: PoolKey
+    }
+
+    #[external(v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
+        fn call_into_pool(self: @ContractState, pool_key: PoolKey) {
+            let unused_output: () = call_core_with_callback(
+                self.core.read(), @CallbackData { pool_key }
+            );
+        }
         fn get_num_calls(self: @ContractState) -> u32 {
             self.num_calls.read()
         }
