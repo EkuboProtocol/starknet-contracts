@@ -386,7 +386,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: tick_constants::MAX_TICK_SPACING * 127, sign: false }, false),
+                ) == (max_tick(), false),
             'max tick limited'
         );
     }
@@ -420,6 +420,8 @@ mod initialized_ticks {
         );
     }
 
+    use debug::PrintTrait;
+
     #[test]
     #[available_gas(30000000)]
     fn test_next_prev_initialized_tick_none_initialized() {
@@ -444,8 +446,8 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2
-                ) == (i129 { mag: 2547200, sign: true }, false),
-            'prev from 0, skip 1'
+                ) == (i129 { mag: 4994900, sign: true }, false), // 5014800 == 251*9950*2
+            'prev from 0, skip 2'
         );
 
         assert(
@@ -453,7 +455,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
-                ) == (i129 { mag: 6368000, sign: true }, false),
+                ) == (i129 { mag: 12487250, sign: true }, false), // 2547200 == 251*9950*5
             'prev from 0, skip 5'
         );
 
@@ -462,7 +464,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: 1263650, sign: false }, false),
+                ) == (i129 { mag: 2487500, sign: false }, false),
             'next from 0'
         );
 
@@ -471,7 +473,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 1
-                ) == (i129 { mag: 2537250, sign: false }, false),
+                ) == (i129 { mag: 4984950, sign: false }, false),
             'next from 0, skip 1'
         );
 
@@ -480,7 +482,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
-                ) == (i129 { mag: 7631650, sign: false }, false),
+                ) == (i129 { mag: 14974750, sign: false }, false),
             'next from 0, skip 5'
         );
     }
