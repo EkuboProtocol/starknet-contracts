@@ -25,6 +25,35 @@ fn test_zeroable() {
 }
 
 #[test]
+#[available_gas(3000000000)]
+fn test_set_all_bits() {
+    let mut b: Bitmap = Zeroable::zero();
+    let mut i: u8 = 0;
+    loop {
+        if (i == 251) {
+            break ();
+        }
+
+        b = b.set_bit(i);
+
+        i += 1;
+    };
+
+    i = 0;
+    loop {
+        if (i == 251) {
+            break ();
+        }
+
+        b = b.unset_bit(i);
+
+        i += 1;
+    };
+
+    assert(b.is_zero(), 'b.is_zero')
+}
+
+#[test]
 fn test_set_bit() {
     assert(Bitmap { value: 0 }.set_bit(0) == Bitmap { value: 1 }, 'set 0');
     assert(Bitmap { value: 0 }.set_bit(1) == Bitmap { value: 2 }, 'set 1');
@@ -51,13 +80,13 @@ fn test_set_bit() {
     assert(
         Bitmap {
             value: 0
-            }.set_bit(251) == Bitmap {
-            value: 0x800000000000000000000000000000000000000000000000000000000000000
+            }.set_bit(250) == Bitmap {
+            value: 0x400000000000000000000000000000000000000000000000000000000000000
         },
         'set 251'
     );
 
-    assert(Bitmap { value: 0 }.set_bit(251).unset_bit(251) == Bitmap { value: 0 }, 'set/unset 251');
+    assert(Bitmap { value: 0 }.set_bit(250).unset_bit(250) == Bitmap { value: 0 }, 'set/unset 251');
     assert(
         Bitmap { value: 0 }.set_bit(0).set_bit(0) == Bitmap { value: 2 }, 'set 0 twice sets next'
     );
@@ -67,14 +96,14 @@ fn test_set_bit() {
 
 #[test]
 #[should_panic(expected: ('MAX_INDEX', ))]
-fn test_set_bit_fails_252() {
-    Bitmap { value: 0 }.set_bit(252);
+fn test_set_bit_fails_max() {
+    Bitmap { value: 0 }.set_bit(251);
 }
 
 #[test]
 #[should_panic(expected: ('MAX_INDEX', ))]
-fn test_unset_bit_fails_252() {
-    Bitmap { value: 0 }.unset_bit(252);
+fn test_unset_bit_fails_max() {
+    Bitmap { value: 0 }.unset_bit(251);
 }
 
 // these errors are bad because we should never encounter these in production
@@ -93,30 +122,32 @@ fn test_unset_not_set() {
 fn test_next_set_bit_zero() {
     let b: Bitmap = Zeroable::zero();
     assert(b.next_set_bit(0).is_none(), '0');
+    assert(b.next_set_bit(250).is_none(), '250');
     assert(b.next_set_bit(251).is_none(), '251');
     assert(b.next_set_bit(255).is_none(), '255');
 }
 
 #[test]
-fn test_next_set_bit_only_max_bit_set() {
-    let b: Bitmap = Zeroable::zero().set_bit(251);
-    assert(b.next_set_bit(0).is_none(), '0');
-    assert(b.next_set_bit(251).unwrap() == 251, '251');
-}
-
-
-#[test]
 fn test_prev_set_bit_zero() {
     let b: Bitmap = Zeroable::zero();
     assert(b.prev_set_bit(0).is_none(), '0');
+    assert(b.prev_set_bit(250).is_none(), '250');
     assert(b.prev_set_bit(251).is_none(), '251');
+    assert(b.prev_set_bit(255).is_none(), '255');
+}
+
+#[test]
+fn test_next_set_bit_only_max_bit_set() {
+    let b: Bitmap = Zeroable::zero().set_bit(250);
+    assert(b.next_set_bit(0).is_none(), '0');
+    assert(b.next_set_bit(250).unwrap() == 250, '251');
 }
 
 #[test]
 fn test_prev_set_bit_only_smallest_bit_set() {
     let b: Bitmap = Zeroable::zero().set_bit(0);
     assert(b.prev_set_bit(0).unwrap() == 0, '0');
-    assert(b.prev_set_bit(251).is_none(), '251');
+    assert(b.prev_set_bit(250).is_none(), '251');
 }
 
 
@@ -124,9 +155,9 @@ fn test_prev_set_bit_only_smallest_bit_set() {
 fn test_word_and_bit_index_0_tick_spacing_1() {
     let (word, bit) = tick_to_word_and_bit_index(tick: Zeroable::zero(), tick_spacing: 1);
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 1).is_zero(), 'reverse');
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 1).is_zero(), 'reverse');
 }
 
 #[test]
@@ -135,18 +166,18 @@ fn test_word_and_bit_index_negative_0_tick_spacing_1() {
         tick: i129 { mag: 0, sign: true }, tick_spacing: 1
     );
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 1).is_zero(), 'reverse');
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 1).is_zero(), 'reverse');
 }
 
 #[test]
 fn test_word_and_bit_index_0_tick_spacing_100() {
     let (word, bit) = tick_to_word_and_bit_index(tick: Zeroable::zero(), tick_spacing: 100);
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 100).is_zero(), 'reverse');
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
 }
 
 #[test]
@@ -155,9 +186,9 @@ fn test_word_and_bit_index_negative_0_tick_spacing_100() {
         tick: i129 { mag: 0, sign: true }, tick_spacing: 100
     );
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 100).is_zero(), 'reverse');
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
 }
 
 #[test]
@@ -166,9 +197,9 @@ fn test_word_and_bit_index_50_tick_spacing_100() {
         tick: i129 { mag: 50, sign: false }, tick_spacing: 100
     );
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 100).is_zero(), 'reverse');
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
 }
 
 #[test]
@@ -177,9 +208,9 @@ fn test_word_and_bit_index_99_tick_spacing_100() {
         tick: i129 { mag: 99, sign: false }, tick_spacing: 100
     );
     assert(word == 0, 'word');
-    assert(bit == 251, 'bit');
+    assert(bit == 250, 'bit');
 
-    assert(word_and_bit_index_to_tick((0, 251), tick_spacing: 100).is_zero(), 'reverse')
+    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse')
 }
 
 #[test]
@@ -188,10 +219,10 @@ fn test_word_and_bit_index_100_tick_spacing_100() {
         tick: i129 { mag: 100, sign: false }, tick_spacing: 100
     );
     assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
+    assert(bit == 249, 'bit');
 
     assert(
-        word_and_bit_index_to_tick((0, 250), tick_spacing: 100) == i129 { mag: 100, sign: false },
+        word_and_bit_index_to_tick((0, 249), tick_spacing: 100) == i129 { mag: 100, sign: false },
         'reverse'
     )
 }
