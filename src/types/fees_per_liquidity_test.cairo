@@ -8,6 +8,12 @@ const FELT252_MAX: felt252 =
     3618502788666131213697322783095070105623107215331596699973092056135872020480;
 
 #[test]
+fn test_felt252_max_plus_one_is_zero() {
+    assert((FELT252_MAX + 1) == 0, 'max+1');
+    assert((0_felt252 - 1) == FELT252_MAX, '0-1');
+}
+
+#[test]
 fn test_fpl_zeroable() {
     let fpl: FeesPerLiquidity = Zeroable::zero();
     assert(fpl.value0 == Zeroable::zero(), 'fpl0');
@@ -32,9 +38,7 @@ fn test_fpl_underflow_sub() {
 
     let difference = fpl_zero - fpl_one;
 
-    assert(
-        difference == FeesPerLiquidity { value0: FELT252_MAX, value1: FELT252_MAX,  }, 'overflow'
-    );
+    assert(difference == FeesPerLiquidity { value0: FELT252_MAX, value1: FELT252_MAX }, 'overflow');
 }
 
 #[test]
