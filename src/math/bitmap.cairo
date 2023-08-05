@@ -122,7 +122,6 @@ mod internal {
 
 // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
 // The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
-#[internal]
 fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     // we don't care about the relative placement of words, only the placement of bits within a word
     if (tick.is_negative()) {
@@ -142,7 +141,6 @@ fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
 }
 
 // Compute the tick corresponding to the word and bit index
-#[internal]
 fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
     let (word, bit) = word_and_bit_index;
     if (word >= internal::NEGATIVE_OFFSET) {
