@@ -94,11 +94,10 @@ fn deploy_two_mock_tokens() -> (IMockERC20Dispatcher, IMockERC20Dispatcher) {
 }
 
 fn deploy_mock_extension(
-    core: ICoreDispatcher, core_locker: ICoreLockerDispatcher, call_points: CallPoints
+    core: ICoreDispatcher, call_points: CallPoints
 ) -> IMockExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
-    Serde::serialize(@core_locker.contract_address, ref constructor_args);
     Serde::serialize(@call_points, ref constructor_args);
     let (address, _) = deploy_syscall(
         MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
