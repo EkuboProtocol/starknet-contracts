@@ -441,16 +441,12 @@ mod initialized_ticks {
             'prev from 0'
         );
 
-        let (tick, is_initialized) = setup
-            .core
-            .prev_initialized_tick(pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2);
-
         assert(
             setup
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2
-                ) == (i129 { mag: 5014800, sign: true }, false), // 5014800 == 252*9950*2
+                ) == (i129 { mag: 4994900, sign: true }, false), // 5014800 == 251*9950*2
             'prev from 0, skip 2'
         );
 
@@ -459,7 +455,7 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
-                ) == (i129 { mag: 12537000, sign: true }, false), // 2547200 == 252*9950*5
+                ) == (i129 { mag: 12487250, sign: true }, false), // 2547200 == 251*9950*5
             'prev from 0, skip 5'
         );
 
@@ -468,7 +464,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: 2497450, sign: false }, false),
+                ) == (i129 { mag: 2487500, sign: false }, false),
             'next from 0'
         );
 
@@ -477,7 +473,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 1
-                ) == (i129 { mag: 5004850, sign: false }, false),
+                ) == (i129 { mag: 4984950, sign: false }, false),
             'next from 0, skip 1'
         );
 
@@ -486,7 +482,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
-                ) == (i129 { mag: 15034450, sign: false }, false),
+                ) == (i129 { mag: 14974750, sign: false }, false),
             'next from 0, skip 5'
         );
     }

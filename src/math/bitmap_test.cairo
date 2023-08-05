@@ -4,6 +4,8 @@ use ekubo::math::bitmap::{
 use ekubo::types::i129::{i129};
 use zeroable::{Zeroable};
 use option::{OptionTrait};
+use ekubo::math::string::{append, to_decimal};
+use traits::{Into};
 
 impl PartialEqBitmap of PartialEq<Bitmap> {
     fn eq(lhs: @Bitmap, rhs: @Bitmap) -> bool {
@@ -108,7 +110,7 @@ fn test_unset_bit_fails_max() {
 
 // these errors are bad because we should never encounter these in production
 #[test]
-#[should_panic(expected: ('Option::unwrap failed.', ))]
+#[should_panic(expected: ('MAX_INDEX', ))]
 fn test_double_set_reverts() {
     Bitmap { value: 0 }.set_bit(251).set_bit(251);
 }
@@ -150,351 +152,98 @@ fn test_prev_set_bit_only_smallest_bit_set() {
     assert(b.prev_set_bit(250).is_none(), '251');
 }
 
-
-#[test]
-fn test_word_and_bit_index_0_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(tick: Zeroable::zero(), tick_spacing: 1);
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 1).is_zero(), 'reverse');
-}
-
-#[test]
-fn test_word_and_bit_index_negative_0_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 0, sign: true }, tick_spacing: 1
-    );
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 1).is_zero(), 'reverse');
-}
-
-#[test]
-fn test_word_and_bit_index_0_tick_spacing_100() {
-    let (word, bit) = tick_to_word_and_bit_index(tick: Zeroable::zero(), tick_spacing: 100);
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
-}
-
-#[test]
-fn test_word_and_bit_index_negative_0_tick_spacing_100() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 0, sign: true }, tick_spacing: 100
-    );
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
-}
-
-#[test]
-fn test_word_and_bit_index_50_tick_spacing_100() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 50, sign: false }, tick_spacing: 100
-    );
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse');
-}
-
-#[test]
-fn test_word_and_bit_index_99_tick_spacing_100() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 99, sign: false }, tick_spacing: 100
-    );
-    assert(word == 0, 'word');
-    assert(bit == 250, 'bit');
-
-    assert(word_and_bit_index_to_tick((0, 250), tick_spacing: 100).is_zero(), 'reverse')
-}
-
-#[test]
-fn test_word_and_bit_index_100_tick_spacing_100() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 100, sign: false }, tick_spacing: 100
-    );
-    assert(word == 0, 'word');
-    assert(bit == 249, 'bit');
-
+fn assert_case_ticks(tick: i129, location: (u128, u8), tick_spacing: u128) {
+    let (word, bit) = tick_to_word_and_bit_index(tick: tick, tick_spacing: tick_spacing);
     assert(
-        word_and_bit_index_to_tick((0, 249), tick_spacing: 100) == i129 { mag: 100, sign: false },
-        'reverse'
-    )
-}
-
-use debug::PrintTrait;
-#[test]
-fn test_word_and_bit_index_100_tick_spacing_2() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 100, sign: false }, tick_spacing: 2
+        (word, bit) == location,
+        append(
+            append(append('w.', to_decimal(word).unwrap()).unwrap(), '.b.').unwrap(),
+            to_decimal(bit.into()).unwrap()
+        )
+            .unwrap()
     );
-    assert(word == 0, 'word');
-    assert(bit == 201, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0, 201), tick_spacing: 2) == i129 { mag: 100, sign: false },
-        'reverse'
-    );
+    let prev = word_and_bit_index_to_tick(location, tick_spacing: tick_spacing);
+    assert((tick - prev) < i129 { mag: tick_spacing, sign: false }, 'reverse');
 }
 
 #[test]
-fn test_word_and_bit_index_end_of_first_positive_word() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 251, sign: false }, tick_spacing: 1
-    );
-    assert(word == 0, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0, 0), tick_spacing: 1) == i129 { mag: 251, sign: false },
-        'reverse'
-    );
+#[available_gas(3000000000)]
+fn test_positive_cases_tick_spacing_one() {
+    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 1);
+    assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 1);
+    assert_case_ticks(tick: i129 { mag: 249, sign: false }, location: (0, 1), tick_spacing: 1);
+    assert_case_ticks(tick: i129 { mag: 250, sign: false }, location: (0, 0), tick_spacing: 1);
+    assert_case_ticks(tick: i129 { mag: 251, sign: false }, location: (1, 250), tick_spacing: 1);
+    assert_case_ticks(tick: i129 { mag: 252, sign: false }, location: (1, 249), tick_spacing: 1);
 }
 
 #[test]
-fn test_word_and_bit_index_beginning_of_next_word_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 252, sign: false }, tick_spacing: 1
-    );
-    assert(word == 1, 'word');
-    assert(bit == 251, 'bit');
+#[available_gas(3000000000)]
+fn test_positive_cases_tick_spacing_ten() {
+    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 10);
+    assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 10);
+    assert_case_ticks(tick: i129 { mag: 2493, sign: false }, location: (0, 1), tick_spacing: 10);
+    assert_case_ticks(tick: i129 { mag: 2506, sign: false }, location: (0, 0), tick_spacing: 10);
+    assert_case_ticks(tick: i129 { mag: 2512, sign: false }, location: (1, 250), tick_spacing: 10);
+    assert_case_ticks(tick: i129 { mag: 2525, sign: false }, location: (1, 249), tick_spacing: 10);
 }
 
 #[test]
-fn test_word_and_bit_index_beginning_of_next_word_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 756, sign: false }, tick_spacing: 3
-    );
-    assert(word == 1, 'word');
-    assert(bit == 251, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((1, 251), tick_spacing: 3) == i129 { mag: 756, sign: false },
-        'reverse'
-    );
+#[available_gas(3000000000)]
+fn test_positive_cases_non_one_tick_spacing() {
+    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 100);
+    assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 100);
+    assert_case_ticks(tick: i129 { mag: 50, sign: false }, location: (0, 250), tick_spacing: 100);
+    assert_case_ticks(tick: i129 { mag: 99, sign: false }, location: (0, 250), tick_spacing: 100);
+    assert_case_ticks(tick: i129 { mag: 100, sign: false }, location: (0, 249), tick_spacing: 100);
+    assert_case_ticks(tick: i129 { mag: 100, sign: false }, location: (0, 200), tick_spacing: 2);
 }
 
-#[test]
-fn test_word_and_bit_index_end_of_word_zero() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 755, sign: false }, tick_spacing: 3
-    );
-    assert(word == 0, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0, 0), tick_spacing: 3) == i129 { mag: 753, sign: false },
-        'reverse'
-    );
-}
 
 #[test]
-fn test_word_and_bit_index_757_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 757, sign: false }, tick_spacing: 3
+#[available_gas(3000000000)]
+fn test_negative_cases_tick_spacing_one() {
+    assert_case_ticks(
+        tick: i129 { mag: 253, sign: true }, location: (0x100000001, 1), tick_spacing: 1
     );
-    assert(word == 1, 'word');
-    assert(bit == 251, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((1, 251), tick_spacing: 3) == i129 { mag: 756, sign: false },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 252, sign: true }, location: (0x100000001, 0), tick_spacing: 1
     );
-}
-
-#[test]
-fn test_word_and_bit_index_758_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 758, sign: false }, tick_spacing: 3
+    assert_case_ticks(
+        tick: i129 { mag: 251, sign: true }, location: (0x100000000, 250), tick_spacing: 1
     );
-
-    assert(word == 1, 'word');
-    assert(bit == 251, 'bit');
-    assert(
-        word_and_bit_index_to_tick((1, 251), tick_spacing: 3) == i129 { mag: 756, sign: false },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 250, sign: true }, location: (0x100000000, 249), tick_spacing: 1
     );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_1_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 1, sign: true }, tick_spacing: 3
+    assert_case_ticks(
+        tick: i129 { mag: 3, sign: true }, location: (0x100000000, 2), tick_spacing: 1
     );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 0), tick_spacing: 3) == i129 {
-            mag: 3, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_3_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 3, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 0), tick_spacing: 3) == i129 {
-            mag: 3, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_4_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 4, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 1, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 1), tick_spacing: 3) == i129 {
-            mag: 6, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_2_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 2, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 0), tick_spacing: 3) == i129 {
-            mag: 3, sign: true
-        },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 1, sign: true }, location: (0x100000000, 0), tick_spacing: 1
     );
 }
 
 
 #[test]
-fn test_word_and_bit_index_negative_1_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 1, sign: true }, tick_spacing: 1
+#[available_gas(3000000000)]
+fn test_negative_cases_tick_spacing_ten() {
+    assert_case_ticks(
+        tick: i129 { mag: 2525, sign: true }, location: (0x100000001, 1), tick_spacing: 10
     );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 0), tick_spacing: 1) == i129 {
-            mag: 1, sign: true
-        },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 2519, sign: true }, location: (0x100000001, 0), tick_spacing: 10
     );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_3_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 3, sign: true }, tick_spacing: 1
+    assert_case_ticks(
+        tick: i129 { mag: 2503, sign: true }, location: (0x100000000, 250), tick_spacing: 10
     );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 2, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 2), tick_spacing: 1) == i129 {
-            mag: 3, sign: true
-        },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 2500, sign: true }, location: (0x100000000, 249), tick_spacing: 10
     );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_128_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 128, sign: true }, tick_spacing: 1
+    assert_case_ticks(
+        tick: i129 { mag: 25, sign: true }, location: (0x100000000, 2), tick_spacing: 10
     );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 127, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 127), tick_spacing: 1) == i129 {
-            mag: 128, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_253_tick_spacing_1() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 253, sign: true }, tick_spacing: 1
-    );
-    assert(word == 0x100000001, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000001, 0), tick_spacing: 1) == i129 {
-            mag: 253, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_757_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 757, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000001, 'word');
-    assert(bit == 0, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000001, 0), tick_spacing: 3) == i129 {
-            mag: 759, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_756_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 756, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 251, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 251), tick_spacing: 3) == i129 {
-            mag: 756, sign: true
-        },
-        'reverse'
-    );
-}
-
-#[test]
-fn test_word_and_bit_index_negative_755_tick_spacing_3() {
-    let (word, bit) = tick_to_word_and_bit_index(
-        tick: i129 { mag: 755, sign: true }, tick_spacing: 3
-    );
-    assert(word == 0x100000000, 'word');
-    assert(bit == 251, 'bit');
-
-    assert(
-        word_and_bit_index_to_tick((0x100000000, 251), tick_spacing: 3) == i129 {
-            mag: 756, sign: true
-        },
-        'reverse'
+    assert_case_ticks(
+        tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
 }
 

@@ -24,7 +24,7 @@ mod Core {
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
     use ekubo::math::bitmap::{
-        BITS_PER_WORD, Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
+        Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
     };
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
@@ -396,9 +396,7 @@ mod Core {
                 },
                 Option::None(_) => {
                     // if it's not set, we know there is no set bit in this word
-                    let prev = word_and_bit_index_to_tick(
-                        (word_index, BITS_PER_WORD), pool_key.tick_spacing
-                    );
+                    let prev = word_and_bit_index_to_tick((word_index, 250), pool_key.tick_spacing);
                     if (prev < min_tick()) {
                         return (min_tick(), false);
                     }

@@ -7,12 +7,9 @@ use ekubo::math::mask::{mask};
 use traits::{Into, TryInto};
 use zeroable::{Zeroable};
 
-
-const BITS_PER_WORD: u8 = 251;
-
 #[derive(Copy, Drop, starknet::Store)]
 struct Bitmap {
-    // there are 251 bits that can all be set in this number
+    // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
     value: felt252
 }
 
