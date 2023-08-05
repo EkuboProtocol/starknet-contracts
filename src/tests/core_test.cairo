@@ -386,7 +386,7 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: tick_constants::MAX_TICK_SPACING * 127, sign: false }, false),
+                ) == (max_tick(), false),
             'max tick limited'
         );
     }

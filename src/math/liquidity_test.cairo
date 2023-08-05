@@ -89,8 +89,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
         sqrt_ratio_upper: tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: false })
     );
 
-    assert(delta.amount0 == i129 { mag: 2929, sign: false }, 'amount0');
-    assert(delta.amount1 == i129 { mag: 2929, sign: false }, 'amount1');
+    assert(delta.amount0 == i129 { mag: 1621, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 1621, sign: false }, 'amount1');
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
         tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: false })
     );
 
-    assert(delta.amount0 == i129 { mag: 7072, sign: false }, 'amount0');
+    assert(delta.amount0 == i129 { mag: 3554, sign: false }, 'amount0');
     assert(delta.amount1.is_zero(), 'amount1');
 }
 
@@ -118,7 +118,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
     );
 
     assert(delta.amount0.is_zero(), 'amount0');
-    assert(delta.amount1 == i129 { mag: 7072, sign: false }, 'amount1');
+    assert(delta.amount1 == i129 { mag: 3554, sign: false }, 'amount1');
 }
 
 #[test]
