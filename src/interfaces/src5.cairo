@@ -6,5 +6,8 @@ trait ISRC5<TStorage> {
     // Returns true if the contract supports the interface
     // Note this is backwards compatible with the old spec that took a u32, since they
     // share a selector
+    fn supportsInterface(self: @TStorage, interfaceId: felt252) -> bool;
+
+    // snake_case
     fn supports_interface(self: @TStorage, interface_id: felt252) -> bool;
 }

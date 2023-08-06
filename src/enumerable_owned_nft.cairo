@@ -34,11 +34,8 @@ mod EnumerableOwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::string::{to_decimal, append};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
-    use ekubo::interfaces::erc721::{
-        IERC721_RECEIVER_INTERFACE_ID, IACCOUNT_INTERFACE_ID, IERC721, IERC721ReceiverDispatcher,
-        IERC721ReceiverDispatcherTrait
-    };
+    use ekubo::interfaces::src5::{ISRC5};
+    use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
 
@@ -175,22 +172,6 @@ mod EnumerableOwnedNFT {
                 };
             };
         }
-
-        fn transfer(
-            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
-        ) {
-            let id = validate_token_id(token_id);
-
-            let (authorized, owner) = self.is_account_authorized_internal(id, get_caller_address());
-            assert(owner == from, 'OWNER');
-            assert(authorized, 'UNAUTHORIZED');
-
-            self.owners.write(id, to);
-            self.approvals.write(id, Zeroable::zero());
-            self.tokens_by_owner_insert(to, id);
-            self.tokens_by_owner_remove(from, id);
-            self.emit(Transfer { from, to, token_id });
-        }
     }
 
     #[external(v0)]
@@ -222,38 +203,17 @@ mod EnumerableOwnedNFT {
         fn transferFrom(
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
-            self.transfer(from, to, token_id);
-        }
+            let id = validate_token_id(token_id);
 
-        fn safeTransferFrom(
-            ref self: ContractState,
-            from: ContractAddress,
-            to: ContractAddress,
-            token_id: u256,
-            data: Span<felt252>
-        ) {
-            self.transfer(from, to, token_id);
-            if (ISRC5Dispatcher {
-                contract_address: to
-            }.supports_interface(IERC721_RECEIVER_INTERFACE_ID.into())) {
-                // todo add casing fallback mechanism
-                assert(
-                    IERC721ReceiverDispatcher {
-                        contract_address: to
-                    }
-                        .on_erc721_received(
-                            get_caller_address(), from, token_id, data
-                        ) == IERC721_RECEIVER_INTERFACE_ID,
-                    'CALLBACK_FAILED'
-                );
-            } else {
-                assert(
-                    ISRC5Dispatcher {
-                        contract_address: to
-                    }.supports_interface(IACCOUNT_INTERFACE_ID),
-                    'SAFE_TRANSFER_TO_NON_ACCOUNT'
-                );
-            }
+            let (authorized, owner) = self.is_account_authorized_internal(id, get_caller_address());
+            assert(owner == from, 'OWNER');
+            assert(authorized, 'UNAUTHORIZED');
+
+            self.owners.write(id, to);
+            self.approvals.write(id, Zeroable::zero());
+            self.tokens_by_owner_insert(to, id);
+            self.tokens_by_owner_remove(from, id);
+            self.emit(Transfer { from, to, token_id });
         }
 
         fn setApprovalForAll(ref self: ContractState, operator: ContractAddress, approved: bool) {
@@ -279,17 +239,6 @@ mod EnumerableOwnedNFT {
             append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
         }
-        fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
-            // 721
-            interfaceId == 0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943
-                // 721 metadata
-                || interfaceId == 0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd
-                // cairo 0 interface id?
-                || interfaceId == 0x80ac58cd
-                // SRC5 interface ID 
-                // https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-5.md#how-to-detect-if-a-contract-implements-src-5
-                || interfaceId == 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055
-        }
 
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -302,15 +251,6 @@ mod EnumerableOwnedNFT {
             ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
         ) {
             self.transferFrom(from, to, token_id)
-        }
-        fn safe_transfer_from(
-            ref self: ContractState,
-            from: ContractAddress,
-            to: ContractAddress,
-            token_id: u256,
-            data: Span<felt252>
-        ) {
-            self.safeTransferFrom(from, to, token_id, data)
         }
         fn set_approval_for_all(
             ref self: ContractState, operator: ContractAddress, approved: bool
@@ -328,6 +268,22 @@ mod EnumerableOwnedNFT {
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
             self.tokenUri(token_id)
         }
+    }
+
+    #[external(v0)]
+    impl SRC5Impl of ISRC5<ContractState> {
+        fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
+            // 721
+            interfaceId == 0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943
+                // 721 metadata
+                || interfaceId == 0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd
+                // cairo 0 interface id?
+                || interfaceId == 0x80ac58cd
+                // SRC5 interface ID 
+                // https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-5.md#how-to-detect-if-a-contract-implements-src-5
+                || interfaceId == 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055
+        }
+
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
             self.supportsInterface(interface_id)
         }
