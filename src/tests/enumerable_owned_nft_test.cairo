@@ -42,32 +42,47 @@ fn test_nft_name_symbol_token_uri() {
 fn test_nft_supports_interfaces() {
     let (_, nft) = deploy_default();
     let src = ISRC5Dispatcher { contract_address: nft.contract_address };
+    assert(!src.supportsInterface(0), '0');
+    assert(!src.supportsInterface(1), '1');
+    assert(
+        !src
+            .supportsInterface(
+                3618502788666131213697322783095070105623107215331596699973092056135872020480
+            ),
+        'max'
+    );
+
     assert(
         src.supportsInterface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
-        'src5'
+        'src5.721'
     );
     assert(
         src.supports_interface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
-        'src5.snake'
+        'src5.721.snake'
     );
     assert(
         src.supportsInterface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
-        'src5'
+        'src5.721_metadata'
     );
     assert(
         src.supports_interface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
-        'src5.snake'
+        'src5.721_metadata.snake'
     );
-    assert(src.supportsInterface(0x80ac58cd), 'erc165');
-    assert(src.supports_interface(0x80ac58cd), 'erc165.snake');
     assert(
         src.supportsInterface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
-        'src5'
+        'src5.src5'
     );
     assert(
         src.supports_interface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
-        'src5.snake'
+        'src5.src5.snake'
     );
+
+    assert(src.supportsInterface(0x80ac58cd), 'erc165.721');
+    assert(src.supports_interface(0x80ac58cd), 'erc165.721.snake');
+    assert(src.supportsInterface(0x5b5e139f), 'erc165.721_metadata');
+    assert(src.supports_interface(0x5b5e139f), 'erc165.721_metadata.snake');
+    assert(src.supportsInterface(0x01ffc9a7), 'erc165.165');
+    assert(src.supports_interface(0x01ffc9a7), 'erc165.165.snake');
 }
 
 #[test]

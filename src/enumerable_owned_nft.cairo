@@ -34,7 +34,10 @@ mod EnumerableOwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::math::string::{to_decimal, append};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::src5::{ISRC5};
+    use ekubo::interfaces::src5::{
+        ISRC5, SRC5_SRC5_ID, SRC5_ERC721_ID, SRC5_ERC721_METADATA_ID, ERC165_ERC721_METADATA_ID,
+        ERC165_ERC721_ID, ERC165_ERC165_ID
+    };
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
@@ -273,15 +276,12 @@ mod EnumerableOwnedNFT {
     #[external(v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
-            // 721
-            interfaceId == 0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943
-                // 721 metadata
-                || interfaceId == 0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd
-                // cairo 0 interface id?
-                || interfaceId == 0x80ac58cd
-                // SRC5 interface ID 
-                // https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-5.md#how-to-detect-if-a-contract-implements-src-5
-                || interfaceId == 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055
+            interfaceId == SRC5_SRC5_ID
+                || interfaceId == SRC5_ERC721_ID
+                || interfaceId == SRC5_ERC721_METADATA_ID
+                || interfaceId == ERC165_ERC721_ID
+                || interfaceId == ERC165_ERC721_METADATA_ID
+                || interfaceId == ERC165_ERC165_ID
         }
 
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
