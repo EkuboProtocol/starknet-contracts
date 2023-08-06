@@ -49,6 +49,7 @@ mod Quoter {
         i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult,
         QuoteSingleParameters
     };
+    use ekubo::shared_locker::{consume_callback_data};
 
     use starknet::{get_caller_address};
     use starknet::syscalls::{call_contract_syscall};
@@ -97,18 +98,10 @@ mod Quoter {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
 
-            assert(get_caller_address() == core.contract_address, 'UNAUTHORIZED');
-
-            let mut input_span = data.span();
-            let mut params_enum: CallbackParameters = Serde::<CallbackParameters>::deserialize(
-                ref input_span
-            )
-                .expect('LOCKED_DESERIALIZE_FAILED');
-
             let mut output: Array<felt252> = ArrayTrait::new();
             Serde::<felt252>::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
 
-            match params_enum {
+            match consume_callback_data::<CallbackParameters>(core, data) {
                 CallbackParameters::QuoteParameters(params) => {
                     let mut pool_keys = params.route.pool_keys;
                     let mut amount: i129 = params.amount;
@@ -175,7 +168,7 @@ mod Quoter {
         }
     }
 
-    fn call_core_with_callback<
+    fn call_core_with_reverting_callback<
         TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>, 
     >(
         core: ICoreDispatcher, input: @TInput
@@ -209,7 +202,9 @@ mod Quoter {
     #[external(v0)]
     impl QuoterImpl of IQuoter<ContractState> {
         fn quote(self: @ContractState, params: QuoteParameters) -> QuoteResult {
-            call_core_with_callback(self.core.read(), @CallbackParameters::QuoteParameters(params))
+            call_core_with_reverting_callback(
+                self.core.read(), @CallbackParameters::QuoteParameters(params)
+            )
         }
 
         fn quote_single(self: @ContractState, params: QuoteSingleParameters) -> QuoteResult {

@@ -26,7 +26,7 @@ mod MockExtension {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::i129::i129;
     use ekubo::types::delta::{Delta};
-    use ekubo::shared_locker::{call_core_with_callback};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use starknet::{get_caller_address};
     use zeroable::{Zeroable};
@@ -152,10 +152,8 @@ mod MockExtension {
     #[external(v0)]
     impl ExtensionLocked of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            let core = self.check_caller_is_core();
-
-            let mut span = data.span();
-            let data: CallbackData = Serde::deserialize(ref span).unwrap();
+            let core = self.core.read();
+            let data = consume_callback_data::<CallbackData>(core, data);
 
             let mut delta: Delta = Zeroable::zero();
 

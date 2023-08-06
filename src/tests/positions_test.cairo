@@ -61,6 +61,20 @@ fn test_deposit_liquidity_full_range() {
 
 #[test]
 #[available_gas(20000000)]
+#[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
+fn test_locked_cannot_be_called_directly() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    ILockerDispatcher { contract_address: positions.contract_address }.locked(1, ArrayTrait::new());
+}
+
+#[test]
+#[available_gas(20000000)]
 #[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
 fn test_deposit_fails_min_liquidity() {
     let setup = setup_pool(
