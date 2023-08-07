@@ -25,7 +25,7 @@ jobs:
 
       - name: Copy matching files
         run: |
-          rsync --delete --delete-excluded -Rav --exclude='*_test.cairo' --exclude="tests" --exclude='tests.cairo' --exclude "tests/**/*.cairo" --exclude='option_incentives.cairo' --delete-excluded src ../mirror
+          rsync --delete --delete-excluded -Rav --exclude='*_test.cairo' --exclude="tests" --exclude='tests.cairo' --exclude "tests/**/*.cairo" --exclude='option_incentives.cairo' --exclude="math/ticks" --exclude="math/ticks.cairo" --delete-excluded src ../mirror
 
       - name: Push to destination repo
         run: |
