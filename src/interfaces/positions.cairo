@@ -5,6 +5,13 @@ use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 
 #[derive(Copy, Drop, Serde)]
+struct GetTokenInfoRequest {
+    id: u64,
+    pool_key: PoolKey,
+    bounds: Bounds
+}
+
+#[derive(Copy, Drop, Serde)]
 struct GetTokenInfoResult {
     pool_price: PoolPrice,
     liquidity: u128,
@@ -19,9 +26,12 @@ trait IPositions<TStorage> {
     fn get_nft_address(self: @TStorage) -> ContractAddress;
 
     // Return the principal and fee amounts owed to a position
-    fn get_token_info(
-        self: @TStorage, id: u64, pool_key: PoolKey, bounds: Bounds
-    ) -> GetTokenInfoResult;
+    fn get_token_info(self: @TStorage, request: GetTokenInfoRequest) -> GetTokenInfoResult;
+
+    // The same as below but for each of the specified tokens
+    fn get_tokens_info(
+        self: @TStorage, requests: Array<GetTokenInfoRequest>
+    ) -> Array<GetTokenInfoResult>;
 
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u64;

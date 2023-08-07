@@ -5,7 +5,9 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
+use ekubo::interfaces::positions::{
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoRequest, GetTokenInfoResult
+};
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
@@ -335,7 +337,10 @@ fn test_deposit_then_withdraw_with_fees() {
         skip_ahead: 0
     );
 
-    let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let token_info = positions
+        .get_token_info(
+            GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds: bounds }
+        );
 
     assert(token_info.liquidity == 200050104166, 'liquidity');
     assert(token_info.amount0 == 100000998, 'amount0');
@@ -414,7 +419,8 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
 
     // fees are not withdrawn with the principal
-    let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let token_info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(token_info.liquidity == 100025052083, 'liquidity');
     assert(token_info.amount0 == 50000499, 'amount0');
@@ -643,7 +649,8 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let mut info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -664,7 +671,8 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     assert(delta_swap.amount0 == i129 { mag: 10000, sign: true }, 'first swap delta0');
     assert(delta_swap.amount1 == i129 { mag: 10000, sign: false }, 'first swap delta1');
 
-    info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 0, 'amount0 after');
@@ -697,7 +705,8 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let mut info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -718,7 +727,8 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     assert(delta_swap.amount0 == i129 { mag: 10000, sign: false }, 'swap delta0');
     assert(delta_swap.amount1 == i129 { mag: 10000, sign: true }, 'swap delta1');
 
-    info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 20000, 'amount0 after');
@@ -751,7 +761,8 @@ fn test_deposit_swap_round_trip_accounting() {
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let mut info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let mut info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity before');
     assert(info.amount0 == 9999, 'amount0 before');
@@ -786,7 +797,8 @@ fn test_deposit_swap_round_trip_accounting() {
         skip_ahead: 0
     );
 
-    info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
@@ -807,7 +819,8 @@ fn test_deposit_swap_round_trip_accounting() {
 
     assert(amount0 == 200, 'amount0 withdrawn');
     assert(amount1 == 200, 'amount1 withdrawn');
-    info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    info = positions
+        .get_token_info(GetTokenInfoRequest { id: token_id, pool_key: setup.pool_key, bounds });
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
     assert(info.amount1 == 9999, 'amount1 after');
@@ -818,6 +831,8 @@ fn test_deposit_swap_round_trip_accounting() {
 #[derive(Copy, Drop)]
 struct CreatePositionResult {
     id: u64,
+    positions: IPositionsDispatcher,
+    pool_key: PoolKey,
     bounds: Bounds,
     liquidity: u128,
 }
@@ -836,7 +851,18 @@ fn create_position(
     let liquidity = positions
         .deposit(id: token_id, pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    CreatePositionResult { id: token_id, bounds, liquidity }
+    CreatePositionResult { id: token_id, positions, pool_key: setup.pool_key, bounds, liquidity }
+}
+
+#[generate_trait]
+impl CreatePositionResultTraitImpl of CreatePositionResultTrait {
+    fn get_info(self: CreatePositionResult) -> GetTokenInfoResult {
+        self
+            .positions
+            .get_token_info(
+                GetTokenInfoRequest { id: self.id, pool_key: self.pool_key, bounds: self.bounds }
+            )
+    }
 }
 
 
@@ -867,7 +893,7 @@ fn test_deposit_existing_position() {
     let liquidity = positions
         .deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
 
-    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let info = p0.get_info();
 
     assert(info.liquidity == 5000015000, 'liquidity');
     assert(info.amount0 == 24999, 'amount0');
@@ -885,7 +911,7 @@ fn test_deposit_existing_position() {
         skip_ahead: 0
     );
 
-    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let info = p0.get_info();
 
     assert(info.liquidity == 5000015000, 'liquidity');
     assert(info.amount0 == 19999, 'amount0');
@@ -898,7 +924,7 @@ fn test_deposit_existing_position() {
     let liquidity = positions
         .deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
 
-    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let info = p0.get_info();
 
     assert(info.liquidity == 7500021250, 'liquidity');
     assert(info.amount0 == 29999, 'amount0');
@@ -968,9 +994,9 @@ fn test_deposit_swap_multiple_positions() {
         skip_ahead: 0
     );
 
-    let p0_info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
-    let p1_info = positions.get_token_info(p1.id, setup.pool_key, p1.bounds);
-    let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
+    let p0_info = p0.get_info();
+    let p1_info = p1.get_info();
+    let p2_info = p2.get_info();
 
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
     assert(p0_info.amount0 == 9999, 'p0 amount0');
@@ -1055,10 +1081,10 @@ fn test_create_position_in_range_after_swap_no_fees() {
         0
     );
 
-    let p0_info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
-    let p1_info = positions.get_token_info(p1.id, setup.pool_key, p1.bounds);
-    let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
-    let p3_info = positions.get_token_info(p3.id, setup.pool_key, p3.bounds);
+    let p0_info = p0.get_info();
+    let p1_info = p1.get_info();
+    let p2_info = p2.get_info();
+    let p3_info = p3.get_info();
 
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
     assert(p0_info.amount0 == 9999, 'p0 amount0');
@@ -1232,7 +1258,7 @@ fn test_withdraw_partial_leave_fees() {
             collect_fees: false,
         );
 
-    let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
+    let info = p0.get_info();
     assert(info.liquidity == (p0.liquidity - (p0.liquidity / 3)), 'liquidity');
     assert(info.amount0 == 13333, 'amount0'); // 2/3 of 20k
     assert(info.amount1 == 0, 'amount1');

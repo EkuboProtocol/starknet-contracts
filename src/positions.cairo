@@ -24,7 +24,7 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult};
+    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
@@ -279,21 +279,27 @@ mod Positions {
         }
 
         fn get_token_info(
-            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+            self: @ContractState, request: GetTokenInfoRequest
         ) -> GetTokenInfoResult {
-            self.check_key_hash(id, pool_key, bounds);
+            self.check_key_hash(request.id, request.pool_key, request.bounds);
+
             let core = self.core.read();
             let get_position_result = core
                 .get_position_with_fees(
-                    pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
+                    request.pool_key,
+                    PositionKey {
+                        owner: get_contract_address(),
+                        salt: request.id.into(),
+                        bounds: request.bounds
+                    }
                 );
-            let price = core.get_pool_price(pool_key);
+            let price = core.get_pool_price(request.pool_key);
 
             let delta = liquidity_delta_to_amount_delta(
                 sqrt_ratio: price.sqrt_ratio,
                 liquidity_delta: i129 { mag: get_position_result.position.liquidity, sign: true },
-                sqrt_ratio_lower: tick_to_sqrt_ratio(bounds.lower),
-                sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
+                sqrt_ratio_lower: tick_to_sqrt_ratio(request.bounds.lower),
+                sqrt_ratio_upper: tick_to_sqrt_ratio(request.bounds.upper),
             );
 
             GetTokenInfoResult {
@@ -304,6 +310,25 @@ mod Positions {
                 fees0: get_position_result.fees0,
                 fees1: get_position_result.fees1
             }
+        }
+
+        fn get_tokens_info(
+            self: @ContractState, mut requests: Array<GetTokenInfoRequest>
+        ) -> Array<GetTokenInfoResult> {
+            let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
+
+            loop {
+                match requests.pop_front() {
+                    Option::Some(request) => {
+                        results.append(self.get_token_info(request));
+                    },
+                    Option::None(_) => {
+                        break ();
+                    }
+                };
+            };
+
+            results
         }
 
         fn deposit(

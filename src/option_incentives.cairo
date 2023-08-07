@@ -46,7 +46,9 @@ trait IOptionIncentives<TStorage> {
 #[starknet::contract]
 mod OptionIncentives {
     use super::{ContractAddress, IOptionIncentives, PoolKey, Bounds, ExercisableAmount, i129};
-    use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
+    use ekubo::interfaces::positions::{
+        IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoRequest
+    };
     use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
@@ -146,7 +148,8 @@ mod OptionIncentives {
             );
 
             let positions = self.positions.read();
-            let info = positions.get_token_info(token_id, pool_key, bounds);
+            let info = positions
+                .get_token_info(GetTokenInfoRequest { id: token_id, pool_key, bounds });
 
             assert(info.liquidity.is_non_zero(), 'ZERO_LIQUIDITY_STAKE');
 
@@ -185,7 +188,7 @@ mod OptionIncentives {
             let liquidity = self
                 .positions
                 .read()
-                .get_token_info(token_id, pool_key, bounds)
+                .get_token_info(GetTokenInfoRequest { id: token_id, pool_key, bounds })
                 .liquidity;
 
             // we know if this overflows the u256 container, the result overflows a u128
