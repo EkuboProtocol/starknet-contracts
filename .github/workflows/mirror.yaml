@@ -34,6 +34,9 @@ jobs:
           git config --global user.name "🪞"
           git add .
           git commit -m "to-be-squashed"
-          git reset $(git commit-tree HEAD^{tree} -m "mirrored @ ${{ github.sha }}")
+          git checkout --orphan temp_branch
+          git commit -m "mirrored @ ${{ github.sha }}"
+          git branch -M temp_branch main
           git push -f origin main
+
 
