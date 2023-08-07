@@ -1,5 +1,5 @@
 use serde::Serde;
-use starknet::{call_contract_syscall, ContractAddress, SyscallResultTrait};
+use starknet::{get_caller_address, call_contract_syscall, ContractAddress, SyscallResultTrait};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 use array::{ArrayTrait};
 use option::{OptionTrait};
@@ -15,4 +15,12 @@ fn call_core_with_callback<
     let mut output_span = core.lock(input_data).span();
 
     Serde::deserialize(ref output_span).expect('DESERIALIZE_RESULT_FAILED')
+}
+
+fn consume_callback_data<TInput, impl TSerdeInput: Serde<TInput>>(
+    core: ICoreDispatcher, callback_data: Array<felt252>
+) -> TInput {
+    assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
+    let mut span = callback_data.span();
+    Serde::deserialize(ref span).expect('DESERIALIZE_INPUT_FAILED')
 }

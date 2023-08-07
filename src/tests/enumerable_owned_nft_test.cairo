@@ -1,5 +1,6 @@
 use ekubo::tests::helper::{deploy_enumerable_owned_nft};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
@@ -26,7 +27,7 @@ fn deploy_default() -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
 
 #[test]
 #[available_gas(300000000)]
-fn test_nft_name_symbol() {
+fn test_nft_name_symbol_token_uri() {
     let (_, nft) = deploy_enumerable_owned_nft(
         default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
     );
@@ -34,6 +35,54 @@ fn test_nft_name_symbol() {
     assert(nft.symbol() == 'EpNFT', 'symbol');
     assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'tokenUri');
     assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_supports_interfaces() {
+    let (_, nft) = deploy_default();
+    let src = ISRC5Dispatcher { contract_address: nft.contract_address };
+    assert(!src.supportsInterface(0), '0');
+    assert(!src.supportsInterface(1), '1');
+    assert(
+        !src
+            .supportsInterface(
+                3618502788666131213697322783095070105623107215331596699973092056135872020480
+            ),
+        'max'
+    );
+
+    assert(
+        src.supportsInterface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
+        'src5.721'
+    );
+    assert(
+        src.supports_interface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
+        'src5.721.snake'
+    );
+    assert(
+        src.supportsInterface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
+        'src5.721_metadata'
+    );
+    assert(
+        src.supports_interface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
+        'src5.721_metadata.snake'
+    );
+    assert(
+        src.supportsInterface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
+        'src5.src5'
+    );
+    assert(
+        src.supports_interface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
+        'src5.src5.snake'
+    );
+
+    assert(src.supportsInterface(0x80ac58cd), 'erc165.721');
+    assert(src.supports_interface(0x80ac58cd), 'erc165.721.snake');
+    assert(src.supportsInterface(0x5b5e139f), 'erc165.721_metadata');
+    assert(src.supports_interface(0x5b5e139f), 'erc165.721_metadata.snake');
+    assert(src.supportsInterface(0x01ffc9a7), 'erc165.165');
+    assert(src.supports_interface(0x01ffc9a7), 'erc165.165.snake');
 }
 
 #[test]
@@ -84,6 +133,49 @@ fn test_nft_indexing_token_ids() {
     let token_id_2 = controller.mint(alice);
     set_contract_address(bob);
     nft.transferFrom(bob, alice, token_id.into());
+
+    all = controller.get_all_owned_tokens(alice);
+    assert(all.len() == 2, 'len final');
+    assert(all.pop_front().unwrap().into() == token_id, 'token1');
+    assert(all.pop_front().unwrap().into() == token_id_2, 'token2');
+}
+
+#[test]
+#[available_gas(300000000)]
+fn test_nft_indexing_token_ids_snake_case() {
+    let (controller, nft) = deploy_enumerable_owned_nft(
+        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+    );
+
+    switch_to_controller();
+
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<9123456>();
+
+    assert(nft.balance_of(alice) == 0, 'balance start');
+    let mut all = controller.get_all_owned_tokens(alice);
+    assert(all.len() == 0, 'len before');
+    let token_id = controller.mint(alice);
+
+    assert(nft.balance_of(alice) == 1, 'balance after');
+    all = controller.get_all_owned_tokens(alice);
+    assert(all.len() == 1, 'len after');
+    set_contract_address(alice);
+    nft.transfer_from(alice, bob, all.pop_front().unwrap().into());
+
+    assert(nft.balance_of(alice) == 0, 'balance after transfer');
+    all = controller.get_all_owned_tokens(alice);
+    assert(all.len() == 0, 'len after transfer');
+
+    assert(nft.balance_of(bob) == 1, 'balance bob transfer');
+    all = controller.get_all_owned_tokens(bob);
+    assert(all.len() == 1, 'len bob');
+    assert(all.pop_front().unwrap().into() == token_id, 'token bob');
+
+    switch_to_controller();
+    let token_id_2 = controller.mint(alice);
+    set_contract_address(bob);
+    nft.transfer_from(bob, alice, token_id.into());
 
     all = controller.get_all_owned_tokens(alice);
     assert(all.len() == 2, 'len final');

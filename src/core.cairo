@@ -78,14 +78,14 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesWithdrawn {
+    struct ProtocolFeesWithdrawn {
         recipient: ContractAddress,
         token: ContractAddress,
         amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesPaid {
+    struct ProtocolFeesPaid {
         pool_key: PoolKey,
         position_key: PositionKey,
         delta: Delta,
@@ -145,8 +145,8 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
-        FeesPaid: FeesPaid,
-        FeesWithdrawn: FeesWithdrawn,
+        ProtocolFeesPaid: ProtocolFeesPaid,
+        ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
         PositionFeesCollected: PositionFeesCollected,
@@ -425,7 +425,7 @@ mod Core {
             self.reserves.write(token, self.reserves.read(token) - amount.into());
 
             IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
-            self.emit(FeesWithdrawn { recipient, token, amount });
+            self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
         fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
@@ -671,7 +671,7 @@ mod Core {
                 }
 
                 delta -= withdrawal_fee_delta;
-                self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
+                self.emit(ProtocolFeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
             let get_position_result = self.get_position_with_fees(pool_key, position_key);

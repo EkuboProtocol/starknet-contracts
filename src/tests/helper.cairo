@@ -19,6 +19,7 @@ use ekubo::extensions::oracle::{Oracle};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
+use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
@@ -37,6 +38,15 @@ use starknet::testing::{set_contract_address};
 use starknet::class_hash::Felt252TryIntoClassHash;
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
+
+fn deploy_asset_recovery() -> IAssetRecoveryDispatcher {
+    let constructor_args: Array<felt252> = ArrayTrait::new();
+    let (address, _) = deploy_syscall(
+        AssetRecovery::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('asset recovery deploy');
+    return IAssetRecoveryDispatcher { contract_address: address };
+}
 
 fn deploy_mock_token() -> IMockERC20Dispatcher {
     let constructor_args: Array<felt252> = ArrayTrait::new();

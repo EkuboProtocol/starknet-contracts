@@ -49,7 +49,7 @@ mod CoreLocker {
     use array::ArrayTrait;
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-    use ekubo::shared_locker::call_core_with_callback;
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
 
     use option::{Option, OptionTrait};
 
@@ -90,13 +90,8 @@ mod CoreLocker {
     impl CoreLockerLockedImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
-            assert(core.contract_address == get_caller_address(), 'UNAUTHORIZED_CALLBACK');
 
-            let mut action_data = data.span();
-            let mut action: Action = Serde::<Action>::deserialize(ref action_data)
-                .expect('DESERIALIZE_FAILED');
-
-            let result = match action {
+            let result = match consume_callback_data::<Action>(core, data) {
                 Action::AssertLockerId(locker_id) => {
                     assert(locker_id == id, 'INVALID_LOCKER_ID');
 
