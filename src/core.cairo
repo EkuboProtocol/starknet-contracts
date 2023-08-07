@@ -258,8 +258,6 @@ mod Core {
         }
     }
 
-    use debug::PrintTrait;
-
     #[external(v0)]
     impl Core of ICore<ContractState> {
         fn set_withdrawal_only_mode(ref self: ContractState) {
