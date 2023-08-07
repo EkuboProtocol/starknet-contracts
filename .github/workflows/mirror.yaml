@@ -30,9 +30,10 @@ jobs:
       - name: Push to destination repo
         run: |
           cd ../mirror
-          git add .
           git config --global user.email "eng@ekubo.org"
           git config --global user.name "🪞"
+          git add .
+          git commit -m "to-be-squashed"
           git reset $(git commit-tree HEAD^{tree} -m "mirrored @ ${{ github.sha }}")
           git push -f origin main
 
