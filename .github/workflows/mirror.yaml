@@ -35,7 +35,7 @@ jobs:
           git config --global user.email "eng@ekubo.org"
           git config --global user.name "🪞"
           git add .
-          git commit -m "to-be-squashed"
+          git commit -m "to-be-squashed" --allow-empty
           git checkout --orphan temp_branch
           git commit -m "mirrored @ ${{ github.sha }}"
           git branch -M temp_branch main
