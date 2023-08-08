@@ -16,6 +16,7 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
 use ekubo::extensions::oracle::{Oracle};
+use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::positions::{Positions};
 use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
@@ -87,6 +88,18 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
         Oracle::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('oracle deploy failed');
+
+    IExtensionDispatcher { contract_address: address }
+}
+
+fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        LimitOrders::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('limit_orders deploy failed');
 
     IExtensionDispatcher { contract_address: address }
 }
