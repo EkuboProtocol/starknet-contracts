@@ -23,7 +23,9 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
-    use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
+    use ekubo::math::bitmap::{
+        Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
+    };
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::owner::{check_owner_only};
@@ -63,7 +65,7 @@ mod Core {
         tick_liquidity_delta: LegacyMap::<(PoolKey, i129), i129>,
         tick_fees_outside: LegacyMap::<(PoolKey, i129), FeesPerLiquidity>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
-        tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
+        tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
         // in withdrawal only mode, the contract will not accept deposits
@@ -76,14 +78,14 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesWithdrawn {
+    struct ProtocolFeesWithdrawn {
         recipient: ContractAddress,
         token: ContractAddress,
         amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesPaid {
+    struct ProtocolFeesPaid {
         pool_key: PoolKey,
         position_key: PositionKey,
         delta: Delta,
@@ -143,8 +145,8 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
-        FeesPaid: FeesPaid,
-        FeesWithdrawn: FeesWithdrawn,
+        ProtocolFeesPaid: ProtocolFeesPaid,
+        ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
         PositionFeesCollected: PositionFeesCollected,
@@ -200,7 +202,7 @@ mod Core {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
-            self.tick_bitmaps.write((pool_key, word_index), bitmap - exp2(bit_index));
+            self.tick_bitmaps.write((pool_key, word_index), bitmap.unset_bit(bit_index));
         }
 
         // Insert an initialized tick for the given pool
@@ -208,7 +210,7 @@ mod Core {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
-            self.tick_bitmaps.write((pool_key, word_index), bitmap + exp2(bit_index));
+            self.tick_bitmaps.write((pool_key, word_index), bitmap.set_bit(bit_index));
         }
 
         fn update_tick(
@@ -351,23 +353,25 @@ mod Core {
             );
 
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-            // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
-            // now the next tick is at the most significant bit in the masked bitmap
-            let masked = bitmap & mask(bit_index);
 
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
-                if (next > max_tick()) {
-                    return (max_tick(), false);
-                }
-                if (skip_ahead == 0) {
-                    (next, false)
-                } else {
-                    self.next_initialized_tick(pool_key, next, skip_ahead - 1)
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, msb(masked)), pool_key.tick_spacing), true)
+            match bitmap.next_set_bit(bit_index) {
+                Option::Some(next_bit) => {
+                    (
+                        word_and_bit_index_to_tick((word_index, next_bit), pool_key.tick_spacing),
+                        true
+                    )
+                },
+                Option::None(_) => {
+                    let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+                    if (next > max_tick()) {
+                        return (max_tick(), false);
+                    }
+                    if (skip_ahead.is_zero()) {
+                        (next, false)
+                    } else {
+                        self.next_initialized_tick(pool_key, next, skip_ahead - 1)
+                    }
+                },
             }
         }
 
@@ -379,26 +383,30 @@ mod Core {
 
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
 
-            let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
-
-            let masked = bitmap & mask;
-
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
-                if (prev < min_tick()) {
-                    return (min_tick(), false);
+            match bitmap.prev_set_bit(bit_index) {
+                Option::Some(prev_bit_index) => {
+                    (
+                        word_and_bit_index_to_tick(
+                            (word_index, prev_bit_index), pool_key.tick_spacing
+                        ),
+                        true
+                    )
+                },
+                Option::None(_) => {
+                    // if it's not set, we know there is no set bit in this word
+                    let prev = word_and_bit_index_to_tick((word_index, 250), pool_key.tick_spacing);
+                    if (prev < min_tick()) {
+                        return (min_tick(), false);
+                    }
+                    if (skip_ahead == 0) {
+                        (prev, false)
+                    } else {
+                        self
+                            .prev_initialized_tick(
+                                pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
+                            )
+                    }
                 }
-                if (skip_ahead == 0) {
-                    (prev, false)
-                } else {
-                    self
-                        .prev_initialized_tick(
-                            pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
-                        )
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, lsb(masked)), pool_key.tick_spacing), true)
             }
         }
 
@@ -415,7 +423,7 @@ mod Core {
             self.reserves.write(token, self.reserves.read(token) - amount.into());
 
             IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
-            self.emit(FeesWithdrawn { recipient, token, amount });
+            self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
         fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
@@ -661,7 +669,7 @@ mod Core {
                 }
 
                 delta -= withdrawal_fee_delta;
-                self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
+                self.emit(ProtocolFeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
             let get_position_result = self.get_position_with_fees(pool_key, position_key);

@@ -4,8 +4,14 @@ use ekubo::types::fees_per_liquidity::{
 };
 use zeroable::{Zeroable};
 
-const FELT252_MAX: felt252 =
+const MAX_PRIME: felt252 =
     3618502788666131213697322783095070105623107215331596699973092056135872020480;
+
+#[test]
+fn test_MAX_PRIME_plus_one_is_zero() {
+    assert((MAX_PRIME + 1) == 0, 'max+1');
+    assert((0_felt252 - 1) == MAX_PRIME, '0-1');
+}
 
 #[test]
 fn test_fpl_zeroable() {
@@ -32,16 +38,14 @@ fn test_fpl_underflow_sub() {
 
     let difference = fpl_zero - fpl_one;
 
-    assert(
-        difference == FeesPerLiquidity { value0: FELT252_MAX, value1: FELT252_MAX,  }, 'overflow'
-    );
+    assert(difference == FeesPerLiquidity { value0: MAX_PRIME, value1: MAX_PRIME }, 'overflow');
 }
 
 #[test]
 fn test_fpl_overflow_add() {
     let fpl_one = FeesPerLiquidity { value0: 1, value1: 1 };
 
-    let fpl_max = FeesPerLiquidity { value0: FELT252_MAX, value1: FELT252_MAX };
+    let fpl_max = FeesPerLiquidity { value0: MAX_PRIME, value1: MAX_PRIME };
 
     let sum = fpl_max + fpl_one;
 

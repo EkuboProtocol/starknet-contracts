@@ -37,19 +37,22 @@ scarb build
 
 declare_class_hash() {
     local class_name=$1
-    starkli declare --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --compiler-version "2.0.1" "target/dev/ekubo_${class_name}.sierra.json"
+    starkli declare --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --compiler-version "2.1.0" "target/dev/ekubo_${class_name}.sierra.json"
 }
 
 echo "Declaring core"
 CORE_CLASS_HASH=$(declare_class_hash Core)
 echo "Declaring positions"
 POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
-echo "Declaring quoter"
+echo "Declaring Quoter"
 QUOTER_CLASS_HASH=$(declare_class_hash Quoter)
+echo "Declaring NFT"
+NFT_CLASS_HASH=$(declare_class_hash EnumerableOwnedNFT)
 
 echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"
 echo "Declared quoter @ $QUOTER_CLASS_HASH"
+echo "Declared nft @ $NFT_CLASS_HASH"
 
 case $NETWORK in
     "goerli-1")
@@ -64,12 +67,20 @@ case $NETWORK in
         ;;
 esac
 
-echo "Waiting 15 seconds for the class hashes to be indexed"
-sleep 15;
+echo "Waiting 30 seconds for the classhashes to be indexed"
+sleep 30;
 
 CORE_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$CORE_CLASS_HASH")
-POSITIONS_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$POSITIONS_CLASS_HASH" "$CORE_ADDRESS" "$METADATA_URL")
+
+sleep 10;
+
+POSITIONS_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$POSITIONS_CLASS_HASH" "$CORE_ADDRESS" "$NFT_CLASS_HASH" "$METADATA_URL")
+
+sleep 10;
+
 QUOTER_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$QUOTER_CLASS_HASH" "$CORE_ADDRESS")
+
+sleep 10;
 
 echo "Core deployed @ $CORE_ADDRESS"
 echo "Positions deployed @ $POSITIONS_ADDRESS"

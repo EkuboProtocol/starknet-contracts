@@ -3,7 +3,7 @@ use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use starknet::{contract_address_const};
 use hash::{LegacyHash};
-use debug::PrintTrait;
+use ekubo::math::ticks::{constants as tick_constants};
 
 fn check_hashes_differ<
     T, impl TLegacyHash: LegacyHash<T>, impl TCopy: Copy<T>, impl TDrop: Drop<T>
@@ -117,7 +117,7 @@ fn test_pool_key_check_tick_spacing_max() {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
         fee: Zeroable::zero(),
-        tick_spacing: 693149,
+        tick_spacing: tick_constants::MAX_TICK_SPACING + 1,
         extension: Zeroable::zero(),
     }.check_valid();
 }
@@ -136,8 +136,24 @@ fn test_pool_key_check_valid_is_valid() {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
         fee: Zeroable::zero(),
-        tick_spacing: 693148,
+        tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: Zeroable::zero(),
+    }.check_valid();
+
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: 0xffffffffffffffffffffffffffffffff,
+        tick_spacing: tick_constants::MAX_TICK_SPACING,
+        extension: Zeroable::zero(),
+    }.check_valid();
+
+    PoolKey {
+        token0: contract_address_const::<1>(),
+        token1: contract_address_const::<2>(),
+        fee: 0xffffffffffffffffffffffffffffffff,
+        tick_spacing: tick_constants::MAX_TICK_SPACING,
+        extension: contract_address_const::<2>(),
     }.check_valid();
 }
 

@@ -61,6 +61,20 @@ fn test_deposit_liquidity_full_range() {
 
 #[test]
 #[available_gas(20000000)]
+#[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
+fn test_locked_cannot_be_called_directly() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    ILockerDispatcher { contract_address: positions.contract_address }.locked(1, ArrayTrait::new());
+}
+
+#[test]
+#[available_gas(20000000)]
 #[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
 fn test_deposit_fails_min_liquidity() {
     let setup = setup_pool(
@@ -116,6 +130,31 @@ fn test_deposit_liquidity_concentrated() {
     assert(balance0 == Zeroable::zero(), 'balance0');
     assert(balance1 == Zeroable::zero(), 'balance1');
 
+    assert(liquidity == 200050104166, 'liquidity');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_deposit_liquidity_concentrated_mint_and_deposit() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+    };
+
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    let (token_id, liquidity) = positions
+        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+
+    assert(token_id == 1, 'token_id');
     assert(liquidity == 200050104166, 'liquidity');
 }
 

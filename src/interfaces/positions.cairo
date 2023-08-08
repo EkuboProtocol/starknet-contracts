@@ -39,6 +39,11 @@ trait IPositions<TStorage> {
         ref self: TStorage, id: u64, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
+    // Mint and deposit in a single call
+    fn mint_and_deposit(
+        ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+    ) -> (u64, u128);
+
     // Withdraw liquidity from a specific token ID. Must be called by an operator, approved address or the owner
     fn withdraw(
         ref self: TStorage,

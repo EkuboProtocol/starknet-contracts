@@ -1,3 +1,4 @@
+mod asset_recovery_test;
 mod core_test;
 mod enumerable_owned_nft_test;
 mod extensions_test;

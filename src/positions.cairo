@@ -27,7 +27,7 @@ mod Positions {
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
-    use ekubo::shared_locker::{call_core_with_callback};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
 
     #[storage]
     struct Storage {
@@ -154,13 +154,8 @@ mod Positions {
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
-            assert(core.contract_address == get_caller_address(), 'CORE');
 
-            let mut data_span = data.span();
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
-                .expect('DESERIALIZE_CALLBACK_FAILED');
-
-            let delta = match callback_data {
+            let delta = match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
                     let delta: Delta = if data.liquidity.is_non_zero() {
                         core
@@ -399,6 +394,14 @@ mod Positions {
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> u128 {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
+        }
+
+        fn mint_and_deposit(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ) -> (u64, u128) {
+            let id = self.mint(pool_key, bounds);
+            let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
+            (id, liquidity)
         }
     }
 }

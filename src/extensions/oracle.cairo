@@ -232,8 +232,6 @@ mod Oracle {
         }
     }
 
-    use debug::PrintTrait;
-
     #[external(v0)]
     impl OracleExtension of IExtension<ContractState> {
         fn before_initialize_pool(

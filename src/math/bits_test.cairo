@@ -1,13 +1,4 @@
-use ekubo::math::bits::{msb, lsb, NegU128};
-
-#[test]
-fn test_neg_u128() {
-    assert(-0_u128 == 0_u128, 'neg 0 is 0');
-    assert(-1_u128 == 0xffffffffffffffffffffffffffffffff_u128, 'neg 1 is max');
-    assert(-2_u128 == 0xfffffffffffffffffffffffffffffffe_u128, 'neg 2 is max-1');
-    assert(-0xfffffffffffffffffffffffffffffffe_u128 == 2_u128, 'neg max-1 is 2');
-    assert(-0xffffffffffffffffffffffffffffffff_u128 == 1_u128, 'neg max is 1');
-}
+use ekubo::math::bits::{msb, lsb};
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO', ))]
@@ -16,7 +7,7 @@ fn msb_0_panics() {
 }
 
 #[test]
-#[should_panic(expected: ('MSB_NONZERO', ))]
+#[should_panic(expected: ('LSB_NONZERO', ))]
 fn lsb_0_panics() {
     lsb(0);
 }
