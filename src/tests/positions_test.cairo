@@ -135,6 +135,31 @@ fn test_deposit_liquidity_concentrated() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_deposit_liquidity_concentrated_mint_and_deposit() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+    };
+
+    setup.token0.increase_balance(positions.contract_address, 100000000);
+    setup.token1.increase_balance(positions.contract_address, 100000000);
+    let (token_id, liquidity) = positions
+        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
+
+    assert(token_id == 1, 'token_id');
+    assert(liquidity == 200050104166, 'liquidity');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);

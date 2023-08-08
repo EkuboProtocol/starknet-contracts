@@ -395,5 +395,13 @@ mod Positions {
         ) -> u128 {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
         }
+
+        fn mint_and_deposit(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ) -> (u64, u128) {
+            let id = self.mint(pool_key, bounds);
+            let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
+            (id, liquidity)
+        }
     }
 }
