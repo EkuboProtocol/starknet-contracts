@@ -1,8 +1,9 @@
 use ekubo::math::ticks::{min_tick, max_tick, constants as tick_constants};
 use starknet::ContractAddress;
 use ekubo::types::keys::{PositionKey, PoolKey};
-use ekubo::types::i129::{i129};
-use traits::Into;
+use ekubo::types::i129::{i129, i129Trait};
+use traits::{Into};
+use hash::{LegacyHash};
 
 // Tick bounds for a position
 #[derive(Copy, Drop, Serde)]
@@ -11,29 +12,9 @@ struct Bounds {
     upper: i129
 }
 
-mod internal {
-    use super::i129;
-
-    fn bounded_tick_to_u128(x: i129) -> u128 {
-        assert(x.mag < 0x80000000, 'BOUNDS_MAG');
-        if (x.mag == 0) {
-            0
-        } else {
-            (x.mag + if x.sign {
-                0x80000000
-            } else {
-                0
-            })
-        }
-    }
-}
-
-// Converts the bounds into a felt for hashing
-impl BoundsIntoFelt252 of Into<Bounds, felt252> {
-    fn into(self: Bounds) -> felt252 {
-        ((internal::bounded_tick_to_u128(self.lower) * 0x100000000)
-            + internal::bounded_tick_to_u128(self.upper))
-            .into()
+impl BoundsLegacyHash of LegacyHash<Bounds> {
+    fn hash(state: felt252, value: Bounds) -> felt252 {
+        LegacyHash::hash(LegacyHash::hash(state, value.lower), value.upper)
     }
 }
 
@@ -45,14 +26,8 @@ fn max_bounds(tick_spacing: u128) -> Bounds {
     Bounds { lower: i129 { mag, sign: true }, upper: i129 { mag, sign: false } }
 }
 
-impl DefaultBounds of Default<Bounds> {
-    fn default() -> Bounds {
-        Bounds { lower: min_tick(), upper: max_tick() }
-    }
-}
-
 #[generate_trait]
-impl CheckBoundsValidImpl of CheckBoundsValidTrait {
+impl BoudnsTraitImpl of BoundsTrait {
     fn check_valid(self: Bounds, tick_spacing: u128) {
         assert(self.lower < self.upper, 'BOUNDS_ORDER');
         assert(self.lower >= min_tick(), 'BOUNDS_MIN');

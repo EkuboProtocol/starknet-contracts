@@ -24,10 +24,10 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::interfaces::positions::{IPositions, GetPositionInfoResult};
+    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
-    use ekubo::shared_locker::{call_core_with_callback};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
 
     #[storage]
     struct Storage {
@@ -105,7 +105,7 @@ mod Positions {
 
     // Compute the hash for a given position key
     fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
-        LegacyHash::hash(bounds.into(), pool_key)
+        LegacyHash::hash(LegacyHash::hash(0, pool_key), bounds)
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -154,13 +154,8 @@ mod Positions {
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
-            assert(core.contract_address == get_caller_address(), 'CORE');
 
-            let mut data_span = data.span();
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
-                .expect('DESERIALIZE_CALLBACK_FAILED');
-
-            let delta = match callback_data {
+            let delta = match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
                     let delta: Delta = if data.liquidity.is_non_zero() {
                         core
@@ -247,6 +242,10 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        fn get_nft_address(self: @ContractState) -> ContractAddress {
+            self.nft.read().contract_address
+        }
+
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
@@ -279,9 +278,9 @@ mod Positions {
             nft.burn(id);
         }
 
-        fn get_position_info(
+        fn get_token_info(
             self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
-        ) -> GetPositionInfoResult {
+        ) -> GetTokenInfoResult {
             self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
             let get_position_result = core
@@ -297,7 +296,7 @@ mod Positions {
                 sqrt_ratio_upper: tick_to_sqrt_ratio(bounds.upper),
             );
 
-            GetPositionInfoResult {
+            GetTokenInfoResult {
                 pool_price: price,
                 liquidity: get_position_result.position.liquidity,
                 amount0: delta.amount0.mag,
@@ -391,18 +390,18 @@ mod Positions {
             balance
         }
 
-        fn maybe_initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) {
-            let core = self.core.read();
-            let price = core.get_pool_price(pool_key);
-            if (price.sqrt_ratio.is_zero()) {
-                core.initialize_pool(pool_key, initial_tick);
-            }
-        }
-
         fn deposit_last(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> u128 {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
+        }
+
+        fn mint_and_deposit(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ) -> (u64, u128) {
+            let id = self.mint(pool_key, bounds);
+            let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
+            (id, liquidity)
         }
     }
 }

@@ -2,6 +2,7 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher};
 
 #[starknet::interface]
 trait IAssetRecovery<TStorage> {
+    // Send the balance of a given token to the owner
     fn recover(ref self: TStorage, token: IERC20Dispatcher);
 }
 

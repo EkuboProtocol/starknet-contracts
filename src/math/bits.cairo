@@ -1,9 +1,11 @@
+use core::math::Oneable;
 use core::result::ResultTrait;
 use integer::{u128_overflowing_sub};
+use zeroable::{Zeroable};
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
 fn msb(mut x: u128) -> u8 {
-    assert(x != 0, 'MSB_NONZERO');
+    assert(x.is_non_zero(), 'MSB_NONZERO');
 
     let mut res: u8 = 0;
     if (x >= 0x10000000000000000) {
@@ -38,20 +40,9 @@ fn msb(mut x: u128) -> u8 {
     res
 }
 
-
-impl NegU128 of Neg<u128> {
-    #[inline]
-    fn neg(a: u128) -> u128 {
-        if (a == 0) {
-            0
-        } else {
-            u128_overflowing_sub(0, a).unwrap_err()
-        }
-    }
-}
-
 // Return the index of the least set bit
 fn lsb(x: u128) -> u8 {
-    // msb throws if x == 0
-    msb((-x) & x)
+    assert(x.is_non_zero(), 'LSB_NONZERO');
+
+    msb((u128_overflowing_sub(0, x).unwrap_err()) & x)
 }

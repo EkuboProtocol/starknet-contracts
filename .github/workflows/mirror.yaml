@@ -1,0 +1,42 @@
+name: Mirror
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.MIRRORING_KEY }}" > ~/.ssh/id_ed25519
+          chmod 400 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+      - name: Clone destination repo
+        run: |
+          git clone git@github.com:EkuboProtocol/contracts-shareable.git ../mirror
+
+      - name: Copy matching files
+        run: |
+          rsync --delete --delete-excluded -Rav --exclude='*_test.cairo' --exclude="tests" --exclude='tests.cairo' --exclude "tests/**/*.cairo" --exclude='option_incentives.cairo' --exclude="math/ticks" --exclude="math/ticks.cairo" --delete-excluded src ../mirror
+
+      - name: Push to destination repo
+        run: |
+          cd ../mirror
+          git config --global user.email "eng@ekubo.org"
+          git config --global user.name "🪞"
+          git add .
+          git commit -m "to-be-squashed" --allow-empty
+          git checkout --orphan temp_branch
+          git commit -m "mirrored @ ${{ github.sha }}"
+          git branch -M temp_branch main
+          git push -f origin main
+
+

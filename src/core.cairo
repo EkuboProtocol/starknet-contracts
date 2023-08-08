@@ -14,7 +14,6 @@ mod Core {
     };
     use option::{Option, OptionTrait};
     use array::{ArrayTrait, SpanTrait};
-    use traits::{Neg};
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
@@ -24,20 +23,21 @@ mod Core {
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::mask::{mask};
-    use ekubo::math::bitmap::{tick_to_word_and_bit_index, word_and_bit_index_to_tick};
+    use ekubo::math::bitmap::{
+        Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
+    };
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::owner::{check_owner_only};
-    use ekubo::types::i129::{i129, AddDeltaTrait};
+    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::fees_per_liquidity::{
         FeesPerLiquidity, fees_per_liquidity_new, fees_per_liquidity_from_amount0,
         fees_per_liquidity_from_amount1
     };
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::types::tick::{Tick};
-    use ekubo::types::keys::{PositionKey, PoolKey};
-    use ekubo::types::bounds::{Bounds, CheckBoundsValidTrait};
+    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait};
+    use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
     use traits::{Into};
@@ -61,10 +61,11 @@ mod Core {
         pool_price: LegacyMap::<PoolKey, PoolPrice>,
         pool_liquidity: LegacyMap::<PoolKey, u128>,
         pool_fees: LegacyMap::<PoolKey, FeesPerLiquidity>,
-        ticks: LegacyMap::<(PoolKey, i129), Tick>,
+        tick_liquidity_net: LegacyMap::<(PoolKey, i129), u128>,
+        tick_liquidity_delta: LegacyMap::<(PoolKey, i129), i129>,
         tick_fees_outside: LegacyMap::<(PoolKey, i129), FeesPerLiquidity>,
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
-        tick_bitmaps: LegacyMap<(PoolKey, u128), u128>,
+        tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
         // in withdrawal only mode, the contract will not accept deposits
@@ -77,14 +78,14 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesWithdrawn {
+    struct ProtocolFeesWithdrawn {
         recipient: ContractAddress,
         token: ContractAddress,
         amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesPaid {
+    struct ProtocolFeesPaid {
         pool_key: PoolKey,
         position_key: PositionKey,
         delta: Delta,
@@ -144,8 +145,8 @@ mod Core {
     #[event]
     enum Event {
         ClassHashReplaced: ClassHashReplaced,
-        FeesPaid: FeesPaid,
-        FeesWithdrawn: FeesWithdrawn,
+        ProtocolFeesPaid: ProtocolFeesPaid,
+        ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
         PositionFeesCollected: PositionFeesCollected,
@@ -201,7 +202,7 @@ mod Core {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
-            self.tick_bitmaps.write((pool_key, word_index), bitmap - exp2(bit_index));
+            self.tick_bitmaps.write((pool_key, word_index), bitmap.unset_bit(bit_index));
         }
 
         // Insert an initialized tick for the given pool
@@ -209,7 +210,7 @@ mod Core {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
-            self.tick_bitmaps.write((pool_key, word_index), bitmap + exp2(bit_index));
+            self.tick_bitmaps.write((pool_key, word_index), bitmap.set_bit(bit_index));
         }
 
         fn update_tick(
@@ -219,25 +220,26 @@ mod Core {
             liquidity_delta: i129,
             is_upper: bool
         ) {
-            let tick = self.ticks.read((pool_key, index));
+            let key = (pool_key, index);
+            let liquidity_delta_current = self.tick_liquidity_delta.read(key);
 
-            let next_liquidity_net = tick.liquidity_net.add(liquidity_delta);
+            let liquidity_net_current = self.tick_liquidity_net.read(key);
+            let next_liquidity_net = liquidity_net_current.add(liquidity_delta);
 
             self
-                .ticks
+                .tick_liquidity_delta
                 .write(
-                    (pool_key, index),
-                    Tick {
-                        liquidity_delta: if is_upper {
-                            tick.liquidity_delta - liquidity_delta
-                        } else {
-                            tick.liquidity_delta + liquidity_delta
-                        },
-                        liquidity_net: next_liquidity_net,
+                    key,
+                    if is_upper {
+                        liquidity_delta_current - liquidity_delta
+                    } else {
+                        liquidity_delta_current + liquidity_delta
                     }
                 );
 
-            if ((next_liquidity_net == 0) != (tick.liquidity_net == 0)) {
+            self.tick_liquidity_net.write(key, next_liquidity_net);
+
+            if ((next_liquidity_net == 0) != (liquidity_net_current == 0)) {
                 if (next_liquidity_net == 0) {
                     self.remove_initialized_tick(pool_key, index);
                 } else {
@@ -259,7 +261,12 @@ mod Core {
     #[external(v0)]
     impl Core of ICore<ContractState> {
         fn set_withdrawal_only_mode(ref self: ContractState) {
+            check_owner_only();
             self.withdrawal_only_mode.write(true);
+        }
+
+        fn get_withdrawal_only_mode(self: @ContractState) -> bool {
+            self.withdrawal_only_mode.read()
         }
 
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
@@ -290,8 +297,16 @@ mod Core {
             self.reserves.read(token)
         }
 
-        fn get_pool_tick(self: @ContractState, pool_key: PoolKey, index: i129) -> Tick {
-            self.ticks.read((pool_key, index))
+        fn get_pool_tick_liquidity_delta(
+            self: @ContractState, pool_key: PoolKey, index: i129
+        ) -> i129 {
+            self.tick_liquidity_delta.read((pool_key, index))
+        }
+
+        fn get_pool_tick_liquidity_net(
+            self: @ContractState, pool_key: PoolKey, index: i129
+        ) -> u128 {
+            self.tick_liquidity_net.read((pool_key, index))
         }
 
         fn get_pool_tick_fees_outside(
@@ -311,23 +326,13 @@ mod Core {
         ) -> GetPositionWithFeesResult {
             let position = self.get_position(pool_key, position_key);
 
-            if (position.is_zero()) {
-                // no computation needed for a zero position
-                GetPositionWithFeesResult {
-                    position,
-                    fees0: Zeroable::zero(),
-                    fees1: Zeroable::zero(),
-                    fees_per_liquidity_inside_current: Zeroable::zero(),
-                }
-            } else {
-                let fees_per_liquidity_inside_current = self
-                    .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
+            let fees_per_liquidity_inside_current = self
+                .get_pool_fees_per_liquidity_inside(pool_key, position_key.bounds);
 
-                let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
+            let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
 
-                GetPositionWithFeesResult {
-                    position, fees0, fees1, fees_per_liquidity_inside_current, 
-                }
+            GetPositionWithFeesResult {
+                position, fees0, fees1, fees_per_liquidity_inside_current, 
             }
         }
 
@@ -348,23 +353,25 @@ mod Core {
             );
 
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-            // for exp2(bit_index) - 1, all bits less significant than bit_index are set (representing ticks greater than current tick)
-            // now the next tick is at the most significant bit in the masked bitmap
-            let masked = bitmap & mask(bit_index);
 
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
-                if (next > max_tick()) {
-                    return (max_tick(), false);
-                }
-                if (skip_ahead == 0) {
-                    (next, false)
-                } else {
-                    self.next_initialized_tick(pool_key, next, skip_ahead - 1)
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, msb(masked)), pool_key.tick_spacing), true)
+            match bitmap.next_set_bit(bit_index) {
+                Option::Some(next_bit) => {
+                    (
+                        word_and_bit_index_to_tick((word_index, next_bit), pool_key.tick_spacing),
+                        true
+                    )
+                },
+                Option::None(_) => {
+                    let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
+                    if (next > max_tick()) {
+                        return (max_tick(), false);
+                    }
+                    if (skip_ahead.is_zero()) {
+                        (next, false)
+                    } else {
+                        self.next_initialized_tick(pool_key, next, skip_ahead - 1)
+                    }
+                },
             }
         }
 
@@ -376,26 +383,30 @@ mod Core {
 
             let bitmap = self.tick_bitmaps.read((pool_key, word_index));
 
-            let mask = ~(exp2(bit_index) - 1); // all bits at or to the left of from are 0
-
-            let masked = bitmap & mask;
-
-            // if it's 0, we know there is no set bit in this word
-            if (masked == 0) {
-                let prev = word_and_bit_index_to_tick((word_index, 127), pool_key.tick_spacing);
-                if (prev < min_tick()) {
-                    return (min_tick(), false);
+            match bitmap.prev_set_bit(bit_index) {
+                Option::Some(prev_bit_index) => {
+                    (
+                        word_and_bit_index_to_tick(
+                            (word_index, prev_bit_index), pool_key.tick_spacing
+                        ),
+                        true
+                    )
+                },
+                Option::None(_) => {
+                    // if it's not set, we know there is no set bit in this word
+                    let prev = word_and_bit_index_to_tick((word_index, 250), pool_key.tick_spacing);
+                    if (prev < min_tick()) {
+                        return (min_tick(), false);
+                    }
+                    if (skip_ahead == 0) {
+                        (prev, false)
+                    } else {
+                        self
+                            .prev_initialized_tick(
+                                pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
+                            )
+                    }
                 }
-                if (skip_ahead == 0) {
-                    (prev, false)
-                } else {
-                    self
-                        .prev_initialized_tick(
-                            pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
-                        )
-                }
-            } else {
-                (word_and_bit_index_to_tick((word_index, lsb(masked)), pool_key.tick_spacing), true)
             }
         }
 
@@ -412,7 +423,7 @@ mod Core {
             self.reserves.write(token, self.reserves.read(token) - amount.into());
 
             IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
-            self.emit(FeesWithdrawn { recipient, token, amount });
+            self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
         fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
@@ -522,15 +533,19 @@ mod Core {
             balance_next
         }
 
+        fn maybe_initialize_pool(
+            ref self: ContractState, pool_key: PoolKey, initial_tick: i129
+        ) -> Option<u256> {
+            let price = self.pool_price.read(pool_key);
+            if (price.sqrt_ratio.is_zero()) {
+                Option::Some(self.initialize_pool(pool_key, initial_tick))
+            } else {
+                Option::None(())
+            }
+        }
+
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
-            // token0 is always l.t. token1
-            assert(pool_key.token0 < pool_key.token1, 'TOKEN_ORDER');
-            assert(pool_key.token0.is_non_zero(), 'TOKEN_ZERO');
-            assert(
-                (pool_key.tick_spacing.is_non_zero())
-                    & (pool_key.tick_spacing <= tick_constants::MAX_TICK_SPACING),
-                'TICK_SPACING'
-            );
+            pool_key.check_valid();
 
             let price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
@@ -620,7 +635,7 @@ mod Core {
             };
 
             // account the withdrawal protocol fee, because it's based on the deltas
-            if (params.liquidity_delta.sign) {
+            if (params.liquidity_delta.is_negative()) {
                 let amount0_fee = compute_fee(delta.amount0.mag, pool_key.fee);
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
@@ -654,7 +669,7 @@ mod Core {
                 }
 
                 delta -= withdrawal_fee_delta;
-                self.emit(FeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
+                self.emit(ProtocolFeesPaid { pool_key, position_key, delta: withdrawal_fee_delta });
             }
 
             let get_position_result = self.get_position_with_fees(pool_key, position_key);
@@ -860,12 +875,12 @@ mod Core {
                         };
 
                     if (is_initialized) {
-                        let tick_data = self.ticks.read((pool_key, next_tick));
+                        let liquidity_delta = self.tick_liquidity_delta.read((pool_key, next_tick));
                         // update our working liquidity based on the direction we are crossing the tick
                         if (increasing) {
-                            liquidity = liquidity.add(tick_data.liquidity_delta);
+                            liquidity = liquidity.add(liquidity_delta);
                         } else {
-                            liquidity = liquidity.sub(tick_data.liquidity_delta);
+                            liquidity = liquidity.sub(liquidity_delta);
                         }
 
                         // update the tick fee state

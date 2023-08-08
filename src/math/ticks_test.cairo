@@ -17,37 +17,25 @@ fn zero_tick() {
 #[test]
 fn sqrt_ratio_of_max_tick_spacing() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: false });
-    assert(
-        sqrt_ratio == u256 { high: 1, low: 0x6a09ec040c2369e15dce90e9f15668da },
-        'sqrt_ratio is ~= sqrt(2)'
-    );
+    assert(sqrt_ratio == u256 { high: 1, low: 0x31b4b265e1423f777a15722778490040 }, 'sqrt_ratio');
 }
 
 #[test]
 fn sqrt_ratio_of_double_max_tick_spacing() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: false });
-    assert(
-        sqrt_ratio == u256 { high: 2, low: 0xfdde43478607c0af52ed8d4de41 },
-        'sqrt_ratio is ~= sqrt(4)'
-    );
+    assert(sqrt_ratio == u256 { high: 1, low: 0x6d1010a21e56762f95a886eb89babb3a }, 'sqrt_ratio');
 }
 
 #[test]
 fn sqrt_ratio_of_max_tick_spacing_negative() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING, sign: true });
-    assert(
-        sqrt_ratio == u256 { high: 0, low: 0xb504f065edb6345da9e39ee5dc758249 },
-        'sqrt_ratio is ~= sqrt(1/2)'
-    );
+    assert(sqrt_ratio == u256 { high: 0, low: 0xd660423f1925f68c36dac925648cd720 }, 'sqrt_ratio');
 }
 
 #[test]
 fn sqrt_ratio_of_double_max_tick_spacing_negative() {
     let sqrt_ratio = tick_to_sqrt_ratio(i129 { mag: constants::MAX_TICK_SPACING * 2, sign: true });
-    assert(
-        sqrt_ratio == u256 { high: 0, low: 0x7ffffc0887125a0925d8fce4c4ea9fcc },
-        'sqrt_ratio is ~= sqrt(1/4)'
-    );
+    assert(sqrt_ratio == u256 { high: 0, low: 0xb38512f33e82ed304b270175c43d864c }, 'sqrt_ratio');
 }
 
 #[test]

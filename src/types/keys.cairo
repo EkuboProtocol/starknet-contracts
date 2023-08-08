@@ -1,17 +1,20 @@
-use hash::pedersen;
+use hash::{pedersen};
 use starknet::{contract_address_const, ContractAddress};
 use option::{Option, OptionTrait};
 use traits::{Into, TryInto};
-use hash::LegacyHash;
-use zeroable::Zeroable;
-use ekubo::types::i129::i129;
-use ekubo::types::bounds::Bounds;
+use hash::{LegacyHash};
+use zeroable::{Zeroable};
+use ekubo::types::i129::{i129};
+use ekubo::types::bounds::{Bounds};
+use ekubo::math::ticks::{constants as tick_constants};
+use ekubo::math::contract_address::{ContractAddressOrder};
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)
 // token1 is the token with the larger address (sorted by integer value)
 // fee is specified as a 0.128 number, so 1% == 2**128 / 100
 // tick_spacing is the minimum spacing between initialized ticks, i.e. ticks that positions may use
+// extension is the address of a contract that implements additional functionality for the pool
 #[derive(Copy, Drop, Serde)]
 struct PoolKey {
     token0: ContractAddress,
@@ -19,6 +22,19 @@ struct PoolKey {
     fee: u128,
     tick_spacing: u128,
     extension: ContractAddress,
+}
+
+#[generate_trait]
+impl PoolKeyTraitImpl of PoolKeyTrait {
+    fn check_valid(self: PoolKey) {
+        assert(self.token0 < self.token1, 'TOKEN_ORDER');
+        assert(self.token0.is_non_zero(), 'TOKEN_NON_ZERO');
+        assert(
+            (self.tick_spacing.is_non_zero())
+                & (self.tick_spacing <= tick_constants::MAX_TICK_SPACING),
+            'TICK_SPACING'
+        );
+    }
 }
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
@@ -36,6 +52,9 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
     }
 }
 
+// salt is a random number specified by the owner to allow a single address to control many positions with the same pool and bounds
+// owner is the immutable address of the position
+// bounds is the price range where the liquidity of the position is active
 #[derive(Copy, Drop, Serde)]
 struct PositionKey {
     salt: u64,
@@ -45,8 +64,8 @@ struct PositionKey {
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        pedersen(
-            state, pedersen(value.salt.into(), pedersen(value.owner.into(), value.bounds.into()))
+        LegacyHash::hash(
+            pedersen(state, pedersen(value.salt.into(), value.owner.into())), value.bounds
         )
     }
 }

@@ -10,13 +10,13 @@ use ekubo::interfaces::core::{
     SwapParameters, UpdatePositionParameters
 };
 use ekubo::tests::mocks::locker::{ICoreLockerDispatcher, ICoreLockerDispatcherTrait};
-use ekubo::types::keys::PoolKey;
-use ekubo::types::bounds::Bounds;
-use ekubo::types::i129::i129;
+use ekubo::types::keys::{PoolKey};
+use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::i129::{i129};
 use ekubo::types::delta::Delta;
 use starknet::testing::{set_contract_address};
 use starknet::{get_contract_address};
-use zeroable::Zeroable;
+use zeroable::{Zeroable};
 use ekubo::types::call_points::{CallPoints, all_call_points};
 
 fn setup(
@@ -26,7 +26,7 @@ fn setup(
 ) {
     let core = deploy_core();
     let locker = deploy_locker(core);
-    let extension = deploy_mock_extension(core, locker, call_points);
+    let extension = deploy_mock_extension(core, call_points);
     let token0 = deploy_mock_token();
     let token1 = deploy_mock_token();
     (
@@ -134,7 +134,7 @@ fn test_mock_extension_update_position_is_called() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -164,7 +164,7 @@ fn test_mock_extension_no_call_points() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -209,7 +209,7 @@ fn test_mock_extension_after_initialize_pool_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -255,7 +255,7 @@ fn test_mock_extension_before_swap_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -300,7 +300,7 @@ fn test_mock_extension_after_swap_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -346,7 +346,7 @@ fn test_mock_extension_before_update_position_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -391,7 +391,7 @@ fn test_mock_extension_after_update_position_only() {
         core: core,
         pool_key: pool_key,
         locker: locker,
-        bounds: Default::default(),
+        bounds: max_bounds(1),
         liquidity_delta: Zeroable::zero(),
         recipient: Zeroable::zero(),
     );
@@ -413,5 +413,77 @@ fn test_mock_extension_after_update_position_only() {
     let call = mock.get_call(1);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 5, 'called');
+    check_matches_pool_key(call, pool_key);
+}
+
+#[test]
+#[available_gas(30000000)]
+fn test_mock_extension_is_called_back_into_other_pool() {
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+
+    // shadow the mock variable
+    let other_mock = deploy_mock_extension(core, all_call_points());
+
+    core.initialize_pool(pool_key, Zeroable::zero());
+
+    // because the other mock is calling into the pool, the extension should get hit every time
+    other_mock.call_into_pool(pool_key);
+
+    assert(mock.get_num_calls() == 6, '# calls made');
+
+    let call = mock.get_call(0);
+    assert(call.caller == get_contract_address(), 'before initialize caller');
+    assert(call.call_point == 0, 'before init');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(1);
+    assert(call.caller == get_contract_address(), 'after initialize caller');
+    assert(call.call_point == 1, 'after init');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(2);
+    assert(call.caller == other_mock.contract_address, 'before swap caller');
+    assert(call.call_point == 2, 'before swap');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(3);
+    assert(call.caller == other_mock.contract_address, 'after swap caller');
+    assert(call.call_point == 3, 'after init');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(4);
+    assert(call.caller == other_mock.contract_address, 'before update caller');
+    assert(call.call_point == 4, 'before update');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(5);
+    assert(call.caller == other_mock.contract_address, 'after update caller');
+    assert(call.call_point == 5, 'after update');
+    check_matches_pool_key(call, pool_key);
+}
+
+#[test]
+#[available_gas(30000000)]
+fn test_mock_extension_not_called_back_into_own_pool() {
+    let (core, mock, extension, locker, pool_key) = setup(
+        fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+
+    core.initialize_pool(pool_key, Zeroable::zero());
+
+    mock.call_into_pool(pool_key);
+
+    assert(mock.get_num_calls() == 2, '2 call made');
+
+    let call = mock.get_call(0);
+    assert(call.caller == get_contract_address(), 'before initialize caller');
+    assert(call.call_point == 0, 'before init');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(1);
+    assert(call.caller == get_contract_address(), 'after initialize caller');
+    assert(call.call_point == 1, 'after init');
     check_matches_pool_key(call, pool_key);
 }

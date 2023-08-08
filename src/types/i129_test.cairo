@@ -4,7 +4,23 @@ use zeroable::Zeroable;
 use option::{Option, OptionTrait};
 use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
+use ekubo::tests::store_packing_test::{assert_round_trip};
+use hash::{LegacyHash};
+use ekubo::types::keys_test::{check_hashes_differ};
 
+#[test]
+fn test_legacy_hash_i129() {
+    check_hashes_differ(i129 { mag: 0, sign: false }, i129 { mag: 1, sign: false });
+    check_hashes_differ(i129 { mag: 1, sign: true }, i129 { mag: 1, sign: false });
+    check_hashes_differ(i129 { mag: 1, sign: true }, i129 { mag: 0, sign: false });
+
+    assert(
+        LegacyHash::hash(
+            0, i129 { mag: 0, sign: false }
+        ) == LegacyHash::hash(0, i129 { mag: 0, sign: true }),
+        'hash of 0'
+    );
+}
 
 #[test]
 fn test_zeroable() {
@@ -113,6 +129,15 @@ fn test_mul_positive_negative() {
     assert(x == i129 { mag: 0x1, sign: true }, '1 * -1 = -1');
 }
 
+#[test]
+fn test_round_trip_many_values() {
+    assert_round_trip(i129 { mag: 0, sign: false });
+    assert_round_trip(i129 { mag: 0, sign: true });
+    assert_round_trip(i129 { mag: 1, sign: false });
+    assert_round_trip(i129 { mag: 1, sign: true });
+    assert_round_trip(i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true });
+    assert_round_trip(i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false });
+}
 
 #[test]
 #[available_gas(3000000)]
