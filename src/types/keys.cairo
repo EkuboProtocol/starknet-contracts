@@ -15,7 +15,7 @@ use ekubo::math::contract_address::{ContractAddressOrder};
 // fee is specified as a 0.128 number, so 1% == 2**128 / 100
 // tick_spacing is the minimum spacing between initialized ticks, i.e. ticks that positions may use
 // extension is the address of a contract that implements additional functionality for the pool
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
@@ -55,7 +55,7 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
 // salt is a random number specified by the owner to allow a single address to control many positions with the same pool and bounds
 // owner is the immutable address of the position
 // bounds is the price range where the liquidity of the position is active
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct PositionKey {
     salt: u64,
     owner: ContractAddress,

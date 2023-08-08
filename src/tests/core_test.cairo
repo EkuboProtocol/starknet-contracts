@@ -3,7 +3,7 @@ use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use starknet::contract_address_const;
 use starknet::ContractAddress;
-use starknet::testing::{set_contract_address};
+use starknet::testing::{set_contract_address, pop_log};
 use integer::u256;
 use integer::u256_from_felt252;
 use integer::BoundedInt;
@@ -13,7 +13,8 @@ use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::math::ticks::{
-    max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants
+    max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants,
+    tick_to_sqrt_ratio
 };
 use ekubo::math::muldiv::{div};
 use array::{ArrayTrait};
@@ -36,13 +37,13 @@ mod owner_tests {
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
         IMockERC20DispatcherTrait, ContractAddress, Into, IUpgradeableDispatcher,
-        IUpgradeableDispatcherTrait
+        IUpgradeableDispatcherTrait, pop_log
     };
     use ekubo::owner::owner;
 
     use debug::PrintTrait;
 
-    use starknet::class_hash::Felt252TryIntoClassHash;
+    use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
 
 
     #[test]
@@ -80,9 +81,13 @@ mod owner_tests {
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
         set_contract_address(owner());
+        let class_hash: ClassHash = MockERC20::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher {
             contract_address: core.contract_address
-        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        }.replace_class_hash(class_hash);
+
+        let event: ekubo::core::Core::ClassHashReplaced = pop_log(core.contract_address).unwrap();
+        assert(event.new_class_hash == class_hash, 'event.class_hash');
     }
 
     #[test]
@@ -123,12 +128,12 @@ mod owner_tests {
 mod initialize_pool_tests {
     use super::{
         PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
-        OptionTrait
+        OptionTrait, pop_log, tick_to_sqrt_ratio
     };
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
-    #[available_gas(3000000)]
+    #[available_gas(4000000)]
     fn test_initialize_pool_works_uninitialized() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -151,6 +156,12 @@ mod initialize_pool_tests {
         assert(price.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
+
+        let event: ekubo::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
+        assert(event.pool_key == pool_key, 'event.pool_key');
+        assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
+        assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');
+        assert(event.call_points == Default::default(), 'event.call_points');
     }
 
     #[test]

@@ -6,7 +6,7 @@ use traits::{Into};
 use hash::{LegacyHash};
 
 // Tick bounds for a position
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct Bounds {
     lower: i129,
     upper: i129
