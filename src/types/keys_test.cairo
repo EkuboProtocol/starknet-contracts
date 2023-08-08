@@ -4,7 +4,6 @@ use ekubo::types::bounds::{Bounds};
 use starknet::{contract_address_const};
 use hash::{LegacyHash};
 use ekubo::math::ticks::{constants as tick_constants};
-use debug::PrintTrait;
 
 fn check_hashes_differ<
     T, impl TLegacyHash: LegacyHash<T>, impl TCopy: Copy<T>, impl TDrop: Drop<T>

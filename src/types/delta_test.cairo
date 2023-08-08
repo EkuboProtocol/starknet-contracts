@@ -1,6 +1,6 @@
 use ekubo::types::i129::{i129};
 use ekubo::types::delta::{Delta};
-use zeroable::Zeroable;
+use zeroable::{Zeroable};
 
 #[test]
 fn test_delta_zeroable() {
