@@ -142,6 +142,47 @@ fn test_nft_indexing_token_ids() {
 
 #[test]
 #[available_gas(300000000)]
+fn test_nft_indexing_token_ids_not_sorted() {
+    let (controller, nft) = deploy_default();
+
+    switch_to_controller();
+
+    let alice = contract_address_const::<912345>();
+    let bob = contract_address_const::<9123456>();
+
+    let id_1 = controller.mint(alice);
+    let id_2 = controller.mint(bob);
+    let id_3 = controller.mint(alice);
+    let id_4 = controller.mint(bob);
+    let id_5 = controller.mint(alice);
+
+    assert(nft.balanceOf(alice) == 3, 'balance alice');
+    assert(nft.balanceOf(bob) == 2, 'balance bob');
+
+    assert(controller.get_all_owned_tokens(alice).len() == 3, 'len alice');
+    assert(controller.get_all_owned_tokens(bob).len() == 2, 'len bob');
+
+    set_contract_address(alice);
+    nft.transferFrom(alice, bob, id_3.into());
+    set_contract_address(bob);
+    nft.transferFrom(bob, alice, id_4.into());
+
+    assert(nft.balanceOf(alice) == 3, 'balance alice after');
+    let mut alices = controller.get_all_owned_tokens(alice);
+    assert(alices.len() == 3, 'len after');
+    assert(alices.pop_front().unwrap() == 4, 'alice.0');
+    assert(alices.pop_front().unwrap() == 5, 'alice.1');
+    assert(alices.pop_front().unwrap() == 1, 'alice.2');
+
+    assert(nft.balanceOf(bob) == 2, 'balance bob after');
+    let mut bobs = controller.get_all_owned_tokens(bob);
+    assert(bobs.len() == 2, 'len after');
+    assert(bobs.pop_front().unwrap() == 3, 'bob.0');
+    assert(bobs.pop_front().unwrap() == 2, 'bob.1');
+}
+
+#[test]
+#[available_gas(300000000)]
 fn test_nft_indexing_token_ids_snake_case() {
     let (controller, nft) = deploy_enumerable_owned_nft(
         default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'

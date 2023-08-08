@@ -140,21 +140,9 @@ mod EnumerableOwnedNFT {
         }
 
         fn tokens_by_owner_insert(ref self: ContractState, owner: ContractAddress, id: u64) {
-            let mut curr = self.tokens_by_owner.read((owner, 0));
-
-            loop {
-                if (curr < id) {
-                    let next = self.tokens_by_owner.read((owner, curr));
-                    if (next == 0 || next > id) {
-                        self.tokens_by_owner.write((owner, curr), id);
-                        self.tokens_by_owner.write((owner, id), next);
-                        break ();
-                    }
-                    curr = next;
-                } else {
-                    curr = self.tokens_by_owner.read((owner, curr));
-                };
-            };
+            let head = self.tokens_by_owner.read((owner, 0));
+            self.tokens_by_owner.write((owner, 0), id);
+            self.tokens_by_owner.write((owner, id), head);
         }
 
         fn tokens_by_owner_remove(ref self: ContractState, owner: ContractAddress, id: u64) {
@@ -162,7 +150,8 @@ mod EnumerableOwnedNFT {
 
             loop {
                 let next = self.tokens_by_owner.read((owner, curr));
-                assert(next <= id, 'TOKEN_NOT_FOUND');
+
+                assert(next.is_non_zero(), 'TOKEN_NOT_FOUND');
 
                 if (next == id) {
                     self
