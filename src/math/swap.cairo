@@ -72,12 +72,12 @@ fn swap_result(
     let mut sqrt_ratio_next: u256 = if (is_token1) {
         match next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, with_fee) {
             Option::Some(next) => next,
-            Option::None(_) => sqrt_ratio_limit
+            Option::None => sqrt_ratio_limit
         }
     } else {
         match next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, with_fee) {
             Option::Some(next) => next,
-            Option::None(_) => sqrt_ratio_limit
+            Option::None => sqrt_ratio_limit
         }
     };
 

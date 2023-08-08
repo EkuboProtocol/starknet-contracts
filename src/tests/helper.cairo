@@ -338,11 +338,11 @@ fn update_position_inner(
                 (pool_key, UpdatePositionParameters { bounds, liquidity_delta, salt: 0 }, recipient)
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -402,11 +402,11 @@ fn accumulate_as_fees_inner(
     amount1: u128,
 ) -> Delta {
     match locker.call(Action::AccumulateAsFees((pool_key, amount0, amount1))) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -460,11 +460,11 @@ fn swap_inner(
                 )
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },

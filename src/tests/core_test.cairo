@@ -2013,10 +2013,10 @@ mod save_load_tests {
         let recipient = locker.contract_address;
 
         match locker.call(Action::SaveBalance((token.contract_address, cache_key, recipient, 1))) {
-            ActionResult::AssertLockerId(_) => {
+            ActionResult::AssertLockerId => {
                 assert(false, 'unexpected');
             },
-            ActionResult::Relock(_) => {
+            ActionResult::Relock => {
                 assert(false, 'unexpected');
             },
             ActionResult::UpdatePosition(delta) => {
@@ -2052,10 +2052,10 @@ mod save_load_tests {
         );
 
         match locker.call(Action::LoadBalance((token.contract_address, cache_key, recipient, 1))) {
-            ActionResult::AssertLockerId(_) => {
+            ActionResult::AssertLockerId => {
                 assert(false, 'unexpected');
             },
-            ActionResult::Relock(_) => {
+            ActionResult::Relock => {
                 assert(false, 'unexpected');
             },
             ActionResult::UpdatePosition(delta) => {
