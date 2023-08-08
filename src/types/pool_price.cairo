@@ -7,7 +7,7 @@ use option::{OptionTrait, Option};
 use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
 
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolPrice {
     // the current ratio, up to 192 bits
     sqrt_ratio: u256,

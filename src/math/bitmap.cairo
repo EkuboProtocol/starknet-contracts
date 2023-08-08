@@ -7,7 +7,7 @@ use ekubo::math::mask::{mask};
 use traits::{Into, TryInto};
 use zeroable::{Zeroable};
 
-#[derive(Copy, Drop, starknet::Store)]
+#[derive(Copy, Drop, starknet::Store, PartialEq)]
 struct Bitmap {
     // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
     value: felt252

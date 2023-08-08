@@ -9,7 +9,7 @@ use zeroable::Zeroable;
 // calculated_amount is how much of the other token is given
 // sqrt_ratio_next is the next ratio, limited to the given sqrt_ratio_limit
 // fee_amount is the amount of fee collected, always in terms of the specified amount
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct SwapResult {
     consumed_amount: i129,
     calculated_amount: u128,

@@ -4,26 +4,13 @@ use starknet::storage_access::{StorePacking};
 use traits::{Into};
 
 // The points at which an extension should be called
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct CallPoints {
     after_initialize_pool: bool,
     before_swap: bool,
     after_swap: bool,
     before_update_position: bool,
     after_update_position: bool,
-}
-
-impl CallPointsPartialEq of PartialEq<CallPoints> {
-    fn eq(lhs: @CallPoints, rhs: @CallPoints) -> bool {
-        (lhs.after_initialize_pool == rhs.after_initialize_pool)
-            & (lhs.before_swap == rhs.before_swap)
-            & (lhs.after_swap == rhs.after_swap)
-            & (lhs.before_update_position == rhs.before_update_position)
-            & (lhs.after_update_position == rhs.after_update_position)
-    }
-    fn ne(lhs: @CallPoints, rhs: @CallPoints) -> bool {
-        !PartialEq::<CallPoints>::eq(lhs, rhs)
-    }
 }
 
 impl CallPointsDefault of Default<CallPoints> {
