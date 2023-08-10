@@ -148,12 +148,10 @@ fn test_place_order_creates_position_at_tick() {
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
-    let id = lo
-        .place_order(
-            OrderKey {
-                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
-            }
-        );
+    let order_key = OrderKey {
+        sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+    };
+    let id = lo.place_order(order_key);
     assert(id == 1, 'id');
 
     t0.increase_balance(lo.contract_address, 200);
@@ -165,12 +163,12 @@ fn test_place_order_creates_position_at_tick() {
         );
     assert(id_2 == 2, 'id_2');
 
-    let oi_1 = lo.get_order_state(id);
+    let oi_1 = lo.get_order_state(order_key, id);
     let nft = IERC721Dispatcher { contract_address: lo.get_nft_address() };
     assert(nft.ownerOf(id.into()) == get_contract_address(), 'owner of 1');
     assert(oi_1.liquidity == 200000350, 'liquidity');
 
-    let oi_2 = lo.get_order_state(id_2);
+    let oi_2 = lo.get_order_state(order_key, id_2);
     assert(nft.ownerOf(id_2.into()) == get_contract_address(), 'owner of 2');
     assert(oi_2.liquidity == 400000700, 'liquidity_2');
 

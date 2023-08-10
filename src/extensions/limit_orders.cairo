@@ -18,7 +18,6 @@ impl OrderKeyHash of LegacyHash<OrderKey> {
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct OrderState {
-    order_key_hash: felt252,
     epoch: u64,
     liquidity: u128,
 }
@@ -38,7 +37,7 @@ trait ILimitOrders<TContractState> {
     fn get_nft_address(self: @TContractState) -> ContractAddress;
 
     // Returns the stored order state
-    fn get_order_state(self: @TContractState, id: u64) -> OrderState;
+    fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
 
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
     // The size of the new order is determined by the current balance of the sell token
@@ -46,13 +45,17 @@ trait ILimitOrders<TContractState> {
 
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
     fn close_order(
-        ref self: TContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
+        ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
     ) -> (u128, u128);
+
+    // Clear the token balance held by this contract
+    // This contract is non-custodial, i.e. never holds a balance on behalf of a user
+    fn clear(ref self: TContractState, token: ContractAddress) -> u256;
 }
 
 #[starknet::contract]
 mod LimitOrders {
-    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState};
+    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState, LegacyHash};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
@@ -80,7 +83,7 @@ mod LimitOrders {
         core: ICoreDispatcher,
         nft: IEnumerableOwnedNFTDispatcher,
         pools: LegacyMap<PoolKey, PoolState>,
-        orders: LegacyMap<u64, OrderState>,
+        orders: LegacyMap<(OrderKey, u64), OrderState>,
         tick_last_cross_epoch: LegacyMap<(PoolKey, i129), u64>,
     }
 
@@ -330,8 +333,8 @@ mod LimitOrders {
         }
 
 
-        fn get_order_state(self: @ContractState, id: u64) -> OrderState {
-            self.orders.read(id)
+        fn get_order_state(self: @ContractState, order_key: OrderKey, id: u64) -> OrderState {
+            self.orders.read((order_key, id))
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey) -> u64 {
@@ -389,12 +392,8 @@ mod LimitOrders {
             self
                 .orders
                 .write(
-                    id,
-                    OrderState {
-                        order_key_hash: hash::LegacyHash::hash(0, order_key),
-                        epoch: self.pools.read(pool_key).epoch,
-                        liquidity
-                    }
+                    (order_key, id),
+                    OrderState { epoch: self.pools.read(pool_key).epoch, liquidity }
                 );
 
             let result: LockCallbackResult = call_core_with_callback(
@@ -408,11 +407,25 @@ mod LimitOrders {
         }
 
         fn close_order(
-            ref self: ContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
+            ref self: ContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
         ) -> (u128, u128) {
-            assert(self.nft.read().is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            let nft = self.nft.read();
+            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            nft.burn(id);
+
+            let order = self.orders.read((order_key, id));
+            assert(order.liquidity.is_non_zero(), 'INVALID_ORDER');
 
             (0, 0)
+        }
+
+        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
+            let dispatcher = IERC20Dispatcher { contract_address: token };
+            let balance = dispatcher.balanceOf(get_contract_address());
+            if (balance.is_non_zero()) {
+                dispatcher.transfer(get_caller_address(), balance);
+            }
+            balance
         }
     }
 }
