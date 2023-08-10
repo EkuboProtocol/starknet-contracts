@@ -95,6 +95,8 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
+    Serde::serialize(@'limit_orders://', ref constructor_args);
 
     let (address, _) = deploy_syscall(
         LimitOrders::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true

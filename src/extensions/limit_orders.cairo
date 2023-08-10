@@ -1,3 +1,4 @@
+use ekubo::enumerable_owned_nft::IEnumerableOwnedNFTDispatcherTrait;
 use ekubo::types::i129::{i129};
 use starknet::{ContractAddress};
 
@@ -24,9 +25,7 @@ trait ILimitOrders<TContractState> {
     ) -> u64;
 
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
-    fn close_order(
-        ref self: TContractState, order_id: u64, recipient: ContractAddress
-    ) -> (u128, u128);
+    fn close_order(ref self: TContractState, id: u64, recipient: ContractAddress) -> (u128, u128);
 }
 
 #[starknet::contract]
@@ -37,12 +36,15 @@ mod LimitOrders {
         ICoreDispatcherTrait
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::enumerable_owned_nft::{
+        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+    };
     use ekubo::types::keys::{PoolKey, PositionKey};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use zeroable::{Zeroable};
-    use starknet::{get_contract_address, get_caller_address};
+    use starknet::{get_contract_address, get_caller_address, ClassHash};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::shared_locker::{call_core_with_callback};
     use array::{ArrayTrait};
@@ -54,15 +56,32 @@ mod LimitOrders {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
+        nft: IEnumerableOwnedNFTDispatcher,
         last_seen_pool_key_tick: LegacyMap<PoolKey, i129>,
         orders: LegacyMap<u64, OrderInfo>,
-        next_order_id: u64,
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, core: ICoreDispatcher) {
+    fn constructor(
+        ref self: ContractState,
+        core: ICoreDispatcher,
+        nft_class_hash: ClassHash,
+        token_uri_base: felt252,
+    ) {
         self.core.write(core);
-        self.next_order_id.write(1);
+
+        self
+            .nft
+            .write(
+                EnumerableOwnedNFT::deploy(
+                    nft_class_hash: nft_class_hash,
+                    controller: get_contract_address(),
+                    name: 'Ekubo Limit Order',
+                    symbol: 'eLO',
+                    token_uri_base: token_uri_base,
+                    salt: 0
+                )
+            );
     }
 
 
@@ -288,8 +307,8 @@ mod LimitOrders {
             // this allows us to optimize iterating through ticks, by only considering even ticks
             assert(tick.mag % 2 == 0, 'EVEN_TICKS_ONLY');
 
-            let order_id = self.next_order_id.read();
-            self.next_order_id.write(order_id + 1);
+            let id = self.nft.read().mint(get_caller_address());
+
             let (token0, token1, is_token1) = if (sell_token < buy_token) {
                 (sell_token, buy_token, false)
             } else {
@@ -334,8 +353,7 @@ mod LimitOrders {
             self
                 .orders
                 .write(
-                    order_id,
-                    OrderInfo { sell_token, buy_token, owner: get_caller_address(), liquidity }
+                    id, OrderInfo { sell_token, buy_token, owner: get_caller_address(), liquidity }
                 );
 
             let result: LockCallbackResult = call_core_with_callback(
@@ -345,14 +363,13 @@ mod LimitOrders {
                 )
             );
 
-            order_id
+            id
         }
 
         fn close_order(
-            ref self: ContractState, order_id: u64, recipient: ContractAddress
+            ref self: ContractState, id: u64, recipient: ContractAddress
         ) -> (u128, u128) {
-            let order_info = self.orders.read(order_id);
-            assert(get_caller_address() == order_info.owner, 'OWNER_ONLY');
+            assert(self.nft.read().is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
             (0, 0)
         }

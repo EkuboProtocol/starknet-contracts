@@ -27,7 +27,7 @@ mod EnumerableOwnedNFT {
     use array::{ArrayTrait};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
-        replace_class_syscall
+        replace_class_syscall, deploy_syscall
     };
 
     use ekubo::types::i129::{i129};
@@ -100,6 +100,30 @@ mod EnumerableOwnedNFT {
         self.symbol.write(symbol);
         self.token_uri_base.write(token_uri_base);
         self.next_token_id.write(1);
+    }
+
+    fn deploy(
+        nft_class_hash: ClassHash,
+        controller: ContractAddress,
+        name: felt252,
+        symbol: felt252,
+        token_uri_base: felt252,
+        salt: felt252
+    ) -> super::IEnumerableOwnedNFTDispatcher {
+        let mut calldata = ArrayTrait::<felt252>::new();
+        Serde::serialize(@controller, ref calldata);
+        Serde::serialize(@name, ref calldata);
+        Serde::serialize(@symbol, ref calldata);
+        Serde::serialize(@token_uri_base, ref calldata);
+
+        let (address, _) = deploy_syscall(
+            class_hash: nft_class_hash,
+            contract_address_salt: salt,
+            calldata: calldata.span(),
+            deploy_from_zero: false,
+        )
+            .unwrap_syscall();
+        super::IEnumerableOwnedNFTDispatcher { contract_address: address }
     }
 
     fn validate_token_id(token_id: u256) -> u64 {

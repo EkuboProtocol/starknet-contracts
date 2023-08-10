@@ -19,7 +19,7 @@ mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::enumerable_owned_nft::{
-        IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
     };
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
@@ -86,21 +86,18 @@ mod Positions {
     ) {
         self.core.write(core);
 
-        let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@get_contract_address(), ref calldata);
-        Serde::serialize(@'Ekubo Position NFT', ref calldata);
-        Serde::serialize(@'EpNFT', ref calldata);
-        Serde::serialize(@token_uri_base, ref calldata);
-
-        let (nft_address, _) = deploy_syscall(
-            class_hash: nft_class_hash,
-            contract_address_salt: 0,
-            calldata: calldata.span(),
-            deploy_from_zero: false,
-        )
-            .unwrap_syscall();
-
-        self.nft.write(IEnumerableOwnedNFTDispatcher { contract_address: nft_address });
+        self
+            .nft
+            .write(
+                EnumerableOwnedNFT::deploy(
+                    nft_class_hash: nft_class_hash,
+                    controller: get_contract_address(),
+                    name: 'Ekubo Position NFT',
+                    symbol: 'epNFT',
+                    token_uri_base: token_uri_base,
+                    salt: 0
+                )
+            );
     }
 
     // Compute the hash for a given position key
