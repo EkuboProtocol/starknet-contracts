@@ -1,4 +1,3 @@
-use ekubo::enumerable_owned_nft::IEnumerableOwnedNFTDispatcherTrait;
 use ekubo::types::i129::{i129};
 use starknet::{ContractAddress};
 
@@ -6,12 +5,14 @@ use starknet::{ContractAddress};
 struct OrderInfo {
     sell_token: ContractAddress,
     buy_token: ContractAddress,
-    owner: ContractAddress,
     liquidity: u128,
 }
 
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
+    // Return the NFT contract address that this contract uses to represent limit orders
+    fn get_nft_address(self: @TContractState) -> ContractAddress;
+
     // Returns the stored order state
     fn get_order_info(self: @TContractState, order_id: u64) -> OrderInfo;
 
@@ -292,6 +293,10 @@ mod LimitOrders {
 
     #[external(v0)]
     impl LimitOrderImpl of ILimitOrders<ContractState> {
+        fn get_nft_address(self: @ContractState) -> ContractAddress {
+            self.nft.read().contract_address
+        }
+
         fn get_order_info(self: @ContractState, order_id: u64) -> OrderInfo {
             self.orders.read(order_id)
         }
@@ -350,11 +355,7 @@ mod LimitOrders {
 
             assert(liquidity > 0, 'SELL_AMOUNT_TOO_SMALL');
 
-            self
-                .orders
-                .write(
-                    id, OrderInfo { sell_token, buy_token, owner: get_caller_address(), liquidity }
-                );
+            self.orders.write(id, OrderInfo { sell_token, buy_token, liquidity });
 
             let result: LockCallbackResult = call_core_with_callback(
                 core,

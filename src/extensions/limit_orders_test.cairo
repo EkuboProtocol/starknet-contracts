@@ -1,6 +1,10 @@
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
+use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::extensions::limit_orders::{ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait};
+use ekubo::enumerable_owned_nft::{
+    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
@@ -13,7 +17,7 @@ use ekubo::types::call_points::{CallPoints};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
-use traits::{TryInto};
+use traits::{TryInto, Into};
 use zeroable::{Zeroable};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
@@ -130,11 +134,12 @@ fn test_place_order_creates_position_at_tick() {
     assert(id_2 == 2, 'id_2');
 
     let oi_1 = lo.get_order_info(id);
-    assert(oi_1.owner == get_contract_address(), 'owner');
+    let nft = IERC721Dispatcher { contract_address: lo.get_nft_address() };
+    assert(nft.ownerOf(id.into()) == get_contract_address(), 'owner of 1');
     assert(oi_1.liquidity == 200000350, 'liquidity');
 
     let oi_2 = lo.get_order_info(id_2);
-    assert(oi_2.owner == get_contract_address(), 'owner_2');
+    assert(nft.ownerOf(id_2.into()) == get_contract_address(), 'owner of 2');
     assert(oi_2.liquidity == 400000700, 'liquidity_2');
 
     let position = core
