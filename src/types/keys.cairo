@@ -39,15 +39,9 @@ impl PoolKeyTraitImpl of PoolKeyTrait {
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
     fn hash(state: felt252, value: PoolKey) -> felt252 {
-        pedersen(
-            state,
-            pedersen(
-                pedersen(
-                    pedersen(value.token0.into(), value.token1.into()),
-                    pedersen(value.fee.into(), value.tick_spacing.into())
-                ),
-                value.extension.into()
-            )
+        LegacyHash::hash(
+            LegacyHash::hash(state, (value.token0, value.token1, value.fee, value.tick_spacing)),
+            value.extension
         )
     }
 }
@@ -64,8 +58,6 @@ struct PositionKey {
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        LegacyHash::hash(
-            pedersen(state, pedersen(value.salt.into(), value.owner.into())), value.bounds
-        )
+        LegacyHash::hash(state, (value.salt, value.owner, value.bounds))
     }
 }

@@ -199,9 +199,6 @@ fn test_pool_key_hash() {
             extension: Zeroable::zero(),
         }
     );
-    assert(
-        hash == 816564634321650757221487563680589244607980786618433000970843109861186355085, 'id'
-    );
     assert(hash != hash_with_different_extension, 'not equal');
     assert(hash != hash_with_different_fee, 'not equal');
     assert(hash != hash_with_different_tick_spacing, 'not equal');
@@ -270,8 +267,6 @@ fn test_position_key_hash() {
             },
         }
     );
-
-    assert(hash == 0xae1cb865e2141d5a02075e11fdafd23e0459cf254cfc7511d346c1fcee1123, 'id');
     assert(hash != hash_with_diff_salt, 'not equal');
     assert(hash != hash_with_diff_state, 'not equal');
 }

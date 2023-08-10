@@ -14,7 +14,7 @@ struct Bounds {
 
 impl BoundsLegacyHash of LegacyHash<Bounds> {
     fn hash(state: felt252, value: Bounds) -> felt252 {
-        LegacyHash::hash(LegacyHash::hash(state, value.lower), value.upper)
+        LegacyHash::hash(state, (value.lower, value.upper))
     }
 }
 
