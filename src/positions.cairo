@@ -33,7 +33,6 @@ mod Positions {
     struct Storage {
         core: ICoreDispatcher,
         nft: IEnumerableOwnedNFTDispatcher,
-        token_key_hashes: LegacyMap<u64, felt252>,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -100,11 +99,6 @@ mod Positions {
             );
     }
 
-    // Compute the hash for a given position key
-    fn hash_key(pool_key: PoolKey, bounds: Bounds) -> felt252 {
-        LegacyHash::hash(LegacyHash::hash(0, pool_key), bounds)
-    }
-
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
         pool_key: PoolKey,
@@ -133,11 +127,6 @@ mod Positions {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn check_key_hash(self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds) {
-            let key_hash = self.token_key_hashes.read(id);
-            assert(key_hash == hash_key(pool_key, bounds), 'POSITION_KEY');
-        }
-
         fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
             let balance = IERC20Dispatcher {
                 contract_address: token
@@ -246,9 +235,6 @@ mod Positions {
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
-            let key_hash = hash_key(pool_key, bounds);
-            self.token_key_hashes.write(id, key_hash);
-
             // contains the associated pool key and bounds which is never stored,
             // so it's important for indexing
             self.emit(PositionMinted { id, pool_key, bounds });
@@ -260,7 +246,6 @@ mod Positions {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
-            self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
             let position = core
                 .get_position(
@@ -269,16 +254,12 @@ mod Positions {
 
             assert(position.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
 
-            // delete the storage variables
-            self.token_key_hashes.write(id, 0);
-
             nft.burn(id);
         }
 
         fn get_token_info(
             self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> GetTokenInfoResult {
-            self.check_key_hash(id, pool_key, bounds);
             let core = self.core.read();
             let get_position_result = core
                 .get_position_with_fees(
@@ -312,8 +293,6 @@ mod Positions {
         ) -> u128 {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
-
-            self.check_key_hash(id, pool_key, bounds);
 
             let core = self.core.read();
             let price = core.get_pool_price(pool_key);
