@@ -1,6 +1,6 @@
 import { MAX_U128 } from "./constants";
 
-const SWAP_CASES: Array<{
+export const SWAP_CASES: Array<{
   amount: bigint;
   isToken1: boolean;
   priceLimit?: bigint;

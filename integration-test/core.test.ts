@@ -7,6 +7,8 @@ import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.casm.json";
 import { POOL_CASES } from "./pool-cases";
 import { getAccounts } from "./accounts";
+import { SWAP_CASES } from "./swap-cases";
+import { dump, load } from "./state-cache";
 
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
@@ -40,7 +42,7 @@ describe("core tests", () => {
 
   let core: Contract;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     console.log("Deploying core");
     const response = await accounts[0].declareAndDeploy(
       {
@@ -50,16 +52,17 @@ describe("core tests", () => {
       { maxFee: 10000000000000 } // workaround
     );
 
-    console.log(response);
+    // positions = await positionsContractFactory.deploy(
+    //   core.address,
+    //   "https://f.ekubo.org/"
+    // );
+
+    await dump();
   });
 
-  // beforeEach(async () => {
-  //   console.log("Deploying positions with core address", core.address);
-  //   positions = await positionsContractFactory.deploy(
-  //     core.address,
-  //     "https://f.ekubo.org/"
-  //   );
-  // });
+  beforeEach(async () => {
+    await load();
+  });
 
   it("works", () => {
     console.log("test body");
@@ -67,18 +70,18 @@ describe("core tests", () => {
 
   for (const poolCase of POOL_CASES) {
     describe(poolCase.name, () => {
-      // // set up the pool according to the pool case
-      // beforeEach(async () => {
-      //   console.log("Setting up pool");
-      // });
-      // then test swap for each swap case
-      // for (const swapCase of SWAP_CASES) {
-      //   it(`swap ${swapCase.amount} ${
-      //     swapCase.isToken1 ? "token1" : "token0"
-      //   }`, async () => {
-      //     expect("result").toMatchSnapshot();
-      //   });
-      // }
+      // set up the pool according to the pool case
+      beforeEach(async () => {
+        console.log(`Setting up pool for ${poolCase.name}`);
+      });
+
+      for (const swapCase of SWAP_CASES) {
+        it(`swap ${swapCase.amount} ${
+          swapCase.isToken1 ? "token1" : "token0"
+        }`, async () => {
+          console.log(`Swap test`);
+        });
+      }
     });
   }
 
