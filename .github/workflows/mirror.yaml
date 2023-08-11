@@ -38,6 +38,11 @@ jobs:
             --exclude="src/enumerable_owned_nft.cairo" \
             --exclude="src/asset_recovery.cairo" \
             --exclude="src/owner.cairo" \
+            --exclude="src/types.cairo" \
+            --exclude="src/math.cairo" \
+            --exclude="src/lib.cairo" \
+            --exclude="src/interfaces.cairo" \
+            --exclude="src/extensions.cairo" \
             src ../mirror
 
       - name: Push to destination repo
