@@ -1,199 +1,90 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
-import {
-  Account,
-  Contract,
-  ContractFactory,
-  hash,
-  RpcProvider,
-} from "starknet";
+import { Account, Contract, hash, Provider } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
 import CoreCompiledContractCASM from "../target/dev/ekubo_Core.casm.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.casm.json";
-
-function numberToFixedPoint128(x: number): bigint {
-  let power = 0;
-  while (x % 1 !== 0) {
-    power++;
-    x *= 10;
-  }
-
-  return (BigInt(x) * 2n ** 128n) / 10n ** BigInt(power);
-}
-
-const MAX_TICK_SPACING = 693148;
-const MAX_TICK = 88722883;
-const MIN_TICK = -88722883;
-
-const POOL_CASES: Array<{
-  name: string;
-  pool: {
-    starting_price: number;
-    tick_spacing: number;
-    fee: number;
-  };
-  positions: {
-    bounds: {
-      lower: number;
-      upper: number;
-    };
-    liquidity: bigint;
-  }[];
-}> = [
-  {
-    name: "no liquidity, starting at price 1, tick_spacing==1, fee=0.003",
-    pool: { starting_price: 1, tick_spacing: 1, fee: 0.003 },
-    positions: [],
-  },
-  {
-    name: "single position, full range liquidity, starting at price 1",
-    pool: {
-      starting_price: 1,
-      tick_spacing: 1,
-      fee: 0.003,
-    },
-    positions: [
-      { bounds: { lower: MIN_TICK, upper: MAX_TICK }, liquidity: 10000n },
-    ],
-  },
-];
-
-const MAX_U128 = 2n ** 128n - 1n;
-
-const SWAP_CASES: Array<{
-  amount: bigint;
-  isToken1: boolean;
-  priceLimit?: bigint;
-  skipAhead?: number;
-}> = [
-  {
-    amount: 10000n,
-    isToken1: true,
-  },
-  {
-    amount: 10000n,
-    isToken1: false,
-  },
-  {
-    amount: -10000n,
-    isToken1: true,
-  },
-  {
-    amount: -10000n,
-    isToken1: false,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: false,
-  },
-  {
-    amount: -MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: -MAX_U128,
-    isToken1: false,
-  },
-];
+import { POOL_CASES } from "./pool-cases";
+import { getAccounts } from "./accounts";
 
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
-  let rpcUrl: string;
   let accounts: Account[];
-  let provider: RpcProvider;
-  let coreContractFactory: ContractFactory;
-  let positionsContractFactory: ContractFactory;
+  let provider: Provider;
 
   beforeAll(() => {
-    starknetProcess = spawn("katana", ["--seed", "0"]);
+    console.log("Starting starknet devnet");
+    starknetProcess = spawn("starknet-devnet", ["--seed", "0"]);
 
     return new Promise((resolve) => {
-      starknetProcess.stdout.once("data", (data) => {
-        let str = data.toString("utf8");
+      // starknetProcess.stderr.on("data", (data) =>
+      //   console.error(data.toString("utf8"))
+      // );
+      // starknetProcess.stdout.on("data", (data) =>
+      //   console.log(data.toString("utf8"))
+      // );
 
-        rpcUrl = /(http:\/\/[\w\.:\d]+)/g
-          .exec(str)?.[1]
-          ?.replace(/0\.0\.0\.0/, "127.0.0.1");
-
-        provider = new RpcProvider({
-          nodeUrl: rpcUrl,
-        });
-
-        accounts = [
-          ...str.matchAll(
-            /\|\s+Account Address\s+\|\s+(0x[a-f0-9]+)\s+\|\s+Private key\s+\|\s+(0x[a-f0-9]+)\s+\|\s+Public key\s+\|\s+(0x[a-f0-9]+)/gi
-          ),
-        ]
-          .map((match) => ({
-            address: match[1],
-            privateKey: match[2],
-            publicKey: match[3],
-          }))
-          .map(
-            ({ address, privateKey }) =>
-              new Account(provider, address, privateKey)
-          );
-
-        resolve(null);
+      starknetProcess.stdout.on("data", (data) => {
+        if (data.toString("utf8").includes("Predeployed UDC")) {
+          console.log("Starknet devnet started");
+          provider = new Provider({
+            sequencer: { baseUrl: "http://127.0.0.1:5050" },
+          });
+          accounts = getAccounts(provider);
+          resolve(null);
+        }
       });
     });
   });
 
-  beforeAll(() => {
-    coreContractFactory = new ContractFactory({
-      compiledContract: CoreCompiledContract as any,
-      classHash: hash.computeContractClassHash(CoreCompiledContract as any),
-      account: accounts[0],
-      compiledClassHash: hash.computeCompiledClassHash(
-        CoreCompiledContractCASM as any
-      ),
-    });
-    positionsContractFactory = new ContractFactory({
-      compiledContract: PositionsCompiledContract as any,
-      classHash: hash.computeContractClassHash(
-        PositionsCompiledContract as any
-      ),
-      account: accounts[0],
-      compiledClassHash: hash.computeCompiledClassHash(
-        PositionsCompiledContractCASM as any
-      ),
-    });
-  });
-
   let core: Contract;
-  let positions: Contract;
 
   beforeEach(async () => {
-    core = await coreContractFactory.deploy();
-    positions = await positionsContractFactory.deploy(
-      core.address,
-      "https://f.ekubo.org/"
+    console.log("Deploying core");
+    const response = await accounts[0].declareAndDeploy(
+      {
+        contract: CoreCompiledContract as any,
+        casm: CoreCompiledContractCASM as any,
+      },
+      { maxFee: 10000000000000 } // workaround
     );
+
+    console.log(response);
+  });
+
+  // beforeEach(async () => {
+  //   console.log("Deploying positions with core address", core.address);
+  //   positions = await positionsContractFactory.deploy(
+  //     core.address,
+  //     "https://f.ekubo.org/"
+  //   );
+  // });
+
+  it("works", () => {
+    console.log("test body");
   });
 
   for (const poolCase of POOL_CASES) {
     describe(poolCase.name, () => {
-      // set up the pool according to the pool case
-      beforeEach(async () => {});
-
+      // // set up the pool according to the pool case
+      // beforeEach(async () => {
+      //   console.log("Setting up pool");
+      // });
       // then test swap for each swap case
-      for (const swapCase of SWAP_CASES) {
-        it(`swap ${swapCase.amount} ${
-          swapCase.isToken1 ? "token1" : "token0"
-        }`, async () => {
-          expect("result").toMatchSnapshot();
-        });
-      }
+      // for (const swapCase of SWAP_CASES) {
+      //   it(`swap ${swapCase.amount} ${
+      //     swapCase.isToken1 ? "token1" : "token0"
+      //   }`, async () => {
+      //     expect("result").toMatchSnapshot();
+      //   });
+      // }
     });
   }
 
   afterAll(async () => {
-    return new Promise((resolve) => {
+    console.log("Shutting down");
+    await new Promise((resolve) => {
       starknetProcess.on("close", () => {
         resolve(null);
       });
