@@ -25,7 +25,25 @@ jobs:
 
       - name: Copy matching files
         run: |
-          rsync --delete --delete-excluded -Rav --exclude='*_test.cairo' --exclude="tests" --exclude='tests.cairo' --exclude "tests/**/*.cairo" --exclude='option_incentives.cairo' --exclude="math/ticks" --exclude="math/ticks.cairo" --delete-excluded src ../mirror
+          rsync --delete --delete-excluded -Rav \
+            --exclude='*_test.cairo' \
+            --exclude="tests" \
+            --exclude='tests.cairo' \
+            --exclude "tests/**/*.cairo" \
+            --exclude='option_incentives.cairo' \
+            --exclude="math/ticks" \
+            --exclude="math/ticks.cairo" \
+            --exclude="src/positions.cairo" \
+            --exclude="src/interfaces/positions.cairo" \
+            --exclude="src/enumerable_owned_nft.cairo" \
+            --exclude="src/asset_recovery.cairo" \
+            --exclude="src/owner.cairo" \
+            --exclude="src/types.cairo" \
+            --exclude="src/math.cairo" \
+            --exclude="src/lib.cairo" \
+            --exclude="src/interfaces.cairo" \
+            --exclude="src/extensions.cairo" \
+            src ../mirror
 
       - name: Push to destination repo
         run: |

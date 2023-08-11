@@ -95,6 +95,8 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
+    Serde::serialize(@'limit_orders://', ref constructor_args);
 
     let (address, _) = deploy_syscall(
         LimitOrders::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -338,11 +340,11 @@ fn update_position_inner(
                 (pool_key, UpdatePositionParameters { bounds, liquidity_delta, salt: 0 }, recipient)
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -402,11 +404,11 @@ fn accumulate_as_fees_inner(
     amount1: u128,
 ) -> Delta {
     match locker.call(Action::AccumulateAsFees((pool_key, amount0, amount1))) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -460,11 +462,11 @@ fn swap_inner(
                 )
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },

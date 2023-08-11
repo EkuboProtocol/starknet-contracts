@@ -22,8 +22,8 @@ enum Action {
 
 #[derive(Copy, Drop, Serde)]
 enum ActionResult {
-    AssertLockerId: (),
-    Relock: (),
+    AssertLockerId,
+    Relock,
     UpdatePosition: Delta,
     Swap: Delta,
     SaveBalance: u128,

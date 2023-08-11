@@ -19,18 +19,6 @@ impl SwapResultPrintTrait of PrintTrait<SwapResult> {
 }
 
 
-impl SwapResultEq of PartialEq<SwapResult> {
-    fn eq(lhs: @SwapResult, rhs: @SwapResult) -> bool {
-        (*lhs.consumed_amount == *rhs.consumed_amount)
-            & (*lhs.sqrt_ratio_next == *rhs.sqrt_ratio_next)
-            & (*lhs.calculated_amount == *rhs.calculated_amount)
-            & (*lhs.fee_amount == *rhs.fee_amount)
-    }
-    fn ne(lhs: @SwapResult, rhs: @SwapResult) -> bool {
-        !PartialEq::<SwapResult>::eq(lhs, rhs)
-    }
-}
-
 #[test]
 fn test_is_price_increasing_cases() {
     assert(!is_price_increasing(exact_output: false, is_token1: false), 'input token0');

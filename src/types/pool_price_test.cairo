@@ -7,17 +7,6 @@ use zeroable::Zeroable;
 use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 
-impl PoolPricePartialEq of PartialEq<PoolPrice> {
-    fn eq(lhs: @PoolPrice, rhs: @PoolPrice) -> bool {
-        (lhs.sqrt_ratio == rhs.sqrt_ratio)
-            & (lhs.tick == rhs.tick)
-            & (lhs.call_points == rhs.call_points)
-    }
-    fn ne(lhs: @PoolPrice, rhs: @PoolPrice) -> bool {
-        !PartialEq::eq(lhs, rhs)
-    }
-}
-
 #[test]
 fn test_packing_round_trip_many_values() {
     assert_round_trip(

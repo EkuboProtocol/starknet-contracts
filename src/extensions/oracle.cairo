@@ -8,7 +8,7 @@ use starknet::{StorePacking};
 use integer::{u256_safe_divmod, u256_as_non_zero};
 
 // 192 bits total, fits in a single felt
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct PoolState {
     // 64 bits
     block_timestamp_last: u64,

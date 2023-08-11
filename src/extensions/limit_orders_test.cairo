@@ -1,6 +1,12 @@
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
-use ekubo::extensions::limit_orders::{ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait};
+use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+use ekubo::extensions::limit_orders::{
+    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState
+};
+use ekubo::enumerable_owned_nft::{
+    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
@@ -13,11 +19,12 @@ use ekubo::types::call_points::{CallPoints};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use option::{OptionTrait};
-use traits::{TryInto};
+use traits::{TryInto, Into};
 use zeroable::{Zeroable};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use debug::PrintTrait;
+use ekubo::types::keys_test::{check_hashes_differ};
 
 fn setup_pool_with_extension(
     initial_tick: i129
@@ -37,6 +44,31 @@ fn setup_pool_with_extension(
     core.initialize_pool(key, initial_tick);
 
     (core, ILimitOrdersDispatcher { contract_address: limit_orders.contract_address }, key)
+}
+
+#[test]
+fn test_order_key_hash() {
+    let base: OrderKey = OrderKey {
+        sell_token: Zeroable::zero(), buy_token: Zeroable::zero(), tick: Zeroable::zero(), 
+    };
+
+    let mut other_sell = base;
+    other_sell.sell_token = contract_address_const::<1>();
+
+    let mut other_buy = base;
+    other_buy.buy_token = contract_address_const::<1>();
+
+    let mut other_tick = base;
+    other_tick.tick = i129 { mag: 1, sign: false };
+
+    check_hashes_differ(base, other_sell);
+    check_hashes_differ(base, other_buy);
+    check_hashes_differ(base, other_tick);
+
+    check_hashes_differ(other_sell, other_buy);
+    check_hashes_differ(other_sell, other_tick);
+
+    check_hashes_differ(other_buy, other_tick);
 }
 
 #[test]
@@ -116,25 +148,28 @@ fn test_place_order_creates_position_at_tick() {
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
-    let id = lo
-        .place_order(
-            sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
-        );
+    let order_key = OrderKey {
+        sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+    };
+    let id = lo.place_order(order_key);
     assert(id == 1, 'id');
 
     t0.increase_balance(lo.contract_address, 200);
     let id_2 = lo
         .place_order(
-            sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+            OrderKey {
+                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+            }
         );
     assert(id_2 == 2, 'id_2');
 
-    let oi_1 = lo.get_order_info(id);
-    assert(oi_1.owner == get_contract_address(), 'owner');
+    let oi_1 = lo.get_order_state(order_key, id);
+    let nft = IERC721Dispatcher { contract_address: lo.get_nft_address() };
+    assert(nft.ownerOf(id.into()) == get_contract_address(), 'owner of 1');
     assert(oi_1.liquidity == 200000350, 'liquidity');
 
-    let oi_2 = lo.get_order_info(id_2);
-    assert(oi_2.owner == get_contract_address(), 'owner_2');
+    let oi_2 = lo.get_order_state(order_key, id_2);
+    assert(nft.ownerOf(id_2.into()) == get_contract_address(), 'owner of 2');
     assert(oi_2.liquidity == 400000700, 'liquidity_2');
 
     let position = core
@@ -155,7 +190,12 @@ fn test_place_order_creates_position_at_tick() {
 fn test_place_order_fails_odd_tick() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false });
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false }
+            }
+        );
 }
 
 
@@ -165,7 +205,10 @@ fn test_place_order_fails_odd_tick() {
 fn test_place_order_fails_price_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero());
+    lo
+        .place_order(
+            OrderKey { sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero() }
+        );
 }
 
 #[test]
@@ -174,7 +217,12 @@ fn test_place_order_fails_price_at_tick() {
 fn test_place_order_fails_tick_at_wrong_side_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: true });
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: true }
+            }
+        );
 }
 
 #[test]
@@ -183,7 +231,12 @@ fn test_place_order_fails_tick_at_wrong_side_sell_token0() {
 fn test_place_order_fails_tick_at_wrong_side_sell_token1() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: false });
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: false }
+            }
+        );
 }
 
 #[test]
@@ -194,9 +247,13 @@ fn test_place_order_fails_pool_not_initialized() {
 
     lo
         .place_order(
-            sell_token: contract_address_const::<12344>(),
-            buy_token: contract_address_const::<12345>(),
-            tick: i129 { mag: 2, sign: false }
+            OrderKey {
+                sell_token: contract_address_const::<12344>(),
+                buy_token: contract_address_const::<12345>(),
+                tick: i129 {
+                    mag: 2, sign: false
+                }
+            }
         );
 }
 
@@ -206,7 +263,12 @@ fn test_place_order_fails_pool_not_initialized() {
 fn test_place_order_fails_no_token0_transferred() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false });
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+            }
+        );
 }
 
 #[test]
@@ -215,5 +277,10 @@ fn test_place_order_fails_no_token0_transferred() {
 fn test_place_order_fails_no_token1_transferred() {
     let (core, lo, pk) = setup_pool_with_extension(Zeroable::zero());
 
-    lo.place_order(sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: true });
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: true }
+            }
+        );
 }
