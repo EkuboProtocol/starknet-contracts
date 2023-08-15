@@ -120,7 +120,6 @@ describe("core tests", () => {
             { Deposit: depositEvent },
           ] = positions.parseEvents(receipt);
           const [{ Transfer: transferEvent }] = nft.parseEvents(receipt);
-          console.log(positionMintedEvent, depositEvent, transferEvent);
           positionsToWithdraw.push({
             id: transferEvent.token_id as any,
             liquidity: depositEvent.liquidity as any,
@@ -143,7 +142,6 @@ describe("core tests", () => {
       }
 
       afterEach(async () => {
-        console.log(positionsToWithdraw);
         for (let i = 0; i < poolCasePositions.length; i++) {
           const { bounds } = poolCasePositions[i];
           await positions.invoke("withdraw", [
