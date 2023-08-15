@@ -23,7 +23,7 @@ describe("core tests", () => {
 
   let core: Contract;
   let positions: Contract;
-  let positionsNft: Contract;
+  let nft: Contract;
   let token0: Contract;
   let token1: Contract;
 
@@ -56,7 +56,7 @@ describe("core tests", () => {
       accounts[0]
     );
 
-    positionsNft = new Contract(
+    nft = new Contract(
       EnumerableOwnedNFTContract.abi,
       ADDRESSES.nftAddress,
       accounts[0]
@@ -69,13 +69,16 @@ describe("core tests", () => {
     positions: poolCasePositions,
   } of POOL_CASES) {
     describe(poolCaseName, () => {
+      const positionsToWithdraw: { id: bigint; liquidity: bigint }[] = [];
+      let poolKey;
+
       // set up the pool according to the pool case
       beforeAll(async () => {
         await loadDump();
 
         console.log(`Setting up pool for ${poolCaseName}`);
 
-        const poolKey = {
+        poolKey = {
           token0: token0.address,
           token1: token1.address,
           fee: poolParams.fee,
@@ -108,16 +111,20 @@ describe("core tests", () => {
               0,
             ]
           );
-          const { events } = (await provider.getTransactionReceipt(
+
+          const receipt = await provider.getTransactionReceipt(
             transaction_hash
-          )) as unknown as {
-            events: {
-              data: unknown[];
-              keys: unknown[];
-              from_address: string;
-            }[];
-          };
-          console.log("events", events);
+          );
+          const [
+            { PositionMinted: positionMintedEvent },
+            { Deposit: depositEvent },
+          ] = positions.parseEvents(receipt);
+          const [{ Transfer: transferEvent }] = nft.parseEvents(receipt);
+          console.log(positionMintedEvent, depositEvent, transferEvent);
+          positionsToWithdraw.push({
+            id: transferEvent.token_id as any,
+            liquidity: depositEvent.liquidity as any,
+          });
         }
 
         await dumpState("dumppool.bin");
@@ -136,7 +143,19 @@ describe("core tests", () => {
       }
 
       afterEach(async () => {
-        console.log("Checking withdrawals");
+        console.log(positionsToWithdraw);
+        for (let i = 0; i < poolCasePositions.length; i++) {
+          const { bounds } = poolCasePositions[i];
+          await positions.invoke("withdraw", [
+            positionsToWithdraw[i].id,
+            poolKey,
+            { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+            positionsToWithdraw[i].liquidity,
+            0,
+            0,
+            true,
+          ]);
+        }
       });
     });
   }
