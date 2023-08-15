@@ -3,7 +3,7 @@ use starknet::{ContractAddress};
 #[starknet::interface]
 trait IMockERC20<TStorage> {
     fn balanceOf(self: @TStorage, address: ContractAddress) -> u256;
-    fn transfer(ref self: TStorage, to: ContractAddress, amount: u256);
+    fn transfer(ref self: TStorage, to: ContractAddress, amount: u256) -> bool;
     fn set_balance(ref self: TStorage, address: ContractAddress, amount: u256);
     fn increase_balance(ref self: TStorage, address: ContractAddress, amount: u128);
     fn decrease_balance(ref self: TStorage, address: ContractAddress, amount: u128);
@@ -25,11 +25,12 @@ mod MockERC20 {
             self.balances.read(address)
         }
 
-        fn transfer(ref self: ContractState, to: ContractAddress, amount: u256) {
+        fn transfer(ref self: ContractState, to: ContractAddress, amount: u256) -> bool {
             let caller = get_caller_address();
             assert(self.balanceOf(caller) >= amount, 'INSUFFICIENT_BALANCE');
             self.balances.write(caller, self.balanceOf(caller) - amount);
             self.balances.write(to, self.balanceOf(to) + amount);
+            true
         }
 
         fn set_balance(ref self: ContractState, address: ContractAddress, amount: u256) {

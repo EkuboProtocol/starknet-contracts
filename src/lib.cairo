@@ -10,6 +10,7 @@ mod quoter;
 mod types;
 mod option_incentives;
 mod owner;
+mod simple_erc20;
 
 #[cfg(test)]
 mod tests;

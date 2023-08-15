@@ -66,8 +66,6 @@ describe("core tests", () => {
       { maxFee: 10000000000000 } // workaround
     );
 
-    console.log(JSON.stringify(coreResponse));
-
     core = new Contract(
       CoreCompiledContract.abi,
       coreResponse.deploy.address,
@@ -83,8 +81,6 @@ describe("core tests", () => {
       },
       { maxFee: 10000000000000 } // workaround
     );
-
-    console.log(JSON.stringify(declareNftResponse));
 
     const positionsConstructorCalldata = [
       coreResponse.deploy.address,

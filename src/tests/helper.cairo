@@ -14,7 +14,9 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::simple_erc20::{SimpleERC20};
 use ekubo::extensions::oracle::{Oracle};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
@@ -55,6 +57,15 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
+}
+
+fn deploy_simple_erc20() -> IERC20Dispatcher {
+    let constructor_args: Array<felt252> = ArrayTrait::new();
+    let (token_address, _) = deploy_syscall(
+        SimpleERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('simpleerc20 deploy');
+    return IERC20Dispatcher { contract_address: token_address };
 }
 
 fn deploy_enumerable_owned_nft(
