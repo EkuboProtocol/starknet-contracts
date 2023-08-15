@@ -5,10 +5,12 @@ import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
 import CoreCompiledContractCASM from "../target/dev/ekubo_Core.casm.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.casm.json";
+import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
+import EnumerableOwnedNFTContractCASM from "../target/dev/ekubo_EnumerableOwnedNFT.casm.json";
 import { POOL_CASES } from "./pool-cases";
 import { getAccounts } from "./accounts";
 import { SWAP_CASES } from "./swap-cases";
-import { dump, load } from "./state-cache";
+import { dump, load } from "./devnet";
 
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
@@ -16,12 +18,22 @@ describe("core tests", () => {
   let provider: Provider;
 
   beforeAll(() => {
-    console.log("Starting starknet devnet");
-    starknetProcess = spawn("starknet-devnet", ["--seed", "0"]);
+    console.log(
+      "Starting starknet devnet",
+      process.env.STARKNET_SIERRA_COMPILER_PATH
+    );
 
-    return new Promise((resolve) => {
+    starknetProcess = spawn("starknet-devnet", [
+      "--seed",
+      "0",
+      ...(process.env.STARKNET_SIERRA_COMPILER_PATH
+        ? ["--sierra-compiler-path", process.env.STARKNET_SIERRA_COMPILER_PATH]
+        : []),
+    ]);
+
+    return new Promise((resolve, reject) => {
       // starknetProcess.stderr.on("data", (data) =>
-      //   console.error(data.toString("utf8"))
+      //   reject(new Error(data.toString("utf8")))
       // );
       // starknetProcess.stdout.on("data", (data) =>
       //   console.log(data.toString("utf8"))
@@ -41,10 +53,11 @@ describe("core tests", () => {
   });
 
   let core: Contract;
+  let positions: Contract;
 
   beforeAll(async () => {
     console.log("Deploying core");
-    const response = await accounts[0].declareAndDeploy(
+    const coreResponse = await accounts[0].declareAndDeploy(
       {
         contract: CoreCompiledContract as any,
         casm: CoreCompiledContractCASM as any,
@@ -52,10 +65,47 @@ describe("core tests", () => {
       { maxFee: 10000000000000 } // workaround
     );
 
-    // positions = await positionsContractFactory.deploy(
-    //   core.address,
-    //   "https://f.ekubo.org/"
-    // );
+    console.log(JSON.stringify(coreResponse));
+
+    core = new Contract(
+      CoreCompiledContract.abi,
+      coreResponse.deploy.address,
+      provider
+    );
+
+    console.log("Declaring NFTs");
+
+    const declareNftResponse = await accounts[0].declare(
+      {
+        contract: EnumerableOwnedNFTContract as any,
+        casm: EnumerableOwnedNFTContractCASM as any,
+      },
+      { maxFee: 10000000000000 } // workaround
+    );
+
+    console.log(JSON.stringify(declareNftResponse));
+
+    const positionsConstructorCalldata = [
+      coreResponse.deploy.address,
+      declareNftResponse.class_hash,
+      `0x${Buffer.from("https://f.ekubo.org/", "ascii").toString("hex")}`,
+    ];
+    console.log("Deploying positions", positionsConstructorCalldata);
+
+    const positionsResponse = await accounts[0].declareAndDeploy(
+      {
+        contract: PositionsCompiledContract as any,
+        casm: PositionsCompiledContractCASM as any,
+        constructorCalldata: positionsConstructorCalldata,
+      },
+      { maxFee: 10000000000000 } // workaround
+    );
+
+    positions = new Contract(
+      PositionsCompiledContract.abi,
+      positionsResponse.deploy.address,
+      accounts[0]
+    );
 
     await dump();
   });
@@ -64,8 +114,9 @@ describe("core tests", () => {
     await load();
   });
 
-  it("works", () => {
-    console.log("test body");
+  it("works", async () => {
+    const str = await positions.call("token_uri", [1]);
+    console.log("token uri of one", str);
   });
 
   for (const poolCase of POOL_CASES) {
@@ -85,9 +136,9 @@ describe("core tests", () => {
     });
   }
 
-  afterAll(async () => {
+  afterAll(() => {
     console.log("Shutting down");
-    await new Promise((resolve) => {
+    return new Promise((resolve) => {
       starknetProcess.on("close", () => {
         resolve(null);
       });
