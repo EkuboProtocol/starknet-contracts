@@ -54,6 +54,7 @@ describe("core tests", () => {
 
   let core: Contract;
   let positions: Contract;
+  let positionsNft: Contract;
 
   beforeAll(async () => {
     console.log("Deploying core");
@@ -90,6 +91,7 @@ describe("core tests", () => {
       declareNftResponse.class_hash,
       `0x${Buffer.from("https://f.ekubo.org/", "ascii").toString("hex")}`,
     ];
+
     console.log("Deploying positions", positionsConstructorCalldata);
 
     const positionsResponse = await accounts[0].declareAndDeploy(
@@ -107,16 +109,19 @@ describe("core tests", () => {
       accounts[0]
     );
 
+    const nftAddress = (await positions.call("get_nft_address")) as bigint;
+
+    positionsNft = new Contract(
+      EnumerableOwnedNFTContract.abi,
+      `0x${nftAddress.toString(16)}`,
+      accounts[0]
+    );
+
     await dump();
   });
 
   beforeEach(async () => {
     await load();
-  });
-
-  it("works", async () => {
-    const str = await positions.call("token_uri", [1]);
-    console.log("token uri of one", str);
   });
 
   for (const poolCase of POOL_CASES) {
