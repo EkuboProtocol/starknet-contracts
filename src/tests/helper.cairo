@@ -59,8 +59,9 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     return IMockERC20Dispatcher { contract_address: token_address };
 }
 
-fn deploy_simple_erc20() -> IERC20Dispatcher {
-    let constructor_args: Array<felt252> = ArrayTrait::new();
+fn deploy_simple_erc20(owner: ContractAddress) -> IERC20Dispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@owner, ref constructor_args);
     let (token_address, _) = deploy_syscall(
         SimpleERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )

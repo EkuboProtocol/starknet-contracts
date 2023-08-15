@@ -1,7 +1,7 @@
 #[starknet::contract]
 mod SimpleERC20 {
     use ekubo::interfaces::erc20::{IERC20};
-    use starknet::{ContractAddress, get_caller_address};
+    use starknet::{ContractAddress, contract_address_const, get_caller_address};
     use traits::{Into};
     use option::{OptionTrait};
     use zeroable::{Zeroable};
@@ -25,8 +25,16 @@ mod SimpleERC20 {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState) {
-        self.balances.write(get_caller_address(), 0xffffffffffffffffffffffffffffffff);
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        self.balances.write(owner, 0xffffffffffffffffffffffffffffffff);
+        self
+            .emit(
+                Transfer {
+                    from: contract_address_const::<0>(),
+                    to: owner,
+                    amount: 0xffffffffffffffffffffffffffffffff.into()
+                }
+            );
     }
 
     #[external(v0)]

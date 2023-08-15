@@ -1,130 +1,130 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams } from "child_process";
 
-import { Account, Contract, hash, Provider } from "starknet";
+import { Account, Contract, Provider } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
-import CoreCompiledContractCASM from "../target/dev/ekubo_Core.casm.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
-import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.casm.json";
 import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
-import EnumerableOwnedNFTContractCASM from "../target/dev/ekubo_EnumerableOwnedNFT.casm.json";
+import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import { POOL_CASES } from "./pool-cases";
-import { getAccounts } from "./accounts";
 import { SWAP_CASES } from "./swap-cases";
-import { dump, load } from "./devnet";
+import { dumpState, loadDump, startDevnet } from "./devnet";
 
+function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
+  return {
+    mag: x < 0n ? x * -1n : x,
+    sign: x < 0n ? "0x1" : "0x0",
+  };
+}
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
   let accounts: Account[];
   let provider: Provider;
-
-  beforeAll(() => {
-    console.log(
-      "Starting starknet devnet",
-      process.env.STARKNET_SIERRA_COMPILER_PATH
-    );
-
-    starknetProcess = spawn("starknet-devnet", [
-      "--seed",
-      "0",
-      ...(process.env.STARKNET_SIERRA_COMPILER_PATH
-        ? ["--sierra-compiler-path", process.env.STARKNET_SIERRA_COMPILER_PATH]
-        : []),
-    ]);
-
-    return new Promise((resolve, reject) => {
-      // starknetProcess.stderr.on("data", (data) =>
-      //   reject(new Error(data.toString("utf8")))
-      // );
-      // starknetProcess.stdout.on("data", (data) =>
-      //   console.log(data.toString("utf8"))
-      // );
-
-      starknetProcess.stdout.on("data", (data) => {
-        if (data.toString("utf8").includes("Predeployed UDC")) {
-          console.log("Starknet devnet started");
-          provider = new Provider({
-            sequencer: { baseUrl: "http://127.0.0.1:5050" },
-          });
-          accounts = getAccounts(provider);
-          resolve(null);
-        }
-      });
-    });
-  });
+  let killedPromise: Promise<null>;
 
   let core: Contract;
   let positions: Contract;
   let positionsNft: Contract;
+  let token0: Contract;
+  let token1: Contract;
+
+  const ADDRESSES = {
+    token0: "0x1329afe083102885daaa3dc0bbbefa65b5e04f3130e0a5c4b713b42dd35562a",
+    token1: "0x618d100c061d201fbb64bde289b8316b6696ddb31299db5808d53cfef8990f2",
+    coreAddress:
+      "0x3f6fe8574ebf90ebd0ba09d8d952a410543415097999202ae3918188ab967cb",
+    positionsAddress:
+      "0x47bf18efb3ea4dd07887457a118fd8f84b0afb582a5761a2d09355c88e10386",
+    nftAddress:
+      "0x5001bdab48ad23f4eed385363afb3e6d95b2bea4a69c342dd66cca057c9e543",
+  };
 
   beforeAll(async () => {
-    console.log("Deploying core");
-    const coreResponse = await accounts[0].declareAndDeploy(
-      {
-        contract: CoreCompiledContract as any,
-        casm: CoreCompiledContractCASM as any,
-      },
-      { maxFee: 10000000000000 } // workaround
-    );
+    [starknetProcess, killedPromise, provider, accounts] = await startDevnet();
+    await loadDump();
+    token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
+    token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
 
     core = new Contract(
       CoreCompiledContract.abi,
-      coreResponse.deploy.address,
-      provider
-    );
-
-    console.log("Declaring NFTs");
-
-    const declareNftResponse = await accounts[0].declare(
-      {
-        contract: EnumerableOwnedNFTContract as any,
-        casm: EnumerableOwnedNFTContractCASM as any,
-      },
-      { maxFee: 10000000000000 } // workaround
-    );
-
-    const positionsConstructorCalldata = [
-      coreResponse.deploy.address,
-      declareNftResponse.class_hash,
-      `0x${Buffer.from("https://f.ekubo.org/", "ascii").toString("hex")}`,
-    ];
-
-    console.log("Deploying positions", positionsConstructorCalldata);
-
-    const positionsResponse = await accounts[0].declareAndDeploy(
-      {
-        contract: PositionsCompiledContract as any,
-        casm: PositionsCompiledContractCASM as any,
-        constructorCalldata: positionsConstructorCalldata,
-      },
-      { maxFee: 10000000000000 } // workaround
+      ADDRESSES.coreAddress,
+      accounts[0]
     );
 
     positions = new Contract(
       PositionsCompiledContract.abi,
-      positionsResponse.deploy.address,
+      ADDRESSES.positionsAddress,
       accounts[0]
     );
-
-    const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
     positionsNft = new Contract(
       EnumerableOwnedNFTContract.abi,
-      `0x${nftAddress.toString(16)}`,
+      ADDRESSES.nftAddress,
       accounts[0]
     );
-
-    await dump();
   });
 
-  beforeEach(async () => {
-    await load();
-  });
-
-  for (const poolCase of POOL_CASES) {
-    describe(poolCase.name, () => {
+  for (const {
+    name: poolCaseName,
+    pool: poolParams,
+    positions: poolCasePositions,
+  } of POOL_CASES) {
+    describe(poolCaseName, () => {
       // set up the pool according to the pool case
+      beforeAll(async () => {
+        await loadDump();
+
+        console.log(`Setting up pool for ${poolCaseName}`);
+
+        const poolKey = {
+          token0: token0.address,
+          token1: token1.address,
+          fee: poolParams.fee,
+          tick_spacing: poolParams.tickSpacing,
+          extension: "0x0",
+        };
+
+        await core.invoke("initialize_pool", [
+          poolKey,
+
+          // starting tick
+          toI129(poolParams.startingTick),
+        ]);
+
+        for (const { liquidity, bounds } of poolCasePositions) {
+          await token0.invoke("transfer", [
+            positions.address, // recipient
+            1000, // amount
+          ]);
+          await token1.invoke("transfer", [
+            positions.address, // recipient
+            1000, // amount
+          ]);
+
+          const { transaction_hash } = await positions.invoke(
+            "mint_and_deposit",
+            [
+              poolKey,
+              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+              0,
+            ]
+          );
+          const { events } = (await provider.getTransactionReceipt(
+            transaction_hash
+          )) as unknown as {
+            events: {
+              data: unknown[];
+              keys: unknown[];
+              from_address: string;
+            }[];
+          };
+          console.log("events", events);
+        }
+
+        await dumpState("dumppool.bin");
+      });
+
       beforeEach(async () => {
-        console.log(`Setting up pool for ${poolCase.name}`);
+        await loadDump("dumppool.bin");
       });
 
       for (const swapCase of SWAP_CASES) {
@@ -134,16 +134,15 @@ describe("core tests", () => {
           console.log(`Swap test`);
         });
       }
+
+      afterEach(async () => {
+        console.log("Checking withdrawals");
+      });
     });
   }
 
-  afterAll(() => {
-    console.log("Shutting down");
-    return new Promise((resolve) => {
-      starknetProcess.on("close", () => {
-        resolve(null);
-      });
-      starknetProcess.kill();
-    });
+  afterAll(async () => {
+    starknetProcess.kill();
+    await killedPromise;
   });
 });
