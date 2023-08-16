@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Integration tests for the core contracts of Ekubo Protocol",
   "scripts": {
-    "devnet": "starknet-devnet --seed 0",
+    "devnet": "starknet-devnet --hide-server-logs --seed 0",
     "test:inner": "jest",
     "test": "start-server-and-test --expect 404 devnet http://127.0.0.1:5050 test:inner",
     "create-dump:inner": "ts-node create-dump.ts",

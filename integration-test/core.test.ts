@@ -203,8 +203,6 @@ describe("core tests", () => {
 
           const parsed = positionsContract.parseEvents(receipt);
 
-          console.log("Parsed events", parsed);
-
           const [{ PositionMinted }, { Deposit }] = parsed;
 
           if (Deposit.liquidity !== liquidity) {
@@ -252,8 +250,6 @@ describe("core tests", () => {
         it(`swap ${swapCase.amount} ${
           swapCase.isToken1 ? "token1" : "token0"
         }`, async () => {
-          console.log("Testing swap");
-
           let transaction_hash: string;
           try {
             ({ transaction_hash } = await swapper.invoke(
@@ -285,8 +281,6 @@ describe("core tests", () => {
             transaction_hash
           );
 
-          console.log(swap_receipt);
-
           switch (swap_receipt.status) {
             case TransactionStatus.REVERTED:
               const revertReasonRaw = (swap_receipt as any)
@@ -307,9 +301,16 @@ describe("core tests", () => {
               }).toMatchSnapshot();
               break;
             case TransactionStatus.ACCEPTED_ON_L2:
+              const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
+                core.parseEvents(swap_receipt)[0].Swapped;
               expect({
                 execution_resources: (swap_receipt as any).execution_resources,
-                result: core.parseEvents(swap_receipt)[0].Swapped,
+                result: {
+                  delta,
+                  liquidity_after,
+                  sqrt_ratio_after,
+                  tick_after,
+                },
               }).toMatchSnapshot();
               break;
           }
