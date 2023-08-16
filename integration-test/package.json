@@ -14,5 +14,8 @@
     "starknet": "^5.19.0",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "decimal.js-light": "^2.5.1"
   }
 }

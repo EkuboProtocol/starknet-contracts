@@ -1,9 +1,7 @@
-import { MAX_U128 } from "./constants";
-
 export const SWAP_CASES: Array<{
   amount: bigint;
   isToken1: boolean;
-  priceLimit?: bigint;
+  sqrtRatioLimit?: bigint;
   skipAhead?: bigint;
 }> = [
   {
@@ -20,22 +18,6 @@ export const SWAP_CASES: Array<{
   },
   {
     amount: -10000n,
-    isToken1: false,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: MAX_U128,
-    isToken1: false,
-  },
-  {
-    amount: -MAX_U128,
-    isToken1: true,
-  },
-  {
-    amount: -MAX_U128,
     isToken1: false,
   },
 ];

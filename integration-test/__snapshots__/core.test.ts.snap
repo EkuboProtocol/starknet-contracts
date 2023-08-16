@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
+{
+  "builtin_instance_counter": {
+    "bitwise_builtin": 1620,
+    "pedersen_builtin": 402,
+    "range_check_builtin": 27633,
+  },
+  "n_memory_holes": 318074,
+  "n_steps": 220022,
+}
+`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
+{
+  "builtin_instance_counter": {
+    "bitwise_builtin": 1647,
+    "pedersen_builtin": 408,
+    "range_check_builtin": 27038,
+  },
+  "n_memory_holes": 327433,
+  "n_steps": 223179,
+}
+`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
+{
+  "builtin_instance_counter": {
+    "bitwise_builtin": 1647,
+    "pedersen_builtin": 408,
+    "range_check_builtin": 26978,
+  },
+  "n_memory_holes": 327733,
+  "n_steps": 222707,
+}
+`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
+{
+  "builtin_instance_counter": {
+    "bitwise_builtin": 1620,
+    "pedersen_builtin": 402,
+    "range_check_builtin": 27574,
+  },
+  "n_memory_holes": 318361,
+  "n_steps": 219550,
+}
+`;

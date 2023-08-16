@@ -23,7 +23,7 @@ export const POOL_CASES: Array<{
   }[];
 }> = [
   {
-    name: "full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3%",
+    name: "1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3%",
     pool: {
       startingTick: 0n,
       tickSpacing: SIXTY_BIPS_TICK_SPACING,
@@ -35,7 +35,7 @@ export const POOL_CASES: Array<{
           lower: nearest(MIN_TICK, SIXTY_BIPS_TICK_SPACING),
           upper: nearest(MAX_TICK, SIXTY_BIPS_TICK_SPACING),
         },
-        liquidity: 10000n,
+        liquidity: 10n ** 18n,
       },
     ],
   },

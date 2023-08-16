@@ -11,6 +11,7 @@ import { SWAP_CASES } from "./swap-cases";
 import { dumpState, loadDump, startDevnet } from "./devnet";
 import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
 import ADDRESSES from "./addresses.json";
+import Decimal from "decimal.js-light";
 
 function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   return {
@@ -18,6 +19,92 @@ function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
     sign: x < 0n ? "0x1" : "0x0",
   };
 }
+
+function amount0Delta({
+  liquidity,
+  sqrtRatioLower,
+  sqrtRatioUpper,
+}: {
+  liquidity: bigint;
+  sqrtRatioLower: bigint;
+  sqrtRatioUpper: bigint;
+}) {
+  const numerator = (liquidity << 128n) * (sqrtRatioUpper - sqrtRatioLower);
+
+  const divOne =
+    numerator / sqrtRatioUpper + (numerator % sqrtRatioUpper === 0n ? 0n : 1n);
+
+  return divOne / sqrtRatioLower + (divOne % sqrtRatioLower === 0n ? 0n : 1n);
+}
+
+function amount1Delta({
+  liquidity,
+  sqrtRatioLower,
+  sqrtRatioUpper,
+}: {
+  liquidity: bigint;
+  sqrtRatioLower: bigint;
+  sqrtRatioUpper: bigint;
+}) {
+  const numerator = liquidity * (sqrtRatioUpper - sqrtRatioLower);
+  const result =
+    (numerator % (1n << 128n) !== 0n ? 1n : 0n) + numerator / (1n << 128n);
+  return result;
+}
+
+Decimal.set({ precision: 80 });
+function tickToSqrtRatio(tick: bigint) {
+  return BigInt(
+    new Decimal("1.000001")
+      .pow(new Decimal(Number(tick)))
+      .mul(new Decimal(2).pow(128))
+      .toFixed(0)
+  );
+}
+
+function getAmountsForLiquidity({
+  bounds,
+  liquidity,
+  tick,
+}: {
+  bounds: { lower: bigint; upper: bigint };
+  liquidity: bigint;
+  tick: bigint;
+}): { amount0: bigint; amount1: bigint } {
+  if (tick < bounds.lower) {
+    return {
+      amount0: amount0Delta({
+        liquidity,
+        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
+        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
+      }),
+      amount1: 0n,
+    };
+  } else if (tick < bounds.upper) {
+    return {
+      amount0: amount0Delta({
+        liquidity,
+        sqrtRatioLower: tickToSqrtRatio(tick),
+        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
+      }),
+      amount1: amount1Delta({
+        liquidity,
+        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
+        sqrtRatioUpper: tickToSqrtRatio(tick),
+      }),
+    };
+  } else {
+    return {
+      amount0: 0n,
+      amount1: amount1Delta({
+        liquidity,
+        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
+        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
+      }),
+    };
+  }
+}
+
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
   let accounts: Account[];
@@ -25,7 +112,7 @@ describe("core tests", () => {
   let killedPromise: Promise<null>;
 
   let core: Contract;
-  let positions: Contract;
+  let positionsContract: Contract;
   let nft: Contract;
   let token0: Contract;
   let token1: Contract;
@@ -39,7 +126,7 @@ describe("core tests", () => {
 
     core = new Contract(CoreCompiledContract.abi, ADDRESSES.core, accounts[0]);
 
-    positions = new Contract(
+    positionsContract = new Contract(
       PositionsCompiledContract.abi,
       ADDRESSES.positions,
       accounts[0]
@@ -54,14 +141,15 @@ describe("core tests", () => {
     swapper = new Contract(SimpleSwapper.abi, ADDRESSES.swapper, accounts[0]);
   });
 
-  for (const {
-    name: poolCaseName,
-    pool: poolParams,
-    positions: poolCasePositions,
-  } of POOL_CASES) {
+  for (const { name: poolCaseName, pool, positions: positions } of POOL_CASES) {
     describe(poolCaseName, () => {
-      const positionsToWithdraw: { id: bigint; liquidity: bigint }[] = [];
-      let poolKey;
+      let poolKey: {
+        token0: string;
+        token1: string;
+        fee: bigint;
+        tick_spacing: bigint;
+        extension: string;
+      };
 
       // set up the pool according to the pool case
       beforeAll(async () => {
@@ -72,8 +160,8 @@ describe("core tests", () => {
         poolKey = {
           token0: token0.address,
           token1: token1.address,
-          fee: poolParams.fee,
-          tick_spacing: poolParams.tickSpacing,
+          fee: pool.fee,
+          tick_spacing: pool.tickSpacing,
           extension: "0x0",
         };
 
@@ -81,40 +169,48 @@ describe("core tests", () => {
           poolKey,
 
           // starting tick
-          toI129(poolParams.startingTick),
+          toI129(pool.startingTick),
         ]);
 
-        for (const { liquidity, bounds } of poolCasePositions) {
+        for (const { liquidity, bounds } of positions) {
+          const { amount0, amount1 } = getAmountsForLiquidity({
+            tick: pool.startingTick,
+            liquidity,
+            bounds,
+          });
           await token0.invoke("transfer", [
-            positions.address, // recipient
-            1000, // amount
+            positionsContract.address, // recipient
+            amount0, // amount
           ]);
           await token1.invoke("transfer", [
-            positions.address, // recipient
-            1000, // amount
+            positionsContract.address, // recipient
+            amount1, // amount
           ]);
 
-          const { transaction_hash } = await positions.invoke(
+          const { transaction_hash } = await positionsContract.invoke(
             "mint_and_deposit",
             [
               poolKey,
               { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
-              0,
+              liquidity,
             ]
           );
 
           const receipt = await provider.getTransactionReceipt(
             transaction_hash
           );
-          const [
-            { PositionMinted: positionMintedEvent },
-            { Deposit: depositEvent },
-          ] = positions.parseEvents(receipt);
-          const [{ Transfer: transferEvent }] = nft.parseEvents(receipt);
-          positionsToWithdraw.push({
-            id: transferEvent.token_id as any,
-            liquidity: depositEvent.liquidity as any,
-          });
+
+          const parsed = positionsContract.parseEvents(receipt);
+
+          console.log("Parsed events", parsed);
+
+          const [{ PositionMinted }, { Deposit }] = parsed;
+
+          if (Deposit.liquidity !== liquidity) {
+            throw new Error(
+              `Liquidity not equal: ${Deposit.liquidity} !== ${liquidity}`
+            );
+          }
         }
 
         await dumpState("dump-pool.bin");
@@ -122,6 +218,21 @@ describe("core tests", () => {
 
       beforeEach(async () => {
         await loadDump("dump-pool.bin");
+      });
+
+      afterEach(async () => {
+        for (let i = 0; i < positions.length; i++) {
+          const { bounds, liquidity } = positions[i];
+          await positionsContract.invoke("withdraw", [
+            i + 1,
+            poolKey,
+            { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+            liquidity,
+            0,
+            0,
+            true,
+          ]);
+        }
       });
 
       const RECIPIENT = "0xabcd";
@@ -134,24 +245,20 @@ describe("core tests", () => {
 
           let transaction_hash: string;
           try {
-            ({ transaction_hash } = await swapper.invoke(
-              "swap",
-              [
-                poolKey,
-                {
-                  amount: toI129(swapCase.amount),
-                  is_token1: swapCase.isToken1,
-                  sqrt_ratio_limit:
-                    swapCase.priceLimit ??
-                    (swapCase.isToken1 != swapCase.amount < 0
-                      ? MAX_SQRT_RATIO
-                      : MIN_SQRT_RATIO),
-                  skip_ahead: swapCase.skipAhead ?? 0,
-                },
-                RECIPIENT,
-              ],
-              { maxFee: 250n * 1_000_000_000n } // 250 gwei
-            ));
+            ({ transaction_hash } = await swapper.invoke("swap", [
+              poolKey,
+              {
+                amount: toI129(swapCase.amount),
+                is_token1: swapCase.isToken1,
+                sqrt_ratio_limit:
+                  swapCase.sqrtRatioLimit ??
+                  (swapCase.isToken1 != swapCase.amount < 0
+                    ? MAX_SQRT_RATIO
+                    : MIN_SQRT_RATIO),
+                skip_ahead: swapCase.skipAhead ?? 0,
+              },
+              RECIPIENT,
+            ]));
           } catch (error) {
             transaction_hash = error.transaction_hash;
             if (!transaction_hash) throw error;
@@ -167,27 +274,15 @@ describe("core tests", () => {
             case TransactionStatus.REJECTED:
               break;
             case TransactionStatus.ACCEPTED_ON_L2:
+              expect(
+                (swap_receipt as any).execution_resources
+              ).toMatchSnapshot();
               console.log(swap_receipt);
               console.log(core.parseEvents(swap_receipt));
               break;
           }
         });
       }
-
-      afterEach(async () => {
-        for (let i = 0; i < poolCasePositions.length; i++) {
-          const { bounds } = poolCasePositions[i];
-          await positions.invoke("withdraw", [
-            positionsToWithdraw[i].id,
-            poolKey,
-            { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
-            positionsToWithdraw[i].liquidity,
-            0,
-            0,
-            true,
-          ]);
-        }
-      });
     });
   }
 
