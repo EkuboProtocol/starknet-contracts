@@ -288,14 +288,29 @@ describe("core tests", () => {
           console.log(swap_receipt);
 
           switch (swap_receipt.status) {
-            case TransactionStatus.REJECTED:
+            case TransactionStatus.REVERTED:
+              const revertReasonRaw = (swap_receipt as any)
+                .revert_reason as string;
+              const revertReasonHex =
+                /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)\]./g.exec(
+                  revertReasonRaw
+                )[1];
+
+              const parsedRevertReason = Buffer.from(
+                revertReasonHex,
+                "hex"
+              ).toString("ascii");
+
+              expect({
+                execution_resources: (swap_receipt as any).execution_resources,
+                parsedRevertReason,
+              }).toMatchSnapshot();
               break;
             case TransactionStatus.ACCEPTED_ON_L2:
-              expect(
-                (swap_receipt as any).execution_resources
-              ).toMatchSnapshot();
-              console.log(swap_receipt);
-              console.log(core.parseEvents(swap_receipt));
+              expect({
+                execution_resources: (swap_receipt as any).execution_resources,
+                result: core.parseEvents(swap_receipt)[0].Swapped,
+              }).toMatchSnapshot();
               break;
           }
         });

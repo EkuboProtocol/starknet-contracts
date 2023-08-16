@@ -16,8 +16,8 @@ export async function startDevnet() {
       : []),
   ]);
 
-  devnetProcess.stdout.on("data", (data) => console.log(data.toString("utf8")));
-  devnetProcess.stderr.on("data", (data) => console.log(data.toString("utf8")));
+  // devnetProcess.stdout.on("data", (data) => console.log(data.toString("utf8")));
+  // devnetProcess.stderr.on("data", (data) => console.log(data.toString("utf8")));
 
   const killedPromise = new Promise<null>((resolve) => {
     devnetProcess.on("close", () => resolve(null));
@@ -25,13 +25,12 @@ export async function startDevnet() {
 
   await new Promise((resolve, reject) => {
     devnetProcess.stdout.on("data", (data) => {
-      if (data.toString("utf8").includes("Predeployed UDC")) {
+      if (
+        data.toString("utf8").includes("Listening on http://127.0.0.1:5050/")
+      ) {
         console.log("Starknet devnet started");
 
         resolve(null);
-      } else if (data.toString("utf8").includes("Retrying in 1 second.")) {
-        devnetProcess.kill();
-        reject(new Error("Port is taken"));
       }
     });
   });
