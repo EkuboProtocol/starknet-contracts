@@ -1,7 +1,7 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  testMatch: ['**/*.test.ts'],
-  testTimeout: 300000
+  preset: "ts-jest",
+  testEnvironment: "node",
+  testMatch: ["**/*.test.ts"],
+  testTimeout: 300_000_000,
 };
