@@ -120,6 +120,7 @@ describe("core tests", () => {
 
   beforeAll(async () => {
     [starknetProcess, killedPromise, provider, accounts] = await startDevnet();
+
     await loadDump();
     token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
     token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
