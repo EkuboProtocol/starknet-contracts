@@ -213,6 +213,16 @@ describe("core tests", () => {
           }
         }
 
+        // transfer remaining balances to swapper, so it can swap whatever is needed
+        await token0.invoke("transfer", [
+          swapper.address,
+          await token0.call("balanceOf", [accounts[0].address]),
+        ]);
+        await token1.invoke("transfer", [
+          swapper.address,
+          await token1.call("balanceOf", [accounts[0].address]),
+        ]);
+
         await dumpState("dump-pool.bin");
       });
 
