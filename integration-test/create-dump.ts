@@ -10,6 +10,7 @@ import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.casm.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.casm.json";
 import { dumpState, startDevnet } from "./devnet";
+import { writeFileSync } from "fs";
 
 (async function () {
   const [devnetProcess, killedPromise, , accounts] = await startDevnet();
@@ -99,17 +100,18 @@ import { dumpState, startDevnet } from "./devnet";
 
   await dumpState();
 
-  console.log(
-    "Saved deployment state",
-    JSON.stringify({
-      token0,
-      token1,
-      core: coreResponse.deploy.address,
-      positions: positions.address,
-      swapper: swapperResponse.deploy.address,
-      nft: `0x${nftAddress.toString(16)}`,
-    })
-  );
+  const addresses = {
+    token0,
+    token1,
+    core: coreResponse.deploy.address,
+    positions: positions.address,
+    swapper: swapperResponse.deploy.address,
+    nft: `0x${nftAddress.toString(16)}`,
+  };
+
+  writeFileSync("./addresses.json", JSON.stringify(addresses));
+
+  console.log("Saved deployment state", addresses);
 
   devnetProcess.kill();
   await killedPromise;

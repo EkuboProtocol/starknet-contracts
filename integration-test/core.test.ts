@@ -10,6 +10,7 @@ import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
 import { dumpState, loadDump, startDevnet } from "./devnet";
 import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
+import ADDRESSES from "./addresses.json";
 
 function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   return {
@@ -29,17 +30,6 @@ describe("core tests", () => {
   let token0: Contract;
   let token1: Contract;
   let swapper: Contract;
-
-  const ADDRESSES = {
-    token0: "0x3960d01a211cb7ff1360a43275ccbab515a9844a294da67d8d9cf3d43c736",
-    token1: "0x1aea60e7058c88670dbbe7d232c7a7386326fd61e7dc99b32b6073caf6320e",
-    core: "0x326fd01442c237a6cb71d4d382e4e90259761ec4048be020a2c046bb569e37",
-    positions:
-      "0x42c4735c8e6aba298e1088ed405aa57c88a931772b99f6dd545d55dd4068bf5",
-    swapper:
-      "0x6b7450fe6f9764ab5b75c220f0716c78533c27a769a6339fa6785267ebfe68f",
-    nft: "0x7dc5cc83b97f4b9ed3a820c1809b4f062ec793d777bc30495a7c5e2b82cbc28",
-  };
 
   beforeAll(async () => {
     [starknetProcess, killedPromise, provider, accounts] = await startDevnet();
