@@ -16,8 +16,8 @@ export async function startDevnet() {
       : []),
   ]);
 
-  // devnetProcess.stdout.on("data", (data) => console.log(data.toString("utf8")));
-  // devnetProcess.stderr.on("data", (data) => console.log(data.toString("utf8")));
+  devnetProcess.stdout.on("data", (data) => console.log(data.toString("utf8")));
+  devnetProcess.stderr.on("data", (data) => console.log(data.toString("utf8")));
 
   const killedPromise = new Promise<null>((resolve) => {
     devnetProcess.on("close", () => resolve(null));

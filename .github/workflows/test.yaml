@@ -55,7 +55,7 @@ jobs:
       - name: Install deps
         run: |
           cd integration-test
-          npm i
+          npm ci
 
       - name: Create dump
         run: |
