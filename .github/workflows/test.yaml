@@ -52,14 +52,17 @@ jobs:
           sudo apt install -y libgmp3-dev
           pip install starknet-devnet
 
-      - name: Integ test dir
-        run: cd integration-test
-
       - name: Install deps
-        run: npm i
+        run: |
+          cd integration-test
+          npm i
 
       - name: Create dump
-        run: npm run create-dump
+        run: |
+          cd integration-test
+          npm run create-dump
 
       - name: Create dump
-        run: npm test
+        run: |
+          cd integration-test
+          npm test
