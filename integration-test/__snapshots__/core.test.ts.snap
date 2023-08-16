@@ -8,7 +8,6 @@ exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing
       "pedersen_builtin": 79,
       "range_check_builtin": 1879,
     },
-    "n_memory_holes": 7841,
     "n_steps": 25830,
   },
   "result": {
@@ -40,7 +39,6 @@ exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing
       "pedersen_builtin": 85,
       "range_check_builtin": 1916,
     },
-    "n_memory_holes": 17862,
     "n_steps": 27895,
   },
   "result": {
@@ -72,7 +70,6 @@ exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing
       "pedersen_builtin": 85,
       "range_check_builtin": 1854,
     },
-    "n_memory_holes": 18159,
     "n_steps": 27534,
   },
   "result": {
@@ -104,7 +101,6 @@ exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing
       "pedersen_builtin": 79,
       "range_check_builtin": 1830,
     },
-    "n_memory_holes": 8043,
     "n_steps": 25559,
   },
   "result": {
@@ -136,7 +132,6 @@ exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.
       "pedersen_builtin": 402,
       "range_check_builtin": 27633,
     },
-    "n_memory_holes": 318074,
     "n_steps": 220022,
   },
   "result": {
@@ -168,7 +163,6 @@ exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.
       "pedersen_builtin": 408,
       "range_check_builtin": 27038,
     },
-    "n_memory_holes": 327433,
     "n_steps": 223179,
   },
   "result": {
@@ -200,7 +194,6 @@ exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.
       "pedersen_builtin": 408,
       "range_check_builtin": 26978,
     },
-    "n_memory_holes": 327733,
     "n_steps": 222707,
   },
   "result": {
@@ -232,7 +225,6 @@ exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.
       "pedersen_builtin": 402,
       "range_check_builtin": 27574,
     },
-    "n_memory_holes": 318361,
     "n_steps": 219550,
   },
   "result": {

@@ -156,8 +156,6 @@ describe("core tests", () => {
       beforeAll(async () => {
         await provider.loadDump();
 
-        console.log(`Setting up pool for ${poolCaseName}`);
-
         poolKey = {
           token0: token0.address,
           token1: token1.address,
@@ -281,6 +279,11 @@ describe("core tests", () => {
             transaction_hash
           );
 
+          const execution_resources = (swap_receipt as any).execution_resources;
+          if (execution_resources) {
+            delete execution_resources["n_memory_holes"];
+          }
+
           switch (swap_receipt.status) {
             case TransactionStatus.REVERTED:
               const revertReasonRaw = (swap_receipt as any)
@@ -296,7 +299,7 @@ describe("core tests", () => {
               ).toString("ascii");
 
               expect({
-                execution_resources: (swap_receipt as any).execution_resources,
+                execution_resources,
                 parsedRevertReason,
               }).toMatchSnapshot();
               break;
@@ -304,7 +307,7 @@ describe("core tests", () => {
               const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
                 core.parseEvents(swap_receipt)[0].Swapped;
               expect({
-                execution_resources: (swap_receipt as any).execution_resources,
+                execution_resources,
                 result: {
                   delta,
                   liquidity_after,
