@@ -8,7 +8,7 @@ import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
-import { DevnetProvider, startDevnet } from "./devnet";
+import { DevnetProvider } from "./devnet";
 import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
 import ADDRESSES from "./addresses.json";
 import Decimal from "decimal.js-light";
@@ -107,10 +107,8 @@ function getAmountsForLiquidity({
 }
 
 describe("core tests", () => {
-  let starknetProcess: ChildProcessWithoutNullStreams;
-  let accounts: Account[];
   let provider: DevnetProvider;
-  let killedPromise: Promise<null>;
+  let accounts: Account[];
 
   let core: Contract;
   let positionsContract: Contract;
@@ -120,7 +118,7 @@ describe("core tests", () => {
   let swapper: Contract;
 
   beforeAll(async () => {
-    provider = new DevnetProvider(5051);
+    provider = new DevnetProvider();
     accounts = getAccounts(provider);
 
     await provider.loadDump();
@@ -319,9 +317,4 @@ describe("core tests", () => {
       }
     });
   }
-
-  afterAll(async () => {
-    starknetProcess.kill();
-    await killedPromise;
-  });
 });

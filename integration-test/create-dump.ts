@@ -9,12 +9,12 @@ import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.casm.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.casm.json";
-import { DevnetProvider, startDevnet } from "./devnet";
+import { DevnetProvider } from "./devnet";
 import { writeFileSync } from "fs";
 import { getAccounts } from "./accounts";
 
 (async function () {
-  const provider = new DevnetProvider(5052);
+  const provider = new DevnetProvider();
   const accounts = getAccounts(provider);
 
   console.log("Deploying tokens");
