@@ -57,12 +57,12 @@ jobs:
           cd integration-test
           npm i
 
-      - name: Create dump
-        run: |
-          cd integration-test
-          npm run create-dump
+#      - name: Create dump
+#        run: |
+#          cd integration-test
+#          npm run create-dump
 
-      - name: Create dump
+      - name: Run tests
         run: |
           cd integration-test
           npm test
