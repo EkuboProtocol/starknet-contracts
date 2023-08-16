@@ -56,4 +56,5 @@ jobs:
         run: |
           cd integration-test
           npm i
+          npm run create-dump
           npm test

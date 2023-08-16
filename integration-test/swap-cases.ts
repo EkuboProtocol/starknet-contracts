@@ -4,7 +4,7 @@ export const SWAP_CASES: Array<{
   amount: bigint;
   isToken1: boolean;
   priceLimit?: bigint;
-  skipAhead?: number;
+  skipAhead?: bigint;
 }> = [
   {
     amount: 10000n,

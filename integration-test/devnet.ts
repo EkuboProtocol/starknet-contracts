@@ -51,8 +51,6 @@ export async function dumpState(path: string = "dump.bin") {
     throw new Error(`Failed to save state: ${await response.text()}`);
   } else {
     const blob = await response.blob();
-
-    console.log(await blob.text());
   }
 }
 

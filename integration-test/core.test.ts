@@ -1,13 +1,15 @@
 import { ChildProcessWithoutNullStreams } from "child_process";
 
-import { Account, Contract, Provider } from "starknet";
+import { Account, Contract, Provider, TransactionStatus } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
 import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
+import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
 import { dumpState, loadDump, startDevnet } from "./devnet";
+import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
 
 function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   return {
@@ -26,16 +28,17 @@ describe("core tests", () => {
   let nft: Contract;
   let token0: Contract;
   let token1: Contract;
+  let swapper: Contract;
 
   const ADDRESSES = {
-    token0: "0x1329afe083102885daaa3dc0bbbefa65b5e04f3130e0a5c4b713b42dd35562a",
-    token1: "0x618d100c061d201fbb64bde289b8316b6696ddb31299db5808d53cfef8990f2",
-    coreAddress:
-      "0x3f6fe8574ebf90ebd0ba09d8d952a410543415097999202ae3918188ab967cb",
-    positionsAddress:
-      "0x47bf18efb3ea4dd07887457a118fd8f84b0afb582a5761a2d09355c88e10386",
-    nftAddress:
-      "0x5001bdab48ad23f4eed385363afb3e6d95b2bea4a69c342dd66cca057c9e543",
+    token0: "0x3960d01a211cb7ff1360a43275ccbab515a9844a294da67d8d9cf3d43c736",
+    token1: "0x1aea60e7058c88670dbbe7d232c7a7386326fd61e7dc99b32b6073caf6320e",
+    core: "0x326fd01442c237a6cb71d4d382e4e90259761ec4048be020a2c046bb569e37",
+    positions:
+      "0x42c4735c8e6aba298e1088ed405aa57c88a931772b99f6dd545d55dd4068bf5",
+    swapper:
+      "0x6b7450fe6f9764ab5b75c220f0716c78533c27a769a6339fa6785267ebfe68f",
+    nft: "0x7dc5cc83b97f4b9ed3a820c1809b4f062ec793d777bc30495a7c5e2b82cbc28",
   };
 
   beforeAll(async () => {
@@ -44,23 +47,21 @@ describe("core tests", () => {
     token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
     token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
 
-    core = new Contract(
-      CoreCompiledContract.abi,
-      ADDRESSES.coreAddress,
-      accounts[0]
-    );
+    core = new Contract(CoreCompiledContract.abi, ADDRESSES.core, accounts[0]);
 
     positions = new Contract(
       PositionsCompiledContract.abi,
-      ADDRESSES.positionsAddress,
+      ADDRESSES.positions,
       accounts[0]
     );
 
     nft = new Contract(
       EnumerableOwnedNFTContract.abi,
-      ADDRESSES.nftAddress,
+      ADDRESSES.nft,
       accounts[0]
     );
+
+    swapper = new Contract(SimpleSwapper.abi, ADDRESSES.swapper, accounts[0]);
   });
 
   for (const {
@@ -126,17 +127,61 @@ describe("core tests", () => {
           });
         }
 
-        await dumpState("dumppool.bin");
+        await dumpState("dump-pool.bin");
       });
 
       beforeEach(async () => {
-        await loadDump("dumppool.bin");
+        await loadDump("dump-pool.bin");
       });
+
+      const RECIPIENT = "0xabcd";
 
       for (const swapCase of SWAP_CASES) {
         it(`swap ${swapCase.amount} ${
           swapCase.isToken1 ? "token1" : "token0"
-        }`, async () => {});
+        }`, async () => {
+          console.log("Testing swap");
+
+          let transaction_hash: string;
+          try {
+            ({ transaction_hash } = await swapper.invoke(
+              "swap",
+              [
+                poolKey,
+                {
+                  amount: toI129(swapCase.amount),
+                  is_token1: swapCase.isToken1,
+                  sqrt_ratio_limit:
+                    swapCase.priceLimit ??
+                    (swapCase.isToken1 != swapCase.amount < 0
+                      ? MAX_SQRT_RATIO
+                      : MIN_SQRT_RATIO),
+                  skip_ahead: swapCase.skipAhead ?? 0,
+                },
+                RECIPIENT,
+              ],
+              { maxFee: 250n * 1_000_000_000n } // 250 gwei
+            ));
+          } catch (error) {
+            transaction_hash = error.transaction_hash;
+            if (!transaction_hash) throw error;
+          }
+
+          const swap_receipt = await provider.getTransactionReceipt(
+            transaction_hash
+          );
+
+          console.log(swap_receipt);
+
+          switch (swap_receipt.status) {
+            case TransactionStatus.REJECTED:
+              break;
+            case TransactionStatus.ACCEPTED_ON_L2:
+              console.log(swap_receipt);
+              console.log(core.parseEvents(swap_receipt));
+              break;
+          }
+        });
       }
 
       afterEach(async () => {

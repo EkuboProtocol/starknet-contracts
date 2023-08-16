@@ -7,6 +7,8 @@ import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.s
 import EnumerableOwnedNFTContractCASM from "../target/dev/ekubo_EnumerableOwnedNFT.casm.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.casm.json";
+import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
+import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.casm.json";
 import { dumpState, startDevnet } from "./devnet";
 
 (async function () {
@@ -84,16 +86,29 @@ import { dumpState, startDevnet } from "./devnet";
 
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
+  console.log("Deploying swapper");
+
+  const swapperResponse = await accounts[0].declareAndDeploy(
+    {
+      contract: SimpleSwapper as any,
+      casm: SimpleSwapperCASM as any,
+      constructorCalldata: [coreResponse.deploy.address],
+    },
+    { maxFee: 10000000000000 } // workaround
+  );
+
+  await dumpState();
+
   console.log(
     "Saved deployment state",
     JSON.stringify({
       token0,
       token1,
-      coreAddress: coreResponse.deploy.address,
-      positionsAddress: positions.address,
-      nftAddress: `0x${nftAddress.toString(16)}`,
-    }),
-    await dumpState()
+      core: coreResponse.deploy.address,
+      positions: positions.address,
+      swapper: swapperResponse.deploy.address,
+      nft: `0x${nftAddress.toString(16)}`,
+    })
   );
 
   devnetProcess.kill();
