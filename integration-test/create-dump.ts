@@ -9,11 +9,13 @@ import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.casm.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.casm.json";
-import { dumpState, startDevnet } from "./devnet";
+import { DevnetProvider, startDevnet } from "./devnet";
 import { writeFileSync } from "fs";
+import { getAccounts } from "./accounts";
 
 (async function () {
-  const [devnetProcess, killedPromise, , accounts] = await startDevnet();
+  const provider = new DevnetProvider(5052);
+  const accounts = getAccounts(provider);
 
   console.log("Deploying tokens");
   const simpleTokenContractDeclare = await accounts[0].declare(
@@ -68,7 +70,7 @@ import { writeFileSync } from "fs";
     `0x${Buffer.from("https://f.ekubo.org/", "ascii").toString("hex")}`,
   ];
 
-  console.log("Deploying positions", positionsConstructorCalldata);
+  console.log("Deploying positions");
 
   const positionsResponse = await accounts[0].declareAndDeploy(
     {
@@ -98,7 +100,7 @@ import { writeFileSync } from "fs";
     { maxFee: 10000000000000 } // workaround
   );
 
-  await dumpState();
+  await provider.dumpState();
 
   const addresses = {
     token0,
@@ -112,7 +114,4 @@ import { writeFileSync } from "fs";
   writeFileSync("./addresses.json", JSON.stringify(addresses));
 
   console.log("Saved deployment state", addresses);
-
-  devnetProcess.kill();
-  await killedPromise;
 })();

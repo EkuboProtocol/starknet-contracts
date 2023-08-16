@@ -1,70 +1,87 @@
 import { spawn } from "child_process";
-import { Provider } from "starknet";
+import { Provider, ProviderInterface, ProviderOptions } from "starknet";
 import { getAccounts } from "./accounts";
 
-export async function startDevnet() {
-  console.log(
-    "Starting starknet devnet",
-    process.env.STARKNET_SIERRA_COMPILER_PATH ?? ""
-  );
+export class DevnetProvider extends Provider {
+  private readonly port: number;
 
+  constructor(port: number) {
+    super({ sequencer: { baseUrl: `http://127.0.0.1:${port}` } });
+    this.port = port;
+  }
+
+  async dumpState(path: string = "dump.bin") {
+    const response = await fetch(`http://127.0.0.1:${this.port}/dump`, {
+      method: "post",
+      body: JSON.stringify({ path }),
+      headers: { "content-type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to save state: ${await response.text()}`);
+    } else {
+      const blob = await response.blob();
+    }
+  }
+
+  async loadDump(path: string = "dump.bin") {
+    const response = await fetch(`http://127.0.0.1:${this.port}/load`, {
+      method: "post",
+      body: JSON.stringify({
+        path,
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load state: ${await response.text()}`);
+    }
+  }
+}
+
+export async function startDevnet(options?: {
+  sierraCompilerPath?: string;
+  port?: number;
+}) {
+  console.log("Starting starknet devnet", options?.sierraCompilerPath ?? "");
+
+  const port = options?.port ?? 5050;
   const devnetProcess = spawn("starknet-devnet", [
     "--seed",
     "0",
-    ...(process.env.STARKNET_SIERRA_COMPILER_PATH
-      ? ["--sierra-compiler-path", process.env.STARKNET_SIERRA_COMPILER_PATH]
+    "--port",
+    `${port}`,
+    ...(options?.sierraCompilerPath
+      ? ["--sierra-compiler-path", options.sierraCompilerPath]
       : []),
   ]);
-
-  devnetProcess.stdout.on("data", (data) => console.log(data.toString("utf8")));
-  devnetProcess.stderr.on("data", (data) => console.log(data.toString("utf8")));
 
   const killedPromise = new Promise<null>((resolve) => {
     devnetProcess.on("close", () => resolve(null));
   });
 
-  await new Promise((resolve, reject) => {
-    devnetProcess.stdout.on("data", (data) => {
-      if (
-        data.toString("utf8").includes("Listening on http://127.0.0.1:5050/")
-      ) {
+  await new Promise((resolve) => {
+    const listener = (data: Buffer) => {
+      if (data.toString("utf8").includes(`Listening on`)) {
         console.log("Starknet devnet started");
+        devnetProcess.stdout.off("data", listener);
 
         resolve(null);
       }
+    };
+
+    devnetProcess.stdout.on("data", listener);
+    devnetProcess.on("error", (error) => {
+      console.error(`Error: ${error.message}`);
+    });
+
+    devnetProcess.on("exit", (code, signal) => {
+      console.log(
+        `Child process exited with code ${code} and signal ${signal}`
+      );
     });
   });
 
-  const provider = new Provider({
-    sequencer: { baseUrl: "http://127.0.0.1:5050" },
-  });
+  const provider = new DevnetProvider(port);
   const accounts = getAccounts(provider);
 
   return [devnetProcess, killedPromise, provider, accounts] as const;
-}
-
-export async function dumpState(path: string = "dump.bin") {
-  const response = await fetch("http://127.0.0.1:5050/dump", {
-    method: "post",
-    body: JSON.stringify({ path }),
-    headers: { "content-type": "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to save state: ${await response.text()}`);
-  } else {
-    const blob = await response.blob();
-  }
-}
-
-export async function loadDump(path: string = "dump.bin") {
-  const response = await fetch("http://127.0.0.1:5050/load", {
-    method: "post",
-    body: JSON.stringify({
-      path,
-    }),
-    headers: { "content-type": "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to load state: ${await response.text()}`);
-  }
 }

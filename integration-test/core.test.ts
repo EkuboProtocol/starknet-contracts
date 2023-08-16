@@ -8,10 +8,11 @@ import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
-import { dumpState, loadDump, startDevnet } from "./devnet";
+import { DevnetProvider, startDevnet } from "./devnet";
 import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
 import ADDRESSES from "./addresses.json";
 import Decimal from "decimal.js-light";
+import { getAccounts } from "./accounts";
 
 function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   return {
@@ -108,7 +109,7 @@ function getAmountsForLiquidity({
 describe("core tests", () => {
   let starknetProcess: ChildProcessWithoutNullStreams;
   let accounts: Account[];
-  let provider: Provider;
+  let provider: DevnetProvider;
   let killedPromise: Promise<null>;
 
   let core: Contract;
@@ -119,9 +120,10 @@ describe("core tests", () => {
   let swapper: Contract;
 
   beforeAll(async () => {
-    [starknetProcess, killedPromise, provider, accounts] = await startDevnet();
+    provider = new DevnetProvider(5051);
+    accounts = getAccounts(provider);
 
-    await loadDump();
+    await provider.loadDump();
     token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
     token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
 
@@ -154,7 +156,7 @@ describe("core tests", () => {
 
       // set up the pool according to the pool case
       beforeAll(async () => {
-        await loadDump();
+        await provider.loadDump();
 
         console.log(`Setting up pool for ${poolCaseName}`);
 
@@ -224,11 +226,11 @@ describe("core tests", () => {
           await token1.call("balanceOf", [accounts[0].address]),
         ]);
 
-        await dumpState("dump-pool.bin");
+        await provider.dumpState("dump-pool.bin");
       });
 
       beforeEach(async () => {
-        await loadDump("dump-pool.bin");
+        await provider.loadDump("dump-pool.bin");
       });
 
       afterEach(async () => {
