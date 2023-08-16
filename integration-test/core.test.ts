@@ -245,20 +245,26 @@ describe("core tests", () => {
 
           let transaction_hash: string;
           try {
-            ({ transaction_hash } = await swapper.invoke("swap", [
-              poolKey,
+            ({ transaction_hash } = await swapper.invoke(
+              "swap",
+              [
+                poolKey,
+                {
+                  amount: toI129(swapCase.amount),
+                  is_token1: swapCase.isToken1,
+                  sqrt_ratio_limit:
+                    swapCase.sqrtRatioLimit ??
+                    (swapCase.isToken1 != swapCase.amount < 0
+                      ? MAX_SQRT_RATIO
+                      : MIN_SQRT_RATIO),
+                  skip_ahead: swapCase.skipAhead ?? 0,
+                },
+                RECIPIENT,
+              ],
               {
-                amount: toI129(swapCase.amount),
-                is_token1: swapCase.isToken1,
-                sqrt_ratio_limit:
-                  swapCase.sqrtRatioLimit ??
-                  (swapCase.isToken1 != swapCase.amount < 0
-                    ? MAX_SQRT_RATIO
-                    : MIN_SQRT_RATIO),
-                skip_ahead: swapCase.skipAhead ?? 0,
-              },
-              RECIPIENT,
-            ]));
+                maxFee: 1_000_000_000_000_000n,
+              }
+            ));
           } catch (error) {
             transaction_hash = error.transaction_hash;
             if (!transaction_hash) throw error;
