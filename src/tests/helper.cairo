@@ -16,6 +16,7 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
 use ekubo::simple_erc20::{SimpleERC20};
 use ekubo::extensions::oracle::{Oracle};
 use ekubo::extensions::limit_orders::{LimitOrders};
@@ -174,6 +175,18 @@ fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
         .expect('rf deploy failed');
 
     IQuoterDispatcher { contract_address: address }
+}
+
+fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        SimpleSwapper::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('ss deploy failed');
+
+    ISimpleSwapperDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {

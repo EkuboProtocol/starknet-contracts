@@ -9,3 +9,4 @@ mod positions_test;
 mod quoter_test;
 mod store_packing_test;
 mod simple_erc20_test;
+mod simple_swapper_test;

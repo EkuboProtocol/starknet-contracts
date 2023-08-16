@@ -136,9 +136,7 @@ describe("core tests", () => {
       for (const swapCase of SWAP_CASES) {
         it(`swap ${swapCase.amount} ${
           swapCase.isToken1 ? "token1" : "token0"
-        }`, async () => {
-          console.log(`Swap test`);
-        });
+        }`, async () => {});
       }
 
       afterEach(async () => {
