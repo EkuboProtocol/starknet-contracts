@@ -5,7 +5,7 @@ import { getAccounts } from "./accounts";
 export async function startDevnet() {
   console.log(
     "Starting starknet devnet",
-    process.env.STARKNET_SIERRA_COMPILER_PATH
+    process.env.STARKNET_SIERRA_COMPILER_PATH ?? ""
   );
 
   const devnetProcess = spawn("starknet-devnet", [
