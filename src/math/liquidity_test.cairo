@@ -332,18 +332,3 @@ fn test_liquidity_operations_rounding_increases_liquidity_price_above() {
     );
     assert(computed_liquidity == 0x186a0, '100k times capital efficiency');
 }
-
-use debug::PrintTrait;
-
-#[test]
-fn test_liquidity_delta_for_example() {
-    let sqrt_ratio = tick_to_sqrt_ratio(Zeroable::zero());
-    let liquidity_delta = i129 { mag: 100_000, sign: false };
-    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 30 * 5982, sign: true });
-    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 30 * 5982, sign: false });
-    let delta = liquidity_delta_to_amount_delta(
-        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
-    );
-    delta.print();
-}
-
