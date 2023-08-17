@@ -161,6 +161,15 @@ describe("core tests", () => {
               true,
             ]);
           }
+
+          const [balance0, balance1] = await Promise.all([
+            token0.call("balanceOf", [core.address]),
+            token1.call("balanceOf", [core.address]),
+          ]);
+
+          // assuming up to 1 wei of rounding error per swap / withdrawal
+          expect(balance0).toBeLessThan(positions.length + 1);
+          expect(balance1).toBeLessThan(positions.length + 1);
         }
       });
 
