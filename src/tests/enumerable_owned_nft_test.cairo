@@ -21,7 +21,7 @@ fn switch_to_controller() {
 
 fn deploy_default() -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
     deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     )
 }
 
@@ -29,10 +29,10 @@ fn deploy_default() -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
 #[available_gas(300000000)]
 fn test_nft_name_symbol_token_uri() {
     let (_, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
-    assert(nft.name() == 'Ekubo Position NFT', 'name');
-    assert(nft.symbol() == 'EpNFT', 'symbol');
+    assert(nft.name() == 'Ekubo Position', 'name');
+    assert(nft.symbol() == 'EkuPo', 'symbol');
     assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'tokenUri');
     assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
 }
@@ -101,7 +101,7 @@ fn test_nft_custom_uri() {
 #[available_gas(300000000)]
 fn test_nft_indexing_token_ids() {
     let (controller, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -185,7 +185,7 @@ fn test_nft_indexing_token_ids_not_sorted() {
 #[available_gas(300000000)]
 fn test_nft_indexing_token_ids_snake_case() {
     let (controller, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -228,7 +228,7 @@ fn test_nft_indexing_token_ids_snake_case() {
 #[available_gas(300000000)]
 fn test_burn_makes_token_non_transferrable() {
     let (controller, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -294,7 +294,7 @@ fn test_is_account_authorized() {
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_burn_makes_token_non_transferrable_error() {
     let (controller, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position NFT', 'EpNFT', 'https://z.ekubo.org/'
+        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();

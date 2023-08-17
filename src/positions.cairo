@@ -91,8 +91,8 @@ mod Positions {
                 EnumerableOwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
                     controller: get_contract_address(),
-                    name: 'Ekubo Position NFT',
-                    symbol: 'epNFT',
+                    name: 'Ekubo Position',
+                    symbol: 'EkuPo',
                     token_uri_base: token_uri_base,
                     salt: 0
                 )
