@@ -114,17 +114,6 @@ fn deposit(
     (token_id, actual_liquidity)
 }
 
-impl PoolStatePartialEq of PartialEq<PoolState> {
-    fn eq(lhs: @PoolState, rhs: @PoolState) -> bool {
-        (lhs.block_timestamp_last == rhs.block_timestamp_last)
-            & (lhs.tick_cumulative_last == rhs.tick_cumulative_last)
-            & (lhs.tick_last == rhs.tick_last)
-    }
-    fn ne(lhs: @PoolState, rhs: @PoolState) -> bool {
-        !PartialEq::eq(lhs, rhs)
-    }
-}
-
 #[test]
 #[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE', ))]
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {

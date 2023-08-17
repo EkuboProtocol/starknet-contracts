@@ -14,7 +14,10 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
+use ekubo::simple_erc20::{SimpleERC20};
 use ekubo::extensions::oracle::{Oracle};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
@@ -57,6 +60,16 @@ fn deploy_mock_token() -> IMockERC20Dispatcher {
     return IMockERC20Dispatcher { contract_address: token_address };
 }
 
+fn deploy_simple_erc20(owner: ContractAddress) -> IERC20Dispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@owner, ref constructor_args);
+    let (token_address, _) = deploy_syscall(
+        SimpleERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('simpleerc20 deploy');
+    return IERC20Dispatcher { contract_address: token_address };
+}
+
 fn deploy_enumerable_owned_nft(
     owner: ContractAddress, name: felt252, symbol: felt252, token_uri_base: felt252
 ) -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
@@ -95,6 +108,8 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
+    Serde::serialize(@'limit_orders://', ref constructor_args);
 
     let (address, _) = deploy_syscall(
         LimitOrders::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -160,6 +175,18 @@ fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
         .expect('rf deploy failed');
 
     IQuoterDispatcher { contract_address: address }
+}
+
+fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@core.contract_address, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        SimpleSwapper::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('ss deploy failed');
+
+    ISimpleSwapperDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
@@ -338,11 +365,11 @@ fn update_position_inner(
                 (pool_key, UpdatePositionParameters { bounds, liquidity_delta, salt: 0 }, recipient)
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -402,11 +429,11 @@ fn accumulate_as_fees_inner(
     amount1: u128,
 ) -> Delta {
     match locker.call(Action::AccumulateAsFees((pool_key, amount0, amount1))) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
@@ -460,11 +487,11 @@ fn swap_inner(
                 )
             )
         ) {
-        ActionResult::AssertLockerId(_) => {
+        ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::Relock(_) => {
+        ActionResult::Relock => {
             assert(false, 'unexpected');
             Zeroable::zero()
         },

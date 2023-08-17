@@ -49,7 +49,7 @@ fn to_decimal(mut x: u128) -> Option<felt252> {
 
                 ix += 1_u8;
             },
-            Option::None(_) => {
+            Option::None => {
                 break ();
             }
         };

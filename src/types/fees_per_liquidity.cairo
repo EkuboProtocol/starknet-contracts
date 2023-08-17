@@ -3,7 +3,7 @@ use option::{OptionTrait};
 use ekubo::math::muldiv::{div};
 use zeroable::{Zeroable};
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
+#[derive(Copy, Drop, Serde, PartialEq, starknet::Store)]
 struct FeesPerLiquidity {
     value0: felt252,
     value1: felt252,
@@ -18,15 +18,6 @@ impl AddFeesPerLiquidity of Add<FeesPerLiquidity> {
 impl SubFeesPerLiquidity of Sub<FeesPerLiquidity> {
     fn sub(lhs: FeesPerLiquidity, rhs: FeesPerLiquidity) -> FeesPerLiquidity {
         FeesPerLiquidity { value0: lhs.value0 - rhs.value0, value1: lhs.value1 - rhs.value1,  }
-    }
-}
-
-impl FeesPerLiquidityPartialEq of PartialEq<FeesPerLiquidity> {
-    fn eq(lhs: @FeesPerLiquidity, rhs: @FeesPerLiquidity) -> bool {
-        (lhs.value0 == rhs.value0) & (lhs.value1 == rhs.value1)
-    }
-    fn ne(lhs: @FeesPerLiquidity, rhs: @FeesPerLiquidity) -> bool {
-        !PartialEq::eq(lhs, rhs)
     }
 }
 

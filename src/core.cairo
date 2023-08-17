@@ -361,7 +361,7 @@ mod Core {
                         true
                     )
                 },
-                Option::None(_) => {
+                Option::None => {
                     let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
                     if (next > max_tick()) {
                         return (max_tick(), false);
@@ -392,7 +392,7 @@ mod Core {
                         true
                     )
                 },
-                Option::None(_) => {
+                Option::None => {
                     // if it's not set, we know there is no set bit in this word
                     let prev = word_and_bit_index_to_tick((word_index, 250), pool_key.tick_spacing);
                     if (prev < min_tick()) {

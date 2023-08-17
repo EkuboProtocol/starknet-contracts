@@ -150,7 +150,7 @@ mod Quoter {
                                     amount = -amount;
                                 };
                             },
-                            Option::None(_) => {
+                            Option::None => {
                                 break ();
                             },
                         };

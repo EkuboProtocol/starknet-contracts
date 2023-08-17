@@ -19,18 +19,6 @@ impl SwapResultPrintTrait of PrintTrait<SwapResult> {
 }
 
 
-impl SwapResultEq of PartialEq<SwapResult> {
-    fn eq(lhs: @SwapResult, rhs: @SwapResult) -> bool {
-        (*lhs.consumed_amount == *rhs.consumed_amount)
-            & (*lhs.sqrt_ratio_next == *rhs.sqrt_ratio_next)
-            & (*lhs.calculated_amount == *rhs.calculated_amount)
-            & (*lhs.fee_amount == *rhs.fee_amount)
-    }
-    fn ne(lhs: @SwapResult, rhs: @SwapResult) -> bool {
-        !PartialEq::<SwapResult>::eq(lhs, rhs)
-    }
-}
-
 #[test]
 fn test_is_price_increasing_cases() {
     assert(!is_price_increasing(exact_output: false, is_token1: false), 'input token0');
@@ -534,13 +522,16 @@ fn test_swap_against_liquidity_hit_limit_token0_output() {
         fee: exp2(127), // equal to 0.5
     );
 
-    assert(result.consumed_amount == i129 { mag: 1961, sign: true }, 'consumed_amount');
     assert(
-        result.sqrt_ratio_next == u256 { high: 1, low: 6805647338418769269267492148635364229 },
-        'sqrt_ratio_next'
+        result == SwapResult {
+            consumed_amount: i129 {
+                mag: 980, sign: true
+                }, sqrt_ratio_next: u256 {
+                high: 1, low: 6805647338418769269267492148635364229
+            }, calculated_amount: 2000, fee_amount: 980
+        },
+        'result'
     );
-    assert(result.calculated_amount == 1999, 'calculated_amount');
-    assert(result.fee_amount == 981, 'fee');
 }
 
 #[test]
@@ -554,13 +545,16 @@ fn test_swap_against_liquidity_hit_limit_token1_output() {
         fee: exp2(127), // equal to 0.5
     );
 
-    assert(result.consumed_amount == i129 { mag: 2001, sign: true }, 'consumed_amount');
     assert(
-        result.sqrt_ratio_next == u256 { high: 0, low: 333476719582519694194107115283132847226 },
-        'sqrt_ratio_next'
+        result == SwapResult {
+            consumed_amount: i129 {
+                mag: 1000, sign: true
+                }, sqrt_ratio_next: u256 {
+                high: 0, low: 333476719582519694194107115283132847226
+            }, calculated_amount: 2041, fee_amount: 1000
+        },
+        'result'
     );
-    assert(result.calculated_amount == 2040, 'calculated_amount');
-    assert(result.fee_amount == 1001, 'fee');
 }
 
 

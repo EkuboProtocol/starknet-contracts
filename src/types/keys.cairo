@@ -15,7 +15,7 @@ use ekubo::math::contract_address::{ContractAddressOrder};
 // fee is specified as a 0.128 number, so 1% == 2**128 / 100
 // tick_spacing is the minimum spacing between initialized ticks, i.e. ticks that positions may use
 // extension is the address of a contract that implements additional functionality for the pool
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
@@ -39,15 +39,9 @@ impl PoolKeyTraitImpl of PoolKeyTrait {
 
 impl PoolKeyHash of LegacyHash<PoolKey> {
     fn hash(state: felt252, value: PoolKey) -> felt252 {
-        pedersen(
-            state,
-            pedersen(
-                pedersen(
-                    pedersen(value.token0.into(), value.token1.into()),
-                    pedersen(value.fee.into(), value.tick_spacing.into())
-                ),
-                value.extension.into()
-            )
+        LegacyHash::hash(
+            LegacyHash::hash(state, (value.token0, value.token1, value.fee, value.tick_spacing)),
+            value.extension
         )
     }
 }
@@ -55,7 +49,7 @@ impl PoolKeyHash of LegacyHash<PoolKey> {
 // salt is a random number specified by the owner to allow a single address to control many positions with the same pool and bounds
 // owner is the immutable address of the position
 // bounds is the price range where the liquidity of the position is active
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct PositionKey {
     salt: u64,
     owner: ContractAddress,
@@ -64,8 +58,6 @@ struct PositionKey {
 
 impl PositionKeyHash of LegacyHash<PositionKey> {
     fn hash(state: felt252, value: PositionKey) -> felt252 {
-        LegacyHash::hash(
-            pedersen(state, pedersen(value.salt.into(), value.owner.into())), value.bounds
-        )
+        LegacyHash::hash(state, (value.salt, value.owner, value.bounds))
     }
 }

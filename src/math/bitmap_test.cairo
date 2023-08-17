@@ -7,15 +7,6 @@ use option::{OptionTrait};
 use ekubo::math::string::{append, to_decimal};
 use traits::{Into};
 
-impl PartialEqBitmap of PartialEq<Bitmap> {
-    fn eq(lhs: @Bitmap, rhs: @Bitmap) -> bool {
-        lhs.value == rhs.value
-    }
-    fn ne(lhs: @Bitmap, rhs: @Bitmap) -> bool {
-        !PartialEq::eq(lhs, rhs)
-    }
-}
-
 #[test]
 fn test_zeroable() {
     let b: Bitmap = Zeroable::zero();
