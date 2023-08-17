@@ -149,12 +149,39 @@ describe("core tests", () => {
 
       afterEach(async () => {
         if (setupSuccess) {
+          let withdrawalFee0 = 0n,
+            withdrawalFee1 = 0n;
+
           for (let i = 0; i < positions.length; i++) {
             const { bounds } = positions[i];
+
+            const boundsArgument = {
+              lower: toI129(bounds.lower),
+              upper: toI129(bounds.upper),
+            };
+
+            const { liquidity, amount0, amount1 } =
+              (await positionsContract.call("get_token_info", [
+                i + 1,
+                poolKey,
+                boundsArgument,
+              ])) as unknown as {
+                liquidity: bigint;
+                amount0: bigint;
+                amount1: bigint;
+                fees0: bigint;
+                fees1: bigint;
+              };
+
+            expect(liquidity).toEqual(liquiditiesActual[i]);
+
+            withdrawalFee0 += (amount0 * poolKey.fee) / 2n ** 128n;
+            withdrawalFee1 += (amount1 * poolKey.fee) / 2n ** 128n;
+
             await positionsContract.invoke("withdraw", [
               i + 1,
               poolKey,
-              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+              boundsArgument,
               liquiditiesActual[i],
               0,
               0,
@@ -168,8 +195,14 @@ describe("core tests", () => {
           ]);
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
-          expect(balance0).toBeLessThan(positions.length + 1);
-          expect(balance1).toBeLessThan(positions.length + 1);
+          expect(balance0).toBeGreaterThanOrEqual(withdrawalFee0);
+          expect(balance0).toBeLessThanOrEqual(
+            withdrawalFee0 + BigInt(positions.length * 2 + 1)
+          );
+          expect(balance1).toBeGreaterThanOrEqual(withdrawalFee1);
+          expect(balance1).toBeLessThanOrEqual(
+            withdrawalFee1 + BigInt(positions.length * 2 + 1)
+          );
         }
       });
 
