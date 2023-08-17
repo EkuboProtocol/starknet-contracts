@@ -85,27 +85,53 @@ fn swap_result(
     if ((sqrt_ratio_next > sqrt_ratio_limit) == increasing) {
         sqrt_ratio_next = sqrt_ratio_limit;
 
-        let (consumed_amount, calculated_amount) = if (is_token1) {
-            (
-                i129 {
-                    mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
-                    sign: amount.sign
-                }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
-            )
-        } else {
-            (
-                i129 {
-                    mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
-                    sign: amount.sign
-                }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
-            )
-        };
+        return if (amount.sign) {
+            let (consumed_amount, calculated_amount) = if (is_token1) {
+                (
+                    i129 {
+                        mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false),
+                        sign: true
+                    }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true)
+                )
+            } else {
+                (
+                    i129 {
+                        mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false),
+                        sign: true
+                    }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true)
+                )
+            };
 
-        return SwapResult {
-            consumed_amount,
-            calculated_amount,
-            sqrt_ratio_next,
-            fee_amount: (amount_with_fee(consumed_amount, fee) - consumed_amount).mag
+            let fee_amount = compute_fee(consumed_amount.mag, fee);
+
+            SwapResult {
+                consumed_amount: consumed_amount + i129 {
+                    mag: fee_amount, sign: false
+                }, calculated_amount, sqrt_ratio_next, fee_amount
+            }
+        } else {
+            let (consumed_amount, calculated_amount) = if (is_token1) {
+                (
+                    i129 {
+                        mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
+                        sign: false
+                    }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
+                )
+            } else {
+                (
+                    i129 {
+                        mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
+                        sign: false
+                    }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
+                )
+            };
+
+            SwapResult {
+                consumed_amount,
+                calculated_amount,
+                sqrt_ratio_next,
+                fee_amount: (amount_with_fee(consumed_amount, fee) - consumed_amount).mag
+            }
         };
     }
 

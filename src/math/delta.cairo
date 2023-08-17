@@ -2,6 +2,7 @@ use ekubo::types::i129::i129;
 use ekubo::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul};
 use zeroable::{Zeroable};
+use traits::{Into};
 
 fn ordered_non_zero<
     T,
@@ -54,10 +55,11 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     }
 
     let result = u256_wide_mul(
-        u256 { low: liquidity, high: 0 }, sqrt_ratio_upper - sqrt_ratio_lower
+        liquidity.into(), sqrt_ratio_upper - sqrt_ratio_lower
     );
 
-    assert(result.limb3.is_zero() & result.limb2.is_zero(), 'OVERFLOW_AMOUNT1_DELTA');
+    // todo: result.limb3 is always zero. we can optimize out its computation
+    assert(result.limb2.is_zero(), 'OVERFLOW_AMOUNT1_DELTA');
 
     if (round_up & result.limb0.is_non_zero()) {
         result.limb1 + 1

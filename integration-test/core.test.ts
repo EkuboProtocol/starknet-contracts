@@ -1,0 +1,250 @@
+import { Account, Contract, TransactionStatus } from "starknet";
+import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
+import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
+import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
+import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
+import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
+import { POOL_CASES } from "./pool-cases";
+import { SWAP_CASES } from "./swap-cases";
+import { DevnetProvider } from "./devnet";
+import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
+import ADDRESSES from "./addresses.json";
+import Decimal from "decimal.js-light";
+import { getAccounts } from "./accounts";
+import { getAmountsForLiquidity } from "./liquidity-to-amounts";
+
+function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
+  return {
+    mag: x < 0n ? x * -1n : x,
+    sign: x < 0n ? "0x1" : "0x0",
+  };
+}
+
+Decimal.set({ precision: 80 });
+
+describe("core tests", () => {
+  let provider: DevnetProvider;
+  let accounts: Account[];
+
+  let core: Contract;
+  let positionsContract: Contract;
+  let nft: Contract;
+  let token0: Contract;
+  let token1: Contract;
+  let swapper: Contract;
+
+  beforeAll(async () => {
+    provider = new DevnetProvider();
+    accounts = getAccounts(provider);
+
+    await provider.loadDump();
+    token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
+    token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
+
+    core = new Contract(CoreCompiledContract.abi, ADDRESSES.core, accounts[0]);
+
+    positionsContract = new Contract(
+      PositionsCompiledContract.abi,
+      ADDRESSES.positions,
+      accounts[0]
+    );
+
+    nft = new Contract(
+      EnumerableOwnedNFTContract.abi,
+      ADDRESSES.nft,
+      accounts[0]
+    );
+
+    swapper = new Contract(SimpleSwapper.abi, ADDRESSES.swapper, accounts[0]);
+  });
+
+  for (const { name: poolCaseName, pool, positions: positions } of POOL_CASES) {
+    describe(poolCaseName, () => {
+      let poolKey: {
+        token0: string;
+        token1: string;
+        fee: bigint;
+        tick_spacing: bigint;
+        extension: string;
+      };
+
+      const liquiditiesActual: bigint[] = [];
+
+      let setupSuccess = false;
+
+      // set up the pool according to the pool case
+      beforeAll(async () => {
+        await provider.loadDump();
+
+        poolKey = {
+          token0: token0.address,
+          token1: token1.address,
+          fee: pool.fee,
+          tick_spacing: pool.tickSpacing,
+          extension: "0x0",
+        };
+
+        await core.invoke("initialize_pool", [
+          poolKey,
+
+          // starting tick
+          toI129(pool.startingTick),
+        ]);
+
+        for (const { liquidity, bounds } of positions) {
+          const { amount0, amount1 } = getAmountsForLiquidity({
+            tick: pool.startingTick,
+            liquidity,
+            bounds,
+          });
+          await token0.invoke("transfer", [
+            positionsContract.address, // recipient
+            amount0, // amount
+          ]);
+          await token1.invoke("transfer", [
+            positionsContract.address, // recipient
+            amount1, // amount
+          ]);
+
+          const { transaction_hash } = await positionsContract.invoke(
+            "mint_and_deposit",
+            [
+              poolKey,
+              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+              liquidity,
+            ]
+          );
+
+          const receipt = await provider.getTransactionReceipt(
+            transaction_hash
+          );
+
+          const parsed = positionsContract.parseEvents(receipt);
+
+          const [{ PositionMinted }, { Deposit }] = parsed;
+
+          liquiditiesActual.push(Deposit.liquidity as bigint);
+        }
+
+        // transfer remaining balances to swapper, so it can swap whatever is needed
+        await token0.invoke("transfer", [
+          swapper.address,
+          await token0.call("balanceOf", [accounts[0].address]),
+        ]);
+        await token1.invoke("transfer", [
+          swapper.address,
+          await token1.call("balanceOf", [accounts[0].address]),
+        ]);
+
+        await provider.dumpState("dump-pool.bin");
+
+        setupSuccess = true;
+      });
+
+      beforeEach(async () => {
+        if (setupSuccess) {
+          await provider.loadDump("dump-pool.bin");
+        }
+      });
+
+      afterEach(async () => {
+        if (setupSuccess) {
+          for (let i = 0; i < positions.length; i++) {
+            const { bounds } = positions[i];
+            await positionsContract.invoke("withdraw", [
+              i + 1,
+              poolKey,
+              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+              liquiditiesActual[i],
+              0,
+              0,
+              true,
+            ]);
+          }
+        }
+      });
+
+      const RECIPIENT = "0xabcd";
+
+      for (const swapCase of SWAP_CASES) {
+        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
+          swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+        }${
+          swapCase.sqrtRatioLimit
+            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+                .div(new Decimal(2).pow(128))
+                .toFixed(3)}`
+            : ""
+        }`, async () => {
+          let transaction_hash: string;
+          try {
+            ({ transaction_hash } = await swapper.invoke(
+              "swap",
+              [
+                poolKey,
+                {
+                  amount: toI129(swapCase.amount),
+                  is_token1: swapCase.isToken1,
+                  sqrt_ratio_limit:
+                    swapCase.sqrtRatioLimit ??
+                    (swapCase.isToken1 != swapCase.amount < 0
+                      ? MAX_SQRT_RATIO
+                      : MIN_SQRT_RATIO),
+                  skip_ahead: swapCase.skipAhead ?? 0,
+                },
+                RECIPIENT,
+              ],
+              {
+                maxFee: 1_000_000_000_000_000n,
+              }
+            ));
+          } catch (error) {
+            transaction_hash = error.transaction_hash;
+            if (!transaction_hash) throw error;
+          }
+
+          const swap_receipt = await provider.getTransactionReceipt(
+            transaction_hash
+          );
+
+          const execution_resources = (swap_receipt as any).execution_resources;
+          if (execution_resources) {
+            delete execution_resources["n_memory_holes"];
+          }
+
+          switch (swap_receipt.status) {
+            case TransactionStatus.REVERTED:
+              const revertReasonRaw = (swap_receipt as any)
+                .revert_reason as string;
+              const revertReasonHex =
+                /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
+                  revertReasonRaw
+                )?.[1];
+
+              const revert_reason = Buffer.from(
+                revertReasonHex,
+                "hex"
+              ).toString("ascii");
+
+              expect({
+                execution_resources,
+                revert_reason,
+              }).toMatchSnapshot();
+              break;
+            case TransactionStatus.ACCEPTED_ON_L2:
+              const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
+                core.parseEvents(swap_receipt)[0].Swapped;
+              expect({
+                execution_resources,
+                delta,
+                liquidity_after,
+                sqrt_ratio_after,
+                tick_after,
+              }).toMatchSnapshot();
+              break;
+          }
+        });
+      }
+    });
+  }
+});

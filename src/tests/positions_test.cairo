@@ -686,8 +686,8 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
         skip_ahead: 0
     );
 
-    assert(delta_swap.amount0 == i129 { mag: 10000, sign: true }, 'first swap delta0');
-    assert(delta_swap.amount1 == i129 { mag: 10000, sign: false }, 'first swap delta1');
+    assert(delta_swap.amount0 == i129 { mag: 9899, sign: true }, 'first swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 10001, sign: false }, 'first swap delta1');
 
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
@@ -740,8 +740,8 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
         skip_ahead: 0
     );
 
-    assert(delta_swap.amount0 == i129 { mag: 10000, sign: false }, 'swap delta0');
-    assert(delta_swap.amount1 == i129 { mag: 10000, sign: true }, 'swap delta1');
+    assert(delta_swap.amount0 == i129 { mag: 10001, sign: false }, 'swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 9899, sign: true }, 'swap delta1');
 
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
 

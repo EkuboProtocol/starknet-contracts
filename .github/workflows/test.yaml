@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  main:
+  unit:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,3 +22,47 @@ jobs:
       - name: Test the code
         run: |
           scarb test
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+
+      - name: Build the code
+        run: |
+          scarb build
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install starknet-devnet
+        run: |
+          sudo apt install -y libgmp3-dev
+          pip install starknet-devnet
+
+      - name: Install deps
+        run: |
+          cd integration-test
+          npm ci
+
+      - name: Create dump
+        run: |
+          cd integration-test
+          npm run create-dump
+
+      - name: Run tests
+        run: |
+          cd integration-test
+          npm test

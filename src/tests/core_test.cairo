@@ -1530,6 +1530,7 @@ mod locks {
         );
     }
 
+
     #[test]
     #[available_gas(60000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
@@ -1569,8 +1570,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 497, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 498, sign: false }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 491, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 499, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1795,8 +1796,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 49873, sign: false }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 49627, sign: true }, 'amount1_delta');
+        assert(delta.amount0 == i129 { mag: 49874, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 49129, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
