@@ -22,6 +22,10 @@ function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
 
 Decimal.set({ precision: 80 });
 
+function computeFee(x: bigint, fee: bigint): bigint {
+  const p = x * fee;
+  return p / 2n ** 128n + (p % 2n ** 128n !== 0n ? 1n : 0n);
+}
 describe("core tests", () => {
   let provider: DevnetProvider;
   let accounts: Account[];
@@ -175,8 +179,8 @@ describe("core tests", () => {
 
             expect(liquidity).toEqual(liquiditiesActual[i]);
 
-            cumulativeProtocolFee0 += (amount0 * poolKey.fee) / 2n ** 128n;
-            cumulativeProtocolFee1 += (amount1 * poolKey.fee) / 2n ** 128n;
+            cumulativeProtocolFee0 += computeFee(amount0, poolKey.fee);
+            cumulativeProtocolFee1 += computeFee(amount1, poolKey.fee);
 
             await positionsContract.invoke("withdraw", [
               i + 1,
