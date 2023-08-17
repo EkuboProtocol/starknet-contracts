@@ -1,6 +1,4 @@
-import { ChildProcessWithoutNullStreams } from "child_process";
-
-import { Account, Contract, Provider, TransactionStatus } from "starknet";
+import { Account, Contract, TransactionStatus } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
 import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
@@ -13,6 +11,7 @@ import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
 import ADDRESSES from "./addresses.json";
 import Decimal from "decimal.js-light";
 import { getAccounts } from "./accounts";
+import { getAmountsForLiquidity } from "./liquidity-to-amounts";
 
 function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   return {
@@ -21,90 +20,7 @@ function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   };
 }
 
-function amount0Delta({
-  liquidity,
-  sqrtRatioLower,
-  sqrtRatioUpper,
-}: {
-  liquidity: bigint;
-  sqrtRatioLower: bigint;
-  sqrtRatioUpper: bigint;
-}) {
-  const numerator = (liquidity << 128n) * (sqrtRatioUpper - sqrtRatioLower);
-
-  const divOne =
-    numerator / sqrtRatioUpper + (numerator % sqrtRatioUpper === 0n ? 0n : 1n);
-
-  return divOne / sqrtRatioLower + (divOne % sqrtRatioLower === 0n ? 0n : 1n);
-}
-
-function amount1Delta({
-  liquidity,
-  sqrtRatioLower,
-  sqrtRatioUpper,
-}: {
-  liquidity: bigint;
-  sqrtRatioLower: bigint;
-  sqrtRatioUpper: bigint;
-}) {
-  const numerator = liquidity * (sqrtRatioUpper - sqrtRatioLower);
-  const result =
-    (numerator % (1n << 128n) !== 0n ? 1n : 0n) + numerator / (1n << 128n);
-  return result;
-}
-
 Decimal.set({ precision: 80 });
-function tickToSqrtRatio(tick: bigint) {
-  return BigInt(
-    new Decimal("1.000001")
-      .pow(new Decimal(Number(tick)))
-      .mul(new Decimal(2).pow(128))
-      .toFixed(0)
-  );
-}
-
-function getAmountsForLiquidity({
-  bounds,
-  liquidity,
-  tick,
-}: {
-  bounds: { lower: bigint; upper: bigint };
-  liquidity: bigint;
-  tick: bigint;
-}): { amount0: bigint; amount1: bigint } {
-  if (tick < bounds.lower) {
-    return {
-      amount0: amount0Delta({
-        liquidity,
-        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
-        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
-      }),
-      amount1: 0n,
-    };
-  } else if (tick < bounds.upper) {
-    return {
-      amount0: amount0Delta({
-        liquidity,
-        sqrtRatioLower: tickToSqrtRatio(tick),
-        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
-      }),
-      amount1: amount1Delta({
-        liquidity,
-        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
-        sqrtRatioUpper: tickToSqrtRatio(tick),
-      }),
-    };
-  } else {
-    return {
-      amount0: 0n,
-      amount1: amount1Delta({
-        liquidity,
-        sqrtRatioLower: tickToSqrtRatio(bounds.lower),
-        sqrtRatioUpper: tickToSqrtRatio(bounds.upper),
-      }),
-    };
-  }
-}
 
 describe("core tests", () => {
   let provider: DevnetProvider;
@@ -151,6 +67,10 @@ describe("core tests", () => {
         tick_spacing: bigint;
         extension: string;
       };
+
+      const liquiditiesActual: bigint[] = [];
+
+      let setupSuccess = false;
 
       // set up the pool according to the pool case
       beforeAll(async () => {
@@ -203,11 +123,7 @@ describe("core tests", () => {
 
           const [{ PositionMinted }, { Deposit }] = parsed;
 
-          if (Deposit.liquidity !== liquidity) {
-            throw new Error(
-              `Liquidity not equal: ${Deposit.liquidity} !== ${liquidity}`
-            );
-          }
+          liquiditiesActual.push(Deposit.liquidity as bigint);
         }
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
@@ -221,32 +137,44 @@ describe("core tests", () => {
         ]);
 
         await provider.dumpState("dump-pool.bin");
+
+        setupSuccess = true;
       });
 
       beforeEach(async () => {
-        await provider.loadDump("dump-pool.bin");
+        if (setupSuccess) {
+          await provider.loadDump("dump-pool.bin");
+        }
       });
 
       afterEach(async () => {
-        for (let i = 0; i < positions.length; i++) {
-          const { bounds, liquidity } = positions[i];
-          await positionsContract.invoke("withdraw", [
-            i + 1,
-            poolKey,
-            { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
-            liquidity,
-            0,
-            0,
-            true,
-          ]);
+        if (setupSuccess) {
+          for (let i = 0; i < positions.length; i++) {
+            const { bounds } = positions[i];
+            await positionsContract.invoke("withdraw", [
+              i + 1,
+              poolKey,
+              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+              liquiditiesActual[i],
+              0,
+              0,
+              true,
+            ]);
+          }
         }
       });
 
       const RECIPIENT = "0xabcd";
 
       for (const swapCase of SWAP_CASES) {
-        it(`swap ${swapCase.amount} ${
-          swapCase.isToken1 ? "token1" : "token0"
+        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
+          swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+        }${
+          swapCase.sqrtRatioLimit
+            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+                .div(new Decimal(2).pow(128))
+                .toFixed(3)}`
+            : ""
         }`, async () => {
           let transaction_hash: string;
           try {
@@ -289,18 +217,18 @@ describe("core tests", () => {
               const revertReasonRaw = (swap_receipt as any)
                 .revert_reason as string;
               const revertReasonHex =
-                /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)\]./g.exec(
+                /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
                   revertReasonRaw
-                )[1];
+                )?.[1];
 
-              const parsedRevertReason = Buffer.from(
+              const revert_reason = Buffer.from(
                 revertReasonHex,
                 "hex"
               ).toString("ascii");
 
               expect({
                 execution_resources,
-                parsedRevertReason,
+                revert_reason,
               }).toMatchSnapshot();
               break;
             case TransactionStatus.ACCEPTED_ON_L2:
@@ -308,12 +236,10 @@ describe("core tests", () => {
                 core.parseEvents(swap_receipt)[0].Swapped;
               expect({
                 execution_resources,
-                result: {
-                  delta,
-                  liquidity_after,
-                  sqrt_ratio_after,
-                  tick_after,
-                },
+                delta,
+                liquidity_after,
+                sqrt_ratio_after,
+                tick_after,
               }).toMatchSnapshot();
               break;
           }
