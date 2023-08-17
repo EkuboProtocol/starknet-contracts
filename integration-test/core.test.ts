@@ -149,8 +149,8 @@ describe("core tests", () => {
 
       afterEach(async () => {
         if (setupSuccess) {
-          let withdrawalFee0 = 0n,
-            withdrawalFee1 = 0n;
+          let cumulativeProtocolFee0 = 0n;
+          let cumulativeProtocolFee1 = 0n;
 
           for (let i = 0; i < positions.length; i++) {
             const { bounds } = positions[i];
@@ -175,8 +175,8 @@ describe("core tests", () => {
 
             expect(liquidity).toEqual(liquiditiesActual[i]);
 
-            withdrawalFee0 += (amount0 * poolKey.fee) / 2n ** 128n;
-            withdrawalFee1 += (amount1 * poolKey.fee) / 2n ** 128n;
+            cumulativeProtocolFee0 += (amount0 * poolKey.fee) / 2n ** 128n;
+            cumulativeProtocolFee1 += (amount1 * poolKey.fee) / 2n ** 128n;
 
             await positionsContract.invoke("withdraw", [
               i + 1,
@@ -189,19 +189,27 @@ describe("core tests", () => {
             ]);
           }
 
+          const [protocolFee0, protocolFee1] = await Promise.all([
+            core.call("get_protocol_fees_collected", [token0.address]),
+            core.call("get_protocol_fees_collected", [token1.address]),
+          ]);
+
+          expect(protocolFee0).toEqual(cumulativeProtocolFee0);
+          expect(protocolFee1).toEqual(cumulativeProtocolFee1);
+
           const [balance0, balance1] = await Promise.all([
             token0.call("balanceOf", [core.address]),
             token1.call("balanceOf", [core.address]),
           ]);
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
-          expect(balance0).toBeGreaterThanOrEqual(withdrawalFee0);
+          expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
           expect(balance0).toBeLessThanOrEqual(
-            withdrawalFee0 + BigInt(positions.length * 2 + 1)
+            cumulativeProtocolFee0 + BigInt(positions.length * 2 + 1)
           );
-          expect(balance1).toBeGreaterThanOrEqual(withdrawalFee1);
+          expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
           expect(balance1).toBeLessThanOrEqual(
-            withdrawalFee1 + BigInt(positions.length * 2 + 1)
+            cumulativeProtocolFee1 + BigInt(positions.length * 2 + 1)
           );
         }
       });
