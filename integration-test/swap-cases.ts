@@ -1,6 +1,5 @@
-import { MAX_SQRT_RATIO } from "./constants";
-
 export const SWAP_CASES: Array<{
+  only?: true;
   amount: bigint;
   isToken1: boolean;
   sqrtRatioLimit?: bigint;
@@ -57,6 +56,17 @@ export const SWAP_CASES: Array<{
     isToken1: true,
     skipAhead: 2n,
     sqrtRatioLimit: 1n << 127n,
+  },
+  // wrong direction
+  {
+    amount: 1n,
+    isToken1: true,
+    sqrtRatioLimit: 2n << 127n,
+  },
+  {
+    amount: 1n,
+    isToken1: true,
+    sqrtRatioLimit: 2n << 127n,
   },
   {
     amount: 10_000n,

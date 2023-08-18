@@ -230,6 +230,20 @@ exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing
 }
 `;
 
+exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
 exports[`core tests 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
@@ -631,6 +645,20 @@ exports[`core tests 1e18 liquidity above price, starting at price 1, tick_spacin
     "mag": 0n,
     "sign": false,
   },
+}
+`;
+
+exports[`core tests 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
@@ -1038,6 +1066,20 @@ exports[`core tests 1e18 liquidity below price, starting at price 1, tick_spacin
 }
 `;
 
+exports[`core tests 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
 exports[`core tests 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
@@ -1442,6 +1484,20 @@ exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.
 }
 `;
 
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
 exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
@@ -1843,6 +1899,20 @@ exports[`core tests overlapping positions asymmetric, starting at price 1, tick_
     "mag": 0n,
     "sign": false,
   },
+}
+`;
+
+exports[`core tests overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "execution_resources": undefined,
+  "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 

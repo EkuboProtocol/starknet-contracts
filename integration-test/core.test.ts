@@ -62,8 +62,13 @@ describe("core tests", () => {
     swapper = new Contract(SimpleSwapper.abi, ADDRESSES.swapper, accounts[0]);
   });
 
-  for (const { name: poolCaseName, pool, positions: positions } of POOL_CASES) {
-    describe(poolCaseName, () => {
+  for (const {
+    only: poolCaseOnly,
+    name: poolCaseName,
+    pool,
+    positions: positions,
+  } of POOL_CASES) {
+    (poolCaseOnly ? describe.only : describe)(poolCaseName, () => {
       let poolKey: {
         token0: string;
         token1: string;
@@ -221,83 +226,87 @@ describe("core tests", () => {
       const RECIPIENT = "0xabcd";
 
       for (const swapCase of SWAP_CASES) {
-        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
-          swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
-        }${
-          swapCase.sqrtRatioLimit
-            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
-                .div(new Decimal(2).pow(128))
-                .toFixed(3)}`
-            : ""
-        }`, async () => {
-          let transaction_hash: string;
-          try {
-            ({ transaction_hash } = await swapper.invoke(
-              "swap",
-              [
-                poolKey,
+        (swapCase.only ? it.only : it)(
+          `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
+            swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+          }${
+            swapCase.sqrtRatioLimit
+              ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+                  .div(new Decimal(2).pow(128))
+                  .toFixed(3)}`
+              : ""
+          }`,
+          async () => {
+            let transaction_hash: string;
+            try {
+              ({ transaction_hash } = await swapper.invoke(
+                "swap",
+                [
+                  poolKey,
+                  {
+                    amount: toI129(swapCase.amount),
+                    is_token1: swapCase.isToken1,
+                    sqrt_ratio_limit:
+                      swapCase.sqrtRatioLimit ??
+                      (swapCase.isToken1 != swapCase.amount < 0
+                        ? MAX_SQRT_RATIO
+                        : MIN_SQRT_RATIO),
+                    skip_ahead: swapCase.skipAhead ?? 0,
+                  },
+                  RECIPIENT,
+                ],
                 {
-                  amount: toI129(swapCase.amount),
-                  is_token1: swapCase.isToken1,
-                  sqrt_ratio_limit:
-                    swapCase.sqrtRatioLimit ??
-                    (swapCase.isToken1 != swapCase.amount < 0
-                      ? MAX_SQRT_RATIO
-                      : MIN_SQRT_RATIO),
-                  skip_ahead: swapCase.skipAhead ?? 0,
-                },
-                RECIPIENT,
-              ],
-              {
-                maxFee: 1_000_000_000_000_000n,
-              }
-            ));
-          } catch (error) {
-            transaction_hash = error.transaction_hash;
-            if (!transaction_hash) throw error;
+                  maxFee: 1_000_000_000_000_000n,
+                }
+              ));
+            } catch (error) {
+              transaction_hash = error.transaction_hash;
+              if (!transaction_hash) throw error;
+            }
+
+            const swap_receipt = await provider.getTransactionReceipt(
+              transaction_hash
+            );
+
+            const execution_resources = (swap_receipt as any)
+              .execution_resources;
+            if (execution_resources) {
+              delete execution_resources["n_memory_holes"];
+            }
+
+            switch (swap_receipt.status) {
+              case TransactionStatus.REVERTED:
+                const revertReasonRaw = (swap_receipt as any)
+                  .revert_reason as string;
+                const revertReasonHex =
+                  /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
+                    revertReasonRaw
+                  )?.[1];
+
+                const revert_reason = Buffer.from(
+                  revertReasonHex,
+                  "hex"
+                ).toString("ascii");
+
+                expect({
+                  execution_resources,
+                  revert_reason,
+                }).toMatchSnapshot();
+                break;
+              case TransactionStatus.ACCEPTED_ON_L2:
+                const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
+                  core.parseEvents(swap_receipt)[0].Swapped;
+                expect({
+                  execution_resources,
+                  delta,
+                  liquidity_after,
+                  sqrt_ratio_after,
+                  tick_after,
+                }).toMatchSnapshot();
+                break;
+            }
           }
-
-          const swap_receipt = await provider.getTransactionReceipt(
-            transaction_hash
-          );
-
-          const execution_resources = (swap_receipt as any).execution_resources;
-          if (execution_resources) {
-            delete execution_resources["n_memory_holes"];
-          }
-
-          switch (swap_receipt.status) {
-            case TransactionStatus.REVERTED:
-              const revertReasonRaw = (swap_receipt as any)
-                .revert_reason as string;
-              const revertReasonHex =
-                /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
-                  revertReasonRaw
-                )?.[1];
-
-              const revert_reason = Buffer.from(
-                revertReasonHex,
-                "hex"
-              ).toString("ascii");
-
-              expect({
-                execution_resources,
-                revert_reason,
-              }).toMatchSnapshot();
-              break;
-            case TransactionStatus.ACCEPTED_ON_L2:
-              const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                core.parseEvents(swap_receipt)[0].Swapped;
-              expect({
-                execution_resources,
-                delta,
-                liquidity_after,
-                sqrt_ratio_after,
-                tick_after,
-              }).toMatchSnapshot();
-              break;
-          }
-        });
+        );
       }
     });
   }
