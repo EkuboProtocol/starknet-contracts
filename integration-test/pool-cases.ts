@@ -114,4 +114,22 @@ export const POOL_CASES: Array<{
     },
     positions: [],
   },
+  {
+    name: "no liquidity, starting at min, tick_spacing=0.6%, fee=0.3%",
+    pool: {
+      startingTick: MIN_TICK,
+      tickSpacing: SIXTY_BIPS_TICK_SPACING,
+      fee: THIRTY_BIPS_FEE,
+    },
+    positions: [],
+  },
+  {
+    name: "no liquidity, starting at max, tick_spacing=0.6%, fee=0.3%",
+    pool: {
+      startingTick: MAX_TICK,
+      tickSpacing: SIXTY_BIPS_TICK_SPACING,
+      fee: THIRTY_BIPS_FEE,
+    },
+    positions: [],
+  },
 ];

@@ -1248,6 +1248,674 @@ exports[`core tests 1e18 liquidity below price, starting at price 1, tick_spacin
 }
 `;
 
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 53777,
+    },
+    "n_steps": 430637,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722884n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 594,
+      "pedersen_builtin": 420,
+      "range_check_builtin": 14079,
+    },
+    "n_steps": 135841,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": {
+    "mag": 1386296n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 15747,
+    },
+    "n_steps": 178935,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722884n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 303,
+    },
+    "n_steps": 10467,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 53658,
+    },
+    "n_steps": 429572,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722884n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 594,
+      "pedersen_builtin": 420,
+      "range_check_builtin": 14059,
+    },
+    "n_steps": 135667,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": {
+    "mag": 1386296n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 15728,
+    },
+    "n_steps": 178770,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722884n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 54094,
+    },
+    "n_steps": 424865,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 307,
+    },
+    "n_steps": 10562,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 567,
+      "pedersen_builtin": 420,
+      "range_check_builtin": 12619,
+    },
+    "n_steps": 125677,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": {
+    "mag": 1386295n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 15484,
+    },
+    "n_steps": 170776,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 307,
+    },
+    "n_steps": 10562,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 307,
+    },
+    "n_steps": 10549,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 306,
+    },
+    "n_steps": 10533,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 27872,
+    },
+    "n_steps": 224475,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": {
+    "mag": 0n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 27872,
+    },
+    "n_steps": 224475,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": {
+    "mag": 0n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 308,
+    },
+    "n_steps": 10577,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 53975,
+    },
+    "n_steps": 423792,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": false,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": true,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 308,
+    },
+    "n_steps": 10577,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": true,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 567,
+      "pedersen_builtin": 420,
+      "range_check_builtin": 12599,
+    },
+    "n_steps": 125495,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": {
+    "mag": 1386295n,
+    "sign": false,
+  },
+}
+`;
+
+exports[`core tests no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": {
+      "mag": 0n,
+      "sign": true,
+    },
+    "amount1": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 762,
+      "range_check_builtin": 15465,
+    },
+    "n_steps": 170603,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": {
+    "mag": 88722883n,
+    "sign": false,
+  },
+}
+`;
+
 exports[`core tests no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {

@@ -50,7 +50,7 @@ mod SimpleSwapper {
     }
 
     #[external(v0)]
-    impl QuoterLockerImpl of ILocker<ContractState> {
+    impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
 
