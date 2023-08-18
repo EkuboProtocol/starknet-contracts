@@ -33,12 +33,17 @@ jobs:
             --exclude='option_incentives.cairo' \
             --exclude="math/ticks" \
             --exclude="math/ticks.cairo" \
+            --exclude="math/exp2.cairo" \
+            --exclude="math/mask.cairo" \
+            --exclude="math/bitmap.cairo" \
+            --exclude="math/string.cairo" \
             --exclude="src/positions.cairo" \
             --exclude="src/interfaces/positions.cairo" \
             --exclude="src/enumerable_owned_nft.cairo" \
             --exclude="src/asset_recovery.cairo" \
             --exclude="src/owner.cairo" \
             --exclude="src/types.cairo" \
+            --exclude="src/types/fees_per_liquidity.cairo" \
             --exclude="src/math.cairo" \
             --exclude="src/lib.cairo" \
             --exclude="src/interfaces.cairo" \
