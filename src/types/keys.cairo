@@ -61,3 +61,20 @@ impl PositionKeyHash of LegacyHash<PositionKey> {
         LegacyHash::hash(state, (value.salt, value.owner, value.bounds))
     }
 }
+
+
+// owner is the address that owns the saved balance
+// token is the address of the token for which the balance is saved
+// salt is a random number to allow a single address to own separate saved balances
+#[derive(Copy, Drop, Serde, PartialEq)]
+struct SavedBalanceKey {
+    owner: ContractAddress,
+    token: ContractAddress,
+    salt: u64,
+}
+
+impl SavedBalanceKeyHash of LegacyHash<SavedBalanceKey> {
+    fn hash(state: felt252, value: SavedBalanceKey) -> felt252 {
+        LegacyHash::hash(state, (value.owner, value.token, value.salt))
+    }
+}

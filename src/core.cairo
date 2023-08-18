@@ -36,7 +36,7 @@ mod Core {
     };
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait};
+    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::delta::{Delta};
     use ekubo::types::call_points::{CallPoints};
@@ -67,7 +67,7 @@ mod Core {
         positions: LegacyMap::<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
-        saved_balances: LegacyMap<(ContractAddress, ContractAddress, u64), u128>,
+        saved_balances: LegacyMap<SavedBalanceKey, u128>,
         // in withdrawal only mode, the contract will not accept deposits
         withdrawal_only_mode: bool,
     }
@@ -127,17 +127,13 @@ mod Core {
 
     #[derive(starknet::Event, Drop)]
     struct SavedBalance {
-        to: ContractAddress,
-        token: ContractAddress,
-        cache_key: u64,
+        key: SavedBalanceKey,
         amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
     struct LoadedBalance {
-        from: ContractAddress,
-        token: ContractAddress,
-        cache_key: u64,
+        key: SavedBalanceKey,
         amount: u128,
     }
 
@@ -336,10 +332,8 @@ mod Core {
             }
         }
 
-        fn get_saved_balance(
-            self: @ContractState, owner: ContractAddress, token: ContractAddress, cache_key: u64
-        ) -> u128 {
-            self.saved_balances.read((owner, token, cache_key))
+        fn get_saved_balance(self: @ContractState, key: SavedBalanceKey) -> u128 {
+            self.saved_balances.read(key)
         }
 
 
@@ -462,28 +456,17 @@ mod Core {
             IERC20Dispatcher { contract_address: token_address }.transfer(recipient, amount_large);
         }
 
-        fn save(
-            ref self: ContractState,
-            token_address: ContractAddress,
-            cache_key: u64,
-            recipient: ContractAddress,
-            amount: u128
-        ) -> u128 {
+        fn save(ref self: ContractState, key: SavedBalanceKey, amount: u128) -> u128 {
             let (id, _) = self.require_locker();
 
-            let saved_balance = self.saved_balances.read((recipient, token_address, cache_key));
+            let saved_balance = self.saved_balances.read(key);
             let balance_next = saved_balance + amount;
-            self.saved_balances.write((recipient, token_address, cache_key), balance_next);
+            self.saved_balances.write(key, balance_next);
 
             // tracks the delta for the given token address
-            self.account_delta(id, token_address, i129 { mag: amount, sign: false });
+            self.account_delta(id, key.token, i129 { mag: amount, sign: false });
 
-            self
-                .emit(
-                    SavedBalance {
-                        to: recipient, token: token_address, cache_key: cache_key, amount: amount
-                    }
-                );
+            self.emit(SavedBalance { key, amount: amount });
 
             balance_next
         }
@@ -510,25 +493,23 @@ mod Core {
             delta.low
         }
 
-        fn load(
-            ref self: ContractState, token_address: ContractAddress, cache_key: u64, amount: u128
-        ) -> u128 {
+        fn load(ref self: ContractState, token: ContractAddress, salt: u64, amount: u128) -> u128 {
             let id = self.get_current_locker_id();
-            let caller = get_caller_address();
 
-            let saved_balance = self.saved_balances.read((caller, token_address, cache_key));
+            // the contract calling load does not have to be the locker! 
+            // this allows for a contract to load a stored balance for another user, e.g.:
+            //  wrapping saved balances as an erc1155
+            let caller = get_caller_address();
+            let key = SavedBalanceKey { owner: caller, token, salt };
+
+            let saved_balance = self.saved_balances.read(key);
             assert(amount <= saved_balance, 'INSUFFICIENT_SAVED_BALANCE');
             let balance_next = saved_balance - amount;
-            self.saved_balances.write((caller, token_address, cache_key), balance_next);
+            self.saved_balances.write(key, balance_next);
 
-            self.account_delta(id, token_address, i129 { mag: amount, sign: true });
+            self.account_delta(id, token, i129 { mag: amount, sign: true });
 
-            self
-                .emit(
-                    LoadedBalance {
-                        from: caller, token: token_address, cache_key: cache_key, amount: amount
-                    }
-                );
+            self.emit(LoadedBalance { key, amount });
 
             balance_next
         }

@@ -8,7 +8,7 @@ use integer::u256;
 use integer::u256_from_felt252;
 use integer::BoundedInt;
 use traits::{Into, TryInto};
-use ekubo::types::keys::PoolKey;
+use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds, max_bounds};
@@ -2004,7 +2004,7 @@ mod save_load_tests {
     use super::{
         deploy_core, deploy_mock_token, deploy_locker, IMockERC20DispatcherTrait,
         ICoreLockerDispatcherTrait, ICoreDispatcherTrait, contract_address_const,
-        set_contract_address
+        set_contract_address, SavedBalanceKey
     };
 
     use ekubo::tests::mocks::locker::{Action, ActionResult};
@@ -2024,7 +2024,16 @@ mod save_load_tests {
         // important because it allows us to load
         let recipient = locker.contract_address;
 
-        match locker.call(Action::SaveBalance((token.contract_address, cache_key, recipient, 1))) {
+        match locker
+            .call(
+                Action::SaveBalance(
+                    (
+                        SavedBalanceKey {
+                            owner: recipient, token: token.contract_address, salt: cache_key
+                        }, 1
+                    )
+                )
+            ) {
             ActionResult::AssertLockerId => {
                 assert(false, 'unexpected');
             },
@@ -2051,19 +2060,23 @@ mod save_load_tests {
         assert(
             core
                 .get_saved_balance(
-                    owner: recipient, token: token.contract_address, cache_key: cache_key
+                    key: SavedBalanceKey {
+                        owner: recipient, token: token.contract_address, salt: cache_key
+                    }
                 ) == 1,
             'saved 1'
         );
         assert(
             core
                 .get_saved_balance(
-                    owner: recipient, token: token.contract_address, cache_key: 0
+                    key: SavedBalanceKey {
+                        owner: recipient, token: token.contract_address, salt: 0
+                    }
                 ) == 0,
             'other cache key'
         );
 
-        match locker.call(Action::LoadBalance((token.contract_address, cache_key, recipient, 1))) {
+        match locker.call(Action::LoadBalance((token.contract_address, cache_key, 1, recipient))) {
             ActionResult::AssertLockerId => {
                 assert(false, 'unexpected');
             },

@@ -75,7 +75,7 @@ mod LimitOrders {
     use array::{ArrayTrait};
     use option::{OptionTrait};
     use ekubo::math::swap::{is_price_increasing};
-    use ekubo::math::liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
+    use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use traits::{TryInto, Into};
 
     #[storage]

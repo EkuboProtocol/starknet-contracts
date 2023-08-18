@@ -2,7 +2,7 @@ use starknet::{ContractAddress, ClassHash};
 use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::position::{Position};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::keys::{PositionKey, PoolKey};
+use ekubo::types::keys::{PositionKey, PoolKey, SavedBalanceKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::delta::{Delta};
@@ -149,9 +149,7 @@ trait ICore<TStorage> {
     fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
 
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
-    fn get_saved_balance(
-        self: @TStorage, owner: ContractAddress, token: ContractAddress, cache_key: u64
-    ) -> u128;
+    fn get_saved_balance(self: @TStorage, key: SavedBalanceKey) -> u128;
 
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is greater than the given `from` tick
     fn next_initialized_tick(
@@ -181,14 +179,8 @@ trait ICore<TStorage> {
 
     // Save a given token balance in core for a given account for use in a future lock. It can be recalled by calling load.
     // Must be called within a ILocker#locked by the locker
-    // Returns the next saved balance for that token, cache_key, recipient tuple
-    fn save(
-        ref self: TStorage,
-        token_address: ContractAddress,
-        cache_key: u64,
-        recipient: ContractAddress,
-        amount: u128
-    ) -> u128;
+    // Returns the next saved balance for the given key
+    fn save(ref self: TStorage, key: SavedBalanceKey, amount: u128) -> u128;
 
     // Deposit a given token into core. This is how payments are made. First send the token to core, and then call deposit to account the delta.
     // Must be called within a ILocker#locked
@@ -196,11 +188,8 @@ trait ICore<TStorage> {
 
     // Recall a balance previously saved via #save
     // Must be called within a ILocker#locked, but it can be called by addresses other than the locker
-    // Returns the next saved balance for that token, cache_key, spender tuple
-    fn load(
-        ref self: TStorage, token_address: ContractAddress, cache_key: u64, amount: u128
-    ) -> u128;
-
+    // Returns the next saved balance for the given key
+    fn load(ref self: TStorage, token: ContractAddress, salt: u64, amount: u128) -> u128;
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129) -> u256;

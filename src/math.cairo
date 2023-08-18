@@ -5,6 +5,7 @@ mod delta;
 mod exp2;
 mod fee;
 mod liquidity;
+mod max_liquidity;
 mod mask;
 mod muldiv;
 mod string;
@@ -26,6 +27,8 @@ mod exp2_test;
 mod fee_test;
 #[cfg(test)]
 mod liquidity_test;
+#[cfg(test)]
+mod max_liquidity_test;
 #[cfg(test)]
 mod mask_test;
 #[cfg(test)]

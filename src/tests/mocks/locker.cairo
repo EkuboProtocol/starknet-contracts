@@ -1,8 +1,8 @@
-use ekubo::types::keys::{PoolKey, PositionKey};
-use ekubo::types::i129::i129;
-use starknet::ContractAddress;
-use array::ArrayTrait;
-use serde::Serde;
+use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
+use ekubo::types::i129::{i129};
+use starknet::{ContractAddress};
+use array::{ArrayTrait};
+use serde::{Serde};
 use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
@@ -13,9 +13,9 @@ enum Action {
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
     Swap: (PoolKey, SwapParameters, ContractAddress),
     // save that amount of balance to the given address
-    SaveBalance: (ContractAddress, u64, ContractAddress, u128),
+    SaveBalance: (SavedBalanceKey, u128),
     // loads the balance to the address
-    LoadBalance: (ContractAddress, u64, ContractAddress, u128),
+    LoadBalance: (ContractAddress, u64, u128, ContractAddress),
     // accumulates some tokens as fees
     AccumulateAsFees: (PoolKey, u128, u128),
 }
@@ -220,15 +220,18 @@ mod CoreLocker {
                     ActionResult::Swap(delta)
                 },
                 Action::SaveBalance((
-                    token, cache_key, recipient, amount
+                    key, amount
                 )) => {
-                    let balance_next = core.save(token, cache_key, recipient, amount);
+                    let balance_next = core.save(key, amount);
 
                     let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    self.handle_delta(core, token, i129 { mag: amount, sign: false }, recipient);
+                    self
+                        .handle_delta(
+                            core, key.token, i129 { mag: amount, sign: false }, Zeroable::zero()
+                        );
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
@@ -236,9 +239,9 @@ mod CoreLocker {
                     ActionResult::SaveBalance(balance_next)
                 },
                 Action::LoadBalance((
-                    token, cache_key, recipient, amount
+                    token, salt, amount, recipient
                 )) => {
-                    let balance_next = core.load(token, cache_key, amount);
+                    let balance_next = core.load(token, salt, amount);
 
                     let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');

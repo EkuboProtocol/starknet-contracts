@@ -35,6 +35,8 @@ jobs:
             --exclude="math/ticks.cairo" \
             --exclude="math/exp2.cairo" \
             --exclude="math/mask.cairo" \
+            --exclude="math/contract_address.cairo" \
+            --exclude="math/max_liquidity.cairo" \
             --exclude="math/bitmap.cairo" \
             --exclude="math/string.cairo" \
             --exclude="src/positions.cairo" \
