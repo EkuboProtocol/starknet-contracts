@@ -67,20 +67,18 @@ case $NETWORK in
         ;;
 esac
 
-echo "Waiting 30 seconds for the classhashes to be indexed"
-sleep 30;
+echo "Waiting 300 seconds for the classhashes to be indexed"
+sleep 300;
 
 CORE_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$CORE_CLASS_HASH")
 
-sleep 10;
+sleep 60;
 
 POSITIONS_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$POSITIONS_CLASS_HASH" "$CORE_ADDRESS" "$NFT_CLASS_HASH" "$METADATA_URL")
 
-sleep 10;
+sleep 60;
 
 QUOTER_ADDRESS=$(starkli deploy --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" "$QUOTER_CLASS_HASH" "$CORE_ADDRESS")
-
-sleep 10;
 
 echo "Core deployed @ $CORE_ADDRESS"
 echo "Positions deployed @ $POSITIONS_ADDRESS"

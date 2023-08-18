@@ -14,6 +14,14 @@ export const SWAP_CASES: Array<{
     isToken1: false,
   },
   {
+    amount: 2n ** 96n,
+    isToken1: false,
+  },
+  {
+    amount: 2n ** 96n,
+    isToken1: true,
+  },
+  {
     amount: 10n ** 18n,
     isToken1: false,
     skipAhead: 5n,

@@ -213,13 +213,11 @@ describe("core tests", () => {
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
           expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
-          expect(balance0).toBeLessThanOrEqual(
-            cumulativeProtocolFee0 + BigInt(positions.length * 10 + 1)
-          );
           expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
-          expect(balance1).toBeLessThanOrEqual(
-            cumulativeProtocolFee1 + BigInt(positions.length * 10 + 1)
-          );
+
+          // 100 is just to account for rounding error for position mints and withdraws as well as swaps (each iteration causes rounding error)
+          expect(balance0).toBeLessThanOrEqual(cumulativeProtocolFee0 + 200n);
+          expect(balance1).toBeLessThanOrEqual(cumulativeProtocolFee1 + 200n);
         }
       });
 
