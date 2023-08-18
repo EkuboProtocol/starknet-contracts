@@ -268,14 +268,8 @@ describe("core tests", () => {
               transaction_hash
             );
 
-            const execution_resources = (swap_receipt as any)
-              .execution_resources;
-            if (execution_resources) {
-              delete execution_resources["n_memory_holes"];
-            }
-
             switch (swap_receipt.status) {
-              case TransactionStatus.REVERTED:
+              case TransactionStatus.REVERTED: {
                 const revertReasonRaw = (swap_receipt as any)
                   .revert_reason as string;
                 const revertReasonHex =
@@ -289,11 +283,17 @@ describe("core tests", () => {
                 ).toString("ascii");
 
                 expect({
-                  execution_resources,
                   revert_reason,
                 }).toMatchSnapshot();
                 break;
-              case TransactionStatus.ACCEPTED_ON_L2:
+              }
+              case TransactionStatus.ACCEPTED_ON_L2: {
+                const execution_resources = (swap_receipt as any)
+                  .execution_resources;
+                if (execution_resources) {
+                  delete execution_resources["n_memory_holes"];
+                }
+
                 const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
                   core.parseEvents(swap_receipt)[0].Swapped;
                 expect({
@@ -304,6 +304,7 @@ describe("core tests", () => {
                   tick_after,
                 }).toMatchSnapshot();
                 break;
+              }
             }
           }
         );
