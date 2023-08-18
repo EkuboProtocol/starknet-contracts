@@ -5,7 +5,7 @@ use ekubo::math::fee::{compute_fee, amount_with_fee};
 use traits::Into;
 use zeroable::Zeroable;
 
-// consumed_amount is how much of the amount was used in this step
+// consumed_amount is how much of the amount was used in this step, including the amount that was paid to fees
 // calculated_amount is how much of the other token is given
 // sqrt_ratio_next is the next ratio, limited to the given sqrt_ratio_limit
 // fee_amount is the amount of fee collected, always in terms of the specified amount
@@ -66,16 +66,16 @@ fn swap_result(
     // this amount is what moves the price. fee is always taken on the specified amount
     // if the user is buying a token, then they pay a fee on the purchased amount
     // if the user is selling a token, then they pay a fee on the sold amount
-    let with_fee = amount_with_fee(amount, fee);
+    let price_impact_amount = amount_with_fee(amount, fee);
 
     // compute the next sqrt_ratio resulting from trading the entire input/output amount
     let mut sqrt_ratio_next: u256 = if (is_token1) {
-        match next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, with_fee) {
+        match next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, price_impact_amount) {
             Option::Some(next) => next,
             Option::None => sqrt_ratio_limit
         }
     } else {
-        match next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, with_fee) {
+        match next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, price_impact_amount) {
             Option::Some(next) => next,
             Option::None => sqrt_ratio_limit
         }
@@ -85,53 +85,28 @@ fn swap_result(
     if ((sqrt_ratio_next > sqrt_ratio_limit) == increasing) {
         sqrt_ratio_next = sqrt_ratio_limit;
 
-        return if (amount.sign) {
-            let (consumed_amount, calculated_amount) = if (is_token1) {
-                (
-                    i129 {
-                        mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false),
-                        sign: true
-                    }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true)
-                )
-            } else {
-                (
-                    i129 {
-                        mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false),
-                        sign: true
-                    }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true)
-                )
-            };
-
-            let fee_amount = compute_fee(consumed_amount.mag, fee);
-
-            SwapResult {
-                consumed_amount: consumed_amount + i129 {
-                    mag: fee_amount, sign: false
-                }, calculated_amount, sqrt_ratio_next, fee_amount
-            }
+        let (consumed_amount, calculated_amount) = if (is_token1) {
+            (
+                i129 {
+                    mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, !amount.sign),
+                    sign: amount.sign
+                }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
+            )
         } else {
-            let (consumed_amount, calculated_amount) = if (is_token1) {
-                (
-                    i129 {
-                        mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
-                        sign: false
-                    }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
-                )
-            } else {
-                (
-                    i129 {
-                        mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, true),
-                        sign: false
-                    }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
-                )
-            };
+            (
+                i129 {
+                    mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, !amount.sign),
+                    sign: amount.sign
+                }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
+            )
+        };
 
-            SwapResult {
-                consumed_amount,
-                calculated_amount,
-                sqrt_ratio_next,
-                fee_amount: (amount_with_fee(consumed_amount, fee) - consumed_amount).mag
-            }
+        let fee_amount = compute_fee(consumed_amount.mag, fee);
+
+        return SwapResult {
+            consumed_amount: consumed_amount + i129 {
+                mag: fee_amount, sign: false
+            }, calculated_amount, sqrt_ratio_next, fee_amount
         };
     }
 
@@ -157,6 +132,6 @@ fn swap_result(
         consumed_amount: amount,
         calculated_amount,
         sqrt_ratio_next,
-        fee_amount: (with_fee - amount).mag
+        fee_amount: (price_impact_amount - amount).mag
     };
 }

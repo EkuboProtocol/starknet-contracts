@@ -363,9 +363,9 @@ fn test_deposit_then_withdraw_with_fees() {
     let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(token_info.liquidity == 200050104166, 'liquidity');
-    assert(token_info.amount0 == 100000998, 'amount0');
-    assert(token_info.amount1 == 99999000, 'amount1');
-    assert(token_info.fees0 == 20, 'fees0');
+    assert(token_info.amount0 == 100000989, 'amount0');
+    assert(token_info.amount1 == 99999009, 'amount1');
+    assert(token_info.fees0 == 19, 'fees0');
     assert(token_info.fees1 == 9, 'fees1');
 }
 
@@ -423,18 +423,18 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             collect_fees: false,
         );
 
-    assert(amount0 == 49500494, 'amount0 less 1%');
-    assert(amount1 == 49499505, 'amount1 less 1%');
+    assert(amount0 == 49500489, 'amount0 less 1%');
+    assert(amount1 == 49499508, 'amount1 less 1%');
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == 49500494,
+        }.balanceOf(caller) == amount0.into(),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == 49499505,
+        }.balanceOf(caller) == amount1.into(),
         'balance1'
     );
 
@@ -442,9 +442,9 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     let token_info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(token_info.liquidity == 100025052083, 'liquidity');
-    assert(token_info.amount0 == 50000499, 'amount0');
-    assert(token_info.amount1 == 49999500, 'amount1');
-    assert(token_info.fees0 == 19, 'fees0');
+    assert(token_info.amount0 == 50000494, 'amount0');
+    assert(token_info.amount1 == 49999504, 'amount1');
+    assert(token_info.fees0 == 18, 'fees0');
     assert(token_info.fees1 == 8, 'fees1');
 
     // withdraw fees only
@@ -459,19 +459,19 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             collect_fees: true,
         );
 
-    assert(amount0 == 19, 'fees0 withdrawn');
+    assert(amount0 == 18, 'fees0 withdrawn');
     assert(amount1 == 8, 'fees1 withdrawn');
 
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500494 + 19),
+        }.balanceOf(caller) == (49500489 + 18),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499505 + 8),
+        }.balanceOf(caller) == (49499508 + 8),
         'balance1'
     );
 
@@ -487,19 +487,19 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             collect_fees: false,
         );
 
-    assert(amount0 == 24750246, 'quarter');
-    assert(amount1 == 24749752, 'quarter');
+    assert(amount0 == 24750244, 'quarter');
+    assert(amount1 == 24749754, 'quarter');
 
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500494 + 19 + 24750246),
+        }.balanceOf(caller) == (49500489 + 18 + 24750244),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499505 + 8 + 24749752),
+        }.balanceOf(caller) == (49499508 + 8 + 24749754),
         'balance1'
     );
 
@@ -515,19 +515,19 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             collect_fees: false,
         );
 
-    assert(amount0 == 24750246, 'remainder');
-    assert(amount1 == 24749752, 'remainder');
+    assert(amount0 == 24750244, 'remainder');
+    assert(amount1 == 24749754, 'remainder');
 
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500494 + 19 + 24750246 + 24750246),
+        }.balanceOf(caller) == (49500489 + 18 + 24750244 + amount0.into()),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher {
             contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499505 + 8 + 24749752 + 24749752),
+        }.balanceOf(caller) == (49499508 + 8 + 24749754 + amount1.into()),
         'balance1'
     );
 }

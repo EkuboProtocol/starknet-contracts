@@ -1334,8 +1334,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 1000, sign: false }, 'amount0==1000');
-        assert(delta.amount1 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
+        assert(delta.amount0 == i129 { mag: 1000, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 989, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1450,8 +1450,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 1000, sign: true }, 'amount0==1000');
-        assert(delta.amount1 == i129 { mag: 1010, sign: false }, 'amount1_delta==989');
+        assert(delta.amount0 == i129 { mag: 1000, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 1010, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1512,8 +1512,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 499, sign: false }, 'amount0==1000');
-        assert(delta.amount1 == i129 { mag: 496, sign: true }, 'amount1_delta==987');
+        assert(delta.amount0 == i129 { mag: 504, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 496, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1623,8 +1623,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount1 == i129 { mag: 1000, sign: false }, 'amount0==1000');
-        assert(delta.amount0 == i129 { mag: 989, sign: true }, 'amount1_delta==989');
+        assert(delta.amount1 == i129 { mag: 1000, sign: false }, 'amount0');
+        assert(delta.amount0 == i129 { mag: 989, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1740,7 +1740,7 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 49626, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 49874, sign: false }, 'amount1_delta');
+        assert(delta.amount1 == i129 { mag: 50373, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1884,8 +1884,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 0x1869d, sign: false }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 0x182be, sign: true }, 'amount1');
+        assert(delta.amount0 == i129 { mag: 100998, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 99006, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1977,7 +1977,7 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 0x182be, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 0x1869d, sign: false }, 'amount1');
+        assert(delta.amount1 == i129 { mag: 0x18a86, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),

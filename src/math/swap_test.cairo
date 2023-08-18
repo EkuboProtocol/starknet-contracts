@@ -481,13 +481,18 @@ fn test_swap_against_liquidity_hit_limit_token0_input() {
         fee: exp2(127), // equal to 0.5
     );
 
-    assert(result.consumed_amount == i129 { mag: 2041, sign: false }, 'consumed_amount');
+    result.print();
+
     assert(
-        result.sqrt_ratio_next == u256 { high: 0, low: 333476719582519694194107115283132847226 },
-        'sqrt_ratio_next'
+        result == SwapResult {
+            consumed_amount: i129 {
+                mag: 3062, sign: false
+                }, sqrt_ratio_next: u256 {
+                high: 0, low: 333476719582519694194107115283132847226
+            }, calculated_amount: 2000, fee_amount: 1021
+        },
+        'result'
     );
-    assert(result.calculated_amount == 2000, 'calculated_amount');
-    assert(result.fee_amount == 1021, 'fee');
 }
 
 #[test]
@@ -501,13 +506,16 @@ fn test_swap_against_liquidity_hit_limit_token1_input() {
         fee: exp2(127), // equal to 0.5
     );
 
-    assert(result.consumed_amount == i129 { mag: 2000, sign: false }, 'consumed_amount');
     assert(
-        result.sqrt_ratio_next == u256 { high: 1, low: 6805647338418769269267492148635364229 },
-        'sqrt_ratio_next'
+        result == SwapResult {
+            consumed_amount: i129 {
+                mag: 3000, sign: false
+                }, sqrt_ratio_next: u256 {
+                high: 1, low: 6805647338418769269267492148635364229
+            }, calculated_amount: 1960, fee_amount: 1000
+        },
+        'result'
     );
-    assert(result.calculated_amount == 1960, 'calculated_amount');
-    assert(result.fee_amount == 1000, 'fee');
 }
 
 

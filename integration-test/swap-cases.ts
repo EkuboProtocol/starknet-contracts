@@ -25,6 +25,16 @@ export const SWAP_CASES: Array<{
     skipAhead: 5n,
   },
   {
+    amount: -(10n ** 18n),
+    isToken1: false,
+    skipAhead: 5n,
+  },
+  {
+    amount: -(10n ** 18n),
+    isToken1: true,
+    skipAhead: 5n,
+  },
+  {
     amount: 10n ** 18n,
     isToken1: false,
     skipAhead: 2n,
@@ -35,6 +45,18 @@ export const SWAP_CASES: Array<{
     isToken1: true,
     skipAhead: 2n,
     sqrtRatioLimit: 1n << 129n,
+  },
+  {
+    amount: -(10n ** 18n),
+    isToken1: false,
+    skipAhead: 2n,
+    sqrtRatioLimit: 1n << 129n,
+  },
+  {
+    amount: -(10n ** 18n),
+    isToken1: true,
+    skipAhead: 2n,
+    sqrtRatioLimit: 1n << 127n,
   },
   {
     amount: 10_000n,
