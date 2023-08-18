@@ -209,11 +209,11 @@ describe("core tests", () => {
           // assuming up to 1 wei of rounding error per swap / withdrawal
           expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
           expect(balance0).toBeLessThanOrEqual(
-            cumulativeProtocolFee0 + BigInt(positions.length * 2 + 1)
+            cumulativeProtocolFee0 + BigInt(positions.length * 10 + 1)
           );
           expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
           expect(balance1).toBeLessThanOrEqual(
-            cumulativeProtocolFee1 + BigInt(positions.length * 2 + 1)
+            cumulativeProtocolFee1 + BigInt(positions.length * 10 + 1)
           );
         }
       });

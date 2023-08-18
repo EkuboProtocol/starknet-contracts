@@ -2,8 +2,9 @@ use ekubo::types::i129::{i129};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_with_fee};
-use traits::Into;
-use zeroable::Zeroable;
+use core::option::{OptionTrait};
+use traits::{Into};
+use zeroable::{Zeroable};
 
 // consumed_amount is how much of the amount was used in this step, including the amount that was paid to fees
 // calculated_amount is how much of the other token is given
@@ -37,6 +38,7 @@ fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
     }
 }
 
+
 // Compute the result of swapping some amount in/out of either token0/token1 against the liquidity
 fn swap_result(
     sqrt_ratio: u256,
@@ -69,35 +71,32 @@ fn swap_result(
     let price_impact_amount = amount_with_fee(amount, fee);
 
     // compute the next sqrt_ratio resulting from trading the entire input/output amount
-    let mut sqrt_ratio_next: u256 = if (is_token1) {
-        match next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, price_impact_amount) {
-            Option::Some(next) => next,
-            Option::None => sqrt_ratio_limit
-        }
+    let sqrt_ratio_next_from_amount = if (is_token1) {
+        next_sqrt_ratio_from_amount1(sqrt_ratio, liquidity, price_impact_amount)
     } else {
-        match next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, price_impact_amount) {
-            Option::Some(next) => next,
-            Option::None => sqrt_ratio_limit
-        }
+        next_sqrt_ratio_from_amount0(sqrt_ratio, liquidity, price_impact_amount)
+    };
+
+    let limited = match sqrt_ratio_next_from_amount {
+        Option::Some(next) => (next > sqrt_ratio_limit) == increasing,
+        Option::None => true
     };
 
     // if we exceeded the limit, then adjust the delta to be the amount spent to reach the limit
-    if ((sqrt_ratio_next > sqrt_ratio_limit) == increasing) {
-        sqrt_ratio_next = sqrt_ratio_limit;
-
+    if (limited) {
         let (consumed_amount, calculated_amount) = if (is_token1) {
             (
                 i129 {
-                    mag: amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, !amount.sign),
+                    mag: amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
                     sign: amount.sign
-                }, amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
+                }, amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
             )
         } else {
             (
                 i129 {
-                    mag: amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, !amount.sign),
+                    mag: amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
                     sign: amount.sign
-                }, amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
+                }, amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
             )
         };
 
@@ -106,12 +105,18 @@ fn swap_result(
         return SwapResult {
             consumed_amount: consumed_amount + i129 {
                 mag: fee_amount, sign: false
-            }, calculated_amount, sqrt_ratio_next, fee_amount
+            }, calculated_amount, sqrt_ratio_next: sqrt_ratio_limit, fee_amount
         };
     }
 
+    let sqrt_ratio_next = sqrt_ratio_next_from_amount.unwrap();
+
     // amount was not enough to move the price, so consume everything as a fee
     if (sqrt_ratio_next == sqrt_ratio) {
+        // this scenario should only happen with very small input amounts that do not overcome rounding
+        // output amounts should round s.t. they always move by at least one
+        assert(!amount.sign, 'INPUT_SMALL_AMOUNT');
+
         return SwapResult {
             consumed_amount: amount,
             calculated_amount: 0,
@@ -120,11 +125,11 @@ fn swap_result(
         };
     }
 
-    // rounds down
+    // rounds down for calculated == output, up for calculated == input
     let calculated_amount = if (is_token1) {
-        amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
+        amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
     } else {
-        amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false)
+        amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
     };
 
     // otherwise, the consumed amount is the input amount, we just computed the next ratio and fee

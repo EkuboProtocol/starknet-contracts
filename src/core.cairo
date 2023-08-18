@@ -808,7 +808,7 @@ mod Core {
             let self_snap = @self;
 
             loop {
-                if (amount_remaining == Zeroable::zero()) {
+                if (amount_remaining.is_zero()) {
                     break ();
                 }
 

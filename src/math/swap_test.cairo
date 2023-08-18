@@ -362,7 +362,7 @@ fn test_swap_against_liquidity_min_limit_token0_output() {
         result.sqrt_ratio_next == u256 { high: 1, low: 60049829456636199434713166017370860846 },
         'sqrt_ratio_next'
     );
-    assert(result.calculated_amount == 17647, 'calculated_amount');
+    assert(result.calculated_amount == 17648, 'calculated_amount');
     assert(result.fee_amount == 5000, 'fee');
 }
 
@@ -383,7 +383,7 @@ fn test_swap_against_liquidity_min_limit_token0_minimum_output() {
         result.sqrt_ratio_next == u256 { high: 1, low: 6805783454087851026288017908993545 },
         'sqrt_ratio_next'
     );
-    assert(result.calculated_amount == 2, 'calculated_amount');
+    assert(result.calculated_amount == 3, 'calculated_amount');
     assert(result.fee_amount == 1, 'fee');
 }
 
@@ -442,7 +442,7 @@ fn test_swap_against_liquidity_min_limit_token1_output() {
         result.sqrt_ratio_next == u256 { high: 0, low: 289240011882797693943868416317002979737 },
         'sqrt_ratio_next'
     );
-    assert(result.calculated_amount == 17647, 'calculated_amount');
+    assert(result.calculated_amount == 17648, 'calculated_amount');
     assert(result.fee_amount == 5000, 'fee');
 }
 
@@ -463,7 +463,7 @@ fn test_swap_against_liquidity_min_limit_token1_minimum_output() {
         result.sqrt_ratio_next == u256 { high: 0, low: 340275561273600044694105339939619576091 },
         'sqrt_ratio_next'
     );
-    assert(result.calculated_amount == 2, 'calculated_amount');
+    assert(result.calculated_amount == 3, 'calculated_amount');
     assert(result.fee_amount == 1, 'fee');
 }
 
@@ -480,8 +480,6 @@ fn test_swap_against_liquidity_hit_limit_token0_input() {
         is_token1: false,
         fee: exp2(127), // equal to 0.5
     );
-
-    result.print();
 
     assert(
         result == SwapResult {

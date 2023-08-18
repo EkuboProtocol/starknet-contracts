@@ -166,7 +166,7 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, route: route,
             }
         );
-    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token0 out');
+    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
     assert(result.other_token == pool_key.token1, 'tokenb');
 
     result = quoter
@@ -187,7 +187,7 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token1, route: route,
             }
         );
-    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token1 out');
+    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token1 out');
     assert(result.other_token == pool_key.token0, 'tokend');
 }
 
@@ -215,7 +215,7 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token0, pool_key: pool_key,
             }
         );
-    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token0 out');
+    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
     assert(result.other_token == pool_key.token1, 'tokenb');
 
     result = quoter
@@ -236,7 +236,7 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
                 }, specified_token: pool_key.token1, pool_key: pool_key,
             }
         );
-    assert(result.amount == i129 { mag: 0x65, sign: false }, '100 token1 out');
+    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token1 out');
     assert(result.other_token == pool_key.token0, 'tokend');
 }
 
@@ -274,7 +274,7 @@ fn test_quoter_quote_multihop_routes() {
                 }, specified_token: pool_key_a.token0, route: route,
             }
         );
-    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
+    assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token0 out');
     assert(result.other_token == pool_key_b.token1, '100 token0 out other');
 
     result = quoter
@@ -296,6 +296,6 @@ fn test_quoter_quote_multihop_routes() {
                 }, specified_token: pool_key_b.token1, route: route_reverse,
             }
         );
-    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token2 out');
+    assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token2 out');
     assert(result.other_token == pool_key_a.token0, '100 token2 out other');
 }

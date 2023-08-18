@@ -1264,3 +1264,43 @@ fn test_withdraw_partial_leave_fees() {
     assert(info.fees0 == 99, 'fees0'); // 1% of 10k
     assert(info.fees1 == 0, 'fees1');
 }
+
+#[test]
+#[available_gas(1000000000)]
+fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let setup = setup_pool(
+        // 30 bips
+        fee: 1020847100762815390390123822295304634,
+        tick_spacing: 5982,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+
+    let ONE_E18 = 1000000000000000000;
+    let p0 = create_position(setup, positions, max_bounds(5982), ONE_E18, ONE_E18);
+
+    assert(p0.liquidity == ONE_E18, 'liquidity');
+    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18);
+    let delta = swap(
+        setup: setup,
+        amount: i129 { mag: ONE_E18, sign: true },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { high: 2, low: 0 },
+        recipient: Zeroable::zero(),
+        skip_ahead: 0
+    );
+
+    positions
+        .withdraw(
+            id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: p0.liquidity,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: true,
+        );
+}
