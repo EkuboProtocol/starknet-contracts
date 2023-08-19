@@ -7,6 +7,7 @@ trait IEnumerableOwnedNFT<TStorage> {
 
     // Create a new token, only callable by the controller
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
+
     // Burn the token with the given ID
     fn burn(ref self: TStorage, id: u64);
 
@@ -58,6 +59,13 @@ mod EnumerableOwnedNFT {
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
     }
 
+
+    #[derive(starknet::Event, Drop)]
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash, 
+    }
+
+
     #[derive(starknet::Event, Drop)]
     struct Transfer {
         from: ContractAddress,
@@ -82,6 +90,7 @@ mod EnumerableOwnedNFT {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
+        ClassHashReplaced: ClassHashReplaced,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
@@ -187,6 +196,15 @@ mod EnumerableOwnedNFT {
                     curr = next;
                 };
             };
+        }
+    }
+
+    #[external(v0)]
+    impl Upgradeable of IUpgradeable<ContractState> {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
+            check_owner_only();
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 

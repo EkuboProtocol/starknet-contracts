@@ -24,6 +24,23 @@ export const POOL_CASES: Array<{
   }[];
 }> = [
   {
+    name: "1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0",
+    pool: {
+      startingTick: 0n,
+      tickSpacing: 354892n,
+      fee: 0n,
+    },
+    positions: [
+      {
+        bounds: {
+          lower: nearest(MIN_TICK, 354892n),
+          upper: nearest(MAX_TICK, 354892n),
+        },
+        liquidity: 10n ** 36n,
+      },
+    ],
+  },
+  {
     name: "1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3%",
     pool: {
       startingTick: 0n,
@@ -39,6 +56,15 @@ export const POOL_CASES: Array<{
         liquidity: 10n ** 18n,
       },
     ],
+  },
+  {
+    name: "no liquidity, starting at price 1, tick_spacing=1, fee=max",
+    pool: {
+      startingTick: 0n,
+      tickSpacing: 1n,
+      fee: 2n ** 128n - 1n,
+    },
+    positions: [],
   },
   {
     name: "2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3%",
