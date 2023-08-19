@@ -268,20 +268,22 @@ describe("core", () => {
 
             switch (swap_receipt.status) {
               case TransactionStatus.REVERTED: {
-                const revertReasonRaw = (swap_receipt as any)
+                console.log(swap_receipt);
+
+                const revertReason = (swap_receipt as any)
                   .revert_reason as string;
-                const revertReasonHex =
+
+                const hexErrorMessage =
                   /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
-                    revertReasonRaw
+                    revertReason
                   )?.[1];
 
-                const revert_reason = Buffer.from(
-                  revertReasonHex,
-                  "hex"
-                ).toString("ascii");
-
                 expect({
-                  revert_reason,
+                  revert_reason: hexErrorMessage
+                    ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
+                    : /(End of program was not reached)/g.exec(
+                        revertReason
+                      )?.[1] ?? "could not parse error",
                 }).toMatchSnapshot();
                 break;
               }

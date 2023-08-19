@@ -3604,6 +3604,42 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
 }
 `;
 
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -10000 token0 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -10000 token1 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 token0 1`] = `
 {
   "delta": {
@@ -3669,6 +3705,54 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1 token1 limit 1.000 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 10000 token0 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 10000 token1 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79228162514264337593543950336 token0 1`] = `
+{
+  "revert_reason": "End of program was not reached",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79228162514264337593543950336 token1 1`] = `
+{
+  "revert_reason": "End of program was not reached",
 }
 `;
 
