@@ -1,7 +1,7 @@
 use ekubo::types::i129::{i129};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::fee::{compute_fee, amount_with_fee};
+use ekubo::math::fee::{compute_fee};
 use core::option::{OptionTrait};
 use traits::{Into};
 use zeroable::{Zeroable};
@@ -65,10 +65,12 @@ fn swap_result(
         return no_op_swap_result(sqrt_ratio_limit);
     }
 
-    // this amount is what moves the price. fee is always taken on the specified amount
-    // if the user is buying a token, then they pay a fee on the purchased amount
-    // if the user is selling a token, then they pay a fee on the sold amount
-    let price_impact_amount = amount_with_fee(amount, fee);
+    // this amount is what moves the price
+    let price_impact_amount = if (amount.sign) {
+        amount
+    } else {
+        amount - i129 { mag: compute_fee(amount.mag, fee), sign: false }
+    };
 
     // compute the next sqrt_ratio resulting from trading the entire input/output amount
     let sqrt_ratio_next_from_amount = if (is_token1) {
@@ -84,7 +86,7 @@ fn swap_result(
 
     // if we exceeded the limit, then adjust the delta to be the amount spent to reach the limit
     if (limited) {
-        let (consumed_amount, calculated_amount) = if (is_token1) {
+        let (specified_amount_delta, calculated_amount_delta) = if (is_token1) {
             (
                 i129 {
                     mag: amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
@@ -100,12 +102,20 @@ fn swap_result(
             )
         };
 
-        let fee_amount = compute_fee(consumed_amount.mag, fee);
+        let (consumed_amount, calculated_amount, fee_amount) = if amount.sign {
+            let fee_amount = compute_fee(calculated_amount_delta, fee);
+            (specified_amount_delta, calculated_amount_delta + fee_amount, fee_amount)
+        } else {
+            let fee_amount = compute_fee(specified_amount_delta.mag, fee);
+            (
+                specified_amount_delta + i129 {
+                    mag: fee_amount, sign: false
+                }, calculated_amount_delta, fee_amount
+            )
+        };
 
         return SwapResult {
-            consumed_amount: consumed_amount + i129 {
-                mag: fee_amount, sign: false
-            }, calculated_amount, sqrt_ratio_next: sqrt_ratio_limit, fee_amount
+            consumed_amount, calculated_amount, sqrt_ratio_next: sqrt_ratio_limit, fee_amount
         };
     }
 
@@ -126,17 +136,19 @@ fn swap_result(
     }
 
     // rounds down for calculated == output, up for calculated == input
-    let calculated_amount = if (is_token1) {
+    let calculated_amount_before_fee = if (is_token1) {
         amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
     } else {
         amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
     };
 
-    // otherwise, the consumed amount is the input amount, we just computed the next ratio and fee
-    return SwapResult {
-        consumed_amount: amount,
-        calculated_amount,
-        sqrt_ratio_next,
-        fee_amount: (price_impact_amount - amount).mag
+    // add on the fee to calculated amount for exact output
+    let (calculated_amount, fee_amount) = if (amount.sign) {
+        let fee_amount = compute_fee(calculated_amount_before_fee, fee);
+        (calculated_amount_before_fee + fee_amount, fee_amount)
+    } else {
+        (calculated_amount_before_fee, (amount - price_impact_amount).mag)
     };
+
+    return SwapResult { consumed_amount: amount, calculated_amount, sqrt_ratio_next, fee_amount };
 }
