@@ -1,7 +1,7 @@
 use ekubo::types::i129::{i129};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::fee::{compute_fee};
+use ekubo::math::fee::{compute_fee, amount_before_fee};
 use core::option::{OptionTrait};
 use traits::{Into};
 use zeroable::{Zeroable};
@@ -103,14 +103,14 @@ fn swap_result(
         };
 
         let (consumed_amount, calculated_amount, fee_amount) = if amount.sign {
-            let fee_amount = compute_fee(calculated_amount_delta, fee);
-            (specified_amount_delta, calculated_amount_delta + fee_amount, fee_amount)
+            let before_fee = amount_before_fee(calculated_amount_delta, fee);
+            (specified_amount_delta, before_fee, before_fee - calculated_amount_delta)
         } else {
-            let fee_amount = compute_fee(specified_amount_delta.mag, fee);
+            let before_fee = amount_before_fee(specified_amount_delta.mag, fee);
             (
-                specified_amount_delta + i129 {
-                    mag: fee_amount, sign: false
-                }, calculated_amount_delta, fee_amount
+                i129 {
+                    mag: before_fee, sign: false
+                }, calculated_amount_delta, before_fee - specified_amount_delta.mag
             )
         };
 
@@ -136,7 +136,7 @@ fn swap_result(
     }
 
     // rounds down for calculated == output, up for calculated == input
-    let calculated_amount_before_fee = if (is_token1) {
+    let calculated_amount_excluding_fee = if (is_token1) {
         amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
     } else {
         amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, amount.sign)
@@ -144,10 +144,10 @@ fn swap_result(
 
     // add on the fee to calculated amount for exact output
     let (calculated_amount, fee_amount) = if (amount.sign) {
-        let fee_amount = compute_fee(calculated_amount_before_fee, fee);
-        (calculated_amount_before_fee + fee_amount, fee_amount)
+        let including_fee = amount_before_fee(calculated_amount_excluding_fee, fee);
+        (including_fee, including_fee - calculated_amount_excluding_fee)
     } else {
-        (calculated_amount_before_fee, (amount - price_impact_amount).mag)
+        (calculated_amount_excluding_fee, (amount - price_impact_amount).mag)
     };
 
     return SwapResult { consumed_amount: amount, calculated_amount, sqrt_ratio_next, fee_amount };

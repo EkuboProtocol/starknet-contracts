@@ -676,7 +676,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     assert(info.fees0 == 0, 'fees0 before');
     assert(info.fees1 == 0, 'fees1 before');
 
-    setup.token1.increase_balance(setup.locker.contract_address, 10010);
+    setup.token1.increase_balance(setup.locker.contract_address, 20000);
     let delta_swap = swap(
         setup: setup,
         amount: i129 { mag: 100000, sign: true },
@@ -730,7 +730,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     assert(info.fees0 == 0, 'fees0 before');
     assert(info.fees1 == 0, 'fees1 before');
 
-    setup.token0.increase_balance(setup.locker.contract_address, 10010);
+    setup.token0.increase_balance(setup.locker.contract_address, 20000);
     let delta_swap = swap(
         setup: setup,
         amount: i129 { mag: 100000, sign: true },
