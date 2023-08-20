@@ -835,7 +835,7 @@ mod Core {
                 // this only happens when liquidity != 0
                 if (swap_result.fee_amount != 0) {
                     fees_per_liquidity = fees_per_liquidity
-                        + if (params.is_token1) {
+                        + if increasing {
                             fees_per_liquidity_from_amount1(
                                 swap_result.fee_amount, liquidity.into()
                             )
