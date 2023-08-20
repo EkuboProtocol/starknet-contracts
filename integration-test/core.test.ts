@@ -20,6 +20,10 @@ function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
   };
 }
 
+function fromI129(x: { mag: bigint; sign: boolean }): bigint {
+  return x.sign ? x.mag * -1n : x.mag;
+}
+
 Decimal.set({ precision: 80 });
 
 function computeFee(x: bigint, fee: bigint): bigint {
@@ -268,8 +272,6 @@ describe("core", () => {
 
             switch (swap_receipt.status) {
               case TransactionStatus.REVERTED: {
-                console.log(swap_receipt);
-
                 const revertReason = (swap_receipt as any)
                   .revert_reason as string;
 
@@ -296,12 +298,16 @@ describe("core", () => {
 
                 const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
                   core.parseEvents(swap_receipt)[0].Swapped;
+
                 expect({
                   execution_resources,
-                  delta,
+                  delta: {
+                    amount0: fromI129((delta as any).amount0),
+                    amount1: fromI129((delta as any).amount1),
+                  },
                   liquidity_after,
                   sqrt_ratio_after,
-                  tick_after,
+                  tick_after: fromI129(tick_after as any),
                 }).toMatchSnapshot();
                 break;
               }
