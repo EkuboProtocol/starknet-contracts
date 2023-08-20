@@ -1,16 +1,340 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": -10000n,
+    "amount1": 20005n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 79,
+      "range_check_builtin": 2086,
+    },
+    "n_steps": 27468,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340350437008340131489672541940156242705n,
+  "tick_after": 400n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 20005n,
+    "amount1": -10000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 81,
+      "pedersen_builtin": 85,
+      "range_check_builtin": 2108,
+    },
+    "n_steps": 29089,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340214310447554275770681932510281857813n,
+  "tick_after": -401n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 100000000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 76,
+      "range_check_builtin": 1781,
+    },
+    "n_steps": 24778,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 1841134676131230063154976969n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 299,
+      "pedersen_builtin": 442,
+      "range_check_builtin": 10965,
+    },
+    "n_steps": 115592,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 100000000n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 76,
+      "range_check_builtin": 2601,
+    },
+    "n_steps": 30367,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 1841134676131230063154976969n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 327,
+      "pedersen_builtin": 448,
+      "range_check_builtin": 11600,
+    },
+    "n_steps": 127433,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10468,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10456,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 2`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 10000n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 70,
+      "range_check_builtin": 1646,
+    },
+    "n_steps": 23662,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 10000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 64,
+      "range_check_builtin": 1594,
+    },
+    "n_steps": 22112,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 1000000000000000000n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 76,
+      "range_check_builtin": 1706,
+    },
+    "n_steps": 24019,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 1000000000000000000n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 94,
+      "range_check_builtin": 1928,
+    },
+    "n_steps": 27149,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 1000000000000000000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 76,
+      "range_check_builtin": 1565,
+    },
+    "n_steps": 23141,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 1000000000000000000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 94,
+      "range_check_builtin": 1989,
+    },
+    "n_steps": 26954,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token0 1`] = `
+{
+  "delta": {
+    "amount0": 79228162514264337593543950336n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 70,
+      "range_check_builtin": 1646,
+    },
+    "n_steps": 23663,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 79228162514264337593543950336n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 64,
+      "range_check_builtin": 1594,
+    },
+    "n_steps": 22113,
+  },
+  "liquidity_after": 100000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10031n,
-      "sign": false,
-    },
+    "amount0": -10000n,
+    "amount1": 10031n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -22,24 +346,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941876495514824478789461470n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10031n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": true,
-    },
+    "amount0": 10031n,
+    "amount1": -10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -51,24 +366,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935050431234390418979673808n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 498500000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -498500000000000000n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -80,24 +386,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 996999999999999991n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 18411346761312300631549769633270080325n,
-      "sign": false,
-    },
+    "amount0": -996999999999999991n,
+    "amount1": 18411346761312300631549769633270080325n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -109,24 +406,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 498500000000000000n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -498500000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -138,24 +426,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 18411346761312300631549769633270080325n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 996999999999999988n,
-      "sign": true,
-    },
+    "amount0": 18411346761312300631549769633270080325n,
+    "amount1": -996999999999999988n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -167,24 +446,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -195,24 +465,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -223,10 +484,7 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -245,14 +503,8 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 9969n,
-      "sign": true,
-    },
+    "amount0": 10000n,
+    "amount1": -9969n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -264,24 +516,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935070848176405709111855138n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 9969n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": false,
-    },
+    "amount0": -9969n,
+    "amount1": 10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -293,24 +536,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941856078572809188248941300n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -499248873309964947n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -322,24 +556,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": {
-    "mag": 1383293n,
-    "sign": true,
-  },
+  "tick_after": -1383293n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -499248873309964947n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -351,24 +576,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": {
-    "mag": 1383293n,
-    "sign": true,
-  },
+  "tick_after": -1383293n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -499248873309964947n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -380,24 +596,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": {
-    "mag": 1383292n,
-    "sign": false,
-  },
+  "tick_after": 1383292n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -499248873309964947n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -409,24 +616,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": {
-    "mag": 1383292n,
-    "sign": false,
-  },
+  "tick_after": 1383292n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 999999999987340315n,
-      "sign": true,
-    },
+    "amount0": 79228162514264337593543950336n,
+    "amount1": -999999999987340315n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -438,24 +636,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 4307862763438282374583701768n,
-  "tick_after": {
-    "mag": 50185225n,
-    "sign": true,
-  },
+  "tick_after": -50185225n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 999999999987340315n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
+    "amount0": -999999999987340315n,
+    "amount1": 79228162514264337593543950336n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -467,24 +656,15 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 26879242290602659127166050169264208153695482184933n,
-  "tick_after": {
-    "mag": 50185224n,
-    "sign": false,
-  },
+  "tick_after": 50185224n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10031n,
-      "sign": false,
-    },
+    "amount0": -10000n,
+    "amount1": 10031n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -496,24 +676,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941876495514824478789461470n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -525,24 +696,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 498500000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -498500000000000000n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -554,24 +716,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 996999999999999991n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 18411346761312300631549769633270080325n,
-      "sign": false,
-    },
+    "amount0": -996999999999999991n,
+    "amount1": 18411346761312300631549769633270080325n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -583,24 +736,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -612,24 +756,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -641,24 +776,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -669,24 +795,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -697,10 +814,7 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -719,14 +833,8 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -738,24 +846,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 9969n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": false,
-    },
+    "amount0": -9969n,
+    "amount1": 10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -767,24 +866,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941856078572809188248941300n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -796,24 +886,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -825,24 +906,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -499248873309964947n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -854,24 +926,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": {
-    "mag": 1383292n,
-    "sign": false,
-  },
+  "tick_after": 1383292n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -499248873309964947n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -883,24 +946,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": {
-    "mag": 1383292n,
-    "sign": false,
-  },
+  "tick_after": 1383292n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -912,24 +966,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 999999999987340315n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
+    "amount0": -999999999987340315n,
+    "amount1": 79228162514264337593543950336n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -941,24 +986,15 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 26879242290602659127166050169264208153695482184933n,
-  "tick_after": {
-    "mag": 50185224n,
-    "sign": false,
-  },
+  "tick_after": 50185224n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -970,24 +1006,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10031n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": true,
-    },
+    "amount0": 10031n,
+    "amount1": -10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -999,24 +1026,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935050431234390418979673808n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1028,24 +1046,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1057,24 +1066,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 498500000000000000n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -498500000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1086,24 +1086,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 18411346761312300631549769633270080324n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 996999999999999987n,
-      "sign": true,
-    },
+    "amount0": 18411346761312300631549769633270080324n,
+    "amount1": -996999999999999987n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1115,24 +1106,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1143,24 +1125,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1171,10 +1144,7 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -1193,14 +1163,8 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 9969n,
-      "sign": true,
-    },
+    "amount0": 10000n,
+    "amount1": -9969n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1212,24 +1176,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935070848176405709111855138n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1241,24 +1196,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -499248873309964947n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1270,24 +1216,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": {
-    "mag": 1383293n,
-    "sign": true,
-  },
+  "tick_after": -1383293n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 499248873309964947n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -499248873309964947n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1299,24 +1236,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": {
-    "mag": 1383293n,
-    "sign": true,
-  },
+  "tick_after": -1383293n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1328,24 +1256,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1357,24 +1276,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 999999999987340315n,
-      "sign": true,
-    },
+    "amount0": 79228162514264337593543950336n,
+    "amount1": -999999999987340315n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1386,24 +1296,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 4307862763438282374583701768n,
-  "tick_after": {
-    "mag": 50185225n,
-    "sign": true,
-  },
+  "tick_after": -50185225n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1415,24 +1316,15 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10001n,
-      "sign": false,
-    },
+    "amount0": -10000n,
+    "amount1": 10001n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1444,24 +1336,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431771614280n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10001n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": true,
-    },
+    "amount0": 10001n,
+    "amount1": -10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1473,24 +1356,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431764808632n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000002n,
-      "sign": false,
-    },
+    "amount0": -1000000000000000000n,
+    "amount1": 1000000000000000002n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1502,24 +1376,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000002n,
-      "sign": false,
-    },
+    "amount0": -1000000000000000000n,
+    "amount1": 1000000000000000002n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1531,24 +1396,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000002n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000002n,
+    "amount1": -1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1560,24 +1416,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000002n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000002n,
+    "amount1": -1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1589,24 +1436,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1617,24 +1455,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1645,10 +1474,7 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -1667,14 +1493,8 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 9999n,
-      "sign": true,
-    },
+    "amount0": 10000n,
+    "amount1": -9999n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1686,24 +1506,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431764808633n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 9999n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": false,
-    },
+    "amount0": -9999n,
+    "amount1": 10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1715,24 +1526,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431771614279n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 999999999999999998n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -999999999999999998n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1744,24 +1546,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 999999999999999998n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -999999999999999998n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1773,24 +1566,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 999999999999999998n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -999999999999999998n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1802,24 +1586,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 999999999999999998n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -999999999999999998n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1831,24 +1606,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 79228156237163099530060194283n,
-      "sign": true,
-    },
+    "amount0": 79228162514264337593543950336n,
+    "amount1": -79228156237163099530060194283n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1860,24 +1626,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282339960993932299601503360233022685n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 79228156237163099530060194283n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
+    "amount0": -79228156237163099530060194283n,
+    "amount1": 79228162514264337593543950336n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1889,24 +1646,15 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282393880885130614014402098783298475n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10031n,
-      "sign": false,
-    },
+    "amount0": -10000n,
+    "amount1": 10031n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1918,24 +1666,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374650510290190337n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10031n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": true,
-    },
+    "amount0": 10031n,
+    "amount1": -10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1947,24 +1686,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374564353246232576n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1003000000012697619n,
-      "sign": false,
-    },
+    "amount0": -1000000000000000000n,
+    "amount1": 1003000000012697619n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -1976,24 +1706,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925246315661317143288935900352n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1003000000012697619n,
-      "sign": false,
-    },
+    "amount0": -1000000000000000000n,
+    "amount1": 1003000000012697619n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2005,24 +1726,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925246315661317143288935900352n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1003000000012697619n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
+    "amount0": 1003000000012697619n,
+    "amount1": -1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2034,24 +1746,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916630611265486607431768211456n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1003000000012697619n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": true,
-    },
+    "amount0": 1003000000012697619n,
+    "amount1": -1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2063,24 +1766,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916630611265486607431768211456n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2091,24 +1785,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2119,10 +1804,7 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -2141,14 +1823,8 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 9969n,
-      "sign": true,
-    },
+    "amount0": 10000n,
+    "amount1": -9969n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2160,24 +1836,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374564610944270337n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 9969n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": false,
-    },
+    "amount0": -9969n,
+    "amount1": 10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2189,24 +1856,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374650252592152576n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 996999999987453842n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -996999999987453842n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2218,24 +1876,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916656381069316492767631040557n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 996999999987453842n,
-      "sign": true,
-    },
+    "amount0": 1000000000000000000n,
+    "amount1": -996999999987453842n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2247,24 +1896,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916656381069316492767631040557n,
-  "tick_after": {
-    "mag": 1n,
-    "sign": true,
-  },
+  "tick_after": -1n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 996999999987453842n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -996999999987453842n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2276,24 +1916,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925220545857486607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 996999999987453842n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 1000000000000000000n,
-      "sign": false,
-    },
+    "amount0": -996999999987453842n,
+    "amount1": 1000000000000000000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2305,24 +1936,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925220545857486607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 39554570869665270195675172000n,
-      "sign": true,
-    },
+    "amount0": 79228162514264337593543950336n,
+    "amount1": -39554570869665270195675172000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2334,24 +1956,15 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 170396778628411849505946223051528149971n,
-  "tick_after": {
-    "mag": 1383293n,
-    "sign": true,
-  },
+  "tick_after": -1383293n,
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 39554570869665270195675172000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 79228162514264337593543950336n,
-      "sign": false,
-    },
+    "amount0": -39554570869665270195675172000n,
+    "amount1": 79228162514264337593543950336n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2363,10 +1976,7 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 679543886741114111536359091036980510720n,
-  "tick_after": {
-    "mag": 1383292n,
-    "sign": false,
-  },
+  "tick_after": 1383292n,
 }
 `;
 
@@ -2379,14 +1989,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2398,10 +2002,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2420,14 +2021,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2439,24 +2034,15 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2468,24 +2054,15 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2496,10 +2073,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
@@ -2524,14 +2098,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2543,10 +2111,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2559,14 +2124,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2578,24 +2137,15 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2607,10 +2157,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2629,14 +2176,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2648,10 +2189,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2664,14 +2202,8 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2683,24 +2215,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2711,24 +2234,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2740,24 +2254,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2769,10 +2274,7 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
@@ -2785,14 +2287,8 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2803,24 +2299,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2831,24 +2318,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2859,24 +2337,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2888,24 +2357,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2917,24 +2377,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2945,24 +2396,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -2974,10 +2416,7 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
@@ -2990,14 +2429,8 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3008,24 +2441,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3037,24 +2461,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3066,24 +2481,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3094,24 +2500,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": true,
-  },
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3123,24 +2520,15 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3152,24 +2540,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3181,24 +2560,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3210,24 +2580,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3239,24 +2600,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3268,24 +2620,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3297,24 +2640,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3325,24 +2659,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3353,10 +2678,7 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -3375,14 +2697,8 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3394,24 +2710,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3423,24 +2730,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3452,24 +2750,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3481,24 +2770,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3510,24 +2790,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3539,24 +2810,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3568,24 +2830,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3597,10 +2850,337 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
   },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1620,
+      "pedersen_builtin": 402,
+      "range_check_builtin": 27633,
+    },
+    "n_steps": 218863,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 27038,
+    },
+    "n_steps": 222001,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 60,
+      "range_check_builtin": 1448,
+    },
+    "n_steps": 20120,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 270,
+      "pedersen_builtin": 402,
+      "range_check_builtin": 7963,
+    },
+    "n_steps": 89470,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 60,
+      "range_check_builtin": 2281,
+    },
+    "n_steps": 25802,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 297,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 8772,
+    },
+    "n_steps": 100521,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10468,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10456,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 2`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 26978,
+    },
+    "n_steps": 221467,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1620,
+      "pedersen_builtin": 402,
+      "range_check_builtin": 27574,
+    },
+    "n_steps": 218330,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 60,
+      "range_check_builtin": 2281,
+    },
+    "n_steps": 25808,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 297,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 8762,
+    },
+    "n_steps": 100437,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 60,
+      "range_check_builtin": 1448,
+    },
+    "n_steps": 20118,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 270,
+      "pedersen_builtin": 402,
+      "range_check_builtin": 7954,
+    },
+    "n_steps": 89387,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 408,
+      "range_check_builtin": 26978,
+    },
+    "n_steps": 221467,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1620,
+      "pedersen_builtin": 402,
+      "range_check_builtin": 27574,
+    },
+    "n_steps": 218330,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
@@ -3643,14 +3223,8 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3661,24 +3235,15 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3689,10 +3254,7 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -3756,17 +3318,341 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79
 }
 `;
 
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 776,
+    },
+    "n_steps": 14027,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 831,
+    },
+    "n_steps": 15689,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 1535,
+    },
+    "n_steps": 19372,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 776,
+    },
+    "n_steps": 14027,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 2276,
+    },
+    "n_steps": 25085,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 826,
+    },
+    "n_steps": 15043,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 0 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10468,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 0 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 42,
+      "range_check_builtin": 302,
+    },
+    "n_steps": 10456,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1 token1 limit 1.000 1`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1 token1 limit 1.000 2`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 830,
+    },
+    "n_steps": 15686,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 776,
+    },
+    "n_steps": 14025,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 2276,
+    },
+    "n_steps": 25091,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 826,
+    },
+    "n_steps": 15049,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 1535,
+    },
+    "n_steps": 19370,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 776,
+    },
+    "n_steps": 14025,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 79228162514264337593543950336 token0 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 54,
+      "range_check_builtin": 830,
+    },
+    "n_steps": 15686,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
+}
+`;
+
+exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 79228162514264337593543950336 token1 1`] = `
+{
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 48,
+      "range_check_builtin": 776,
+    },
+    "n_steps": 14025,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
+}
+`;
+
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10517n,
-      "sign": false,
-    },
+    "amount0": -10000n,
+    "amount1": 10517n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3778,24 +3664,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 150019n,
   "sqrt_ratio_after": 358626480022582750641202830198326118313n,
-  "tick_after": {
-    "mag": 105011n,
-    "sign": false,
-  },
+  "tick_after": 105011n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10649n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": true,
-    },
+    "amount0": 10649n,
+    "amount1": -10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3807,24 +3684,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 100009n,
   "sqrt_ratio_after": 318092040655615236860302625335891824051n,
-  "tick_after": {
-    "mag": 134871n,
-    "sign": true,
-  },
+  "tick_after": -134871n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 15185n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 16513n,
-      "sign": false,
-    },
+    "amount0": -15185n,
+    "amount1": 16513n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3836,24 +3704,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 15185n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 16513n,
-      "sign": false,
-    },
+    "amount0": -15185n,
+    "amount1": 16513n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3865,24 +3724,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 13061n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 12055n,
-      "sign": true,
-    },
+    "amount0": 13061n,
+    "amount1": -12055n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3894,24 +3744,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 13061n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 12055n,
-      "sign": true,
-    },
+    "amount0": 13061n,
+    "amount1": -12055n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3923,24 +3764,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": true,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3951,24 +3783,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 230021n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 0n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 0n,
-      "sign": false,
-    },
+    "amount0": 0n,
+    "amount1": 0n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -3979,10 +3802,7 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 230021n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": {
-    "mag": 0n,
-    "sign": false,
-  },
+  "tick_after": 0n,
 }
 `;
 
@@ -4001,14 +3821,8 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 10000n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 9433n,
-      "sign": true,
-    },
+    "amount0": 10000n,
+    "amount1": -9433n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4020,24 +3834,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 100009n,
   "sqrt_ratio_after": 320125855863226297598523424027276983985n,
-  "tick_after": {
-    "mag": 122124n,
-    "sign": true,
-  },
+  "tick_after": -122124n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 9537n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 10000n,
-      "sign": false,
-    },
+    "amount0": -9537n,
+    "amount1": 10000n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4049,24 +3854,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 150019n,
   "sqrt_ratio_after": 357386975632795108754492777510811258014n,
-  "tick_after": {
-    "mag": 98086n,
-    "sign": false,
-  },
+  "tick_after": 98086n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 13101n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 12092n,
-      "sign": true,
-    },
+    "amount0": 13101n,
+    "amount1": -12092n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4078,24 +3874,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": {
-    "mag": 1386296n,
-    "sign": true,
-  },
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 13101n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 12092n,
-      "sign": true,
-    },
+    "amount0": 13101n,
+    "amount1": -12092n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4107,24 +3894,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 15232n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 16563n,
-      "sign": false,
-    },
+    "amount0": -15232n,
+    "amount1": 16563n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4136,24 +3914,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": {
-    "mag": 1386295n,
-    "sign": false,
-  },
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 15232n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 16563n,
-      "sign": false,
-    },
+    "amount0": -15232n,
+    "amount1": 16563n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4165,24 +3934,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 13101n,
-      "sign": false,
-    },
-    "amount1": {
-      "mag": 12092n,
-      "sign": true,
-    },
+    "amount0": 13101n,
+    "amount1": -12092n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4194,24 +3954,15 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": {
-    "mag": 88722884n,
-    "sign": true,
-  },
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
-    "amount0": {
-      "mag": 15232n,
-      "sign": true,
-    },
-    "amount1": {
-      "mag": 16563n,
-      "sign": false,
-    },
+    "amount0": -15232n,
+    "amount1": 16563n,
   },
   "execution_resources": {
     "builtin_instance_counter": {
@@ -4223,9 +3974,6 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": {
-    "mag": 88722883n,
-    "sign": false,
-  },
+  "tick_after": 88722883n,
 }
 `;
