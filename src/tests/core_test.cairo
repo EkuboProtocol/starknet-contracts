@@ -1459,14 +1459,12 @@ mod locks {
             setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
-            price.sqrt_ratio == u256 { low: 343685537712540937764355495505137, high: 1 },
-            'price lower'
+            price.sqrt_ratio == u256 { low: 0x10c6f8ba2f9812745d280cca2e8d, high: 1 }, 'price lower'
         );
         assert(liquidity == 1000000000, 'liquidity is original');
-
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 3402823669209384634633746074317, value1: 0, 
+                value0: 0, value1: 0x2f3ea0be6ace18ebf8fbc39f15
             },
             'fees'
         );
@@ -1571,8 +1569,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 491, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 499, sign: false }, 'amount1');
+        assert(delta.amount0 == i129 { mag: 496, sign: true }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 505, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1583,7 +1581,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 17014118346046923173168730371588410, value1: 0, 
+                value0: 0, value1: 0x3eea209aaa3ad18d25edd052934ac
             },
             'fees'
         );
@@ -1692,7 +1690,6 @@ mod locks {
             price.sqrt_ratio == u256 { low: 0xffffef39085f4a1272c94b380cb6c7a7, high: 0 }, 'price'
         );
         assert(liquidity == 1000000000, 'liquidity is original');
-        fees_per_liquidity.value0.print();
         assert(
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 0x2f3ea0be6ace18ebf8fbc39f15, value1: 0
@@ -1741,18 +1738,21 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 49626, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 50373, sign: false }, 'amount1');
+        assert(delta.amount1 == i129 { mag: 50378, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
             setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
-        assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
+        assert(
+            price.sqrt_ratio == u256 { low: 0x672a6ec856fce6c85fbf4a4920eb890, high: 1 },
+            'ratio after'
+        );
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 16980090109354829326822392910845233, 
+                value0: 0, value1: 0x34d925a0a379166c530f718d0b15d
             },
             'fees'
         );
@@ -1797,8 +1797,8 @@ mod locks {
             skip_ahead: 0
         );
 
-        assert(delta.amount0 == i129 { mag: 49874, sign: false }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 49129, sign: true }, 'amount1');
+        assert(delta.amount0 == i129 { mag: 50378, sign: false }, 'amount0');
+        assert(delta.amount1 == i129 { mag: 49626, sign: true }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1809,7 +1809,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 16912033635970641634129717989358880, 
+                value0: 0x34d925a0a379166c530f718d0b15d, value1: 0
             },
             'fees'
         );
@@ -1978,7 +1978,7 @@ mod locks {
         );
 
         assert(delta.amount0 == i129 { mag: 0x182be, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 0x18a86, sign: false }, 'amount1');
+        assert(delta.amount1 == i129 { mag: 0x18a90, sign: false }, 'amount1');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1993,7 +1993,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 0x68f6639f0bc961de416956dbaee7d, 
+                value0: 0, value1: 0x6a02d31917283ab1acb5d610426d5, 
             },
             'fees'
         );
