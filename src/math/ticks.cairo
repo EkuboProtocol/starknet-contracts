@@ -25,7 +25,7 @@ mod constants {
 mod internal {
     use ekubo::math::bits::{msb};
     use ekubo::math::exp2::{exp2};
-    use integer::{downcast, u256_as_non_zero};
+    use integer::{downcast};
     use option::{OptionTrait, Option};
     use traits::{Into, TryInto};
     use ekubo::types::i129::{i129};

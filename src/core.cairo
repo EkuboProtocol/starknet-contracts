@@ -832,10 +832,10 @@ mod Core {
                 sqrt_ratio = swap_result.sqrt_ratio_next;
                 calculated_amount += swap_result.calculated_amount;
 
-                // this only happens when liquidity != 0
-                if (swap_result.fee_amount != 0) {
+                // we know this only happens when liquidity is non zero
+                if (swap_result.fee_amount.is_non_zero()) {
                     fees_per_liquidity = fees_per_liquidity
-                        + if (params.is_token1) {
+                        + if increasing {
                             fees_per_liquidity_from_amount1(
                                 swap_result.fee_amount, liquidity.into()
                             )

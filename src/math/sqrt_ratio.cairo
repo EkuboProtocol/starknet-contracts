@@ -1,10 +1,10 @@
-use ekubo::types::i129::i129;
+use ekubo::types::i129::{i129};
 use ekubo::math::muldiv::{muldiv, div};
-use option::Option;
+use option::{Option};
 use integer::{
     u256_as_non_zero, u256_overflow_mul, u256_overflow_sub, u256_overflowing_add, u256_safe_divmod
 };
-use zeroable::Zeroable;
+use zeroable::{Zeroable};
 
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
 // An empty option is returned on overflow/underflow which means the price exceeded the u256 bounds
@@ -28,7 +28,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
         }
 
         let (denominator, overflow_sub) = u256_overflow_sub(numerator1, product);
-        if (overflow_sub) {
+        if (overflow_sub | denominator.is_zero()) {
             return Option::None(());
         }
 

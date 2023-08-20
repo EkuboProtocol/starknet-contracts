@@ -676,7 +676,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     assert(info.fees0 == 0, 'fees0 before');
     assert(info.fees1 == 0, 'fees1 before');
 
-    setup.token1.increase_balance(setup.locker.contract_address, 10010);
+    setup.token1.increase_balance(setup.locker.contract_address, 20000);
     let delta_swap = swap(
         setup: setup,
         amount: i129 { mag: 100000, sign: true },
@@ -686,16 +686,16 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
         skip_ahead: 0
     );
 
-    assert(delta_swap.amount0 == i129 { mag: 9899, sign: true }, 'first swap delta0');
-    assert(delta_swap.amount1 == i129 { mag: 10001, sign: false }, 'first swap delta1');
+    assert(delta_swap.amount0 == i129 { mag: 9999, sign: true }, 'first swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 10103, sign: false }, 'first swap delta1');
 
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 0, 'amount0 after');
     assert(info.amount1 == 20000, 'amount1 after');
-    assert(info.fees0 == 99, 'fees0 after');
-    assert(info.fees1 == 0, 'fees1 after');
+    assert(info.fees0 == 0, 'fees0 after');
+    assert(info.fees1 == 101, 'fees1 after');
 }
 
 #[test]
@@ -730,7 +730,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     assert(info.fees0 == 0, 'fees0 before');
     assert(info.fees1 == 0, 'fees1 before');
 
-    setup.token0.increase_balance(setup.locker.contract_address, 10010);
+    setup.token0.increase_balance(setup.locker.contract_address, 20000);
     let delta_swap = swap(
         setup: setup,
         amount: i129 { mag: 100000, sign: true },
@@ -740,16 +740,16 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
         skip_ahead: 0
     );
 
-    assert(delta_swap.amount0 == i129 { mag: 10001, sign: false }, 'swap delta0');
-    assert(delta_swap.amount1 == i129 { mag: 9899, sign: true }, 'swap delta1');
+    assert(delta_swap.amount0 == i129 { mag: 10103, sign: false }, 'swap delta0');
+    assert(delta_swap.amount1 == i129 { mag: 9999, sign: true }, 'swap delta1');
 
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
 
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 20000, 'amount0 after');
     assert(info.amount1 == 0, 'amount1 after');
-    assert(info.fees0 == 0, 'fees0 after');
-    assert(info.fees1 == 99, 'fees1 after');
+    assert(info.fees0 == 101, 'fees0 after');
+    assert(info.fees1 == 0, 'fees1 after');
 }
 
 #[test]
@@ -816,8 +816,8 @@ fn test_deposit_swap_round_trip_accounting() {
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
     assert(info.amount1 == 9999, 'amount1 after');
-    assert(info.fees0 == 200, 'fees0 after');
-    assert(info.fees1 == 200, 'fees1 after');
+    assert(info.fees0 == 203, 'fees0 after');
+    assert(info.fees1 == 203, 'fees1 after');
 
     let (amount0, amount1) = positions
         .withdraw(
@@ -830,8 +830,8 @@ fn test_deposit_swap_round_trip_accounting() {
             collect_fees: true,
         );
 
-    assert(amount0 == 200, 'amount0 withdrawn');
-    assert(amount1 == 200, 'amount1 withdrawn');
+    assert(amount0 == 203, 'amount0 withdrawn');
+    assert(amount1 == 203, 'amount1 withdrawn');
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
@@ -1000,20 +1000,20 @@ fn test_deposit_swap_multiple_positions() {
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
     assert(p0_info.amount0 == 9999, 'p0 amount0');
     assert(p0_info.amount1 == 9999, 'p0 amount1');
-    assert(p0_info.fees0 == 200, 'p0 fees0');
-    assert(p0_info.fees1 == 200, 'p0 fees1');
+    assert(p0_info.fees0 == 202, 'p0 fees0');
+    assert(p0_info.fees1 == 202, 'p0 fees1');
 
     assert(p1_info.liquidity == p1.liquidity, 'p1 liquidity');
     assert(p1_info.amount0 == 9999, 'p1 amount0');
     assert(p1_info.amount1 == 0, 'p1 amount1');
-    assert(p1_info.fees0 == 99, 'p1 fees0');
-    assert(p1_info.fees1 == 100, 'p1 fees1');
+    assert(p1_info.fees0 == 101, 'p1 fees0');
+    assert(p1_info.fees1 == 101, 'p1 fees1');
 
     assert(p2_info.liquidity == p2.liquidity, 'p2 liquidity');
     assert(p2_info.amount0 == 0, 'p2 amount0');
     assert(p2_info.amount1 == 9999, 'p2 amount1');
-    assert(p2_info.fees0 == 100, 'p2 fees0');
-    assert(p2_info.fees1 == 99, 'p2 fees1');
+    assert(p2_info.fees0 == 101, 'p2 fees0');
+    assert(p2_info.fees1 == 101, 'p2 fees1');
 }
 
 
@@ -1261,7 +1261,7 @@ fn test_withdraw_partial_leave_fees() {
     assert(info.liquidity == (p0.liquidity - (p0.liquidity / 3)), 'liquidity');
     assert(info.amount0 == 13333, 'amount0'); // 2/3 of 20k
     assert(info.amount1 == 0, 'amount1');
-    assert(info.fees0 == 99, 'fees0'); // 1% of 10k
+    assert(info.fees0 == 100, 'fees0'); // 1% of 10k
     assert(info.fees1 == 0, 'fees1');
 }
 
@@ -1283,7 +1283,7 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
     let p0 = create_position(setup, positions, max_bounds(5982), ONE_E18, ONE_E18);
 
     assert(p0.liquidity == ONE_E18, 'liquidity');
-    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18);
+    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18 * 2);
     let delta = swap(
         setup: setup,
         amount: i129 { mag: ONE_E18, sign: true },
