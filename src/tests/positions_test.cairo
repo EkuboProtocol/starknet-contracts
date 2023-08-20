@@ -1283,8 +1283,7 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
     let p0 = create_position(setup, positions, max_bounds(5982), ONE_E18, ONE_E18);
 
     assert(p0.liquidity == ONE_E18, 'liquidity');
-    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18);
-    'hello'.print();
+    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18 * 2);
     let delta = swap(
         setup: setup,
         amount: i129 { mag: ONE_E18, sign: true },
@@ -1293,7 +1292,6 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
         recipient: Zeroable::zero(),
         skip_ahead: 0
     );
-    'goodbye'.print();
 
     positions
         .withdraw(

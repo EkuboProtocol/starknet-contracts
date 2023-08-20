@@ -28,7 +28,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
         }
 
         let (denominator, overflow_sub) = u256_overflow_sub(numerator1, product);
-        if (overflow_sub) {
+        if (overflow_sub | denominator.is_zero()) {
             return Option::None(());
         }
 
