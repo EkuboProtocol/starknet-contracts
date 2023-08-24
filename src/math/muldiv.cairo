@@ -16,23 +16,27 @@ fn div(x: u256, z: u256, round_up: bool) -> u256 {
 }
 
 // Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
-fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> (u256, bool) {
+fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     let numerator = u256_wide_mul(x, y);
 
     if ((numerator.limb3 == 0) & (numerator.limb2 == 0)) {
-        return (div(u256 { low: numerator.limb0, high: numerator.limb1 }, z, round_up), false);
+        return Option::Some(div(u256 { low: numerator.limb0, high: numerator.limb1 }, z, round_up));
     }
 
     let (quotient, remainder) = u512_safe_div_rem_by_u256(numerator, u256_as_non_zero(z));
 
-    let overflows = (z <= u256 { low: numerator.limb2, high: numerator.limb3 });
-
-    return if (!round_up | (remainder.is_zero())) {
-        (u256 { low: quotient.limb0, high: quotient.limb1 }, overflows)
+    if (z <= u256 { low: numerator.limb2, high: numerator.limb3 }) {
+        Option::None(())
+    } else if (!round_up | (remainder.is_zero())) {
+        Option::Some(u256 { low: quotient.limb0, high: quotient.limb1 })
     } else {
         let (sum, sum_overflows) = u256_overflowing_add(
             u256 { low: quotient.limb0, high: quotient.limb1 }, u256 { low: 1, high: 0 }
         );
-        (sum, sum_overflows | overflows)
-    };
+        if (sum_overflows) {
+            Option::None(())
+        } else {
+            Option::Some(sum)
+        }
+    }
 }

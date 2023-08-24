@@ -32,11 +32,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
             return Option::None(());
         }
 
-        let (result, overflows) = muldiv(numerator1, sqrt_ratio, denominator, true);
-        if (overflows) {
-            return Option::None(());
-        }
-        return Option::Some(result);
+        muldiv(numerator1, sqrt_ratio, denominator, true)
     } else {
         // adding amount0, taking out amount1, price is less than sqrt_ratio and should round up
         let (denominator_p1, _, _) = u256_safe_divmod(numerator1, u256_as_non_zero(sqrt_ratio));

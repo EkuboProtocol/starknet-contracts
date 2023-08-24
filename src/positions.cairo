@@ -244,9 +244,6 @@ mod Positions {
         }
 
         fn burn(ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds) {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
-
             let core = self.core.read();
             let position = core
                 .get_position(
@@ -255,6 +252,12 @@ mod Positions {
 
             assert(position.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
 
+            self.unsafe_burn(id);
+        }
+
+        fn unsafe_burn(ref self: ContractState, id: u64) {
+            let nft = self.nft.read();
+            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
             nft.burn(id);
         }
 
@@ -379,6 +382,15 @@ mod Positions {
             let id = self.mint(pool_key, bounds);
             let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
             (id, liquidity)
+        }
+
+        fn mint_and_deposit_and_clear_both(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+        ) -> (u64, u128, u256, u256) {
+            let (id, liquidity) = self.mint_and_deposit(pool_key, bounds, min_liquidity);
+            let amount0 = self.clear(pool_key.token0);
+            let amount1 = self.clear(pool_key.token1);
+            (id, liquidity, amount0, amount1)
         }
     }
 }

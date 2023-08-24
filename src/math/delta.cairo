@@ -2,6 +2,7 @@ use ekubo::types::i129::i129;
 use ekubo::math::muldiv::{muldiv, div};
 use integer::{u256_wide_mul};
 use zeroable::{Zeroable};
+use option::{OptionTrait};
 use traits::{Into};
 
 fn ordered_non_zero<
@@ -31,14 +32,14 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
         return Zeroable::zero();
     }
 
-    let (result_0, result_0_overflow) = muldiv(
+    let result_0 = muldiv(
         u256 { low: 0, high: liquidity },
         sqrt_ratio_upper - sqrt_ratio_lower,
         sqrt_ratio_upper,
         round_up
-    );
+    )
+        .expect('OVERFLOW_AMOUNT0_DELTA_0');
 
-    assert(!result_0_overflow, 'OVERFLOW_AMOUNT0_DELTA_0');
     let result = div(result_0, sqrt_ratio_lower, round_up);
     assert(result.high.is_zero(), 'OVERFLOW_AMOUNT0_DELTA');
 
@@ -54,9 +55,7 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
         return Zeroable::zero();
     }
 
-    let result = u256_wide_mul(
-        liquidity.into(), sqrt_ratio_upper - sqrt_ratio_lower
-    );
+    let result = u256_wide_mul(liquidity.into(), sqrt_ratio_upper - sqrt_ratio_lower);
 
     // todo: result.limb3 is always zero. we can optimize out its computation
     assert(result.limb2.is_zero(), 'OVERFLOW_AMOUNT1_DELTA');
