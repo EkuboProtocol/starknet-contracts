@@ -256,6 +256,8 @@ describe("core", () => {
                     skip_ahead: swapCase.skipAhead ?? 0,
                   },
                   RECIPIENT,
+                  swapCase.amountLimit ??
+                    (swapCase.amount < 0 ? 2n ** 128n - 1n : 0n),
                 ],
                 {
                   maxFee: 1_000_000_000_000_000n,

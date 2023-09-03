@@ -52,7 +52,8 @@ fn test_simple_swapper_swap_not_initialized_pool() {
                     mag: 100, sign: false
                 }, is_token1: false, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0,
             },
-            recipient()
+            recipient(),
+            0,
         );
 }
 
@@ -81,7 +82,8 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
                     mag: 100, sign: false
                 }, is_token1: false, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
             },
-            recipient()
+            recipient(),
+            0,
         );
 
     assert(delta.amount0.is_zero(), 'no input');
@@ -117,7 +119,8 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token1_in() {
                     mag: 100, sign: false
                 }, is_token1: true, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0
             },
-            recipient()
+            recipient(),
+            0,
         );
 
     assert(delta.amount0.is_zero(), 'no input');
