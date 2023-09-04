@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "description": "Integration tests for the core contracts of Ekubo Protocol",
   "scripts": {
-    "devnet": "starknet-devnet --hide-server-logs --seed 0 --sierra-compiler-path ~/Downloads/cairo/bin/starknet-sierra-compile",
-    "test": "start-server-and-test --expect 404 devnet http://127.0.0.1:5050 \"jest -u\"",
+    "devnet": "starknet-devnet --hide-server-logs --seed 0",
+    "test": "start-server-and-test --expect 404 devnet http://127.0.0.1:5050 \"jest\"",
     "create-dump": "start-server-and-test --expect 404 devnet http://127.0.0.1:5050 \"ts-node create-dump.ts\""
   },
   "author": "Moody Salem",
