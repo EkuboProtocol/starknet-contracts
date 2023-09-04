@@ -1,5 +1,6 @@
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
+use ekubo::types::delta::{Delta};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde)]
@@ -33,6 +34,9 @@ trait IQuoter<TStorage> {
     fn quote(self: @TStorage, params: QuoteParameters) -> QuoteResult;
     // Quote for a single pool
     fn quote_single(self: @TStorage, params: QuoteSingleParameters) -> QuoteResult;
+
+    // Returns the delta for swapping a pool to the given price
+    fn delta_to_sqrt_ratio(self: @TStorage, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
 }
 
 #[starknet::contract]
@@ -47,7 +51,7 @@ mod Quoter {
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use super::{
         i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult,
-        QuoteSingleParameters
+        QuoteSingleParameters, Delta
     };
     use ekubo::shared_locker::{consume_callback_data};
 
@@ -58,7 +62,6 @@ mod Quoter {
     struct Storage {
         core: ICoreDispatcher, 
     }
-
 
     #[constructor]
     fn constructor(ref self: ContractState, core: ICoreDispatcher) {
@@ -87,7 +90,8 @@ mod Quoter {
 
     #[derive(Drop, Copy, Serde)]
     enum CallbackParameters {
-        QuoteParameters: QuoteParameters, 
+        QuoteParameters: QuoteParameters,
+        DeltaToSqrtRatio: (PoolKey, u256),
     }
 
     const FUNCTION_DID_NOT_ERROR_FLAG: felt252 =
@@ -160,6 +164,27 @@ mod Quoter {
                         @QuoteResult { amount, other_token: current_token }, ref output
                     );
                     panic(output);
+                },
+                CallbackParameters::DeltaToSqrtRatio((
+                    pool_key, sqrt_ratio
+                )) => {
+                    let current_pool_price = core.get_pool_price(pool_key);
+
+                    let delta = core
+                        .swap(
+                            pool_key,
+                            SwapParameters {
+                                amount: i129 {
+                                    mag: 340282366920938463463374607431768211455, sign: true
+                                },
+                                is_token1: sqrt_ratio <= current_pool_price.sqrt_ratio,
+                                sqrt_ratio_limit: sqrt_ratio,
+                                skip_ahead: 0,
+                            }
+                        );
+
+                    Serde::<Delta>::serialize(@delta, ref output);
+                    panic(output);
                 }
             };
 
@@ -219,6 +244,12 @@ mod Quoter {
                         }, amount: params.amount, specified_token: params.specified_token,
                     }
                 )
+        }
+
+        fn delta_to_sqrt_ratio(self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256) -> Delta {
+            call_core_with_reverting_callback(
+                self.core.read(), @CallbackParameters::DeltaToSqrtRatio((pool_key, sqrt_ratio))
+            )
         }
     }
 }

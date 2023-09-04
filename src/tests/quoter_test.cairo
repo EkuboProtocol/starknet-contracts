@@ -240,6 +240,30 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     assert(result.other_token == pool_key.token0, 'tokend');
 }
 
+
+#[test]
+#[available_gas(300000000)]
+fn test_quoter_quote_to_delta() {
+    let (quoter, pool_key, _) = setup_for_routing();
+
+    let mut delta = quoter
+        .delta_to_sqrt_ratio(pool_key: pool_key, sqrt_ratio: u256 { low: 0, high: 1 });
+    assert(delta.amount0.is_zero(), 'amount0');
+    assert(delta.amount1.is_zero(), 'amount1');
+
+    delta = quoter.delta_to_sqrt_ratio(pool_key: pool_key, sqrt_ratio: u256 { low: 0, high: 2 });
+    assert(delta.amount0 == i129 { mag: 0x270f, sign: true }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 0x274d, sign: false }, 'amount1');
+
+    delta = quoter
+        .delta_to_sqrt_ratio(
+            pool_key: pool_key,
+            sqrt_ratio: u256 { low: 170141183460469231731687303715884105728, high: 0 }
+        );
+    assert(delta.amount0 == i129 { mag: 0x274d, sign: false }, 'amount0');
+    assert(delta.amount1 == i129 { mag: 0x270f, sign: true }, 'amount1');
+}
+
 #[test]
 #[available_gas(300000000)]
 fn test_quoter_quote_multihop_routes() {
