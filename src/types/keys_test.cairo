@@ -204,6 +204,24 @@ fn test_pool_key_hash() {
     assert(hash != hash_with_different_tick_spacing, 'not equal');
 }
 
+
+#[test]
+fn test_pool_key_hash_result() {
+    assert(
+        LegacyHash::<PoolKey>::hash(
+            1234,
+            PoolKey {
+                token0: contract_address_const::<1>(),
+                token1: contract_address_const::<2>(),
+                fee: 3,
+                tick_spacing: 4,
+                extension: contract_address_const::<5>(),
+            }
+        ) == 0x2cfe2f704e1821da98a42a506dbd7fa4f356af4a491d2bd0901beedd4027db6,
+        'hash'
+    );
+}
+
 #[test]
 fn test_position_key_hash_differs_for_any_field_or_state_change() {
     let base = PositionKey {
@@ -269,4 +287,19 @@ fn test_position_key_hash() {
     );
     assert(hash != hash_with_diff_salt, 'not equal');
     assert(hash != hash_with_diff_state, 'not equal');
+}
+
+#[test]
+fn test_position_key_hash_result() {
+    assert(
+        LegacyHash::hash(
+            1234,
+            PositionKey {
+                salt: 1, owner: contract_address_const::<2>(), bounds: Bounds {
+                    lower: i129 { mag: 3, sign: false }, upper: i129 { mag: 4, sign: false }
+                },
+            }
+        ) == 0x103df9e683d9ca32325eb076200ba9e872904b133018ce0d3943756fcb2d01e,
+        'hash'
+    );
 }
