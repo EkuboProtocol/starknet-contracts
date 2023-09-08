@@ -16,8 +16,10 @@ struct GetTokenInfoResult {
 
 #[starknet::interface]
 trait IPositions<TStorage> {
+    // Returns the address of the NFT contract that represents ownership of a position
     fn get_nft_address(self: @TStorage) -> ContractAddress;
 
+    // Returns the principal and fee amount for a set of positions
     fn get_tokens_info(
         self: @TStorage, params: Array<(u64, PoolKey, Bounds)>
     ) -> Array<GetTokenInfoResult>;
