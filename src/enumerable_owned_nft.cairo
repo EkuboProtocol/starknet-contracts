@@ -274,6 +274,9 @@ mod EnumerableOwnedNFT {
                 .expect('URI_LENGTH')
         }
 
+        fn tokenURI(self: @ContractState, token_id: u256) -> felt252 {
+            self.tokenUri(token_id)
+        }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
             self.balanceOf(account)
