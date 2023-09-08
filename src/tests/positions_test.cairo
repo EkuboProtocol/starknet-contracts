@@ -5,7 +5,9 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
+use ekubo::interfaces::positions::{
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult
+};
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
@@ -1084,6 +1086,18 @@ fn test_create_position_in_range_after_swap_no_fees() {
     let p1_info = positions.get_token_info(p1.id, setup.pool_key, p1.bounds);
     let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
     let p3_info = positions.get_token_info(p3.id, setup.pool_key, p3.bounds);
+
+    let mut arr: Array<(u64, PoolKey, Bounds)> = ArrayTrait::new();
+    arr.append((p0.id, setup.pool_key, p0.bounds));
+    arr.append((p1.id, setup.pool_key, p1.bounds));
+    arr.append((p2.id, setup.pool_key, p2.bounds));
+    arr.append((p3.id, setup.pool_key, p3.bounds));
+    let mut all_info = positions.get_tokens_info(arr);
+    assert(all_info.pop_front().unwrap() == p0_info, 'p0_info');
+    assert(all_info.pop_front().unwrap() == p1_info, 'p1_info');
+    assert(all_info.pop_front().unwrap() == p2_info, 'p2_info');
+    assert(all_info.pop_front().unwrap() == p3_info, 'p3_info');
+    assert(all_info.pop_front().is_none(), 'no others');
 
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
     assert(p0_info.amount0 == 9999, 'p0 amount0');

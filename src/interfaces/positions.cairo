@@ -4,7 +4,7 @@ use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, PartialEq)]
 struct GetTokenInfoResult {
     pool_price: PoolPrice,
     liquidity: u128,
