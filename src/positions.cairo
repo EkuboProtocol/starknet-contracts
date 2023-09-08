@@ -5,7 +5,7 @@ mod Positions {
     use option::{Option, OptionTrait};
     use serde::{Serde};
     use zeroable::{Zeroable};
-    use array::{ArrayTrait};
+    use array::{ArrayTrait, SpanTrait};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
         deploy_syscall
@@ -259,6 +259,29 @@ mod Positions {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
             nft.burn(id);
+        }
+
+        fn get_tokens_info(
+            self: @ContractState, params: Array<(u64, PoolKey, Bounds)>
+        ) -> Array<GetTokenInfoResult> {
+            let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
+
+            let mut params_view = params.span();
+
+            loop {
+                match params_view.pop_front() {
+                    Option::Some((
+                        id, pool_key, bounds
+                    )) => {
+                        results.append(self.get_token_info(*id, *pool_key, *bounds));
+                    },
+                    Option::None(()) => {
+                        break ();
+                    }
+                };
+            };
+
+            results
         }
 
         fn get_token_info(

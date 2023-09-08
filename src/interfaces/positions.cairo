@@ -18,6 +18,10 @@ struct GetTokenInfoResult {
 trait IPositions<TStorage> {
     fn get_nft_address(self: @TStorage) -> ContractAddress;
 
+    fn get_tokens_info(
+        self: @TStorage, params: Array<(u64, PoolKey, Bounds)>
+    ) -> Array<GetTokenInfoResult>;
+
     // Return the principal and fee amounts owed to a position
     fn get_token_info(
         self: @TStorage, id: u64, pool_key: PoolKey, bounds: Bounds
