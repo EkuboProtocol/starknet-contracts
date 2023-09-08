@@ -25,7 +25,7 @@ mod Positions {
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
-    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult};
+    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
@@ -262,7 +262,7 @@ mod Positions {
         }
 
         fn get_tokens_info(
-            self: @ContractState, params: Array<(u64, PoolKey, Bounds)>
+            self: @ContractState, params: Array<GetTokenInfoRequest>
         ) -> Array<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
 
@@ -270,10 +270,11 @@ mod Positions {
 
             loop {
                 match params_view.pop_front() {
-                    Option::Some((
-                        id, pool_key, bounds
-                    )) => {
-                        results.append(self.get_token_info(*id, *pool_key, *bounds));
+                    Option::Some(request) => {
+                        results
+                            .append(
+                                self.get_token_info(*request.id, *request.pool_key, *request.bounds)
+                            );
                     },
                     Option::None(()) => {
                         break ();
