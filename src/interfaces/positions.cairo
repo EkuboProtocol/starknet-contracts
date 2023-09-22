@@ -39,11 +39,7 @@ trait IPositions<TStorage> {
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u64;
 
-    // Delete the NFT. Checks the position with the given pool key, bounds, and token ID has 0 liquidity.
-    // Must be called by an operator, approved address or the owner
-    fn burn(ref self: TStorage, id: u64, pool_key: PoolKey, bounds: Bounds);
-
-    // Delete the NFT. All liquidity controlled by the NFT is irrevocably locked.
+    // Delete the NFT. All liquidity controlled by the NFT (not withdrawn) is irrevocably locked.
     // Must be called by an operator, approved address or the owner.
     fn unsafe_burn(ref self: TStorage, id: u64);
 

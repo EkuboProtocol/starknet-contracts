@@ -243,18 +243,6 @@ mod Positions {
             id
         }
 
-        fn burn(ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds) {
-            let core = self.core.read();
-            let position = core
-                .get_position(
-                    pool_key, PositionKey { owner: get_contract_address(), salt: id, bounds }
-                );
-
-            assert(position.is_zero(), 'LIQUIDITY_MUST_BE_ZERO');
-
-            self.unsafe_burn(id);
-        }
-
         fn unsafe_burn(ref self: ContractState, id: u64) {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
