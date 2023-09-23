@@ -33,7 +33,7 @@ fn test_nft_name_symbol_token_uri() {
     );
     assert(nft.name() == 'Ekubo Position', 'name');
     assert(nft.symbol() == 'EkuPo', 'symbol');
-    assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'tokenUri');
+    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'tokenURI');
     assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
 }
 
@@ -93,7 +93,7 @@ fn test_nft_custom_uri() {
     );
     assert(nft.name() == 'abcde', 'name');
     assert(nft.symbol() == 'def', 'symbol');
-    assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'tokenUri');
+    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'tokenURI');
     assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
 }
 
@@ -420,16 +420,16 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 fn test_nft_token_uri() {
     let (controller, nft) = deploy_default();
 
-    assert(nft.tokenUri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
     assert(
-        nft.tokenUri(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999', 'token_uri'
+        nft.tokenURI(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999', 'token_uri'
     );
     assert(
-        nft.tokenUri(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
+        nft.tokenURI(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
         'token_uri'
     );
     assert(
-        nft.tokenUri(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
+        nft.tokenURI(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
         'max token_uri'
     );
 }
@@ -440,7 +440,7 @@ fn test_nft_token_uri() {
 fn test_nft_token_uri_reverts_too_long() {
     let (controller, nft) = deploy_default();
 
-    nft.tokenUri(u256 { low: 999999999999, high: 0 });
+    nft.tokenURI(u256 { low: 999999999999, high: 0 });
 }
 
 #[test]
@@ -449,7 +449,7 @@ fn test_nft_token_uri_reverts_too_long() {
 fn test_nft_token_uri_reverts_token_id_too_big() {
     let (controller, nft) = deploy_default();
 
-    nft.tokenUri(u256 { low: 10000000000000000000000000000000, high: 0 });
+    nft.tokenURI(u256 { low: 10000000000000000000000000000000, high: 0 });
 }
 
 #[test]

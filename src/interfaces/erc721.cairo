@@ -11,7 +11,6 @@ trait IERC721<TStorage> {
     fn setApprovalForAll(ref self: TStorage, operator: ContractAddress, approved: bool);
     fn getApproved(self: @TStorage, token_id: u256) -> ContractAddress;
     fn isApprovedForAll(self: @TStorage, owner: ContractAddress, operator: ContractAddress) -> bool;
-    fn tokenUri(self: @TStorage, token_id: u256) -> felt252;
     fn tokenURI(self: @TStorage, token_id: u256) -> felt252;
 
     // snake_case

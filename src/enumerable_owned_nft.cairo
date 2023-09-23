@@ -266,16 +266,12 @@ mod EnumerableOwnedNFT {
             self.operators.read((owner, operator))
         }
 
-        fn tokenUri(self: @ContractState, token_id: u256) -> felt252 {
+        fn tokenURI(self: @ContractState, token_id: u256) -> felt252 {
             let id = validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
             append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
                 .expect('URI_LENGTH')
-        }
-
-        fn tokenURI(self: @ContractState, token_id: u256) -> felt252 {
-            self.tokenUri(token_id)
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -303,7 +299,7 @@ mod EnumerableOwnedNFT {
             self.isApprovedForAll(owner, operator)
         }
         fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
-            self.tokenUri(token_id)
+            self.tokenURI(token_id)
         }
     }
 
