@@ -50,8 +50,10 @@ mod EnumerableOwnedNFT {
         next_token_id: u64,
         approvals: LegacyMap<u64, ContractAddress>,
         owners: LegacyMap<u64, ContractAddress>,
+        balances: LegacyMap<ContractAddress, u64>,
         // address, id -> next
         // address, 0 contains the first token id
+        // deprecated
         tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
     }
@@ -168,32 +170,6 @@ mod EnumerableOwnedNFT {
                 curr = self.tokens_by_owner.read((owner, curr));
             }
         }
-
-        fn tokens_by_owner_insert(ref self: ContractState, owner: ContractAddress, id: u64) {
-            let head = self.tokens_by_owner.read((owner, 0));
-            self.tokens_by_owner.write((owner, 0), id);
-            self.tokens_by_owner.write((owner, id), head);
-        }
-
-        fn tokens_by_owner_remove(ref self: ContractState, owner: ContractAddress, id: u64) {
-            let mut curr: u64 = 0;
-
-            loop {
-                let next = self.tokens_by_owner.read((owner, curr));
-
-                assert(next.is_non_zero(), 'TOKEN_NOT_FOUND');
-
-                if (next == id) {
-                    self
-                        .tokens_by_owner
-                        .write((owner, curr), self.tokens_by_owner.read((owner, next)));
-                    self.tokens_by_owner.write((owner, next), 0);
-                    break ();
-                } else {
-                    curr = next;
-                };
-            };
-        }
     }
 
     #[external(v0)]
@@ -224,7 +200,10 @@ mod EnumerableOwnedNFT {
         }
 
         fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
-            u256 { low: self.count_tokens_for_owner(account).into(), high: 0 }
+            u256 {
+                low: (self.balances.read(account) + self.count_tokens_for_owner(account)).into(),
+                high: 0
+            }
         }
 
         fn ownerOf(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -242,8 +221,12 @@ mod EnumerableOwnedNFT {
 
             self.owners.write(id, to);
             self.approvals.write(id, Zeroable::zero());
-            self.tokens_by_owner_insert(to, id);
-            self.tokens_by_owner_remove(from, id);
+            if (to.is_non_zero()) {
+                self.balances.write(to, self.balances.read(to) + 1);
+            }
+            if (from.is_non_zero()) {
+                self.balances.write(from, self.balances.read(from) - 1);
+            }
             self.emit(Transfer { from, to, token_id });
         }
 
@@ -326,7 +309,10 @@ mod EnumerableOwnedNFT {
 
             // effect the mint by updating storage
             self.owners.write(id, owner);
-            self.tokens_by_owner_insert(owner, id);
+
+            if (owner.is_non_zero()) {
+                self.balances.write(owner, self.balances.read(owner) + 1);
+            }
 
             self
                 .emit(
@@ -348,7 +334,7 @@ mod EnumerableOwnedNFT {
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
             self.approvals.write(id, Zeroable::zero());
-            self.tokens_by_owner_remove(owner, id);
+            self.balances.write(owner, self.balances.read(owner) - 1);
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id: id.into() });
         }
