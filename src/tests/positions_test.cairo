@@ -48,17 +48,10 @@ fn test_deposit_liquidity_full_range() {
 
     assert(liquidity == 100000000, 'liquidity');
 
-    let mut tokens = IEnumerableOwnedNFTDispatcher {
-        contract_address: positions.get_nft_address()
-    }.get_all_owned_tokens(get_contract_address());
-    assert(tokens.len() == 1, 'len');
-    assert(tokens.pop_front().unwrap() == 1, 'token id');
-    assert(
-        IERC721Dispatcher {
-            contract_address: positions.get_nft_address()
-        }.balance_of(get_contract_address()) == 1,
-        'balance'
-    );
+    let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
+
+    assert(nft.balance_of(get_contract_address()) == 1, 'balance');
+    assert(nft.owner_of(1) == get_contract_address(), 'owner');
 }
 
 #[test]

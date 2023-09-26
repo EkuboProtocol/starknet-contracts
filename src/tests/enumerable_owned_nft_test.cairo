@@ -110,34 +110,21 @@ fn test_nft_indexing_token_ids() {
     let bob = contract_address_const::<9123456>();
 
     assert(nft.balanceOf(alice) == 0, 'balance start');
-    let mut all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 0, 'len before');
+
     let token_id = controller.mint(alice);
 
     assert(nft.balanceOf(alice) == 1, 'balance after');
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 1, 'len after');
     set_contract_address(alice);
-    nft.transferFrom(alice, bob, all.pop_front().unwrap().into());
+    nft.transferFrom(alice, bob, 1);
 
     assert(nft.balanceOf(alice) == 0, 'balance after transfer');
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 0, 'len after transfer');
 
     assert(nft.balanceOf(bob) == 1, 'balance bob transfer');
-    all = controller.get_all_owned_tokens(bob);
-    assert(all.len() == 1, 'len bob');
-    assert(all.pop_front().unwrap().into() == token_id, 'token bob');
 
     switch_to_controller();
     let token_id_2 = controller.mint(alice);
     set_contract_address(bob);
     nft.transferFrom(bob, alice, token_id.into());
-
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 2, 'len final');
-    assert(all.pop_front().unwrap().into() == token_id, 'token1');
-    assert(all.pop_front().unwrap().into() == token_id_2, 'token2');
 }
 
 #[test]
@@ -159,26 +146,14 @@ fn test_nft_indexing_token_ids_not_sorted() {
     assert(nft.balanceOf(alice) == 3, 'balance alice');
     assert(nft.balanceOf(bob) == 2, 'balance bob');
 
-    assert(controller.get_all_owned_tokens(alice).len() == 3, 'len alice');
-    assert(controller.get_all_owned_tokens(bob).len() == 2, 'len bob');
-
     set_contract_address(alice);
     nft.transferFrom(alice, bob, id_3.into());
     set_contract_address(bob);
     nft.transferFrom(bob, alice, id_4.into());
 
     assert(nft.balanceOf(alice) == 3, 'balance alice after');
-    let mut alices = controller.get_all_owned_tokens(alice);
-    assert(alices.len() == 3, 'len after');
-    assert(alices.pop_front().unwrap() == 4, 'alice.0');
-    assert(alices.pop_front().unwrap() == 5, 'alice.1');
-    assert(alices.pop_front().unwrap() == 1, 'alice.2');
 
     assert(nft.balanceOf(bob) == 2, 'balance bob after');
-    let mut bobs = controller.get_all_owned_tokens(bob);
-    assert(bobs.len() == 2, 'len after');
-    assert(bobs.pop_front().unwrap() == 3, 'bob.0');
-    assert(bobs.pop_front().unwrap() == 2, 'bob.1');
 }
 
 #[test]
@@ -194,34 +169,20 @@ fn test_nft_indexing_token_ids_snake_case() {
     let bob = contract_address_const::<9123456>();
 
     assert(nft.balance_of(alice) == 0, 'balance start');
-    let mut all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 0, 'len before');
     let token_id = controller.mint(alice);
 
     assert(nft.balance_of(alice) == 1, 'balance after');
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 1, 'len after');
     set_contract_address(alice);
-    nft.transfer_from(alice, bob, all.pop_front().unwrap().into());
+    nft.transfer_from(alice, bob, token_id.into());
 
     assert(nft.balance_of(alice) == 0, 'balance after transfer');
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 0, 'len after transfer');
 
     assert(nft.balance_of(bob) == 1, 'balance bob transfer');
-    all = controller.get_all_owned_tokens(bob);
-    assert(all.len() == 1, 'len bob');
-    assert(all.pop_front().unwrap().into() == token_id, 'token bob');
 
     switch_to_controller();
     let token_id_2 = controller.mint(alice);
     set_contract_address(bob);
     nft.transfer_from(bob, alice, token_id.into());
-
-    all = controller.get_all_owned_tokens(alice);
-    assert(all.len() == 2, 'len final');
-    assert(all.pop_front().unwrap().into() == token_id, 'token1');
-    assert(all.pop_front().unwrap().into() == token_id_2, 'token2');
 }
 
 #[test]
@@ -253,8 +214,6 @@ fn test_burn_makes_token_non_transferrable() {
     assert(nft.balance_of(bob) == 0, 'balance_of(bob)');
     assert(nft.get_approved(id.into()).is_zero(), 'get_approved after');
     assert(nft.getApproved(id.into()).is_zero(), 'getApproved after');
-    assert(controller.get_all_owned_tokens(alice).len() == 0, 'empty');
-    assert(controller.get_all_owned_tokens(bob).len() == 0, 'empty');
 }
 
 

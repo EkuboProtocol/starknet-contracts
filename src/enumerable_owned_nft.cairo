@@ -2,9 +2,6 @@ use starknet::{ContractAddress};
 
 #[starknet::interface]
 trait IEnumerableOwnedNFT<TStorage> {
-    // Get the full list of tokens owned by an account
-    fn get_all_owned_tokens(self: @TStorage, account: ContractAddress) -> Array<u64>;
-
     // Create a new token, only callable by the controller
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
 
@@ -321,23 +318,6 @@ mod EnumerableOwnedNFT {
 
     #[external(v0)]
     impl EnumerableOwnedNFTImpl of IEnumerableOwnedNFT<ContractState> {
-        fn get_all_owned_tokens(self: @ContractState, account: ContractAddress) -> Array<u64> {
-            let mut arr: Array<u64> = ArrayTrait::new();
-
-            let mut curr = self.tokens_by_owner.read((account, 0));
-            loop {
-                if (curr == 0) {
-                    break ();
-                }
-
-                arr.append(curr);
-
-                curr = self.tokens_by_owner.read((account, curr));
-            };
-
-            arr
-        }
-
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
             self.require_controller();
 
