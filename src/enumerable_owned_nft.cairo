@@ -295,8 +295,6 @@ mod EnumerableOwnedNFT {
         }
     }
 
-    use debug::PrintTrait;
-
     #[external(v0)]
     impl EnumerableOwnedNFTImpl of IEnumerableOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
