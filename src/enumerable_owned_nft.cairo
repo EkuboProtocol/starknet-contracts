@@ -51,11 +51,11 @@ mod EnumerableOwnedNFT {
         approvals: LegacyMap<u64, ContractAddress>,
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
+        operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
         // address, id -> next
         // address, 0 contains the first token id
         // deprecated
         tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
-        operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
     }
 
 
