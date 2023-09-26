@@ -221,12 +221,8 @@ mod EnumerableOwnedNFT {
 
             self.owners.write(id, to);
             self.approvals.write(id, Zeroable::zero());
-            if (to.is_non_zero()) {
-                self.balances.write(to, self.balances.read(to) + 1);
-            }
-            if (from.is_non_zero()) {
-                self.balances.write(from, self.balances.read(from) - 1);
-            }
+            self.balances.write(to, self.balances.read(to) + 1);
+            self.balances.write(from, self.balances.read(from) - 1);
             self.emit(Transfer { from, to, token_id });
         }
 
@@ -299,6 +295,8 @@ mod EnumerableOwnedNFT {
         }
     }
 
+    use debug::PrintTrait;
+
     #[external(v0)]
     impl EnumerableOwnedNFTImpl of IEnumerableOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
@@ -309,10 +307,7 @@ mod EnumerableOwnedNFT {
 
             // effect the mint by updating storage
             self.owners.write(id, owner);
-
-            if (owner.is_non_zero()) {
-                self.balances.write(owner, self.balances.read(owner) + 1);
-            }
+            self.balances.write(owner, self.balances.read(owner) + 1);
 
             self
                 .emit(

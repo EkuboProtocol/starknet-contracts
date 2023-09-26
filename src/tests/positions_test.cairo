@@ -51,7 +51,7 @@ fn test_deposit_liquidity_full_range() {
     let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
 
     assert(nft.balance_of(get_contract_address()) == 1, 'balance');
-    assert(nft.owner_of(1) == get_contract_address(), 'owner');
+    assert(nft.owner_of(token_id.into()) == get_contract_address(), 'owner');
 }
 
 #[test]
