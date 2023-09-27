@@ -5,7 +5,7 @@ use array::{ArrayTrait};
 use option::{OptionTrait};
 
 fn call_core_with_callback<
-    TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>, 
+    TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>,
 >(
     core: ICoreDispatcher, input: @TInput
 ) -> TOutput {

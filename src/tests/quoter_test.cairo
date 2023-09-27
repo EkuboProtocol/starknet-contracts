@@ -48,9 +48,9 @@ fn test_quoter_quote_not_initialized_pool() {
     quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: token0.contract_address, route: route,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: token0.contract_address,
+                route: route,
             }
         );
 }
@@ -79,9 +79,9 @@ fn test_quoter_quote_initialized_pool_no_liquidity() {
     let result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: token0.contract_address, route: route,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: token0.contract_address,
+                route: route,
             }
         );
 
@@ -127,13 +127,13 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
     token1.increase_balance(positions.contract_address, 10000);
     let token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
     let deposited_liquidity_a = positions
-        .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0, );
+        .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0,);
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
     let token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
     let deposited_liquidity_b = positions
-        .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0, );
+        .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0,);
 
     (quoter, pool_key_a, pool_key_b)
 }
@@ -151,9 +151,9 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
     let mut result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key.token0, route: route,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key.token0,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
@@ -161,9 +161,9 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key.token0, route: route,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key.token0,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
@@ -172,9 +172,9 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key.token1, route: route,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key.token1,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token1 in');
@@ -182,9 +182,9 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key.token1, route: route,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key.token1,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token1 out');
@@ -200,9 +200,9 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     let mut result = quoter
         .quote_single(
             QuoteSingleParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key.token0, pool_key: pool_key,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key.token0,
+                pool_key: pool_key,
             }
         );
     assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
@@ -210,9 +210,9 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     result = quoter
         .quote_single(
             QuoteSingleParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key.token0, pool_key: pool_key,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key.token0,
+                pool_key: pool_key,
             }
         );
     assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
@@ -221,9 +221,9 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     result = quoter
         .quote_single(
             QuoteSingleParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key.token1, pool_key: pool_key,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key.token1,
+                pool_key: pool_key,
             }
         );
     assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token1 in');
@@ -231,9 +231,9 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     result = quoter
         .quote_single(
             QuoteSingleParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key.token1, pool_key: pool_key,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key.token1,
+                pool_key: pool_key,
             }
         );
     assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token1 out');
@@ -282,9 +282,9 @@ fn test_quoter_quote_multihop_routes() {
     let mut result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key_a.token0, route: route,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key_a.token0,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token0 in');
@@ -293,9 +293,9 @@ fn test_quoter_quote_multihop_routes() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key_a.token0, route: route,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key_a.token0,
+                route: route,
             }
         );
     assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token0 out');
@@ -304,9 +304,9 @@ fn test_quoter_quote_multihop_routes() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, specified_token: pool_key_b.token1, route: route_reverse,
+                amount: i129 { mag: 100, sign: false },
+                specified_token: pool_key_b.token1,
+                route: route_reverse,
             }
         );
     assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token2 in');
@@ -315,9 +315,9 @@ fn test_quoter_quote_multihop_routes() {
     result = quoter
         .quote(
             QuoteParameters {
-                amount: i129 {
-                    mag: 100, sign: true
-                }, specified_token: pool_key_b.token1, route: route_reverse,
+                amount: i129 { mag: 100, sign: true },
+                specified_token: pool_key_b.token1,
+                route: route_reverse,
             }
         );
     assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token2 out');

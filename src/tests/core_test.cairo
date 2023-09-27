@@ -48,18 +48,17 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        IUpgradeableDispatcher {
-            contract_address: core.contract_address
-        }.replace_class_hash(Zeroable::zero());
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(Zeroable::zero());
     }
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_set_withdrawal_only_mode_owner_only() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
@@ -82,9 +81,8 @@ mod owner_tests {
         let core = deploy_core();
         set_contract_address(owner());
         let class_hash: ClassHash = MockERC20::TEST_CLASS_HASH.try_into().unwrap();
-        IUpgradeableDispatcher {
-            contract_address: core.contract_address
-        }.replace_class_hash(class_hash);
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(class_hash);
 
         let event: ekubo::core::Core::ClassHashReplaced = pop_log(core.contract_address).unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
@@ -92,16 +90,14 @@ mod owner_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND', ))]
+    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND',))]
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core();
         set_contract_address(owner());
-        IUpgradeableDispatcher {
-            contract_address: core.contract_address
-        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
-        IUpgradeableDispatcher {
-            contract_address: core.contract_address
-        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
     }
 
     #[test]
@@ -109,17 +105,14 @@ mod owner_tests {
     fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
         let core = deploy_core();
         set_contract_address(owner());
-        IUpgradeableDispatcher {
-            contract_address: core.contract_address
-        }.replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         // these won't fail because it has a new implementation
-        IMockERC20Dispatcher {
-            contract_address: core.contract_address
-        }.increase_balance(contract_address_const::<1>(), 100);
+        IMockERC20Dispatcher { contract_address: core.contract_address }
+            .increase_balance(contract_address_const::<1>(), 100);
         assert(
-            IMockERC20Dispatcher {
-                contract_address: core.contract_address
-            }.balanceOf(contract_address_const::<1>()) == 100,
+            IMockERC20Dispatcher { contract_address: core.contract_address }
+                .balanceOf(contract_address_const::<1>()) == 100,
             'balance'
         );
     }
@@ -166,7 +159,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_same_token() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -181,7 +174,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -197,7 +190,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -212,7 +205,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -241,7 +234,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(3000000)]
-    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -256,7 +249,7 @@ mod initialize_pool_tests {
 
     #[test]
     #[available_gas(4000000)]
-    #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_already_initialized() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -282,9 +275,9 @@ mod initialize_pool_tests {
             extension: Zeroable::zero(),
         };
         assert(
-            core.maybe_initialize_pool(pool_key, Zeroable::zero()).unwrap() == u256 {
-                high: 1, low: 0
-            },
+            core
+                .maybe_initialize_pool(pool_key, Zeroable::zero())
+                .unwrap() == u256 { high: 1, low: 0 },
             'price'
         );
         assert(
@@ -308,7 +301,7 @@ mod initialized_ticks {
 
     #[test]
     #[available_gas(30000000)]
-    #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED',))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -348,7 +341,7 @@ mod initialized_ticks {
 
     #[test]
     #[available_gas(30000000)]
-    #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED', ))]
+    #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED',))]
     fn test_next_initialized_tick_max_tick() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -514,11 +507,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -526,11 +516,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -538,11 +525,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -773,11 +757,8 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                }
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }
             },
             liquidity_delta: Zeroable::zero(),
             recipient: contract_address_const::<42>()
@@ -826,11 +807,8 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: 12, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: 12, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
@@ -859,11 +837,8 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: 10, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
             recipient: contract_address_const::<42>()
@@ -893,7 +868,7 @@ mod locks {
         let delta = update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }, 
+                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: Zeroable::zero(),
             recipient: contract_address_const::<42>()
@@ -919,7 +894,7 @@ mod locks {
         let delta = update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }, 
+                lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -946,7 +921,7 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false }, 
+                lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -959,10 +934,14 @@ mod locks {
         accumulate_as_fees(setup: setup, amount0: 2, amount1: 3);
 
         assert(
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key) == FeesPerLiquidity {
-                value0: 680564733841876926926749214863536422912,
-                value1: 1020847100762815390390123822295304634368
-            },
+            setup
+                .core
+                .get_pool_fees_per_liquidity(
+                    setup.pool_key
+                ) == FeesPerLiquidity {
+                    value0: 680564733841876926926749214863536422912,
+                    value1: 1020847100762815390390123822295304634368
+                },
             'fees_per_liquidity'
         );
     }
@@ -983,11 +962,8 @@ mod locks {
         let delta = update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1315,11 +1291,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1349,7 +1322,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 3402823669209384634633746074317, value1: 0, 
+                value0: 3402823669209384634633746074317, value1: 0,
             },
             'fees'
         );
@@ -1431,11 +1404,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1487,11 +1457,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1523,7 +1490,7 @@ mod locks {
 
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0x3eea209aaa3ad18d25edd052934ac, value1: 0, 
+                value0: 0x3eea209aaa3ad18d25edd052934ac, value1: 0,
             },
             'fees'
         );
@@ -1546,11 +1513,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1603,11 +1567,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1637,7 +1598,7 @@ mod locks {
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 3402823669209384634633746074317, 
+                value0: 0, value1: 3402823669209384634633746074317,
             },
             'fees'
         );
@@ -1659,11 +1620,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1714,11 +1672,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1774,11 +1729,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1832,11 +1784,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1846,11 +1795,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                },
+                lower: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1860,11 +1806,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                    }, upper: i129 {
-                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                upper: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1901,7 +1844,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0x6a02d31917283ab1acb5d610426d5, value1: 0, 
+                value0: 0x6a02d31917283ab1acb5d610426d5, value1: 0,
             },
             'fees'
         );
@@ -1924,11 +1867,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1938,11 +1878,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                    }, upper: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true
-                },
+                lower: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1952,11 +1889,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 {
-                    mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                    }, upper: i129 {
-                    mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false
-                },
+                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                upper: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1993,7 +1927,7 @@ mod locks {
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 0x6a02d31917283ab1acb5d610426d5, 
+                value0: 0, value1: 0x6a02d31917283ab1acb5d610426d5,
             },
             'fees'
         );
@@ -2031,7 +1965,8 @@ mod save_load_tests {
                     (
                         SavedBalanceKey {
                             owner: recipient, token: token.contract_address, salt: cache_key
-                        }, 1
+                        },
+                        1
                     )
                 )
             ) {

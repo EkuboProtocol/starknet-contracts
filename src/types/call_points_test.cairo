@@ -48,13 +48,14 @@ fn test_lower_bits_result_in_none() {
 #[test]
 fn test_u8_into_after_initialize_call_points() {
     assert(
-        TryInto::<u8, CallPoints>::try_into(128).unwrap() == CallPoints {
-            after_initialize_pool: true,
-            before_swap: false,
-            after_swap: false,
-            before_update_position: false,
-            after_update_position: false,
-        },
+        TryInto::<u8, CallPoints>::try_into(128)
+            .unwrap() == CallPoints {
+                after_initialize_pool: true,
+                before_swap: false,
+                after_swap: false,
+                before_update_position: false,
+                after_update_position: false,
+            },
         'after_initialize_pool'
     );
 }
@@ -63,13 +64,14 @@ fn test_u8_into_after_initialize_call_points() {
 #[test]
 fn test_u8_into_before_swap_call_points() {
     assert(
-        TryInto::<u8, CallPoints>::try_into(64).unwrap() == CallPoints {
-            after_initialize_pool: false,
-            before_swap: true,
-            after_swap: false,
-            before_update_position: false,
-            after_update_position: false,
-        },
+        TryInto::<u8, CallPoints>::try_into(64)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: true,
+                after_swap: false,
+                before_update_position: false,
+                after_update_position: false,
+            },
         'after_initialize_pool'
     );
 }
@@ -78,13 +80,14 @@ fn test_u8_into_before_swap_call_points() {
 #[test]
 fn test_u8_into_after_swap_call_points() {
     assert(
-        TryInto::<u8, CallPoints>::try_into(32).unwrap() == CallPoints {
-            after_initialize_pool: false,
-            before_swap: false,
-            after_swap: true,
-            before_update_position: false,
-            after_update_position: false,
-        },
+        TryInto::<u8, CallPoints>::try_into(32)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: true,
+                before_update_position: false,
+                after_update_position: false,
+            },
         'after_initialize_pool'
     );
 }
@@ -92,13 +95,14 @@ fn test_u8_into_after_swap_call_points() {
 #[test]
 fn test_u8_into_before_update_position_call_points() {
     assert(
-        TryInto::<u8, CallPoints>::try_into(16).unwrap() == CallPoints {
-            after_initialize_pool: false,
-            before_swap: false,
-            after_swap: false,
-            before_update_position: true,
-            after_update_position: false,
-        },
+        TryInto::<u8, CallPoints>::try_into(16)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: false,
+                before_update_position: true,
+                after_update_position: false,
+            },
         'after_initialize_pool'
     );
 }
@@ -106,13 +110,14 @@ fn test_u8_into_before_update_position_call_points() {
 #[test]
 fn test_u8_into_after_update_position_call_points() {
     assert(
-        TryInto::<u8, CallPoints>::try_into(8).unwrap() == CallPoints {
-            after_initialize_pool: false,
-            before_swap: false,
-            after_swap: false,
-            before_update_position: false,
-            after_update_position: true,
-        },
+        TryInto::<u8, CallPoints>::try_into(8)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: false,
+                before_update_position: false,
+                after_update_position: true,
+            },
         'after_initialize_pool'
     );
 }

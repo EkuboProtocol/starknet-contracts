@@ -74,7 +74,7 @@ mod Core {
 
     #[derive(starknet::Event, Drop)]
     struct ClassHashReplaced {
-        new_class_hash: ClassHash, 
+        new_class_hash: ClassHash,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -327,9 +327,7 @@ mod Core {
 
             let (fees0, fees1) = position.fees(fees_per_liquidity_inside_current);
 
-            GetPositionWithFeesResult {
-                position, fees0, fees1, fees_per_liquidity_inside_current, 
-            }
+            GetPositionWithFeesResult { position, fees0, fees1, fees_per_liquidity_inside_current, }
         }
 
         fn get_saved_balance(self: @ContractState, key: SavedBalanceKey) -> u128 {
@@ -476,9 +474,8 @@ mod Core {
 
             let (id, _) = self.require_locker();
 
-            let balance = IERC20Dispatcher {
-                contract_address: token_address
-            }.balanceOf(get_contract_address());
+            let balance = IERC20Dispatcher { contract_address: token_address }
+                .balanceOf(get_contract_address());
 
             let reserve = self.reserves.read(token_address);
             // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
@@ -532,9 +529,8 @@ mod Core {
             assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
             let call_points = if (pool_key.extension.is_non_zero()) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.before_initialize_pool(get_caller_address(), pool_key, initial_tick)
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_initialize_pool(get_caller_address(), pool_key, initial_tick)
             } else {
                 Default::<CallPoints>::default()
             };
@@ -553,9 +549,8 @@ mod Core {
                 );
 
             if (call_points.after_initialize_pool) {
-                IExtensionDispatcher {
-                    contract_address: pool_key.extension
-                }.after_initialize_pool(get_caller_address(), pool_key, initial_tick);
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
 
             sqrt_ratio
@@ -590,9 +585,8 @@ mod Core {
 
             if (price.call_points.before_update_position) {
                 if (pool_key.extension != locker) {
-                    IExtensionDispatcher {
-                        contract_address: pool_key.extension
-                    }.before_update_position(locker, pool_key, params);
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .before_update_position(locker, pool_key, params);
                 }
             }
 
@@ -621,11 +615,8 @@ mod Core {
                 let amount1_fee = compute_fee(delta.amount1.mag, pool_key.fee);
 
                 let withdrawal_fee_delta = Delta {
-                    amount0: i129 {
-                        mag: amount0_fee, sign: true
-                        }, amount1: i129 {
-                        mag: amount1_fee, sign: true
-                    },
+                    amount0: i129 { mag: amount0_fee, sign: true },
+                    amount1: i129 { mag: amount1_fee, sign: true },
                 };
 
                 if (amount0_fee.is_non_zero()) {
@@ -706,9 +697,8 @@ mod Core {
 
             if (price.call_points.after_update_position) {
                 if (pool_key.extension != locker) {
-                    IExtensionDispatcher {
-                        contract_address: pool_key.extension
-                    }.after_update_position(locker, pool_key, params, delta);
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .after_update_position(locker, pool_key, params, delta);
                 }
             }
 
@@ -735,11 +725,8 @@ mod Core {
                 );
 
             let delta = Delta {
-                amount0: i129 {
-                    mag: result.fees0, sign: true
-                    }, amount1: i129 {
-                    mag: result.fees1, sign: true
-                },
+                amount0: i129 { mag: result.fees0, sign: true },
+                amount1: i129 { mag: result.fees1, sign: true },
             };
 
             self.account_pool_delta(id, pool_key, delta);
@@ -760,9 +747,8 @@ mod Core {
 
             if (price.call_points.before_swap) {
                 if (pool_key.extension != locker) {
-                    IExtensionDispatcher {
-                        contract_address: pool_key.extension
-                    }.before_swap(locker, pool_key, params);
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .before_swap(locker, pool_key, params);
                 }
             }
 
@@ -880,15 +866,13 @@ mod Core {
 
             let delta = if (params.is_token1) {
                 Delta {
-                    amount0: i129 {
-                        mag: calculated_amount, sign: !params.amount.sign
-                    }, amount1: params.amount - amount_remaining
+                    amount0: i129 { mag: calculated_amount, sign: !params.amount.sign },
+                    amount1: params.amount - amount_remaining
                 }
             } else {
                 Delta {
-                    amount0: params.amount - amount_remaining, amount1: i129 {
-                        mag: calculated_amount, sign: !params.amount.sign
-                    }
+                    amount0: params.amount - amount_remaining,
+                    amount1: i129 { mag: calculated_amount, sign: !params.amount.sign }
                 }
             };
 
@@ -915,9 +899,8 @@ mod Core {
 
             if (price.call_points.after_swap) {
                 if (pool_key.extension != locker) {
-                    IExtensionDispatcher {
-                        contract_address: pool_key.extension
-                    }.after_swap(locker, pool_key, params, delta);
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .after_swap(locker, pool_key, params, delta);
                 }
             }
 
@@ -940,11 +923,8 @@ mod Core {
                 );
 
             let delta = Delta {
-                amount0: i129 {
-                    mag: amount0, sign: false
-                    }, amount1: i129 {
-                    mag: amount1, sign: false
-                },
+                amount0: i129 { mag: amount0, sign: false },
+                amount1: i129 { mag: amount1, sign: false },
             };
 
             self.account_pool_delta(id, pool_key, delta);

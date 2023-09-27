@@ -37,15 +37,16 @@ impl PoolStatePacking of StorePacking<PoolState, felt252> {
             .into()
             * 0x10000000000000000;
 
-        total += u256 {
-            high: (if value.tick_last.is_negative() {
-                value.tick_last.mag + 0x80000000
-            } else {
-                value.tick_last.mag
-            })
-                * 0x100000000,
-            low: 0
-        };
+        total +=
+            u256 {
+                high: (if value.tick_last.is_negative() {
+                    value.tick_last.mag + 0x80000000
+                } else {
+                    value.tick_last.mag
+                })
+                    * 0x100000000,
+                low: 0
+            };
 
         total.try_into().unwrap()
     }
@@ -200,11 +201,8 @@ mod Oracle {
                         self.pool_seconds_per_liquidity.read(pool_key)
                     } else {
                         self.pool_seconds_per_liquidity.read(pool_key)
-                            + (u256 {
-                                low: 0, high: (time - state.block_timestamp_last).into()
-                                } / u256 {
-                                low: liquidity, high: 0
-                            })
+                            + (u256 { low: 0, high: (time - state.block_timestamp_last).into() }
+                                / u256 { low: liquidity, high: 0 })
                                 .try_into()
                                 .unwrap()
                     }
@@ -225,9 +223,8 @@ mod Oracle {
             } else {
                 let price = self.core.read().get_pool_price(pool_key);
                 state.tick_cumulative_last
-                    + (price.tick * i129 {
-                        mag: (time - state.block_timestamp_last).into(), sign: false
-                    })
+                    + (price.tick
+                        * i129 { mag: (time - state.block_timestamp_last).into(), sign: false })
             }
         }
     }

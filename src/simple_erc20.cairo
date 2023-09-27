@@ -8,7 +8,7 @@ mod SimpleERC20 {
 
     #[storage]
     struct Storage {
-        balances: LegacyMap<ContractAddress, u128>, 
+        balances: LegacyMap<ContractAddress, u128>,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -21,7 +21,7 @@ mod SimpleERC20 {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        Transfer: Transfer, 
+        Transfer: Transfer,
     }
 
     #[constructor]

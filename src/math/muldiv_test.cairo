@@ -3,19 +3,19 @@ use zeroable::{Zeroable};
 use option::{OptionTrait};
 
 #[test]
-#[should_panic(expected: ('u256 is 0', ))]
+#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_div_by_zero() {
     muldiv(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false);
 }
 
 #[test]
-#[should_panic(expected: ('u256 is 0', ))]
+#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_up_div_by_zero() {
     muldiv(u256 { low: 0, high: 1 }, u256 { low: 0, high: 1 }, u256 { low: 0, high: 0 }, false);
 }
 
 #[test]
-#[should_panic(expected: ('u256 is 0', ))]
+#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_up_div_by_zero_no_overflow() {
     muldiv(u256 { low: 0, high: 1 }, u256 { low: 1, high: 0 }, u256 { low: 0, high: 0 }, false);
 }
@@ -67,9 +67,10 @@ fn test_muldiv_max_inputs() {
         false
     );
     assert(
-        x.unwrap() == u256 {
-            low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff
-        },
+        x
+            .unwrap() == u256 {
+                low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff
+            },
         'result'
     );
 }
@@ -83,9 +84,10 @@ fn test_muldiv_up_max_inputs_no_rounding() {
         false
     );
     assert(
-        x.unwrap() == u256 {
-            low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff
-        },
+        x
+            .unwrap() == u256 {
+                low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff
+            },
         'result'
     );
 }

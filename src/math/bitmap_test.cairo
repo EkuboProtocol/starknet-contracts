@@ -55,27 +55,25 @@ fn test_set_bit() {
         'set 128'
     );
     assert(
-        Bitmap {
-            value: 0
-            }.set_bit(128).set_bit(129) == Bitmap {
-            value: 0x300000000000000000000000000000000
-        },
+        Bitmap { value: 0 }
+            .set_bit(128)
+            .set_bit(129) == Bitmap { value: 0x300000000000000000000000000000000 },
         'set 128/129'
     );
     assert(
-        Bitmap {
-            value: 0
-            }.set_bit(128).set_bit(129).unset_bit(128) == Bitmap {
-            value: 0x200000000000000000000000000000000
-        },
+        Bitmap { value: 0 }
+            .set_bit(128)
+            .set_bit(129)
+            .unset_bit(128) == Bitmap { value: 0x200000000000000000000000000000000 },
         'set 128/129 - unset 128'
     );
     assert(
-        Bitmap {
-            value: 0
-            }.set_bit(250) == Bitmap {
-            value: 0x400000000000000000000000000000000000000000000000000000000000000
-        },
+        Bitmap { value: 0 }
+            .set_bit(
+                250
+            ) == Bitmap {
+                value: 0x400000000000000000000000000000000000000000000000000000000000000
+            },
         'set 251'
     );
 
@@ -88,22 +86,22 @@ fn test_set_bit() {
 }
 
 #[test]
-#[should_panic(expected: ('MAX_INDEX', ))]
+#[should_panic(expected: ('MAX_INDEX',))]
 fn test_set_bit_fails_max() {
     Bitmap { value: 0 }.set_bit(251);
 }
 #[test]
-#[should_panic(expected: ('MAX_INDEX', ))]
+#[should_panic(expected: ('MAX_INDEX',))]
 fn test_unset_bit_fails_max() {
     Bitmap { value: 0 }.unset_bit(251);
 }
 #[test]
-#[should_panic(expected: ('Option::unwrap failed.', ))]
+#[should_panic(expected: ('Option::unwrap failed.',))]
 fn test_double_set_reverts() {
     Bitmap { value: 0 }.set_bit(250).set_bit(250).set_bit(250);
 }
 #[test]
-#[should_panic(expected: ('u128_sub Overflow', ))]
+#[should_panic(expected: ('u128_sub Overflow',))]
 fn test_unset_not_set() {
     Bitmap { value: 0 }.unset_bit(0);
 }

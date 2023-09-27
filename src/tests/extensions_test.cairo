@@ -30,9 +30,11 @@ fn setup(
     let token0 = deploy_mock_token();
     let token1 = deploy_mock_token();
     (
-        core, extension, IExtensionDispatcher {
-            contract_address: extension.contract_address
-            }, locker, PoolKey {
+        core,
+        extension,
+        IExtensionDispatcher { contract_address: extension.contract_address },
+        locker,
+        PoolKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
             fee,

@@ -38,7 +38,7 @@ mod SimpleSwapper {
 
     #[storage]
     struct Storage {
-        core: ICoreDispatcher, 
+        core: ICoreDispatcher,
     }
 
     #[constructor]
@@ -98,9 +98,8 @@ mod SimpleSwapper {
                     core.withdraw(callback.pool_key.token0, callback.recipient, delta.amount0.mag);
                 }
                 if delta.amount1.is_non_zero() {
-                    IERC20Dispatcher {
-                        contract_address: callback.pool_key.token1
-                    }.transfer(core.contract_address, delta.amount1.mag.into());
+                    IERC20Dispatcher { contract_address: callback.pool_key.token1 }
+                        .transfer(core.contract_address, delta.amount1.mag.into());
                     assert(
                         core.deposit(callback.pool_key.token1) == delta.amount1.mag, 'PAID_AMOUNT1'
                     );
@@ -108,9 +107,8 @@ mod SimpleSwapper {
             } else {
                 // if decreasing, the amount0 == input
                 if delta.amount0.is_non_zero() {
-                    IERC20Dispatcher {
-                        contract_address: callback.pool_key.token0
-                    }.transfer(core.contract_address, delta.amount0.mag.into());
+                    IERC20Dispatcher { contract_address: callback.pool_key.token0 }
+                        .transfer(core.contract_address, delta.amount0.mag.into());
                     assert(
                         core.deposit(callback.pool_key.token0) == delta.amount0.mag, 'PAID_AMOUNT0'
                     );
@@ -138,9 +136,7 @@ mod SimpleSwapper {
         ) -> Delta {
             call_core_with_callback(
                 self.core.read(),
-                @SwapCallbackData {
-                    pool_key, swap_params, recipient, calculated_amount_threshold, 
-                }
+                @SwapCallbackData { pool_key, swap_params, recipient, calculated_amount_threshold, }
             )
         }
 

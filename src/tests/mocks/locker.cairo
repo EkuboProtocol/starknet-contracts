@@ -74,9 +74,8 @@ mod CoreLocker {
         ) {
             if (delta > Zeroable::zero()) {
                 // transfer the token from self (assumes we have the balance)
-                IERC20Dispatcher {
-                    contract_address: token
-                }.transfer(core.contract_address, u256 { low: delta.mag, high: 0 });
+                IERC20Dispatcher { contract_address: token }
+                    .transfer(core.contract_address, u256 { low: delta.mag, high: 0 });
                 // then call pay
                 assert(core.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
             } else if (delta < Zeroable::zero()) {
@@ -119,9 +118,8 @@ mod CoreLocker {
 
                     if (relock_count != Zeroable::zero()) {
                         // relock
-                        ICoreLockerDispatcher {
-                            contract_address: get_contract_address()
-                        }.call(Action::Relock((locker_id + 1, relock_count - 1)));
+                        ICoreLockerDispatcher { contract_address: get_contract_address() }
+                            .call(Action::Relock((locker_id + 1, relock_count - 1)));
                     }
 
                     ActionResult::Relock(())

@@ -45,13 +45,14 @@ fn test_before_initialize_call_points() {
     let price = core.get_pool_price(key);
 
     assert(
-        price.call_points == CallPoints {
-            after_initialize_pool: false,
-            before_swap: true,
-            after_swap: true,
-            before_update_position: true,
-            after_update_position: false,
-        },
+        price
+            .call_points == CallPoints {
+                after_initialize_pool: false,
+                before_swap: true,
+                after_swap: true,
+                before_update_position: true,
+                after_update_position: false,
+            },
         'call points'
     );
 
@@ -89,24 +90,22 @@ fn deposit(
     );
 
     assert(
-        IMockERC20Dispatcher {
-            contract_address: pool_key.token0
-        }.balanceOf(address: positions.contract_address).is_zero(),
+        IMockERC20Dispatcher { contract_address: pool_key.token0 }
+            .balanceOf(address: positions.contract_address)
+            .is_zero(),
         'token0 balance'
     );
     assert(
-        IMockERC20Dispatcher {
-            contract_address: pool_key.token1
-        }.balanceOf(address: positions.contract_address).is_zero(),
+        IMockERC20Dispatcher { contract_address: pool_key.token1 }
+            .balanceOf(address: positions.contract_address)
+            .is_zero(),
         'token1 balance'
     );
 
-    IMockERC20Dispatcher {
-        contract_address: pool_key.token0
-    }.increase_balance(address: positions.contract_address, amount: delta.amount0.mag);
-    IMockERC20Dispatcher {
-        contract_address: pool_key.token1
-    }.increase_balance(address: positions.contract_address, amount: delta.amount1.mag);
+    IMockERC20Dispatcher { contract_address: pool_key.token0 }
+        .increase_balance(address: positions.contract_address, amount: delta.amount0.mag);
+    IMockERC20Dispatcher { contract_address: pool_key.token1 }
+        .increase_balance(address: positions.contract_address, amount: delta.amount1.mag);
 
     let actual_liquidity = positions
         .deposit_last(pool_key: pool_key, bounds: bounds, min_liquidity: min_liquidity);
@@ -115,53 +114,49 @@ fn deposit(
 }
 
 #[test]
-#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE', ))]
+#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE',))]
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(), tick_cumulative_last: i129 {
-                mag: 0x800000000000000000000000, sign: false
-            }, tick_last: Zeroable::zero(),
+            block_timestamp_last: Zeroable::zero(),
+            tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: false },
+            tick_last: Zeroable::zero(),
         }
     );
 }
 
 #[test]
-#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE', ))]
+#[should_panic(expected: ('TICK_CUMULATIVE_LAST_TOO_LARGE',))]
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(), tick_cumulative_last: i129 {
-                mag: 0x800000000000000000000000, sign: true
-            }, tick_last: Zeroable::zero(),
+            block_timestamp_last: Zeroable::zero(),
+            tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: true },
+            tick_last: Zeroable::zero(),
         }
     );
 }
 
 #[test]
-#[should_panic(expected: ('TICK_LAST_TOO_LARGE', ))]
+#[should_panic(expected: ('TICK_LAST_TOO_LARGE',))]
 fn test_pool_state_store_packing_fails_tick_last_too_large() {
     StorePacking::pack(
         PoolState {
             block_timestamp_last: Zeroable::zero(),
             tick_cumulative_last: Zeroable::zero(),
-            tick_last: i129 {
-                mag: 0x80000000, sign: false
-            },
+            tick_last: i129 { mag: 0x80000000, sign: false },
         }
     );
 }
 
 #[test]
-#[should_panic(expected: ('TICK_LAST_TOO_LARGE', ))]
+#[should_panic(expected: ('TICK_LAST_TOO_LARGE',))]
 fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
             block_timestamp_last: Zeroable::zero(),
             tick_cumulative_last: Zeroable::zero(),
-            tick_last: i129 {
-                mag: 0x80000000, sign: true
-            },
+            tick_last: i129 { mag: 0x80000000, sign: true },
         }
     );
 }
@@ -177,38 +172,30 @@ fn test_pool_state_packing_round_trip_many_values() {
     );
     assert_round_trip(
         PoolState {
-            block_timestamp_last: 1, tick_cumulative_last: i129 {
-                mag: 2, sign: false
-                }, tick_last: i129 {
-                mag: 3, sign: false
-            },
+            block_timestamp_last: 1,
+            tick_cumulative_last: i129 { mag: 2, sign: false },
+            tick_last: i129 { mag: 3, sign: false },
         }
     );
     assert_round_trip(
         PoolState {
-            block_timestamp_last: 1, tick_cumulative_last: i129 {
-                mag: 2, sign: true
-                }, tick_last: i129 {
-                mag: 3, sign: true
-            },
+            block_timestamp_last: 1,
+            tick_cumulative_last: i129 { mag: 2, sign: true },
+            tick_last: i129 { mag: 3, sign: true },
         }
     );
     assert_round_trip(
         PoolState {
-            block_timestamp_last: 0xffffffffffffffff, tick_cumulative_last: i129 {
-                mag: 0x7fffffffffffffffffffffff, sign: false
-                }, tick_last: i129 {
-                mag: 0x7fffffff, sign: false
-            },
+            block_timestamp_last: 0xffffffffffffffff,
+            tick_cumulative_last: i129 { mag: 0x7fffffffffffffffffffffff, sign: false },
+            tick_last: i129 { mag: 0x7fffffff, sign: false },
         }
     );
     assert_round_trip(
         PoolState {
-            block_timestamp_last: 0xffffffffffffffff, tick_cumulative_last: i129 {
-                mag: 0x7fffffffffffffffffffffff, sign: true
-                }, tick_last: i129 {
-                mag: 0x7fffffff, sign: true
-            },
+            block_timestamp_last: 0xffffffffffffffff,
+            tick_cumulative_last: i129 { mag: 0x7fffffffffffffffffffffff, sign: true },
+            tick_last: i129 { mag: 0x7fffffff, sign: true },
         }
     );
 }
@@ -225,7 +212,7 @@ fn test_time_passes_seconds_per_liquidity_global() {
     };
 
     deposit(
-        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
+        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9,
     );
 
     assert(
@@ -311,12 +298,11 @@ fn test_swap_into_liquidity_time_passed() {
     };
 
     deposit(
-        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
+        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9,
     );
 
-    IMockERC20Dispatcher {
-        contract_address: key.token1
-    }.increase_balance(locker.contract_address, 10000000);
+    IMockERC20Dispatcher { contract_address: key.token1 }
+        .increase_balance(locker.contract_address, 10000000);
 
     set_block_timestamp(get_block_timestamp() + 75);
 
@@ -363,12 +349,11 @@ fn test_swap_through_liquidity_time_passed() {
     };
 
     deposit(
-        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9, 
+        core: core, positions: positions, pool_key: key, bounds: bounds, min_liquidity: 0xb5a81a9,
     );
 
-    IMockERC20Dispatcher {
-        contract_address: key.token1
-    }.increase_balance(locker.contract_address, 10000000);
+    IMockERC20Dispatcher { contract_address: key.token1 }
+        .increase_balance(locker.contract_address, 10000000);
 
     set_block_timestamp(get_block_timestamp() + 75);
 
@@ -399,9 +384,8 @@ fn test_swap_through_liquidity_time_passed() {
         oracle.get_tick_cumulative(key) == i129 { mag: 10000, sign: false }, 'tick_cumulative after'
     );
 
-    IMockERC20Dispatcher {
-        contract_address: key.token0
-    }.increase_balance(locker.contract_address, 10000000);
+    IMockERC20Dispatcher { contract_address: key.token0 }
+        .increase_balance(locker.contract_address, 10000000);
     swap_inner(
         core: core,
         pool_key: key,

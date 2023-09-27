@@ -275,7 +275,7 @@ fn test_burn_makes_token_non_transferrable_error() {
 
 #[test]
 #[available_gas(300000000)]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_fails_id_not_exists() {
     let (_, nft) = deploy_enumerable_owned_nft(
         default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
@@ -413,7 +413,7 @@ fn test_nft_token_uri_reverts_token_id_too_big() {
 
 #[test]
 #[available_gas(300000000)]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED', ))]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_only_owner_can_approve() {
     let (controller, nft) = deploy_default();
 

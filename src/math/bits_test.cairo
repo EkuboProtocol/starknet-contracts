@@ -1,13 +1,13 @@
 use ekubo::math::bits::{msb, lsb};
 
 #[test]
-#[should_panic(expected: ('MSB_NONZERO', ))]
+#[should_panic(expected: ('MSB_NONZERO',))]
 fn msb_0_panics() {
     msb(0);
 }
 
 #[test]
-#[should_panic(expected: ('LSB_NONZERO', ))]
+#[should_panic(expected: ('LSB_NONZERO',))]
 fn lsb_0_panics() {
     lsb(0);
 }

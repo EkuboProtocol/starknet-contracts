@@ -57,9 +57,8 @@ fn test_positions_zeroable() {
 #[test]
 fn test_is_zero_for_nonzero_fees() {
     let p = Position {
-        liquidity: Zeroable::zero(), fees_per_liquidity_inside_last: FeesPerLiquidity {
-            value0: 1, value1: 1, 
-        },
+        liquidity: Zeroable::zero(),
+        fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1, },
     };
     assert(p.is_zero(), 'is_zero');
     assert(!p.is_non_zero(), 'is_non_zero');
@@ -75,9 +74,8 @@ fn test_is_zero_for_nonzero_liquidity() {
 #[test]
 fn test_fees_calculation_zero_liquidity() {
     let p = Position {
-        liquidity: Zeroable::zero(), fees_per_liquidity_inside_last: FeesPerLiquidity {
-            value0: 0, value1: 0, 
-        },
+        liquidity: Zeroable::zero(),
+        fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 0, value1: 0, },
     };
 
     assert(
@@ -96,7 +94,7 @@ fn test_fees_calculation_zero_liquidity() {
 fn test_fees_calculation_one_liquidity_max_difference() {
     assert(
         Position {
-            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 }, 
+            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
         }
             .fees(
                 Zeroable::zero()
@@ -109,8 +107,9 @@ fn test_fees_calculation_one_liquidity_max_difference() {
 fn test_fees_calculation_one_liquidity_max_difference_token0_only() {
     assert(
         Position {
-            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 0 }, 
-        }.fees(Zeroable::zero()) == (0x8000000000000110000000000000000, 0),
+            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 0 },
+        }
+            .fees(Zeroable::zero()) == (0x8000000000000110000000000000000, 0),
         'fees'
     );
 }
@@ -119,8 +118,9 @@ fn test_fees_calculation_one_liquidity_max_difference_token0_only() {
 fn test_fees_calculation_one_liquidity_max_difference_token1_only() {
     assert(
         Position {
-            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 0, value1: 1 }, 
-        }.fees(Zeroable::zero()) == (0, 0x8000000000000110000000000000000),
+            liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 0, value1: 1 },
+        }
+            .fees(Zeroable::zero()) == (0, 0x8000000000000110000000000000000),
         'fees'
     );
 }
@@ -130,9 +130,8 @@ fn test_fees_calculation_one_liquidity_max_difference_token1_only() {
 fn test_fees_calculation_fees_pre_overflow() {
     assert(
         Position {
-            liquidity: 31, fees_per_liquidity_inside_last: FeesPerLiquidity {
-                value0: 1, value1: 1
-            },
+            liquidity: 31,
+            fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
         }
             .fees(
                 Zeroable::zero()
@@ -145,10 +144,10 @@ fn test_fees_calculation_fees_pre_overflow() {
 fn test_fees_calculation_fees_overflow() {
     assert(
         Position {
-            liquidity: 32, fees_per_liquidity_inside_last: FeesPerLiquidity {
-                value0: 1, value1: 1
-            },
-        }.fees(Zeroable::zero()) == (0x2200000000000000000, 0x2200000000000000000),
+            liquidity: 32,
+            fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
+        }
+            .fees(Zeroable::zero()) == (0x2200000000000000000, 0x2200000000000000000),
         'fees'
     );
 }
@@ -159,14 +158,13 @@ fn test_fees_calculation_fees_example_value() {
     let fees_base = FeesPerLiquidity { value0: 234812903512510, value1: 34901248108108888 };
 
     assert(
-        Position {
-            liquidity: 1333, fees_per_liquidity_inside_last: fees_base, 
-        }
+        Position { liquidity: 1333, fees_per_liquidity_inside_last: fees_base, }
             .fees(
-                fees_base + FeesPerLiquidity {
-                    value0: 4253529586511730793292182592897102643200, // 25n * 2n**128n / 2n == 12.5 fees per liq
-                    value1: 8507059173023461586584365185794205286 // 2n**128n / 40n == 1 fee per 40 liquidity
-                }
+                fees_base
+                    + FeesPerLiquidity {
+                        value0: 4253529586511730793292182592897102643200, // 25n * 2n**128n / 2n == 12.5 fees per liq
+                        value1: 8507059173023461586584365185794205286 // 2n**128n / 40n == 1 fee per 40 liquidity
+                    }
             ) == (16662, 33),
         'fees'
     );
