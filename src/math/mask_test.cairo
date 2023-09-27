@@ -36,19 +36,19 @@ fn test_mask_127() {
 }
 
 #[test]
-#[should_panic(expected: ('mask', ))]
+#[should_panic(expected: ('mask',))]
 fn test_mask_128() {
     mask(128);
 }
 
 #[test]
-#[should_panic(expected: ('mask', ))]
+#[should_panic(expected: ('mask',))]
 fn test_mask_129() {
     mask(129);
 }
 
 #[test]
-#[should_panic(expected: ('mask', ))]
+#[should_panic(expected: ('mask',))]
 fn test_mask_255() {
     mask(255);
 }

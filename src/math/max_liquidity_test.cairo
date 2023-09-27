@@ -17,7 +17,7 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('OVERFLOW_MLFT0', ))]
+#[should_panic(expected: ('OVERFLOW_MLFT0',))]
 fn test_max_liquidity_for_token0_max_lower_half_range() {
     let result = max_liquidity_for_token0(
         tick_to_sqrt_ratio(Zeroable::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
@@ -44,7 +44,7 @@ fn test_max_liquidity_for_token1_max_at_full_range() {
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('OVERFLOW_MLFT1', ))]
+#[should_panic(expected: ('OVERFLOW_MLFT1',))]
 fn test_max_liquidity_for_token1_max_lower_half_range() {
     let result = max_liquidity_for_token1(
         min_sqrt_ratio(), tick_to_sqrt_ratio(Zeroable::zero()), 0xffffffffffffffffffffffffffffffff
@@ -62,7 +62,7 @@ fn test_max_liquidity_for_token1_max_upper_half_range() {
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('SQRT_RATIO_ORDER', ))]
+#[should_panic(expected: ('SQRT_RATIO_ORDER',))]
 fn test_max_liquidity_panics_order_ratios() {
     max_liquidity(
         u256 { low: 0, high: 1 },
@@ -88,7 +88,7 @@ fn test_max_liquidity_concentrated_example() {
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('SQRT_RATIO_ORDER', ))]
+#[should_panic(expected: ('SQRT_RATIO_ORDER',))]
 fn test_max_liquidity_panics_equal_ratios() {
     max_liquidity(
         u256 { low: 0, high: 1 },
@@ -101,7 +101,7 @@ fn test_max_liquidity_panics_equal_ratios() {
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('SQRT_RATIO_ZERO', ))]
+#[should_panic(expected: ('SQRT_RATIO_ZERO',))]
 fn test_max_liquidity_panics_zero_ratio_lower() {
     max_liquidity(
         u256 { low: 0, high: 1 },
@@ -143,7 +143,7 @@ fn test_liquidity_operations_rounding_increases_liquidity_in_range() {
     let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
     let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
     let delta = liquidity_delta_to_amount_delta(
-        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper,
     );
     assert(delta.amount0 == i129 { mag: 1, sign: false }, 'amount0');
     assert(delta.amount1 == i129 { mag: 1, sign: false }, 'amount1');
@@ -165,7 +165,7 @@ fn test_liquidity_operations_rounding_increases_liquidity_price_below() {
     let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
     let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
     let delta = liquidity_delta_to_amount_delta(
-        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper,
     );
     assert(delta.amount0 == i129 { mag: 1, sign: false }, 'amount0');
     assert(delta.amount1.is_zero(), 'amount1');
@@ -187,7 +187,7 @@ fn test_liquidity_operations_rounding_increases_liquidity_price_above() {
     let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
     let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });
     let delta = liquidity_delta_to_amount_delta(
-        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper, 
+        sqrt_ratio, liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper,
     );
     assert(delta.amount0.is_zero(), 'amount0');
     assert(delta.amount1 == i129 { mag: 1, sign: false }, 'amount1');

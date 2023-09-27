@@ -41,19 +41,19 @@ fn test_exp2_127() {
 }
 
 #[test]
-#[should_panic(expected: ('exp2', ))]
+#[should_panic(expected: ('exp2',))]
 fn test_exp2_128() {
     exp2(128);
 }
 
 #[test]
-#[should_panic(expected: ('exp2', ))]
+#[should_panic(expected: ('exp2',))]
 fn test_exp2_129() {
     exp2(129);
 }
 
 #[test]
-#[should_panic(expected: ('exp2', ))]
+#[should_panic(expected: ('exp2',))]
 fn test_exp2_255() {
     exp2(255);
 }

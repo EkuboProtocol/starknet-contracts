@@ -11,13 +11,13 @@ struct FeesPerLiquidity {
 
 impl AddFeesPerLiquidity of Add<FeesPerLiquidity> {
     fn add(lhs: FeesPerLiquidity, rhs: FeesPerLiquidity) -> FeesPerLiquidity {
-        FeesPerLiquidity { value0: lhs.value0 + rhs.value0, value1: lhs.value1 + rhs.value1,  }
+        FeesPerLiquidity { value0: lhs.value0 + rhs.value0, value1: lhs.value1 + rhs.value1, }
     }
 }
 
 impl SubFeesPerLiquidity of Sub<FeesPerLiquidity> {
     fn sub(lhs: FeesPerLiquidity, rhs: FeesPerLiquidity) -> FeesPerLiquidity {
-        FeesPerLiquidity { value0: lhs.value0 - rhs.value0, value1: lhs.value1 - rhs.value1,  }
+        FeesPerLiquidity { value0: lhs.value0 - rhs.value0, value1: lhs.value1 - rhs.value1, }
     }
 }
 
@@ -47,12 +47,12 @@ fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> Fees
 
 fn fees_per_liquidity_from_amount0(amount0: u128, liquidity: u128) -> FeesPerLiquidity {
     FeesPerLiquidity {
-        value0: to_fees_per_liquidity(amount0, liquidity), value1: Zeroable::zero(), 
+        value0: to_fees_per_liquidity(amount0, liquidity), value1: Zeroable::zero(),
     }
 }
 
 fn fees_per_liquidity_from_amount1(amount1: u128, liquidity: u128) -> FeesPerLiquidity {
     FeesPerLiquidity {
-        value0: Zeroable::zero(), value1: to_fees_per_liquidity(amount1, liquidity), 
+        value0: Zeroable::zero(), value1: to_fees_per_liquidity(amount1, liquidity),
     }
 }

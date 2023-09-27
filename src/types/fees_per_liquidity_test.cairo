@@ -49,13 +49,15 @@ fn test_fpl_overflow_add() {
 
     let sum = fpl_max + fpl_one;
 
-    assert(sum == FeesPerLiquidity { value0: 0, value1: 0,  }, 'sum');
+    assert(sum == FeesPerLiquidity { value0: 0, value1: 0, }, 'sum');
 }
 
 #[test]
 fn test_fees_per_liquidity_new() {
     assert(
-        fees_per_liquidity_new(100, 250, 10000) == FeesPerLiquidity {
+        fees_per_liquidity_new(
+            100, 250, 10000
+        ) == FeesPerLiquidity {
             value0: 3402823669209384634633746074317682114,
             value1: 8507059173023461586584365185794205286
         },
@@ -69,13 +71,13 @@ fn test_to_fees_per_liquidity_max_fees() {
 }
 
 #[test]
-#[should_panic(expected: ('FEES_OVERFLOW', ))]
+#[should_panic(expected: ('FEES_OVERFLOW',))]
 fn test_to_fees_per_liquidity_overflows() {
     to_fees_per_liquidity(10633823966279327296825105735305134081, 1);
 }
 
 #[test]
-#[should_panic(expected: ('ZERO_LIQUIDITY_FEES', ))]
+#[should_panic(expected: ('ZERO_LIQUIDITY_FEES',))]
 fn test_to_fees_per_liquidity_div_by_zero() {
     to_fees_per_liquidity(1, 0);
 }

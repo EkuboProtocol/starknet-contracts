@@ -100,7 +100,7 @@ fn test_deposit_liquidity_concentrated() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -141,7 +141,7 @@ fn test_deposit_liquidity_concentrated_mint_and_deposit() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
 
     setup.token0.increase_balance(positions.contract_address, 100000000);
@@ -166,7 +166,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -206,7 +206,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -247,7 +247,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -288,7 +288,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     assert(token_id == 1, 'token id');
@@ -328,7 +328,7 @@ fn test_deposit_then_withdraw_with_fees() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -377,7 +377,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -421,15 +421,15 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 49500489, 'amount0 less 1%');
     assert(amount1 == 49499508, 'amount1 less 1%');
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == amount0.into(),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
+            .balanceOf(caller) == amount0
+            .into(),
         'balance0'
     );
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == amount1.into(),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
+            .balanceOf(caller) == amount1
+            .into(),
         'balance1'
     );
 
@@ -458,15 +458,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount1 == 8, 'fees1 withdrawn');
 
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500489 + 18),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
+            .balanceOf(caller) == (49500489 + 18),
         'balance0'
     );
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499508 + 8),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
+            .balanceOf(caller) == (49499508 + 8),
         'balance1'
     );
 
@@ -486,15 +484,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount1 == 24749754, 'quarter');
 
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500489 + 18 + 24750244),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
+            .balanceOf(caller) == (49500489 + 18 + 24750244),
         'balance0'
     );
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499508 + 8 + 24749754),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
+            .balanceOf(caller) == (49499508 + 8 + 24749754),
         'balance1'
     );
 
@@ -514,15 +510,13 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount1 == 24749754, 'remainder');
 
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token0
-        }.balanceOf(caller) == (49500489 + 18 + 24750244 + amount0.into()),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
+            .balanceOf(caller) == (49500489 + 18 + 24750244 + amount0.into()),
         'balance0'
     );
     assert(
-        IMockERC20Dispatcher {
-            contract_address: setup.pool_key.token1
-        }.balanceOf(caller) == (49499508 + 8 + 24749754 + amount1.into()),
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
+            .balanceOf(caller) == (49499508 + 8 + 24749754 + amount1.into()),
         'balance1'
     );
 }
@@ -541,7 +535,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false }, 
+        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -592,7 +586,7 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -652,7 +646,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -706,7 +700,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
@@ -760,7 +754,7 @@ fn test_deposit_swap_round_trip_accounting() {
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
-        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false }, 
+        lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false },
     };
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 

@@ -112,13 +112,13 @@ fn diff_between_min_tick_tick_plus_one() {
 }
 
 #[test]
-#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+#[should_panic(expected: ('TICK_MAGNITUDE',))]
 fn tick_magnitude_exceeds_min() {
     tick_to_sqrt_ratio(min_tick() - i129 { mag: 1, sign: false });
 }
 
 #[test]
-#[should_panic(expected: ('TICK_MAGNITUDE', ))]
+#[should_panic(expected: ('TICK_MAGNITUDE',))]
 fn tick_magnitude_exceeds_max() {
     tick_to_sqrt_ratio(max_tick() + i129 { mag: 1, sign: false });
 }
@@ -140,17 +140,13 @@ fn test_internal_div_by_2_127() {
     assert(
         ticks_internal::by_2_127(
             u256 { high: 0, low: 0x80000000000000000000000000000000 }
-        ) == u256 {
-            low: 1, high: 0
-        },
+        ) == u256 { low: 1, high: 0 },
         '2n**127n/2n**127n'
     );
     assert(
         ticks_internal::by_2_127(
             u256 { high: 0, low: 0x40000000000000000000000000000000 }
-        ) == u256 {
-            low: 0, high: 0
-        },
+        ) == u256 { low: 0, high: 0 },
         '2n**126n/2n**127n'
     );
     assert(
@@ -158,9 +154,7 @@ fn test_internal_div_by_2_127() {
             u256 {
                 high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
             }
-        ) == u256 {
-            low: 0xffffffffffffffffffffffffffffffff, high: 0x01
-        },
+        ) == u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0x01 },
         'max/2n**127n'
     );
 }
@@ -308,13 +302,13 @@ fn sqrt_ratio_to_tick_powers_of_tick() {
 }
 
 #[test]
-#[should_panic(expected: ('SQRT_RATIO_TOO_HIGH', ))]
+#[should_panic(expected: ('SQRT_RATIO_TOO_HIGH',))]
 fn sqrt_ratio_to_tick_max_sqrt_ratio_panics() {
     sqrt_ratio_to_tick(max_sqrt_ratio());
 }
 
 #[test]
-#[should_panic(expected: ('SQRT_RATIO_TOO_LOW', ))]
+#[should_panic(expected: ('SQRT_RATIO_TOO_LOW',))]
 fn sqrt_ratio_to_tick_min_sqrt_ratio_less_one_panics() {
     sqrt_ratio_to_tick(min_sqrt_ratio() - u256 { high: 0, low: 1 });
 }

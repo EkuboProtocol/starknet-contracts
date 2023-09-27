@@ -39,6 +39,7 @@ mod EnumerableOwnedNFT {
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
+    use starknet::{SyscallResultTrait};
 
     #[storage]
     struct Storage {
@@ -61,7 +62,7 @@ mod EnumerableOwnedNFT {
 
     #[derive(starknet::Event, Drop)]
     struct ClassHashReplaced {
-        new_class_hash: ClassHash, 
+        new_class_hash: ClassHash,
     }
 
 
@@ -310,9 +311,9 @@ mod EnumerableOwnedNFT {
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(), to: owner, token_id: u256 {
-                            low: id.into(), high: 0
-                        }
+                        from: Zeroable::zero(),
+                        to: owner,
+                        token_id: u256 { low: id.into(), high: 0 }
                     }
                 );
 

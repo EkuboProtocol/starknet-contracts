@@ -42,9 +42,8 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         };
 
         let packed = value.sqrt_ratio
-            + ((u256 {
-                low: tick_raw_shifted, high: 0
-            } + Into::<u8, u256>::into(value.call_points.into()))
+            + ((u256 { low: tick_raw_shifted, high: 0 }
+                + Into::<u8, u256>::into(value.call_points.into()))
                 * 0x1000000000000000000000000000000000000000000000000);
 
         packed.try_into().unwrap()

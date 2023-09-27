@@ -33,34 +33,46 @@ fn test_is_price_increasing_cases() {
 #[test]
 fn test_no_op_swap_result() {
     assert(
-        no_op_swap_result(u256 { low: 0, high: 0 }) == SwapResult {
-            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
-                low: 0, high: 0
-            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        no_op_swap_result(
+            u256 { low: 0, high: 0 }
+        ) == SwapResult {
+            consumed_amount: Zeroable::zero(),
+            sqrt_ratio_next: u256 { low: 0, high: 0 },
+            calculated_amount: Zeroable::zero(),
+            fee_amount: Zeroable::zero(),
         },
         'no-op'
     );
     assert(
-        no_op_swap_result(u256 { low: 1, high: 0 }) == SwapResult {
-            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
-                low: 1, high: 0
-            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        no_op_swap_result(
+            u256 { low: 1, high: 0 }
+        ) == SwapResult {
+            consumed_amount: Zeroable::zero(),
+            sqrt_ratio_next: u256 { low: 1, high: 0 },
+            calculated_amount: Zeroable::zero(),
+            fee_amount: Zeroable::zero(),
         },
         'no-op'
     );
     assert(
-        no_op_swap_result(u256 { low: 0, high: 1 }) == SwapResult {
-            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
-                low: 0, high: 1
-            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        no_op_swap_result(
+            u256 { low: 0, high: 1 }
+        ) == SwapResult {
+            consumed_amount: Zeroable::zero(),
+            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            calculated_amount: Zeroable::zero(),
+            fee_amount: Zeroable::zero(),
         },
         'no-op'
     );
     assert(
-        no_op_swap_result(u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff }) == SwapResult {
-            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
-                low: 0, high: 0xffffffffffffffffffffffffffffffff
-            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+        no_op_swap_result(
+            u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff }
+        ) == SwapResult {
+            consumed_amount: Zeroable::zero(),
+            sqrt_ratio_next: u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff },
+            calculated_amount: Zeroable::zero(),
+            fee_amount: Zeroable::zero(),
         },
         'no-op'
     );
@@ -77,9 +89,10 @@ fn test_swap_zero_amount_token0() {
             is_token1: false,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(), sqrt_ratio_next: u256 {
-                high: 1, low: 0
-            }, calculated_amount: Zeroable::zero(), fee_amount: Zeroable::zero(),
+            consumed_amount: Zeroable::zero(),
+            sqrt_ratio_next: u256 { high: 1, low: 0 },
+            calculated_amount: Zeroable::zero(),
+            fee_amount: Zeroable::zero(),
         },
         'result'
     );
@@ -139,7 +152,7 @@ fn test_swap_ratio_equal_limit_token1() {
 // wrong direction asserts
 
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token0_input() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -152,7 +165,7 @@ fn test_swap_ratio_wrong_direction_token0_input() {
     );
 }
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token0_input_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -180,7 +193,7 @@ fn test_swap_ratio_wrong_direction_token0_zero_input_and_liquidity() {
     );
 }
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token0_output() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -193,7 +206,7 @@ fn test_swap_ratio_wrong_direction_token0_output() {
     );
 }
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token0_output_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -222,7 +235,7 @@ fn test_swap_ratio_wrong_direction_token0_zero_output_and_liquidity() {
 }
 
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token1_input() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -235,7 +248,7 @@ fn test_swap_ratio_wrong_direction_token1_input() {
     );
 }
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token1_input_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -265,7 +278,7 @@ fn test_swap_ratio_wrong_direction_token1_zero_input_and_liquidity() {
 }
 
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token1_output() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -278,7 +291,7 @@ fn test_swap_ratio_wrong_direction_token1_output() {
     );
 }
 #[test]
-#[should_panic(expected: ('DIRECTION', ))]
+#[should_panic(expected: ('DIRECTION',))]
 fn test_swap_ratio_wrong_direction_token1_output_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
@@ -484,11 +497,10 @@ fn test_swap_against_liquidity_hit_limit_token0_input() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 4082, sign: false
-                }, sqrt_ratio_next: u256 {
-                high: 0, low: 333476719582519694194107115283132847226
-            }, calculated_amount: 2000, fee_amount: 2041
+            consumed_amount: i129 { mag: 4082, sign: false },
+            sqrt_ratio_next: u256 { high: 0, low: 333476719582519694194107115283132847226 },
+            calculated_amount: 2000,
+            fee_amount: 2041
         },
         'result'
     );
@@ -507,11 +519,10 @@ fn test_swap_against_liquidity_hit_limit_token1_input() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 4000, sign: false
-                }, sqrt_ratio_next: u256 {
-                high: 1, low: 0x51eb851eb851eb851eb851eb851eb85
-            }, calculated_amount: 1960, fee_amount: 2000
+            consumed_amount: i129 { mag: 4000, sign: false },
+            sqrt_ratio_next: u256 { high: 1, low: 0x51eb851eb851eb851eb851eb851eb85 },
+            calculated_amount: 1960,
+            fee_amount: 2000
         },
         'result'
     );
@@ -531,11 +542,10 @@ fn test_swap_against_liquidity_hit_limit_token0_output() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 1960, sign: true
-                }, sqrt_ratio_next: u256 {
-                high: 1, low: 0x51eb851eb851eb851eb851eb851eb85
-            }, calculated_amount: 4000, fee_amount: 2000
+            consumed_amount: i129 { mag: 1960, sign: true },
+            sqrt_ratio_next: u256 { high: 1, low: 0x51eb851eb851eb851eb851eb851eb85 },
+            calculated_amount: 4000,
+            fee_amount: 2000
         },
         'result'
     );
@@ -554,11 +564,10 @@ fn test_swap_against_liquidity_hit_limit_token1_output() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 2000, sign: true
-                }, sqrt_ratio_next: u256 {
-                high: 0, low: 333476719582519694194107115283132847226
-            }, calculated_amount: 4082, fee_amount: 2041
+            consumed_amount: i129 { mag: 2000, sign: true },
+            sqrt_ratio_next: u256 { high: 0, low: 333476719582519694194107115283132847226 },
+            calculated_amount: 4082,
+            fee_amount: 2041
         },
         'result'
     );
@@ -579,11 +588,10 @@ fn test_swap_max_amount_token0() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 0x1869ff9f1cba5e3895631, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0x1000003f7f1380b75, high: 0
-            }, calculated_amount: 0x1869f, fee_amount: 0x0
+            consumed_amount: i129 { mag: 0x1869ff9f1cba5e3895631, sign: false },
+            sqrt_ratio_next: u256 { low: 0x1000003f7f1380b75, high: 0 },
+            calculated_amount: 0x1869f,
+            fee_amount: 0x0
         },
         'result'
     );
@@ -602,11 +610,10 @@ fn test_swap_min_amount_token0() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0xffff583ac1ac1c114b9160ddeb4791b8, high: 0
-            }, calculated_amount: 0, fee_amount: 0x0
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0xffff583ac1ac1c114b9160ddeb4791b8, high: 0 },
+            calculated_amount: 0,
+            fee_amount: 0x0
         },
         'result'
     );
@@ -623,11 +630,10 @@ fn test_swap_min_amount_token0_very_high_price() {
             is_token1: false,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0, high: 0x186a0
-            }, calculated_amount: 0x1869ff9f1cba38f7ef8d0, fee_amount: 0x0
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0, high: 0x186a0 },
+            calculated_amount: 0x1869ff9f1cba38f7ef8d0,
+            fee_amount: 0x0
         },
         'result'
     );
@@ -644,11 +650,12 @@ fn test_swap_max_amount_token1() {
             is_token1: true,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 0x1869ff9f1cba5e3895631, sign: false
-                }, sqrt_ratio_next: u256 {
+            consumed_amount: i129 { mag: 0x1869ff9f1cba5e3895631, sign: false },
+            sqrt_ratio_next: u256 {
                 low: 0x6f3528fe26840249f4b191ef6dff7928, high: 0xfffffc080ed7b455
-            }, calculated_amount: 0x1869f, fee_amount: 0
+            },
+            calculated_amount: 0x1869f,
+            fee_amount: 0
         },
         'result'
     );
@@ -665,11 +672,10 @@ fn test_swap_min_amount_token1() {
             is_token1: true,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0xa7c5ac471b4784230fcf80dc3372, high: 1
-            }, calculated_amount: 0, fee_amount: 0x0
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0xa7c5ac471b4784230fcf80dc3372, high: 1 },
+            calculated_amount: 0,
+            fee_amount: 0x0
         },
         'result'
     );
@@ -687,11 +693,10 @@ fn test_swap_min_amount_token1_very_high_price() {
             is_token1: true,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0xa7c5ac471b48842313c772143ee7, high: 0
-            }, calculated_amount: 0x1869ff9f1cba38f7ef8d0, fee_amount: 0x0
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0xa7c5ac471b48842313c772143ee7, high: 0 },
+            calculated_amount: 0x1869ff9f1cba38f7ef8d0,
+            fee_amount: 0x0
         },
         'result'
     );
@@ -708,11 +713,10 @@ fn test_swap_max_fee() {
             is_token1: false,
             fee: 0xffffffffffffffffffffffffffffffff,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1000, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0, high: 1
-            }, calculated_amount: 0, fee_amount: 0x3e8
+            consumed_amount: i129 { mag: 1000, sign: false },
+            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            calculated_amount: 0,
+            fee_amount: 0x3e8
         },
         'result'
     );
@@ -729,11 +733,10 @@ fn test_swap_min_fee() {
             is_token1: false,
             fee: 1,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1000, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0xfd77c56b2369787351572278168739a1, high: 0
-            }, calculated_amount: 989, fee_amount: 0x1
+            consumed_amount: i129 { mag: 1000, sign: false },
+            sqrt_ratio_next: u256 { low: 0xfd77c56b2369787351572278168739a1, high: 0 },
+            calculated_amount: 989,
+            fee_amount: 0x1
         },
         'result'
     );
@@ -750,9 +753,7 @@ fn test_swap_all_max_inputs() {
             is_token1: false,
             fee: 0xffffffffffffffffffffffffffffffff,
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 0xffffffffffffffffffffffffffffffff, sign: false
-            },
+            consumed_amount: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false },
             sqrt_ratio_next: max_sqrt_ratio(),
             calculated_amount: 0,
             fee_amount: 0xffffffffffffffffffffffffffffffff
@@ -763,7 +764,7 @@ fn test_swap_all_max_inputs() {
 
 
 #[test]
-#[should_panic(expected: ('OVERFLOW_AMOUNT1_DELTA', ))]
+#[should_panic(expected: ('OVERFLOW_AMOUNT1_DELTA',))]
 fn test_swap_all_max_inputs_no_fee() {
     swap_result(
         sqrt_ratio: max_sqrt_ratio(),
@@ -788,11 +789,10 @@ fn test_swap_result_example_usdc_wbtc() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 9995000000, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0xfead0f195a1008a61a0a6a34c2b5410, high: 0
-            }, calculated_amount: 38557555, fee_amount: 29985001
+            consumed_amount: i129 { mag: 9995000000, sign: false },
+            sqrt_ratio_next: u256 { low: 0xfead0f195a1008a61a0a6a34c2b5410, high: 0 },
+            calculated_amount: 38557555,
+            fee_amount: 29985001
         },
         'calculated_amount'
     );
@@ -800,7 +800,7 @@ fn test_swap_result_example_usdc_wbtc() {
 
 
 #[test]
-#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW', ))]
+#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token0() {
     assert(
         swap_result(
@@ -811,18 +811,17 @@ fn test_exact_output_swap_max_fee_token0() {
             is_token1: false,
             fee: mask(127),
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: true
-                }, sqrt_ratio_next: u256 {
-                low: 0x200000001, high: 1
-            }, calculated_amount: 3, fee_amount: 1,
+            consumed_amount: i129 { mag: 1, sign: true },
+            sqrt_ratio_next: u256 { low: 0x200000001, high: 1 },
+            calculated_amount: 3,
+            fee_amount: 1,
         },
         'result'
     );
 }
 
 #[test]
-#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW', ))]
+#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_large_amount_token0() {
     let result = swap_result(
         sqrt_ratio: u256 { high: 1, low: 0 },
@@ -835,18 +834,17 @@ fn test_exact_output_swap_max_fee_large_amount_token0() {
 
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 10000, sign: true
-                }, sqrt_ratio_next: u256 {
-                low: 0x271000000001, high: 1
-            }, calculated_amount: 10002, fee_amount: 0x1,
+            consumed_amount: i129 { mag: 10000, sign: true },
+            sqrt_ratio_next: u256 { low: 0x271000000001, high: 1 },
+            calculated_amount: 10002,
+            fee_amount: 0x1,
         },
         'result'
     );
 }
 
 #[test]
-#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW', ))]
+#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token0_limit_reached() {
     let result = swap_result(
         sqrt_ratio: u256 { high: 1, low: 0 },
@@ -858,18 +856,17 @@ fn test_exact_output_swap_max_fee_token0_limit_reached() {
     );
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 0, sign: true
-                }, sqrt_ratio_next: u256 {
-                high: 1, low: 0x200000000
-            }, calculated_amount: 2, fee_amount: 1,
+            consumed_amount: i129 { mag: 0, sign: true },
+            sqrt_ratio_next: u256 { high: 1, low: 0x200000000 },
+            calculated_amount: 2,
+            fee_amount: 1,
         },
         'result'
     );
 }
 
 #[test]
-#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW', ))]
+#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token1() {
     let result = swap_result(
         sqrt_ratio: u256 { high: 1, low: 0 },
@@ -881,18 +878,17 @@ fn test_exact_output_swap_max_fee_token1() {
     );
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: true
-                }, sqrt_ratio_next: u256 {
-                low: 0xfffffffffffffffffffffffe00000000, high: 0
-            }, calculated_amount: 3, fee_amount: 1,
+            consumed_amount: i129 { mag: 1, sign: true },
+            sqrt_ratio_next: u256 { low: 0xfffffffffffffffffffffffe00000000, high: 0 },
+            calculated_amount: 3,
+            fee_amount: 1,
         },
         'result'
     );
 }
 
 #[test]
-#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW', ))]
+#[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token1_limit_reached() {
     let result = swap_result(
         sqrt_ratio: u256 { high: 1, low: 0 },
@@ -904,11 +900,10 @@ fn test_exact_output_swap_max_fee_token1_limit_reached() {
     );
     assert(
         result == SwapResult {
-            consumed_amount: i129 {
-                mag: 0, sign: true
-                }, sqrt_ratio_next: u256 {
-                low: 0xffffffffffffffffffffffff00000000, high: 0
-            }, calculated_amount: 2, fee_amount: 1,
+            consumed_amount: i129 { mag: 0, sign: true },
+            sqrt_ratio_next: u256 { low: 0xffffffffffffffffffffffff00000000, high: 0 },
+            calculated_amount: 2,
+            fee_amount: 1,
         },
         'result'
     );
@@ -925,11 +920,10 @@ fn test_exact_input_swap_max_fee_token0() {
             is_token1: false,
             fee: mask(127),
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0, high: 1
-            }, calculated_amount: 0, fee_amount: 1,
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            calculated_amount: 0,
+            fee_amount: 1,
         },
         'result'
     );
@@ -946,11 +940,10 @@ fn test_exact_input_swap_max_fee_token1() {
             is_token1: true,
             fee: mask(127),
         ) == SwapResult {
-            consumed_amount: i129 {
-                mag: 1, sign: false
-                }, sqrt_ratio_next: u256 {
-                low: 0, high: 1
-            }, calculated_amount: 0, fee_amount: 1,
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            calculated_amount: 0,
+            fee_amount: 1,
         },
         'result'
     );

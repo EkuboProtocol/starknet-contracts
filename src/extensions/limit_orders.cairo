@@ -1,19 +1,12 @@
 use ekubo::types::i129::{i129};
 use traits::{Into};
-use hash::{LegacyHash};
 use starknet::{ContractAddress};
 
-#[derive(Drop, Copy, Serde)]
+#[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
     sell_token: ContractAddress,
     buy_token: ContractAddress,
     tick: i129,
-}
-
-impl OrderKeyHash of LegacyHash<OrderKey> {
-    fn hash(state: felt252, value: OrderKey) -> felt252 {
-        LegacyHash::hash(state, (value.sell_token, value.buy_token, value.tick))
-    }
 }
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
@@ -55,7 +48,7 @@ trait ILimitOrders<TContractState> {
 
 #[starknet::contract]
 mod LimitOrders {
-    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState, LegacyHash};
+    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
@@ -223,14 +216,12 @@ mod LimitOrders {
                         .update_position(
                             pool_key: place_order.pool_key,
                             params: UpdatePositionParameters {
-                                salt: 0, bounds: Bounds {
-                                    lower: place_order.tick, upper: place_order.tick + i129 {
-                                        mag: 1, sign: false
-                                    },
-                                    }, // TODO: compute it from the balance of this contract
-                                    liquidity_delta: i129 {
-                                    mag: place_order.liquidity, sign: false
-                                }
+                                salt: 0,
+                                bounds: Bounds {
+                                    lower: place_order.tick,
+                                    upper: place_order.tick + i129 { mag: 1, sign: false },
+                                }, // TODO: compute it from the balance of this contract
+                                liquidity_delta: i129 { mag: place_order.liquidity, sign: false }
                             }
                         );
 
@@ -240,9 +231,8 @@ mod LimitOrders {
                         (place_order.pool_key.token0, delta.amount0.mag)
                     };
 
-                    IERC20Dispatcher {
-                        contract_address: pay_token
-                    }.transfer(core.contract_address, pay_amount.into());
+                    IERC20Dispatcher { contract_address: pay_token }
+                        .transfer(core.contract_address, pay_amount.into());
                     core.deposit(pay_token);
 
                     LockCallbackResult {}
@@ -277,10 +267,11 @@ mod LimitOrders {
                                     .get_position(
                                         after_swap.pool_key,
                                         PositionKey {
-                                            salt: 0, owner: get_contract_address(), bounds: Bounds {
-                                                lower: next_tick, upper: next_tick + i129 {
-                                                    mag: 1, sign: false
-                                                },
+                                            salt: 0,
+                                            owner: get_contract_address(),
+                                            bounds: Bounds {
+                                                lower: next_tick,
+                                                upper: next_tick + i129 { mag: 1, sign: false },
                                             }
                                         }
                                     );
@@ -289,11 +280,12 @@ mod LimitOrders {
                                     .update_position(
                                         after_swap.pool_key,
                                         UpdatePositionParameters {
-                                            salt: 0, bounds: Bounds {
-                                                lower: next_tick, upper: next_tick + i129 {
-                                                    mag: 1, sign: false
-                                                },
-                                                }, liquidity_delta: i129 {
+                                            salt: 0,
+                                            bounds: Bounds {
+                                                lower: next_tick,
+                                                upper: next_tick + i129 { mag: 1, sign: false },
+                                            },
+                                            liquidity_delta: i129 {
                                                 mag: position_data.liquidity, sign: true
                                             }
                                         }
@@ -378,9 +370,10 @@ mod LimitOrders {
             let sqrt_ratio_upper = tick_to_sqrt_ratio(
                 order_key.tick + i129 { mag: 1, sign: false }
             );
-            let amount: u128 = IERC20Dispatcher {
-                contract_address: order_key.sell_token
-            }.balanceOf(get_contract_address()).try_into().expect('SELL_BALANCE_TOO_LARGE');
+            let amount: u128 = IERC20Dispatcher { contract_address: order_key.sell_token }
+                .balanceOf(get_contract_address())
+                .try_into()
+                .expect('SELL_BALANCE_TOO_LARGE');
             let liquidity = if is_token1 {
                 max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
             } else {

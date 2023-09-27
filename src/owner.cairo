@@ -1,5 +1,7 @@
 use starknet::{ContractAddress, get_caller_address, contract_address_const, ClassHash};
 use traits::{Into};
+use pedersen::{PedersenTrait};
+use hash::{HashStateTrait};
 
 // The owner is hard coded, but the owner checks are obfuscated in the contract code.
 fn owner() -> ContractAddress {
@@ -8,7 +10,7 @@ fn owner() -> ContractAddress {
 
 // This is how we hash the owner to check permissions
 fn hash_for_owner_check(addr: ContractAddress) -> felt252 {
-    pedersen('OWNER_ONLY', addr.into())
+    PedersenTrait::new('OWNER_ONLY').update(addr.into()).finalize()
 }
 
 // This checks the owner is the address returned by #owner()

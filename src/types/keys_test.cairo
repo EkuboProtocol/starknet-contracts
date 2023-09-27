@@ -63,7 +63,7 @@ fn test_pool_key_hash_differs_for_any_field_or_state_change() {
 }
 
 #[test]
-#[should_panic(expected: ('TOKEN_ORDER', ))]
+#[should_panic(expected: ('TOKEN_ORDER',))]
 fn test_pool_key_check_valid_order_wrong_order() {
     PoolKey {
         token0: contract_address_const::<2>(),
@@ -71,11 +71,12 @@ fn test_pool_key_check_valid_order_wrong_order() {
         fee: Zeroable::zero(),
         tick_spacing: 1,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
-#[should_panic(expected: ('TOKEN_ORDER', ))]
+#[should_panic(expected: ('TOKEN_ORDER',))]
 fn test_pool_key_check_valid_order_same_token() {
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -83,11 +84,12 @@ fn test_pool_key_check_valid_order_same_token() {
         fee: Zeroable::zero(),
         tick_spacing: 1,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
-#[should_panic(expected: ('TOKEN_NON_ZERO', ))]
+#[should_panic(expected: ('TOKEN_NON_ZERO',))]
 fn test_pool_key_check_non_zero() {
     PoolKey {
         token0: contract_address_const::<0>(),
@@ -95,11 +97,12 @@ fn test_pool_key_check_non_zero() {
         fee: Zeroable::zero(),
         tick_spacing: 1,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
-#[should_panic(expected: ('TICK_SPACING', ))]
+#[should_panic(expected: ('TICK_SPACING',))]
 fn test_pool_key_check_tick_spacing_non_zero() {
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -107,11 +110,12 @@ fn test_pool_key_check_tick_spacing_non_zero() {
         fee: Zeroable::zero(),
         tick_spacing: Zeroable::zero(),
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
-#[should_panic(expected: ('TICK_SPACING', ))]
+#[should_panic(expected: ('TICK_SPACING',))]
 fn test_pool_key_check_tick_spacing_max() {
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -119,7 +123,8 @@ fn test_pool_key_check_tick_spacing_max() {
         fee: Zeroable::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING + 1,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
@@ -130,7 +135,8 @@ fn test_pool_key_check_valid_is_valid() {
         fee: Zeroable::zero(),
         tick_spacing: 1,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -138,7 +144,8 @@ fn test_pool_key_check_valid_is_valid() {
         fee: Zeroable::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -146,7 +153,8 @@ fn test_pool_key_check_valid_is_valid() {
         fee: 0xffffffffffffffffffffffffffffffff,
         tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: Zeroable::zero(),
-    }.check_valid();
+    }
+        .check_valid();
 
     PoolKey {
         token0: contract_address_const::<1>(),
@@ -154,7 +162,8 @@ fn test_pool_key_check_valid_is_valid() {
         fee: 0xffffffffffffffffffffffffffffffff,
         tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: contract_address_const::<2>(),
-    }.check_valid();
+    }
+        .check_valid();
 }
 
 #[test]
@@ -225,9 +234,9 @@ fn test_pool_key_hash_result() {
 #[test]
 fn test_position_key_hash_differs_for_any_field_or_state_change() {
     let base = PositionKey {
-        salt: Zeroable::zero(), owner: Zeroable::zero(), bounds: Bounds {
-            lower: Zeroable::zero(), upper: Zeroable::zero()
-        }
+        salt: Zeroable::zero(),
+        owner: Zeroable::zero(),
+        bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() }
     };
 
     let mut other_salt = base;
@@ -262,27 +271,27 @@ fn test_position_key_hash() {
     let hash = LegacyHash::<PositionKey>::hash(
         0,
         PositionKey {
-            salt: 0, owner: contract_address_const::<1>(), bounds: Bounds {
-                lower: Zeroable::zero(), upper: Zeroable::zero()
-            },
+            salt: 0,
+            owner: contract_address_const::<1>(),
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
         }
     );
 
     let hash_with_diff_salt = LegacyHash::<PositionKey>::hash(
         0,
         PositionKey {
-            salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
-                lower: Zeroable::zero(), upper: Zeroable::zero()
-            },
+            salt: 1,
+            owner: contract_address_const::<1>(),
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
         }
     );
 
     let hash_with_diff_state = LegacyHash::<PositionKey>::hash(
         1,
         PositionKey {
-            salt: 1, owner: contract_address_const::<1>(), bounds: Bounds {
-                lower: Zeroable::zero(), upper: Zeroable::zero()
-            },
+            salt: 1,
+            owner: contract_address_const::<1>(),
+            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
         }
     );
     assert(hash != hash_with_diff_salt, 'not equal');
@@ -295,7 +304,9 @@ fn test_position_key_hash_result() {
         LegacyHash::hash(
             1234,
             PositionKey {
-                salt: 1, owner: contract_address_const::<2>(), bounds: Bounds {
+                salt: 1,
+                owner: contract_address_const::<2>(),
+                bounds: Bounds {
                     lower: i129 { mag: 3, sign: false }, upper: i129 { mag: 4, sign: false }
                 },
             }

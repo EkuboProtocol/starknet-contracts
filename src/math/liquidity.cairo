@@ -29,21 +29,24 @@ fn liquidity_delta_to_amount_delta(
                     sqrt_ratio_lower, sqrt_ratio_upper, liquidity_delta.mag, round_up
                 ),
                 sign: liquidity_delta.sign
-            }, amount1: Zeroable::zero()
+            },
+            amount1: Zeroable::zero()
         };
     } else if (sqrt_ratio < sqrt_ratio_upper) {
         return Delta {
             amount0: i129 {
                 mag: amount0_delta(sqrt_ratio, sqrt_ratio_upper, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
-                }, amount1: i129 {
+            },
+            amount1: i129 {
                 mag: amount1_delta(sqrt_ratio_lower, sqrt_ratio, liquidity_delta.mag, round_up),
                 sign: liquidity_delta.sign
             }
         };
     } else {
         return Delta {
-            amount0: Zeroable::zero(), amount1: i129 {
+            amount0: Zeroable::zero(),
+            amount1: i129 {
                 mag: amount1_delta(
                     sqrt_ratio_lower, sqrt_ratio_upper, liquidity_delta.mag, round_up
                 ),

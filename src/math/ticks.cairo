@@ -75,7 +75,8 @@ mod internal {
                 u256 {
                     high: 0xffffffffffffffffffffffffffffffff,
                     low: 0xffffffffffffffffffffffffffffffff
-                } / x
+                }
+                    / x
             );
             return (mag, !sign);
         }
@@ -404,12 +405,13 @@ fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
         // rounds towards negative infinity and includes error
         (
             i129 {
-                mag: (tick_mag_x128 + error + u256 {
-                    low: 0xffffffffffffffffffffffffffffffff, high: 0
-                })
+                mag: (tick_mag_x128
+                    + error
+                    + u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 })
                     .high,
                 sign
-                }, i129 {
+            },
+            i129 {
                 mag: (tick_mag_x128 + u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 })
                     .high,
                 sign

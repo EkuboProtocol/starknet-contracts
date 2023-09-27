@@ -48,9 +48,10 @@ fn test_simple_swapper_swap_not_initialized_pool() {
         .swap(
             pool_key,
             SwapParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, is_token1: false, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0,
+                amount: i129 { mag: 100, sign: false },
+                is_token1: false,
+                sqrt_ratio_limit: min_sqrt_ratio(),
+                skip_ahead: 0,
             },
             recipient(),
             0,
@@ -78,9 +79,10 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
         .swap(
             pool_key,
             SwapParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, is_token1: false, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
+                amount: i129 { mag: 100, sign: false },
+                is_token1: false,
+                sqrt_ratio_limit: min_sqrt_ratio(),
+                skip_ahead: 0
             },
             recipient(),
             0,
@@ -115,9 +117,10 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token1_in() {
         .swap(
             pool_key,
             SwapParameters {
-                amount: i129 {
-                    mag: 100, sign: false
-                }, is_token1: true, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0
+                amount: i129 { mag: 100, sign: false },
+                is_token1: true,
+                sqrt_ratio_limit: max_sqrt_ratio(),
+                skip_ahead: 0
             },
             recipient(),
             0,
@@ -170,13 +173,13 @@ fn setup_for_swapping() -> (ISimpleSwapperDispatcher, PoolKey, PoolKey) {
     token1.increase_balance(positions.contract_address, 10000);
     let token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
     let deposited_liquidity_a = positions
-        .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0, );
+        .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0,);
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
     let token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
     let deposited_liquidity_b = positions
-        .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0, );
+        .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0,);
 
     (simple_swapper, pool_key_a, pool_key_b)
 }

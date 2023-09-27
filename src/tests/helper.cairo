@@ -85,11 +85,8 @@ fn deploy_enumerable_owned_nft(
     )
         .expect('nft deploy failed');
     return (
-        IEnumerableOwnedNFTDispatcher {
-            contract_address: address
-            }, IERC721Dispatcher {
-            contract_address: address
-        }
+        IEnumerableOwnedNFTDispatcher { contract_address: address },
+        IERC721Dispatcher { contract_address: address }
     );
 }
 
@@ -481,9 +478,9 @@ fn swap_inner(
         .call(
             Action::Swap(
                 (
-                    pool_key, SwapParameters {
-                        amount, is_token1, sqrt_ratio_limit, skip_ahead
-                    }, recipient
+                    pool_key,
+                    SwapParameters { amount, is_token1, sqrt_ratio_limit, skip_ahead },
+                    recipient
                 )
             )
         ) {

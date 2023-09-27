@@ -8,7 +8,7 @@ use zeroable::{Zeroable};
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED', ))]
+#[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
 fn test_recover_must_be_called_by_owner() {
     let ar = deploy_asset_recovery();
     let token = deploy_mock_token();

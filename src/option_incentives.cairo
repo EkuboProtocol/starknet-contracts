@@ -21,7 +21,7 @@ trait IOptionIncentives<TStorage> {
 
     // Get the number of exercisable call options for a given position
     fn get_exercisable_amount(
-        self: @TStorage, token_id: u64, pool_key: PoolKey, bounds: Bounds, 
+        self: @TStorage, token_id: u64, pool_key: PoolKey, bounds: Bounds,
     ) -> ExercisableAmount;
 
     // Exercise options for a given staked position NFT. The quote token must already be transferred to the contract, and the
@@ -170,7 +170,7 @@ mod OptionIncentives {
         }
 
         fn get_exercisable_amount(
-            self: @ContractState, token_id: u64, pool_key: PoolKey, bounds: Bounds, 
+            self: @ContractState, token_id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> ExercisableAmount {
             let staked_info = self.staked_token_info.read(token_id);
 
@@ -189,12 +189,9 @@ mod OptionIncentives {
                 .liquidity;
 
             // we know if this overflows the u256 container, the result overflows a u128
-            let amount = ((seconds_per_liquidity_difference.into() * u256 {
-                low: liquidity, high: 0
-            })
-                * u256 {
-                high: 0, low: self.options_per_second.read().into()
-            })
+            let amount = ((seconds_per_liquidity_difference.into()
+                * u256 { low: liquidity, high: 0 })
+                * u256 { high: 0, low: self.options_per_second.read().into() })
                 .high;
 
             // we do not need to do sub with overflow because we use 64 bits for time
@@ -202,9 +199,10 @@ mod OptionIncentives {
             let tick_cumulative_current = oracle.get_tick_cumulative(pool_key);
             let tick_difference = tick_cumulative_current - staked_info.tick_cumulative_snapshot;
 
-            let average_tick = tick_difference / i129 {
-                mag: (get_block_timestamp() - staked_info.timestamp_last).into(), sign: false
-            };
+            let average_tick = tick_difference
+                / i129 {
+                    mag: (get_block_timestamp() - staked_info.timestamp_last).into(), sign: false
+                };
 
             // expressed in terms of reward_token/quote_token so we can just multiply it
             let strike_price = if (pool_key.token1 == self.reward_token.read().contract_address) {
@@ -214,7 +212,7 @@ mod OptionIncentives {
             };
 
             ExercisableAmount {
-                strike_price, amount, tick_cumulative_current, seconds_per_liquidity_inside_current, 
+                strike_price, amount, tick_cumulative_current, seconds_per_liquidity_inside_current,
             }
         }
 
@@ -294,9 +292,8 @@ mod OptionIncentives {
                     }
                 );
 
-            IERC721Dispatcher {
-                contract_address: self.positions.read().contract_address
-            }.transferFrom(get_contract_address(), recipient, token_id.into());
+            IERC721Dispatcher { contract_address: self.positions.read().contract_address }
+                .transferFrom(get_contract_address(), recipient, token_id.into());
 
             self.emit(Unstaked { token_id: token_id, recipient: recipient });
         }

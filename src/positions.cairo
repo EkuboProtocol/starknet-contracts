@@ -1,6 +1,5 @@
 #[starknet::contract]
 mod Positions {
-    use hash::{LegacyHash};
     use traits::{Into};
     use option::{Option, OptionTrait};
     use serde::{Serde};
@@ -38,7 +37,7 @@ mod Positions {
 
     #[derive(starknet::Event, Drop)]
     struct ClassHashReplaced {
-        new_class_hash: ClassHash, 
+        new_class_hash: ClassHash,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -129,9 +128,8 @@ mod Positions {
     #[generate_trait]
     impl Internal of InternalTrait {
         fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
-            let balance = IERC20Dispatcher {
-                contract_address: token
-            }.balanceOf(get_contract_address());
+            let balance = IERC20Dispatcher { contract_address: token }
+                .balanceOf(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
         }
@@ -149,9 +147,9 @@ mod Positions {
                             .update_position(
                                 data.pool_key,
                                 UpdatePositionParameters {
-                                    salt: data.salt, bounds: data.bounds, liquidity_delta: i129 {
-                                        mag: data.liquidity, sign: false
-                                    },
+                                    salt: data.salt,
+                                    bounds: data.bounds,
+                                    liquidity_delta: i129 { mag: data.liquidity, sign: false },
                                 }
                             )
                     } else {
@@ -159,16 +157,18 @@ mod Positions {
                     };
 
                     if delta.amount0.is_non_zero() {
-                        IERC20Dispatcher {
-                            contract_address: data.pool_key.token0
-                        }.transfer(core.contract_address, u256 { low: delta.amount0.mag, high: 0 });
+                        IERC20Dispatcher { contract_address: data.pool_key.token0 }
+                            .transfer(
+                                core.contract_address, u256 { low: delta.amount0.mag, high: 0 }
+                            );
                         core.deposit(data.pool_key.token0);
                     }
 
                     if delta.amount1.is_non_zero() {
-                        IERC20Dispatcher {
-                            contract_address: data.pool_key.token1
-                        }.transfer(core.contract_address, u256 { low: delta.amount1.mag, high: 0 });
+                        IERC20Dispatcher { contract_address: data.pool_key.token1 }
+                            .transfer(
+                                core.contract_address, u256 { low: delta.amount1.mag, high: 0 }
+                            );
                         core.deposit(data.pool_key.token1);
                     }
 
@@ -189,9 +189,9 @@ mod Positions {
                             .update_position(
                                 data.pool_key,
                                 UpdatePositionParameters {
-                                    salt: data.salt, bounds: data.bounds, liquidity_delta: i129 {
-                                        mag: data.liquidity, sign: true
-                                    },
+                                    salt: data.salt,
+                                    bounds: data.bounds,
+                                    liquidity_delta: i129 { mag: data.liquidity, sign: true },
                                 }
                             );
                         delta += update;
@@ -326,9 +326,7 @@ mod Positions {
             let delta: Delta = call_core_with_callback(
                 core,
                 @LockCallbackData::Deposit(
-                    DepositCallbackData {
-                        pool_key, bounds, liquidity: liquidity, salt: id.into(), 
-                    }
+                    DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
                 )
             );
 

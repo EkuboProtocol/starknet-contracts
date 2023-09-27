@@ -91,14 +91,16 @@ fn swap_result(
                 i129 {
                     mag: amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
                     sign: amount.sign
-                }, amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
+                },
+                amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
             )
         } else {
             (
                 i129 {
                     mag: amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
                     sign: amount.sign
-                }, amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
+                },
+                amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
             )
         };
 
@@ -108,9 +110,9 @@ fn swap_result(
         } else {
             let before_fee = amount_before_fee(specified_amount_delta.mag, fee);
             (
-                i129 {
-                    mag: before_fee, sign: false
-                }, calculated_amount_delta, before_fee - specified_amount_delta.mag
+                i129 { mag: before_fee, sign: false },
+                calculated_amount_delta,
+                before_fee - specified_amount_delta.mag
             )
         };
 

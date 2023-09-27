@@ -49,7 +49,7 @@ fn setup_pool_with_extension(
 #[test]
 fn test_order_key_hash() {
     let base: OrderKey = OrderKey {
-        sell_token: Zeroable::zero(), buy_token: Zeroable::zero(), tick: Zeroable::zero(), 
+        sell_token: Zeroable::zero(), buy_token: Zeroable::zero(), tick: Zeroable::zero(),
     };
 
     let mut other_sell = base;
@@ -130,13 +130,14 @@ fn test_before_initialize_pool_sets_call_points() {
 
     let price = core.get_pool_price(key);
     assert(
-        price.call_points == CallPoints {
-            after_initialize_pool: false,
-            before_swap: false,
-            after_swap: true,
-            before_update_position: true,
-            after_update_position: false,
-        },
+        price
+            .call_points == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: true,
+                before_update_position: true,
+                after_update_position: false,
+            },
         'call_points'
     );
 }
@@ -176,7 +177,9 @@ fn test_place_order_creates_position_at_tick() {
         .get_position(
             pk,
             PositionKey {
-                salt: 0, owner: lo.contract_address, bounds: Bounds {
+                salt: 0,
+                owner: lo.contract_address,
+                bounds: Bounds {
                     lower: i129 { mag: 2, sign: false }, upper: i129 { mag: 3, sign: false }
                 },
             }
@@ -250,9 +253,7 @@ fn test_place_order_fails_pool_not_initialized() {
             OrderKey {
                 sell_token: contract_address_const::<12344>(),
                 buy_token: contract_address_const::<12345>(),
-                tick: i129 {
-                    mag: 2, sign: false
-                }
+                tick: i129 { mag: 2, sign: false }
             }
         );
 }

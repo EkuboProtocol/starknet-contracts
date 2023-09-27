@@ -11,17 +11,17 @@ fn test_ordered_non_zero() {
 }
 
 #[test]
-#[should_panic(expected: ('NONZERO', ))]
+#[should_panic(expected: ('NONZERO',))]
 fn test_ordered_non_zero_panics_zero() {
     ordered_non_zero(0_u128, 1);
 }
 #[test]
-#[should_panic(expected: ('NONZERO', ))]
+#[should_panic(expected: ('NONZERO',))]
 fn test_ordered_non_zero_panics_zero_second() {
     ordered_non_zero(1_u128, 0);
 }
 #[test]
-#[should_panic(expected: ('NONZERO', ))]
+#[should_panic(expected: ('NONZERO',))]
 fn test_ordered_non_zero_panics_zero_both() {
     ordered_non_zero(0_u128, 0);
 }
@@ -186,7 +186,7 @@ fn test_amount1_delta_price_up_round_up() {
 }
 
 #[test]
-#[should_panic(expected: ('OVERFLOW_AMOUNT1_DELTA', ))]
+#[should_panic(expected: ('OVERFLOW_AMOUNT1_DELTA',))]
 fn test_amount1_delta_overflow_entire_price_range_max_liquidity() {
     amount1_delta(
         sqrt_ratio_a: min_sqrt_ratio(),

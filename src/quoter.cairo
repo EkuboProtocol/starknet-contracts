@@ -5,7 +5,7 @@ use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde)]
 struct Route {
-    pool_keys: Span<PoolKey>, 
+    pool_keys: Span<PoolKey>,
 }
 
 #[derive(Drop, Copy, Serde)]
@@ -60,7 +60,7 @@ mod Quoter {
 
     #[storage]
     struct Storage {
-        core: ICoreDispatcher, 
+        core: ICoreDispatcher,
     }
 
     #[constructor]
@@ -194,7 +194,7 @@ mod Quoter {
     }
 
     fn call_core_with_reverting_callback<
-        TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>, 
+        TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>,
     >(
         core: ICoreDispatcher, input: @TInput
     ) -> TOutput {
@@ -239,9 +239,9 @@ mod Quoter {
             self
                 .quote(
                     QuoteParameters {
-                        route: Route {
-                            pool_keys: arr.span(), 
-                        }, amount: params.amount, specified_token: params.specified_token,
+                        route: Route { pool_keys: arr.span(), },
+                        amount: params.amount,
+                        specified_token: params.specified_token,
                     }
                 )
         }
