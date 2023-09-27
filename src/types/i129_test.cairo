@@ -40,13 +40,8 @@ fn test_zeroable() {
 #[test]
 fn test_div_i129() {
     assert(
-        i129 {
-            mag: 15, sign: false
-            } / i129 {
-            mag: 4, sign: false
-            } == i129 {
-            mag: 3, sign: false
-        },
+        i129 { mag: 15, sign: false }
+            / i129 { mag: 4, sign: false } == i129 { mag: 3, sign: false },
         '15/4'
     );
     assert(
@@ -195,7 +190,7 @@ fn test_store_write_read_min_value() {
 
 #[test]
 #[available_gas(3000000)]
-#[should_panic(expected: ('i129_store_overflow', ))]
+#[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_min_value_minus_one() {
     StorePacking::<i129,
     felt252>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: true });
@@ -203,7 +198,7 @@ fn test_store_write_min_value_minus_one() {
 
 #[test]
 #[available_gas(3000000)]
-#[should_panic(expected: ('i129_store_overflow', ))]
+#[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_max_value_plus_one() {
     StorePacking::<i129,
     felt252>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: false });
@@ -228,13 +223,13 @@ fn test_add_delta_no_overflow() {
 }
 
 #[test]
-#[should_panic(expected: ('ADD_DELTA', ))]
+#[should_panic(expected: ('ADD_DELTA',))]
 fn test_add_delta_panics_underflow() {
     1.add(i129 { mag: 2, sign: true });
 }
 
 #[test]
-#[should_panic(expected: ('ADD_DELTA', ))]
+#[should_panic(expected: ('ADD_DELTA',))]
 fn test_add_delta_panics_underflow_max() {
     0xfffffffffffffffffffffffffffffffe
         .add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true });
@@ -250,13 +245,13 @@ fn test_add_delta_max_inputs() {
 }
 
 #[test]
-#[should_panic(expected: ('u128_add Overflow', ))]
+#[should_panic(expected: ('u128_add Overflow',))]
 fn test_add_delta_panics_overflow() {
     0xffffffffffffffffffffffffffffffff.add(i129 { mag: 1, sign: false });
 }
 
 #[test]
-#[should_panic(expected: ('u128_add Overflow', ))]
+#[should_panic(expected: ('u128_add Overflow',))]
 fn test_add_delta_panics_overflow_reverse() {
     1.add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false });
 }
