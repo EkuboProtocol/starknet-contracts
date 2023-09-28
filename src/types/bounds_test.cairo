@@ -2,6 +2,7 @@ use ekubo::types::bounds::{BoundsTrait, Bounds, max_bounds};
 use ekubo::types::i129::i129;
 use ekubo::math::ticks::{max_tick, min_tick};
 use ekubo::types::keys_test::{check_hashes_differ};
+use hash::{LegacyHash};
 
 #[test]
 fn test_legacy_hash_bounds() {
@@ -17,6 +18,50 @@ fn test_legacy_hash_bounds() {
     check_hashes_differ(base, other_upper);
     check_hashes_differ(other_lower, other_upper);
 }
+
+#[test]
+fn test_legacy_hash_bounds_result() {
+    let mut base: Bounds = max_bounds(1);
+
+    assert(
+        LegacyHash::hash(
+            1, base
+        ) == 0x6c42881e4742039126ad0a222a95e45a9839da6ca5a57be07d07ef3c5f32813,
+        'hash'
+    );
+
+    assert(
+        LegacyHash::hash(
+            2, base
+        ) == 0x1ba5884f70dc5d63515a033ebf4b813de0620a28c1868cec3fc338db27b8f5c,
+        'hash'
+    );
+
+    base.lower = i129 { mag: 0, sign: false };
+    assert(
+        LegacyHash::hash(
+            2, base
+        ) == 0x12cec395c34e44f4e611bd1d7a6063fa101cb17f8bc8e81c59a37fca4650cf8,
+        'hash'
+    );
+
+    base.lower = i129 { mag: 0, sign: true };
+    assert(
+        LegacyHash::hash(
+            2, base
+        ) == 0x12cec395c34e44f4e611bd1d7a6063fa101cb17f8bc8e81c59a37fca4650cf8,
+        'hash'
+    );
+
+    base.upper = i129 { mag: 1, sign: true };
+    assert(
+        LegacyHash::hash(
+            2, base
+        ) == 0x6a3c9bc74cf8b0759a66e4d6ba6e7ee61509a00539fdcd67b951ae1cdac6a9e,
+        'hash'
+    );
+}
+
 
 #[test]
 fn test_check_valid_succeeds_default_1() {

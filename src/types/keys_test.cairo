@@ -1,4 +1,4 @@
-use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey};
+use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
 use ekubo::types::i129::{i129};
 use ekubo::types::bounds::{Bounds};
 use starknet::{contract_address_const};
@@ -232,6 +232,24 @@ fn test_pool_key_hash_result() {
 }
 
 #[test]
+fn test_pool_key_hash_result_reverse() {
+    assert(
+        LegacyHash::<PoolKey>::hash(
+            4321,
+            PoolKey {
+                token0: contract_address_const::<5>(),
+                token1: contract_address_const::<4>(),
+                fee: 32,
+                tick_spacing: 2,
+                extension: contract_address_const::<1>(),
+            }
+        ) == 0x48442dcb25c83d8e9eab16c4d669e79407743073e9b76798ec54d528dd35aa2,
+        'hash'
+    );
+}
+
+
+#[test]
 fn test_position_key_hash_differs_for_any_field_or_state_change() {
     let base = PositionKey {
         salt: Zeroable::zero(),
@@ -311,6 +329,69 @@ fn test_position_key_hash_result() {
                 },
             }
         ) == 0x103df9e683d9ca32325eb076200ba9e872904b133018ce0d3943756fcb2d01e,
+        'hash'
+    );
+}
+
+#[test]
+fn test_position_key_hash_result_reverse() {
+    assert(
+        LegacyHash::hash(
+            4321,
+            PositionKey {
+                salt: 5, owner: contract_address_const::<4>(), bounds: Bounds {
+                    lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 1, sign: true }
+                },
+            }
+        ) == 0x559ca4d70a491d29c8d29d8513a71c3ae28b410766cea8c55859c9097071603,
+        'hash'
+    );
+}
+
+#[test]
+fn test_saved_balance_key_hash_differs() {
+    let base = SavedBalanceKey {
+        owner: contract_address_const::<1>(), token: contract_address_const::<2>(), salt: 3
+    };
+
+    let mut other_owner = base;
+    other_owner.owner = contract_address_const::<2>();
+    check_hashes_differ(base, other_owner);
+
+    let mut other_token = base;
+    other_token.token = contract_address_const::<3>();
+    check_hashes_differ(base, other_token);
+    check_hashes_differ(other_owner, other_token);
+
+    let mut other_salt = base;
+    other_salt.salt = 4;
+    check_hashes_differ(base, other_salt);
+    check_hashes_differ(other_owner, other_salt);
+    check_hashes_differ(other_token, other_salt);
+}
+
+#[test]
+fn test_saved_balance_key_hash() {
+    assert(
+        LegacyHash::hash(
+            1,
+            SavedBalanceKey {
+                owner: contract_address_const::<2>(), token: contract_address_const::<3>(), salt: 4, 
+            }
+        ) == 0x4c1cec8ca0d266e102559432703b9807b75dae05048908f6dedcb29f125e2da,
+        'hash'
+    );
+}
+
+#[test]
+fn test_saved_balance_key_hash_reverse() {
+    assert(
+        LegacyHash::hash(
+            4,
+            SavedBalanceKey {
+                owner: contract_address_const::<3>(), token: contract_address_const::<2>(), salt: 1, 
+            }
+        ) == 0x1439c58e1c389a2ac51f8462ecc0a4ec7f812be1c04e3b82ce2af1c2cf959ef,
         'hash'
     );
 }
