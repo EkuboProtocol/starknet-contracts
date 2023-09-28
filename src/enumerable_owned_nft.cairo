@@ -14,9 +14,6 @@ trait IEnumerableOwnedNFT<TStorage> {
     // Returns the next token ID, 
     // i.e. the ID of the token that will be minted on the next call to mint from the controller
     fn get_next_token_id(self: @TStorage) -> u64;
-
-    // Migrates the indexed token storage for the list of addresses
-    fn migrate_indexed_token_storage(ref self: TStorage, accounts: Span<ContractAddress>);
 }
 
 #[starknet::contract]
@@ -57,16 +54,12 @@ mod EnumerableOwnedNFT {
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-        // address, id -> next
-        // address, 0 contains the first token id
-        // deprecated
-        tokens_by_owner: LegacyMap<(ContractAddress, u64), u64>,
     }
 
 
     #[derive(starknet::Event, Drop)]
     struct ClassHashReplaced {
-        new_class_hash: ClassHash, 
+        new_class_hash: ClassHash,
     }
 
 
@@ -161,37 +154,6 @@ mod EnumerableOwnedNFT {
             }
             return (true, owner);
         }
-
-        fn count_tokens_for_owner(self: @ContractState, owner: ContractAddress) -> u64 {
-            let mut count: u64 = 0;
-
-            let mut curr = self.tokens_by_owner.read((owner, 0));
-
-            loop {
-                if (curr == 0) {
-                    break count;
-                };
-                count += 1;
-                curr = self.tokens_by_owner.read((owner, curr));
-            }
-        }
-
-        // Deletes the tokens_by_owner storage and updates the balance storage
-        fn balance_of_migrate_indexed_tokens_storage(
-            ref self: ContractState, account: ContractAddress
-        ) -> u64 {
-            let indexed_count = self.count_tokens_for_owner(account);
-            if (indexed_count > 0) {
-                self.tokens_by_owner.write((account, 0), 0);
-
-                let balance = self.balances.read(account);
-                let total = balance + indexed_count;
-                self.balances.write(account, total);
-                total
-            } else {
-                self.balances.read(account)
-            }
-        }
     }
 
     #[external(v0)]
@@ -222,10 +184,7 @@ mod EnumerableOwnedNFT {
         }
 
         fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
-            u256 {
-                low: (self.balances.read(account) + self.count_tokens_for_owner(account)).into(),
-                high: 0
-            }
+            u256 { low: self.balances.read(account).into(), high: 0 }
         }
 
         fn ownerOf(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -244,8 +203,8 @@ mod EnumerableOwnedNFT {
             self.owners.write(id, to);
             self.approvals.write(id, Zeroable::zero());
 
-            self.balances.write(to, self.balance_of_migrate_indexed_tokens_storage(to) + 1);
-            self.balances.write(from, self.balance_of_migrate_indexed_tokens_storage(from) - 1);
+            self.balances.write(to, self.balances.read(to) + 1);
+            self.balances.write(from, self.balances.read(from) - 1);
 
             self.emit(Transfer { from, to, token_id });
         }
@@ -329,14 +288,14 @@ mod EnumerableOwnedNFT {
 
             // effect the mint by updating storage
             self.owners.write(id, owner);
-            self.balances.write(owner, self.balance_of_migrate_indexed_tokens_storage(owner) + 1);
+            self.balances.write(owner, self.balances.read(owner) + 1);
 
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(), to: owner, token_id: u256 {
-                            low: id.into(), high: 0
-                        }
+                        from: Zeroable::zero(),
+                        to: owner,
+                        token_id: u256 { low: id.into(), high: 0 }
                     }
                 );
 
@@ -351,7 +310,7 @@ mod EnumerableOwnedNFT {
             // delete the storage variables
             self.owners.write(id, Zeroable::zero());
             self.approvals.write(id, Zeroable::zero());
-            self.balances.write(owner, self.balance_of_migrate_indexed_tokens_storage(owner) - 1);
+            self.balances.write(owner, self.balances.read(owner) - 1);
 
             self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id: id.into() });
         }
@@ -363,21 +322,6 @@ mod EnumerableOwnedNFT {
         fn is_account_authorized(self: @ContractState, id: u64, account: ContractAddress) -> bool {
             let (authorized, _) = self.is_account_authorized_internal(id, account);
             authorized
-        }
-
-        fn migrate_indexed_token_storage(
-            ref self: ContractState, mut accounts: Span<ContractAddress>
-        ) {
-            loop {
-                match accounts.pop_front() {
-                    Option::Some(account) => {
-                        self.balance_of_migrate_indexed_tokens_storage(*account);
-                    },
-                    Option::None => {
-                        break ();
-                    }
-                };
-            };
         }
     }
 }
