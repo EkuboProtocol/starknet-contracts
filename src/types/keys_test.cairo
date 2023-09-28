@@ -222,8 +222,6 @@ fn test_pool_key_hash_result() {
     );
 }
 
-use debug::PrintTrait;
-
 #[test]
 fn test_pool_key_hash_result_reverse() {
     assert(
