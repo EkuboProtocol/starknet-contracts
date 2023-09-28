@@ -66,7 +66,7 @@ mod EnumerableOwnedNFT {
 
     #[derive(starknet::Event, Drop)]
     struct ClassHashReplaced {
-        new_class_hash: ClassHash,
+        new_class_hash: ClassHash, 
     }
 
 
@@ -245,7 +245,7 @@ mod EnumerableOwnedNFT {
             self.approvals.write(id, Zeroable::zero());
 
             self.balances.write(to, self.balance_of_migrate_indexed_tokens_storage(to) + 1);
-            self.balances.write(from, self.balance_of_migrate_indexed_tokens_storage(to) - 1);
+            self.balances.write(from, self.balance_of_migrate_indexed_tokens_storage(from) - 1);
 
             self.emit(Transfer { from, to, token_id });
         }
@@ -334,9 +334,9 @@ mod EnumerableOwnedNFT {
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(),
-                        to: owner,
-                        token_id: u256 { low: id.into(), high: 0 }
+                        from: Zeroable::zero(), to: owner, token_id: u256 {
+                            low: id.into(), high: 0
+                        }
                     }
                 );
 
