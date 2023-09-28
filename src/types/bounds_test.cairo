@@ -19,8 +19,6 @@ fn test_legacy_hash_bounds() {
     check_hashes_differ(other_lower, other_upper);
 }
 
-use debug::PrintTrait;
-
 #[test]
 fn test_legacy_hash_bounds_result() {
     let mut base: Bounds = max_bounds(1);
