@@ -176,13 +176,14 @@ fn test_nft_indexing_token_ids_snake_case() {
     nft.transfer_from(alice, bob, token_id.into());
 
     assert(nft.balance_of(alice) == 0, 'balance after transfer');
-
     assert(nft.balance_of(bob) == 1, 'balance bob transfer');
 
     switch_to_controller();
     let token_id_2 = controller.mint(alice);
     set_contract_address(bob);
     nft.transfer_from(bob, alice, token_id.into());
+    assert(nft.balanceOf(alice) == 2, 'alice last');
+    assert(nft.balanceOf(bob) == 0, 'bob last');
 }
 
 #[test]
