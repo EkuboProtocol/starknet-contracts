@@ -9,20 +9,20 @@ struct OrderKey {
     tick: i129,
 }
 
+// State of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct OrderState {
-    epoch: u64,
+    ticks_crossed_last: u64,
     liquidity: u128,
 }
 
-
+// The state of the pool as it was last seen
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct PoolState {
     // the number of initialized ticks that has been crossed
-    epoch: u64,
+    ticks_crossed: u64,
     last_tick: i129,
 }
-
 
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
@@ -136,7 +136,7 @@ mod LimitOrders {
             assert(pool_key.tick_spacing == 1, 'TICK_SPACING_ONE_ONLY');
 
             // we choose 1 as starting epoch so we can always tell if a pool is initialized
-            self.pools.write(pool_key, PoolState { epoch: 1, last_tick: initial_tick });
+            self.pools.write(pool_key, PoolState { ticks_crossed: 1, last_tick: initial_tick });
 
             CallPoints {
                 after_initialize_pool: false,
@@ -240,7 +240,7 @@ mod LimitOrders {
                 LockCallbackData::HandleAfterSwapCallbackData(after_swap) => {
                     let price_after_swap = core.get_pool_price(after_swap.pool_key);
                     let state = self.pools.read(after_swap.pool_key);
-                    let mut epoch = state.epoch;
+                    let mut ticks_crossed = state.ticks_crossed;
 
                     if (price_after_swap.tick != state.last_tick) {
                         let price_increasing = price_after_swap.tick > state.last_tick;
@@ -291,10 +291,10 @@ mod LimitOrders {
                                         }
                                     );
 
-                                epoch += 1;
+                                ticks_crossed += 1;
                                 self
                                     .tick_last_cross_epoch
-                                    .write((after_swap.pool_key, next_tick), epoch);
+                                    .write((after_swap.pool_key, next_tick), ticks_crossed);
                             };
                         };
 
@@ -302,7 +302,9 @@ mod LimitOrders {
                             .pools
                             .write(
                                 after_swap.pool_key,
-                                PoolState { epoch: epoch, last_tick: price_after_swap.tick }
+                                PoolState {
+                                    ticks_crossed: ticks_crossed, last_tick: price_after_swap.tick
+                                }
                             );
                     }
 
@@ -386,7 +388,9 @@ mod LimitOrders {
                 .orders
                 .write(
                     (order_key, id),
-                    OrderState { epoch: self.pools.read(pool_key).epoch, liquidity }
+                    OrderState {
+                        ticks_crossed_last: self.pools.read(pool_key).ticks_crossed, liquidity
+                    }
                 );
 
             let result: LockCallbackResult = call_core_with_callback(
