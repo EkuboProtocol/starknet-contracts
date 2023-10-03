@@ -161,7 +161,16 @@ mod Positions {
                             .transfer(
                                 core.contract_address, u256 { low: delta.amount0.mag, high: 0 }
                             );
-                        core.deposit(data.pool_key.token0);
+                        let amount_paid = core.deposit(data.pool_key.token0);
+                        if (amount_paid > delta.amount0.mag) {
+                            // withdraw back to self, and the subsequent clear should get it
+                            core
+                                .withdraw(
+                                    data.pool_key.token0,
+                                    get_contract_address(),
+                                    amount_paid - delta.amount0.mag
+                                );
+                        }
                     }
 
                     if delta.amount1.is_non_zero() {
@@ -169,7 +178,17 @@ mod Positions {
                             .transfer(
                                 core.contract_address, u256 { low: delta.amount1.mag, high: 0 }
                             );
-                        core.deposit(data.pool_key.token1);
+
+                        let amount_paid = core.deposit(data.pool_key.token1);
+                        if (amount_paid > delta.amount1.mag) {
+                            // withdraw back to self, and the subsequent clear should get it
+                            core
+                                .withdraw(
+                                    data.pool_key.token1,
+                                    get_contract_address(),
+                                    amount_paid - delta.amount1.mag
+                                );
+                        }
                     }
 
                     delta
