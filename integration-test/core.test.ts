@@ -1,9 +1,9 @@
 import { Account, Contract, TransactionStatus } from "starknet";
-import CoreCompiledContract from "../target/dev/ekubo_Core.sierra.json";
-import PositionsCompiledContract from "../target/dev/ekubo_Positions.sierra.json";
-import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.sierra.json";
-import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.sierra.json";
-import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.sierra.json";
+import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
+import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
+import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.contract_class.json";
+import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
+import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
 import { DevnetProvider } from "./devnet";
@@ -229,14 +229,12 @@ describe("core", () => {
 
       for (const swapCase of SWAP_CASES) {
         (swapCase.only ? it.only : it)(
-          `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
-            swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
-          }${
-            swapCase.sqrtRatioLimit
-              ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
-                  .div(new Decimal(2).pow(128))
-                  .toFixed(3)}`
-              : ""
+          `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+          }${swapCase.sqrtRatioLimit
+            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+              .div(new Decimal(2).pow(128))
+              .toFixed(3)}`
+            : ""
           }`,
           async () => {
             let transaction_hash: string;
@@ -257,7 +255,7 @@ describe("core", () => {
                   },
                   RECIPIENT,
                   swapCase.amountLimit ??
-                    (swapCase.amount < 0 ? 2n ** 128n - 1n : 0n),
+                  (swapCase.amount < 0 ? 2n ** 128n - 1n : 0n),
                 ],
                 {
                   maxFee: 1_000_000_000_000_000n,
@@ -286,8 +284,8 @@ describe("core", () => {
                   revert_reason: hexErrorMessage
                     ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
                     : /(End of program was not reached)/g.exec(
-                        revertReason
-                      )?.[1] ?? "could not parse error",
+                      revertReason
+                    )?.[1] ?? "could not parse error",
                 }).toMatchSnapshot();
                 break;
               }
