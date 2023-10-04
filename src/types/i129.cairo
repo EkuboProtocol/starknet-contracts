@@ -1,6 +1,6 @@
 use array::{ArrayTrait};
 use debug::{PrintTrait};
-use hash::{HashStateTrait};
+use hash::{HashStateTrait, Hash};
 use integer::{u128_safe_divmod, u128_as_non_zero};
 use option::{Option, OptionTrait};
 use starknet::storage_access::{StorePacking};
@@ -16,9 +16,7 @@ struct i129 {
     sign: bool,
 }
 
-impl HashI129<
-    S, impl SHashState: hash::HashStateTrait<S>, impl SDrop: Drop<S>
-> of hash::Hash<i129, S, SHashState> {
+impl HashI129<S, +HashStateTrait<S>, +Drop<S>> of Hash<i129, S> {
     #[inline(always)]
     fn update_state(state: S, value: i129) -> S {
         let mut hashable: felt252 = value.mag.into();
