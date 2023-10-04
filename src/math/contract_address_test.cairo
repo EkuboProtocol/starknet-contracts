@@ -1,5 +1,5 @@
-use ekubo::types::i129::i129;
 use ekubo::math::contract_address::{ContractAddressOrder};
+use ekubo::types::i129::i129;
 use starknet::{contract_address_const};
 use zeroable::Zeroable;
 

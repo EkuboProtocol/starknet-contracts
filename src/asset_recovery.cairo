@@ -8,10 +8,10 @@ trait IAssetRecovery<TStorage> {
 
 #[starknet::contract]
 mod AssetRecovery {
-    use super::{IERC20Dispatcher, IAssetRecovery};
-    use starknet::{get_contract_address};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
     use ekubo::owner::{check_owner_only};
+    use starknet::{get_contract_address};
+    use super::{IERC20Dispatcher, IAssetRecovery};
 
     #[storage]
     struct Storage {}

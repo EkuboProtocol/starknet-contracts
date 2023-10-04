@@ -1,11 +1,11 @@
-use ekubo::types::i129::{i129, i129Trait};
-use ekubo::types::call_points::{CallPoints};
-use starknet::{StorageBaseAddress, StorePacking};
-use zeroable::Zeroable;
-use traits::{Into, TryInto};
-use option::{OptionTrait, Option};
-use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
+use ekubo::types::call_points::{CallPoints};
+use ekubo::types::i129::{i129, i129Trait};
+use integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
+use option::{OptionTrait, Option};
+use starknet::{StorageBaseAddress, StorePacking};
+use traits::{Into, TryInto};
+use zeroable::Zeroable;
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolPrice {
@@ -67,8 +67,9 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             i129 { mag: tick_raw, sign: false }
         };
 
-        let call_points: CallPoints = TryInto::<u8,
-        CallPoints>::try_into(TryInto::<u128, u8>::try_into(call_points_raw).unwrap())
+        let call_points: CallPoints = TryInto::<
+            u8, CallPoints
+        >::try_into(TryInto::<u128, u8>::try_into(call_points_raw).unwrap())
             .unwrap();
 
         PoolPrice { sqrt_ratio, tick, call_points }

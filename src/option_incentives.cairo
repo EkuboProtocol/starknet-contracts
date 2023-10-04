@@ -1,8 +1,8 @@
 use core::math::Oneable;
-use starknet::{ContractAddress};
 use ekubo::types::bounds::{Bounds};
-use ekubo::types::keys::{PoolKey};
 use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PoolKey};
+use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde)]
 struct ExercisableAmount {
@@ -45,16 +45,16 @@ trait IOptionIncentives<TStorage> {
 // The liquidity position must be on a pool that uses the oracle extension
 #[starknet::contract]
 mod OptionIncentives {
-    use super::{ContractAddress, IOptionIncentives, PoolKey, Bounds, ExercisableAmount, i129};
-    use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
-    use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
-    use zeroable::{Zeroable};
-    use starknet::{get_caller_address, get_contract_address, get_block_timestamp};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+    use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
     use ekubo::math::muldiv::{muldiv};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use starknet::{get_caller_address, get_contract_address, get_block_timestamp};
+    use super::{ContractAddress, IOptionIncentives, PoolKey, Bounds, ExercisableAmount, i129};
     use traits::{Into};
+    use zeroable::{Zeroable};
 
     #[derive(Drop, Copy, starknet::Store)]
     struct StakedTokenInfo {

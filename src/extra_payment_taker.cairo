@@ -8,20 +8,20 @@ trait IExtraPaymentTaker<TStorage> {
 #[starknet::contract]
 mod ExtraPaymentTaker {
     use array::{Array, ArrayTrait, SpanTrait};
-    use option::{OptionTrait};
-    use result::{ResultTrait};
-    use zeroable::{Zeroable};
-    use traits::{Into};
 
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use super::{ContractAddress, IExtraPaymentTaker};
+    use ekubo::math::swap::{is_price_increasing};
     use ekubo::shared_locker::{consume_callback_data, call_core_with_callback};
     use ekubo::types::i129::{i129Trait};
-    use ekubo::math::swap::{is_price_increasing};
+    use option::{OptionTrait};
+    use result::{ResultTrait};
+    use starknet::syscalls::{call_contract_syscall};
 
     use starknet::{get_caller_address, get_contract_address};
-    use starknet::syscalls::{call_contract_syscall};
+    use super::{ContractAddress, IExtraPaymentTaker};
+    use traits::{Into};
+    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

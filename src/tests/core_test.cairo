@@ -1,26 +1,12 @@
+use array::{ArrayTrait};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use starknet::contract_address_const;
-use starknet::ContractAddress;
-use starknet::testing::{set_contract_address, pop_log};
-use integer::u256;
-use integer::u256_from_felt252;
-use integer::BoundedInt;
-use traits::{Into, TryInto};
-use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::math::muldiv::{div};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants,
     tick_to_sqrt_ratio
 };
-use ekubo::math::muldiv::{div};
-use array::{ArrayTrait};
-use option::{Option, OptionTrait};
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use zeroable::{Zeroable};
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
@@ -31,19 +17,32 @@ use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
+use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
+use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PoolKey, SavedBalanceKey};
+use integer::BoundedInt;
+use integer::u256;
+use integer::u256_from_felt252;
+use option::{Option, OptionTrait};
+use starknet::ContractAddress;
+use starknet::contract_address_const;
+use starknet::testing::{set_contract_address, pop_log};
+use traits::{Into, TryInto};
+use zeroable::{Zeroable};
 
 mod owner_tests {
+    use debug::PrintTrait;
+    use ekubo::owner::owner;
+
+    use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
         IMockERC20DispatcherTrait, ContractAddress, Into, IUpgradeableDispatcher,
         IUpgradeableDispatcherTrait, pop_log
     };
-    use ekubo::owner::owner;
-
-    use debug::PrintTrait;
-
-    use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
 
 
     #[test]
@@ -119,11 +118,11 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
+    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use super::{
         PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
         OptionTrait, pop_log, tick_to_sqrt_ratio
     };
-    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 
     #[test]
     #[available_gas(4000000)]
@@ -294,6 +293,7 @@ mod initialize_pool_tests {
 
 
 mod initialized_ticks {
+    use debug::PrintTrait;
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
         ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds
@@ -423,8 +423,6 @@ mod initialized_ticks {
             'min tick'
         );
     }
-
-    use debug::PrintTrait;
 
     #[test]
     #[available_gas(30000000)]
@@ -1936,13 +1934,12 @@ mod locks {
 
 
 mod save_load_tests {
+    use ekubo::tests::mocks::locker::{Action, ActionResult};
     use super::{
         deploy_core, deploy_mock_token, deploy_locker, IMockERC20DispatcherTrait,
         ICoreLockerDispatcherTrait, ICoreDispatcherTrait, contract_address_const,
         set_contract_address, SavedBalanceKey
     };
-
-    use ekubo::tests::mocks::locker::{Action, ActionResult};
 
     #[test]
     #[available_gas(30000000)]
@@ -1970,27 +1967,15 @@ mod save_load_tests {
                     )
                 )
             ) {
-            ActionResult::AssertLockerId => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::Relock => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::UpdatePosition(delta) => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::Swap(_) => {
-                assert(false, 'unexpected');
-            },
+            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
+            ActionResult::Relock => { assert(false, 'unexpected'); },
+            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
+            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
             ActionResult::SaveBalance(balance_next) => {
                 assert(balance_next == 1, 'balance_next');
             },
-            ActionResult::LoadBalance(_) => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::AccumulateAsFees(_) => {
-                assert(false, 'unexpected')
-            },
+            ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
+            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
         };
 
         assert(
@@ -2013,27 +1998,15 @@ mod save_load_tests {
         );
 
         match locker.call(Action::LoadBalance((token.contract_address, cache_key, 1, recipient))) {
-            ActionResult::AssertLockerId => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::Relock => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::UpdatePosition(delta) => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::Swap(_) => {
-                assert(false, 'unexpected');
-            },
-            ActionResult::SaveBalance(_) => {
-                assert(false, 'unexpected');
-            },
+            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
+            ActionResult::Relock => { assert(false, 'unexpected'); },
+            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
+            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
+            ActionResult::SaveBalance(_) => { assert(false, 'unexpected'); },
             ActionResult::LoadBalance(balance_next) => {
                 assert(balance_next == 0, 'balance_next');
             },
-            ActionResult::AccumulateAsFees(_) => {
-                assert(false, 'unexpected')
-            },
+            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
         };
     }
 }

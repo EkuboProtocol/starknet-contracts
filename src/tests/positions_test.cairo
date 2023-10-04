@@ -1,6 +1,10 @@
-use starknet::{contract_address_const, get_contract_address};
-use starknet::testing::{set_contract_address};
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use array::ArrayTrait;
+
+
+use debug::PrintTrait;
+use ekubo::enumerable_owned_nft::{
+    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -8,26 +12,22 @@ use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
     IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
 };
-use ekubo::enumerable_owned_nft::{
-    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-};
-use ekubo::types::keys::{PoolKey};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
-use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
-use zeroable::Zeroable;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
     IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
-use array::ArrayTrait;
+use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PoolKey};
 use option::OptionTrait;
+use starknet::testing::{set_contract_address};
+use starknet::{contract_address_const, get_contract_address};
 use traits::{Into};
-
-
-use debug::PrintTrait;
+use zeroable::Zeroable;
 
 #[test]
 #[available_gas(20000000)]

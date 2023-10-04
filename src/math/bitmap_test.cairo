@@ -1,11 +1,11 @@
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
 };
-use ekubo::types::i129::{i129};
-use zeroable::{Zeroable};
-use option::{OptionTrait};
 use ekubo::math::string::{append, to_decimal};
+use ekubo::types::i129::{i129};
+use option::{OptionTrait};
 use traits::{Into};
+use zeroable::{Zeroable};
 
 #[test]
 fn test_zeroable() {

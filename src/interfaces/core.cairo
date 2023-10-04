@@ -1,12 +1,12 @@
-use starknet::{ContractAddress, ClassHash};
+use ekubo::types::bounds::{Bounds};
+use ekubo::types::call_points::{CallPoints};
+use ekubo::types::delta::{Delta};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
+use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PositionKey, PoolKey, SavedBalanceKey};
 use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::position::{Position};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::keys::{PositionKey, PoolKey, SavedBalanceKey};
-use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds};
-use ekubo::types::delta::{Delta};
-use ekubo::types::call_points::{CallPoints};
+use starknet::{ContractAddress, ClassHash};
 
 // This interface must be implemented by any contract that intends to call ICore#lock
 #[starknet::interface]

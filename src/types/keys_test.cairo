@@ -1,19 +1,15 @@
-use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds};
-use starknet::{contract_address_const};
-use hash::{LegacyHash};
 use ekubo::math::ticks::{constants as tick_constants};
+use ekubo::types::bounds::{Bounds};
+use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
+use hash::{LegacyHash};
+use starknet::{contract_address_const};
 
-fn check_hashes_differ<
-    T, impl TLegacyHash: LegacyHash<T>, impl TCopy: Copy<T>, impl TDrop: Drop<T>
->(
-    x: T, y: T
-) {
-    let a = LegacyHash::<T>::hash(0, x);
-    let b = LegacyHash::<T>::hash(0, y);
-    let c = LegacyHash::<T>::hash(1, x);
-    let d = LegacyHash::<T>::hash(1, y);
+fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
+    let a = LegacyHash::hash(0, x);
+    let b = LegacyHash::hash(0, y);
+    let c = LegacyHash::hash(1, x);
+    let d = LegacyHash::hash(1, y);
     assert((a != b) & (a != c) & (a != d) & (b != c) & (b != d) & (c != d), 'hashes differ');
 }
 
@@ -168,7 +164,9 @@ fn test_pool_key_check_valid_is_valid() {
 
 #[test]
 fn test_pool_key_hash() {
-    let hash = LegacyHash::<PoolKey>::hash(
+    let hash = LegacyHash::<
+        PoolKey
+    >::hash(
         0,
         PoolKey {
             token0: contract_address_const::<1>(),
@@ -178,7 +176,9 @@ fn test_pool_key_hash() {
             extension: Zeroable::zero(),
         }
     );
-    let hash_with_different_extension = LegacyHash::<PoolKey>::hash(
+    let hash_with_different_extension = LegacyHash::<
+        PoolKey
+    >::hash(
         0,
         PoolKey {
             token0: contract_address_const::<1>(),
@@ -188,7 +188,9 @@ fn test_pool_key_hash() {
             extension: contract_address_const::<3>(),
         }
     );
-    let hash_with_different_fee = LegacyHash::<PoolKey>::hash(
+    let hash_with_different_fee = LegacyHash::<
+        PoolKey
+    >::hash(
         0,
         PoolKey {
             token0: contract_address_const::<1>(),
@@ -198,7 +200,9 @@ fn test_pool_key_hash() {
             extension: Zeroable::zero(),
         }
     );
-    let hash_with_different_tick_spacing = LegacyHash::<PoolKey>::hash(
+    let hash_with_different_tick_spacing = LegacyHash::<
+        PoolKey
+    >::hash(
         0,
         PoolKey {
             token0: contract_address_const::<1>(),
@@ -217,7 +221,9 @@ fn test_pool_key_hash() {
 #[test]
 fn test_pool_key_hash_result() {
     assert(
-        LegacyHash::<PoolKey>::hash(
+        LegacyHash::<
+            PoolKey
+        >::hash(
             1234,
             PoolKey {
                 token0: contract_address_const::<1>(),
@@ -234,7 +240,9 @@ fn test_pool_key_hash_result() {
 #[test]
 fn test_pool_key_hash_result_reverse() {
     assert(
-        LegacyHash::<PoolKey>::hash(
+        LegacyHash::<
+            PoolKey
+        >::hash(
             4321,
             PoolKey {
                 token0: contract_address_const::<5>(),
@@ -286,7 +294,9 @@ fn test_position_key_hash_differs_for_any_field_or_state_change() {
 
 #[test]
 fn test_position_key_hash() {
-    let hash = LegacyHash::<PositionKey>::hash(
+    let hash = LegacyHash::<
+        PositionKey
+    >::hash(
         0,
         PositionKey {
             salt: 0,
@@ -295,7 +305,9 @@ fn test_position_key_hash() {
         }
     );
 
-    let hash_with_diff_salt = LegacyHash::<PositionKey>::hash(
+    let hash_with_diff_salt = LegacyHash::<
+        PositionKey
+    >::hash(
         0,
         PositionKey {
             salt: 1,
@@ -304,7 +316,9 @@ fn test_position_key_hash() {
         }
     );
 
-    let hash_with_diff_state = LegacyHash::<PositionKey>::hash(
+    let hash_with_diff_state = LegacyHash::<
+        PositionKey
+    >::hash(
         1,
         PositionKey {
             salt: 1,
@@ -339,7 +353,9 @@ fn test_position_key_hash_result_reverse() {
         LegacyHash::hash(
             4321,
             PositionKey {
-                salt: 5, owner: contract_address_const::<4>(), bounds: Bounds {
+                salt: 5,
+                owner: contract_address_const::<4>(),
+                bounds: Bounds {
                     lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 1, sign: true }
                 },
             }
@@ -376,7 +392,7 @@ fn test_saved_balance_key_hash() {
         LegacyHash::hash(
             1,
             SavedBalanceKey {
-                owner: contract_address_const::<2>(), token: contract_address_const::<3>(), salt: 4, 
+                owner: contract_address_const::<2>(), token: contract_address_const::<3>(), salt: 4,
             }
         ) == 0x4c1cec8ca0d266e102559432703b9807b75dae05048908f6dedcb29f125e2da,
         'hash'
@@ -389,7 +405,7 @@ fn test_saved_balance_key_hash_reverse() {
         LegacyHash::hash(
             4,
             SavedBalanceKey {
-                owner: contract_address_const::<3>(), token: contract_address_const::<2>(), salt: 1, 
+                owner: contract_address_const::<3>(), token: contract_address_const::<2>(), salt: 1,
             }
         ) == 0x1439c58e1c389a2ac51f8462ecc0a4ec7f812be1c04e3b82ce2af1c2cf959ef,
         'hash'

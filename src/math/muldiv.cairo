@@ -1,9 +1,9 @@
-use option::{Option, OptionTrait};
-use zeroable::Zeroable;
 use integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_overflowing_add,
     u256_safe_divmod
 };
+use option::{Option, OptionTrait};
+use zeroable::Zeroable;
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 fn div(x: u256, z: u256, round_up: bool) -> u256 {

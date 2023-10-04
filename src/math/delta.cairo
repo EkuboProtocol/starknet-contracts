@@ -1,19 +1,11 @@
-use ekubo::types::i129::i129;
 use ekubo::math::muldiv::{muldiv, div};
+use ekubo::types::i129::i129;
 use integer::{u256_wide_mul};
-use zeroable::{Zeroable};
 use option::{OptionTrait};
 use traits::{Into};
+use zeroable::{Zeroable};
 
-fn ordered_non_zero<
-    T,
-    impl TPartialEq: PartialOrd<T>,
-    impl TZeroable: Zeroable<T>,
-    impl TDrop: Drop<T>,
-    impl TCopy: Copy<T>
->(
-    x: T, y: T
-) -> (T, T) {
+fn ordered_non_zero<T, +PartialOrd<T>, +Zeroable<T>, +Drop<T>, +Copy<T>>(x: T, y: T) -> (T, T) {
     let (lower, upper) = if x < y {
         (x, y)
     } else {

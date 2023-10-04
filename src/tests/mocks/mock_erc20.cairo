@@ -11,8 +11,8 @@ trait IMockERC20<TStorage> {
 
 #[starknet::contract]
 mod MockERC20 {
-    use super::{IMockERC20};
     use starknet::{ContractAddress, get_caller_address};
+    use super::{IMockERC20};
 
     #[storage]
     struct Storage {

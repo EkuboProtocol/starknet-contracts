@@ -1,5 +1,5 @@
-use starknet::{ContractAddress};
 use ekubo::types::keys::{PoolKey};
+use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct ExtensionCalled {
@@ -21,22 +21,22 @@ trait IMockExtension<TStorage> {
 
 #[starknet::contract]
 mod MockExtension {
-    use super::{IMockExtension, ExtensionCalled, ContractAddress};
-    use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
-    use ekubo::types::keys::{PoolKey};
-    use ekubo::types::i129::i129;
-    use ekubo::types::delta::{Delta};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
-    use starknet::{get_caller_address};
-    use zeroable::{Zeroable};
-    use ekubo::types::call_points::{CallPoints, all_call_points};
-    use ekubo::types::bounds::{Bounds, max_bounds};
-    use traits::{Into, TryInto};
-    use option::{OptionTrait};
     use array::{ArrayTrait};
-    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
     use debug::PrintTrait;
+    use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
+    use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
+    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::types::bounds::{Bounds, max_bounds};
+    use ekubo::types::call_points::{CallPoints, all_call_points};
+    use ekubo::types::delta::{Delta};
+    use ekubo::types::i129::i129;
+    use ekubo::types::keys::{PoolKey};
+    use option::{OptionTrait};
+    use starknet::{get_caller_address};
+    use super::{IMockExtension, ExtensionCalled, ContractAddress};
+    use traits::{Into, TryInto};
+    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

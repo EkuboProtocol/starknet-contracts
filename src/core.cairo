@@ -1,46 +1,46 @@
 #[starknet::contract]
 mod Core {
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use array::{ArrayTrait, SpanTrait};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
         GetPositionWithFeesResult
     };
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use zeroable::Zeroable;
-    use starknet::{
-        ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall
-    };
-    use option::{Option, OptionTrait};
-    use array::{ArrayTrait, SpanTrait};
-    use ekubo::math::ticks::{
-        tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
-        constants as tick_constants
-    };
-    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-    use ekubo::math::swap::{swap_result, is_price_increasing};
-    use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
-    use ekubo::math::exp2::{exp2};
-    use ekubo::math::mask::{mask};
     use ekubo::math::bitmap::{
         Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
     };
     use ekubo::math::bits::{msb, lsb};
     use ekubo::math::contract_address::{ContractAddressOrder};
+    use ekubo::math::exp2::{exp2};
+    use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
+    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
+    use ekubo::math::mask::{mask};
+    use ekubo::math::swap::{swap_result, is_price_increasing};
+    use ekubo::math::ticks::{
+        tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
+        constants as tick_constants
+    };
     use ekubo::owner::{check_owner_only};
-    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
+    use ekubo::types::bounds::{Bounds, BoundsTrait};
+    use ekubo::types::call_points::{CallPoints};
+    use ekubo::types::delta::{Delta};
     use ekubo::types::fees_per_liquidity::{
         FeesPerLiquidity, fees_per_liquidity_new, fees_per_liquidity_from_amount0,
         fees_per_liquidity_from_amount1
     };
+    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
+    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
-    use ekubo::types::bounds::{Bounds, BoundsTrait};
-    use ekubo::types::delta::{Delta};
-    use ekubo::types::call_points::{CallPoints};
+    use option::{Option, OptionTrait};
+    use starknet::{
+        ContractAddress, ClassHash, contract_address_const, get_caller_address,
+        get_contract_address, replace_class_syscall
+    };
     use traits::{Into};
+    use zeroable::Zeroable;
 
 
     #[storage]

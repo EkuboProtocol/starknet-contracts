@@ -1,12 +1,11 @@
-use zeroable::Zeroable;
-use ekubo::types::i129::i129;
+use debug::PrintTrait;
+use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
     constants, internal as ticks_internal
 };
-use ekubo::math::exp2::exp2;
-
-use debug::PrintTrait;
+use ekubo::types::i129::i129;
+use zeroable::Zeroable;
 
 #[test]
 fn zero_tick() {

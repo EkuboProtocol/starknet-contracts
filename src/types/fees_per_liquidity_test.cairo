@@ -1,7 +1,7 @@
-use ekubo::types::i129::{i129};
 use ekubo::types::fees_per_liquidity::{
     FeesPerLiquidity, to_fees_per_liquidity, fees_per_liquidity_new
 };
+use ekubo::types::i129::{i129};
 use zeroable::{Zeroable};
 
 const MAX_PRIME: felt252 =

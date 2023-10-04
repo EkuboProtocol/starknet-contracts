@@ -1,9 +1,9 @@
-use ekubo::types::position::{Position, PositionTrait, internal::multiply_and_get_limb1};
+use debug::PrintTrait;
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use zeroable::{Zeroable};
+use ekubo::types::position::{Position, PositionTrait, internal::multiply_and_get_limb1};
 use integer::{u256_wide_mul};
 use traits::{Into};
-use debug::PrintTrait;
+use zeroable::{Zeroable};
 
 impl PrintFees of PrintTrait<(u128, u128)> {
     fn print(self: (u128, u128)) {

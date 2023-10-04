@@ -1,7 +1,7 @@
 use ekubo::math::ticks::{min_tick, max_tick, constants as tick_constants};
-use starknet::ContractAddress;
-use ekubo::types::keys::{PositionKey, PoolKey};
 use ekubo::types::i129::{i129, i129Trait};
+use ekubo::types::keys::{PositionKey, PoolKey};
+use starknet::ContractAddress;
 use traits::{Into};
 
 // Tick bounds for a position

@@ -1,44 +1,46 @@
-use integer::{u256, u256_from_felt252, BoundedInt};
-use result::{Result, ResultTrait};
-use traits::{Into, TryInto};
 use array::{Array, ArrayTrait};
-use option::{Option, OptionTrait};
 
-use ekubo::types::keys::PoolKey;
-use ekubo::types::i129::i129;
-use ekubo::types::bounds::{Bounds};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
-use ekubo::math::contract_address::ContractAddressOrder;
+use debug::PrintTrait;
+use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::core::{Core};
+use ekubo::enumerable_owned_nft::{EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher};
+use ekubo::extensions::limit_orders::{LimitOrders};
+use ekubo::extensions::oracle::{Oracle};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
-use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
-use ekubo::quoter::{IQuoterDispatcher, Quoter};
-use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
-use ekubo::simple_erc20::{SimpleERC20};
-use ekubo::extensions::oracle::{Oracle};
-use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
+use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::math::contract_address::ContractAddressOrder;
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::positions::{Positions};
-use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use ekubo::tests::mocks::mock_extension::{
-    MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
-};
+use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::simple_erc20::{SimpleERC20};
+use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
+use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_extension::{
+    MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
+};
+use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
-use ekubo::enumerable_owned_nft::{EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher};
+use ekubo::types::i129::i129;
+
+use ekubo::types::keys::PoolKey;
+use integer::{u256, u256_from_felt252, BoundedInt};
+use option::{Option, OptionTrait};
+use result::{Result, ResultTrait};
+use starknet::class_hash::Felt252TryIntoClassHash;
+use starknet::testing::{set_contract_address};
 
 use starknet::{
     get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
 };
-use starknet::testing::{set_contract_address};
-use starknet::class_hash::Felt252TryIntoClassHash;
+use traits::{Into, TryInto};
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
@@ -302,8 +304,6 @@ fn diff(x: u256, y: u256) -> i129 {
     i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
 }
 
-use debug::PrintTrait;
-
 fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     assert(
         diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0,
@@ -450,9 +450,7 @@ fn accumulate_as_fees_inner(
             assert(false, 'unexpected');
             Zeroable::zero()
         },
-        ActionResult::AccumulateAsFees(delta) => {
-            delta
-        }
+        ActionResult::AccumulateAsFees(delta) => { delta }
     }
 }
 

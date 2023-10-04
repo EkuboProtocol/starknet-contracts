@@ -1,12 +1,12 @@
+use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::i129::{i129, AddDeltaTrait};
-use traits::{Into};
-use zeroable::Zeroable;
+use ekubo::types::keys_test::{check_hashes_differ};
+use hash::{LegacyHash};
 use option::{Option, OptionTrait};
 use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
-use ekubo::tests::store_packing_test::{assert_round_trip};
-use hash::{LegacyHash};
-use ekubo::types::keys_test::{check_hashes_differ};
+use traits::{Into};
+use zeroable::Zeroable;
 
 #[test]
 fn test_legacy_hash_i129() {
@@ -192,16 +192,18 @@ fn test_store_write_read_min_value() {
 #[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_min_value_minus_one() {
-    StorePacking::<i129,
-    felt252>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: true });
+    StorePacking::<
+        i129, felt252
+    >::pack(i129 { mag: 0x80000000000000000000000000000000, sign: true });
 }
 
 #[test]
 #[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_max_value_plus_one() {
-    StorePacking::<i129,
-    felt252>::pack(i129 { mag: 0x80000000000000000000000000000000, sign: false });
+    StorePacking::<
+        i129, felt252
+    >::pack(i129 { mag: 0x80000000000000000000000000000000, sign: false });
 }
 
 

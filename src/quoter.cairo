@@ -1,6 +1,6 @@
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
-use ekubo::types::delta::{Delta};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde)]
@@ -42,21 +42,21 @@ trait IQuoter<TStorage> {
 #[starknet::contract]
 mod Quoter {
     use array::{Array, ArrayTrait, SpanTrait};
-    use option::{OptionTrait};
-    use result::{ResultTrait};
-    use zeroable::{Zeroable};
 
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+    use ekubo::shared_locker::{consume_callback_data};
+    use option::{OptionTrait};
+    use result::{ResultTrait};
+    use starknet::syscalls::{call_contract_syscall};
+
+    use starknet::{get_caller_address};
     use super::{
         i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult,
         QuoteSingleParameters, Delta
     };
-    use ekubo::shared_locker::{consume_callback_data};
-
-    use starknet::{get_caller_address};
-    use starknet::syscalls::{call_contract_syscall};
+    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {
@@ -79,9 +79,7 @@ mod Quoter {
                         res.append(*pool_key);
                     }
                 },
-                Option::None(()) => {
-                    break ();
-                },
+                Option::None(()) => { break (); },
             };
         };
 
@@ -154,15 +152,13 @@ mod Quoter {
                                     amount = -amount;
                                 };
                             },
-                            Option::None => {
-                                break ();
-                            },
+                            Option::None => { break (); },
                         };
                     };
 
-                    Serde::<QuoteResult>::serialize(
-                        @QuoteResult { amount, other_token: current_token }, ref output
-                    );
+                    Serde::<
+                        QuoteResult
+                    >::serialize(@QuoteResult { amount, other_token: current_token }, ref output);
                     panic(output);
                 },
                 CallbackParameters::DeltaToSqrtRatio((
@@ -193,9 +189,7 @@ mod Quoter {
         }
     }
 
-    fn call_core_with_reverting_callback<
-        TInput, impl TSerdeInput: Serde<TInput>, TOutput, impl TSerdeOutput: Serde<TOutput>,
-    >(
+    fn call_core_with_reverting_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
         core: ICoreDispatcher, input: @TInput
     ) -> TOutput {
         let mut input_data: Array<felt252> = ArrayTrait::new();

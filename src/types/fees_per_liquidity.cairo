@@ -1,6 +1,6 @@
-use traits::{TryInto, Into};
-use option::{OptionTrait};
 use ekubo::math::muldiv::{div};
+use option::{OptionTrait};
+use traits::{TryInto, Into};
 use zeroable::{Zeroable};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store)]

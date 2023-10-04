@@ -1,8 +1,8 @@
-use starknet::{ContractAddress};
+use ekubo::types::bounds::{Bounds};
+use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use ekubo::types::pool_price::{PoolPrice};
-use ekubo::types::i129::{i129};
-use ekubo::types::bounds::{Bounds};
+use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 struct GetTokenInfoResult {

@@ -1,5 +1,5 @@
-use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
 use debug::PrintTrait;
+use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
 use ekubo::types::i129::i129;
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;

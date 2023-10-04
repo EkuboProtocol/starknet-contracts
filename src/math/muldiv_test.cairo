@@ -1,6 +1,6 @@
 use ekubo::math::muldiv::{div, muldiv};
-use zeroable::{Zeroable};
 use option::{OptionTrait};
+use zeroable::{Zeroable};
 
 #[test]
 #[should_panic(expected: ('u256 is 0',))]

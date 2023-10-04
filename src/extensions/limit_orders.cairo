@@ -1,6 +1,6 @@
 use ekubo::types::i129::{i129};
-use traits::{Into};
 use starknet::{ContractAddress};
+use traits::{Into};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -48,28 +48,28 @@ trait ILimitOrders<TContractState> {
 
 #[starknet::contract]
 mod LimitOrders {
-    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState};
+    use array::{ArrayTrait};
+    use ekubo::enumerable_owned_nft::{
+        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
+    };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::enumerable_owned_nft::{
-        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-    };
-    use ekubo::types::keys::{PoolKey, PositionKey};
+    use ekubo::math::contract_address::{ContractAddressOrder};
+    use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
+    use ekubo::math::swap::{is_price_increasing};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use zeroable::{Zeroable};
-    use starknet::{get_contract_address, get_caller_address, ClassHash};
-    use ekubo::math::contract_address::{ContractAddressOrder};
-    use ekubo::shared_locker::{call_core_with_callback};
-    use array::{ArrayTrait};
+    use ekubo::types::keys::{PoolKey, PositionKey};
     use option::{OptionTrait};
-    use ekubo::math::swap::{is_price_increasing};
-    use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
+    use starknet::{get_contract_address, get_caller_address, ClassHash};
+    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState};
     use traits::{TryInto, Into};
+    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

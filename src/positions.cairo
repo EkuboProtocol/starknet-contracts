@@ -1,33 +1,33 @@
 #[starknet::contract]
 mod Positions {
-    use traits::{Into};
-    use option::{Option, OptionTrait};
-    use serde::{Serde};
-    use zeroable::{Zeroable};
     use array::{ArrayTrait, SpanTrait};
-    use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
-        deploy_syscall
-    };
-    use ekubo::types::i129::{i129};
-    use ekubo::types::bounds::{Bounds};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
-    use ekubo::math::max_liquidity::{max_liquidity};
-    use ekubo::types::keys::{PoolKey};
-    use ekubo::types::delta::{Delta};
-    use ekubo::types::keys::{PositionKey};
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::enumerable_owned_nft::{
         EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
     };
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
+    use ekubo::math::max_liquidity::{max_liquidity};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::types::bounds::{Bounds};
+    use ekubo::types::delta::{Delta};
+    use ekubo::types::i129::{i129};
+    use ekubo::types::keys::{PoolKey};
+    use ekubo::types::keys::{PositionKey};
+    use option::{Option, OptionTrait};
+    use serde::{Serde};
+    use starknet::{
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
+        deploy_syscall
+    };
+    use traits::{Into};
+    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {
@@ -283,9 +283,7 @@ mod Positions {
                                 self.get_token_info(*request.id, *request.pool_key, *request.bounds)
                             );
                     },
-                    Option::None(()) => {
-                        break ();
-                    }
+                    Option::None(()) => { break (); }
                 };
             };
 
