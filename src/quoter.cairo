@@ -47,6 +47,7 @@ mod Quoter {
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::shared_locker::{consume_callback_data};
+    use ekubo::math::ticks::{sqrt_ratio_to_tick};
     use option::{OptionTrait};
     use result::{ResultTrait};
     use starknet::syscalls::{call_contract_syscall};
@@ -165,6 +166,12 @@ mod Quoter {
                     pool_key, sqrt_ratio
                 )) => {
                     let current_pool_price = core.get_pool_price(pool_key);
+                    let skip_ahead: u32 = ((current_pool_price.tick
+                        - sqrt_ratio_to_tick(sqrt_ratio))
+                        .mag
+                        / (pool_key.tick_spacing * 127_u128))
+                        .try_into()
+                        .expect('TICK_DIFF_TOO_LARGE');
 
                     let delta = core
                         .swap(
@@ -175,7 +182,7 @@ mod Quoter {
                                 },
                                 is_token1: sqrt_ratio <= current_pool_price.sqrt_ratio,
                                 sqrt_ratio_limit: sqrt_ratio,
-                                skip_ahead: 0,
+                                skip_ahead,
                             }
                         );
 
