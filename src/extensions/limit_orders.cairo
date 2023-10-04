@@ -124,9 +124,6 @@ mod LimitOrders {
         HandleAfterSwapCallbackData: HandleAfterSwapCallbackData,
     }
 
-    #[derive(Serde, Copy, Drop)]
-    struct LockCallbackResult {}
-
     #[external(v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
@@ -135,7 +132,7 @@ mod LimitOrders {
             assert(pool_key.fee.is_zero(), 'ZERO_FEE_ONLY');
             assert(pool_key.tick_spacing == 1, 'TICK_SPACING_ONE_ONLY');
 
-            // we choose 1 as starting epoch so we can always tell if a pool is initialized
+            // we choose 1 as starting epoch so we can always tell if a pool is initialized by reading only the local state
             self.pools.write(pool_key, PoolState { ticks_crossed: 1, last_tick: initial_tick });
 
             CallPoints {
@@ -170,13 +167,16 @@ mod LimitOrders {
             params: SwapParameters,
             delta: Delta
         ) {
-            // implement this
             let core = self.core.read();
 
-            let callback_data = HandleAfterSwapCallbackData {
-                pool_key, skip_ahead: params.skip_ahead
-            };
-            let result: LockCallbackResult = call_core_with_callback(core, @callback_data);
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
+                core,
+                @LockCallbackData::HandleAfterSwapCallbackData(
+                    HandleAfterSwapCallbackData { pool_key, skip_ahead: params.skip_ahead }
+                )
+            );
         }
 
         fn before_update_position(
@@ -185,7 +185,8 @@ mod LimitOrders {
             pool_key: PoolKey,
             params: UpdatePositionParameters
         ) {
-            assert(caller == get_contract_address(), 'ONLY_LIMIT_ORDERS');
+            // only this contract can create positions, and the extension will not be called in that case
+            assert(false, 'ONLY_LIMIT_ORDERS');
         }
 
 
@@ -199,6 +200,8 @@ mod LimitOrders {
             assert(false, 'NOT_USED');
         }
     }
+
+
     #[external(v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
@@ -210,7 +213,7 @@ mod LimitOrders {
             let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
                 .expect('LOCK_CALLBACK_DESERIALIZE');
 
-            let result = match callback_data {
+            match callback_data {
                 LockCallbackData::PlaceOrderCallbackData(place_order) => {
                     let delta = core
                         .update_position(
@@ -234,8 +237,6 @@ mod LimitOrders {
                     IERC20Dispatcher { contract_address: pay_token }
                         .transfer(core.contract_address, pay_amount.into());
                     core.deposit(pay_token);
-
-                    LockCallbackResult {}
                 },
                 LockCallbackData::HandleAfterSwapCallbackData(after_swap) => {
                     let price_after_swap = core.get_pool_price(after_swap.pool_key);
@@ -307,16 +308,10 @@ mod LimitOrders {
                                 }
                             );
                     }
-
-                    LockCallbackResult {}
                 }
             };
 
-            let mut result_data = ArrayTrait::<felt252>::new();
-
-            Serde::serialize(@result, ref result_data);
-
-            result_data
+            ArrayTrait::new()
         }
     }
 
@@ -393,7 +388,9 @@ mod LimitOrders {
                     }
                 );
 
-            let result: LockCallbackResult = call_core_with_callback(
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
                 core,
                 @LockCallbackData::PlaceOrderCallbackData(
                     PlaceOrderCallbackData { pool_key, tick: order_key.tick, is_token1, liquidity }

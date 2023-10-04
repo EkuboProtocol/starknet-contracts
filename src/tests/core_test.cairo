@@ -23,8 +23,8 @@ use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use option::{Option, OptionTrait};
-use starknet::{ContractAddress, contract_address_const};
 use starknet::testing::{set_contract_address, pop_log};
+use starknet::{ContractAddress, contract_address_const};
 use traits::{Into, TryInto};
 use zeroable::{Zeroable};
 
