@@ -10,17 +10,22 @@ struct OrderKey {
 }
 
 // State of a particular order, defined by the key
+// TODO: define StorePacking for this
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct OrderState {
-    ticks_crossed_last: u64,
+    // the number of ticks crossed when this order was created
+    ticks_crossed_at_create: u64,
+    // how much liquidity was deposited for this order
     liquidity: u128,
 }
 
 // The state of the pool as it was last seen
+// TODO: define StorePacking for this
 #[derive(Drop, Copy, Serde, starknet::Store)]
 struct PoolState {
-    // the number of initialized ticks that has been crossed
+    // the number of initialized ticks that have been crossed, minus 1
     ticks_crossed: u64,
+    // the last tick that was seen for the pool
     last_tick: i129,
 }
 
@@ -129,11 +134,7 @@ mod LimitOrders {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
-            assert(pool_key.fee.is_zero(), 'ZERO_FEE_ONLY');
-            assert(pool_key.tick_spacing == 1, 'TICK_SPACING_ONE_ONLY');
-
-            // we choose 1 as starting epoch so we can always tell if a pool is initialized by reading only the local state
-            self.pools.write(pool_key, PoolState { ticks_crossed: 1, last_tick: initial_tick });
+            assert(caller == get_contract_address(), 'ONLY_FROM_PLACE_ORDER');
 
             CallPoints {
                 after_initialize_pool: false,
@@ -202,6 +203,16 @@ mod LimitOrders {
     }
 
 
+    #[generate_trait]
+    impl Internal of InternalTrait {
+        fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
+            let balance = IERC20Dispatcher { contract_address: token }
+                .balanceOf(get_contract_address());
+            assert(balance.high == 0, 'BALANCE_OVERFLOW');
+            balance.low
+        }
+    }
+
     #[external(v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
@@ -219,24 +230,30 @@ mod LimitOrders {
                         .update_position(
                             pool_key: place_order.pool_key,
                             params: UpdatePositionParameters {
+                                // all the positions have the same salt
                                 salt: 0,
                                 bounds: Bounds {
                                     lower: place_order.tick,
                                     upper: place_order.tick + i129 { mag: 1, sign: false },
-                                }, // TODO: compute it from the balance of this contract
+                                },
                                 liquidity_delta: i129 { mag: place_order.liquidity, sign: false }
                             }
                         );
 
                     let (pay_token, pay_amount) = if place_order.is_token1 {
+                        assert(delta.amount0.is_zero(), 'TICK_ACTIVE_AMOUNT0');
                         (place_order.pool_key.token1, delta.amount1.mag)
                     } else {
+                        assert(delta.amount1.is_zero(), 'TICK_ACTIVE_AMOUNT1');
                         (place_order.pool_key.token0, delta.amount0.mag)
                     };
 
                     IERC20Dispatcher { contract_address: pay_token }
                         .transfer(core.contract_address, pay_amount.into());
-                    core.deposit(pay_token);
+                    let paid_amount = core.deposit(pay_token);
+                    if (paid_amount > pay_amount) {
+                        core.withdraw(pay_token, get_contract_address(), paid_amount - pay_amount);
+                    }
                 },
                 LockCallbackData::HandleAfterSwapCallbackData(after_swap) => {
                     let price_after_swap = core.get_pool_price(after_swap.pool_key);
@@ -328,8 +345,7 @@ mod LimitOrders {
 
         fn place_order(ref self: ContractState, order_key: OrderKey) -> u64 {
             // orders can only be placed on even ticks
-            // this means we know even ticks are always the specified price
-            // this allows us to optimize iterating through ticks, by only considering even ticks
+            // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
             assert(order_key.tick.mag % 2 == 0, 'EVEN_TICKS_ONLY');
 
             let id = self.nft.read().mint(get_caller_address());
@@ -348,7 +364,17 @@ mod LimitOrders {
             let core = self.core.read();
             let price = core.get_pool_price(pool_key);
 
-            assert(price.sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
+            if (price.sqrt_ratio.is_zero()) {
+                core
+                    .initialize_pool(
+                        pool_key,
+                        if is_token1 {
+                            price.tick + i129 { mag: 1, sign: false }
+                        } else {
+                            price.tick - i129 { mag: 1, sign: false }
+                        }
+                    );
+            }
 
             assert(
                 price.tick != order_key.tick, 'PRICE_AT_TICK'
@@ -367,10 +393,7 @@ mod LimitOrders {
             let sqrt_ratio_upper = tick_to_sqrt_ratio(
                 order_key.tick + i129 { mag: 1, sign: false }
             );
-            let amount: u128 = IERC20Dispatcher { contract_address: order_key.sell_token }
-                .balanceOf(get_contract_address())
-                .try_into()
-                .expect('SELL_BALANCE_TOO_LARGE');
+            let amount: u128 = self.balance_of_token(order_key.sell_token);
             let liquidity = if is_token1 {
                 max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
             } else {
@@ -384,7 +407,7 @@ mod LimitOrders {
                 .write(
                     (order_key, id),
                     OrderState {
-                        ticks_crossed_last: self.pools.read(pool_key).ticks_crossed, liquidity
+                        ticks_crossed_at_create: self.pools.read(pool_key).ticks_crossed, liquidity
                     }
                 );
 
