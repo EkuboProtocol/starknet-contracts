@@ -98,7 +98,7 @@ fn test_place_order_creates_position_at_tick() {
     let order_key = OrderKey {
         sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
     };
-    let id = lo.place_order(order_key);
+    let id = lo.place_order(order_key, 100);
     assert(id == 1, 'id');
 
     t0.increase_balance(lo.contract_address, 200);
@@ -106,7 +106,8 @@ fn test_place_order_creates_position_at_tick() {
         .place_order(
             OrderKey {
                 sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
-            }
+            },
+            200
         );
     assert(id_2 == 2, 'id_2');
 
@@ -143,75 +144,31 @@ fn test_place_order_fails_odd_tick() {
         .place_order(
             OrderKey {
                 sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false }
-            }
-        );
-}
-
-
-#[test]
-#[available_gas(3000000000)]
-#[should_panic(expected: ('PRICE_AT_TICK', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_price_at_tick() {
-    let (core, lo, pk) = setup_pool_with_extension();
-
-    lo
-        .place_order(
-            OrderKey { sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero() }
-        );
-}
-
-#[test]
-#[available_gas(3000000000)]
-#[should_panic(expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_tick_at_wrong_side_sell_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
-
-    lo
-        .place_order(
-            OrderKey {
-                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: true }
-            }
-        );
-}
-
-#[test]
-#[available_gas(3000000000)]
-#[should_panic(expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_tick_at_wrong_side_sell_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
-
-    lo
-        .place_order(
-            OrderKey {
-                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: false }
-            }
+            },
+            0
         );
 }
 
 #[test]
 #[available_gas(3000000000)]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_no_token0_transferred() {
+fn test_place_order_fails_zero_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
 
     lo
         .place_order(
-            OrderKey {
-                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
-            }
+            OrderKey { sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero() }, 0
         );
 }
 
 #[test]
 #[available_gas(3000000000)]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_no_token1_transferred() {
+fn test_place_order_fails_zero_token1() {
     let (core, lo, pk) = setup_pool_with_extension();
 
     lo
         .place_order(
-            OrderKey {
-                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 2, sign: true }
-            }
+            OrderKey { sell_token: pk.token1, buy_token: pk.token0, tick: Zeroable::zero() }, 0
         );
 }

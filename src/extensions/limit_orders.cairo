@@ -1,6 +1,8 @@
 use ekubo::types::i129::{i129};
 use starknet::{ContractAddress};
-use traits::{Into};
+use traits::{Into, TryInto};
+use integer::{u256_safe_divmod, u256_as_non_zero};
+use starknet::{StorePacking};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -11,7 +13,7 @@ struct OrderKey {
 
 // State of a particular order, defined by the key
 // TODO: define StorePacking for this
-#[derive(Drop, Copy, Serde, starknet::Store)]
+#[derive(Drop, Copy, Serde)]
 struct OrderState {
     // the number of ticks crossed when this order was created
     ticks_crossed_at_create: u64,
@@ -19,14 +21,42 @@ struct OrderState {
     liquidity: u128,
 }
 
+impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
+    fn pack(value: OrderState) -> felt252 {
+        u256 { low: value.liquidity, high: value.ticks_crossed_at_create.into() }
+            .try_into()
+            .unwrap()
+    }
+    fn unpack(value: felt252) -> OrderState {
+        let x: u256 = value.into();
+
+        OrderState { ticks_crossed_at_create: x.high.try_into().unwrap(), liquidity: x.low }
+    }
+}
+
 // The state of the pool as it was last seen
 // TODO: define StorePacking for this
-#[derive(Drop, Copy, Serde, starknet::Store)]
+#[derive(Drop, Copy, Serde)]
 struct PoolState {
     // the number of initialized ticks that have been crossed, minus 1
     ticks_crossed: u64,
     // the last tick that was seen for the pool
     last_tick: i129,
+}
+
+impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
+    fn pack(value: PoolState) -> felt252 {
+        let low: u128 = StorePacking::<i129, felt252>::pack(value.last_tick).try_into().unwrap();
+
+        u256 { low, high: value.ticks_crossed.into() }.try_into().unwrap()
+    }
+    fn unpack(value: felt252) -> PoolState {
+        let x: u256 = value.into();
+
+        let last_tick = StorePacking::<i129, felt252>::unpack(x.low.into());
+
+        PoolState { last_tick, ticks_crossed: x.high.try_into().unwrap() }
+    }
 }
 
 #[starknet::interface]
@@ -39,7 +69,7 @@ trait ILimitOrders<TContractState> {
 
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
     // The size of the new order is determined by the current balance of the sell token
-    fn place_order(ref self: TContractState, order_key: OrderKey) -> u64;
+    fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
 
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
     fn close_order(
@@ -112,7 +142,7 @@ mod LimitOrders {
     #[derive(Serde, Copy, Drop)]
     struct PlaceOrderCallbackData {
         pool_key: PoolKey,
-        is_token1: bool,
+        is_selling_token1: bool,
         tick: i129,
         liquidity: u128,
     }
@@ -186,7 +216,7 @@ mod LimitOrders {
             pool_key: PoolKey,
             params: UpdatePositionParameters
         ) {
-            // only this contract can create positions, and the extension will not be called in that case
+            // only this contract can create positions, and the extension will not be called in that case, so always revert
             assert(false, 'ONLY_LIMIT_ORDERS');
         }
 
@@ -199,17 +229,6 @@ mod LimitOrders {
             delta: Delta
         ) {
             assert(false, 'NOT_USED');
-        }
-    }
-
-
-    #[generate_trait]
-    impl Internal of InternalTrait {
-        fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
-            let balance = IERC20Dispatcher { contract_address: token }
-                .balanceOf(get_contract_address());
-            assert(balance.high == 0, 'BALANCE_OVERFLOW');
-            balance.low
         }
     }
 
@@ -240,7 +259,7 @@ mod LimitOrders {
                             }
                         );
 
-                    let (pay_token, pay_amount) = if place_order.is_token1 {
+                    let (pay_token, pay_amount) = if place_order.is_selling_token1 {
                         assert(delta.amount0.is_zero(), 'TICK_ACTIVE_AMOUNT0');
                         (place_order.pool_key.token1, delta.amount1.mag)
                     } else {
@@ -343,14 +362,16 @@ mod LimitOrders {
             self.orders.read((order_key, id))
         }
 
-        fn place_order(ref self: ContractState, order_key: OrderKey) -> u64 {
+        fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             // orders can only be placed on even ticks
             // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
             assert(order_key.tick.mag % 2 == 0, 'EVEN_TICKS_ONLY');
 
             let id = self.nft.read().mint(get_caller_address());
 
-            let (token0, token1, is_token1) = if (order_key.sell_token < order_key.buy_token) {
+            let (token0, token1, is_selling_token1) = if (order_key
+                .sell_token < order_key
+                .buy_token) {
                 (order_key.sell_token, order_key.buy_token, false)
             } else {
                 (order_key.buy_token, order_key.sell_token, true)
@@ -360,41 +381,43 @@ mod LimitOrders {
                 token0, token1, fee: 0, tick_spacing: 1, extension: get_contract_address()
             };
 
-            // validate the pool key is initialized
             let core = self.core.read();
-            let price = core.get_pool_price(pool_key);
 
-            if (price.sqrt_ratio.is_zero()) {
-                core
-                    .initialize_pool(
-                        pool_key,
-                        if is_token1 {
-                            price.tick + i129 { mag: 1, sign: false }
-                        } else {
-                            price.tick - i129 { mag: 1, sign: false }
-                        }
-                    );
-            }
+            // check the price is on the right side of the order tick
+            {
+                let price = core.get_pool_price(pool_key);
 
-            assert(
-                price.tick != order_key.tick, 'PRICE_AT_TICK'
-            ); // cannot place an order at the current tick
-
-            assert(
-                if is_token1 {
-                    order_key.tick < price.tick
+                if (price.sqrt_ratio.is_zero()) {
+                    // The first order initializes the pool just next to where the order is placed.
+                    core
+                        .initialize_pool(
+                            pool_key,
+                            if is_selling_token1 {
+                                price.tick + i129 { mag: 1, sign: false }
+                            } else {
+                                price.tick - i129 { mag: 1, sign: false }
+                            }
+                        );
                 } else {
-                    order_key.tick > price.tick
-                },
-                'TICK_WRONG_SIDE'
-            );
+                    // cannot place an order at the current tick since it could include both tokens
+                    assert(price.tick != order_key.tick, 'PRICE_AT_TICK');
+
+                    assert(
+                        if is_selling_token1 {
+                            order_key.tick < price.tick
+                        } else {
+                            order_key.tick > price.tick
+                        },
+                        'TICK_WRONG_SIDE'
+                    );
+                }
+            }
 
             let sqrt_ratio_lower = tick_to_sqrt_ratio(order_key.tick);
             let sqrt_ratio_upper = tick_to_sqrt_ratio(
                 order_key.tick + i129 { mag: 1, sign: false }
             );
-            let amount: u128 = self.balance_of_token(order_key.sell_token);
-            let liquidity = if is_token1 {
+            let liquidity = if is_selling_token1 {
                 max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
             } else {
                 max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
@@ -416,7 +439,9 @@ mod LimitOrders {
             >(
                 core,
                 @LockCallbackData::PlaceOrderCallbackData(
-                    PlaceOrderCallbackData { pool_key, tick: order_key.tick, is_token1, liquidity }
+                    PlaceOrderCallbackData {
+                        pool_key, tick: order_key.tick, is_selling_token1, liquidity
+                    }
                 )
             );
 
