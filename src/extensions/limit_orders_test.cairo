@@ -5,14 +5,15 @@ use ekubo::enumerable_owned_nft::{
 use ekubo::extensions::limit_orders::{
     ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState
 };
-use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
+use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::simple_swapper::{ISimpleSwapperDispatcherTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
-    deploy_locker
+    deploy_locker, deploy_simple_swapper
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::types::bounds::{Bounds};
@@ -132,6 +133,88 @@ fn test_place_order_creates_position_at_tick() {
             }
         );
     assert(position.liquidity == (200000350 + 400000700), 'position liquidity sum');
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_is_pulled_after_swap_token0_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t1.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token1, buy_token: pk.token0, tick: Zeroable::zero()
+    };
+    lo.place_order(order_key, 100);
+
+    t0.increase_balance(simple_swapper.contract_address, 200);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 200, sign: false },
+                is_token1: false,
+                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    let position = core
+        .get_position(
+            pk,
+            PositionKey {
+                salt: 0,
+                owner: lo.contract_address,
+                bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+            }
+        );
+
+    assert(position.liquidity.is_zero(), 'position liquidity pulled');
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_is_pulled_after_swap_token1_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t0.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
+    };
+    lo.place_order(order_key, 100);
+
+    t1.increase_balance(simple_swapper.contract_address, 200);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 200, sign: false },
+                is_token1: true,
+                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    let position = core
+        .get_position(
+            pk,
+            PositionKey {
+                salt: 0,
+                owner: lo.contract_address,
+                bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+            }
+        );
+
+    assert(position.liquidity.is_zero(), 'position liquidity pulled');
 }
 
 #[test]

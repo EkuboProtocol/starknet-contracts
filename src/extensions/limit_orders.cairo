@@ -1,4 +1,4 @@
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::{i129, i129Trait};
 use starknet::{ContractAddress};
 use traits::{Into, TryInto};
 use integer::{u256_safe_divmod, u256_as_non_zero};
@@ -25,12 +25,15 @@ impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
     fn pack(value: OrderState) -> felt252 {
         u256 { low: value.liquidity, high: value.ticks_crossed_at_create.into() }
             .try_into()
-            .unwrap()
+            .expect('PACK_ORDER_STATE_U256')
     }
     fn unpack(value: felt252) -> OrderState {
         let x: u256 = value.into();
 
-        OrderState { ticks_crossed_at_create: x.high.try_into().unwrap(), liquidity: x.low }
+        OrderState {
+            ticks_crossed_at_create: x.high.try_into().expect('UNPACK_ORDER_STATE_HIGH'),
+            liquidity: x.low
+        }
     }
 }
 
@@ -46,16 +49,26 @@ struct PoolState {
 
 impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
     fn pack(value: PoolState) -> felt252 {
-        let low: u128 = StorePacking::<i129, felt252>::pack(value.last_tick).try_into().unwrap();
+        let low: u128 = if value.last_tick.sign {
+            value.last_tick.mag + 0x80000000000000000000000000000000
+        } else {
+            value.last_tick.mag
+        };
 
-        u256 { low, high: value.ticks_crossed.into() }.try_into().unwrap()
+        u256 { low, high: value.ticks_crossed.into() }.try_into().expect('PACK_POOL_STATE_U256')
     }
     fn unpack(value: felt252) -> PoolState {
         let x: u256 = value.into();
 
-        let last_tick = StorePacking::<i129, felt252>::unpack(x.low.into());
+        let last_tick = if x.low > 0x80000000000000000000000000000000 {
+            i129 { mag: x.low - 0x80000000000000000000000000000000, sign: true }
+        } else {
+            i129 { mag: x.low, sign: false }
+        };
 
-        PoolState { last_tick, ticks_crossed: x.high.try_into().unwrap() }
+        PoolState {
+            last_tick, ticks_crossed: x.high.try_into().expect('UNPACK_POOL_STATE_TICKS_CROSSED')
+        }
     }
 }
 
@@ -89,7 +102,7 @@ mod LimitOrders {
     };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
-        ICoreDispatcherTrait
+        ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::contract_address::{ContractAddressOrder};
@@ -112,7 +125,8 @@ mod LimitOrders {
         nft: IEnumerableOwnedNFTDispatcher,
         pools: LegacyMap<PoolKey, PoolState>,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
-        tick_last_cross_epoch: LegacyMap<(PoolKey, i129), u64>,
+        ticks_crossed_last_crossing: LegacyMap<(PoolKey, i129), u64>,
+        reserves: LegacyMap<ContractAddress, u256>,
     }
 
     #[constructor]
@@ -232,6 +246,8 @@ mod LimitOrders {
         }
     }
 
+    use debug::PrintTrait;
+
     #[external(v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
@@ -281,17 +297,18 @@ mod LimitOrders {
 
                     if (price_after_swap.tick != state.last_tick) {
                         let price_increasing = price_after_swap.tick > state.last_tick;
+                        let mut tick_current = state.last_tick;
 
                         loop {
                             let (next_tick, is_initialized) = if price_increasing {
                                 core
                                     .next_initialized_tick(
-                                        after_swap.pool_key, state.last_tick, after_swap.skip_ahead
+                                        after_swap.pool_key, tick_current, after_swap.skip_ahead
                                     )
                             } else {
                                 core
                                     .prev_initialized_tick(
-                                        after_swap.pool_key, state.last_tick, after_swap.skip_ahead
+                                        after_swap.pool_key, tick_current, after_swap.skip_ahead
                                     )
                             };
 
@@ -299,49 +316,75 @@ mod LimitOrders {
                                 break ();
                             };
 
-                            if (is_initialized) {
+                            if (is_initialized & (next_tick.mag % 2 == 1)) {
+                                next_tick.print();
+
+                                let bounds = Bounds {
+                                    lower: next_tick,
+                                    upper: next_tick + i129 { mag: 1, sign: false },
+                                };
+
                                 let position_data = core
                                     .get_position(
                                         after_swap.pool_key,
                                         PositionKey {
-                                            salt: 0,
-                                            owner: get_contract_address(),
-                                            bounds: Bounds {
-                                                lower: next_tick,
-                                                upper: next_tick + i129 { mag: 1, sign: false },
-                                            }
+                                            salt: 0, owner: get_contract_address(), bounds
                                         }
                                     );
 
-                                core
+                                let delta = core
                                     .update_position(
                                         after_swap.pool_key,
                                         UpdatePositionParameters {
                                             salt: 0,
-                                            bounds: Bounds {
-                                                lower: next_tick,
-                                                upper: next_tick + i129 { mag: 1, sign: false },
-                                            },
+                                            bounds,
                                             liquidity_delta: i129 {
                                                 mag: position_data.liquidity, sign: true
                                             }
                                         }
                                     );
 
+                                if price_increasing {
+                                    core
+                                        .save(
+                                            SavedBalanceKey {
+                                                owner: get_contract_address(),
+                                                token: after_swap.pool_key.token1,
+                                                salt: 0,
+                                            },
+                                            delta.amount1.mag
+                                        );
+                                } else {
+                                    core
+                                        .save(
+                                            SavedBalanceKey {
+                                                owner: get_contract_address(),
+                                                token: after_swap.pool_key.token0,
+                                                salt: 0,
+                                            },
+                                            delta.amount0.mag
+                                        );
+                                }
+
                                 ticks_crossed += 1;
                                 self
-                                    .tick_last_cross_epoch
+                                    .ticks_crossed_last_crossing
                                     .write((after_swap.pool_key, next_tick), ticks_crossed);
                             };
+
+                            tick_current =
+                                if price_increasing {
+                                    next_tick
+                                } else {
+                                    next_tick - i129 { mag: 1, sign: false }
+                                };
                         };
 
                         self
                             .pools
                             .write(
                                 after_swap.pool_key,
-                                PoolState {
-                                    ticks_crossed: ticks_crossed, last_tick: price_after_swap.tick
-                                }
+                                PoolState { ticks_crossed, last_tick: price_after_swap.tick }
                             );
                     }
                 }
