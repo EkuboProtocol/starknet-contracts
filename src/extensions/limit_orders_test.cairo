@@ -263,10 +263,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 
-    let (amount0, amount1) = lo
-        .close_order(order_key, id, recipient: contract_address_const::<1>());
-    amount0.print();
-    amount1.print();
+    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
 }
 
 #[test]
@@ -308,10 +305,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 
-    let (amount0, amount1) = lo
-        .close_order(order_key, id, recipient: contract_address_const::<1>());
-    amount0.print();
-    amount1.print();
+    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
 }
 
 #[test]

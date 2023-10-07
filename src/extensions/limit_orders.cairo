@@ -87,7 +87,7 @@ trait ILimitOrders<TContractState> {
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-    ) -> (u128, u128);
+    );
 
     // Clear the token balance held by this contract
     // This contract is non-custodial, i.e. never holds a balance on behalf of a user
@@ -438,8 +438,8 @@ mod LimitOrders {
             }
         } else {
             PoolKey {
-                token0: order_key.sell_token,
-                token1: order_key.buy_token,
+                token0: order_key.buy_token,
+                token1: order_key.sell_token,
                 fee: 0,
                 tick_spacing: 1,
                 extension: get_contract_address()
@@ -528,7 +528,7 @@ mod LimitOrders {
 
         fn close_order(
             ref self: ContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-        ) -> (u128, u128) {
+        ) {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
@@ -541,9 +541,20 @@ mod LimitOrders {
 
             let core = self.core.read();
 
+            let buying_token0 = order_key.buy_token == pool_key.token0;
+
             let ticks_crossed_at_order_tick = self
                 .ticks_crossed_last_crossing
-                .read((pool_key, order_key.tick));
+                .read(
+                    (
+                        pool_key,
+                        if buying_token0 {
+                            order_key.tick
+                        } else {
+                            order_key.tick + i129 { mag: 1, sign: false }
+                        }
+                    )
+                );
 
             // the order is fully executed, just withdraw the saved balance
             if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
@@ -552,9 +563,7 @@ mod LimitOrders {
                     order_key.tick + i129 { mag: 1, sign: false }
                 );
 
-                let bought_token0 = order_key.buy_token == pool_key.token0;
-
-                let bought_amount = if bought_token0 {
+                let amount = if buying_token0 {
                     amount0_delta(
                         sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
                     )
@@ -570,21 +579,13 @@ mod LimitOrders {
                     core,
                     @LockCallbackData::WithdrawExecutedOrderBalance(
                         WithdrawExecutedOrderBalance {
-                            token: order_key.buy_token, amount: bought_amount, recipient
+                            token: order_key.buy_token, amount, recipient
                         }
                     )
                 );
-
-                if bought_token0 {
-                    (bought_amount, 0)
-                } else {
-                    (0, bought_amount)
-                }
             } else {
                 // TODO: unexecuted order pulls liquidity at any price
                 assert(false, 'TODO');
-
-                (0, 0)
             }
         }
 
