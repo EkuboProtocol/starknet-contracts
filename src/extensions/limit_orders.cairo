@@ -107,7 +107,6 @@ mod LimitOrders {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
-    use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::types::bounds::{Bounds};
@@ -275,13 +274,13 @@ mod LimitOrders {
                             }
                         );
 
-                    let (pay_token, pay_amount) = if place_order.is_selling_token1 {
-                        assert(delta.amount0.is_zero(), 'TICK_ACTIVE_AMOUNT0');
-                        (place_order.pool_key.token1, delta.amount1.mag)
+                    let (pay_token, pay_amount, other_is_zero) = if place_order.is_selling_token1 {
+                        (place_order.pool_key.token1, delta.amount1.mag, delta.amount0.is_zero())
                     } else {
-                        assert(delta.amount1.is_zero(), 'TICK_ACTIVE_AMOUNT1');
-                        (place_order.pool_key.token0, delta.amount0.mag)
+                        (place_order.pool_key.token0, delta.amount0.mag, delta.amount1.is_zero())
                     };
+
+                    assert(other_is_zero, 'TICK_WRONG_SIDE');
 
                     IERC20Dispatcher { contract_address: pay_token }
                         .transfer(core.contract_address, pay_amount.into());
@@ -316,12 +315,19 @@ mod LimitOrders {
                                 break ();
                             };
 
-                            if (is_initialized & (next_tick.mag % 2 == 1)) {
-                                next_tick.print();
-
-                                let bounds = Bounds {
-                                    lower: next_tick,
-                                    upper: next_tick + i129 { mag: 1, sign: false },
+                            // if we crossed an odd tick, that means we can close an order if we're going in increasing price
+                            // if we crossed an even tick, that means we can close an order if we're going in decreasing price
+                            if (is_initialized & ((next_tick.mag % 2 == 1) == price_increasing)) {
+                                let bounds = if price_increasing {
+                                    Bounds {
+                                        lower: next_tick - i129 { mag: 1, sign: false },
+                                        upper: next_tick,
+                                    }
+                                } else {
+                                    Bounds {
+                                        lower: next_tick,
+                                        upper: next_tick + i129 { mag: 1, sign: false },
+                                    }
                                 };
 
                                 let position_data = core
@@ -406,10 +412,6 @@ mod LimitOrders {
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
-            // orders can only be placed on even ticks
-            // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
-            assert(order_key.tick.mag % 2 == 0, 'EVEN_TICKS_ONLY');
-
             let id = self.nft.read().mint(get_caller_address());
 
             let (token0, token1, is_selling_token1) = if (order_key
@@ -419,6 +421,12 @@ mod LimitOrders {
             } else {
                 (order_key.buy_token, order_key.sell_token, true)
             };
+
+            // orders can only be placed on even ticks for selling token0, and odd ticks for selling token1
+            // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
+            assert(
+                (order_key.tick.mag % 2 == 0) == (order_key.sell_token == token0), 'TICK_EVEN_ODD'
+            );
 
             let pool_key = PoolKey {
                 token0, token1, fee: 0, tick_spacing: 1, extension: get_contract_address()
@@ -436,23 +444,11 @@ mod LimitOrders {
                         .initialize_pool(
                             pool_key,
                             if is_selling_token1 {
-                                price.tick + i129 { mag: 1, sign: false }
+                                order_key.tick + i129 { mag: 1, sign: false }
                             } else {
-                                price.tick - i129 { mag: 1, sign: false }
+                                order_key.tick
                             }
                         );
-                } else {
-                    // cannot place an order at the current tick since it could include both tokens
-                    assert(price.tick != order_key.tick, 'PRICE_AT_TICK');
-
-                    assert(
-                        if is_selling_token1 {
-                            order_key.tick < price.tick
-                        } else {
-                            order_key.tick > price.tick
-                        },
-                        'TICK_WRONG_SIDE'
-                    );
                 }
             }
 

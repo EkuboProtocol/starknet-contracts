@@ -91,6 +91,38 @@ fn test_before_initialize_pool_not_from_extension() {
 
 #[test]
 #[available_gas(3000000000)]
+fn test_place_order_sell_token0_initializes_pool_above_tick() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    t0.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
+    };
+    lo.place_order(order_key, 100);
+    let price = core.get_pool_price(pk);
+    assert(price.tick.is_zero() & price.sqrt_ratio.is_non_zero(), 'initialized');
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_place_order_sell_token1_initializes_pool_above_tick() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t1.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+    };
+    lo.place_order(order_key, 100);
+    let price = core.get_pool_price(pk);
+    assert(
+        (price.tick == i129 { mag: 2, sign: false }) & price.sqrt_ratio.is_non_zero(), 'initialized'
+    );
+}
+
+#[test]
+#[available_gas(3000000000)]
 fn test_place_order_creates_position_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
 
@@ -145,7 +177,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: Zeroable::zero()
+        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
     };
     lo.place_order(order_key, 100);
 
@@ -169,7 +201,9 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
             PositionKey {
                 salt: 0,
                 owner: lo.contract_address,
-                bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+                bounds: Bounds {
+                    lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false }
+                },
             }
         );
 
@@ -204,6 +238,8 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
             calculated_amount_threshold: 0
         );
 
+    delta.print();
+
     let position = core
         .get_position(
             pk,
@@ -219,14 +255,29 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 
 #[test]
 #[available_gas(3000000000)]
-#[should_panic(expected: ('EVEN_TICKS_ONLY', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_odd_tick() {
+#[should_panic(expected: ('TICK_EVEN_ODD', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_odd_tick_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
 
     lo
         .place_order(
             OrderKey {
                 sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false }
+            },
+            0
+        );
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(expected: ('TICK_EVEN_ODD', 'ENTRYPOINT_FAILED'))]
+fn test_place_order_fails_even_tick_sell_token1() {
+    let (core, lo, pk) = setup_pool_with_extension();
+
+    lo
+        .place_order(
+            OrderKey {
+                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 0, sign: false }
             },
             0
         );
@@ -252,6 +303,9 @@ fn test_place_order_fails_zero_token1() {
 
     lo
         .place_order(
-            OrderKey { sell_token: pk.token1, buy_token: pk.token0, tick: Zeroable::zero() }, 0
+            OrderKey {
+                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+            },
+            0
         );
 }
