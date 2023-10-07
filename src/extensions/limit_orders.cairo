@@ -340,7 +340,8 @@ mod LimitOrders {
                                     )
                             };
 
-                            if ((next_tick >= price_after_swap.tick) == price_increasing) {
+                            if ((next_tick == price_after_swap.tick)
+                                | ((next_tick > price_after_swap.tick) == price_increasing)) {
                                 break ();
                             };
 
@@ -377,6 +378,7 @@ mod LimitOrders {
                                         }
                                     );
 
+                                // todo: defer saving and just do it once for the total
                                 if price_increasing {
                                     core
                                         .save(
@@ -445,7 +447,7 @@ mod LimitOrders {
                             }
                         );
 
-                    if (delta.amount0.is_negative()) {
+                    if (delta.amount0.is_non_zero()) {
                         core
                             .withdraw(
                                 token_address: withdraw.pool_key.token0,
@@ -453,7 +455,8 @@ mod LimitOrders {
                                 amount: delta.amount0.mag
                             );
                     }
-                    if (delta.amount1.is_negative()) {
+
+                    if (delta.amount1.is_non_zero()) {
                         core
                             .withdraw(
                                 token_address: withdraw.pool_key.token1,

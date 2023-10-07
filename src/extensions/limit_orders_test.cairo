@@ -310,6 +310,98 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 
 #[test]
 #[available_gas(3000000000)]
+fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t1.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+    };
+    let id = lo.place_order(order_key, 100);
+
+    let position_key = PositionKey {
+        salt: 0,
+        owner: lo.contract_address,
+        bounds: Bounds { lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false } },
+    };
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
+    );
+
+    t0.increase_balance(simple_swapper.contract_address, 50);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 50, sign: false },
+                is_token1: false,
+                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity not pulled'
+    );
+
+    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
+
+    assert(core.get_position(pk, position_key).liquidity.is_zero(), 'order closed');
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t0.increase_balance(lo.contract_address, 100);
+    let order_key = OrderKey {
+        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
+    };
+    let id = lo.place_order(order_key, 100);
+
+    let position_key = PositionKey {
+        salt: 0,
+        owner: lo.contract_address,
+        bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+    };
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
+    );
+
+    t1.increase_balance(simple_swapper.contract_address, 200);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 50, sign: false },
+                is_token1: true,
+                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity not pulled'
+    );
+
+    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
+
+    assert(core.get_position(pk, position_key).liquidity.is_zero(), 'order closed');
+}
+
+#[test]
+#[available_gas(3000000000)]
 #[should_panic(expected: ('TICK_EVEN_ODD', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_odd_tick_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
