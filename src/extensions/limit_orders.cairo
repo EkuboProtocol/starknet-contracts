@@ -172,6 +172,19 @@ mod LimitOrders {
         HandleAfterSwapCallbackData: HandleAfterSwapCallbackData,
     }
 
+    #[derive(starknet::Event, Drop)]
+    struct OrderPlaced {
+        id: u64,
+        order_key: OrderKey,
+        liquidity: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    #[event]
+    enum Event {
+        OrderPlaced: OrderPlaced,
+    }
+
     #[external(v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
@@ -478,6 +491,8 @@ mod LimitOrders {
                     }
                 )
             );
+
+            self.emit(OrderPlaced { id, order_key, liquidity });
 
             id
         }
