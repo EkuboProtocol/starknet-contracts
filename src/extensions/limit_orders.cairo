@@ -424,9 +424,7 @@ mod LimitOrders {
 
             // orders can only be placed on even ticks for selling token0, and odd ticks for selling token1
             // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
-            assert(
-                (order_key.tick.mag % 2 == 0) == (order_key.sell_token == token0), 'TICK_EVEN_ODD'
-            );
+            assert((order_key.tick.mag % 2 == 1) == is_selling_token1, 'TICK_EVEN_ODD');
 
             let pool_key = PoolKey {
                 token0, token1, fee: 0, tick_spacing: 1, extension: get_contract_address()
