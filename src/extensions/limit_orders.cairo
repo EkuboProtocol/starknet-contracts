@@ -115,7 +115,7 @@ mod LimitOrders {
     use ekubo::types::keys::{PoolKey, PositionKey};
     use option::{OptionTrait};
     use starknet::{get_contract_address, get_caller_address, ClassHash};
-    use super::{ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState};
+    use super::{ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState};
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
 
@@ -175,10 +175,19 @@ mod LimitOrders {
     }
 
     #[derive(Serde, Copy, Drop)]
+    struct WithdrawUnexecutedOrderBalance {
+        pool_key: PoolKey,
+        tick: i129,
+        liquidity: u128,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         PlaceOrderCallbackData: PlaceOrderCallbackData,
         HandleAfterSwapCallbackData: HandleAfterSwapCallbackData,
         WithdrawExecutedOrderBalance: WithdrawExecutedOrderBalance,
+        WithdrawUnexecutedOrderBalance: WithdrawUnexecutedOrderBalance,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -420,6 +429,38 @@ mod LimitOrders {
                             recipient: withdraw.recipient,
                             amount: withdraw.amount
                         );
+                },
+                LockCallbackData::WithdrawUnexecutedOrderBalance(withdraw) => {
+                    let delta = core
+                        .update_position(
+                            pool_key: withdraw.pool_key,
+                            params: UpdatePositionParameters {
+                                // all the positions have the same salt
+                                salt: 0,
+                                bounds: Bounds {
+                                    lower: withdraw.tick,
+                                    upper: withdraw.tick + i129 { mag: 1, sign: false },
+                                },
+                                liquidity_delta: i129 { mag: withdraw.liquidity, sign: true }
+                            }
+                        );
+
+                    if (delta.amount0.is_negative()) {
+                        core
+                            .withdraw(
+                                token_address: withdraw.pool_key.token0,
+                                recipient: withdraw.recipient,
+                                amount: delta.amount0.mag
+                            );
+                    }
+                    if (delta.amount1.is_negative()) {
+                        core
+                            .withdraw(
+                                token_address: withdraw.pool_key.token1,
+                                recipient: withdraw.recipient,
+                                amount: delta.amount1.mag
+                            );
+                    }
                 }
             };
 
@@ -535,7 +576,11 @@ mod LimitOrders {
             let order = self.orders.read((order_key, id));
             assert(order.liquidity.is_non_zero(), 'INVALID_ORDER_KEY');
 
+            // burn the NFT and clear the order state so it cannot be withdrawn twice
             nft.burn(id);
+            self
+                .orders
+                .write((order_key, id), OrderState { liquidity: 0, ticks_crossed_at_create: 0 });
 
             let pool_key = to_pool_key(order_key);
 
@@ -584,8 +629,16 @@ mod LimitOrders {
                     )
                 );
             } else {
-                // TODO: unexecuted order pulls liquidity at any price
-                assert(false, 'TODO');
+                call_core_with_callback::<
+                    LockCallbackData, ()
+                >(
+                    core,
+                    @LockCallbackData::WithdrawUnexecutedOrderBalance(
+                        WithdrawUnexecutedOrderBalance {
+                            pool_key, tick: order_key.tick, liquidity: order.liquidity, recipient
+                        }
+                    )
+                );
             }
         }
 
