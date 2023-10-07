@@ -13,7 +13,7 @@ struct OrderKey {
 
 // State of a particular order, defined by the key
 // TODO: define StorePacking for this
-#[derive(Drop, Copy, Serde)]
+#[derive(Drop, Copy, Serde, PartialEq)]
 struct OrderState {
     // the number of ticks crossed when this order was created
     ticks_crossed_at_create: u64,
@@ -39,7 +39,7 @@ impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
 
 // The state of the pool as it was last seen
 // TODO: define StorePacking for this
-#[derive(Drop, Copy, Serde)]
+#[derive(Drop, Copy, Serde, PartialEq)]
 struct PoolState {
     // the number of initialized ticks that have been crossed, minus 1
     ticks_crossed: u64,
@@ -245,8 +245,6 @@ mod LimitOrders {
         }
     }
 
-    use debug::PrintTrait;
-
     #[external(v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
@@ -315,9 +313,7 @@ mod LimitOrders {
                                 break ();
                             };
 
-                            // if we crossed an odd tick, that means we can close an order if we're going in increasing price
-                            // if we crossed an even tick, that means we can close an order if we're going in decreasing price
-                            if (is_initialized & ((next_tick.mag % 2 == 1) == price_increasing)) {
+                            if (is_initialized & (next_tick.mag % 2 == 1)) {
                                 let bounds = if price_increasing {
                                     Bounds {
                                         lower: next_tick - i129 { mag: 1, sign: false },
@@ -436,17 +432,18 @@ mod LimitOrders {
             {
                 let price = core.get_pool_price(pool_key);
 
+                // the first order initializes the pool just next to where the order is placed
                 if (price.sqrt_ratio.is_zero()) {
-                    // The first order initializes the pool just next to where the order is placed.
-                    core
-                        .initialize_pool(
-                            pool_key,
-                            if is_selling_token1 {
-                                order_key.tick + i129 { mag: 1, sign: false }
-                            } else {
-                                order_key.tick
-                            }
-                        );
+                    let initial_tick = if is_selling_token1 {
+                        order_key.tick + i129 { mag: 1, sign: false }
+                    } else {
+                        order_key.tick
+                    };
+
+                    self
+                        .pools
+                        .write(pool_key, PoolState { ticks_crossed: 1, last_tick: initial_tick });
+                    core.initialize_pool(pool_key, initial_tick);
                 }
             }
 

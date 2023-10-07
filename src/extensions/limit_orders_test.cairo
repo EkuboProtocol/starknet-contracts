@@ -3,7 +3,7 @@ use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
 use ekubo::extensions::limit_orders::{
-    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState
+    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState
 };
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
@@ -26,6 +26,7 @@ use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
+use ekubo::tests::store_packing_test::{assert_round_trip};
 
 fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
     let core = deploy_core();
@@ -41,6 +42,32 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, Pool
     };
 
     (core, ILimitOrdersDispatcher { contract_address: limit_orders.contract_address }, key)
+}
+
+#[test]
+fn test_round_trip_order_state() {
+    assert_round_trip(
+        OrderState { liquidity: Zeroable::zero(), ticks_crossed_at_create: Zeroable::zero() }
+    );
+
+    assert_round_trip(OrderState { liquidity: 0, ticks_crossed_at_create: 1 });
+    assert_round_trip(OrderState { liquidity: 1, ticks_crossed_at_create: 0 });
+    assert_round_trip(OrderState { liquidity: 1, ticks_crossed_at_create: 1 });
+
+    assert_round_trip(OrderState { liquidity: 1, ticks_crossed_at_create: 2 });
+    assert_round_trip(OrderState { liquidity: 2, ticks_crossed_at_create: 1 });
+    assert_round_trip(OrderState { liquidity: 0, ticks_crossed_at_create: 2 });
+    assert_round_trip(OrderState { liquidity: 2, ticks_crossed_at_create: 0 });
+    assert_round_trip(OrderState { liquidity: 2, ticks_crossed_at_create: 2 });
+}
+
+#[test]
+fn test_round_trip_pool_state() {
+    assert_round_trip(PoolState { ticks_crossed: 0, last_tick: Zeroable::zero() });
+    assert_round_trip(PoolState { ticks_crossed: 1, last_tick: Zeroable::zero() });
+    assert_round_trip(PoolState { ticks_crossed: 0, last_tick: i129 { mag: 1, sign: false } });
+    assert_round_trip(PoolState { ticks_crossed: 1, last_tick: i129 { mag: 1, sign: true } });
+    assert_round_trip(PoolState { ticks_crossed: 123, last_tick: i129 { mag: 0, sign: true } });
 }
 
 #[test]
@@ -211,6 +238,15 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     };
     lo.place_order(order_key, 100);
 
+    let position_key = PositionKey {
+        salt: 0,
+        owner: lo.contract_address,
+        bounds: Bounds { lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false } },
+    };
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
+    );
+
     t0.increase_balance(simple_swapper.contract_address, 200);
     let delta = simple_swapper
         .swap(
@@ -225,19 +261,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
             calculated_amount_threshold: 0
         );
 
-    let position = core
-        .get_position(
-            pk,
-            PositionKey {
-                salt: 0,
-                owner: lo.contract_address,
-                bounds: Bounds {
-                    lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false }
-                },
-            }
-        );
-
-    assert(position.liquidity.is_zero(), 'position liquidity pulled');
+    assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 }
 
 #[test]
@@ -254,6 +278,15 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     };
     lo.place_order(order_key, 100);
 
+    let position_key = PositionKey {
+        salt: 0,
+        owner: lo.contract_address,
+        bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+    };
+    assert(
+        core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
+    );
+
     t1.increase_balance(simple_swapper.contract_address, 200);
     let delta = simple_swapper
         .swap(
@@ -268,19 +301,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
             calculated_amount_threshold: 0
         );
 
-    delta.print();
-
-    let position = core
-        .get_position(
-            pk,
-            PositionKey {
-                salt: 0,
-                owner: lo.contract_address,
-                bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
-            }
-        );
-
-    assert(position.liquidity.is_zero(), 'position liquidity pulled');
+    assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 }
 
 #[test]
