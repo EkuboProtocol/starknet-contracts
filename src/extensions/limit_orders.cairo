@@ -60,7 +60,7 @@ impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
     fn unpack(value: felt252) -> PoolState {
         let x: u256 = value.into();
 
-        let last_tick = if x.low > 0x80000000000000000000000000000000 {
+        let last_tick = if x.low >= 0x80000000000000000000000000000000 {
             i129 { mag: x.low - 0x80000000000000000000000000000000, sign: true }
         } else {
             i129 { mag: x.low, sign: false }
