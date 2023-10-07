@@ -236,7 +236,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     let order_key = OrderKey {
         sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
     };
-    lo.place_order(order_key, 100);
+    let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
@@ -262,6 +262,11 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
         );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
+
+    let (amount0, amount1) = lo
+        .close_order(order_key, id, recipient: contract_address_const::<1>());
+    amount0.print();
+    amount1.print();
 }
 
 #[test]
@@ -276,7 +281,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     let order_key = OrderKey {
         sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
     };
-    lo.place_order(order_key, 100);
+    let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
@@ -302,6 +307,11 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
         );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
+
+    let (amount0, amount1) = lo
+        .close_order(order_key, id, recipient: contract_address_const::<1>());
+    amount0.print();
+    amount1.print();
 }
 
 #[test]

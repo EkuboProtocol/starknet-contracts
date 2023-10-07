@@ -107,6 +107,7 @@ mod LimitOrders {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
+    use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::types::bounds::{Bounds};
@@ -167,9 +168,17 @@ mod LimitOrders {
     }
 
     #[derive(Serde, Copy, Drop)]
+    struct WithdrawExecutedOrderBalance {
+        token: ContractAddress,
+        amount: u128,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         PlaceOrderCallbackData: PlaceOrderCallbackData,
         HandleAfterSwapCallbackData: HandleAfterSwapCallbackData,
+        WithdrawExecutedOrderBalance: WithdrawExecutedOrderBalance,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -402,10 +411,39 @@ mod LimitOrders {
                                 PoolState { ticks_crossed, last_tick: price_after_swap.tick }
                             );
                     }
+                },
+                LockCallbackData::WithdrawExecutedOrderBalance(withdraw) => {
+                    core.load(token: withdraw.token, salt: 0, amount: withdraw.amount);
+                    core
+                        .withdraw(
+                            token_address: withdraw.token,
+                            recipient: withdraw.recipient,
+                            amount: withdraw.amount
+                        );
                 }
             };
 
             ArrayTrait::new()
+        }
+    }
+
+    fn to_pool_key(order_key: OrderKey) -> PoolKey {
+        if (order_key.sell_token < order_key.buy_token) {
+            PoolKey {
+                token0: order_key.sell_token,
+                token1: order_key.buy_token,
+                fee: 0,
+                tick_spacing: 1,
+                extension: get_contract_address()
+            }
+        } else {
+            PoolKey {
+                token0: order_key.sell_token,
+                token1: order_key.buy_token,
+                fee: 0,
+                tick_spacing: 1,
+                extension: get_contract_address()
+            }
         }
     }
 
@@ -423,21 +461,12 @@ mod LimitOrders {
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
-            let (token0, token1, is_selling_token1) = if (order_key
-                .sell_token < order_key
-                .buy_token) {
-                (order_key.sell_token, order_key.buy_token, false)
-            } else {
-                (order_key.buy_token, order_key.sell_token, true)
-            };
+            let pool_key = to_pool_key(order_key);
+            let is_selling_token1 = order_key.sell_token == pool_key.token1;
 
-            // orders can only be placed on even ticks for selling token0, and odd ticks for selling token1
-            // this means we only care about crossing odd ticks in increasing price direction and even ticks in decreasing price direction 
+            // because of this constraint, the after swap handler can ignore any initialized ticks crossed that are not even, 
+            // which, in the absence of this constraint, can be the beginning OR end of positions.
             assert((order_key.tick.mag % 2 == 1) == is_selling_token1, 'TICK_EVEN_ODD');
-
-            let pool_key = PoolKey {
-                token0, token1, fee: 0, tick_spacing: 1, extension: get_contract_address()
-            };
 
             let core = self.core.read();
 
@@ -502,12 +531,61 @@ mod LimitOrders {
         ) -> (u128, u128) {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
-            nft.burn(id);
 
             let order = self.orders.read((order_key, id));
-            assert(order.liquidity.is_non_zero(), 'INVALID_ORDER');
+            assert(order.liquidity.is_non_zero(), 'INVALID_ORDER_KEY');
 
-            (0, 0)
+            nft.burn(id);
+
+            let pool_key = to_pool_key(order_key);
+
+            let core = self.core.read();
+
+            let ticks_crossed_at_order_tick = self
+                .ticks_crossed_last_crossing
+                .read((pool_key, order_key.tick));
+
+            // the order is fully executed, just withdraw the saved balance
+            if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
+                let sqrt_ratio_a = tick_to_sqrt_ratio(order_key.tick);
+                let sqrt_ratio_b = tick_to_sqrt_ratio(
+                    order_key.tick + i129 { mag: 1, sign: false }
+                );
+
+                let bought_token0 = order_key.buy_token == pool_key.token0;
+
+                let bought_amount = if bought_token0 {
+                    amount0_delta(
+                        sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                    )
+                } else {
+                    amount1_delta(
+                        sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                    )
+                };
+
+                call_core_with_callback::<
+                    LockCallbackData, ()
+                >(
+                    core,
+                    @LockCallbackData::WithdrawExecutedOrderBalance(
+                        WithdrawExecutedOrderBalance {
+                            token: order_key.buy_token, amount: bought_amount, recipient
+                        }
+                    )
+                );
+
+                if bought_token0 {
+                    (bought_amount, 0)
+                } else {
+                    (0, bought_amount)
+                }
+            } else {
+                // TODO: unexecuted order pulls liquidity at any price
+                assert(false, 'TODO');
+
+                (0, 0)
+            }
         }
 
         fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
