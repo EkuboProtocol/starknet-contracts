@@ -73,26 +73,26 @@ fn test_round_trip_pool_state() {
 #[test]
 fn test_order_key_hash() {
     let base: OrderKey = OrderKey {
-        sell_token: Zeroable::zero(), buy_token: Zeroable::zero(), tick: Zeroable::zero(),
+        token0: Zeroable::zero(), token1: Zeroable::zero(), tick: Zeroable::zero(),
     };
 
-    let mut other_sell = base;
-    other_sell.sell_token = contract_address_const::<1>();
+    let mut other_token0 = base;
+    other_token0.token0 = contract_address_const::<1>();
 
-    let mut other_buy = base;
-    other_buy.buy_token = contract_address_const::<1>();
+    let mut other_token1 = base;
+    other_token1.token1 = contract_address_const::<1>();
 
     let mut other_tick = base;
     other_tick.tick = i129 { mag: 1, sign: false };
 
-    check_hashes_differ(base, other_sell);
-    check_hashes_differ(base, other_buy);
+    check_hashes_differ(base, other_token0);
+    check_hashes_differ(base, other_token1);
     check_hashes_differ(base, other_tick);
 
-    check_hashes_differ(other_sell, other_buy);
-    check_hashes_differ(other_sell, other_tick);
+    check_hashes_differ(other_token0, other_token1);
+    check_hashes_differ(other_token0, other_tick);
 
-    check_hashes_differ(other_buy, other_tick);
+    check_hashes_differ(other_token1, other_tick);
 }
 
 #[test]
@@ -123,9 +123,7 @@ fn test_place_order_sell_token0_initializes_pool_above_tick() {
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey {
-        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
-    };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
     lo.place_order(order_key, 100);
     let price = core.get_pool_price(pk);
     assert(price.tick.is_zero() & price.sqrt_ratio.is_non_zero(), 'initialized');
@@ -139,7 +137,7 @@ fn test_place_order_sell_token1_initializes_pool_above_tick() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
     };
     lo.place_order(order_key, 100);
     let price = core.get_pool_price(pk);
@@ -156,7 +154,7 @@ fn test_place_order_token0_creates_position_at_tick() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 2, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false }
     };
     let id = lo.place_order(order_key, 100);
     assert(id == 1, 'id');
@@ -194,7 +192,7 @@ fn test_place_order_token1_creates_position_at_tick() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
     };
     let id = lo.place_order(order_key, 100);
     assert(id == 1, 'id');
@@ -234,7 +232,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
@@ -275,9 +273,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey {
-        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
-    };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
@@ -318,7 +314,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
@@ -363,9 +359,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey {
-        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
-    };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
@@ -411,7 +405,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
@@ -454,9 +448,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey {
-        sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero()
-    };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
@@ -491,44 +483,11 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 
 #[test]
 #[available_gas(3000000000)]
-#[should_panic(expected: ('TICK_EVEN_ODD', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_odd_tick_sell_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
-
-    lo
-        .place_order(
-            OrderKey {
-                sell_token: pk.token0, buy_token: pk.token1, tick: i129 { mag: 1, sign: false }
-            },
-            0
-        );
-}
-
-#[test]
-#[available_gas(3000000000)]
-#[should_panic(expected: ('TICK_EVEN_ODD', 'ENTRYPOINT_FAILED'))]
-fn test_place_order_fails_even_tick_sell_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
-
-    lo
-        .place_order(
-            OrderKey {
-                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 0, sign: false }
-            },
-            0
-        );
-}
-
-#[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_zero_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
 
-    lo
-        .place_order(
-            OrderKey { sell_token: pk.token0, buy_token: pk.token1, tick: Zeroable::zero() }, 0
-        );
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 0);
 }
 
 #[test]
@@ -539,9 +498,6 @@ fn test_place_order_fails_zero_token1() {
 
     lo
         .place_order(
-            OrderKey {
-                sell_token: pk.token1, buy_token: pk.token0, tick: i129 { mag: 1, sign: false }
-            },
-            0
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } }, 0
         );
 }

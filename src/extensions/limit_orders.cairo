@@ -6,8 +6,8 @@ use starknet::{StorePacking};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
-    sell_token: ContractAddress,
-    buy_token: ContractAddress,
+    token0: ContractAddress,
+    token1: ContractAddress,
     tick: i129,
 }
 
@@ -105,7 +105,6 @@ mod LimitOrders {
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
@@ -477,22 +476,12 @@ mod LimitOrders {
     }
 
     fn to_pool_key(order_key: OrderKey) -> PoolKey {
-        if (order_key.sell_token < order_key.buy_token) {
-            PoolKey {
-                token0: order_key.sell_token,
-                token1: order_key.buy_token,
-                fee: 0,
-                tick_spacing: 1,
-                extension: get_contract_address()
-            }
-        } else {
-            PoolKey {
-                token0: order_key.buy_token,
-                token1: order_key.sell_token,
-                fee: 0,
-                tick_spacing: 1,
-                extension: get_contract_address()
-            }
+        PoolKey {
+            token0: order_key.token0,
+            token1: order_key.token1,
+            fee: 0,
+            tick_spacing: 1,
+            extension: get_contract_address()
         }
     }
 
@@ -511,11 +500,7 @@ mod LimitOrders {
             let id = self.nft.read().mint(get_caller_address());
 
             let pool_key = to_pool_key(order_key);
-            let is_selling_token1 = order_key.sell_token == pool_key.token1;
-
-            // because of this constraint, the after swap handler can ignore any initialized ticks crossed that are not even, 
-            // which, in the absence of this constraint, can be the beginning OR end of positions.
-            assert((order_key.tick.mag % 2 == 1) == is_selling_token1, 'TICK_EVEN_ODD');
+            let is_selling_token1 = order_key.tick.mag % 2 == 1;
 
             let core = self.core.read();
 
@@ -594,14 +579,14 @@ mod LimitOrders {
 
             let core = self.core.read();
 
-            let buying_token0 = order_key.buy_token == pool_key.token0;
+            let is_selling_token1 = order_key.tick.mag % 2 == 1;
 
             let ticks_crossed_at_order_tick = self
                 .ticks_crossed_last_crossing
                 .read(
                     (
                         pool_key,
-                        if buying_token0 {
+                        if is_selling_token1 {
                             order_key.tick
                         } else {
                             order_key.tick + i129 { mag: 1, sign: false }
@@ -616,7 +601,7 @@ mod LimitOrders {
                     order_key.tick + i129 { mag: 1, sign: false }
                 );
 
-                let amount = if buying_token0 {
+                let amount = if is_selling_token1 {
                     amount0_delta(
                         sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
                     )
@@ -632,7 +617,13 @@ mod LimitOrders {
                     core,
                     @LockCallbackData::WithdrawExecutedOrderBalance(
                         WithdrawExecutedOrderBalance {
-                            token: order_key.buy_token, amount, recipient
+                            token: if is_selling_token1 {
+                                order_key.token0
+                            } else {
+                                order_key.token1
+                            },
+                            amount,
+                            recipient
                         }
                     )
                 );
