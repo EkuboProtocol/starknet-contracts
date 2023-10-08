@@ -340,8 +340,7 @@ mod LimitOrders {
                                     )
                             };
 
-                            if ((next_tick == price_after_swap.tick)
-                                | ((next_tick > price_after_swap.tick) == price_increasing)) {
+                            if ((next_tick > price_after_swap.tick) == price_increasing) {
                                 break ();
                             };
 
