@@ -198,9 +198,15 @@ mod LimitOrders {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct OrderClosed {
+        id: u64
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         OrderPlaced: OrderPlaced,
+        OrderClosed: OrderClosed,
     }
 
     #[external(v0)]
@@ -642,6 +648,8 @@ mod LimitOrders {
                     )
                 );
             }
+
+            self.emit(OrderClosed { id });
         }
 
         fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
