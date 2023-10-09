@@ -1,8 +1,8 @@
 use ekubo::types::i129::{i129, i129Trait};
-use starknet::{ContractAddress};
-use traits::{Into, TryInto};
 use integer::{u256_safe_divmod, u256_as_non_zero};
+use starknet::{ContractAddress};
 use starknet::{StorePacking};
+use traits::{Into, TryInto};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -107,8 +107,8 @@ mod LimitOrders {
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::types::bounds::{Bounds};

@@ -46,8 +46,8 @@ mod Quoter {
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-    use ekubo::shared_locker::{consume_callback_data};
     use ekubo::math::ticks::{sqrt_ratio_to_tick};
+    use ekubo::shared_locker::{consume_callback_data};
     use option::{OptionTrait};
     use result::{ResultTrait};
     use starknet::syscalls::{call_contract_syscall};
