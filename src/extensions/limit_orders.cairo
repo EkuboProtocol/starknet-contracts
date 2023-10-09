@@ -25,15 +25,12 @@ impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
     fn pack(value: OrderState) -> felt252 {
         u256 { low: value.liquidity, high: value.ticks_crossed_at_create.into() }
             .try_into()
-            .expect('PACK_ORDER_STATE_U256')
+            .unwrap()
     }
     fn unpack(value: felt252) -> OrderState {
         let x: u256 = value.into();
 
-        OrderState {
-            ticks_crossed_at_create: x.high.try_into().expect('UNPACK_ORDER_STATE_HIGH'),
-            liquidity: x.low
-        }
+        OrderState { ticks_crossed_at_create: x.high.try_into().unwrap(), liquidity: x.low }
     }
 }
 
@@ -58,7 +55,7 @@ impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
             }
         }
             .try_into()
-            .expect('PACK_POOL_STATE_U256')
+            .unwrap()
     }
     fn unpack(value: felt252) -> PoolState {
         let x: u256 = value.into();
