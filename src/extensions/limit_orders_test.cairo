@@ -213,6 +213,49 @@ fn test_place_order_sell_token1_initializes_pool_above_tick() {
 
 #[test]
 #[available_gas(3000000000)]
+fn test_place_order_on_both_sides_token1_first() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    t1.increase_balance(lo.contract_address, 100);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            100
+        );
+    t0.increase_balance(lo.contract_address, 200);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } },
+            200
+        );
+}
+#[test]
+#[available_gas(3000000000)]
+fn test_place_order_on_both_sides_token0_first() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+
+    t0.increase_balance(lo.contract_address, 200);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } },
+            200
+        );
+
+    t1.increase_balance(lo.contract_address, 100);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            100
+        );
+}
+
+#[test]
+#[available_gas(3000000000)]
 fn test_place_order_token0_creates_position_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
 
