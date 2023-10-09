@@ -16,7 +16,6 @@ use ekubo::tests::helper::{
     deploy_locker, deploy_simple_swapper
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
@@ -27,6 +26,7 @@ use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
+use ekubo::tests::store_packing_test::{assert_round_trip};
 
 fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
     let core = deploy_core();
@@ -287,6 +287,92 @@ fn test_place_order_token1_creates_position_at_tick() {
     assert(position.liquidity == (oi_1.liquidity + oi_2.liquidity), 'liquidity sum');
 }
 
+
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_combined_complex_scenario_swap_token0_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t1.increase_balance(lo.contract_address, 1000);
+    let ok_1 = OrderKey {
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+    };
+    let ok_3 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: true } };
+    let ok_5 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 3, sign: true } };
+    let id_1 = lo.place_order(ok_1, 100);
+    let id_2 = lo.place_order(ok_3, 50);
+    let id_3 = lo.place_order(ok_3, 250);
+    let id_4 = lo.place_order(ok_5, 100);
+
+    t0.increase_balance(simple_swapper.contract_address, 2000);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 2000, sign: false },
+                is_token1: false,
+                // halfway between -3 and -2
+                sqrt_ratio_limit: (tick_to_sqrt_ratio(i129 { mag: 3, sign: true }) * 10000005)
+                    / 10000000,
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    lo.close_order(ok_1, id_1, recipient: contract_address_const::<1>());
+    lo.close_order(ok_3, id_2, recipient: contract_address_const::<1>());
+    lo.close_order(ok_3, id_3, recipient: contract_address_const::<1>());
+    lo.close_order(ok_5, id_4, recipient: contract_address_const::<1>());
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_combined_complex_scenario_swap_token1_input() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t0.increase_balance(lo.contract_address, 1000);
+    let ok_1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: true } };
+    let ok_3 = OrderKey {
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 0, sign: false }
+    };
+    let ok_5 = OrderKey {
+        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false }
+    };
+    let id_1 = lo.place_order(ok_1, 100);
+    let id_2 = lo.place_order(ok_3, 50);
+    let id_3 = lo.place_order(ok_3, 250);
+    let id_4 = lo.place_order(ok_5, 100);
+
+    t1.increase_balance(simple_swapper.contract_address, 2000);
+    let delta = simple_swapper
+        .swap(
+            pool_key: pk,
+            swap_params: SwapParameters {
+                amount: i129 { mag: 2000, sign: false },
+                is_token1: true,
+                // halfway between -3 and -2
+                sqrt_ratio_limit: (tick_to_sqrt_ratio(i129 { mag: 1, sign: false }) * 10000005)
+                    / 10000000,
+                skip_ahead: 0,
+            },
+            recipient: contract_address_const::<1>(),
+            calculated_amount_threshold: 0
+        );
+
+    lo.close_order(ok_1, id_1, recipient: contract_address_const::<1>());
+    lo.close_order(ok_3, id_2, recipient: contract_address_const::<1>());
+    lo.close_order(ok_3, id_3, recipient: contract_address_const::<1>());
+    lo.close_order(ok_5, id_4, recipient: contract_address_const::<1>());
+}
+
+
 #[test]
 #[available_gas(3000000000)]
 fn test_limit_order_is_pulled_after_swap_token0_input() {
@@ -545,6 +631,43 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 
     lo.close_order(order_key, id, recipient: contract_address_const::<1>());
 }
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(
+    expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
+)]
+fn test_place_order_fails_wrong_side_token1() {
+    let (core, lo, pk) = setup_pool_with_extension();
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    t0.increase_balance(lo.contract_address, 100);
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            100
+        );
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(
+    expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
+)]
+fn test_place_order_fails_wrong_side_token0() {
+    let (core, lo, pk) = setup_pool_with_extension();
+
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+    t1.increase_balance(lo.contract_address, 100);
+    lo
+        .place_order(
+            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            100
+        );
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
+}
+
 
 #[test]
 #[available_gas(3000000000)]

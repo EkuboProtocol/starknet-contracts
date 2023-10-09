@@ -12,7 +12,6 @@ struct OrderKey {
 }
 
 // State of a particular order, defined by the key
-// TODO: define StorePacking for this
 #[derive(Drop, Copy, Serde, PartialEq)]
 struct OrderState {
     // the number of ticks crossed when this order was created
@@ -35,7 +34,6 @@ impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
 }
 
 // The state of the pool as it was last seen
-// TODO: define StorePacking for this
 #[derive(Drop, Copy, Serde, PartialEq)]
 struct PoolState {
     // the number of initialized ticks that have been crossed, minus 1
@@ -333,6 +331,7 @@ mod LimitOrders {
                     if (price_after_swap.tick != state.last_tick) {
                         let price_increasing = price_after_swap.tick > state.last_tick;
                         let mut tick_current = state.last_tick;
+                        let mut save_amount: u128 = 0;
 
                         loop {
                             let (next_tick, is_initialized) = if price_increasing {
@@ -384,29 +383,12 @@ mod LimitOrders {
                                         }
                                     );
 
-                                // todo: defer saving and just do it once for the total
-                                if price_increasing {
-                                    core
-                                        .save(
-                                            SavedBalanceKey {
-                                                owner: get_contract_address(),
-                                                token: after_swap.pool_key.token1,
-                                                salt: 0,
-                                            },
-                                            delta.amount1.mag
-                                        );
-                                } else {
-                                    core
-                                        .save(
-                                            SavedBalanceKey {
-                                                owner: get_contract_address(),
-                                                token: after_swap.pool_key.token0,
-                                                salt: 0,
-                                            },
-                                            delta.amount0.mag
-                                        );
-                                }
-
+                                save_amount +=
+                                    if price_increasing {
+                                        delta.amount1.mag
+                                    } else {
+                                        delta.amount0.mag
+                                    };
                                 ticks_crossed += 1;
                                 self
                                     .ticks_crossed_last_crossing
@@ -420,6 +402,22 @@ mod LimitOrders {
                                     next_tick - i129 { mag: 1, sign: false }
                                 };
                         };
+
+                        if (save_amount.is_non_zero()) {
+                            core
+                                .save(
+                                    SavedBalanceKey {
+                                        owner: get_contract_address(),
+                                        token: if price_increasing {
+                                            after_swap.pool_key.token1
+                                        } else {
+                                            after_swap.pool_key.token0
+                                        },
+                                        salt: 0,
+                                    },
+                                    save_amount
+                                );
+                        }
 
                         self
                             .pools
@@ -502,7 +500,7 @@ mod LimitOrders {
             let id = self.nft.read().mint(get_caller_address());
 
             let pool_key = to_pool_key(order_key);
-            let is_selling_token1 = order_key.tick.mag % 2 == 1;
+            let is_selling_token1 = (order_key.tick.mag % 2) == 1;
 
             let core = self.core.read();
 
