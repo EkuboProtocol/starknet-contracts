@@ -49,25 +49,30 @@ struct PoolState {
 
 impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
     fn pack(value: PoolState) -> felt252 {
-        let low: u128 = if value.last_tick.sign {
-            value.last_tick.mag + 0x80000000000000000000000000000000
-        } else {
-            value.last_tick.mag
-        };
-
-        u256 { low, high: value.ticks_crossed.into() }.try_into().expect('PACK_POOL_STATE_U256')
+        u256 {
+            low: value.last_tick.mag,
+            high: if value.last_tick.is_negative() {
+                value.ticks_crossed.into() + 0x10000000000000000
+            } else {
+                value.ticks_crossed.into()
+            }
+        }
+            .try_into()
+            .expect('PACK_POOL_STATE_U256')
     }
     fn unpack(value: felt252) -> PoolState {
         let x: u256 = value.into();
 
-        let last_tick = if x.low >= 0x80000000000000000000000000000000 {
-            i129 { mag: x.low - 0x80000000000000000000000000000000, sign: true }
+        if (x.high >= 0x10000000000000000) {
+            PoolState {
+                last_tick: i129 { mag: x.low, sign: true },
+                ticks_crossed: (x.high - 0x10000000000000000).try_into().unwrap()
+            }
         } else {
-            i129 { mag: x.low, sign: false }
-        };
-
-        PoolState {
-            last_tick, ticks_crossed: x.high.try_into().expect('UNPACK_POOL_STATE_TICKS_CROSSED')
+            PoolState {
+                last_tick: i129 { mag: x.low, sign: false },
+                ticks_crossed: x.high.try_into().unwrap()
+            }
         }
     }
 }

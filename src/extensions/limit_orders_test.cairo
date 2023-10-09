@@ -59,6 +59,24 @@ fn test_round_trip_order_state() {
     assert_round_trip(OrderState { liquidity: 0, ticks_crossed_at_create: 2 });
     assert_round_trip(OrderState { liquidity: 2, ticks_crossed_at_create: 0 });
     assert_round_trip(OrderState { liquidity: 2, ticks_crossed_at_create: 2 });
+    assert_round_trip(
+        OrderState {
+            liquidity: 0xffffffffffffffffffffffffffffffff,
+            ticks_crossed_at_create: 0xffffffffffffffff
+        }
+    );
+    assert_round_trip(
+        OrderState {
+            liquidity: 0xffffffffffffffffffffffffffffffff - 1,
+            ticks_crossed_at_create: 0xffffffffffffffff
+        }
+    );
+    assert_round_trip(
+        OrderState {
+            liquidity: 0xffffffffffffffffffffffffffffffff,
+            ticks_crossed_at_create: 0xffffffffffffffff - 1
+        }
+    );
 }
 
 #[test]
@@ -68,6 +86,53 @@ fn test_round_trip_pool_state() {
     assert_round_trip(PoolState { ticks_crossed: 0, last_tick: i129 { mag: 1, sign: false } });
     assert_round_trip(PoolState { ticks_crossed: 1, last_tick: i129 { mag: 1, sign: true } });
     assert_round_trip(PoolState { ticks_crossed: 123, last_tick: i129 { mag: 0, sign: true } });
+
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0xffffffffffffffff,
+            last_tick: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }
+        }
+    );
+
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0xffffffffffffffff,
+            last_tick: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false }
+        }
+    );
+
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0xffffffffffffffff,
+            last_tick: i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true }
+        }
+    );
+
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0xffffffffffffffff,
+            last_tick: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false }
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0xffffffffffffffff,
+            last_tick: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }
+        }
+    );
+
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0,
+            last_tick: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false }
+        }
+    );
+    assert_round_trip(
+        PoolState {
+            ticks_crossed: 0,
+            last_tick: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }
+        }
+    );
 }
 
 #[test]
