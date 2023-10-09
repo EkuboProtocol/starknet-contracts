@@ -16,6 +16,7 @@ use ekubo::tests::helper::{
     deploy_locker, deploy_simple_swapper
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
@@ -26,7 +27,6 @@ use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
-use ekubo::tests::store_packing_test::{assert_round_trip};
 
 fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
     let core = deploy_core();
@@ -231,6 +231,7 @@ fn test_place_order_on_both_sides_token1_first() {
             200
         );
 }
+
 #[test]
 #[available_gas(3000000000)]
 fn test_place_order_on_both_sides_token0_first() {

@@ -1,7 +1,6 @@
 use ekubo::types::i129::{i129, i129Trait};
 use integer::{u256_safe_divmod, u256_as_non_zero};
-use starknet::{ContractAddress};
-use starknet::{StorePacking};
+use starknet::{ContractAddress, StorePacking};
 use traits::{Into, TryInto};
 
 #[derive(Drop, Copy, Serde, Hash)]
@@ -105,15 +104,17 @@ mod LimitOrders {
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
     use option::{OptionTrait};
-    use starknet::{get_contract_address, get_caller_address, ClassHash};
+    use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState};
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
@@ -201,11 +202,27 @@ mod LimitOrders {
         id: u64
     }
 
+
+    #[derive(starknet::Event, Drop)]
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash,
+    }
+
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
+        ClassHashReplaced: ClassHashReplaced,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
+    }
+
+    #[external(v0)]
+    impl Upgradeable of IUpgradeable<ContractState> {
+        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
+            check_owner_only();
+            replace_class_syscall(class_hash);
+            self.emit(ClassHashReplaced { new_class_hash: class_hash });
+        }
     }
 
     #[external(v0)]
