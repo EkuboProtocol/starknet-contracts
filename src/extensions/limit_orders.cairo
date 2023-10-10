@@ -126,7 +126,6 @@ mod LimitOrders {
         pools: LegacyMap<PoolKey, PoolState>,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         ticks_crossed_last_crossing: LegacyMap<(PoolKey, i129), u64>,
-        reserves: LegacyMap<ContractAddress, u256>,
     }
 
     #[constructor]
