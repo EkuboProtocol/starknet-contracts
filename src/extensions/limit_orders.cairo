@@ -71,6 +71,20 @@ impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
     }
 }
 
+#[derive(Drop, Copy, Serde)]
+struct GetOrderInfoRequest {
+    order_key: OrderKey,
+    id: u64
+}
+
+#[derive(Drop, Copy, Serde)]
+struct GetOrderInfoResult {
+    state: OrderState,
+    executed: bool,
+    amount0: u128,
+    amount1: u128,
+}
+
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
@@ -78,6 +92,11 @@ trait ILimitOrders<TContractState> {
 
     // Returns the stored order state
     fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
+
+    // Return information on each of the given orders
+    fn get_order_info(
+        self: @TContractState, requests: Span<GetOrderInfoRequest>
+    ) -> Array<GetOrderInfoResult>;
 
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
     // The size of the new order is determined by the current balance of the sell token
@@ -106,6 +125,7 @@ mod LimitOrders {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owner::{check_owner_only};
@@ -115,7 +135,10 @@ mod LimitOrders {
     use ekubo::types::keys::{PoolKey, PositionKey};
     use option::{OptionTrait};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
-    use super::{ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState};
+    use super::{
+        ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
+        GetOrderInfoRequest, GetOrderInfoResult
+    };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
 
@@ -657,6 +680,100 @@ mod LimitOrders {
             }
 
             self.emit(OrderClosed { id });
+        }
+
+        fn get_order_info(
+            self: @ContractState, mut requests: Span<GetOrderInfoRequest>
+        ) -> Array<GetOrderInfoResult> {
+            let mut result: Array<GetOrderInfoResult> = ArrayTrait::new();
+
+            let core = self.core.read();
+
+            loop {
+                match requests.pop_front() {
+                    Option::Some(request) => {
+                        let is_selling_token1 = *request.order_key.tick.mag % 2 == 1;
+                        let pool_key = to_pool_key(*request.order_key);
+                        let price = core.get_pool_price(pool_key);
+
+                        assert(price.sqrt_ratio.is_non_zero(), 'INVALID_ORDER_KEY');
+
+                        let ticks_crossed_at_order_tick = self
+                            .ticks_crossed_last_crossing
+                            .read(
+                                (
+                                    pool_key,
+                                    if is_selling_token1 {
+                                        *request.order_key.tick
+                                    } else {
+                                        *request.order_key.tick + i129 { mag: 1, sign: false }
+                                    }
+                                )
+                            );
+
+                        let order = self.orders.read((*request.order_key, *request.id));
+
+                        // the order is fully executed, just withdraw the saved balance
+                        if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
+                            let sqrt_ratio_a = tick_to_sqrt_ratio(*request.order_key.tick);
+                            let sqrt_ratio_b = tick_to_sqrt_ratio(
+                                *request.order_key.tick + i129 { mag: 1, sign: false }
+                            );
+
+                            let (amount0, amount1) = if is_selling_token1 {
+                                (
+                                    amount0_delta(
+                                        sqrt_ratio_a,
+                                        sqrt_ratio_b,
+                                        liquidity: order.liquidity,
+                                        round_up: false
+                                    ),
+                                    0
+                                )
+                            } else {
+                                (
+                                    0,
+                                    amount1_delta(
+                                        sqrt_ratio_a,
+                                        sqrt_ratio_b,
+                                        liquidity: order.liquidity,
+                                        round_up: false
+                                    )
+                                )
+                            };
+
+                            result
+                                .append(
+                                    GetOrderInfoResult {
+                                        state: order, executed: true, amount0, amount1
+                                    }
+                                );
+                        } else {
+                            let delta = liquidity_delta_to_amount_delta(
+                                sqrt_ratio: price.sqrt_ratio,
+                                liquidity_delta: i129 { mag: order.liquidity, sign: true },
+                                sqrt_ratio_lower: tick_to_sqrt_ratio(*request.order_key.tick),
+                                sqrt_ratio_upper: tick_to_sqrt_ratio(
+                                    *request.order_key.tick + i129 { mag: 1, sign: false }
+                                )
+                            );
+
+                            result
+                                .append(
+                                    GetOrderInfoResult {
+                                        state: order,
+                                        executed: false,
+                                        amount0: delta.amount0.mag,
+                                        amount1: delta.amount1.mag
+                                    }
+                                );
+                        }
+                    },
+                    Option::None => { break (); }
+                };
+            };
+
+            result
         }
 
         fn clear(ref self: ContractState, token: ContractAddress) -> u256 {

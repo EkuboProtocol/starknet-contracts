@@ -3,7 +3,8 @@ use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
 use ekubo::extensions::limit_orders::{
-    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState
+    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
+    GetOrderInfoRequest, GetOrderInfoResult
 };
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
@@ -218,18 +219,30 @@ fn test_place_order_on_both_sides_token1_first() {
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+
+    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
+    let ok2 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } };
+
     t1.increase_balance(lo.contract_address, 100);
-    lo
-        .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
-            100
-        );
+    let id1 = lo.place_order(ok1, 100);
     t0.increase_balance(lo.contract_address, 200);
-    lo
-        .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } },
-            200
-        );
+    let id2 = lo.place_order(ok2, 200);
+
+    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
+    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
+    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
+    let mut results = lo.get_order_info(arr.span());
+
+    let status1 = results.pop_front().unwrap();
+    let status2 = results.pop_front().unwrap();
+    assert(results.is_empty(), 'results empty');
+    assert(!status1.executed, '1.executed');
+    assert(status1.amount0 == 0, '1.amount0');
+    assert(status1.amount1 == 99, '1.amount1');
+
+    assert(!status2.executed, '2.executed');
+    assert(status2.amount0 == 199, '2.amount0');
+    assert(status2.amount1 == 0, '2.amount1');
 }
 
 #[test]
@@ -237,22 +250,33 @@ fn test_place_order_on_both_sides_token1_first() {
 fn test_place_order_on_both_sides_token0_first() {
     let (core, lo, pk) = setup_pool_with_extension();
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
+
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
 
-    t0.increase_balance(lo.contract_address, 200);
-    lo
-        .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } },
-            200
-        );
+    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } };
+    let ok2 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
 
-    t1.increase_balance(lo.contract_address, 100);
-    lo
-        .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
-            100
-        );
+    t0.increase_balance(lo.contract_address, 100);
+    let id1 = lo.place_order(ok1, 100);
+    t1.increase_balance(lo.contract_address, 200);
+    let id2 = lo.place_order(ok2, 200);
+
+    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
+    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
+    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
+    let mut results = lo.get_order_info(arr.span());
+
+    let status1 = results.pop_front().unwrap();
+    let status2 = results.pop_front().unwrap();
+    assert(results.is_empty(), 'results empty');
+    assert(!status1.executed, '1.executed');
+    assert(status1.amount0 == 99, '1.amount0');
+    assert(status1.amount1 == 0, '1.amount1');
+
+    assert(!status2.executed, '2.executed');
+    assert(status2.amount0 == 0, '2.amount0');
+    assert(status2.amount1 == 199, '2.amount1');
 }
 
 #[test]
