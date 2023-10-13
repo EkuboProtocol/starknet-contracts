@@ -166,7 +166,7 @@ mod Quoter {
                     pool_key, sqrt_ratio
                 )) => {
                     let current_pool_price = core.get_pool_price(pool_key);
-                    let skip_ahead: u32 = ((current_pool_price.tick
+                    let skip_ahead: u128 = ((current_pool_price.tick
                         - sqrt_ratio_to_tick(sqrt_ratio))
                         .mag
                         / (pool_key.tick_spacing * 127_u128))

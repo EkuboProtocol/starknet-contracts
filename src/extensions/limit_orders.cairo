@@ -186,7 +186,7 @@ mod LimitOrders {
     #[derive(Serde, Copy, Drop)]
     struct HandleAfterSwapCallbackData {
         pool_key: PoolKey,
-        skip_ahead: u32,
+        skip_ahead: u128,
     }
 
     #[derive(Serde, Copy, Drop)]
