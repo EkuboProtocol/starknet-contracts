@@ -212,10 +212,7 @@ trait ICore<TStorage> {
     // You must call this within a lock callback.
     fn swap(ref self: TStorage, pool_key: PoolKey, params: SwapParameters) -> Delta;
 
-    // Accumulates tokens to fees of a pool. 
-    // This is useful for extensions, e.g. extensions that do arbitrage based on external data and want to return profits to in-range LPs
+    // Accumulates tokens to fees of a pool. Only callable by the extension of the specified pool key, i.e. the current locker _must_ be the extension.
     // You must call this within a lock callback.
-    fn accumulate_as_fees(
-        ref self: TStorage, pool_key: PoolKey, amount0: u128, amount1: u128
-    ) -> Delta;
+    fn accumulate_as_fees(ref self: TStorage, pool_key: PoolKey, amount0: u128, amount1: u128);
 }

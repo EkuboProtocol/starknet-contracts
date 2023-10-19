@@ -230,9 +230,11 @@ fn deploy_positions(core: ICoreDispatcher) -> IPositionsDispatcher {
 fn setup_pool(
     fee: u128, tick_spacing: u128, initial_tick: i129, extension: ContractAddress
 ) -> SetupPoolResult {
+    let core = deploy_core();
+    let locker = deploy_locker(core);
     let (token0, token1) = deploy_two_mock_tokens();
 
-    let pool_key: PoolKey = PoolKey {
+    let pool_key = PoolKey {
         token0: token0.contract_address,
         token1: token1.contract_address,
         fee,
@@ -240,15 +242,7 @@ fn setup_pool(
         extension
     };
 
-    let core = deploy_core();
-
-    let address = get_contract_address();
-    set_contract_address(contract_address_const::<0x01234567>());
-    set_contract_address(address);
-
     core.initialize_pool(pool_key, initial_tick);
-
-    let locker = deploy_locker(core);
 
     SetupPoolResult { token0, token1, pool_key, core, locker }
 }
@@ -414,7 +408,7 @@ fn update_position(
 }
 
 
-fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) -> Delta {
+fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) {
     accumulate_as_fees_inner(setup.core, setup.pool_key, setup.locker, amount0, amount1)
 }
 
@@ -424,33 +418,15 @@ fn accumulate_as_fees_inner(
     locker: ICoreLockerDispatcher,
     amount0: u128,
     amount1: u128,
-) -> Delta {
+) {
     match locker.call(Action::AccumulateAsFees((pool_key, amount0, amount1))) {
-        ActionResult::AssertLockerId => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::Relock => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::UpdatePosition(_) => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::Swap(delta) => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::SaveBalance(_) => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::LoadBalance(_) => {
-            assert(false, 'unexpected');
-            Zeroable::zero()
-        },
-        ActionResult::AccumulateAsFees(delta) => { delta }
+        ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
+        ActionResult::Relock => { assert(false, 'unexpected'); },
+        ActionResult::UpdatePosition(_) => { assert(false, 'unexpected'); },
+        ActionResult::Swap(delta) => { assert(false, 'unexpected'); },
+        ActionResult::SaveBalance(_) => { assert(false, 'unexpected'); },
+        ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
+        ActionResult::AccumulateAsFees => {}
     }
 }
 

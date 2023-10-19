@@ -126,6 +126,13 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct FeesAccumulated {
+        pool_key: PoolKey,
+        amount0: u128,
+        amount1: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
     struct SavedBalance {
         key: SavedBalanceKey,
         amount: u128,
@@ -136,6 +143,7 @@ mod Core {
         key: SavedBalanceKey,
         amount: u128,
     }
+
 
     #[derive(starknet::Event, Drop)]
     #[event]
@@ -149,6 +157,7 @@ mod Core {
         Swapped: Swapped,
         SavedBalance: SavedBalance,
         LoadedBalance: LoadedBalance,
+        FeesAccumulated: FeesAccumulated,
     }
 
     #[generate_trait]
@@ -909,8 +918,12 @@ mod Core {
 
         fn accumulate_as_fees(
             ref self: ContractState, pool_key: PoolKey, amount0: u128, amount1: u128
-        ) -> Delta {
-            let (id, _) = self.require_locker();
+        ) {
+            let (id, locker) = self.require_locker();
+
+            // This method is only allowed for the extension of a pool,
+            // because otherwise it complicates extension implementation considerably
+            assert(locker == pool_key.extension, 'NOT_EXTENSION');
 
             self
                 .pool_fees
@@ -922,14 +935,17 @@ mod Core {
                         )
                 );
 
-            let delta = Delta {
-                amount0: i129 { mag: amount0, sign: false },
-                amount1: i129 { mag: amount1, sign: false },
-            };
+            self
+                .account_pool_delta(
+                    id,
+                    pool_key,
+                    Delta {
+                        amount0: i129 { mag: amount0, sign: false },
+                        amount1: i129 { mag: amount1, sign: false },
+                    }
+                );
 
-            self.account_pool_delta(id, pool_key, delta);
-
-            delta
+            self.emit(FeesAccumulated { pool_key, amount0, amount1, });
         }
     }
 }

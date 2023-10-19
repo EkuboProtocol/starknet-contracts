@@ -367,7 +367,7 @@ fn test_deposit_then_withdraw_with_fees() {
 #[test]
 #[available_gas(100000000)]
 fn test_deposit_then_partial_withdraw_with_fees() {
-    let caller = contract_address_const::<1>();
+    let caller = contract_address_const::<12345678>();
     set_contract_address(caller);
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT,

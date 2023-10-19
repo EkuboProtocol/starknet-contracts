@@ -1,5 +1,5 @@
 use array::{ArrayTrait};
-use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta};
+use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta, IExtension};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
@@ -28,7 +28,7 @@ enum ActionResult {
     Swap: Delta,
     SaveBalance: u128,
     LoadBalance: u128,
-    AccumulateAsFees: Delta,
+    AccumulateAsFees: (),
 }
 
 #[starknet::interface]
@@ -48,9 +48,11 @@ mod CoreLocker {
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
     };
+    use ekubo::types::call_points::{CallPoints};
     use super::{
         Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129, ICoreLocker
+        ICoreLockerDispatcherTrait, i129, ICoreLocker, IExtension, SwapParameters,
+        UpdatePositionParameters, PoolKey
     };
 
     #[storage]
@@ -82,6 +84,56 @@ mod CoreLocker {
                 // withdraw to recipient
                 core.withdraw(token, recipient, delta.mag);
             }
+        }
+    }
+
+    #[external(v0)]
+    impl ExtensionImpl of IExtension<ContractState> {
+        fn before_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ) -> CallPoints {
+            Default::default()
+        }
+        fn after_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ) {
+            assert(false, 'never called');
+        }
+
+        fn before_swap(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters
+        ) {
+            assert(false, 'never called');
+        }
+        fn after_swap(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: SwapParameters,
+            delta: Delta
+        ) {
+            assert(false, 'never called');
+        }
+
+        fn before_update_position(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: UpdatePositionParameters
+        ) {
+            assert(false, 'never called');
+        }
+        fn after_update_position(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            params: UpdatePositionParameters,
+            delta: Delta
+        ) {
+            assert(false, 'never called');
         }
     }
 
@@ -255,23 +307,24 @@ mod CoreLocker {
                 Action::AccumulateAsFees((
                     pool_key, amount0, amount1
                 )) => {
-                    let delta = core.accumulate_as_fees(pool_key, amount0, amount1);
-
-                    assert(delta.amount0.mag == amount0, 'delta0.amount');
-                    assert(!delta.amount0.sign, 'delta0.sign');
-                    assert(delta.amount1.mag == amount1, 'delta1.amount');
-                    assert(!delta.amount1.sign, 'delta1.sign');
+                    core.accumulate_as_fees(pool_key, amount0, amount1);
 
                     self
                         .handle_delta(
-                            core, pool_key.token0, delta.amount0, contract_address_const::<0>()
+                            core,
+                            pool_key.token0,
+                            i129 { mag: amount0, sign: false },
+                            contract_address_const::<0>()
                         );
                     self
                         .handle_delta(
-                            core, pool_key.token1, delta.amount1, contract_address_const::<0>()
+                            core,
+                            pool_key.token1,
+                            i129 { mag: amount1, sign: false },
+                            contract_address_const::<0>()
                         );
 
-                    ActionResult::AccumulateAsFees(delta)
+                    ActionResult::AccumulateAsFees
                 }
             };
 

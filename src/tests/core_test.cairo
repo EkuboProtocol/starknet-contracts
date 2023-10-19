@@ -662,8 +662,11 @@ mod locks {
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable,
-        accumulate_as_fees, max_bounds
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, PoolKey,
+        accumulate_as_fees, max_bounds, deploy_core
+    };
+    use ekubo::tests::helper::{
+        deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
     };
 
     #[test]
@@ -900,7 +903,16 @@ mod locks {
 
     #[test]
     #[available_gas(500000000)]
-    fn test_accumulate_fees_per_liquidity() {
+    #[should_panic(
+        expected: (
+            'NOT_EXTENSION',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_accumulate_fees_per_liquidity_not_extension() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
@@ -926,12 +938,48 @@ mod locks {
         );
 
         accumulate_as_fees(setup: setup, amount0: 2, amount1: 3);
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_accumulate_fees_per_liquidity_success() {
+        let core = deploy_core();
+        let (token0, token1) = deploy_two_mock_tokens();
+        let locker = deploy_locker(core);
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            extension: locker.contract_address,
+        };
+
+        core.initialize_pool(pool_key, Zeroable::zero());
+
+        token0.increase_balance(locker.contract_address, 10000000);
+        token1.increase_balance(locker.contract_address, 10000000);
+
+        // add 1 liquidity
+        update_position_inner(
+            core,
+            pool_key,
+            locker,
+            bounds: Bounds {
+                lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
+            },
+            liquidity_delta: i129 { mag: 1, sign: false },
+            recipient: contract_address_const::<42>()
+        );
+        assert(core.get_pool_liquidity(pool_key) == 1, 'liquidity');
+        assert(core.get_pool_fees_per_liquidity(pool_key).is_zero(), 'fees_per_liquidity');
+
+        accumulate_as_fees_inner(core, pool_key, locker, amount0: 2, amount1: 3);
 
         assert(
-            setup
-                .core
+            core
                 .get_pool_fees_per_liquidity(
-                    setup.pool_key
+                    pool_key
                 ) == FeesPerLiquidity {
                     value0: 680564733841876926926749214863536422912,
                     value1: 1020847100762815390390123822295304634368
