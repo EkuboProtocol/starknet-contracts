@@ -42,13 +42,13 @@ mod CoreLocker {
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::types::call_points::{CallPoints};
 
     use option::{Option, OptionTrait};
     use serde::Serde;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
     };
-    use ekubo::types::call_points::{CallPoints};
     use super::{
         Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, ICoreLocker, IExtension, SwapParameters,

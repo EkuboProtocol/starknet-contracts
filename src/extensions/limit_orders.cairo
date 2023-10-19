@@ -85,6 +85,12 @@ struct GetOrderInfoResult {
     amount1: u128,
 }
 
+#[derive(Drop, Copy, Serde)]
+struct CloseOrderResult {
+    amount0: u128,
+    amount1: u128,
+}
+
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
@@ -105,7 +111,7 @@ trait ILimitOrders<TContractState> {
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-    );
+    ) -> CloseOrderResult;
 
     // Clear the token balance held by this contract
     // This contract is non-custodial, i.e. never holds a balance on behalf of a user
@@ -129,7 +135,7 @@ mod LimitOrders {
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owner::{check_owner_only};
-    use ekubo::shared_locker::{call_core_with_callback};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
@@ -137,7 +143,7 @@ mod LimitOrders {
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
-        GetOrderInfoRequest, GetOrderInfoResult
+        GetOrderInfoRequest, GetOrderInfoResult, CloseOrderResult
     };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
@@ -210,6 +216,12 @@ mod LimitOrders {
         HandleAfterSwapCallbackData: HandleAfterSwapCallbackData,
         WithdrawExecutedOrderBalance: WithdrawExecutedOrderBalance,
         WithdrawUnexecutedOrderBalance: WithdrawUnexecutedOrderBalance,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    enum LockCallbackResult {
+        Empty: (),
+        Delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -324,14 +336,9 @@ mod LimitOrders {
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
-            assert(core.contract_address == get_caller_address(), 'CALLER_IS_CORE');
 
-            let mut data_span = data.span();
-
-            let callback_data = Serde::<LockCallbackData>::deserialize(ref data_span)
-                .expect('LOCK_CALLBACK_DESERIALIZE');
-
-            match callback_data {
+            let result: LockCallbackResult =
+                match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::PlaceOrderCallbackData(place_order) => {
                     let delta = core
                         .update_position(
@@ -361,6 +368,8 @@ mod LimitOrders {
                     if (paid_amount > pay_amount) {
                         core.withdraw(pay_token, get_contract_address(), paid_amount - pay_amount);
                     }
+
+                    LockCallbackResult::Empty
                 },
                 LockCallbackData::HandleAfterSwapCallbackData(after_swap) => {
                     let price_after_swap = core.get_pool_price(after_swap.pool_key);
@@ -465,6 +474,8 @@ mod LimitOrders {
                                 PoolState { ticks_crossed, last_tick: price_after_swap.tick }
                             );
                     }
+
+                    LockCallbackResult::Empty
                 },
                 LockCallbackData::WithdrawExecutedOrderBalance(withdraw) => {
                     core.load(token: withdraw.token, salt: 0, amount: withdraw.amount);
@@ -474,6 +485,7 @@ mod LimitOrders {
                             recipient: withdraw.recipient,
                             amount: withdraw.amount
                         );
+                    LockCallbackResult::Empty
                 },
                 LockCallbackData::WithdrawUnexecutedOrderBalance(withdraw) => {
                     let delta = core
@@ -507,10 +519,14 @@ mod LimitOrders {
                                 amount: delta.amount1.mag
                             );
                     }
+
+                    LockCallbackResult::Delta(delta)
                 }
             };
 
-            ArrayTrait::new()
+            let mut result_data = ArrayTrait::new();
+            Serde::serialize(@result, ref result_data);
+            result_data
         }
     }
 
@@ -601,7 +617,7 @@ mod LimitOrders {
 
         fn close_order(
             ref self: ContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-        ) {
+        ) -> CloseOrderResult {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
@@ -634,19 +650,26 @@ mod LimitOrders {
                 );
 
             // the order is fully executed, just withdraw the saved balance
-            if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
+            let (amount0, amount1) = if (ticks_crossed_at_order_tick > order
+                .ticks_crossed_at_create) {
                 let sqrt_ratio_a = tick_to_sqrt_ratio(order_key.tick);
                 let sqrt_ratio_b = tick_to_sqrt_ratio(
                     order_key.tick + i129 { mag: 1, sign: false }
                 );
 
-                let amount = if is_selling_token1 {
-                    amount0_delta(
-                        sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                let (amount0, amount1) = if is_selling_token1 {
+                    (
+                        amount0_delta(
+                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                        ),
+                        0_u128
                     )
                 } else {
-                    amount1_delta(
-                        sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                    (
+                        0_u128,
+                        amount1_delta(
+                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                        )
                     )
                 };
 
@@ -655,20 +678,22 @@ mod LimitOrders {
                 >(
                     core,
                     @LockCallbackData::WithdrawExecutedOrderBalance(
-                        WithdrawExecutedOrderBalance {
-                            token: if is_selling_token1 {
-                                order_key.token0
-                            } else {
-                                order_key.token1
-                            },
-                            amount,
-                            recipient
+                        if is_selling_token1 {
+                            WithdrawExecutedOrderBalance {
+                                token: order_key.token0, amount: amount0, recipient,
+                            }
+                        } else {
+                            WithdrawExecutedOrderBalance {
+                                token: order_key.token1, amount: amount1, recipient,
+                            }
                         }
                     )
                 );
+
+                (amount0, amount1)
             } else {
-                call_core_with_callback::<
-                    LockCallbackData, ()
+                match call_core_with_callback::<
+                    LockCallbackData, LockCallbackResult
                 >(
                     core,
                     @LockCallbackData::WithdrawUnexecutedOrderBalance(
@@ -676,10 +701,18 @@ mod LimitOrders {
                             pool_key, tick: order_key.tick, liquidity: order.liquidity, recipient
                         }
                     )
-                );
-            }
+                ) {
+                    LockCallbackResult::Empty => {
+                        assert(false, 'EMPTY_RESULT');
+                        (0, 0)
+                    },
+                    LockCallbackResult::Delta(delta) => { (delta.amount0.mag, delta.amount1.mag) }
+                }
+            };
 
             self.emit(OrderClosed { id });
+
+            CloseOrderResult { amount0, amount1 }
         }
 
         fn get_order_info(

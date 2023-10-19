@@ -657,6 +657,9 @@ mod locks {
     use debug::PrintTrait;
 
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::tests::helper::{
+        deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
+    };
     use super::{
         FeesPerLiquidity, setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult,
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
@@ -664,9 +667,6 @@ mod locks {
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, PoolKey,
         accumulate_as_fees, max_bounds, deploy_core
-    };
-    use ekubo::tests::helper::{
-        deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
     };
 
     #[test]

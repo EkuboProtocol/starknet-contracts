@@ -702,6 +702,123 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 
 #[test]
 #[available_gas(3000000000)]
+fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+
+    t0.increase_balance(lo.contract_address, 100);
+    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let id1 = lo.place_order(ok1, 100);
+
+    t1.increase_balance(simple_swapper.contract_address, 200);
+    assert(
+        simple_swapper
+            .swap(
+                pool_key: pk,
+                swap_params: SwapParameters {
+                    amount: i129 { mag: 200, sign: false },
+                    is_token1: true,
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                    skip_ahead: 0,
+                },
+                recipient: contract_address_const::<1>(),
+                calculated_amount_threshold: 0
+            )
+            .is_non_zero(),
+        'swap forward'
+    );
+    assert(
+        simple_swapper
+            .swap(
+                pool_key: pk,
+                swap_params: SwapParameters {
+                    amount: i129 { mag: 200, sign: false },
+                    is_token1: false,
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                    skip_ahead: 0,
+                },
+                recipient: contract_address_const::<1>(),
+                calculated_amount_threshold: 0
+            )
+            .is_zero(),
+        'zero swap back'
+    );
+
+    t0.increase_balance(lo.contract_address, 100);
+    let id2 = lo.place_order(ok1, 100);
+
+    let co1 = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
+    assert(co1.amount0 == 0, 'co1.amount0');
+    assert(co1.amount1 == 100, 'co1.amount1');
+
+    let co2 = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
+    assert(co2.amount0 == 99, 'co2.amount0');
+    assert(co2.amount1 == 0, 'co2.amount1');
+}
+#[test]
+#[available_gas(3000000000)]
+fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
+    let (core, lo, pk) = setup_pool_with_extension();
+    let simple_swapper = deploy_simple_swapper(core);
+
+    let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
+    let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
+
+    t1.increase_balance(lo.contract_address, 100);
+    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
+    let id1 = lo.place_order(ok1, 100);
+
+    t0.increase_balance(simple_swapper.contract_address, 200);
+    assert(
+        simple_swapper
+            .swap(
+                pool_key: pk,
+                swap_params: SwapParameters {
+                    amount: i129 { mag: 200, sign: false },
+                    is_token1: false,
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                    skip_ahead: 0,
+                },
+                recipient: contract_address_const::<1>(),
+                calculated_amount_threshold: 0
+            )
+            .is_non_zero(),
+        'swap forward'
+    );
+    assert(
+        simple_swapper
+            .swap(
+                pool_key: pk,
+                swap_params: SwapParameters {
+                    amount: i129 { mag: 200, sign: false },
+                    is_token1: true,
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                    skip_ahead: 0,
+                },
+                recipient: contract_address_const::<1>(),
+                calculated_amount_threshold: 0
+            )
+            .is_zero(),
+        'zero swap back'
+    );
+
+    t1.increase_balance(lo.contract_address, 100);
+    let id2 = lo.place_order(ok1, 100);
+
+    let co1 = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
+    assert(co1.amount0 == 99, 'co1.amount0');
+    assert(co1.amount1 == 0, 'co1.amount1');
+
+    let co2 = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
+    assert(co2.amount0 == 0, 'co2.amount0');
+    assert(co2.amount1 == 99, 'co2.amount1');
+}
+
+#[test]
+#[available_gas(3000000000)]
 #[should_panic(
     expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
 )]
