@@ -85,7 +85,7 @@ struct GetOrderInfoResult {
     amount1: u128,
 }
 
-#[derive(Drop, Copy, Serde)]
+#[derive(Drop, Copy, Serde, PartialEq, Zeroable)]
 struct CloseOrderResult {
     amount0: u128,
     amount1: u128,
