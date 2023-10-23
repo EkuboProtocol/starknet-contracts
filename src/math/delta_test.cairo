@@ -30,7 +30,7 @@ fn test_ordered_non_zero_panics_zero_both() {
 fn test_amount0_delta_price_down() {
     let delta = amount0_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         false
     );
@@ -41,7 +41,7 @@ fn test_amount0_delta_price_down() {
 #[test]
 fn test_amount0_delta_price_down_reverse() {
     let delta = amount0_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
         1000000,
         false
@@ -52,7 +52,7 @@ fn test_amount0_delta_price_down_reverse() {
 #[test]
 fn test_amount0_delta_price_example_down() {
     let delta = amount0_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 34028236692093846346337460743176821145, high: 1 },
         1000000000000000000,
         false
@@ -63,7 +63,7 @@ fn test_amount0_delta_price_example_down() {
 #[test]
 fn test_amount0_delta_price_example_up() {
     let delta = amount0_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 34028236692093846346337460743176821145, high: 1 },
         1000000000000000000,
         true
@@ -76,7 +76,7 @@ fn test_amount0_delta_price_example_up() {
 fn test_amount0_delta_price_up() {
     let delta = amount0_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         false
     );
@@ -87,7 +87,7 @@ fn test_amount0_delta_price_up() {
 fn test_amount0_delta_price_down_round_up() {
     let delta = amount0_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         true
     );
@@ -98,7 +98,7 @@ fn test_amount0_delta_price_down_round_up() {
 fn test_amount0_delta_price_up_round_up() {
     let delta = amount0_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         true
     );
@@ -109,7 +109,7 @@ fn test_amount0_delta_price_up_round_up() {
 fn test_amount1_delta_price_down() {
     let delta = amount1_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         false
     );
@@ -119,7 +119,7 @@ fn test_amount1_delta_price_down() {
 #[test]
 fn test_amount1_delta_price_down_reverse() {
     let delta = amount1_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
         1000000,
         false
@@ -131,7 +131,7 @@ fn test_amount1_delta_price_down_reverse() {
 fn test_amount1_delta_price_up() {
     let delta = amount1_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         false
     );
@@ -142,7 +142,7 @@ fn test_amount1_delta_price_up() {
 #[test]
 fn test_amount1_delta_price_example_down() {
     let delta = amount1_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 309347606291762239512158734028880192232, high: 0 },
         1000000000000000000,
         false
@@ -154,7 +154,7 @@ fn test_amount1_delta_price_example_down() {
 #[test]
 fn test_amount1_delta_price_example_up() {
     let delta = amount1_delta(
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 309347606291762239512158734028880192232, high: 0 },
         1000000000000000000,
         true
@@ -167,7 +167,7 @@ fn test_amount1_delta_price_example_up() {
 fn test_amount1_delta_price_down_round_up() {
     let delta = amount1_delta(
         u256 { low: 339942424496442021441932674757011200255, high: 0 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         true
     );
@@ -178,7 +178,7 @@ fn test_amount1_delta_price_down_round_up() {
 fn test_amount1_delta_price_up_round_up() {
     let delta = amount1_delta(
         u256 { low: 340622989910849312776150758189957120, high: 1 },
-        u256 { high: 1, low: 0 },
+        0x100000000000000000000000000000000_u256,
         1000000,
         true
     );
@@ -200,7 +200,7 @@ fn test_amount1_delta_overflow_entire_price_range_max_liquidity() {
 fn test_amount1_delta_no_overflow_half_price_range_half_liquidity() {
     assert(
         amount1_delta(
-            sqrt_ratio_a: u256 { low: 0, high: 1 },
+            sqrt_ratio_a: 0x100000000000000000000000000000000_u256,
             sqrt_ratio_b: max_sqrt_ratio(),
             liquidity: 0xffffffffffffffff,
             round_up: false

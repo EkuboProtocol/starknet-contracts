@@ -106,7 +106,7 @@ fn test_mock_extension_swap_is_called() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -177,7 +177,7 @@ fn test_mock_extension_no_call_points() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -222,7 +222,7 @@ fn test_mock_extension_after_initialize_pool_only() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -268,7 +268,7 @@ fn test_mock_extension_before_swap_only() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -313,7 +313,7 @@ fn test_mock_extension_after_swap_only() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -359,7 +359,7 @@ fn test_mock_extension_before_update_position_only() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );
@@ -404,7 +404,7 @@ fn test_mock_extension_after_update_position_only() {
         locker: locker,
         amount: i129 { mag: 1, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { low: 0, high: 1 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0,
     );

@@ -34,10 +34,10 @@ fn test_is_price_increasing_cases() {
 fn test_no_op_swap_result() {
     assert(
         no_op_swap_result(
-            u256 { low: 0, high: 0 }
+            0_u256
         ) == SwapResult {
             consumed_amount: Zeroable::zero(),
-            sqrt_ratio_next: u256 { low: 0, high: 0 },
+            sqrt_ratio_next: 0_u256,
             calculated_amount: Zeroable::zero(),
             fee_amount: Zeroable::zero(),
         },
@@ -45,10 +45,10 @@ fn test_no_op_swap_result() {
     );
     assert(
         no_op_swap_result(
-            u256 { low: 1, high: 0 }
+            1_u256
         ) == SwapResult {
             consumed_amount: Zeroable::zero(),
-            sqrt_ratio_next: u256 { low: 1, high: 0 },
+            sqrt_ratio_next: 1_u256,
             calculated_amount: Zeroable::zero(),
             fee_amount: Zeroable::zero(),
         },
@@ -56,10 +56,10 @@ fn test_no_op_swap_result() {
     );
     assert(
         no_op_swap_result(
-            u256 { low: 0, high: 1 }
+            0x100000000000000000000000000000000_u256
         ) == SwapResult {
             consumed_amount: Zeroable::zero(),
-            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
             calculated_amount: Zeroable::zero(),
             fee_amount: Zeroable::zero(),
         },
@@ -82,7 +82,7 @@ fn test_no_op_swap_result() {
 fn test_swap_zero_amount_token0() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: u256 { high: 0, low: 0 },
             amount: Zeroable::zero(),
@@ -90,7 +90,7 @@ fn test_swap_zero_amount_token0() {
             fee: 0,
         ) == SwapResult {
             consumed_amount: Zeroable::zero(),
-            sqrt_ratio_next: u256 { high: 1, low: 0 },
+            sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
             calculated_amount: Zeroable::zero(),
             fee_amount: Zeroable::zero(),
         },
@@ -101,7 +101,7 @@ fn test_swap_zero_amount_token0() {
 #[test]
 fn test_swap_zero_amount_token1() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 2, low: 0 },
         amount: Zeroable::zero(),
@@ -110,7 +110,7 @@ fn test_swap_zero_amount_token1() {
     );
 
     assert(result.consumed_amount.is_zero(), 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
+    assert(result.sqrt_ratio_next == 0x100000000000000000000000000000000_u256, 'sqrt_ratio_next');
     assert(result.calculated_amount.is_zero(), 'calculated_amount');
     assert(result.fee_amount.is_zero(), 'fee');
 }
@@ -118,16 +118,16 @@ fn test_swap_zero_amount_token1() {
 #[test]
 fn test_swap_ratio_equal_limit_token0() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         amount: i129 { mag: 10000, sign: false },
         is_token1: false,
         fee: 0,
     );
 
     assert(result.consumed_amount.is_zero(), 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
+    assert(result.sqrt_ratio_next == 0x100000000000000000000000000000000_u256, 'sqrt_ratio_next');
     assert(result.calculated_amount.is_zero(), 'calculated_amount');
     assert(result.fee_amount.is_zero(), 'fee');
 }
@@ -135,16 +135,16 @@ fn test_swap_ratio_equal_limit_token0() {
 #[test]
 fn test_swap_ratio_equal_limit_token1() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         amount: i129 { mag: 10000, sign: false },
         is_token1: true,
         fee: 0,
     );
 
     assert(result.consumed_amount.is_zero(), 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
+    assert(result.sqrt_ratio_next == 0x100000000000000000000000000000000_u256, 'sqrt_ratio_next');
     assert(result.calculated_amount.is_zero(), 'calculated_amount');
     assert(result.fee_amount.is_zero(), 'fee');
 }
@@ -198,7 +198,7 @@ fn test_swap_ratio_wrong_direction_token0_output() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 100000,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         // output of 10k token0, price increasing
         amount: i129 { mag: 10000, sign: true },
         is_token1: false,
@@ -211,7 +211,7 @@ fn test_swap_ratio_wrong_direction_token0_output_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 0,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         // output of 10k token0, price increasing
         amount: i129 { mag: 10000, sign: true },
         is_token1: false,
@@ -224,7 +224,7 @@ fn test_swap_ratio_wrong_direction_token0_zero_output_and_liquidity() {
         swap_result(
             sqrt_ratio: u256 { high: 2, low: 0 },
             liquidity: 0,
-            sqrt_ratio_limit: u256 { high: 1, low: 0 },
+            sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
             // output of 10k token0, price increasing
             amount: i129 { mag: 0, sign: true },
             is_token1: false,
@@ -240,7 +240,7 @@ fn test_swap_ratio_wrong_direction_token1_input() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 100000,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         // input of 10k token1, price increasing
         amount: i129 { mag: 10000, sign: false },
         is_token1: true,
@@ -253,7 +253,7 @@ fn test_swap_ratio_wrong_direction_token1_input_zero_liquidity() {
     swap_result(
         sqrt_ratio: u256 { high: 2, low: 0 },
         liquidity: 0,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         // input of 10k token1, price increasing
         amount: i129 { mag: 10000, sign: false },
         is_token1: true,
@@ -267,7 +267,7 @@ fn test_swap_ratio_wrong_direction_token1_zero_input_and_liquidity() {
         swap_result(
             sqrt_ratio: u256 { high: 2, low: 0 },
             liquidity: 0,
-            sqrt_ratio_limit: u256 { high: 1, low: 0 },
+            sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
             // input of 10k token1, price increasing
             amount: i129 { mag: 0, sign: false },
             is_token1: true,
@@ -326,7 +326,7 @@ fn test_swap_ratio_wrong_direction_token1_zero_output_and_liquidity() {
 #[test]
 fn test_swap_against_liquidity_max_limit_token0_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: false },
@@ -346,7 +346,7 @@ fn test_swap_against_liquidity_max_limit_token0_input() {
 #[test]
 fn test_swap_against_liquidity_max_limit_token0_minimum_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: false },
@@ -355,7 +355,7 @@ fn test_swap_against_liquidity_max_limit_token0_minimum_input() {
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: false }, 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
+    assert(result.sqrt_ratio_next == 0x100000000000000000000000000000000_u256, 'sqrt_ratio_next');
     assert(result.calculated_amount.is_zero(), 'calculated_amount');
     assert(result.fee_amount == 1, 'fee');
 }
@@ -363,7 +363,7 @@ fn test_swap_against_liquidity_max_limit_token0_minimum_input() {
 #[test]
 fn test_swap_against_liquidity_min_limit_token0_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: true },
@@ -384,7 +384,7 @@ fn test_swap_against_liquidity_min_limit_token0_output() {
 #[test]
 fn test_swap_against_liquidity_min_limit_token0_minimum_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 1, sign: true },
@@ -405,7 +405,7 @@ fn test_swap_against_liquidity_min_limit_token0_minimum_output() {
 #[test]
 fn test_swap_against_liquidity_max_limit_token1_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: false },
@@ -425,7 +425,7 @@ fn test_swap_against_liquidity_max_limit_token1_input() {
 #[test]
 fn test_swap_against_liquidity_max_limit_token1_minimum_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 1, sign: false },
@@ -434,7 +434,7 @@ fn test_swap_against_liquidity_max_limit_token1_minimum_input() {
     );
 
     assert(result.consumed_amount == i129 { mag: 1, sign: false }, 'consumed_amount');
-    assert(result.sqrt_ratio_next == u256 { high: 1, low: 0 }, 'sqrt_ratio_next');
+    assert(result.sqrt_ratio_next == 0x100000000000000000000000000000000_u256, 'sqrt_ratio_next');
     assert(result.calculated_amount.is_zero(), 'calculated_amount');
     assert(result.fee_amount == 1, 'fee');
 }
@@ -443,7 +443,7 @@ fn test_swap_against_liquidity_max_limit_token1_minimum_input() {
 #[test]
 fn test_swap_against_liquidity_min_limit_token1_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: true },
@@ -464,7 +464,7 @@ fn test_swap_against_liquidity_min_limit_token1_output() {
 #[test]
 fn test_swap_against_liquidity_min_limit_token1_minimum_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: true },
@@ -487,7 +487,7 @@ fn test_swap_against_liquidity_min_limit_token1_minimum_output() {
 #[test]
 fn test_swap_against_liquidity_hit_limit_token0_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 0, low: 333476719582519694194107115283132847226 },
         amount: i129 { mag: 10000, sign: false },
@@ -509,7 +509,7 @@ fn test_swap_against_liquidity_hit_limit_token0_input() {
 #[test]
 fn test_swap_against_liquidity_hit_limit_token1_input() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 1, low: 0x51eb851eb851eb851eb851eb851eb85 },
         amount: i129 { mag: 10000, sign: false },
@@ -532,7 +532,7 @@ fn test_swap_against_liquidity_hit_limit_token1_input() {
 #[test]
 fn test_swap_against_liquidity_hit_limit_token0_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 1, low: 0x51eb851eb851eb851eb851eb851eb85 },
         amount: i129 { mag: 10000, sign: true },
@@ -554,7 +554,7 @@ fn test_swap_against_liquidity_hit_limit_token0_output() {
 #[test]
 fn test_swap_against_liquidity_hit_limit_token1_output() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 0, low: 333476719582519694194107115283132847226 },
         amount: i129 { mag: 10000, sign: true },
@@ -578,7 +578,7 @@ fn test_swap_against_liquidity_hit_limit_token1_output() {
 fn test_swap_max_amount_token0() {
     let amount = i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false };
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: amount,
@@ -600,7 +600,7 @@ fn test_swap_max_amount_token0() {
 #[test]
 fn test_swap_min_amount_token0() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: false },
@@ -643,7 +643,7 @@ fn test_swap_min_amount_token0_very_high_price() {
 fn test_swap_max_amount_token1() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: max_sqrt_ratio(),
             amount: i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: false },
@@ -665,7 +665,7 @@ fn test_swap_max_amount_token1() {
 fn test_swap_min_amount_token1() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: max_sqrt_ratio(),
             amount: i129 { mag: 1, sign: false },
@@ -706,7 +706,7 @@ fn test_swap_min_amount_token1_very_high_price() {
 fn test_swap_max_fee() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: min_sqrt_ratio(),
             amount: i129 { mag: 1000, sign: false },
@@ -714,7 +714,7 @@ fn test_swap_max_fee() {
             fee: 0xffffffffffffffffffffffffffffffff,
         ) == SwapResult {
             consumed_amount: i129 { mag: 1000, sign: false },
-            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
             calculated_amount: 0,
             fee_amount: 0x3e8
         },
@@ -726,7 +726,7 @@ fn test_swap_max_fee() {
 fn test_swap_min_fee() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: min_sqrt_ratio(),
             amount: i129 { mag: 1000, sign: false },
@@ -804,7 +804,7 @@ fn test_swap_result_example_usdc_wbtc() {
 fn test_exact_output_swap_max_fee_token0() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 79228162514264337593543950336,
             sqrt_ratio_limit: max_sqrt_ratio(),
             amount: i129 { mag: 1, sign: true },
@@ -824,7 +824,7 @@ fn test_exact_output_swap_max_fee_token0() {
 #[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_large_amount_token0() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 79228162514264337593543950336,
         sqrt_ratio_limit: max_sqrt_ratio(),
         amount: i129 { mag: 10000, sign: true },
@@ -847,7 +847,7 @@ fn test_exact_output_swap_max_fee_large_amount_token0() {
 #[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token0_limit_reached() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 79228162514264337593543950336,
         sqrt_ratio_limit: u256 { high: 1, low: 0x200000000 },
         amount: i129 { mag: 1, sign: true },
@@ -869,7 +869,7 @@ fn test_exact_output_swap_max_fee_token0_limit_reached() {
 #[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token1() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 79228162514264337593543950336,
         sqrt_ratio_limit: min_sqrt_ratio(),
         amount: i129 { mag: 1, sign: true },
@@ -891,7 +891,7 @@ fn test_exact_output_swap_max_fee_token1() {
 #[should_panic(expected: ('AMOUNT_BEFORE_FEE_OVERFLOW',))]
 fn test_exact_output_swap_max_fee_token1_limit_reached() {
     let result = swap_result(
-        sqrt_ratio: u256 { high: 1, low: 0 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 79228162514264337593543950336,
         sqrt_ratio_limit: u256 { low: 0xffffffffffffffffffffffff00000000, high: 0 },
         amount: i129 { mag: 1, sign: true },
@@ -913,7 +913,7 @@ fn test_exact_output_swap_max_fee_token1_limit_reached() {
 fn test_exact_input_swap_max_fee_token0() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 79228162514264337593543950336,
             sqrt_ratio_limit: min_sqrt_ratio(),
             amount: i129 { mag: 1, sign: false },
@@ -921,7 +921,7 @@ fn test_exact_input_swap_max_fee_token0() {
             fee: mask(127),
         ) == SwapResult {
             consumed_amount: i129 { mag: 1, sign: false },
-            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
             calculated_amount: 0,
             fee_amount: 1,
         },
@@ -933,7 +933,7 @@ fn test_exact_input_swap_max_fee_token0() {
 fn test_exact_input_swap_max_fee_token1() {
     assert(
         swap_result(
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 79228162514264337593543950336,
             sqrt_ratio_limit: max_sqrt_ratio(),
             amount: i129 { mag: 1, sign: false },
@@ -941,7 +941,7 @@ fn test_exact_input_swap_max_fee_token1() {
             fee: mask(127),
         ) == SwapResult {
             consumed_amount: i129 { mag: 1, sign: false },
-            sqrt_ratio_next: u256 { low: 0, high: 1 },
+            sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
             calculated_amount: 0,
             fee_amount: 1,
         },

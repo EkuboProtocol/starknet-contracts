@@ -33,8 +33,8 @@ fn test_nft_name_symbol_token_uri() {
     );
     assert(nft.name() == 'Ekubo Position', 'name');
     assert(nft.symbol() == 'EkuPo', 'symbol');
-    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'tokenURI');
-    assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == 'https://z.ekubo.org/1', 'tokenURI');
+    assert(nft.token_uri(1_u256) == 'https://z.ekubo.org/1', 'token_uri');
 }
 
 #[test]
@@ -93,8 +93,8 @@ fn test_nft_custom_uri() {
     );
     assert(nft.name() == 'abcde', 'name');
     assert(nft.symbol() == 'def', 'symbol');
-    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'tokenURI');
-    assert(nft.token_uri(u256 { low: 1, high: 0 }) == 'ipfs://abcdef/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == 'ipfs://abcdef/1', 'tokenURI');
+    assert(nft.token_uri(1_u256) == 'ipfs://abcdef/1', 'token_uri');
 }
 
 #[test]
@@ -312,19 +312,10 @@ fn test_nft_transfer_from() {
     nft.approve(contract_address_const::<3>(), token_id.into());
     nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id.into());
 
-    assert(
-        nft.balanceOf(contract_address_const::<1>()) == u256 { low: 0, high: 0 }, 'balanceOf(from)'
-    );
-    assert(
-        nft.balance_of(contract_address_const::<1>()) == u256 { low: 0, high: 0 },
-        'balance_of(from)'
-    );
-    assert(
-        nft.balanceOf(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'balanceOf(to)'
-    );
-    assert(
-        nft.balance_of(contract_address_const::<2>()) == u256 { low: 1, high: 0 }, 'balance_of(to)'
-    );
+    assert(nft.balanceOf(contract_address_const::<1>()) == 0_u256, 'balanceOf(from)');
+    assert(nft.balance_of(contract_address_const::<1>()) == 0_u256, 'balance_of(from)');
+    assert(nft.balanceOf(contract_address_const::<2>()) == 1_u256, 'balanceOf(to)');
+    assert(nft.balance_of(contract_address_const::<2>()) == 1_u256, 'balance_of(to)');
     assert(nft.ownerOf(token_id.into()) == contract_address_const::<2>(), 'ownerOf');
     assert(nft.owner_of(token_id.into()) == contract_address_const::<2>(), 'owner_of');
     assert(nft.getApproved(token_id.into()).is_zero(), 'getApproved');
@@ -380,7 +371,7 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 fn test_nft_token_uri() {
     let (controller, nft) = deploy_default();
 
-    assert(nft.tokenURI(u256 { low: 1, high: 0 }) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == 'https://z.ekubo.org/1', 'token_uri');
     assert(
         nft.tokenURI(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999', 'token_uri'
     );
@@ -437,7 +428,7 @@ fn test_nft_balance_of() {
     assert(controller.mint(recipient) == 1, 'token id');
     assert(nft.ownerOf(1) == recipient, 'owner');
     assert(nft.owner_of(1) == recipient, 'owner');
-    assert(nft.balanceOf(recipient) == u256 { low: 1, high: 0 }, 'balance check after');
-    assert(nft.balance_of(recipient) == u256 { low: 1, high: 0 }, 'balance check after');
+    assert(nft.balanceOf(recipient) == 1_u256, 'balance check after');
+    assert(nft.balance_of(recipient) == 1_u256, 'balance check after');
 }
 

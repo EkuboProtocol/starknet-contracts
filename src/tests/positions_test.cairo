@@ -795,7 +795,7 @@ fn test_deposit_swap_round_trip_accounting() {
         setup: setup,
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0
     );
@@ -977,7 +977,7 @@ fn test_deposit_swap_multiple_positions() {
         setup: setup,
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0
     );
@@ -1042,7 +1042,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         setup: setup,
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
-        sqrt_ratio_limit: u256 { high: 1, low: 0 },
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
         recipient: Zeroable::zero(),
         skip_ahead: 0
     );

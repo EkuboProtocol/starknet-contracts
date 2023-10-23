@@ -20,7 +20,7 @@ function genTickMath({
     console.log(`// denominator = 1<<${fixedPointRadix}`)
 
 
-    console.log('let mut ratio = u256 { high: 1, low: 0 };')
+    console.log('let mut ratio = 0x100000000000000000000000000000000_u256;')
 
     for (let i = 0; i < numIterations; i++) {
         const tickMultiplier = sqrtTick.pow(new Decimal(2).pow(i));

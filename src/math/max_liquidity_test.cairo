@@ -65,7 +65,7 @@ fn test_max_liquidity_for_token1_max_upper_half_range() {
 #[should_panic(expected: ('SQRT_RATIO_ORDER',))]
 fn test_max_liquidity_panics_order_ratios() {
     max_liquidity(
-        u256 { low: 0, high: 1 },
+        0x100000000000000000000000000000000_u256,
         max_sqrt_ratio(),
         min_sqrt_ratio(),
         0xffffffffffffffffffffffffffffffff,
@@ -77,7 +77,7 @@ fn test_max_liquidity_panics_order_ratios() {
 #[available_gas(2000000)]
 fn test_max_liquidity_concentrated_example() {
     let liquidity = max_liquidity(
-        u256 { low: 0, high: 1 },
+        0x100000000000000000000000000000000_u256,
         u256 { low: 324446506639056680081293727153829971379, high: 0 },
         u256 { low: 16608790382023884626048492437444757061, high: 1 },
         100,
@@ -91,7 +91,7 @@ fn test_max_liquidity_concentrated_example() {
 #[should_panic(expected: ('SQRT_RATIO_ORDER',))]
 fn test_max_liquidity_panics_equal_ratios() {
     max_liquidity(
-        u256 { low: 0, high: 1 },
+        0x100000000000000000000000000000000_u256,
         min_sqrt_ratio(),
         min_sqrt_ratio(),
         0xffffffffffffffffffffffffffffffff,
@@ -104,8 +104,8 @@ fn test_max_liquidity_panics_equal_ratios() {
 #[should_panic(expected: ('SQRT_RATIO_ZERO',))]
 fn test_max_liquidity_panics_zero_ratio_lower() {
     max_liquidity(
-        u256 { low: 0, high: 1 },
-        u256 { low: 0, high: 0 },
+        0x100000000000000000000000000000000_u256,
+        0_u256,
         min_sqrt_ratio(),
         0xffffffffffffffffffffffffffffffff,
         0xffffffffffffffffffffffffffffffff
@@ -117,7 +117,7 @@ fn test_max_liquidity_panics_zero_ratio_lower() {
 fn test_max_liquidity_less_than_liquidity_deltas() {
     let amount0 = 100000000;
     let amount1 = 100000000;
-    let sqrt_ratio = u256 { low: 0, high: 1 };
+    let sqrt_ratio = 0x100000000000000000000000000000000_u256;
     let sqrt_ratio_lower = min_sqrt_ratio();
     let sqrt_ratio_upper = max_sqrt_ratio();
 
@@ -138,7 +138,7 @@ fn test_max_liquidity_less_than_liquidity_deltas() {
 
 #[test]
 fn test_liquidity_operations_rounding_increases_liquidity_in_range() {
-    let sqrt_ratio = u256 { low: 0, high: 1 };
+    let sqrt_ratio = 0x100000000000000000000000000000000_u256;
     let liquidity_delta = i129 { mag: 100, sign: false };
     let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 10, sign: true });
     let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 10, sign: false });

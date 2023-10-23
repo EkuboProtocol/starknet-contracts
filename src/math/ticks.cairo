@@ -291,7 +291,7 @@ fn min_sqrt_ratio() -> u256 {
 fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     assert(tick.mag <= constants::MAX_TICK_MAGNITUDE, 'TICK_MAGNITUDE');
 
-    let mut ratio = u256 { high: 1, low: 0 };
+    let mut ratio = 0x100000000000000000000000000000000_u256;
     if ((tick.mag & 0x1) != 0) {
         ratio = u256 { high: 0, low: 0xfffff79c8499329c7cbb2510d893283b };
     }

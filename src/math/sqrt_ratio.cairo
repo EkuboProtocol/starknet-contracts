@@ -43,7 +43,7 @@ fn next_sqrt_ratio_from_amount0(sqrt_ratio: u256, liquidity: u128, amount: i129)
         return if (remainder.is_zero()) {
             Option::Some(quotient)
         } else {
-            let (result, overflow) = u256_overflowing_add(quotient, u256 { low: 1, high: 0 });
+            let (result, overflow) = u256_overflowing_add(quotient, 1);
             if (overflow) {
                 return Option::None(());
             }
@@ -77,7 +77,7 @@ fn next_sqrt_ratio_from_amount1(sqrt_ratio: u256, liquidity: u128, amount: i129)
             Option::Some(res)
         } else {
             if (res.is_non_zero()) {
-                Option::Some(res - u256 { low: 1, high: 0 })
+                Option::Some(res - 1_u256)
             } else {
                 Option::None(())
             }

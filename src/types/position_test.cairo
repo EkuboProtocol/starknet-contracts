@@ -21,7 +21,7 @@ fn check_mul(a: u256, b: u128) {
 #[test]
 fn test_multiply_and_get_limb1() {
     assert(multiply_and_get_limb1(0, 0) == 0, '0*0');
-    assert(multiply_and_get_limb1(u256 { high: 1, low: 0 }, 1) == 1, '1<<128 * 1');
+    assert(multiply_and_get_limb1(0x100000000000000000000000000000000_u256, 1) == 1, '1<<128 * 1');
     assert(multiply_and_get_limb1(u256 { high: 5, low: 0 }, 2) == 10, '5<<128 * 2');
     assert(multiply_and_get_limb1(u256 { high: 16, low: 0 } / 3, 2) == 10, '16<<128 / 3 * 2');
 

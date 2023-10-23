@@ -11,7 +11,7 @@ use zeroable::Zeroable;
 fn test_packing_round_trip_many_values() {
     assert_round_trip(
         PoolPrice {
-            sqrt_ratio: u256 { high: 1, low: 0 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             tick: Zeroable::zero(),
             call_points: Default::default()
         }
@@ -99,7 +99,7 @@ fn test_fails_if_tick_out_of_range_max() {
         PoolPrice, felt252
     >::pack(
         PoolPrice {
-            sqrt_ratio: u256 { low: 0, high: 1 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             tick: max_tick() + i129 { mag: 1, sign: false },
             call_points: Default::default()
         }
@@ -113,7 +113,7 @@ fn test_fails_if_tick_out_of_range_min() {
         PoolPrice, felt252
     >::pack(
         PoolPrice {
-            sqrt_ratio: u256 { low: 0, high: 1 },
+            sqrt_ratio: 0x100000000000000000000000000000000_u256,
             tick: min_tick() - i129 { mag: 2, sign: false },
             call_points: Default::default()
         }

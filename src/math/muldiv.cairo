@@ -31,7 +31,7 @@ fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
         Option::Some(u256 { low: quotient.limb0, high: quotient.limb1 })
     } else {
         let (sum, sum_overflows) = u256_overflowing_add(
-            u256 { low: quotient.limb0, high: quotient.limb1 }, u256 { low: 1, high: 0 }
+            u256 { low: quotient.limb0, high: quotient.limb1 }, 1_u256
         );
         if (sum_overflows) {
             Option::None(())

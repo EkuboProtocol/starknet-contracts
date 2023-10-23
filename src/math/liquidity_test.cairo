@@ -9,7 +9,7 @@ use zeroable::{Zeroable};
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
-        u256 { low: 0, high: 1 },
+        0x100000000000000000000000000000000_u256,
         i129 { mag: 10000, sign: false },
         min_sqrt_ratio(),
         max_sqrt_ratio()
@@ -23,7 +23,7 @@ fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price_withdraw() {
     let delta = liquidity_delta_to_amount_delta(
-        u256 { low: 0, high: 1 },
+        0x100000000000000000000000000000000_u256,
         i129 { mag: 10000, sign: true },
         min_sqrt_ratio(),
         max_sqrt_ratio()
@@ -79,7 +79,7 @@ fn test_liquidity_delta_to_amount_delta_high_price_in_range() {
 #[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
-        sqrt_ratio: u256 { low: 0, high: 1 },
+        sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity_delta: i129 { mag: 10000, sign: false },
         sqrt_ratio_lower: tick_to_sqrt_ratio(
             i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: true }

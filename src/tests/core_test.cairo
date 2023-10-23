@@ -272,7 +272,7 @@ mod initialize_pool_tests {
         assert(
             core
                 .maybe_initialize_pool(pool_key, Zeroable::zero())
-                .unwrap() == u256 { high: 1, low: 0 },
+                .unwrap() == 0x100000000000000000000000000000000_u256,
             'price'
         );
         assert(
@@ -283,7 +283,10 @@ mod initialize_pool_tests {
             core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: true }).is_none(), 'third'
         );
 
-        assert(core.get_pool_price(pool_key).sqrt_ratio == u256 { low: 0, high: 1 }, 'ratio');
+        assert(
+            core.get_pool_price(pool_key).sqrt_ratio == 0x100000000000000000000000000000000_u256,
+            'ratio'
+        );
     }
 }
 
@@ -1174,7 +1177,7 @@ mod locks {
             setup.core.get_pool_liquidity(setup.pool_key),
             setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
-        assert(price.sqrt_ratio == u256 { low: 0, high: 1 }, 'price did not move');
+        assert(price.sqrt_ratio == 0x100000000000000000000000000000000_u256, 'price did not move');
         assert(liquidity == 0, 'liquidity is 0');
         assert(fees_per_liquidity.is_zero(), 'fees is 0');
     }
@@ -1293,7 +1296,7 @@ mod locks {
             extension: Zeroable::zero(),
         );
 
-        let sqrt_ratio_limit = u256 { low: 0, high: 1 } / u256 { low: 2, high: 0 };
+        let sqrt_ratio_limit = 0x100000000000000000000000000000000_u256 / u256 { low: 2, high: 0 };
 
         let delta = swap(
             setup,

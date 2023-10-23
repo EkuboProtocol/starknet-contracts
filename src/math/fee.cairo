@@ -17,7 +17,7 @@ fn compute_fee(amount: u128, fee: u128) -> u128 {
 fn amount_before_fee(after_fee: u128, fee: u128) -> u128 {
     let (quotient, remainder, _) = u256_safe_divmod(
         u256 { high: after_fee, low: 0 },
-        u256_as_non_zero(u256 { high: 1, low: 0 } - u256 { high: 0, low: fee })
+        u256_as_non_zero(0x100000000000000000000000000000000_u256 - u256 { high: 0, low: fee })
     );
 
     assert(quotient.high.is_zero(), 'AMOUNT_BEFORE_FEE_OVERFLOW');
