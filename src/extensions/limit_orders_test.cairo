@@ -747,13 +747,13 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
     t0.increase_balance(lo.contract_address, 100);
     let id2 = lo.place_order(ok1, 100);
 
-    let co1 = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
-    assert(co1.amount0 == 0, 'co1.amount0');
-    assert(co1.amount1 == 100, 'co1.amount1');
+    let (amount0, amount1) = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
+    assert(amount0 == 0, 'co1.amount0');
+    assert(amount1 == 100, 'co1.amount1');
 
-    let co2 = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
-    assert(co2.amount0 == 99, 'co2.amount0');
-    assert(co2.amount1 == 0, 'co2.amount1');
+    let (amount0, amount1) = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
+    assert(amount0 == 99, 'co2.amount0');
+    assert(amount1 == 0, 'co2.amount1');
 }
 
 #[test]
@@ -806,13 +806,13 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
     t1.increase_balance(lo.contract_address, 100);
     let id2 = lo.place_order(ok1, 100);
 
-    let co1 = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
-    assert(co1.amount0 == 99, 'co1.amount0');
-    assert(co1.amount1 == 0, 'co1.amount1');
+    let (amount0, amount1) = lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
+    assert(amount0 == 99, 'co1.amount0');
+    assert(amount1 == 0, 'co1.amount1');
 
-    let co2 = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
-    assert(co2.amount0 == 0, 'co2.amount0');
-    assert(co2.amount1 == 99, 'co2.amount1');
+    let (amount0, amount1) = lo.close_order(ok1, id2, recipient: contract_address_const::<1>());
+    assert(amount0 == 0, 'co2.amount0');
+    assert(amount1 == 99, 'co2.amount1');
 }
 
 #[test]

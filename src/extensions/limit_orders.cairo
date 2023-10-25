@@ -85,12 +85,6 @@ struct GetOrderInfoResult {
     amount1: u128,
 }
 
-#[derive(Drop, Copy, Serde, PartialEq, Zeroable)]
-struct CloseOrderResult {
-    amount0: u128,
-    amount1: u128,
-}
-
 #[starknet::interface]
 trait ILimitOrders<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
@@ -111,7 +105,7 @@ trait ILimitOrders<TContractState> {
     // Closes an order with the given token ID, returning the amount of token0 and token1 to the recipient
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-    ) -> CloseOrderResult;
+    ) -> (u128, u128);
 
     // Clear the token balance held by this contract
     // This contract is non-custodial, i.e. never holds a balance on behalf of a user
@@ -143,7 +137,7 @@ mod LimitOrders {
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
-        GetOrderInfoRequest, GetOrderInfoResult, CloseOrderResult
+        GetOrderInfoRequest, GetOrderInfoResult
     };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
@@ -228,12 +222,15 @@ mod LimitOrders {
     struct OrderPlaced {
         id: u64,
         order_key: OrderKey,
+        amount: u128,
         liquidity: u128,
     }
 
     #[derive(starknet::Event, Drop)]
     struct OrderClosed {
-        id: u64
+        id: u64,
+        amount0: u128,
+        amount1: u128,
     }
 
 
@@ -610,14 +607,14 @@ mod LimitOrders {
                 )
             );
 
-            self.emit(OrderPlaced { id, order_key, liquidity });
+            self.emit(OrderPlaced { id, order_key, amount, liquidity });
 
             id
         }
 
         fn close_order(
             ref self: ContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
-        ) -> CloseOrderResult {
+        ) -> (u128, u128) {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
@@ -710,9 +707,9 @@ mod LimitOrders {
                 }
             };
 
-            self.emit(OrderClosed { id });
+            self.emit(OrderClosed { id, amount0, amount1 });
 
-            CloseOrderResult { amount0, amount1 }
+            (amount0, amount1)
         }
 
         fn get_order_info(
