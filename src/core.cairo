@@ -41,12 +41,12 @@ mod Core {
     };
     use traits::{Into};
     use zeroable::Zeroable;
-    use ekubo::upgradeable::{Upgradeable};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
-    component!(path: Upgradeable, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
     #[abi(embed_v0)]
-    impl Upgradable = Upgradeable::Upgradeable<ContractState>;
+    impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -77,7 +77,7 @@ mod Core {
         withdrawal_only_mode: bool,
         // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: Upgradeable::Storage
+        upgradeable: upgradeable_component::Storage
     }
 
     #[derive(starknet::Event, Drop)]
@@ -151,7 +151,8 @@ mod Core {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        UpgradeableEvent: Upgradeable::Event,
+        #[flat]
+        ClassHashReplaced: upgradeable_component::Event,
         ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,

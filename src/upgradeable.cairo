@@ -18,8 +18,8 @@ mod Upgradeable {
         new_class_hash: ClassHash,
     }
 
-    #[embeddable_as(Upgradeable)]
-    impl UpgradeableImpl<
+    #[embeddable_as(UpgradeableImpl)]
+    impl Upgradeable<
         TContractState, +HasComponent<TContractState>
     > of IUpgradeable<ComponentState<TContractState>> {
         fn replace_class_hash(ref self: ComponentState<TContractState>, class_hash: ClassHash) {
