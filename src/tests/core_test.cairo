@@ -79,7 +79,10 @@ mod owner_tests {
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::core::Core::ClassHashReplaced = pop_log(core.contract_address).unwrap();
+        let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+            core.contract_address
+        )
+            .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
     }
 
