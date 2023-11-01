@@ -41,7 +41,12 @@ mod Core {
     };
     use traits::{Into};
     use zeroable::Zeroable;
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
+    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+
+    #[abi(embed_v0)]
+    impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -70,11 +75,9 @@ mod Core {
         saved_balances: LegacyMap<SavedBalanceKey, u128>,
         // in withdrawal only mode, the contract will not accept deposits
         withdrawal_only_mode: bool,
-    }
-
-    #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
+        // upgradable component storage (empty)
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage
     }
 
     #[derive(starknet::Event, Drop)]
@@ -148,7 +151,8 @@ mod Core {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        ClassHashReplaced: ClassHashReplaced,
+        #[flat]
+        ClassHashReplaced: upgradeable_component::Event,
         ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
@@ -251,15 +255,6 @@ mod Core {
                     self.insert_initialized_tick(pool_key, index);
                 }
             };
-        }
-    }
-
-    #[external(v0)]
-    impl Upgradeable of IUpgradeable<ContractState> {
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            check_owner_only();
-            replace_class_syscall(class_hash);
-            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 
