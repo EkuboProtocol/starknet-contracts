@@ -23,6 +23,7 @@ mod Upgradeable {
         TContractState, +HasComponent<TContractState>
     > of IUpgradeable<ComponentState<TContractState>> {
         fn replace_class_hash(ref self: ComponentState<TContractState>, class_hash: ClassHash) {
+            assert(!class_hash.is_zero(), 'INVALID_CLASS_HASH');
             check_owner_only();
             replace_class_syscall(class_hash);
             self.emit(ClassHashReplaced { new_class_hash: class_hash });

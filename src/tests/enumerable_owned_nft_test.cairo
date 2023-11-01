@@ -1,13 +1,17 @@
 use array::{ArrayTrait};
+use ekubo::owner::owner;
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::tests::helper::{deploy_enumerable_owned_nft};
+use ekubo::tests::mocks::mock_upgradeable::{
+    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
+};
 use option::{OptionTrait};
-use starknet::testing::{ContractAddress, set_contract_address};
-use starknet::{contract_address_const};
+use starknet::testing::{ContractAddress, set_contract_address, pop_log};
+use starknet::{contract_address_const, ClassHash};
 use traits::{Into};
 use zeroable::{Zeroable};
 
@@ -83,6 +87,24 @@ fn test_nft_supports_interfaces() {
     assert(src.supports_interface(0x5b5e139f), 'erc165.721_metadata.snake');
     assert(src.supportsInterface(0x01ffc9a7), 'erc165.165');
     assert(src.supports_interface(0x01ffc9a7), 'erc165.165.snake');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_replace_class_hash_can_be_called_by_owner() {
+    let (_, nft) = deploy_enumerable_owned_nft(
+        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
+    );
+
+    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+
+    set_contract_address(owner());
+    IMockUpgradeableDispatcher { contract_address: nft.contract_address }
+        .replace_class_hash(class_hash);
+
+    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(nft.contract_address)
+        .unwrap();
+    assert(event.new_class_hash == class_hash, 'event.class_hash');
 }
 
 #[test]

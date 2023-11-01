@@ -1,10 +1,9 @@
 use array::ArrayTrait;
-
-
 use debug::PrintTrait;
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
+use ekubo::owner::owner;
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -20,14 +19,41 @@ use ekubo::tests::helper::{
     IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_upgradeable::{
+    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
+};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use option::OptionTrait;
-use starknet::testing::{set_contract_address};
-use starknet::{contract_address_const, get_contract_address};
+use starknet::testing::{set_contract_address, pop_log};
+use starknet::{contract_address_const, get_contract_address, ClassHash};
 use traits::{Into};
 use zeroable::Zeroable;
+
+#[test]
+#[available_gas(20000000)]
+fn test_replace_class_hash_can_be_called_by_owner() {
+    let setup = setup_pool(
+        fee: FEE_ONE_PERCENT,
+        tick_spacing: 1,
+        initial_tick: Zeroable::zero(),
+        extension: Zeroable::zero(),
+    );
+    let positions = deploy_positions(setup.core);
+
+    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+
+    set_contract_address(owner());
+    IMockUpgradeableDispatcher { contract_address: positions.contract_address }
+        .replace_class_hash(class_hash);
+
+    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        positions.contract_address
+    )
+        .unwrap();
+    assert(event.new_class_hash == class_hash, 'event.class_hash');
+}
 
 #[test]
 #[available_gas(20000000)]
