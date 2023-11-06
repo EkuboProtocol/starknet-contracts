@@ -29,7 +29,6 @@ mod EnumerableOwnedNFT {
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::string::{to_decimal, append};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::owner::{check_owner_only};
 
     use ekubo::types::i129::{i129};
     use option::{OptionTrait};
@@ -41,6 +40,12 @@ mod EnumerableOwnedNFT {
     use super::{IEnumerableOwnedNFT, ContractAddress};
     use traits::{Into, TryInto};
     use zeroable::{Zeroable};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+
+    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+
+    #[abi(embed_v0)]
+    impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -54,6 +59,9 @@ mod EnumerableOwnedNFT {
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
+        // upgradable component storage (empty)
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage
     }
 
 
@@ -87,7 +95,8 @@ mod EnumerableOwnedNFT {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        ClassHashReplaced: ClassHashReplaced,
+        #[flat]
+        ClassHashReplaced: upgradeable_component::Event,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
@@ -153,15 +162,6 @@ mod EnumerableOwnedNFT {
                 }
             }
             return (true, owner);
-        }
-    }
-
-    #[external(v0)]
-    impl Upgradeable of IUpgradeable<ContractState> {
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            check_owner_only();
-            replace_class_syscall(class_hash);
-            self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
     }
 

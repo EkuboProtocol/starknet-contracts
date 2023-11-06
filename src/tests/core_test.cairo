@@ -18,6 +18,7 @@ use ekubo::tests::mocks::locker::{
     UpdatePositionParameters, SwapParameters
 };
 use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
@@ -35,9 +36,9 @@ mod owner_tests {
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, TryInto, OptionTrait, Zeroable, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, ContractAddress, Into, IUpgradeableDispatcher,
-        IUpgradeableDispatcherTrait, pop_log
+        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zeroable,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
+        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log
     };
 
 
@@ -47,8 +48,9 @@ mod owner_tests {
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
+        let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(Zeroable::zero());
+            .replace_class_hash(class_hash);
     }
 
     #[test]
@@ -56,11 +58,14 @@ mod owner_tests {
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
         set_contract_address(owner());
-        let class_hash: ClassHash = MockERC20::TEST_CLASS_HASH.try_into().unwrap();
+        let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::core::Core::ClassHashReplaced = pop_log(core.contract_address).unwrap();
+        let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+            core.contract_address
+        )
+            .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
     }
 
@@ -70,6 +75,7 @@ mod owner_tests {
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core();
         set_contract_address(owner());
+        // MockERC20 is not upgradeable, first call succeeds, second fails
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
         IUpgradeableDispatcher { contract_address: core.contract_address }

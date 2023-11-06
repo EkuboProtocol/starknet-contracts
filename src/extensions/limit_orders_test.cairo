@@ -1,4 +1,5 @@
 use debug::PrintTrait;
+use ekubo::owner::owner;
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
@@ -17,6 +18,9 @@ use ekubo::tests::helper::{
     deploy_locker, deploy_simple_swapper
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::tests::mocks::mock_upgradeable::{
+    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
+};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
@@ -24,8 +28,8 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::keys_test::{check_hashes_differ};
 use option::{OptionTrait};
-use starknet::testing::{set_contract_address, set_block_timestamp};
-use starknet::{get_contract_address, get_block_timestamp, contract_address_const};
+use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
+use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
 
@@ -159,6 +163,25 @@ fn test_order_key_hash() {
     check_hashes_differ(other_token0, other_tick);
 
     check_hashes_differ(other_token1, other_tick);
+}
+
+#[test]
+#[available_gas(3000000000)]
+fn test_replace_class_hash_can_be_called_by_owner() {
+    let core = deploy_core();
+    let limit_orders = deploy_limit_orders(core);
+
+    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+
+    set_contract_address(owner());
+    IMockUpgradeableDispatcher { contract_address: limit_orders.contract_address }
+        .replace_class_hash(class_hash);
+
+    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        limit_orders.contract_address
+    )
+        .unwrap();
+    assert(event.new_class_hash == class_hash, 'event.class_hash');
 }
 
 #[test]

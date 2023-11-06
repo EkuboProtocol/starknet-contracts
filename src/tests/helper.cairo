@@ -26,6 +26,7 @@ use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC2
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
 };
+use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable, IMockUpgradeableDispatcher};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::i129;
@@ -247,6 +248,14 @@ fn setup_pool(
     SetupPoolResult { token0, token1, pool_key, core, locker }
 }
 
+fn deploy_mock_upgradeable() -> IMockUpgradeableDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    let (address, _) = deploy_syscall(
+        MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('upgradeable deploy failed');
+    return IMockUpgradeableDispatcher { contract_address: address };
+}
 
 #[derive(Drop, Copy)]
 struct Balances {
