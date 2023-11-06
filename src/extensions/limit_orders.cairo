@@ -243,11 +243,6 @@ mod LimitOrders {
 
 
     #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
-    }
-
-    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
