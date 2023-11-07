@@ -819,12 +819,7 @@ mod Core {
 
             let tick_bitmap_storage_prefix = LegacyHash::hash(selector!("tick_bitmaps"), pool_key);
 
-            let liquidity_delta_storage_prefix = LegacyHash::hash(
-                selector!("tick_liquidity_delta"), pool_key
-            );
-            let fees_per_liquidity_storage_prefix = LegacyHash::hash(
-                selector!("tick_fees_outside"), pool_key
-            );
+            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None(());
 
             loop {
                 if (amount_remaining.is_zero()) {
@@ -906,6 +901,24 @@ mod Core {
                         };
 
                     if (is_initialized) {
+                        tick_crossing_storage_prefixes = match tick_crossing_storage_prefixes {
+                            Option::Some(prefixes) => { tick_crossing_storage_prefixes },
+                            Option::None => {
+                                Option::Some(
+                                    (
+                                        LegacyHash::hash(
+                                            selector!("tick_liquidity_delta"), pool_key
+                                        ),
+                                        LegacyHash::hash(selector!("tick_fees_outside"), pool_key)
+                                    )
+                                )
+                            }
+                        };
+
+                        let (liquidity_delta_storage_prefix, fees_per_liquidity_storage_prefix) =
+                            tick_crossing_storage_prefixes
+                            .unwrap();
+
                         let liquidity_delta: i129 = Store::read(
                             0,
                             storage_base_address_from_felt252(
