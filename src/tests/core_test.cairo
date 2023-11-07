@@ -649,6 +649,7 @@ mod locks {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
         deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
+        flash_borrow_inner
     };
     use super::{
         FeesPerLiquidity, setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult,
@@ -656,7 +657,7 @@ mod locks {
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, PoolKey,
-        accumulate_as_fees, max_bounds, deploy_core
+        accumulate_as_fees, max_bounds, deploy_core, deploy_mock_token, SavedBalanceKey
     };
 
     #[test]
@@ -671,6 +672,130 @@ mod locks {
         );
         // should fail because not locked at all
         setup.core.deposit(contract_address_const::<1>());
+    }
+
+    fn save_to_core(locker: ICoreLockerDispatcher, token: ContractAddress, amount: u128) {
+        match locker
+            .call(
+                Action::SaveBalance(
+                    (
+                        SavedBalanceKey {
+                            owner: contract_address_const::<0>(), token: token, salt: 0
+                        },
+                        amount
+                    )
+                )
+            ) {
+            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
+            ActionResult::Relock => { assert(false, 'unexpected'); },
+            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
+            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
+            ActionResult::SaveBalance(_) => {},
+            ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
+            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
+            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
+        };
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    fn test_flash_borrow_balanced() {
+        let core = deploy_core();
+        let locker = deploy_locker(core);
+        let token = deploy_mock_token();
+
+        token.increase_balance(locker.contract_address, 100000000);
+        save_to_core(locker, token.contract_address, 100000000);
+
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 0,
+            amount_repay: 0
+        );
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 10,
+            amount_repay: 10
+        );
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 100000000,
+            amount_repay: 100000000
+        );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    fn test_flash_borrow_underpay() {
+        let core = deploy_core();
+        let locker = deploy_locker(core);
+        let token = deploy_mock_token();
+
+        token.increase_balance(locker.contract_address, 100000000);
+        save_to_core(locker, token.contract_address, 100000000);
+
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 100,
+            amount_repay: 0
+        );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    fn test_flash_borrow_overpay() {
+        let core = deploy_core();
+        let locker = deploy_locker(core);
+        let token = deploy_mock_token();
+
+        token.increase_balance(locker.contract_address, 100000000 + 100);
+        save_to_core(locker, token.contract_address, 100000000);
+
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 0,
+            amount_repay: 100
+        );
+    }
+
+    #[test]
+    #[available_gas(500000000)]
+    #[should_panic(
+        expected: (
+            'INSUFFICIENT_RESERVES',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_flash_borrow_more_than_core_balance() {
+        let core = deploy_core();
+        let locker = deploy_locker(core);
+        let token = deploy_mock_token();
+
+        token.increase_balance(locker.contract_address, 100000000);
+        save_to_core(locker, token.contract_address, 100000000);
+
+        flash_borrow_inner(
+            core: core,
+            locker: locker,
+            token: token.contract_address,
+            amount_borrow: 100000000 + 10,
+            amount_repay: 100000000 + 10
+        );
     }
 
 
@@ -2010,6 +2135,7 @@ mod save_load_tests {
             },
             ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
             ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
+            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
         };
 
         assert(
@@ -2041,6 +2167,7 @@ mod save_load_tests {
                 assert(balance_next == 0, 'balance_next');
             },
             ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
+            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
         };
     }
 }

@@ -34,6 +34,7 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use option::{Option, OptionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
@@ -41,7 +42,6 @@ mod Core {
     };
     use traits::{Into};
     use zeroable::Zeroable;
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
@@ -59,15 +59,15 @@ mod Core {
         // locker_id, token_address => delta
         // delta is from the perspective of the core contract, thus:
         // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
-        deltas: LegacyMap::<(u32, ContractAddress), i129>,
+        deltas: LegacyMap<(u32, ContractAddress), i129>,
         // the persistent state of all the pools is stored in these structs
-        pool_price: LegacyMap::<PoolKey, PoolPrice>,
-        pool_liquidity: LegacyMap::<PoolKey, u128>,
-        pool_fees: LegacyMap::<PoolKey, FeesPerLiquidity>,
-        tick_liquidity_net: LegacyMap::<(PoolKey, i129), u128>,
-        tick_liquidity_delta: LegacyMap::<(PoolKey, i129), i129>,
-        tick_fees_outside: LegacyMap::<(PoolKey, i129), FeesPerLiquidity>,
-        positions: LegacyMap::<(PoolKey, PositionKey), Position>,
+        pool_price: LegacyMap<PoolKey, PoolPrice>,
+        pool_liquidity: LegacyMap<PoolKey, u128>,
+        pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
+        tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
+        tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
+        tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
+        positions: LegacyMap<(PoolKey, PositionKey), Position>,
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<SavedBalanceKey, u128>,

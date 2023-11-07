@@ -1,8 +1,8 @@
 #[starknet::component]
 mod Upgradeable {
-    use starknet::{ClassHash, replace_class_syscall};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
+    use starknet::{ClassHash, replace_class_syscall};
 
     #[storage]
     struct Storage {}
