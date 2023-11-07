@@ -56,6 +56,7 @@ mod Core {
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
         lock_count: u32,
+        // locker_id, token_address => delta
         // delta is from the perspective of the core contract, thus:
         // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
         deltas: LegacyMap::<(u32, ContractAddress), i129>,
