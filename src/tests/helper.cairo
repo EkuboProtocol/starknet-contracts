@@ -6,6 +6,7 @@ use ekubo::core::{Core};
 use ekubo::enumerable_owned_nft::{EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::extensions::oracle::{Oracle};
+use ekubo::extensions::twamm::{TWAMM};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
@@ -143,6 +144,21 @@ fn deploy_mock_extension(
         .expect('mockext deploy failed');
 
     IMockExtensionDispatcher { contract_address: address }
+}
+
+fn deploy_twamm(core: ICoreDispatcher, order_block_interval: u64) -> IExtensionDispatcher {
+    let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
+    Serde::serialize(@'twamm://', ref constructor_args);
+    Serde::serialize(@order_block_interval, ref constructor_args);
+
+    let (address, _) = deploy_syscall(
+        TWAMM::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+    )
+        .expect('twamm deploy failed');
+
+    IExtensionDispatcher { contract_address: address }
 }
 
 #[derive(Copy, Drop)]
