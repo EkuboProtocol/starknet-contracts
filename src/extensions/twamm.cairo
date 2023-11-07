@@ -7,27 +7,16 @@ use traits::{Into, TryInto};
 struct OrderKey {
     token0: ContractAddress,
     token1: ContractAddress,
-    block_intervals: i129,
+    time_intervals: u128,
 }
 
 // State of a particular order, defined by the key
-#[derive(Drop, Copy, Serde, PartialEq)]
+#[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
-    // the tick at which the order expires
-    expiration_block: u64,
+    // the timestamp at which the order expires
+    expiration_timestamp: u64,
     // the rate at which the order is selling token0 for token1
     sale_rate: u128,
-}
-
-impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
-    fn pack(value: OrderState) -> felt252 {
-        u256 { low: value.sale_rate, high: value.expiration_block.into() }.try_into().unwrap()
-    }
-    fn unpack(value: felt252) -> OrderState {
-        let x: u256 = value.into();
-
-        OrderState { expiration_block: x.high.try_into().unwrap(), sale_rate: x.low }
-    }
 }
 
 #[derive(Drop, Copy, Serde)]
@@ -69,16 +58,20 @@ mod TWAMM {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::types::bounds::{Bounds};
+    use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
     use option::{OptionTrait};
-    use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
+    use starknet::{
+        get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
+        get_block_timestamp
+    };
     use super::{
         ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, GetOrderInfoRequest,
         GetOrderInfoResult
@@ -97,8 +90,8 @@ mod TWAMM {
         core: ICoreDispatcher,
         nft: IEnumerableOwnedNFTDispatcher,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
-        // interval between blocks where orders can expire
-        order_block_interval: u64,
+        // interval between timestamps where orders can expire
+        order_time_interval: u64,
         // upgradable component storage (empty)
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
@@ -110,7 +103,7 @@ mod TWAMM {
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252,
-        order_block_interval: u64
+        order_time_interval: u64
     ) {
         self.core.write(core);
 
@@ -127,7 +120,7 @@ mod TWAMM {
                 )
             );
 
-        self.order_block_interval.write(order_block_interval);
+        self.order_time_interval.write(order_time_interval);
     }
 
 
@@ -143,7 +136,7 @@ mod TWAMM {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
-            assert(pool_key.tick_spacing == tick_constants::MAX_TICK_SPACING, 'TICK_SPACING');
+            assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
 
             // TODO: update to correct call points
             CallPoints {
@@ -187,9 +180,7 @@ mod TWAMM {
             pool_key: PoolKey,
             params: UpdatePositionParameters
         ) {
-            assert(
-                params.bounds.lower == min_tick() && params.bounds.upper == max_tick(), 'BOUNDS'
-            );
+            assert(params.bounds == max_bounds(pool_key.tick_spacing), 'BOUNDS');
         }
 
         fn after_update_position(

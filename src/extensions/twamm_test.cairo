@@ -4,28 +4,29 @@ use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait,};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::simple_swapper::{ISimpleSwapperDispatcherTrait};
-use ekubo::tests::helper::{deploy_core, deploy_twamm, deploy_two_mock_tokens};
+use ekubo::tests::helper::{
+    deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
+    update_position
+};
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
-use ekubo::types::bounds::{Bounds};
+use ekubo::tests::mocks::locker::{UpdatePositionParameters};
+use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::interfaces::positions::{
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
+};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
+use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
+use ekubo::math::ticks::{min_tick, max_tick};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
-
-fn setup_pool_with_extension(order_block_interval: u64) -> (ICoreDispatcher, ITWAMMDispatcher) {
-    let core = deploy_core();
-    let twamm = deploy_twamm(core, order_block_interval);
-
-    (core, ITWAMMDispatcher { contract_address: twamm.contract_address })
-}
 
 #[test]
 #[available_gas(3000000000)]
@@ -78,9 +79,56 @@ fn test_before_initialize_pool_valid_tick_spacing() {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
                 fee: 0,
-                tick_spacing: tick_constants::MAX_TICK_SPACING,
+                tick_spacing: MAX_TICK_SPACING,
                 extension: twamm.contract_address,
             },
             Zeroable::zero()
         );
+}
+
+#[test]
+#[available_gas(3000000000)]
+#[should_panic(
+    expected: (
+        'BOUNDS',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED',
+        'ENTRYPOINT_FAILED'
+    )
+)]
+fn test_before_update_position_invalid_bounds() {
+    let core = deploy_core();
+    let twamm = deploy_twamm(core, 1_000_u64);
+    let (token0, token1) = deploy_two_mock_tokens();
+
+    let caller = contract_address_const::<42>();
+    set_contract_address(caller);
+
+    let setup = setup_pool_with_core(
+        core,
+        fee: 0,
+        tick_spacing: MAX_TICK_SPACING,
+        initial_tick: Zeroable::zero(),
+        extension: twamm.contract_address,
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = max_bounds(MAX_TICK_SPACING);
+
+    token0.increase_balance(positions.contract_address, 100000000);
+    token1.increase_balance(positions.contract_address, 100000000);
+
+    let (token_id, liquidity) = positions
+        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 0);
+
+    update_position(
+        setup,
+        bounds: Bounds {
+            lower: i129 { mag: TICKS_IN_ONE_PERCENT * 1, sign: true },
+            upper: i129 { mag: TICKS_IN_ONE_PERCENT * 10, sign: false },
+        },
+        liquidity_delta: i129 { mag: 1, sign: false },
+        recipient: caller,
+    );
 }
