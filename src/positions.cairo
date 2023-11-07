@@ -43,11 +43,6 @@ mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
-    }
-
-    #[derive(starknet::Event, Drop)]
     struct Deposit {
         id: u64,
         pool_key: PoolKey,
