@@ -35,6 +35,7 @@ mod Core {
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use hash::{LegacyHash};
     use option::{Option, OptionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
@@ -42,7 +43,6 @@ mod Core {
     };
     use traits::{Into};
     use zeroable::{Zeroable};
-    use hash::{LegacyHash};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
@@ -817,9 +817,7 @@ mod Core {
             // we need to take a snapshot to call view methods within the loop
             let self_snap = @self;
 
-            let tick_bitmap_storage_prefix = LegacyHash::hash(
-                selector!("tick_bitmaps"), pool_key
-            );
+            let tick_bitmap_storage_prefix = LegacyHash::hash(selector!("tick_bitmaps"), pool_key);
 
             let liquidity_delta_storage_prefix = LegacyHash::hash(
                 selector!("tick_liquidity_delta"), pool_key
