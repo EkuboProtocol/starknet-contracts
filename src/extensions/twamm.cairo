@@ -234,8 +234,6 @@ mod TWAMM {
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
-            // TODO: sale rate, and update global rate.
-
             let current_time = get_block_timestamp();
 
             let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
@@ -248,9 +246,11 @@ mod TWAMM {
                     (order_key, id),
                     OrderState {
                         expiry_time: order_expiry_time,
-                        sale_rate: amount / (order_expiry_time - current_time).try_into().unwrap()
+                        sale_rate: amount / (order_expiry_time - current_time).into()
                     }
                 );
+
+            // TODO: update global rate.
 
             // self.emit(OrderPlaced { id, order_key, amount, liquidity });
 

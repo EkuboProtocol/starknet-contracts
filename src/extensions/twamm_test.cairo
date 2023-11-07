@@ -223,12 +223,14 @@ mod OrderTests {
     #[test]
     #[available_gas(3000000000)]
     fn test_order_at_expiry_time() {
-        set_block_timestamp(get_block_timestamp() + 1_000_000);
+        let timestamp = 1_000_000;
+        set_block_timestamp(get_block_timestamp() + timestamp);
 
         let core = deploy_core();
         let twamm = deploy_twamm(core, 1_000_u64);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let amount = 100_000_000;
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(
                 OrderKey {
@@ -249,7 +251,10 @@ mod OrderTests {
                 token_id,
             );
 
+        // 1000000 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
+        // 100000000 / (11001000 - 1000000)
+        assert(order.sale_rate == 9, 'SALE_RATE');
     }
 
     #[test]
@@ -283,6 +288,8 @@ mod OrderTests {
 
         // 1000001 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
+        // 100000000 / (11001000 - 1000000)
+        assert(order.sale_rate == 9, 'SALE_RATE');
     }
 
     #[test]
@@ -316,5 +323,7 @@ mod OrderTests {
 
         // 999999 - (999999 % 1000) + (1000 * (10000 + 1)) = 11000000
         assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
+        // 100000000 / (11000000 - 999999)
+        assert(order.sale_rate == 9, 'SALE_RATE');
     }
 }
