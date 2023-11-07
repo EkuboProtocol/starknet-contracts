@@ -399,7 +399,30 @@ fn update_position_inner(
         ActionResult::AccumulateAsFees(_) => {
             assert(false, 'unexpected');
             Zeroable::zero()
+        },
+        ActionResult::FlashBorrow(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
         }
+    }
+}
+
+fn flash_borrow_inner(
+    core: ICoreDispatcher,
+    locker: ICoreLockerDispatcher,
+    token: ContractAddress,
+    amount_borrow: u128,
+    amount_repay: u128,
+) {
+    match locker.call(Action::FlashBorrow((token, amount_borrow, amount_repay))) {
+        ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
+        ActionResult::Relock => { assert(false, 'unexpected'); },
+        ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
+        ActionResult::Swap(_) => { assert(false, 'unexpected'); },
+        ActionResult::SaveBalance(_) => { assert(false, 'unexpected'); },
+        ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
+        ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected'); },
+        ActionResult::FlashBorrow(_) => {}
     }
 }
 
@@ -435,7 +458,8 @@ fn accumulate_as_fees_inner(
         ActionResult::Swap(delta) => { assert(false, 'unexpected'); },
         ActionResult::SaveBalance(_) => { assert(false, 'unexpected'); },
         ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
-        ActionResult::AccumulateAsFees => {}
+        ActionResult::AccumulateAsFees => {},
+        ActionResult::FlashBorrow(_) => { assert(false, 'unexpected'); }
     }
 }
 
@@ -499,6 +523,10 @@ fn swap_inner(
             Zeroable::zero()
         },
         ActionResult::AccumulateAsFees(_) => {
+            assert(false, 'unexpected');
+            Zeroable::zero()
+        },
+        ActionResult::FlashBorrow(_) => {
             assert(false, 'unexpected');
             Zeroable::zero()
         }

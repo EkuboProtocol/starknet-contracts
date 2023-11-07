@@ -18,6 +18,7 @@ enum Action {
     LoadBalance: (ContractAddress, u64, u128, ContractAddress),
     // accumulates some tokens as fees
     AccumulateAsFees: (PoolKey, u128, u128),
+    FlashBorrow: (ContractAddress, u128, u128),
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -29,6 +30,7 @@ enum ActionResult {
     SaveBalance: u128,
     LoadBalance: u128,
     AccumulateAsFees: (),
+    FlashBorrow: (),
 }
 
 #[starknet::interface]
@@ -325,6 +327,21 @@ mod CoreLocker {
                         );
 
                     ActionResult::AccumulateAsFees
+                },
+                Action::FlashBorrow((
+                    token, amount_borrow, amount_repay
+                )) => {
+                    if (amount_borrow.is_non_zero()) {
+                        core.withdraw(token, get_contract_address(), amount_borrow);
+                    }
+
+                    if (amount_repay.is_non_zero()) {
+                        IERC20Dispatcher { contract_address: token }
+                            .transfer(core.contract_address, amount_repay.into());
+                        core.deposit(token);
+                    }
+
+                    ActionResult::FlashBorrow(())
                 }
             };
 
