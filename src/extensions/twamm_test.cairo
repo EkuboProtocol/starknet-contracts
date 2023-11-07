@@ -20,7 +20,9 @@ use ekubo::interfaces::positions::{
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
+use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
+use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
@@ -101,7 +103,6 @@ fn test_before_initialize_pool_valid_tick_spacing() {
 fn test_before_update_position_invalid_bounds() {
     let core = deploy_core();
     let twamm = deploy_twamm(core, 1_000_u64);
-    let (token0, token1) = deploy_two_mock_tokens();
 
     let caller = contract_address_const::<42>();
     set_contract_address(caller);
@@ -116,11 +117,20 @@ fn test_before_update_position_invalid_bounds() {
     let positions = deploy_positions(setup.core);
     let bounds = max_bounds(MAX_TICK_SPACING);
 
-    token0.increase_balance(positions.contract_address, 100000000);
-    token1.increase_balance(positions.contract_address, 100000000);
+    setup.token0.increase_balance(positions.contract_address, 100_000_000);
+    setup.token1.increase_balance(positions.contract_address, 100_000_000);
+
+    let price = core.get_pool_price(pool_key: setup.pool_key);
+    let max_liquidity = max_liquidity(
+        price.sqrt_ratio,
+        tick_to_sqrt_ratio(bounds.lower),
+        tick_to_sqrt_ratio(bounds.upper),
+        100_000_000,
+        100_000_000,
+    );
 
     let (token_id, liquidity) = positions
-        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 0);
+        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity);
 
     update_position(
         setup,
