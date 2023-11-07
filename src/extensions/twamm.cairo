@@ -7,14 +7,14 @@ use traits::{Into, TryInto};
 struct OrderKey {
     token0: ContractAddress,
     token1: ContractAddress,
-    time_intervals: u128,
+    time_intervals: u64,
 }
 
 // State of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
     // the timestamp at which the order expires
-    expiration_timestamp: u64,
+    expiry_time: u64,
     // the rate at which the order is selling token0 for token1
     sale_rate: u128,
 }
@@ -234,7 +234,23 @@ mod TWAMM {
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
-            // TODO: Calculate expiration timestamp, sale rate, and update global rate.
+            // TODO: sale rate, and update global rate.
+
+            let current_time = get_block_timestamp();
+
+            let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
+            let order_expiry_time = last_expiry_time
+                + (self.order_time_interval.read() * (order_key.time_intervals + 1));
+
+            self
+                .orders
+                .write(
+                    (order_key, id),
+                    OrderState {
+                        expiry_time: order_expiry_time,
+                        sale_rate: amount / (order_expiry_time - current_time).try_into().unwrap()
+                    }
+                );
 
             // self.emit(OrderPlaced { id, order_key, amount, liquidity });
 
