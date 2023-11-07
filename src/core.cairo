@@ -36,8 +36,8 @@ mod Core {
     use ekubo::types::position::{Position, PositionTrait};
     use option::{Option, OptionTrait};
     use starknet::{
-        ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall
+        Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
+        get_contract_address, replace_class_syscall, storage_base_address_from_felt252
     };
     use traits::{Into};
     use zeroable::Zeroable;
@@ -56,9 +56,6 @@ mod Core {
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
         lock_count: u32,
-        locker_addresses: LegacyMap<u32, ContractAddress>,
-        nonzero_delta_counts: LegacyMap::<u32, u32>,
-        // locker_id, token_address => delta
         // delta is from the perspective of the core contract, thus:
         // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
         deltas: LegacyMap::<(u32, ContractAddress), i129>,
@@ -172,9 +169,33 @@ mod Core {
         }
 
         #[inline(always)]
+        fn get_locker_address(self: @ContractState, id: u32) -> ContractAddress {
+            Store::read(0, storage_base_address_from_felt252(id.into()))
+                .expect('FAILED_READ_LOCKER_ADDRESS')
+        }
+
+        #[inline(always)]
+        fn set_locker_address(self: @ContractState, id: u32, address: ContractAddress) {
+            Store::write(0, storage_base_address_from_felt252(id.into()), address)
+                .expect('FAILED_WRITE_LOCKER_ADDRESS');
+        }
+
+        #[inline(always)]
+        fn get_nonzero_delta_count(self: @ContractState, id: u32) -> u32 {
+            Store::read(0, storage_base_address_from_felt252(0x100000000 + id.into()))
+                .expect('FAILED_READ_NZD_COUNT')
+        }
+
+        #[inline(always)]
+        fn set_nonzero_delta_count(self: @ContractState, id: u32, count: u32) {
+            Store::write(0, storage_base_address_from_felt252(0x100000000 + id.into()), count)
+                .expect('FAILED_WRITE_NZD_COUNT');
+        }
+
+        #[inline(always)]
         fn get_locker(self: @ContractState) -> (u32, ContractAddress) {
             let id = self.get_current_locker_id();
-            let locker = self.locker_addresses.read(id);
+            let locker = self.get_locker_address(id);
             (id, locker)
         }
 
@@ -192,9 +213,9 @@ mod Core {
             let next = current + delta;
             self.deltas.write(key, next);
             if (current.is_zero() & next.is_non_zero()) {
-                self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) + 1);
+                self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) + 1);
             } else if (current.is_non_zero() & next.is_zero()) {
-                self.nonzero_delta_counts.write(id, self.nonzero_delta_counts.read(id) - 1);
+                self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) - 1);
             }
         }
 
@@ -263,8 +284,8 @@ mod Core {
         }
 
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
-            let address = self.locker_addresses.read(id);
-            let nonzero_delta_count = self.nonzero_delta_counts.read(id);
+            let address = self.get_locker_address(id);
+            let nonzero_delta_count = self.get_nonzero_delta_count(id);
             LockerState { address, nonzero_delta_count }
         }
 
@@ -416,14 +437,14 @@ mod Core {
             let caller = get_caller_address();
 
             self.lock_count.write(id + 1);
-            self.locker_addresses.write(id, caller);
+            self.set_locker_address(id, caller);
 
             let result = ILockerDispatcher { contract_address: caller }.locked(id, data);
 
-            assert(self.nonzero_delta_counts.read(id) == 0, 'NOT_ZEROED');
+            assert(self.get_nonzero_delta_count(id) == 0, 'NOT_ZEROED');
 
             self.lock_count.write(id);
-            self.locker_addresses.write(id, Zeroable::zero());
+            self.set_locker_address(id, Zeroable::zero());
 
             result
         }
