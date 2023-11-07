@@ -142,3 +142,44 @@ fn test_before_update_position_invalid_bounds() {
         recipient: caller,
     );
 }
+
+#[test]
+#[available_gas(3000000000)]
+fn test_before_update_position_valid_bounds() {
+    let core = deploy_core();
+    let twamm = deploy_twamm(core, 1_000_u64);
+
+    let caller = contract_address_const::<42>();
+    set_contract_address(caller);
+
+    let setup = setup_pool_with_core(
+        core,
+        fee: 0,
+        tick_spacing: MAX_TICK_SPACING,
+        initial_tick: Zeroable::zero(),
+        extension: twamm.contract_address,
+    );
+    let positions = deploy_positions(setup.core);
+    let bounds = max_bounds(MAX_TICK_SPACING);
+
+    setup.token0.increase_balance(positions.contract_address, 100_000_000);
+    setup.token1.increase_balance(positions.contract_address, 100_000_000);
+
+    let price = core.get_pool_price(pool_key: setup.pool_key);
+    let max_liquidity = max_liquidity(
+        price.sqrt_ratio,
+        tick_to_sqrt_ratio(bounds.lower),
+        tick_to_sqrt_ratio(bounds.upper),
+        100_000_000,
+        100_000_000,
+    );
+
+    let (token_id, liquidity) = positions
+        .mint_and_deposit(pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity);
+
+    setup.token0.increase_balance(setup.locker.contract_address, 100_000_000);
+    setup.token1.increase_balance(setup.locker.contract_address, 100_000_000);
+    update_position(
+        setup, bounds, liquidity_delta: i129 { mag: max_liquidity, sign: false }, recipient: caller,
+    );
+}
