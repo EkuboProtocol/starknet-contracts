@@ -132,6 +132,7 @@ mod LimitOrders {
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use option::{OptionTrait};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
@@ -140,7 +141,6 @@ mod LimitOrders {
     };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 

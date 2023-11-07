@@ -19,6 +19,7 @@ mod Positions {
     use ekubo::types::i129::{i129};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use option::{Option, OptionTrait};
     use serde::{Serde};
     use starknet::{
@@ -27,7 +28,6 @@ mod Positions {
     };
     use traits::{Into};
     use zeroable::{Zeroable};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 

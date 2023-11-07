@@ -1,10 +1,10 @@
 use array::{ArrayTrait};
-use ekubo::owner::owner;
 use ekubo::enumerable_owned_nft::{
     IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
+use ekubo::owner::owner;
 use ekubo::tests::helper::{deploy_enumerable_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait

@@ -31,6 +31,7 @@ mod EnumerableOwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use option::{OptionTrait};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
@@ -40,7 +41,6 @@ mod EnumerableOwnedNFT {
     use super::{IEnumerableOwnedNFT, ContractAddress};
     use traits::{Into, TryInto};
     use zeroable::{Zeroable};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 

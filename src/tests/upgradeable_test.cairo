@@ -1,10 +1,10 @@
-use starknet::{class_hash_const, ClassHash};
-use starknet::testing::{set_contract_address, pop_log};
 use ekubo::owner::owner;
 use ekubo::tests::helper::{deploy_mock_upgradeable};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
+use starknet::testing::{set_contract_address, pop_log};
+use starknet::{class_hash_const, ClassHash};
 
 #[test]
 #[available_gas(2000000)]

@@ -12,9 +12,9 @@ mod quoter;
 mod shared_locker;
 mod simple_erc20;
 mod simple_swapper;
-mod upgradeable;
 
 #[cfg(test)]
 mod tests;
 mod types;
+mod upgradeable;
 
