@@ -41,7 +41,8 @@ mod Core {
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252
     };
     use traits::{Into};
-    use zeroable::Zeroable;
+    use zeroable::{Zeroable};
+    use hash::{LegacyHash};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
@@ -276,6 +277,78 @@ mod Core {
                 }
             };
         }
+
+
+        fn prefix_next_initialized_tick(
+            self: @ContractState, prefix: felt252, tick_spacing: u128, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            assert(from < max_tick(), 'NEXT_FROM_MAX');
+
+            let (word_index, bit_index) = tick_to_word_and_bit_index(
+                from + i129 { mag: tick_spacing, sign: false }, tick_spacing
+            );
+
+            let bitmap: Bitmap = Store::read(
+                0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
+            )
+                .expect('BITMAP_READ_FAILED');
+
+            match bitmap.next_set_bit(bit_index) {
+                Option::Some(next_bit) => {
+                    (word_and_bit_index_to_tick((word_index, next_bit), tick_spacing), true)
+                },
+                Option::None => {
+                    let next = word_and_bit_index_to_tick((word_index, 0), tick_spacing);
+                    if (next > max_tick()) {
+                        return (max_tick(), false);
+                    }
+                    if (skip_ahead.is_zero()) {
+                        (next, false)
+                    } else {
+                        self
+                            .prefix_next_initialized_tick(
+                                prefix, tick_spacing, next, skip_ahead - 1
+                            )
+                    }
+                },
+            }
+        }
+
+        fn prefix_prev_initialized_tick(
+            self: @ContractState, prefix: felt252, tick_spacing: u128, from: i129, skip_ahead: u128
+        ) -> (i129, bool) {
+            assert(from >= min_tick(), 'PREV_FROM_MIN');
+            let (word_index, bit_index) = tick_to_word_and_bit_index(from, tick_spacing);
+
+            let bitmap: Bitmap = Store::read(
+                0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
+            )
+                .expect('BITMAP_READ_FAILED');
+
+            match bitmap.prev_set_bit(bit_index) {
+                Option::Some(prev_bit_index) => {
+                    (word_and_bit_index_to_tick((word_index, prev_bit_index), tick_spacing), true)
+                },
+                Option::None => {
+                    // if it's not set, we know there is no set bit in this word
+                    let prev = word_and_bit_index_to_tick((word_index, 250), tick_spacing);
+                    if (prev < min_tick()) {
+                        return (min_tick(), false);
+                    }
+                    if (skip_ahead == 0) {
+                        (prev, false)
+                    } else {
+                        self
+                            .prefix_prev_initialized_tick(
+                                prefix,
+                                tick_spacing,
+                                prev - i129 { mag: 1, sign: false },
+                                skip_ahead - 1
+                            )
+                    }
+                }
+            }
+        }
     }
 
     #[external(v0)]
@@ -353,68 +426,25 @@ mod Core {
         fn next_initialized_tick(
             self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
-            assert(from < max_tick(), 'NEXT_FROM_MAX');
-
-            let (word_index, bit_index) = tick_to_word_and_bit_index(
-                from + i129 { mag: pool_key.tick_spacing, sign: false }, pool_key.tick_spacing
-            );
-
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-
-            match bitmap.next_set_bit(bit_index) {
-                Option::Some(next_bit) => {
-                    (
-                        word_and_bit_index_to_tick((word_index, next_bit), pool_key.tick_spacing),
-                        true
-                    )
-                },
-                Option::None => {
-                    let next = word_and_bit_index_to_tick((word_index, 0), pool_key.tick_spacing);
-                    if (next > max_tick()) {
-                        return (max_tick(), false);
-                    }
-                    if (skip_ahead.is_zero()) {
-                        (next, false)
-                    } else {
-                        self.next_initialized_tick(pool_key, next, skip_ahead - 1)
-                    }
-                },
-            }
+            self
+                .prefix_next_initialized_tick(
+                    LegacyHash::hash(selector!("tick_bitmaps"), pool_key),
+                    pool_key.tick_spacing,
+                    from,
+                    skip_ahead
+                )
         }
 
         fn prev_initialized_tick(
             self: @ContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
         ) -> (i129, bool) {
-            assert(from >= min_tick(), 'PREV_FROM_MIN');
-            let (word_index, bit_index) = tick_to_word_and_bit_index(from, pool_key.tick_spacing);
-
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
-
-            match bitmap.prev_set_bit(bit_index) {
-                Option::Some(prev_bit_index) => {
-                    (
-                        word_and_bit_index_to_tick(
-                            (word_index, prev_bit_index), pool_key.tick_spacing
-                        ),
-                        true
-                    )
-                },
-                Option::None => {
-                    // if it's not set, we know there is no set bit in this word
-                    let prev = word_and_bit_index_to_tick((word_index, 250), pool_key.tick_spacing);
-                    if (prev < min_tick()) {
-                        return (min_tick(), false);
-                    }
-                    if (skip_ahead == 0) {
-                        (prev, false)
-                    } else {
-                        self
-                            .prev_initialized_tick(
-                                pool_key, prev - i129 { mag: 1, sign: false }, skip_ahead - 1
-                            )
-                    }
-                }
-            }
+            self
+                .prefix_prev_initialized_tick(
+                    LegacyHash::hash(selector!("tick_bitmaps"), pool_key),
+                    pool_key.tick_spacing,
+                    from,
+                    skip_ahead
+                )
         }
 
         fn withdraw_protocol_fees(
@@ -787,6 +817,17 @@ mod Core {
             // we need to take a snapshot to call view methods within the loop
             let self_snap = @self;
 
+            let tick_bitmap_storage_prefix = LegacyHash::hash(
+                selector!("tick_bitmaps"), pool_key
+            );
+
+            let liquidity_delta_storage_prefix = LegacyHash::hash(
+                selector!("tick_liquidity_delta"), pool_key
+            );
+            let fees_per_liquidity_storage_prefix = LegacyHash::hash(
+                selector!("tick_fees_outside"), pool_key
+            );
+
             loop {
                 if (amount_remaining.is_zero()) {
                     break ();
@@ -797,9 +838,21 @@ mod Core {
                 }
 
                 let (next_tick, is_initialized) = if (increasing) {
-                    self_snap.next_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap
+                        .prefix_next_initialized_tick(
+                            tick_bitmap_storage_prefix,
+                            pool_key.tick_spacing,
+                            tick,
+                            params.skip_ahead
+                        )
                 } else {
-                    self_snap.prev_initialized_tick(pool_key, tick, params.skip_ahead)
+                    self_snap
+                        .prefix_prev_initialized_tick(
+                            tick_bitmap_storage_prefix,
+                            pool_key.tick_spacing,
+                            tick,
+                            params.skip_ahead
+                        )
                 };
 
                 let next_tick_sqrt_ratio = tick_to_sqrt_ratio(next_tick);
@@ -855,7 +908,13 @@ mod Core {
                         };
 
                     if (is_initialized) {
-                        let liquidity_delta = self.tick_liquidity_delta.read((pool_key, next_tick));
+                        let liquidity_delta: i129 = Store::read(
+                            0,
+                            storage_base_address_from_felt252(
+                                LegacyHash::hash(liquidity_delta_storage_prefix, next_tick)
+                            )
+                        )
+                            .expect('FAILED_READ_LIQ_DELTA');
                         // update our working liquidity based on the direction we are crossing the tick
                         if (increasing) {
                             liquidity = liquidity.add(liquidity_delta);
@@ -864,13 +923,16 @@ mod Core {
                         }
 
                         // update the tick fee state
-                        self
-                            .tick_fees_outside
-                            .write(
-                                (pool_key, next_tick),
-                                fees_per_liquidity
-                                    - self.tick_fees_outside.read((pool_key, next_tick))
-                            );
+                        let fpl_storage_base_address = storage_base_address_from_felt252(
+                            LegacyHash::hash(fees_per_liquidity_storage_prefix, next_tick)
+                        );
+                        Store::write(
+                            0,
+                            fpl_storage_base_address,
+                            fees_per_liquidity
+                                - Store::read(0, fpl_storage_base_address)
+                                    .expect('FAILED_READ_TICK_FPL')
+                        );
                     }
                 } else {
                     tick = sqrt_ratio_to_tick(sqrt_ratio);
