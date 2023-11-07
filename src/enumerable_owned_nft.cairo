@@ -66,12 +66,6 @@ mod EnumerableOwnedNFT {
 
 
     #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
-    }
-
-
-    #[derive(starknet::Event, Drop)]
     struct Transfer {
         from: ContractAddress,
         to: ContractAddress,
