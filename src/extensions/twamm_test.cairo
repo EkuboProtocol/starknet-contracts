@@ -255,6 +255,11 @@ mod OrderTests {
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
         // 100000000 / (11001000 - 1000000)
         assert(order.sale_rate == 9, 'SALE_RATE');
+
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(token0.contract_address);
+
+        assert(global_rate == 9, 'GLOBAL_SALE_RATE');
     }
 
     #[test]
@@ -290,6 +295,11 @@ mod OrderTests {
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
         // 100000000 / (11001000 - 1000000)
         assert(order.sale_rate == 9, 'SALE_RATE');
+
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(token0.contract_address);
+
+        assert(global_rate == 9, 'GLOBAL_SALE_RATE');
     }
 
     #[test]
@@ -325,5 +335,78 @@ mod OrderTests {
         assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
         // 100000000 / (11000000 - 999999)
         assert(order.sale_rate == 9, 'SALE_RATE');
+
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(token0.contract_address);
+
+        assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
+        let timestamp = 1_000_000;
+        set_block_timestamp(get_block_timestamp() + timestamp);
+
+        let core = deploy_core();
+        let twamm = deploy_twamm(core, 100_u64);
+        let (token0, token1) = deploy_two_mock_tokens();
+
+        let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(
+                OrderKey {
+                    token0: token0.contract_address,
+                    token1: token1.contract_address,
+                    time_intervals: 100
+                },
+                100_000,
+            );
+
+        let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(
+                OrderKey {
+                    token0: token0.contract_address,
+                    token1: token1.contract_address,
+                    time_intervals: 100
+                },
+                token_id_0,
+            );
+
+        // 1000000 + (100 * (100 + 1))  
+        assert(order_0.expiry_time == 1_010_100, 'EXPIRY_TIME');
+        // 100000 / (1010100 - 1000000)
+        assert(order_0.sale_rate == 9, 'SALE_RATE');
+
+        let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(
+                OrderKey {
+                    token0: token0.contract_address,
+                    token1: token1.contract_address,
+                    time_intervals: 100
+                },
+                100_000,
+            );
+
+        let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(
+                OrderKey {
+                    token0: token0.contract_address,
+                    token1: token1.contract_address,
+                    time_intervals: 100
+                },
+                token_id_1,
+            );
+
+        // 1000000 + (100 * (100 + 1))  
+        assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
+        // 100000 / (1010100 - 1000000)
+        assert(order_1.sale_rate == 9, 'SALE_RATE');
+
+        // same order was placed twice with no expiring/executing orders in between
+        // sale rate doubles
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(token0.contract_address);
+
+        assert(global_rate == 18, 'GLOBAL_SALE_RATE');
     }
 }

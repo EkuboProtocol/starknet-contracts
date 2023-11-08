@@ -38,8 +38,11 @@ trait ITWAMM<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
     fn get_nft_address(self: @TContractState) -> ContractAddress;
 
-    // Returns the stored order state
+    // Return the stored order state
     fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
+
+    // Returns the current sale rate for the given token
+    fn get_sale_rate(self: @TContractState, token: ContractAddress) -> u128;
 
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
@@ -70,7 +73,7 @@ mod TWAMM {
     use option::{OptionTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
-        get_block_timestamp
+        get_block_timestamp,
     };
     use super::{
         ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, GetOrderInfoRequest,
@@ -92,6 +95,8 @@ mod TWAMM {
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         // interval between timestamps where orders can expire
         order_time_interval: u64,
+        // the current rate at which token0 is being sold for token1
+        sale_rate: LegacyMap<ContractAddress, u128>,
         // upgradable component storage (empty)
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
@@ -195,33 +200,6 @@ mod TWAMM {
     }
 
     #[external(v0)]
-    impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
-            let core = self.core.read();
-
-            // let result: LockCallbackResult =
-            //     match consume_callback_data::<LockCallbackData>(core, data) {
-            //     LockCallbackData::PlaceOrderCallbackData(place_order) => {
-            //         LockCallbackResult::Empty
-            //     },
-            //     LockCallbackData::HandleAfterSwapCallbackData(after_swap) => {
-            //         LockCallbackResult::Empty
-            //     },
-            //     LockCallbackData::WithdrawExecutedOrderBalance(withdraw) => {
-            //         LockCallbackResult::Empty
-            //     },
-            //     LockCallbackData::WithdrawUnexecutedOrderBalance(withdraw) => {
-            //         LockCallbackResult::Empty
-            //     }
-            // };
-
-            let mut result_data = ArrayTrait::new();
-            // Serde::serialize(@result, ref result_data);
-            result_data
-        }
-    }
-
-    #[external(v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
@@ -231,30 +209,41 @@ mod TWAMM {
             self.orders.read((order_key, id))
         }
 
+        fn get_sale_rate(self: @ContractState, token: ContractAddress) -> u128 {
+            self.sale_rate.read(token)
+        }
+
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
+            self.execute_virtual_trades();
+
             let id = self.nft.read().mint(get_caller_address());
 
             let current_time = get_block_timestamp();
-
             let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
             let order_expiry_time = last_expiry_time
                 + (self.order_time_interval.read() * (order_key.time_intervals + 1));
 
+            let sale_rate = amount / (order_expiry_time - current_time).into();
+
             self
                 .orders
-                .write(
-                    (order_key, id),
-                    OrderState {
-                        expiry_time: order_expiry_time,
-                        sale_rate: amount / (order_expiry_time - current_time).into()
-                    }
-                );
+                .write((order_key, id), OrderState { expiry_time: order_expiry_time, sale_rate, });
 
-            // TODO: update global rate.
+            self
+                .sale_rate
+                .write(order_key.token0, self.sale_rate.read(order_key.token0) + sale_rate);
 
-            // self.emit(OrderPlaced { id, order_key, amount, liquidity });
+            // TODO: Emit events.
 
             id
+        }
+    }
+
+    #[generate_trait]
+    impl Internal of InternalTrait {
+        fn execute_virtual_trades(
+            self: @ContractState
+        ) { // TODO: execute virtual trades, and update rates based on expirying orders
         }
     }
 
