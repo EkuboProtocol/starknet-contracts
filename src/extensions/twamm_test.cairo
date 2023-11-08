@@ -217,7 +217,7 @@ mod OrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log
     };
 
     #[test]
@@ -238,7 +238,7 @@ mod OrderTests {
                     token1: token1.contract_address,
                     time_intervals: 10_000
                 },
-                100_000_000,
+                amount,
             );
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -260,6 +260,16 @@ mod OrderTests {
             .get_sale_rate(token0.contract_address);
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+
+        // check event
+
+        let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(event.id == 1, 'event.id');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == 11_001_000, 'event.expiry_time');
+        assert(event.sale_rate == 9, 'event.sale_rate');
+        assert(event.global_sale_rate == 9, 'event.global_sale_rate');
     }
 
     #[test]
@@ -271,6 +281,7 @@ mod OrderTests {
         let twamm = deploy_twamm(core, 1_000_u64);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let amount = 100_000_000;
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(
                 OrderKey {
@@ -278,7 +289,7 @@ mod OrderTests {
                     token1: token1.contract_address,
                     time_intervals: 10_000
                 },
-                100_000_000,
+                amount,
             );
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -300,6 +311,16 @@ mod OrderTests {
             .get_sale_rate(token0.contract_address);
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+
+        // check event
+
+        let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(event.id == 1, 'event.id');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == 11_001_000, 'event.expiry_time');
+        assert(event.sale_rate == 9, 'event.sale_rate');
+        assert(event.global_sale_rate == 9, 'event.global_sale_rate');
     }
 
     #[test]
@@ -311,6 +332,7 @@ mod OrderTests {
         let twamm = deploy_twamm(core, 1_000_u64);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let amount = 100_000_000;
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(
                 OrderKey {
@@ -318,7 +340,7 @@ mod OrderTests {
                     token1: token1.contract_address,
                     time_intervals: 10_000
                 },
-                100_000_000,
+                amount,
             );
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -340,6 +362,16 @@ mod OrderTests {
             .get_sale_rate(token0.contract_address);
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+
+        // check event
+
+        let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(event.id == 1, 'event.id');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == 11_000_000, 'event.expiry_time');
+        assert(event.sale_rate == 9, 'event.sale_rate');
+        assert(event.global_sale_rate == 9, 'event.global_sale_rate');
     }
 
     #[test]
@@ -352,6 +384,7 @@ mod OrderTests {
         let twamm = deploy_twamm(core, 100_u64);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let amount = 100_000;
         let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(
                 OrderKey {
@@ -359,7 +392,7 @@ mod OrderTests {
                     token1: token1.contract_address,
                     time_intervals: 100
                 },
-                100_000,
+                amount,
             );
 
         let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -377,6 +410,16 @@ mod OrderTests {
         // 100000 / (1010100 - 1000000)
         assert(order_0.sale_rate == 9, 'SALE_RATE');
 
+        // check event
+
+        let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(event.id == 1, 'event.id');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == 1_010_100, 'event.expiry_time');
+        assert(event.sale_rate == 9, 'event.sale_rate');
+        assert(event.global_sale_rate == 9, 'event.global_sale_rate');
+
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(
                 OrderKey {
@@ -384,7 +427,7 @@ mod OrderTests {
                     token1: token1.contract_address,
                     time_intervals: 100
                 },
-                100_000,
+                amount,
             );
 
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -401,6 +444,16 @@ mod OrderTests {
         assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
         // 100000 / (1010100 - 1000000)
         assert(order_1.sale_rate == 9, 'SALE_RATE');
+
+        // check event
+
+        let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(event.id == 2, 'event.id');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == 1_010_100, 'event.expiry_time');
+        assert(event.sale_rate == 9, 'event.sale_rate');
+        assert(event.global_sale_rate == 18, 'event.global_sale_rate');
 
         // same order was placed twice with no expiring/executing orders in between
         // sale rate doubles

@@ -128,12 +128,22 @@ mod TWAMM {
         self.order_time_interval.write(order_time_interval);
     }
 
+    #[derive(starknet::Event, Drop)]
+    struct OrderPlaced {
+        id: u64,
+        order_key: OrderKey,
+        amount: u128,
+        expiry_time: u64,
+        sale_rate: u128,
+        global_sale_rate: u128
+    }
 
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
         ClassHashReplaced: upgradeable_component::Event,
+        OrderPlaced: OrderPlaced,
     }
 
     #[external(v0)]
@@ -143,10 +153,9 @@ mod TWAMM {
         ) -> CallPoints {
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
 
-            // TODO: update to correct call points
             CallPoints {
                 after_initialize_pool: false,
-                before_swap: false,
+                before_swap: true,
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
@@ -176,7 +185,7 @@ mod TWAMM {
             params: SwapParameters,
             delta: Delta
         ) {
-            assert(false, 'NOT_USED');
+            self.execute_virtual_trades();
         }
 
         fn before_update_position(
@@ -220,20 +229,20 @@ mod TWAMM {
 
             let current_time = get_block_timestamp();
             let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
-            let order_expiry_time = last_expiry_time
+            let expiry_time = last_expiry_time
                 + (self.order_time_interval.read() * (order_key.time_intervals + 1));
 
-            let sale_rate = amount / (order_expiry_time - current_time).into();
+            let sale_rate = amount / (expiry_time - current_time).into();
+
+            self.orders.write((order_key, id), OrderState { expiry_time: expiry_time, sale_rate, });
+
+            let global_sale_rate = self.sale_rate.read(order_key.token0) + sale_rate;
+            self.sale_rate.write(order_key.token0, global_sale_rate);
 
             self
-                .orders
-                .write((order_key, id), OrderState { expiry_time: order_expiry_time, sale_rate, });
-
-            self
-                .sale_rate
-                .write(order_key.token0, self.sale_rate.read(order_key.token0) + sale_rate);
-
-            // TODO: Emit events.
+                .emit(
+                    OrderPlaced { id, order_key, amount, expiry_time, sale_rate, global_sale_rate }
+                );
 
             id
         }
