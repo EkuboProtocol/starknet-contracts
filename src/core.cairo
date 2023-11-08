@@ -213,9 +213,9 @@ mod Core {
             let delta_storage_location = storage_base_address_from_felt252(
                 pedersen::pedersen(id.into(), token_address.into())
             );
-            let current: i129 = Store::read(0, delta_storage_location).expect('READ_DELTA');
+            let current: i129 = Store::read(0, delta_storage_location).expect('FAILED_READ_DELTA');
             let next = current + delta;
-            Store::write(0, delta_storage_location, next);
+            Store::write(0, delta_storage_location, next).expect('FAILED_WRITE_DELTA');
             if (current.is_zero() & next.is_non_zero()) {
                 self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) + 1);
             } else if (current.is_non_zero() & next.is_zero()) {
@@ -962,7 +962,8 @@ mod Core {
                             fees_per_liquidity
                                 - Store::read(0, fpl_storage_base_address)
                                     .expect('FAILED_READ_TICK_FPL')
-                        );
+                        )
+                            .expect('FAILED_WRITE_TICK_FPL');
                     }
                 } else {
                     tick = sqrt_ratio_to_tick(sqrt_ratio);
@@ -985,9 +986,11 @@ mod Core {
                 0,
                 pool_price_storage_address,
                 PoolPrice { sqrt_ratio, tick, call_points: price.call_points }
-            );
-            Store::write(0, liquidity_storage_address, liquidity);
-            Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity);
+            )
+                .expect('FAILED_WRITE_POOL_PRICE');
+            Store::write(0, liquidity_storage_address, liquidity).expect('FAILED_WRITE_LIQUIDITY');
+            Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity)
+                .expect('FAILED_WRITE_FEES');
 
             self.account_pool_delta(id, pool_key, delta);
 
