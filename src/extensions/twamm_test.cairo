@@ -219,6 +219,7 @@ mod OrderTests {
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait,
     };
 
     #[test]
@@ -235,8 +236,10 @@ mod OrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
+
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount,);
+            .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(
@@ -282,8 +285,10 @@ mod OrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
+
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount,);
+            .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key, token_id,);
@@ -322,8 +327,9 @@ mod OrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount,);
+            .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(
@@ -370,8 +376,10 @@ mod OrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 100
         };
+
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount,);
+            .place_order(order_key, amount);
 
         let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key, token_id_0,);
@@ -391,8 +399,9 @@ mod OrderTests {
         assert(event.sale_rate == 9, 'event.sale_rate');
         assert(event.global_sale_rate == 9, 'event.global_sale_rate');
 
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount,);
+            .place_order(order_key, amount);
 
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key, token_id_1);
@@ -419,4 +428,5 @@ mod OrderTests {
 
         assert(global_rate == 18, 'GLOBAL_SALE_RATE');
     }
+// TODO: Add test that fail deposits
 }

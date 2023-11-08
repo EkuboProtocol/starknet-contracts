@@ -99,6 +99,8 @@ mod TWAMM {
         sale_rate_ending: LegacyMap<(TokenKey, u64), u128>,
         // reward factor for token0
         reward_factor: LegacyMap<TokenKey, u128>,
+        // token reserves for a token key
+        reserves: LegacyMap<TokenKey, u256>,
         // upgradable component storage (empty)
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
@@ -272,7 +274,7 @@ mod TWAMM {
                 );
 
             // TODO: Update rewards factor.
-            self.deposit(order_key, id, amount);
+            self.deposit(token_key, id, amount);
 
             id
         }
@@ -294,10 +296,28 @@ mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn deposit(self: @ContractState, order_key: OrderKey, id: u64, amount: u128) {}
+        fn deposit(ref self: ContractState, token_key: TokenKey, id: u64, amount: u128) {
+            let balance = IERC20Dispatcher { contract_address: token_key.token0 }
+                .balanceOf(get_contract_address());
+
+            let reserves = self.reserves.read(token_key);
+
+            assert(balance >= reserves, 'BALANCE_LT_RESERVE');
+
+            let delta = balance - reserves;
+
+            // the delta is limited to u128
+            assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
+
+            // the delta must equal the deposit amount
+            assert(delta.low == amount, 'DELTA_LT_AMOUNT');
+
+            // update reserves
+            self.reserves.write(token_key, reserves + delta);
+        }
 
         fn execute_virtual_trades(
-            self: @ContractState
+            ref self: ContractState
         ) { // TODO: execute virtual trades, and update rates based on expirying orders
         // swap tokens on core based on current rates
         }
