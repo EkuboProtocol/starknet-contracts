@@ -210,10 +210,12 @@ mod Core {
         fn account_delta(
             ref self: ContractState, id: u32, token_address: ContractAddress, delta: i129
         ) {
-            let key = (id, token_address);
-            let current = self.deltas.read(key);
+            let delta_storage_location = storage_base_address_from_felt252(
+                pedersen::pedersen(id.into(), token_address.into())
+            );
+            let current: i129 = Store::read(0, delta_storage_location).expect('READ_DELTA');
             let next = current + delta;
-            self.deltas.write(key, next);
+            Store::write(0, delta_storage_location, next);
             if (current.is_zero() & next.is_non_zero()) {
                 self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) + 1);
             } else if (current.is_non_zero() & next.is_zero()) {
