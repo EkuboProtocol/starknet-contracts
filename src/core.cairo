@@ -783,7 +783,12 @@ mod Core {
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let price = self.pool_price.read(pool_key);
+            let pool_price_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(selector!("pool_price"), pool_key)
+            );
+
+            let price: PoolPrice = Store::read(0, pool_price_storage_address)
+                .expect('FAILED_READ_POOL_PRICE');
 
             // pool must be initialized
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
@@ -809,10 +814,22 @@ mod Core {
             let mut amount_remaining = params.amount;
             let mut sqrt_ratio = price.sqrt_ratio;
 
-            let mut liquidity = self.pool_liquidity.read(pool_key);
+            let liquidity_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(selector!("pool_liquidity"), pool_key)
+            );
+
+            let mut liquidity: u128 = Store::read(0, liquidity_storage_address)
+                .expect('FAILED_READ_POOL_LIQUIDITY');
             let mut calculated_amount: u128 = Zeroable::zero();
 
-            let mut fees_per_liquidity = self.pool_fees.read(pool_key);
+            let fees_per_liquidity_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(selector!("pool_fees"), pool_key)
+            );
+
+            let mut fees_per_liquidity: FeesPerLiquidity = Store::read(
+                0, fees_per_liquidity_storage_address
+            )
+                .expect('FAILED_READ_POOL_FEES');
 
             // we need to take a snapshot to call view methods within the loop
             let self_snap = @self;
@@ -962,11 +979,13 @@ mod Core {
                 }
             };
 
-            self
-                .pool_price
-                .write(pool_key, PoolPrice { sqrt_ratio, tick, call_points: price.call_points });
-            self.pool_liquidity.write(pool_key, liquidity);
-            self.pool_fees.write(pool_key, fees_per_liquidity);
+            Store::write(
+                0,
+                pool_price_storage_address,
+                PoolPrice { sqrt_ratio, tick, call_points: price.call_points }
+            );
+            Store::write(0, liquidity_storage_address, liquidity);
+            Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity);
 
             self.account_pool_delta(id, pool_key, delta);
 
