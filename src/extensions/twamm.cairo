@@ -17,20 +17,8 @@ struct OrderState {
     expiry_time: u64,
     // the rate at which the order is selling token0 for token1
     sale_rate: u128,
-}
-
-#[derive(Drop, Copy, Serde)]
-struct GetOrderInfoRequest {
-    order_key: OrderKey,
-    id: u64
-}
-
-#[derive(Drop, Copy, Serde)]
-struct GetOrderInfoResult {
-    state: OrderState,
-    executed: bool,
-    amount0: u128,
-    amount1: u128,
+    // reward factor for token0
+    reward_factor: u128,
 }
 
 #[starknet::interface]
@@ -46,6 +34,12 @@ trait ITWAMM<TContractState> {
 
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
+
+    // Cancels a twamm order
+    fn cancel_order(ref self: TContractState, order_key: OrderKey, id: u64);
+
+    // Withdraws proceeds from a twamm order
+    fn withdraw_from_order(ref self: TContractState, order_key: OrderKey, id: u64);
 }
 
 #[starknet::contract]
@@ -75,10 +69,7 @@ mod TWAMM {
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
         get_block_timestamp,
     };
-    use super::{
-        ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, GetOrderInfoRequest,
-        GetOrderInfoResult
-    };
+    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState};
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
@@ -95,8 +86,12 @@ mod TWAMM {
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         // interval between timestamps where orders can expire
         order_time_interval: u64,
-        // the current rate at which token0 is being sold for token1
+        // current rate at which token0 is being sold for token1
         sale_rate: LegacyMap<ContractAddress, u128>,
+        // cumulative sale rate for token0 ending at a particular timestamp
+        sale_rate_ending: LegacyMap<(ContractAddress, u64), u128>,
+        // reward factor for token0
+        reward_factor: LegacyMap<ContractAddress, u128>,
         // upgradable component storage (empty)
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
@@ -135,7 +130,8 @@ mod TWAMM {
         amount: u128,
         expiry_time: u64,
         sale_rate: u128,
-        global_sale_rate: u128
+        global_sale_rate: u128,
+        sale_rate_ending: u128
     }
 
     #[derive(starknet::Event, Drop)]
@@ -155,7 +151,7 @@ mod TWAMM {
 
             CallPoints {
                 after_initialize_pool: false,
-                before_swap: true,
+                before_swap: false,
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
@@ -185,7 +181,7 @@ mod TWAMM {
             params: SwapParameters,
             delta: Delta
         ) {
-            self.execute_virtual_trades();
+            assert(false, 'NOT_USED');
         }
 
         fn before_update_position(
@@ -227,6 +223,7 @@ mod TWAMM {
 
             let id = self.nft.read().mint(get_caller_address());
 
+            // calculate and store order expiry time and sale rate
             let current_time = get_block_timestamp();
             let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
             let expiry_time = last_expiry_time
@@ -234,17 +231,53 @@ mod TWAMM {
 
             let sale_rate = amount / (expiry_time - current_time).into();
 
-            self.orders.write((order_key, id), OrderState { expiry_time: expiry_time, sale_rate, });
+            self
+                .orders
+                .write(
+                    (order_key, id),
+                    OrderState {
+                        expiry_time: expiry_time,
+                        sale_rate,
+                        reward_factor: self.reward_factor.read(order_key.token0)
+                    }
+                );
 
+            // update global sale rate
             let global_sale_rate = self.sale_rate.read(order_key.token0) + sale_rate;
             self.sale_rate.write(order_key.token0, global_sale_rate);
 
+            // update sale rate ending at expiry time
+            let sale_rate_ending = self.sale_rate_ending.read((order_key.token0, expiry_time))
+                + sale_rate;
+            self.sale_rate_ending.write((order_key.token0, expiry_time), sale_rate_ending);
+
             self
                 .emit(
-                    OrderPlaced { id, order_key, amount, expiry_time, sale_rate, global_sale_rate }
+                    OrderPlaced {
+                        id,
+                        order_key,
+                        amount,
+                        expiry_time,
+                        sale_rate,
+                        global_sale_rate,
+                        sale_rate_ending
+                    }
                 );
 
+            // TODO: Update reserves from orders.
+            // TODO: Update rewards factor.
+
             id
+        }
+
+        fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
+            // TODO: Implement
+            self.execute_virtual_trades();
+        }
+
+        fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
+            // TODO: Implement
+            self.execute_virtual_trades();
         }
     }
 
