@@ -1,4 +1,5 @@
 use ekubo::types::i129::{i129, i129Trait};
+use ekubo::types::keys::{PoolKey};
 use integer::{u256_safe_divmod, u256_as_non_zero};
 use starknet::{ContractAddress, StorePacking};
 use traits::{Into, TryInto};
@@ -29,8 +30,8 @@ trait ITWAMM<TContractState> {
     // Return the stored order state
     fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
 
-    // Returns the current sale rate for the given token
-    fn get_sale_rate(self: @TContractState, token: ContractAddress) -> u128;
+    // Returns the current sale rate for the given pool key
+    fn get_sale_rate(self: @TContractState, pool_key: PoolKey) -> u128;
 
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
@@ -87,11 +88,11 @@ mod TWAMM {
         // interval between timestamps where orders can expire
         order_time_interval: u64,
         // current rate at which token0 is being sold for token1
-        sale_rate: LegacyMap<ContractAddress, u128>,
+        sale_rate: LegacyMap<PoolKey, u128>,
         // cumulative sale rate for token0 ending at a particular timestamp
-        sale_rate_ending: LegacyMap<(ContractAddress, u64), u128>,
+        sale_rate_ending: LegacyMap<(PoolKey, u64), u128>,
         // reward factor for token0
-        reward_factor: LegacyMap<ContractAddress, u128>,
+        reward_factor: LegacyMap<PoolKey, u128>,
         // upgradable component storage (empty)
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
@@ -151,7 +152,7 @@ mod TWAMM {
 
             CallPoints {
                 after_initialize_pool: false,
-                before_swap: false,
+                before_swap: true,
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
@@ -170,9 +171,8 @@ mod TWAMM {
             pool_key: PoolKey,
             params: SwapParameters
         ) {
-            assert(false, 'NOT_USED');
+            self.execute_virtual_trades();
         }
-
 
         fn after_swap(
             ref self: ContractState,
@@ -214,8 +214,8 @@ mod TWAMM {
             self.orders.read((order_key, id))
         }
 
-        fn get_sale_rate(self: @ContractState, token: ContractAddress) -> u128 {
-            self.sale_rate.read(token)
+        fn get_sale_rate(self: @ContractState, pool_key: PoolKey) -> u128 {
+            self.sale_rate.read(pool_key)
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
@@ -231,6 +231,8 @@ mod TWAMM {
 
             let sale_rate = amount / (expiry_time - current_time).into();
 
+            let pool_key = to_pool_key(order_key, get_contract_address());
+
             self
                 .orders
                 .write(
@@ -238,18 +240,17 @@ mod TWAMM {
                     OrderState {
                         expiry_time: expiry_time,
                         sale_rate,
-                        reward_factor: self.reward_factor.read(order_key.token0)
+                        reward_factor: self.reward_factor.read(pool_key)
                     }
                 );
 
             // update global sale rate
-            let global_sale_rate = self.sale_rate.read(order_key.token0) + sale_rate;
-            self.sale_rate.write(order_key.token0, global_sale_rate);
+            let global_sale_rate = self.sale_rate.read(pool_key) + sale_rate;
+            self.sale_rate.write(pool_key, global_sale_rate);
 
             // update sale rate ending at expiry time
-            let sale_rate_ending = self.sale_rate_ending.read((order_key.token0, expiry_time))
-                + sale_rate;
-            self.sale_rate_ending.write((order_key.token0, expiry_time), sale_rate_ending);
+            let sale_rate_ending = self.sale_rate_ending.read((pool_key, expiry_time)) + sale_rate;
+            self.sale_rate_ending.write((pool_key, expiry_time), sale_rate_ending);
 
             self
                 .emit(
@@ -264,7 +265,6 @@ mod TWAMM {
                     }
                 );
 
-            // TODO: Update reserves from orders.
             // TODO: Update rewards factor.
 
             id
@@ -281,11 +281,22 @@ mod TWAMM {
         }
     }
 
+    fn to_pool_key(order_key: OrderKey, extension: ContractAddress) -> PoolKey {
+        PoolKey {
+            token0: order_key.token0,
+            token1: order_key.token1,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: extension
+        }
+    }
+
     #[generate_trait]
     impl Internal of InternalTrait {
         fn execute_virtual_trades(
             self: @ContractState
         ) { // TODO: execute virtual trades, and update rates based on expirying orders
+        // swap tokens on core based on current rates
         }
     }
 
