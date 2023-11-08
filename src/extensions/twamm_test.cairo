@@ -25,7 +25,7 @@ use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
 use ekubo::extensions::twamm::{OrderKey};
-use ekubo::extensions::twamm::TWAMM::{to_pool_key};
+use ekubo::extensions::twamm::TWAMM::{to_token_key};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
@@ -218,7 +218,7 @@ mod OrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_pool_key,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
     };
 
     #[test]
@@ -254,7 +254,7 @@ mod OrderTests {
         assert(order.sale_rate == 9, 'SALE_RATE');
 
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_sale_rate(to_pool_key(order_key, twamm.contract_address));
+            .get_sale_rate(to_token_key(order_key));
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
 
@@ -294,7 +294,7 @@ mod OrderTests {
         assert(order.sale_rate == 9, 'SALE_RATE');
 
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_sale_rate(to_pool_key(order_key, twamm.contract_address));
+            .get_sale_rate(to_token_key(order_key));
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
 
@@ -341,7 +341,7 @@ mod OrderTests {
         assert(order.sale_rate == 9, 'SALE_RATE');
 
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_sale_rate(to_pool_key(order_key, twamm.contract_address));
+            .get_sale_rate(to_token_key(order_key));
 
         assert(global_rate == 9, 'GLOBAL_SALE_RATE');
 
@@ -395,7 +395,7 @@ mod OrderTests {
             .place_order(order_key, amount,);
 
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id_1,);
+            .get_order_state(order_key, token_id_1);
 
         // 1000000 + (100 * (100 + 1))  
         assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
@@ -415,7 +415,7 @@ mod OrderTests {
         // same order was placed twice with no expiring/executing orders in between
         // sale rate doubles
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_sale_rate(to_pool_key(order_key, twamm.contract_address));
+            .get_sale_rate(to_token_key(order_key));
 
         assert(global_rate == 18, 'GLOBAL_SALE_RATE');
     }
