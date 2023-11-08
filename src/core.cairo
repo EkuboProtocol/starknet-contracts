@@ -57,10 +57,8 @@ mod Core {
         reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
         lock_count: u32,
-        // locker_id, token_address => delta
-        // delta is from the perspective of the core contract, thus:
-        // a positive delta means the contract is owed tokens, a negative delta means it owes tokens
-        deltas: LegacyMap<(u32, ContractAddress), i129>,
+        // the rest of transient state is accessed directly using Store::read and Store::write to save on hashes
+
         // the persistent state of all the pools is stored in these structs
         pool_price: LegacyMap<PoolKey, PoolPrice>,
         pool_liquidity: LegacyMap<PoolKey, u128>,
