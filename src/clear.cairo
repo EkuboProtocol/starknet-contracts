@@ -1,0 +1,19 @@
+use starknet::{ContractAddress, get_contract_address, get_caller_address};
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+
+#[starknet::interface]
+trait ClearTrait<TContractState> {
+    fn clear(self: @TContractState, token: ContractAddress) -> u256;
+}
+
+#[starknet::embeddable]
+impl ClearImpl<TContractState> of ClearTrait<TContractState> {
+    fn clear(self: @TContractState, token: ContractAddress) -> u256 {
+        let dispatcher = IERC20Dispatcher { contract_address: token };
+        let balance = dispatcher.balanceOf(get_contract_address());
+        if (balance.is_non_zero()) {
+            dispatcher.transfer(get_caller_address(), balance);
+        }
+        balance
+    }
+}

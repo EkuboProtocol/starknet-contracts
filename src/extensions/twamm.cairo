@@ -80,11 +80,13 @@ mod TWAMM {
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::clear::{ClearImpl};
 
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
+    impl Clear = ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -379,15 +381,5 @@ mod TWAMM {
         ) { // TODO: execute virtual trades, and update rates based on expirying orders
         // swap tokens on core based on current rates
         }
-    }
-
-    // TODO: Move to an embeddable impl
-    fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
-        let dispatcher = IERC20Dispatcher { contract_address: token };
-        let balance = dispatcher.balanceOf(get_contract_address());
-        if (balance.is_non_zero()) {
-            dispatcher.transfer(get_caller_address(), balance);
-        }
-        balance
     }
 }
