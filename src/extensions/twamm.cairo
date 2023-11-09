@@ -280,12 +280,65 @@ mod TWAMM {
         }
 
         fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            // TODO: Implement
+            self.validate_caller(id);
             self.execute_virtual_trades();
+
+            let order_state = self.orders.read((order_key, id));
+
+            let timestamp = get_block_timestamp();
+            let caller = get_caller_address();
+
+            // validate that the order has not expired
+            assert(order_state.expiry_time > timestamp, 'ORDER_EXPIRED');
+
+            // calculate token0 amount that was not sold
+            let remaining_time = order_state.expiry_time - timestamp;
+            let remaining_amount = order_state.sale_rate * remaining_time.into();
+
+            // calculate token1 amount that was purchased
+            let token_key = to_token_key(order_key);
+            let purchased_amount = (self.reward_factor.read(token_key) - order_state.reward_factor)
+                * order_state.sale_rate;
+
+            // update global rates
+            self.sale_rate.write(token_key, self.sale_rate.read(token_key) - order_state.sale_rate);
+            self
+                .sale_rate_ending
+                .write(
+                    (token_key, order_state.expiry_time),
+                    self.sale_rate_ending.read((token_key, order_state.expiry_time))
+                        - order_state.sale_rate
+                );
+
+            // update order state to reflect that the order has been cancelled
+            self
+                .orders
+                .write(
+                    (order_key, id), OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                );
+            // burn the NFT
+            self.nft.read().burn(id);
+
+            // transfer remaining token0 and update reserves
+            if (remaining_amount.is_non_zero()) {
+                IERC20Dispatcher { contract_address: token_key.token0 }
+                    .transfer(caller, remaining_amount.into());
+
+                self
+                    .reserves
+                    .write(token_key, self.reserves.read(token_key) - remaining_amount.into());
+            }
+
+            // transfer purchased token1 
+            if (purchased_amount.is_non_zero()) {
+                // TODO: Figure out how we want to handle reserves for token0->token1
+                IERC20Dispatcher { contract_address: token_key.token1 }
+                    .transfer(caller, purchased_amount.into());
+            }
         }
 
         fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            // TODO: Implement
+            self.validate_caller(id);
             self.execute_virtual_trades();
         }
     }
@@ -296,6 +349,11 @@ mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
+        fn validate_caller(self: @ContractState, id: u64) {
+            let nft = self.nft.read();
+            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+        }
+
         fn deposit(ref self: ContractState, token_key: TokenKey, id: u64, amount: u128) {
             let balance = IERC20Dispatcher { contract_address: token_key.token0 }
                 .balanceOf(get_contract_address());
@@ -310,7 +368,7 @@ mod TWAMM {
             assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
 
             // the delta must equal the deposit amount
-            assert(delta.low == amount, 'DELTA_LT_AMOUNT');
+            assert(delta.low == amount, 'DELTA_NE_AMOUNT');
 
             // update reserves
             self.reserves.write(token_key, reserves + delta);

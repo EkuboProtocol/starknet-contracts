@@ -214,7 +214,7 @@ mod PoolTests {
     }
 }
 
-mod OrderTests {
+mod PlaceOrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
@@ -429,4 +429,8 @@ mod OrderTests {
         assert(global_rate == 18, 'GLOBAL_SALE_RATE');
     }
 // TODO: Add test that fail deposits
+
+}
+
+mod CancelOrderTests { // TODO: Add tests.
 }
