@@ -99,8 +99,10 @@ mod TWAMM {
         sale_rate: LegacyMap<TokenKey, u128>,
         // cumulative sale rate for token0 ending at a particular timestamp
         sale_rate_ending: LegacyMap<(TokenKey, u64), u128>,
-        // reward factor for token0
+        // current reward factor for token key
         reward_factor: LegacyMap<TokenKey, u128>,
+        // reward factor for token key at a particular timestamp
+        reward_factor_at_time: LegacyMap<(TokenKey, u64), u128>,
         // token reserves for a token key
         reserves: LegacyMap<TokenKey, u256>,
         // upgradable component storage (empty)
@@ -146,11 +148,25 @@ mod TWAMM {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct OrderCancelled {
+        id: u64,
+        order_key: OrderKey,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    struct OrderWithdrawn {
+        id: u64,
+        order_key: OrderKey,
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
         ClassHashReplaced: upgradeable_component::Event,
         OrderPlaced: OrderPlaced,
+        OrderCancelled: OrderCancelled,
+        OrderWithdrawn: OrderWithdrawn,
     }
 
     #[external(v0)]
@@ -282,13 +298,14 @@ mod TWAMM {
         }
 
         fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            self.validate_caller(id);
+            let caller = get_caller_address();
+
+            self.validate_caller(id, caller);
             self.execute_virtual_trades();
 
             let order_state = self.orders.read((order_key, id));
 
             let timestamp = get_block_timestamp();
-            let caller = get_caller_address();
 
             // validate that the order has not expired
             assert(order_state.expiry_time > timestamp, 'ORDER_EXPIRED');
@@ -303,7 +320,8 @@ mod TWAMM {
                 * order_state.sale_rate;
 
             // update global rates
-            self.sale_rate.write(token_key, self.sale_rate.read(token_key) - order_state.sale_rate);
+            let sale_rate = self.sale_rate.read(token_key) - order_state.sale_rate;
+            self.sale_rate.write(token_key, sale_rate);
             self
                 .sale_rate_ending
                 .write(
@@ -337,23 +355,78 @@ mod TWAMM {
                 IERC20Dispatcher { contract_address: token_key.token1 }
                     .transfer(caller, purchased_amount.into());
             }
+
+            self.emit(OrderCancelled { id, order_key });
         }
 
         fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            self.validate_caller(id);
+            let caller = get_caller_address();
+            self.validate_caller(id, caller);
             self.execute_virtual_trades();
+
+            let order_state = self.orders.read((order_key, id));
+
+            assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
+
+            let timestamp = get_block_timestamp();
+
+            let mut total_reward_factor = 0;
+            let token_key = TokenKey { token0: order_key.token0, token1: order_key.token1 };
+
+            // order has expired
+            if (timestamp > order_state.expiry_time) {
+                total_reward_factor = self
+                    .reward_factor_at_time
+                    .read((token_key, order_state.expiry_time))
+                    - order_state.reward_factor;
+
+                // TODO: Should we burn the NFT? Probably not.
+                // update order state to reflect that the order has been fully executed
+                self
+                    .orders
+                    .write(
+                        (order_key, id),
+                        OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                    );
+            } else {
+                total_reward_factor = self.reward_factor.read(token_key)
+                    - order_state.reward_factor;
+
+                // update order state to reflect that the order has been partially executed
+                self
+                    .orders
+                    .write(
+                        (order_key, id),
+                        OrderState {
+                            expiry_time: order_state.expiry_time,
+                            sale_rate: order_state.sale_rate,
+                            reward_factor: self.reward_factor.read(token_key)
+                        }
+                    );
+            }
+
+            let total_reward = order_state.sale_rate * total_reward_factor;
+
+            // transfer purchased token1 
+            if (total_reward.is_non_zero()) {
+                // TODO: Figure out how we want to handle reserves for token0->token1
+                IERC20Dispatcher { contract_address: token_key.token1 }
+                    .transfer(caller, total_reward.into());
+            }
+
+            self.emit(OrderWithdrawn { id, order_key });
         }
     }
 
     fn to_token_key(order_key: OrderKey) -> TokenKey {
-        TokenKey { token0: order_key.token0, token1: order_key.token1, }
+        TokenKey { token0: order_key.token0, token1: order_key.token1 }
     }
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn validate_caller(self: @ContractState, id: u64) {
+        fn validate_caller(self: @ContractState, id: u64, caller: ContractAddress) {
             let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
         }
 
         fn deposit(ref self: ContractState, token_key: TokenKey, id: u64, amount: u128) {
@@ -378,8 +451,13 @@ mod TWAMM {
 
         fn execute_virtual_trades(
             ref self: ContractState
-        ) { // TODO: execute virtual trades, and update rates based on expirying orders
-        // swap tokens on core based on current rates
+        ) { // TODO: execute virtual trades, swap tokens on core based on current rates
+        // TODO: Distribute payment by updating rewards factor based on sale rate and amount traded
+
+        // TODO: update rates based on expirying orders
+
+        // TODO: Store last timestamp at which virtual trades were executed
+
         }
     }
 }
