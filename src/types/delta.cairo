@@ -53,3 +53,10 @@ impl DeltaSubEq of SubEq<Delta> {
         self = Sub::sub(self, other);
     }
 }
+
+impl DeltaDefault of Default<Delta> {
+    #[inline(always)]
+    fn default() -> Delta {
+        Delta { amount0: i129 { mag: 0, sign: false }, amount1: i129 { mag: 0, sign: false } }
+    }
+}
