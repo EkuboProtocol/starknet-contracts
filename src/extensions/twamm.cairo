@@ -14,6 +14,8 @@ struct OrderKey {
 // State of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
+    // the timestamp at which the order was placed
+    place_time: u64,
     // the timestamp at which the order expires
     expiry_time: u64,
     // the rate at which the order is selling token0 for token1
@@ -39,6 +41,9 @@ trait ITWAMM<TContractState> {
     // Returns the current sale rate for a token key
     fn get_sale_rate(self: @TContractState, token_key: TokenKey,) -> u128;
 
+    // Return the current reserves for a token key
+    fn get_reserves(self: @TContractState, token_key: TokenKey) -> u256;
+
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
 
@@ -62,7 +67,7 @@ mod TWAMM {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
+    use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
     use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
@@ -107,7 +112,7 @@ mod TWAMM {
         reserves: LegacyMap<TokenKey, u256>,
         // initial timestamp at which initial order time defaults to for all token keys
         initial_virtual_order_time: u64,
-        // last timestamp at which virtual order was placed
+        // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TokenKey, u64>,
         // upgradable component storage (empty)
         #[substorage(v0)]
@@ -138,6 +143,10 @@ mod TWAMM {
             );
 
         self.order_time_interval.write(order_time_interval);
+
+        self
+            .initial_virtual_order_time
+            .write(get_block_timestamp() - (get_block_timestamp() % order_time_interval));
     }
 
     #[derive(starknet::Event, Drop)]
@@ -279,6 +288,11 @@ mod TWAMM {
             self.sale_rate.read(token_key)
         }
 
+        fn get_reserves(self: @ContractState, token_key: TokenKey) -> u256 {
+            self.reserves.read(token_key)
+        }
+
+
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let token_key = to_token_key(order_key);
 
@@ -292,13 +306,14 @@ mod TWAMM {
             let expiry_time = last_expiry_time
                 + (self.order_time_interval.read() * (order_key.time_intervals + 1));
 
-            let sale_rate = amount / (expiry_time - current_time).into();
+            let sale_rate = self.scale_up(amount) / (expiry_time - current_time).into();
 
             self
                 .orders
                 .write(
                     (order_key, id),
                     OrderState {
+                        place_time: current_time,
                         expiry_time: expiry_time,
                         sale_rate,
                         reward_factor: self.reward_factor.read(token_key)
@@ -326,7 +341,6 @@ mod TWAMM {
                     }
                 );
 
-            // TODO: Update rewards factor.
             self.deposit(token_key, id, amount);
 
             id
@@ -347,9 +361,18 @@ mod TWAMM {
             // validate that the order has not expired
             assert(order_state.expiry_time > current_time, 'ORDER_EXPIRED');
 
-            // calculate token0 amount that was not sold
-            let remaining_time = order_state.expiry_time - current_time;
-            let remaining_amount = order_state.sale_rate * remaining_time.into();
+            // culate token0 amount that was not sold
+            let remaining_amount = if self.last_virtual_order_time.read(token_key) == 0 {
+                self
+                    .scale_down(
+                        order_state.sale_rate
+                            * (order_state.expiry_time - order_state.place_time).into()
+                    )
+            } else {
+                order_state.sale_rate
+                    * (order_state.expiry_time - self.last_virtual_order_time.read(token_key))
+                        .into()
+            };
 
             // calculate token1 amount that was purchased
             let purchased_amount = (self.reward_factor.read(token_key) - order_state.reward_factor)
@@ -370,7 +393,8 @@ mod TWAMM {
             self
                 .orders
                 .write(
-                    (order_key, id), OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                    (order_key, id),
+                    OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                 );
             // burn the NFT
             self.nft.read().burn(id);
@@ -417,7 +441,7 @@ mod TWAMM {
                     .orders
                     .write(
                         (order_key, id),
-                        OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                        OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                     );
 
                 self.reward_factor_at_time.read((token_key, order_state.expiry_time))
@@ -429,6 +453,7 @@ mod TWAMM {
                     .write(
                         (order_key, id),
                         OrderState {
+                            place_time: order_state.place_time,
                             expiry_time: order_state.expiry_time,
                             sale_rate: order_state.sale_rate,
                             reward_factor: self.reward_factor.read(token_key)
@@ -473,10 +498,20 @@ mod TWAMM {
                         - (last_virtual_order_time % order_time_interval)
                         + order_time_interval;
 
-                    let core = self.core.read();
-                    let mut delta = Default::<Delta>::default();
                     let current_time = get_block_timestamp();
+                    let core = self.core.read();
+                    let mut price = core.get_pool_price(swap.pool_key);
+                    let mut delta = Default::<Delta>::default();
+                    let mut last_virtual_order_time_executed = 0;
                     loop {
+                        if price.sqrt_ratio == 0 {
+                            break;
+                        }
+
+                        if next_expiry_time > current_time {
+                            break;
+                        }
+
                         // TODO:
                         // Execute swap and accumulate all deltas.
                         // distribute payment by updating rewards factor based on sale rate and amount traded
@@ -484,31 +519,36 @@ mod TWAMM {
                         let amount_to_sell = self.sale_rate.read(swap.token_key)
                             * self.reserves.read(swap.token_key).try_into().unwrap();
 
-                        // delta = core
-                        //     .swap(
-                        //         swap.pool_key,
-                        //         // TODO: Figure out correct swap parameters.
-                        //         SwapParameters {
-                        //             amount: i129 { mag: amount_to_sell, sign: false },
-                        //             is_token1: false,
-                        //             sqrt_ratio_limit: 0,
-                        //             skip_ahead: 0
-                        //         },
-                        //     );
+                        delta += core
+                            .swap(
+                                swap.pool_key,
+                                // TODO: Figure out correct swap parameters.
+                                SwapParameters {
+                                    amount: i129 { mag: amount_to_sell, sign: false },
+                                    is_token1: false,
+                                    sqrt_ratio_limit: price.sqrt_ratio
+                                        + TICKS_IN_ONE_PERCENT.into(),
+                                    skip_ahead: 0
+                                },
+                            );
 
                         // TODO:
                         // expire orders and update rates
 
-                        // TODO:
-                        // store last timestamp at which virtual trades were executed
+                        // last timestamp at which virtual trades were executed
+                        last_virtual_order_time_executed = next_expiry_time;
+
+                        // update price
+                        price = core.get_pool_price(swap.pool_key);
 
                         // update next expiry time
                         next_expiry_time += order_time_interval;
-
-                        if next_expiry_time > current_time {
-                            break;
-                        }
                     };
+
+                    self
+                        .last_virtual_order_time
+                        .write(swap.token_key, last_virtual_order_time_executed);
+
                     LockCallbackResult::Empty
                 },
             };
@@ -546,30 +586,54 @@ mod TWAMM {
             assert(delta.low == amount, 'DELTA_NE_AMOUNT');
 
             // update reserves
-            self.reserves.write(token_key, reserves + delta);
+            self.reserves.write(token_key, balance);
         }
 
         fn execute_virtual_trades(ref self: ContractState, token_key: TokenKey) {
+            // TODO: Figure out how to properly get pool key
+            let pool_key = PoolKey {
+                token0: token_key.token0,
+                token1: token_key.token1,
+                tick_spacing: MAX_TICK_SPACING,
+                fee: 0,
+                extension: get_contract_address()
+            };
+
             match call_core_with_callback::<
                 LockCallbackData, LockCallbackResult
             >(
                 self.core.read(),
                 @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    ExecuteVirtualSwapsCallbackData {
-                        token_key: token_key,
-                        // TODO: Figure out how to properly get pool key
-                        pool_key: PoolKey {
-                            token0: token_key.token0,
-                            token1: token_key.token1,
-                            tick_spacing: MAX_TICK_SPACING,
-                            fee: 0,
-                            extension: get_contract_address()
-                        }
-                    }
+                    ExecuteVirtualSwapsCallbackData { token_key: token_key, pool_key: pool_key }
                 )
             ) {
                 LockCallbackResult::Empty => {},
             }
+        }
+
+        fn get_last_virtual_order_time(self: @ContractState, token_key: TokenKey) -> u64 {
+            let lvot = self.last_virtual_order_time.read(token_key);
+            if lvot == 0 {
+                self.initial_virtual_order_time.read()
+            } else {
+                lvot
+            }
+        }
+
+        // scale up by 2**32
+        fn scale_up(ref self: ContractState, amount: u128) -> u128 {
+            let scaled_amount = amount * 0x100000000;
+            // TODO: Include allowable precision loss?
+            // assert(scaled_amount / 0x100000000 == amount, 'SCALE_UP_OVERFLOW');
+            scaled_amount
+        }
+
+        // scale down by 2**32
+        fn scale_down(ref self: ContractState, amount: u128) -> u128 {
+            let scaled_amount = amount / 0x100000000;
+            // TODO: Include allowable precision loss?
+            // assert(scaled_amount * 0x100000000 == amount, 'SCALE_DOWN_OVERFLOW');
+            scaled_amount
         }
     }
 }
