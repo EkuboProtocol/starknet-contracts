@@ -484,17 +484,17 @@ mod TWAMM {
                         let amount_to_sell = self.sale_rate.read(swap.token_key)
                             * self.reserves.read(swap.token_key).try_into().unwrap();
 
-                        delta = core
-                            .swap(
-                                swap.pool_key,
-                                // TODO: Figure out correct swap parameters.
-                                SwapParameters {
-                                    amount: i129 { mag: amount_to_sell, sign: false },
-                                    is_token1: false,
-                                    sqrt_ratio_limit: 0,
-                                    skip_ahead: 0
-                                },
-                            );
+                        // delta = core
+                        //     .swap(
+                        //         swap.pool_key,
+                        //         // TODO: Figure out correct swap parameters.
+                        //         SwapParameters {
+                        //             amount: i129 { mag: amount_to_sell, sign: false },
+                        //             is_token1: false,
+                        //             sqrt_ratio_limit: 0,
+                        //             skip_ahead: 0
+                        //         },
+                        //     );
 
                         // TODO:
                         // expire orders and update rates
