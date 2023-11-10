@@ -22,9 +22,9 @@ struct SwapResult {
 fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
     // sqrt_ratio is expressed in token1/token0, thus:
     // negative token0 = true ^ false = true = increasing
-    // positive token0 = false ^ false = false = decreasing
     // negative token1 = true ^ true = false = decreasing
-    // negative token0 = true ^ false = true = increasing
+    // positive token0 = false ^ false = false = decreasing
+    // positive token1 = false ^ true = true = increasing
     exact_output ^ is_token1
 }
 
