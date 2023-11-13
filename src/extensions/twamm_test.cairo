@@ -245,23 +245,19 @@ mod PlaceOrderTests {
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000
-                },
+                order_key,
                 token_id,
             );
 
         // 1000000 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
         // 100000000 * 2**32 / (11001000 - 1000000)
-        // assert(order.sale_rate == 9, 'SALE_RATE');
+        assert(order.sale_rate == 0x9ffbe7876, 'SALE_RATE');
 
-        // let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-        //     .get_sale_rate(to_token_key(order_key));
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(to_token_key(order_key));
 
-        // assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+        assert(global_rate == 0x9ffbe7876, 'GLOBAL_SALE_RATE');
 
         // check event
 
@@ -270,8 +266,8 @@ mod PlaceOrderTests {
         assert(event.id == 1, 'event.id');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-    // assert(event.sale_rate == 9, 'event.sale_rate');
-    // assert(event.global_sale_rate == 9, 'event.global_sale_rate');
+        assert(event.sale_rate == 0x9ffbe7876, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x9ffbe7876, 'event.global_sale_rate');
     }
 
     #[test]
@@ -297,13 +293,13 @@ mod PlaceOrderTests {
 
         // 1000001 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
-        // 100000000 / (11001000 - 1000000)
-        // assert(order.sale_rate == 9, 'SALE_RATE');
+        // 100000000 * 2**32 / (11001000 - 1000001)
+        assert(order.sale_rate == 0x9ffbe893c, 'SALE_RATE');
 
-        // let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-        //     .get_sale_rate(to_token_key(order_key));
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(to_token_key(order_key));
 
-        // assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+        assert(global_rate == 0x9ffbe893c, 'GLOBAL_SALE_RATE');
 
         // check event
 
@@ -312,8 +308,8 @@ mod PlaceOrderTests {
         assert(event.id == 1, 'event.id');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-    // assert(event.sale_rate == 9, 'event.sale_rate');
-    // assert(event.global_sale_rate == 9, 'event.global_sale_rate');
+        assert(event.sale_rate == 0x9ffbe893c, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x9ffbe893c, 'event.global_sale_rate');
     }
 
     #[test]
@@ -345,13 +341,13 @@ mod PlaceOrderTests {
 
         // 999999 - (999999 % 1000) + (1000 * (10000 + 1)) = 11000000
         assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
-        // 100000000 / (11000000 - 999999)
-        // assert(order.sale_rate == 9, 'SALE_RATE');
+        // 100000000 * 2**32 / (11000000 - 999999)
+        assert(order.sale_rate == 0x9ffffef39, 'SALE_RATE');
 
-        // let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-        //     .get_sale_rate(to_token_key(order_key));
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(to_token_key(order_key));
 
-        // assert(global_rate == 9, 'GLOBAL_SALE_RATE');
+        assert(global_rate == 0x9ffffef39, 'GLOBAL_SALE_RATE');
 
         // check event
 
@@ -360,8 +356,8 @@ mod PlaceOrderTests {
         assert(event.id == 1, 'event.id');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == 11_000_000, 'event.expiry_time');
-    // assert(event.sale_rate == 9, 'event.sale_rate');
-    // assert(event.global_sale_rate == 9, 'event.global_sale_rate');
+        assert(event.sale_rate == 0x9ffffef39, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x9ffffef39, 'event.global_sale_rate');
     }
 
     #[test]
@@ -388,8 +384,8 @@ mod PlaceOrderTests {
 
         // 1000000 + (100 * (100 + 1))  
         assert(order_0.expiry_time == 1_010_100, 'EXPIRY_TIME');
-        // 100000 / (1010100 - 1000000)
-        // assert(order_0.sale_rate == 9, 'SALE_RATE');
+        // 100000 * 2**32 / (1010100 - 1000000)
+        assert(order_0.sale_rate == 0x9e6a74981, 'SALE_RATE');
 
         // check event
 
@@ -398,20 +394,24 @@ mod PlaceOrderTests {
         assert(event.id == 1, 'event.id');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-        // assert(event.sale_rate == 9, 'event.sale_rate');
-        // assert(event.global_sale_rate == 9, 'event.global_sale_rate');
+        assert(event.sale_rate == 0x9e6a74981, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x9e6a74981, 'event.global_sale_rate');
+
+        // increase timestamp
+        set_block_timestamp(get_block_timestamp() + 1);
 
         token0.increase_balance(twamm.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
+
 
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key, token_id_1);
 
         // 1000000 + (100 * (100 + 1))  
         assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
-        // 100000 / (1010100 - 1000000)
-        // assert(order_1.sale_rate == 9, 'SALE_RATE');
+        // 100000 * 2**32 / (1010100 - 1000001)
+        assert(order_1.sale_rate == 0x9e6e789c5, 'SALE_RATE');
 
         // check event
 
@@ -420,15 +420,13 @@ mod PlaceOrderTests {
         assert(event.id == 2, 'event.id');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-    // assert(event.sale_rate == 9, 'event.sale_rate');
-    // assert(event.global_sale_rate == 18, 'event.global_sale_rate');
+        assert(event.sale_rate == 0x9e6e789c5, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x9e6a74981 + 0x9e6e789c5, 'event.global_sale_rate');
 
-    // same order was placed twice with no expiring/executing orders in between
-    // sale rate doubles
-    // let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-    //     .get_sale_rate(to_token_key(order_key));
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(to_token_key(order_key));
 
-    // assert(global_rate == 18, 'GLOBAL_SALE_RATE');
+        assert(global_rate == 0x9e6a74981 + 0x9e6e789c5, 'GLOBAL_SALE_RATE');
     }
 
     #[test]

@@ -355,20 +355,21 @@ mod TWAMM {
             self.execute_virtual_trades(token_key);
 
             let order_state = self.orders.read((order_key, id));
-
             let current_time = get_block_timestamp();
 
             // validate that the order has not expired
             assert(order_state.expiry_time > current_time, 'ORDER_EXPIRED');
 
-            // culate token0 amount that was not sold
+            // calculate token0 amount that was not sold
             let remaining_amount = if self.last_virtual_order_time.read(token_key) == 0 {
+                // no trades executed
                 self
                     .scale_down(
                         order_state.sale_rate
                             * (order_state.expiry_time - order_state.place_time).into()
                     )
             } else {
+                // at least one trade executed
                 order_state.sale_rate
                     * (order_state.expiry_time - self.last_virtual_order_time.read(token_key))
                         .into()
@@ -611,25 +612,16 @@ mod TWAMM {
             }
         }
 
-        fn get_last_virtual_order_time(self: @ContractState, token_key: TokenKey) -> u64 {
-            let lvot = self.last_virtual_order_time.read(token_key);
-            if lvot == 0 {
-                self.initial_virtual_order_time.read()
-            } else {
-                lvot
-            }
-        }
-
-        // scale up by 2**32
         fn scale_up(ref self: ContractState, amount: u128) -> u128 {
+            // scale up by 2**32
             let scaled_amount = amount * 0x100000000;
             // TODO: Include allowable precision loss?
             // assert(scaled_amount / 0x100000000 == amount, 'SCALE_UP_OVERFLOW');
             scaled_amount
         }
 
-        // scale down by 2**32
         fn scale_down(ref self: ContractState, amount: u128) -> u128 {
+            // scale down by 2**32
             let scaled_amount = amount / 0x100000000;
             // TODO: Include allowable precision loss?
             // assert(scaled_amount * 0x100000000 == amount, 'SCALE_DOWN_OVERFLOW');
