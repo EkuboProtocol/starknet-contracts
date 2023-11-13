@@ -361,19 +361,7 @@ mod TWAMM {
             assert(order_state.expiry_time > current_time, 'ORDER_EXPIRED');
 
             // calculate token0 amount that was not sold
-            let remaining_amount = if self.last_virtual_order_time.read(token_key) == 0 {
-                // no trades executed
-                self
-                    .scale_down(
-                        order_state.sale_rate
-                            * (order_state.expiry_time - order_state.place_time).into()
-                    )
-            } else {
-                // at least one trade executed
-                order_state.sale_rate
-                    * (order_state.expiry_time - self.last_virtual_order_time.read(token_key))
-                        .into()
-            };
+            let remaining_amount = self.get_order_remaining_amount(token_key, order_state);
 
             // calculate token1 amount that was purchased
             let purchased_amount = (self.reward_factor.read(token_key) - order_state.reward_factor)
@@ -420,6 +408,8 @@ mod TWAMM {
             self.emit(OrderCancelled { id, order_key });
         }
 
+        // if order did not expire, withdraws proceeds from order
+        // if order expired, withdraws proceeds from order and unsold amount of token0
         fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
@@ -435,7 +425,7 @@ mod TWAMM {
             let current_time = get_block_timestamp();
 
             // order has expired
-            let total_reward_factor = if current_time > order_state.expiry_time {
+            let (total_reward_factor, unsold_amount) = if current_time > order_state.expiry_time {
                 // TODO: Should we burn the NFT? Probably not.
                 // update order state to reflect that the order has been fully executed
                 self
@@ -445,8 +435,12 @@ mod TWAMM {
                         OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                     );
 
-                self.reward_factor_at_time.read((token_key, order_state.expiry_time))
-                    - order_state.reward_factor
+                // Return rewards factor and token0 amount that was not sold as unsold_amount
+                (
+                    self.reward_factor_at_time.read((token_key, order_state.expiry_time))
+                        - order_state.reward_factor,
+                    self.get_order_remaining_amount(token_key, order_state)
+                )
             } else {
                 // update order state to reflect that the order has been partially executed
                 self
@@ -461,10 +455,20 @@ mod TWAMM {
                         }
                     );
 
-                self.reward_factor.read(token_key) - order_state.reward_factor
+                (self.reward_factor.read(token_key) - order_state.reward_factor, 0)
             };
 
-            let total_reward = order_state.sale_rate * total_reward_factor;
+            let total_reward = self.scale_down(order_state.sale_rate * total_reward_factor);
+
+            // transfer remaining token0 and update reserves
+            if (unsold_amount.is_non_zero()) {
+                IERC20Dispatcher { contract_address: token_key.token0 }
+                    .transfer(caller, unsold_amount.into());
+
+                self
+                    .reserves
+                    .write(token_key, self.reserves.read(token_key) - unsold_amount.into());
+            }
 
             // transfer purchased token1 
             if (total_reward.is_non_zero()) {
@@ -609,6 +613,25 @@ mod TWAMM {
                 )
             ) {
                 LockCallbackResult::Empty => {},
+            }
+        }
+
+        // returns the amount of token0 that has not been sold
+        fn get_order_remaining_amount(
+            ref self: ContractState, token_key: TokenKey, order_state: OrderState
+        ) -> u128 {
+            if self.last_virtual_order_time.read(token_key) == 0 {
+                // no trades executed
+                self
+                    .scale_down(
+                        order_state.sale_rate
+                            * (order_state.expiry_time - order_state.place_time).into()
+                    )
+            } else {
+                // at least one trade executed
+                self.scale_down(order_state.sale_rate)
+                    * (order_state.expiry_time - self.last_virtual_order_time.read(token_key))
+                        .into()
             }
         }
 

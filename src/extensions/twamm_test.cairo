@@ -244,10 +244,7 @@ mod PlaceOrderTests {
             .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(
-                order_key,
-                token_id,
-            );
+            .get_order_state(order_key, token_id,);
 
         // 1000000 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
@@ -404,7 +401,6 @@ mod PlaceOrderTests {
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
-
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key, token_id_1);
 
@@ -514,19 +510,40 @@ mod CancelOrderTests {
             .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000
-                },
-                token_id,
-            );
+            .get_order_state(order_key, token_id,);
 
         set_block_timestamp(order.expiry_time + 1);
 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .cancel_order(order_key, token_id);
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_order_and_withdraw() {
+        let timestamp = 1_000_000;
+        set_block_timestamp(get_block_timestamp() + timestamp);
+
+        let core = deploy_core();
+        let twamm = deploy_twamm(core, 1_000_u64);
+        let (token0, token1) = deploy_two_mock_tokens();
+
+        let amount = 100_000_000;
+        let order_key = OrderKey {
+            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+        };
+
+        token0.increase_balance(twamm.contract_address, amount);
+        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+
+        let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+
+        set_block_timestamp(order.expiry_time + 1);
+
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .withdraw_from_order(order_key, token_id,);
     }
 
     #[test]
@@ -539,7 +556,7 @@ mod CancelOrderTests {
         let twamm = deploy_twamm(core, 1_000_u64);
         let (token0, token1) = deploy_two_mock_tokens();
 
-        let amount = 1_000 * 0x40000;
+        let amount = 1_000;
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 50
         };
@@ -549,14 +566,7 @@ mod CancelOrderTests {
             .place_order(order_key, amount);
 
         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 50
-                },
-                token_id,
-            );
+            .get_order_state(order_key, token_id,);
 
         set_block_timestamp(get_block_timestamp() + 100);
 
