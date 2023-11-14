@@ -66,6 +66,7 @@ mod TWAMM {
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
     use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
@@ -110,8 +111,6 @@ mod TWAMM {
         reward_factor_at_time: LegacyMap<(TokenKey, u64), u128>,
         // token reserves for a token key
         reserves: LegacyMap<TokenKey, u256>,
-        // initial timestamp at which initial order time defaults to for all token keys
-        initial_virtual_order_time: u64,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TokenKey, u64>,
         // upgradable component storage (empty)
@@ -143,10 +142,6 @@ mod TWAMM {
             );
 
         self.order_time_interval.write(order_time_interval);
-
-        self
-            .initial_virtual_order_time
-            .write(get_block_timestamp() - (get_block_timestamp() % order_time_interval));
     }
 
     #[derive(starknet::Event, Drop)]
@@ -192,7 +187,6 @@ mod TWAMM {
 
     #[derive(Serde, Copy, Drop)]
     struct ExecuteVirtualSwapsCallbackData {
-        token_key: TokenKey,
         pool_key: PoolKey
     }
 
@@ -295,7 +289,6 @@ mod TWAMM {
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let token_key = to_token_key(order_key);
-
             self.execute_virtual_trades(token_key);
 
             let id = self.nft.read().mint(get_caller_address());
@@ -315,7 +308,7 @@ mod TWAMM {
                     OrderState {
                         place_time: current_time,
                         expiry_time: expiry_time,
-                        sale_rate,
+                        sale_rate: sale_rate,
                         reward_factor: self.reward_factor.read(token_key)
                     }
                 );
@@ -351,7 +344,6 @@ mod TWAMM {
             self.validate_caller(id, caller);
 
             let token_key = to_token_key(order_key);
-
             self.execute_virtual_trades(token_key);
 
             let order_state = self.orders.read((order_key, id));
@@ -364,8 +356,11 @@ mod TWAMM {
             let remaining_amount = self.get_order_remaining_amount(token_key, order_state);
 
             // calculate token1 amount that was purchased
-            let purchased_amount = (self.reward_factor.read(token_key) - order_state.reward_factor)
-                * order_state.sale_rate;
+            let purchased_amount = self
+                .scale_down(
+                    (self.reward_factor.read(token_key) - order_state.reward_factor)
+                        * order_state.sale_rate
+                );
 
             // update global rates
             let sale_rate = self.sale_rate.read(token_key) - order_state.sale_rate;
@@ -415,7 +410,6 @@ mod TWAMM {
             self.validate_caller(id, caller);
 
             let token_key = TokenKey { token0: order_key.token0, token1: order_key.token1 };
-
             self.execute_virtual_trades(token_key);
 
             let order_state = self.orders.read((order_key, id));
@@ -425,7 +419,7 @@ mod TWAMM {
             let current_time = get_block_timestamp();
 
             // order has expired
-            let (total_reward_factor, unsold_amount) = if current_time > order_state.expiry_time {
+            let total_reward_factor = if current_time > order_state.expiry_time {
                 // TODO: Should we burn the NFT? Probably not.
                 // update order state to reflect that the order has been fully executed
                 self
@@ -435,12 +429,9 @@ mod TWAMM {
                         OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                     );
 
-                // Return rewards factor and token0 amount that was not sold as unsold_amount
-                (
-                    self.reward_factor_at_time.read((token_key, order_state.expiry_time))
-                        - order_state.reward_factor,
-                    self.get_order_remaining_amount(token_key, order_state)
-                )
+                // return rewards factor and token0 amount that was not sold as unsold_amount
+                self.reward_factor_at_time.read((token_key, order_state.expiry_time))
+                    - order_state.reward_factor
             } else {
                 // update order state to reflect that the order has been partially executed
                 self
@@ -455,24 +446,13 @@ mod TWAMM {
                         }
                     );
 
-                (self.reward_factor.read(token_key) - order_state.reward_factor, 0)
+                self.reward_factor.read(token_key) - order_state.reward_factor
             };
 
-            let total_reward = self.scale_down(order_state.sale_rate * total_reward_factor);
-
-            // transfer remaining token0 and update reserves
-            if (unsold_amount.is_non_zero()) {
-                IERC20Dispatcher { contract_address: token_key.token0 }
-                    .transfer(caller, unsold_amount.into());
-
-                self
-                    .reserves
-                    .write(token_key, self.reserves.read(token_key) - unsold_amount.into());
-            }
+            let total_reward = self.scale_down(total_reward_factor * order_state.sale_rate);
 
             // transfer purchased token1 
             if (total_reward.is_non_zero()) {
-                // TODO: Figure out how we want to handle reserves for token0->token1
                 IERC20Dispatcher { contract_address: token_key.token1 }
                     .transfer(caller, total_reward.into());
             }
@@ -488,71 +468,72 @@ mod TWAMM {
 
             let result: LockCallbackResult =
                 match consume_callback_data::<LockCallbackData>(core, data) {
-                LockCallbackData::ExecuteVirtualSwapsCallbackData(swap) => {
-                    let last_virtual_order_time = if self
-                        .last_virtual_order_time
-                        .read(swap.token_key) == 0 {
-                        self.initial_virtual_order_time.read()
-                    } else {
-                        self.last_virtual_order_time.read(swap.token_key)
-                    };
+                LockCallbackData::ExecuteVirtualSwapsCallbackData(data) => {
+                    let (token0_key, token1_key) = (
+                        TokenKey { token0: data.pool_key.token0, token1: data.pool_key.token1 },
+                        TokenKey { token0: data.pool_key.token1, token1: data.pool_key.token0 }
+                    );
 
+                    // since trades are executed at the same time for both tokens,
+                    // last_virtual_order_time is the same for both tokens.
+                    let shared_token_key = self
+                        .get_sorted_token_key(data.pool_key.token0, data.pool_key.token1);
+
+                    let current_time = get_block_timestamp();
                     let order_time_interval = self.order_time_interval.read();
+
+                    // if no trades have been executed, round down to closest trade execution time.
+                    // since placing orders executes trades before placing them, there won't be
+                    // any orders place before the first virtual trade.
+                    let mut last_virtual_order_time = if self
+                        .last_virtual_order_time
+                        .read(shared_token_key) == 0 {
+                        current_time - (current_time % order_time_interval)
+                    } else {
+                        self.last_virtual_order_time.read(shared_token_key)
+                    };
 
                     let mut next_expiry_time = last_virtual_order_time
                         - (last_virtual_order_time % order_time_interval)
                         + order_time_interval;
 
-                    let current_time = get_block_timestamp();
                     let core = self.core.read();
-                    let mut price = core.get_pool_price(swap.pool_key);
+                    let mut price = core.get_pool_price(data.pool_key);
                     let mut delta = Default::<Delta>::default();
-                    let mut last_virtual_order_time_executed = 0;
-                    loop {
-                        if price.sqrt_ratio == 0 {
-                            break;
-                        }
 
+                    loop {
                         if next_expiry_time > current_time {
                             break;
                         }
 
-                        // TODO:
-                        // Execute swap and accumulate all deltas.
-                        // distribute payment by updating rewards factor based on sale rate and amount traded
-                        // TODO: Double check necessary guardrails for u264 -> u128 conversion
-                        let amount_to_sell = self.sale_rate.read(swap.token_key)
-                            * self.reserves.read(swap.token_key).try_into().unwrap();
+                        if price.sqrt_ratio != 0 {
+                            // TODO: Execute swap and accumulate all deltas.
+                            // sqrt_ratio_limit should be set to max on the direction of the trade.
+                            // skip_ahead should be 0
+                            // add up delta += swap
+                            let token0_amount = self.sale_rate.read(token0_key)
+                                * (next_expiry_time - last_virtual_order_time).into();
+                            let token1_amount = self.sale_rate.read(token1_key)
+                                * (next_expiry_time - last_virtual_order_time).into();
 
-                        delta += core
-                            .swap(
-                                swap.pool_key,
-                                // TODO: Figure out correct swap parameters.
-                                SwapParameters {
-                                    amount: i129 { mag: amount_to_sell, sign: false },
-                                    is_token1: false,
-                                    sqrt_ratio_limit: price.sqrt_ratio
-                                        + TICKS_IN_ONE_PERCENT.into(),
-                                    skip_ahead: 0
-                                },
-                            );
+                            // TODO: Zero out deltas, and update rewards factor.
 
-                        // TODO:
-                        // expire orders and update rates
+                            // TODO: Expire orders and update rates
+                            if (token0_amount != 0
+                                && token1_amount != 0) {} else if (token0_amount > 0) {} else if (token1_amount > 0) {}
+                        }
 
                         // last timestamp at which virtual trades were executed
-                        last_virtual_order_time_executed = next_expiry_time;
+                        last_virtual_order_time = next_expiry_time;
 
                         // update price
-                        price = core.get_pool_price(swap.pool_key);
+                        price = core.get_pool_price(data.pool_key);
 
                         // update next expiry time
                         next_expiry_time += order_time_interval;
                     };
 
-                    self
-                        .last_virtual_order_time
-                        .write(swap.token_key, last_virtual_order_time_executed);
+                    self.last_virtual_order_time.write(shared_token_key, last_virtual_order_time);
 
                     LockCallbackResult::Empty
                 },
@@ -609,7 +590,7 @@ mod TWAMM {
             >(
                 self.core.read(),
                 @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    ExecuteVirtualSwapsCallbackData { token_key: token_key, pool_key: pool_key }
+                    ExecuteVirtualSwapsCallbackData { pool_key: pool_key }
                 )
             ) {
                 LockCallbackResult::Empty => {},
@@ -620,18 +601,24 @@ mod TWAMM {
         fn get_order_remaining_amount(
             ref self: ContractState, token_key: TokenKey, order_state: OrderState
         ) -> u128 {
-            if self.last_virtual_order_time.read(token_key) == 0 {
-                // no trades executed
-                self
-                    .scale_down(
-                        order_state.sale_rate
-                            * (order_state.expiry_time - order_state.place_time).into()
-                    )
+            let shared_token_key = self.get_sorted_token_key(token_key.token0, token_key.token1);
+
+            self
+                .scale_down(
+                    order_state.sale_rate
+                        * (order_state.expiry_time
+                            - self.last_virtual_order_time.read(shared_token_key))
+                            .into()
+                )
+        }
+
+        fn get_sorted_token_key(
+            self: @ContractState, token0: ContractAddress, token1: ContractAddress
+        ) -> TokenKey {
+            if (token0 < token1) {
+                TokenKey { token0, token1 }
             } else {
-                // at least one trade executed
-                self.scale_down(order_state.sale_rate)
-                    * (order_state.expiry_time - self.last_virtual_order_time.read(token_key))
-                        .into()
+                TokenKey { token0: token1, token1: token0 }
             }
         }
 

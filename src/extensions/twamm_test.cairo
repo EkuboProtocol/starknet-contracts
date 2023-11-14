@@ -215,8 +215,6 @@ mod PoolTests {
 }
 
 mod PlaceOrderTests {
-    // TODO: Fix rate checks.
-
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
@@ -502,7 +500,7 @@ mod CancelOrderTests {
 
         let amount = 100_000_000;
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -530,7 +528,7 @@ mod CancelOrderTests {
 
         let amount = 100_000_000;
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -542,13 +540,14 @@ mod CancelOrderTests {
 
         set_block_timestamp(order.expiry_time + 1);
 
+        // No trades were executed 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .withdraw_from_order(order_key, token_id,);
     }
 
     #[test]
     #[available_gas(3000000000)]
-    fn test_place_order_and_cancel_before_oti_passes() {
+    fn test_place_order_and_cancel_before_oti_passes_at_execution_time() {
         let timestamp = 1_000_000_000;
         set_block_timestamp(get_block_timestamp() + timestamp);
 
@@ -578,5 +577,127 @@ mod CancelOrderTests {
         assert(
             amount.into() - token_balance == 1 || token_balance == amount.into(), 'token0.balance'
         );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_order_and_cancel_before_oti_passes_before_execution_time() {
+        let timestamp = 999_999_999;
+        set_block_timestamp(get_block_timestamp() + timestamp);
+
+        let core = deploy_core();
+        let twamm = deploy_twamm(core, 1_000_u64);
+        let (token0, token1) = deploy_two_mock_tokens();
+
+        let amount = 1_000;
+        let order_key = OrderKey {
+            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 50
+        };
+
+        token0.increase_balance(twamm.contract_address, amount);
+        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+
+        let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+
+        set_block_timestamp(get_block_timestamp() + 100);
+
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .cancel_order(order_key, token_id);
+
+        let token_balance = token0.balanceOf(get_contract_address());
+
+        assert(
+            amount.into() - token_balance == 1 || token_balance == amount.into(), 'token0.balance'
+        );
+    }
+}
+
+mod PlaceOrderWithSwapsTests {
+    use super::{
+        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
+        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
+        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
+        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        IPositionsDispatcherTrait, get_contract_address
+    };
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_order_and_withdraw() {
+        let timestamp = 1_000_000;
+        set_block_timestamp(get_block_timestamp() + timestamp);
+
+        let core = deploy_core();
+        let twamm = deploy_twamm(core, 1_000_u64);
+
+        let liquidity_provider = contract_address_const::<42>();
+        let twamm_caller = contract_address_const::<43>();
+        set_contract_address(liquidity_provider);
+
+        let initial_tick = i129 { mag: 1386294, sign: false };
+        let setup = setup_pool_with_core(
+            core,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            // 2:1 price
+            initial_tick: initial_tick,
+            extension: twamm.contract_address,
+        );
+        let positions = deploy_positions(setup.core);
+        let bounds = max_bounds(MAX_TICK_SPACING);
+
+        let price = core.get_pool_price(pool_key: setup.pool_key);
+        let token0_liquidity = 200_000_000 * 0x100000000;
+        let token1_liquidity = 100_000_000 * 0x100000000;
+        let max_liquidity = max_liquidity(
+            u256 { low: initial_tick.mag, high: 0 },
+            tick_to_sqrt_ratio(bounds.lower),
+            tick_to_sqrt_ratio(bounds.upper),
+            token0_liquidity,
+            token1_liquidity,
+        );
+
+        setup.token0.increase_balance(positions.contract_address, token0_liquidity);
+        setup.token1.increase_balance(positions.contract_address, token1_liquidity);
+        let (token_id, liquidity, amount0, amount1) = positions
+            .mint_and_deposit_and_clear_both(
+                pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity
+            );
+
+        // 'max liquidity'.print();
+        // max_liquidity.print();
+
+        // 'core token 0 balance'.print();
+        // setup.token0.balanceOf(core.contract_address).print();
+        // 'core token 1 balance'.print();
+        // setup.token1.balanceOf(core.contract_address).print();
+
+        // place order
+        set_contract_address(twamm_caller);
+        let amount = 100_000 * 0x100000000;
+        let order_key = OrderKey {
+            token0: setup.token0.contract_address,
+            token1: setup.token1.contract_address,
+            time_intervals: 10_000
+        };
+
+        setup.token0.increase_balance(twamm.contract_address, amount);
+        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+
+        // 'twamm token 0 balance'.print();
+        // setup.token0.balanceOf(twamm.contract_address).print();
+
+        set_block_timestamp(get_block_timestamp() + 1_001);
+
+        setup.token0.increase_balance(twamm.contract_address, amount);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+    // let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+    //     .get_order_state(order_key, token_id,);
     }
 }
