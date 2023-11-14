@@ -535,7 +535,6 @@ mod TWAMM {
                     LockCallbackResult::Empty
                 },
                 LockCallbackData::DepositBalanceCallbackData(data) => {
-                    let core = self.core.read();
                     let deposited_amount = core.deposit(data.token);
 
                     assert(deposited_amount == data.amount, 'DEPOSIT_AMOUNT_NE_AMOUNT');
@@ -551,8 +550,6 @@ mod TWAMM {
                     LockCallbackResult::Empty
                 },
                 LockCallbackData::WithdrawBalanceCallbackData(data) => {
-                    let core = self.core.read();
-
                     core.load(data.token, 0, data.amount);
 
                     core.withdraw(data.token, data.recipient, data.amount);
