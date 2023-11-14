@@ -41,9 +41,6 @@ trait ITWAMM<TContractState> {
     // Returns the current sale rate for a token key
     fn get_sale_rate(self: @TContractState, token_key: TokenKey,) -> u128;
 
-    // Return the current reserves for a token key
-    fn get_reserves(self: @TContractState, token_key: TokenKey) -> u256;
-
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
 
@@ -109,8 +106,6 @@ mod TWAMM {
         reward_factor: LegacyMap<TokenKey, u128>,
         // reward factor for token key at a particular timestamp
         reward_factor_at_time: LegacyMap<(TokenKey, u64), u128>,
-        // token reserves for a token key
-        reserves: LegacyMap<TokenKey, u256>,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TokenKey, u64>,
         // upgradable component storage (empty)
@@ -190,9 +185,25 @@ mod TWAMM {
         pool_key: PoolKey
     }
 
+
+    #[derive(Serde, Copy, Drop)]
+    struct DepositBalanceCallbackData {
+        token: ContractAddress,
+        amount: u128
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct WithdrawBalanceCallbackData {
+        token: ContractAddress,
+        recipient: ContractAddress,
+        amount: u128
+    }
+
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         ExecuteVirtualSwapsCallbackData: ExecuteVirtualSwapsCallbackData,
+        DepositBalanceCallbackData: DepositBalanceCallbackData,
+        WithdrawBalanceCallbackData: WithdrawBalanceCallbackData
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -282,11 +293,6 @@ mod TWAMM {
             self.sale_rate.read(token_key)
         }
 
-        fn get_reserves(self: @ContractState, token_key: TokenKey) -> u256 {
-            self.reserves.read(token_key)
-        }
-
-
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let token_key = to_token_key(order_key);
             self.execute_virtual_trades(token_key);
@@ -334,7 +340,7 @@ mod TWAMM {
                     }
                 );
 
-            self.deposit(token_key, id, amount);
+            self.deposit(token_key.token0, amount);
 
             id
         }
@@ -383,21 +389,14 @@ mod TWAMM {
             // burn the NFT
             self.nft.read().burn(id);
 
-            // transfer remaining token0 and update reserves
+            // transfer remaining token0
             if (remaining_amount.is_non_zero()) {
-                IERC20Dispatcher { contract_address: token_key.token0 }
-                    .transfer(caller, remaining_amount.into());
-
-                self
-                    .reserves
-                    .write(token_key, self.reserves.read(token_key) - remaining_amount.into());
+                self.withdraw(token_key.token0, caller, remaining_amount);
             }
 
             // transfer purchased token1 
             if (purchased_amount.is_non_zero()) {
-                // TODO: Figure out how we want to handle reserves for token0->token1
-                IERC20Dispatcher { contract_address: token_key.token1 }
-                    .transfer(caller, purchased_amount.into());
+                self.withdraw(token_key.token1, caller, purchased_amount)
             }
 
             self.emit(OrderCancelled { id, order_key });
@@ -453,8 +452,7 @@ mod TWAMM {
 
             // transfer purchased token1 
             if (total_reward.is_non_zero()) {
-                IERC20Dispatcher { contract_address: token_key.token1 }
-                    .transfer(caller, total_reward.into());
+                self.withdraw(token_key.token1, caller, total_reward);
             }
 
             self.emit(OrderWithdrawn { id, order_key });
@@ -497,7 +495,6 @@ mod TWAMM {
                         - (last_virtual_order_time % order_time_interval)
                         + order_time_interval;
 
-                    let core = self.core.read();
                     let mut price = core.get_pool_price(data.pool_key);
                     let mut delta = Default::<Delta>::default();
 
@@ -537,6 +534,31 @@ mod TWAMM {
 
                     LockCallbackResult::Empty
                 },
+                LockCallbackData::DepositBalanceCallbackData(data) => {
+                    let core = self.core.read();
+                    let deposited_amount = core.deposit(data.token);
+
+                    assert(deposited_amount == data.amount, 'DEPOSIT_AMOUNT_NE_AMOUNT');
+
+                    core
+                        .save(
+                            SavedBalanceKey {
+                                owner: get_contract_address(), token: data.token, salt: 0
+                            },
+                            data.amount
+                        );
+
+                    LockCallbackResult::Empty
+                },
+                LockCallbackData::WithdrawBalanceCallbackData(data) => {
+                    let core = self.core.read();
+
+                    core.load(data.token, 0, data.amount);
+
+                    core.withdraw(data.token, data.recipient, data.amount);
+
+                    LockCallbackResult::Empty
+                }
             };
 
             let mut result_data = ArrayTrait::new();
@@ -555,24 +577,35 @@ mod TWAMM {
             assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
         }
 
-        fn deposit(ref self: ContractState, token_key: TokenKey, id: u64, amount: u128) {
-            let balance = IERC20Dispatcher { contract_address: token_key.token0 }
-                .balanceOf(get_contract_address());
+        fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::DepositBalanceCallbackData(
+                    DepositBalanceCallbackData { token: token, amount: amount }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
+            }
+        }
 
-            let reserves = self.reserves.read(token_key);
-
-            assert(balance >= reserves, 'BALANCE_LT_RESERVE');
-
-            let delta = balance - reserves;
-
-            // the delta is limited to u128
-            assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
-
-            // the delta must equal the deposit amount
-            assert(delta.low == amount, 'DELTA_NE_AMOUNT');
-
-            // update reserves
-            self.reserves.write(token_key, balance);
+        fn withdraw(
+            ref self: ContractState,
+            token: ContractAddress,
+            recipient: ContractAddress,
+            amount: u128
+        ) {
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::WithdrawBalanceCallbackData(
+                    WithdrawBalanceCallbackData { token, recipient, amount }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
+            }
         }
 
         fn execute_virtual_trades(ref self: ContractState, token_key: TokenKey) {

@@ -237,7 +237,7 @@ mod PlaceOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -279,7 +279,7 @@ mod PlaceOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -320,7 +320,7 @@ mod PlaceOrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
         };
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -370,7 +370,7 @@ mod PlaceOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 100
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -395,7 +395,7 @@ mod PlaceOrderTests {
         // increase timestamp
         set_block_timestamp(get_block_timestamp() + 1);
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -425,42 +425,14 @@ mod PlaceOrderTests {
 
     #[test]
     #[available_gas(3000000000)]
-    fn test_place_order_validate_reserves() {
-        let timestamp = 1_000_000;
-        set_block_timestamp(get_block_timestamp() + timestamp);
-
-        let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
-        let (token0, token1) = deploy_two_mock_tokens();
-
-        let amount = 100_000_000;
-        let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-        };
-
-        token0.increase_balance(twamm.contract_address, amount);
-        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000
-                },
-                token_id,
-            );
-
-        let reserves = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_reserves(to_token_key(order_key));
-
-        assert(reserves == amount.into(), 'reserves');
-    }
-
-    #[test]
-    #[available_gas(3000000000)]
-    #[should_panic(expected: ('DELTA_NE_AMOUNT', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'DEPOSIT_AMOUNT_NE_AMOUNT',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_place_order_no_token_transfer() {
         let timestamp = 1_000_000;
         set_block_timestamp(get_block_timestamp() + timestamp);
@@ -503,7 +475,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -531,7 +503,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -560,7 +532,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 50
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -594,7 +566,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 50
         };
 
-        token0.increase_balance(twamm.contract_address, amount);
+        token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -685,7 +657,7 @@ mod PlaceOrderWithSwapsTests {
             time_intervals: 10_000
         };
 
-        setup.token0.increase_balance(twamm.contract_address, amount);
+        setup.token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -694,7 +666,7 @@ mod PlaceOrderWithSwapsTests {
 
         set_block_timestamp(get_block_timestamp() + 1_001);
 
-        setup.token0.increase_balance(twamm.contract_address, amount);
+        setup.token0.increase_balance(core.contract_address, amount);
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
     // let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
