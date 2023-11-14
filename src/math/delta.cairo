@@ -1,6 +1,6 @@
 use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::i129;
-use integer::{u256_wide_mul};
+use integer::{u256_wide_mul, u256_as_non_zero};
 use option::{OptionTrait};
 use traits::{Into};
 use zeroable::{Zeroable};
@@ -29,7 +29,7 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     )
         .expect('OVERFLOW_AMOUNT0_DELTA_0');
 
-    let result = div(result_0, sqrt_ratio_lower, round_up);
+    let result = div(result_0, u256_as_non_zero(sqrt_ratio_lower), round_up);
     assert(result.high.is_zero(), 'OVERFLOW_AMOUNT0_DELTA');
 
     return result.low;
