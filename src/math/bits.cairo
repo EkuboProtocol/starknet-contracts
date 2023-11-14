@@ -41,6 +41,7 @@ fn msb(mut x: u128) -> u8 {
 }
 
 // Return the index of the least set bit
+#[inline(always)]
 fn lsb(x: u128) -> u8 {
     assert(x.is_non_zero(), 'LSB_NONZERO');
 

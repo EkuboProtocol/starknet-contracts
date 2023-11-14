@@ -5,20 +5,17 @@ use option::{OptionTrait};
 use traits::{Into};
 use zeroable::{Zeroable};
 
-fn ordered_non_zero<T, +PartialOrd<T>, +Zeroable<T>, +Drop<T>, +Copy<T>>(x: T, y: T) -> (T, T) {
-    let (lower, upper) = if x < y {
-        (x, y)
-    } else {
-        (y, x)
-    };
-    assert(lower.is_non_zero(), 'NONZERO');
-    (lower, upper)
-}
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
+#[inline(always)]
 fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     // we do this ordering here because it's easier than branching in swap
-    let (sqrt_ratio_lower, sqrt_ratio_upper) = ordered_non_zero(sqrt_ratio_a, sqrt_ratio_b);
+    let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
+        (sqrt_ratio_a, sqrt_ratio_b)
+    } else {
+        (sqrt_ratio_b, sqrt_ratio_a)
+    };
+    assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO');
 
     if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
         return Zeroable::zero();
@@ -39,9 +36,15 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
 }
 
 // Compute the difference in amount of token1 between two ratios, rounded as specified
+#[inline(always)]
 fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
     // we do this ordering here because it's easier than branching in swap
-    let (sqrt_ratio_lower, sqrt_ratio_upper) = ordered_non_zero(sqrt_ratio_a, sqrt_ratio_b);
+    let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
+        (sqrt_ratio_a, sqrt_ratio_b)
+    } else {
+        (sqrt_ratio_b, sqrt_ratio_a)
+    };
+    assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO');
 
     if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
         return Zeroable::zero();

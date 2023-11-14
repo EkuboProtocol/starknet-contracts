@@ -6,6 +6,7 @@ use option::{Option, OptionTrait};
 use zeroable::Zeroable;
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
+#[inline(always)]
 fn div(x: u256, z: u256, round_up: bool) -> u256 {
     let (quotient, remainder, _) = u256_safe_divmod(x, u256_as_non_zero(z));
     return if (!round_up | remainder.is_zero()) {
@@ -16,6 +17,7 @@ fn div(x: u256, z: u256, round_up: bool) -> u256 {
 }
 
 // Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
+#[inline(always)]
 fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     let numerator = u256_wide_mul(x, y);
 
