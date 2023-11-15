@@ -11,6 +11,7 @@ use result::{ResultTrait};
 use zeroable::{Zeroable};
 
 // Returns the token0, token1 delta owed for a given change in liquidity
+#[inline(always)]
 fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
 ) -> Delta {
