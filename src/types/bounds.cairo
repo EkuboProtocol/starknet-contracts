@@ -21,6 +21,7 @@ fn max_bounds(tick_spacing: u128) -> Bounds {
 
 #[generate_trait]
 impl BoudnsTraitImpl of BoundsTrait {
+    #[inline(always)]
     fn check_valid(self: Bounds, tick_spacing: u128) {
         assert(self.lower < self.upper, 'BOUNDS_ORDER');
         assert(self.lower >= min_tick(), 'BOUNDS_MIN');
