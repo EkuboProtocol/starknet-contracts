@@ -9,13 +9,12 @@ struct OrderKey {
     token0: ContractAddress,
     token1: ContractAddress,
     time_intervals: u64,
+    expiry_time: u64,
 }
 
 // State of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
-    // the timestamp at which the order was placed
-    place_time: u64,
     // the timestamp at which the order expires
     expiry_time: u64,
     // the rate at which the order is selling token0 for token1
@@ -63,8 +62,10 @@ mod TWAMM {
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::math::bits::{msb};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::exp2::{exp2};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
     use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
@@ -294,12 +295,14 @@ mod TWAMM {
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
+            self.validate_expiry_time(order_key.expiry_time);
+
             let token_key = to_token_key(order_key);
             self.execute_virtual_trades(token_key);
 
             let id = self.nft.read().mint(get_caller_address());
 
-            // calculate and store order expiry time and sale rate
+            // calculate and store order sale rate
             let current_time = get_block_timestamp();
             let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
             let expiry_time = last_expiry_time
@@ -312,7 +315,6 @@ mod TWAMM {
                 .write(
                     (order_key, id),
                     OrderState {
-                        place_time: current_time,
                         expiry_time: expiry_time,
                         sale_rate: sale_rate,
                         reward_factor: self.reward_factor.read(token_key)
@@ -383,8 +385,7 @@ mod TWAMM {
             self
                 .orders
                 .write(
-                    (order_key, id),
-                    OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                    (order_key, id), OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                 );
             // burn the NFT
             self.nft.read().burn(id);
@@ -423,7 +424,7 @@ mod TWAMM {
                     .orders
                     .write(
                         (order_key, id),
-                        OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
+                        OrderState { expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                     );
 
                 // reward factor at expiration/full-execution time
@@ -436,7 +437,6 @@ mod TWAMM {
                     .write(
                         (order_key, id),
                         OrderState {
-                            place_time: order_state.place_time,
                             expiry_time: order_state.expiry_time,
                             sale_rate: order_state.sale_rate,
                             reward_factor: self.reward_factor.read(token_key)
@@ -569,6 +569,19 @@ mod TWAMM {
     impl Internal of InternalTrait {
         fn validate_caller(self: @ContractState, id: u64, caller: ContractAddress) {
             assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
+        }
+
+        fn validate_expiry_time(self: @ContractState, expiry_time: u64) {
+            let current_time = get_block_timestamp();
+
+            assert(expiry_time > current_time, 'INVALID_EXPIRY_TIME');
+
+            // validate expiry time is a multiple of 
+            // = 16**(floor(log_16(expiry_time-current_time)))
+            // = 2**(4 * (floor(log_2(expiry_time-current_time)) / 4))
+            let step = exp2(4 * (msb((expiry_time - current_time).into()) / 4));
+
+            assert(expiry_time % step.try_into().unwrap() == 0, 'INVALID_EXPIRY_TIME');
         }
 
         fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {
