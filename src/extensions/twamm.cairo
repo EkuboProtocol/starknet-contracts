@@ -402,8 +402,6 @@ mod TWAMM {
             self.emit(OrderCancelled { id, order_key });
         }
 
-        // if order did not expire, withdraws proceeds from order
-        // if order expired, withdraws proceeds from order and unsold amount of token0
         fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
@@ -417,9 +415,9 @@ mod TWAMM {
 
             let current_time = get_block_timestamp();
 
-            // order has expired
             let total_reward_factor = if current_time > order_state.expiry_time {
                 // TODO: Should we burn the NFT? Probably not.
+                // order has been fully executed
                 // update order state to reflect that the order has been fully executed
                 self
                     .orders
@@ -428,7 +426,7 @@ mod TWAMM {
                         OrderState { place_time: 0, expiry_time: 0, sale_rate: 0, reward_factor: 0 }
                     );
 
-                // return rewards factor and token0 amount that was not sold as unsold_amount
+                // reward factor at expiration/full-execution time
                 self.reward_factor_at_time.read((token_key, order_state.expiry_time))
                     - order_state.reward_factor
             } else {
@@ -508,10 +506,9 @@ mod TWAMM {
                             // sqrt_ratio_limit should be set to max on the direction of the trade.
                             // skip_ahead should be 0
                             // add up delta += swap
-                            let token0_amount = self.sale_rate.read(token0_key)
-                                * (next_expiry_time - last_virtual_order_time).into();
-                            let token1_amount = self.sale_rate.read(token1_key)
-                                * (next_expiry_time - last_virtual_order_time).into();
+                            let time_passed = (next_expiry_time - last_virtual_order_time).into();
+                            let token0_amount = self.sale_rate.read(token0_key) * time_passed;
+                            let token1_amount = self.sale_rate.read(token1_key) * time_passed;
 
                             // TODO: Zero out deltas, and update rewards factor.
 
