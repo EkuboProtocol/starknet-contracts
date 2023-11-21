@@ -146,12 +146,11 @@ fn deploy_mock_extension(
     IMockExtensionDispatcher { contract_address: address }
 }
 
-fn deploy_twamm(core: ICoreDispatcher, order_time_interval: u64) -> IExtensionDispatcher {
+fn deploy_twamm(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
     Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
     Serde::serialize(@'twamm://', ref constructor_args);
-    Serde::serialize(@order_time_interval, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         TWAMM::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true

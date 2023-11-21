@@ -118,8 +118,7 @@ mod TWAMM {
         ref self: ContractState,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
-        token_uri_base: felt252,
-        order_time_interval: u64
+        token_uri_base: felt252
     ) {
         self.core.write(core);
 
@@ -136,7 +135,8 @@ mod TWAMM {
                 )
             );
 
-        self.order_time_interval.write(order_time_interval);
+        // TODO: remove this
+        self.order_time_interval.write(10_000);
     }
 
     #[derive(starknet::Event, Drop)]
@@ -299,6 +299,7 @@ mod TWAMM {
 
             let id = self.nft.read().mint(get_caller_address());
 
+            // get expiry time rounded down to the closest valid timestamp
             let expiry_time = self.validate_expiry_time(order_key.expiry_time);
 
             // calculate and store order sale rate
@@ -578,6 +579,7 @@ mod TWAMM {
             let step = exp2(4 * (msb((expiry_time - current_time).into()) / 4));
 
             let rem = expiry_time % step.try_into().unwrap();
+
             if (rem == 0) {
                 expiry_time
             } else {

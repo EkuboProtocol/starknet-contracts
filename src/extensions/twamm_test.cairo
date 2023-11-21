@@ -24,7 +24,7 @@ use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
-use ekubo::extensions::twamm::{OrderKey};
+use ekubo::extensions::twamm::{OrderKey, TokenKey};
 use ekubo::extensions::twamm::TWAMM::{to_token_key};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
@@ -43,7 +43,7 @@ mod UpgradableTest {
     #[available_gas(3000000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
 
         let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
 
@@ -74,7 +74,7 @@ mod PoolTests {
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_before_initialize_pool_invalid_tick_spacing() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
         core
@@ -94,7 +94,7 @@ mod PoolTests {
     #[available_gas(3000000000)]
     fn test_before_initialize_pool_valid_tick_spacing() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
         core
@@ -124,7 +124,7 @@ mod PoolTests {
     )]
     fn test_before_update_position_invalid_bounds() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);
@@ -171,7 +171,7 @@ mod PoolTests {
     #[available_gas(3000000000)]
     fn test_before_update_position_valid_bounds() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);
@@ -219,46 +219,23 @@ mod PlaceOrderTestsValidateExpiryTime {
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait
     };
 
     #[test]
     #[available_gas(3000000000)]
     #[should_panic(expected: ('INVALID_EXPIRY_TIME', 'ENTRYPOINT_FAILED'))]
-    fn test_place_order() {
-        let timestamp = 1_000_000;
-        set_block_timestamp(get_block_timestamp() + timestamp);
-
+    fn test_place_order_at_timestamp() {
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
-        let amount = 100_000_000;
         let order_key = OrderKey {
+            // current timestamp is 0
             token0: token0.contract_address, token1: token1.contract_address, expiry_time: 0
         };
 
-        token0.increase_balance(core.contract_address, amount);
-        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-    }
-
-    #[test]
-    #[available_gas(3000000000)]
-    #[should_panic(expected: ('INVALID_EXPIRY_TIME', 'ENTRYPOINT_FAILED'))]
-    fn test_place_order_at_timestamp() {
-        let timestamp = 1_000_000;
-        set_block_timestamp(get_block_timestamp() + timestamp);
-
-        let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
-        let (token0, token1) = deploy_two_mock_tokens();
-
         let amount = 100_000_000;
-        let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, expiry_time: timestamp
-        };
-
         token0.increase_balance(core.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
@@ -296,7 +273,7 @@ mod PlaceOrderTestsValidateExpiryTime {
         set_block_timestamp(timestamp);
 
         let core = deploy_core();
-        let twamm = deploy_twamm(core, 1_000_u64);
+        let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
         let amount = 100_000_000;
@@ -595,241 +572,179 @@ mod PlaceOrderTestsValidateExpiryTime {
         );
     }
 }
-// mod PlaceOrderTests {
-//     use super::{
-//         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-//         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-//         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-//         IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-//     };
 
-//     #[test]
-//     #[available_gas(3000000000)]
-//     fn test_place_order_at_expiry_time() {
-//         let timestamp = 1_000_000;
-//         set_block_timestamp(timestamp);
+mod PlaceOrderTests {
+    use super::{
+        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
+        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TokenKey
+    };
 
-//         let core = deploy_core();
-//         let twamm = deploy_twamm(core, 1_000_u64);
-//         let (token0, token1) = deploy_two_mock_tokens();
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_order_sale_rate() {
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: 17,
+            expected_sale_rate: 0x5f5e1000000000 // 6,250,000 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16) + 1,
+            expected_sale_rate: 0x5f5e100000000 // ~ 390,625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16 * 16) + 1,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e10000000 // ~ 24,414.0625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16 * 16 * 16) + 1,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e1000000 // ~ 1,525.87890625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16 * 16 * 16 * 16) + 1,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e100000 // ~ 95.3674316406 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16 * 16 * 16 * 16 * 16) + 1,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e10000 // ~ 5.9604644775 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: (16 * 16 * 16 * 16 * 16 * 16 * 16) + 1,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e1000 // ~ 0.3725290298 * 2**32
+        );
+    }
 
-//         let amount = 100_000_000;
-//         let order_key = OrderKey {
-//             token0: token0.contract_address,
-//             token1: token1.contract_address,
-//             expiry_time: (16 * 16)
-//         };
+    fn run_place_order_and_validate_sale_rate(
+        amount: u128, timestamp: u64, expiry_time: u64, expected_sale_rate: u128
+    ) {
+        set_block_timestamp(timestamp);
 
-//         token0.increase_balance(core.contract_address, amount);
-//         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
+        let core = deploy_core();
+        let twamm = deploy_twamm(core);
+        let (token0, token1) = deploy_two_mock_tokens();
 
-//         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_order_state(order_key, token_id,);
+        let order_key = OrderKey {
+            token0: token0.contract_address, token1: token1.contract_address, expiry_time,
+        };
 
-//         order.sale_rate.print();
-// 100000000 * 2**32 / (11001000 - 1000000)
-// assert(order.sale_rate == 0x9ffbe7876, 'SALE_RATE');
-// let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//     .get_sale_rate(to_token_key(order_key));
+        token0.increase_balance(core.contract_address, amount);
+        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
 
-// assert(global_rate == 0x9ffbe7876, 'GLOBAL_SALE_RATE');
+        let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
 
-// // check event
+        assert(order.sale_rate == expected_sale_rate, 'SALE_RATE');
+    }
 
-// let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//     .unwrap();
-// assert(event.id == 1, 'event.id');
-// assert(event.amount == amount, 'event.amount');
-// assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-// assert(event.sale_rate == 0x9ffbe7876, 'event.sale_rate');
-// assert(event.global_sale_rate == 0x9ffbe7876, 'event.global_sale_rate');
-// }
-// #[test]
-// #[available_gas(3000000000)]
-// fn test_place_order_just_after_expiry_time() {
-//     set_block_timestamp(get_block_timestamp() + 1_000_001);
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
+        let core = deploy_core();
+        let twamm = deploy_twamm(core);
+        let (token0, token1) = deploy_two_mock_tokens();
 
-//     let core = deploy_core();
-//     let twamm = deploy_twamm(core, 1_000_u64);
-//     let (token0, token1) = deploy_two_mock_tokens();
+        let amount = 100_000_000;
 
-//     let amount = 100_000_000;
-//     let order_key = OrderKey {
-//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//     };
+        // order 0
+        let order_key_1 = OrderKey {
+            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 16 * 16,
+        };
+        token0.increase_balance(core.contract_address, amount);
+        let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key_1, amount);
+        let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key_1, token_id_1,);
 
-//     token0.increase_balance(core.contract_address, amount);
-//     let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .place_order(order_key, amount);
+        let mut event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(
+            twamm.contract_address
+        )
+            .unwrap();
 
-//     let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_order_state(order_key, token_id,);
+        assert(event.id == 1, 'event.id');
+        assert(event.order_key.token0 == order_key_1.token0, 'event.order_key.token0');
+        assert(event.order_key.token1 == order_key_1.token1, 'event.order_key.token1');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == order_key_1.expiry_time, 'event.expiry_time');
+        assert(event.sale_rate == 0x5f5e100000000, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x5f5e100000000, 'event.sale_rate');
+        assert(event.sale_rate_ending == 0x5f5e100000000, 'event.sale_rate');
 
-//     // 1000001 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
-//     assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
-//     // 100000000 * 2**32 / (11001000 - 1000001)
-//     assert(order.sale_rate == 0x9ffbe893c, 'SALE_RATE');
+        // order 1
+        let order_key_2 = OrderKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            expiry_time: 16 * 16 * 16,
+        };
+        token0.increase_balance(core.contract_address, amount);
+        let token_id_2 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key_2, amount);
+        let order_2 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key_2, token_id_2,);
 
-//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_sale_rate(to_token_key(order_key));
+        event = pop_log(twamm.contract_address).unwrap();
 
-//     assert(global_rate == 0x9ffbe893c, 'GLOBAL_SALE_RATE');
+        assert(event.id == 2, 'event.id');
+        assert(event.order_key.token0 == order_key_2.token0, 'event.order_key.token0');
+        assert(event.order_key.token1 == order_key_2.token1, 'event.order_key.token1');
+        assert(event.amount == amount, 'event.amount');
+        assert(event.expiry_time == order_key_2.expiry_time, 'event.expiry_time');
+        assert(event.sale_rate == 0x5f5e10000000, 'event.sale_rate');
+        assert(event.global_sale_rate == 0x5f5e100000000 + 0x5f5e10000000, 'event.sale_rate');
+        assert(event.sale_rate_ending == 0x5f5e10000000, 'event.sale_rate');
 
-//     // check event
+        // global rate
+        let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_sale_rate(
+                TokenKey { token0: token0.contract_address, token1: token1.contract_address }
+            );
 
-//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//         .unwrap();
-//     assert(event.id == 1, 'event.id');
-//     assert(event.amount == amount, 'event.amount');
-//     assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-//     assert(event.sale_rate == 0x9ffbe893c, 'event.sale_rate');
-//     assert(event.global_sale_rate == 0x9ffbe893c, 'event.global_sale_rate');
-// }
+        assert(global_rate == 0x5f5e100000000 + 0x5f5e10000000, 'GLOBAL_RATE');
+    }
 
-// #[test]
-// #[available_gas(3000000000)]
-// fn test_place_order_just_before_expiry_time() {
-//     set_block_timestamp(get_block_timestamp() + 999_999);
+    #[test]
+    #[available_gas(3000000000)]
+    #[should_panic(
+        expected: (
+            'DEPOSIT_AMOUNT_NE_AMOUNT',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_place_order_no_token_transfer() {
+        let core = deploy_core();
+        let twamm = deploy_twamm(core);
+        let (token0, token1) = deploy_two_mock_tokens();
 
-//     let core = deploy_core();
-//     let twamm = deploy_twamm(core, 1_000_u64);
-//     let (token0, token1) = deploy_two_mock_tokens();
+        let amount = 100_000_000;
+        let order_key = OrderKey {
+            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 16 * 16,
+        };
 
-//     let amount = 100_000_000;
-//     let order_key = OrderKey {
-//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//     };
-//     token0.increase_balance(core.contract_address, amount);
-//     let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .place_order(order_key, amount);
-
-//     let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_order_state(
-//             OrderKey {
-//                 token0: token0.contract_address,
-//                 token1: token1.contract_address,
-//                 time_intervals: 10_000
-//             },
-//             token_id,
-//         );
-
-//     // 999999 - (999999 % 1000) + (1000 * (10000 + 1)) = 11000000
-//     assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
-//     // 100000000 * 2**32 / (11000000 - 999999)
-//     assert(order.sale_rate == 0x9ffffef39, 'SALE_RATE');
-
-//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_sale_rate(to_token_key(order_key));
-
-//     assert(global_rate == 0x9ffffef39, 'GLOBAL_SALE_RATE');
-
-//     // check event
-
-//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//         .unwrap();
-//     assert(event.id == 1, 'event.id');
-//     assert(event.amount == amount, 'event.amount');
-//     assert(event.expiry_time == 11_000_000, 'event.expiry_time');
-//     assert(event.sale_rate == 0x9ffffef39, 'event.sale_rate');
-//     assert(event.global_sale_rate == 0x9ffffef39, 'event.global_sale_rate');
-// }
-
-// #[test]
-// #[available_gas(3000000000)]
-// fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
-//     let timestamp = 1_000_000;
-//     set_block_timestamp(get_block_timestamp() + timestamp);
-
-//     let core = deploy_core();
-//     let twamm = deploy_twamm(core, 100_u64);
-//     let (token0, token1) = deploy_two_mock_tokens();
-
-//     let amount = 100_000;
-//     let order_key = OrderKey {
-//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 100
-//     };
-
-//     token0.increase_balance(core.contract_address, amount);
-//     let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .place_order(order_key, amount);
-
-//     let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_order_state(order_key, token_id_0,);
-
-//     // 1000000 + (100 * (100 + 1))  
-//     assert(order_0.expiry_time == 1_010_100, 'EXPIRY_TIME');
-//     // 100000 * 2**32 / (1010100 - 1000000)
-//     assert(order_0.sale_rate == 0x9e6a74981, 'SALE_RATE');
-
-//     // check event
-
-//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//         .unwrap();
-//     assert(event.id == 1, 'event.id');
-//     assert(event.amount == amount, 'event.amount');
-//     assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-//     assert(event.sale_rate == 0x9e6a74981, 'event.sale_rate');
-//     assert(event.global_sale_rate == 0x9e6a74981, 'event.global_sale_rate');
-
-//     // increase timestamp
-//     set_block_timestamp(get_block_timestamp() + 1);
-
-//     token0.increase_balance(core.contract_address, amount);
-//     let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .place_order(order_key, amount);
-
-//     let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_order_state(order_key, token_id_1);
-
-//     // 1000000 + (100 * (100 + 1))  
-//     assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
-//     // 100000 * 2**32 / (1010100 - 1000001)
-//     assert(order_1.sale_rate == 0x9e6e789c5, 'SALE_RATE');
-
-//     // check event
-
-//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//         .unwrap();
-//     assert(event.id == 2, 'event.id');
-//     assert(event.amount == amount, 'event.amount');
-//     assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-//     assert(event.sale_rate == 0x9e6e789c5, 'event.sale_rate');
-//     assert(event.global_sale_rate == 0x9e6a74981 + 0x9e6e789c5, 'event.global_sale_rate');
-
-//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .get_sale_rate(to_token_key(order_key));
-
-//     assert(global_rate == 0x9e6a74981 + 0x9e6e789c5, 'GLOBAL_SALE_RATE');
-// }
-
-// #[test]
-// #[available_gas(3000000000)]
-// #[should_panic(
-//     expected: (
-//         'DEPOSIT_AMOUNT_NE_AMOUNT',
-//         'ENTRYPOINT_FAILED',
-//         'ENTRYPOINT_FAILED',
-//         'ENTRYPOINT_FAILED'
-//     )
-// )]
-// fn test_place_order_no_token_transfer() {
-//     let timestamp = 1_000_000;
-//     set_block_timestamp(get_block_timestamp() + timestamp);
-
-//     let core = deploy_core();
-//     let twamm = deploy_twamm(core, 1_000_u64);
-//     let (token0, token1) = deploy_two_mock_tokens();
-
-//     let amount = 100_000_000;
-//     let order_key = OrderKey {
-//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//     };
-
-//     ITWAMMDispatcher { contract_address: twamm.contract_address }
-//         .place_order(order_key, amount);
-// }
-// }
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+    }
+}
 // mod CancelOrderTests {
 //     use super::{
 //         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
