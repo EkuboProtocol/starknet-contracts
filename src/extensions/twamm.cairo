@@ -62,6 +62,9 @@ mod TWAMM {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::bits::{msb};
+    use ekubo::math::bitmap::{
+        Bitmap, BitmapTrait, expiry_to_word_and_bit_index, word_and_bit_index_to_expiry
+    };
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::exp2::{exp2};
@@ -85,6 +88,10 @@ mod TWAMM {
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::clear::{ClearImpl};
 
+    const POOL_FEE: u128 = 0;
+    const LOG_SCALE_FACTOR: u8 = 4;
+    const BIT_MAP_SPACING: u64 = 16;
+
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
     #[abi(embed_v0)]
@@ -102,6 +109,8 @@ mod TWAMM {
         sale_rate: LegacyMap<TokenKey, u128>,
         // cumulative sale rate for token0 ending at a particular timestamp
         sale_rate_ending: LegacyMap<(TokenKey, u64), u128>,
+        // used to find next timestamp at which orders expire
+        expiry_time_bitmaps: LegacyMap<(TokenKey, u128), Bitmap>,
         // current reward factor for token key
         reward_factor: LegacyMap<TokenKey, u128>,
         // reward factor for token key at a particular timestamp
@@ -323,6 +332,11 @@ mod TWAMM {
             // update sale rate ending at expiry time
             let sale_rate_ending = self.sale_rate_ending.read((token_key, expiry_time)) + sale_rate;
             self.sale_rate_ending.write((token_key, expiry_time), sale_rate_ending);
+
+            // first order at this expiry time
+            if (sale_rate_ending == sale_rate) {
+                self.insert_initialized_expiry(token_key, expiry_time);
+            }
 
             self
                 .emit(
@@ -576,7 +590,12 @@ mod TWAMM {
             // an approximation of
             // = 16**(floor(log_16(expiry_time-current_time)))
             // = 2**(4 * (floor(log_2(expiry_time-current_time)) / 4))
-            let step = exp2(4 * (msb((expiry_time - current_time).into()) / 4));
+            let step = exp2(
+                LOG_SCALE_FACTOR * (msb((expiry_time - current_time).into()) / LOG_SCALE_FACTOR)
+            );
+
+            // enforce smallest granularity
+            assert(step >= BIT_MAP_SPACING.into(), 'INVALID_SPACING');
 
             let rem = expiry_time % step.try_into().unwrap();
 
@@ -585,6 +604,22 @@ mod TWAMM {
             } else {
                 expiry_time - rem
             }
+        }
+
+        // remove the initialized expiry time for the order
+        fn remove_initialized_expiry(ref self: ContractState, token_key: TokenKey, expiry: u64) {
+            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry, BIT_MAP_SPACING);
+            let bitmap = self.expiry_time_bitmaps.read((token_key, word_index));
+            // it is assumed that bitmap already contains the set bit exp2(bit_index)
+            self.expiry_time_bitmaps.write((token_key, word_index), bitmap.unset_bit(bit_index));
+        }
+
+        // insert the initialized expiry time for the order
+        fn insert_initialized_expiry(ref self: ContractState, token_key: TokenKey, expiry: u64) {
+            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry, BIT_MAP_SPACING);
+            let bitmap = self.expiry_time_bitmaps.read((token_key, word_index));
+            // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
+            self.expiry_time_bitmaps.write((token_key, word_index), bitmap.set_bit(bit_index));
         }
 
         fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {
@@ -619,12 +654,11 @@ mod TWAMM {
         }
 
         fn execute_virtual_trades(ref self: ContractState, token_key: TokenKey) {
-            // TODO: Figure out how to properly get pool key
             let pool_key = PoolKey {
                 token0: token_key.token0,
                 token1: token_key.token1,
                 tick_spacing: MAX_TICK_SPACING,
-                fee: 0,
+                fee: POOL_FEE,
                 extension: get_contract_address()
             };
 

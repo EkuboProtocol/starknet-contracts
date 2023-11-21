@@ -32,6 +32,15 @@ use starknet::{get_contract_address, get_block_timestamp, contract_address_const
 use traits::{TryInto, Into};
 use zeroable::{Zeroable};
 
+const SIXTEEN_POW_ZERO: u64 = 0x1;
+const SIXTEEN_POW_ONE: u64 = 0x10;
+const SIXTEEN_POW_TWO: u64 = 0x100;
+const SIXTEEN_POW_THREE: u64 = 0x1000;
+const SIXTEEN_POW_FOUR: u64 = 0x10000;
+const SIXTEEN_POW_FIVE: u64 = 0x100000;
+const SIXTEEN_POW_SIX: u64 = 0x1000000;
+const SIXTEEN_POW_SEVEN: u64 = 0x10000000;
+
 mod UpgradableTest {
     use super::{
         deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
@@ -219,8 +228,11 @@ mod PlaceOrderTestsValidateExpiryTime {
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE,
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX,
+        SIXTEEN_POW_SEVEN
     };
+
 
     #[test]
     #[available_gas(3000000000)]
@@ -244,32 +256,95 @@ mod PlaceOrderTestsValidateExpiryTime {
     #[test]
     #[available_gas(3000000000)]
     fn test_place_order_expiry_validation() {
-        // the tests take too long so we run only the first and last test in each section
+        // the tests take too long so we don't run them all
         // however, they are all valid/passing
 
         // timestamp is multiple of 16**N
 
-        // run_place_order_and_validate_expiry(timestamp: 0);
-        // run_place_order_and_validate_expiry(timestamp: 16);
-        // run_place_order_and_validate_expiry(timestamp: 16 * 16);
-        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16);
-        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16);
-        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16);
-        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16 * 16);
-        run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16 * 16 * 16);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_ONE);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_TWO);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_THREE);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_FOUR);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_FIVE);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_SIX);
+        // _test_place_order_expiry_validation(timestamp: SIXTEEN_POW_SEVEN);
+        // timestamp is _not_ multiple of 16**N
 
-        // timestamp is not multiple of 16**N
+        // _test_place_order_expiry_validation(timestamp: 1);
+        // _test_place_order_expiry_validation(timestamp: 100);
+        // _test_place_order_expiry_validation(timestamp: 1_000);
+        // _test_place_order_expiry_validation(timestamp: 1_000_000);
+        // _test_place_order_expiry_validation(timestamp: 1_000_000_000);
+        // _test_place_order_expiry_validation(timestamp: 1_000_000_000_000);
+        // _test_place_order_expiry_validation(timestamp: 1_000_000_000_000_000);
 
-        // run_place_order_and_validate_expiry(timestamp: 1);
-        // run_place_order_and_validate_expiry(timestamp: 100);
-        // run_place_order_and_validate_expiry(timestamp: 1_000);
-        // run_place_order_and_validate_expiry(timestamp: 1_000_000);
-        // run_place_order_and_validate_expiry(timestamp: 1_000_000_000);
-        // run_place_order_and_validate_expiry(timestamp: 1_000_000_000_000);
-        run_place_order_and_validate_expiry(timestamp: 1_000_000_000_000_000);
+        _test_place_order_expiry_validation(timestamp: 0);
     }
 
-    fn run_place_order_and_validate_expiry(timestamp: u64) {
+    fn _test_place_order_expiry_validation(timestamp: u64) {
+        // Do not allow orders to be placed in the smallest interval
+        // orders expire in <= 16**1 seconds 
+        // do not allow 16**0 = 1 second precision
+
+        // orders expire in <= 16**2 = 256 seconds (~4.2min),
+        // allow 16**1 = 16 seconds precision
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_ONE,
+            interval: SIXTEEN_POW_TWO,
+            step: SIXTEEN_POW_ONE
+        );
+
+        // orders expire in <= 16**3 = 4,096 seconds (~1hr),
+        // allow 16**2 = 256 seconds (~4.2min) precision
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_TWO,
+            interval: SIXTEEN_POW_THREE,
+            step: SIXTEEN_POW_TWO
+        );
+
+        // orders expire in <= 16**4 = 65,536 seconds (~18hrs),
+        // allow 16**3 = 4,096 seconds (~1hr) precision
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_THREE,
+            interval: SIXTEEN_POW_FOUR,
+            step: SIXTEEN_POW_THREE
+        );
+
+        // orders expire in <= 16**5 = 1,048,576 seconds (~12 days),
+        // allow 16**4 = 65,536 seconds (~18hrs) precision
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_FOUR,
+            interval: SIXTEEN_POW_FIVE,
+            step: SIXTEEN_POW_FOUR
+        );
+
+        // orders expire in <= 16**6 = 16,777,216 seconds (~6.4 months),
+        // allow 16**5 = 1,048,576 seconds (~12 days) precision
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_FIVE,
+            interval: SIXTEEN_POW_SIX,
+            step: SIXTEEN_POW_FIVE
+        );
+
+        // orders expire in <= 16**7 = 268,435,456 seconds (~8.5 years),
+        // allow 16**6 = 16,777,216 (~6.4 month) precision
+        // unlikely to be used in practice
+        assert_place_order_and_validate_expiry(
+            timestamp: timestamp,
+            prev_interval: SIXTEEN_POW_SIX,
+            interval: SIXTEEN_POW_SEVEN,
+            step: SIXTEEN_POW_SIX
+        );
+    }
+
+    fn assert_place_order_and_validate_expiry(
+        timestamp: u64, prev_interval: u64, interval: u64, step: u64
+    ) {
         set_block_timestamp(timestamp);
 
         let core = deploy_core();
@@ -278,17 +353,11 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let amount = 100_000_000;
 
-        // orders expire in <= 16**1 seconds 
-        // allow 16**0 = 1 second precision
-
-        let mut prev_interval = 0;
-        let mut interval = 16;
-        let mut step = 1;
+        // expiry time at the interval time
         let mut order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            // first valid expiry time in interval
-            expiry_time: timestamp + prev_interval + step // t + 0 + 1
+            expiry_time: timestamp + prev_interval
         };
         token0.increase_balance(core.contract_address, amount);
         let mut token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -301,12 +370,12 @@ mod PlaceOrderTestsValidateExpiryTime {
             'EXPIRY_TIME'
         );
 
+        // first valid expiry time in interval
         order_key =
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**1 - 1
+                expiry_time: timestamp + prev_interval + step
             };
         token0.increase_balance(core.contract_address, amount);
         token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -319,246 +388,12 @@ mod PlaceOrderTestsValidateExpiryTime {
             'EXPIRY_TIME'
         );
 
-        // orders expire in <= 16**2 = 256 seconds (~4.2min),
-        // allow 16**1 = 16 seconds precision
-
-        prev_interval = interval;
-        interval = 16 * 16;
-        step = 16;
+        // last valid expiry time in interval
         order_key =
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**1 + 16
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**2 - 16**1
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        // orders expire in <= 16**3 = 4,096 seconds (~1hr),
-        // allow 16**2 = 256 seconds (~4.2min) precision
-
-        prev_interval = interval;
-        interval = 16 * 16 * 16;
-        step = 16 * 16;
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**2 + 16**2
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**3 - 16**2
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        // orders expire in <= 16**4 = 65,536 seconds (~18hrs),
-        // allow 16**3 = 4,096 seconds (~1hr) precision
-
-        prev_interval = interval;
-        interval = 16 * 16 * 16 * 16;
-        step = 16 * 16 * 16;
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**3 + 16**3
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**4 - 16**3
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        // orders expire in <= 16**5 = 1,048,576 seconds (~12 days),
-        // allow 16**4 = 65,536 seconds (~18hrs) precision
-
-        prev_interval = interval;
-        interval = 16 * 16 * 16 * 16 * 16;
-        step = 16 * 16 * 16 * 16;
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**4 + 16**4
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**5 - 16**4
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        // orders expire in <= 16**6 = 16,777,216 seconds (~6.4 months),
-        // allow 16**5 = 1,048,576 seconds (~12 days) precision
-
-        prev_interval = interval;
-        interval = 16 * 16 * 16 * 16 * 16 * 16;
-        step = 16 * 16 * 16 * 16 * 16;
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**5 + 16**5
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**6 - 16**5
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        // orders expire in <= 16**7 = 268,435,456 seconds (~8.5 years),
-        // allow 16**6 = 16,777,216 (~6.4 month) precision
-        // unlikely to be used in practice
-
-        prev_interval = interval;
-        interval = 16 * 16 * 16 * 16 * 16 * 16 * 16;
-        step = 16 * 16 * 16 * 16 * 16 * 16;
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // first valid expiry time in interval
-                expiry_time: timestamp + prev_interval + step // t + 16**6 + 16**6
-            };
-        token0.increase_balance(core.contract_address, amount);
-        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .get_order_state(order_key, token_id,);
-        assert(
-            order.expiry_time == order_key.expiry_time
-                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
-            'EXPIRY_TIME'
-        );
-
-        order_key =
-            OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
-                // last valid expiry time in interval
-                expiry_time: timestamp + interval - step // t + 16**7 - 16**6
+                expiry_time: timestamp + interval - step
             };
         token0.increase_balance(core.contract_address, amount);
         token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -578,8 +413,22 @@ mod PlaceOrderTests {
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TokenKey
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TokenKey, SIXTEEN_POW_ZERO,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
+        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN
     };
+
+    #[test]
+    #[available_gas(3000000000)]
+    #[should_panic(expected: ('INVALID_SPACING', 'ENTRYPOINT_FAILED'))]
+    fn test_place_order_expiry_too_small() {
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            timestamp: 0,
+            expiry_time: 15,
+            expected_sale_rate: 0x5f5e1000000000 // 6,250,000 * 2**32
+        );
+    }
 
     #[test]
     #[available_gas(3000000000)]
@@ -587,47 +436,47 @@ mod PlaceOrderTests {
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: 17,
+            expiry_time: SIXTEEN_POW_ONE + 1,
             expected_sale_rate: 0x5f5e1000000000 // 6,250,000 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_TWO + 1,
             expected_sale_rate: 0x5f5e100000000 // ~ 390,625 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_THREE + 1,
             // scaled by 2**32
             expected_sale_rate: 0x5f5e10000000 // ~ 24,414.0625 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16 * 16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_FOUR + 1,
             // scaled by 2**32
             expected_sale_rate: 0x5f5e1000000 // ~ 1,525.87890625 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16 * 16 * 16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_FIVE + 1,
             // scaled by 2**32
             expected_sale_rate: 0x5f5e100000 // ~ 95.3674316406 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16 * 16 * 16 * 16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_SIX + 1,
             // scaled by 2**32
             expected_sale_rate: 0x5f5e10000 // ~ 5.9604644775 * 2**32
         );
         run_place_order_and_validate_sale_rate(
             amount: 100_000_000,
             timestamp: 0,
-            expiry_time: (16 * 16 * 16 * 16 * 16 * 16 * 16) + 1,
+            expiry_time: SIXTEEN_POW_SEVEN + 1,
             // scaled by 2**32
             expected_sale_rate: 0x5f5e1000 // ~ 0.3725290298 * 2**32
         );
