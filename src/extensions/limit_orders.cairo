@@ -142,6 +142,9 @@ mod LimitOrders {
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
 
+    const LIMIT_ORDER_TICK_SPACING: u128 = 100;
+    const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;
+
     component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
 
     #[abi(embed_v0)]
@@ -340,7 +343,8 @@ mod LimitOrders {
                                 salt: 0,
                                 bounds: Bounds {
                                     lower: place_order.tick,
-                                    upper: place_order.tick + i129 { mag: 1, sign: false },
+                                    upper: place_order.tick
+                                        + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                                 },
                                 liquidity_delta: i129 { mag: place_order.liquidity, sign: false }
                             }
@@ -390,16 +394,20 @@ mod LimitOrders {
                                 break ();
                             };
 
-                            if (is_initialized & (next_tick.mag % 2 == 1)) {
+                            if (is_initialized
+                                & ((next_tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                                    .is_non_zero())) {
                                 let bounds = if price_increasing {
                                     Bounds {
-                                        lower: next_tick - i129 { mag: 1, sign: false },
+                                        lower: next_tick
+                                            - i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                                         upper: next_tick,
                                     }
                                 } else {
                                     Bounds {
                                         lower: next_tick,
-                                        upper: next_tick + i129 { mag: 1, sign: false },
+                                        upper: next_tick
+                                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                                     }
                                 };
 
@@ -439,7 +447,7 @@ mod LimitOrders {
                                 if price_increasing {
                                     next_tick
                                 } else {
-                                    next_tick - i129 { mag: 1, sign: false }
+                                    next_tick - i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                 };
                         };
 
@@ -488,7 +496,8 @@ mod LimitOrders {
                                 salt: 0,
                                 bounds: Bounds {
                                     lower: withdraw.tick,
-                                    upper: withdraw.tick + i129 { mag: 1, sign: false },
+                                    upper: withdraw.tick
+                                        + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                                 },
                                 liquidity_delta: i129 { mag: withdraw.liquidity, sign: true }
                             }
@@ -527,7 +536,7 @@ mod LimitOrders {
             token0: order_key.token0,
             token1: order_key.token1,
             fee: 0,
-            tick_spacing: 1,
+            tick_spacing: LIMIT_ORDER_TICK_SPACING,
             extension: get_contract_address()
         }
     }
@@ -547,7 +556,8 @@ mod LimitOrders {
             let id = self.nft.read().mint(get_caller_address());
 
             let pool_key = to_pool_key(order_key);
-            let is_selling_token1 = (order_key.tick.mag % 2) == 1;
+            let is_selling_token1 = (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                .is_non_zero();
 
             let core = self.core.read();
 
@@ -558,7 +568,7 @@ mod LimitOrders {
                 // the first order initializes the pool just next to where the order is placed
                 if (price.sqrt_ratio.is_zero()) {
                     let initial_tick = if is_selling_token1 {
-                        order_key.tick + i129 { mag: 1, sign: false }
+                        order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                     } else {
                         order_key.tick
                     };
@@ -572,7 +582,7 @@ mod LimitOrders {
 
             let sqrt_ratio_lower = tick_to_sqrt_ratio(order_key.tick);
             let sqrt_ratio_upper = tick_to_sqrt_ratio(
-                order_key.tick + i129 { mag: 1, sign: false }
+                order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
             );
             let liquidity = if is_selling_token1 {
                 max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
@@ -626,7 +636,8 @@ mod LimitOrders {
 
             let core = self.core.read();
 
-            let is_selling_token1 = order_key.tick.mag % 2 == 1;
+            let is_selling_token1 = (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                .is_non_zero();
 
             let ticks_crossed_at_order_tick = self
                 .ticks_crossed_last_crossing
@@ -636,7 +647,7 @@ mod LimitOrders {
                         if is_selling_token1 {
                             order_key.tick
                         } else {
-                            order_key.tick + i129 { mag: 1, sign: false }
+                            order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                         }
                     )
                 );
@@ -646,7 +657,7 @@ mod LimitOrders {
                 .ticks_crossed_at_create) {
                 let sqrt_ratio_a = tick_to_sqrt_ratio(order_key.tick);
                 let sqrt_ratio_b = tick_to_sqrt_ratio(
-                    order_key.tick + i129 { mag: 1, sign: false }
+                    order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                 );
 
                 let (amount0, amount1) = if is_selling_token1 {
@@ -717,7 +728,11 @@ mod LimitOrders {
             loop {
                 match requests.pop_front() {
                     Option::Some(request) => {
-                        let is_selling_token1 = *request.order_key.tick.mag % 2 == 1;
+                        let is_selling_token1 = (*request
+                            .order_key
+                            .tick
+                            .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                            .is_non_zero();
                         let pool_key = to_pool_key(*request.order_key);
                         let price = core.get_pool_price(pool_key);
 
@@ -731,7 +746,8 @@ mod LimitOrders {
                                     if is_selling_token1 {
                                         *request.order_key.tick
                                     } else {
-                                        *request.order_key.tick + i129 { mag: 1, sign: false }
+                                        *request.order_key.tick
+                                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                     }
                                 )
                             );
@@ -742,7 +758,8 @@ mod LimitOrders {
                         if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
                             let sqrt_ratio_a = tick_to_sqrt_ratio(*request.order_key.tick);
                             let sqrt_ratio_b = tick_to_sqrt_ratio(
-                                *request.order_key.tick + i129 { mag: 1, sign: false }
+                                *request.order_key.tick
+                                    + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                             );
 
                             let (amount0, amount1) = if is_selling_token1 {
@@ -779,7 +796,8 @@ mod LimitOrders {
                                 liquidity_delta: i129 { mag: order.liquidity, sign: true },
                                 sqrt_ratio_lower: tick_to_sqrt_ratio(*request.order_key.tick),
                                 sqrt_ratio_upper: tick_to_sqrt_ratio(
-                                    *request.order_key.tick + i129 { mag: 1, sign: false }
+                                    *request.order_key.tick
+                                        + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                 )
                             );
 
