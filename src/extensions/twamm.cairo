@@ -333,7 +333,7 @@ mod TWAMM {
             let sale_rate_ending = self.sale_rate_ending.read((token_key, expiry_time)) + sale_rate;
             self.sale_rate_ending.write((token_key, expiry_time), sale_rate_ending);
 
-            // first order at this expiry time
+            // first order at this expiry time, insert the initialized expiry time
             if (sale_rate_ending == sale_rate) {
                 self.insert_initialized_expiry(token_key, expiry_time);
             }
@@ -448,6 +448,7 @@ mod TWAMM {
                         OrderState {
                             expiry_time: order_state.expiry_time,
                             sale_rate: order_state.sale_rate,
+                            // use current rewards factor
                             reward_factor: self.reward_factor.read(token_key)
                         }
                     );
