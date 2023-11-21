@@ -4,7 +4,7 @@ use ekubo::enumerable_owned_nft::{
 };
 use ekubo::extensions::limit_orders::{
     ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
-    GetOrderInfoRequest, GetOrderInfoResult
+    GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
 };
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
@@ -42,7 +42,7 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, Pool
         token0: token0.contract_address,
         token1: token1.contract_address,
         fee: 0,
-        tick_spacing: 1,
+        tick_spacing: LIMIT_ORDER_TICK_SPACING,
         extension: limit_orders.contract_address,
     };
 
@@ -198,7 +198,7 @@ fn test_before_initialize_pool_not_from_extension() {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
                 fee: 0,
-                tick_spacing: 1,
+                tick_spacing: LIMIT_ORDER_TICK_SPACING,
                 extension: limit_orders.contract_address,
             },
             Zeroable::zero()
@@ -226,12 +226,16 @@ fn test_place_order_sell_token1_initializes_pool_above_tick() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     lo.place_order(order_key, 100);
     let price = core.get_pool_price(pk);
     assert(
-        (price.tick == i129 { mag: 2, sign: false }) & price.sqrt_ratio.is_non_zero(), 'initialized'
+        (price.tick == i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false })
+            & price.sqrt_ratio.is_non_zero(),
+        'initialized'
     );
 }
 
@@ -243,8 +247,16 @@ fn test_place_order_on_both_sides_token1_first() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
 
-    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
-    let ok2 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } };
+    let ok1 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
+    let ok2 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
 
     t1.increase_balance(lo.contract_address, 100);
     let id1 = lo.place_order(ok1, 100);
@@ -277,8 +289,16 @@ fn test_place_order_on_both_sides_token0_first() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
 
-    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false } };
-    let ok2 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
+    let ok1 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
+    let ok2 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
 
     t0.increase_balance(lo.contract_address, 100);
     let id1 = lo.place_order(ok1, 100);
@@ -310,7 +330,9 @@ fn test_place_order_token0_creates_position_at_tick() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id = lo.place_order(order_key, 100);
     assert(id == 1, 'id');
@@ -333,7 +355,8 @@ fn test_place_order_token0_creates_position_at_tick() {
                 salt: 0,
                 owner: lo.contract_address,
                 bounds: Bounds {
-                    lower: i129 { mag: 2, sign: false }, upper: i129 { mag: 3, sign: false }
+                    lower: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false },
+                    upper: i129 { mag: 3 * LIMIT_ORDER_TICK_SPACING, sign: false }
                 },
             }
         );
@@ -348,7 +371,9 @@ fn test_place_order_token1_creates_position_at_tick() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id = lo.place_order(order_key, 100);
     assert(id == 1, 'id');
@@ -371,7 +396,8 @@ fn test_place_order_token1_creates_position_at_tick() {
                 salt: 0,
                 owner: lo.contract_address,
                 bounds: Bounds {
-                    lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false }
+                    lower: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+                    upper: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
                 },
             }
         );
@@ -388,10 +414,20 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 1000);
     let ok_1 = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
-    let ok_3 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: true } };
-    let ok_5 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 3, sign: true } };
+    let ok_3 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: true }
+    };
+    let ok_5 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 3 * LIMIT_ORDER_TICK_SPACING, sign: true }
+    };
     let id_1 = lo.place_order(ok_1, 100);
     let id_2 = lo.place_order(ok_3, 50);
     let id_3 = lo.place_order(ok_3, 250);
@@ -405,7 +441,10 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
                 amount: i129 { mag: 2000, sign: false },
                 is_token1: false,
                 // halfway between -3 and -2
-                sqrt_ratio_limit: (tick_to_sqrt_ratio(i129 { mag: 3, sign: true }) * 10000005)
+                sqrt_ratio_limit: (tick_to_sqrt_ratio(
+                    i129 { mag: 3 * LIMIT_ORDER_TICK_SPACING, sign: true }
+                )
+                    * 10000005)
                     / 10000000,
                 skip_ahead: 0,
             },
@@ -428,12 +467,18 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 1000);
-    let ok_1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: true } };
+    let ok_1 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: true }
+    };
     let ok_3 = OrderKey {
         token0: pk.token0, token1: pk.token1, tick: i129 { mag: 0, sign: false }
     };
     let ok_5 = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 2, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id_1 = lo.place_order(ok_1, 100);
     let id_2 = lo.place_order(ok_3, 50);
@@ -448,7 +493,10 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
                 amount: i129 { mag: 2000, sign: false },
                 is_token1: true,
                 // halfway between -3 and -2
-                sqrt_ratio_limit: (tick_to_sqrt_ratio(i129 { mag: 1, sign: false }) * 10000005)
+                sqrt_ratio_limit: (tick_to_sqrt_ratio(
+                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                )
+                    * 10000005)
                     / 10000000,
                 skip_ahead: 0,
             },
@@ -472,14 +520,19 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false } },
+        bounds: Bounds {
+            lower: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+            upper: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -519,7 +572,9 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+        bounds: Bounds {
+            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -532,7 +587,9 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
             swap_params: SwapParameters {
                 amount: i129 { mag: 200, sign: false },
                 is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                sqrt_ratio_limit: tick_to_sqrt_ratio(
+                    i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                ),
                 skip_ahead: 0,
             },
             recipient: contract_address_const::<1>(),
@@ -554,14 +611,19 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false } },
+        bounds: Bounds {
+            lower: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+            upper: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -605,7 +667,9 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+        bounds: Bounds {
+            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -618,7 +682,9 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
             swap_params: SwapParameters {
                 amount: i129 { mag: 50, sign: false },
                 is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                sqrt_ratio_limit: tick_to_sqrt_ratio(
+                    i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                ),
                 skip_ahead: 0,
             },
             recipient: contract_address_const::<1>(),
@@ -644,14 +710,19 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
     let order_key = OrderKey {
-        token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false }
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
     };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 2, sign: false } },
+        bounds: Bounds {
+            lower: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+            upper: i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -664,18 +735,24 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
             swap_params: SwapParameters {
                 amount: i129 { mag: 200, sign: false },
                 is_token1: false,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                sqrt_ratio_limit: tick_to_sqrt_ratio(
+                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                ),
                 skip_ahead: 0,
             },
             recipient: contract_address_const::<1>(),
             calculated_amount_threshold: 0
         );
 
-    assert(core.get_pool_price(pk).tick.is_zero(), 'tick after');
+    assert(
+        core.get_pool_price(pk).tick == i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            - i129 { mag: 1, sign: false },
+        'tick after'
+    );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 
-    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
+    assert(lo.close_order(order_key, id, recipient: contract_address_const::<1>()) == (99, 0), '');
 }
 
 #[test]
@@ -693,7 +770,9 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
-        bounds: Bounds { lower: Zeroable::zero(), upper: i129 { mag: 1, sign: false } },
+        bounds: Bounds {
+            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+        },
     };
     assert(
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
@@ -706,18 +785,23 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
             swap_params: SwapParameters {
                 amount: i129 { mag: 200, sign: false },
                 is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                sqrt_ratio_limit: tick_to_sqrt_ratio(
+                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                ),
                 skip_ahead: 0,
             },
             recipient: contract_address_const::<1>(),
             calculated_amount_threshold: 0
         );
 
-    assert(core.get_pool_price(pk).tick == i129 { mag: 1, sign: false }, 'tick after');
+    assert(
+        core.get_pool_price(pk).tick == i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+        'tick after'
+    );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
 
-    lo.close_order(order_key, id, recipient: contract_address_const::<1>());
+    assert(lo.close_order(order_key, id, recipient: contract_address_const::<1>()) == (0, 100), '');
 }
 
 #[test]
@@ -741,7 +825,9 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
                 swap_params: SwapParameters {
                     amount: i129 { mag: 200, sign: false },
                     is_token1: true,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(
+                        i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                    ),
                     skip_ahead: 0,
                 },
                 recipient: contract_address_const::<1>(),
@@ -789,7 +875,11 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
 
     t1.increase_balance(lo.contract_address, 100);
-    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
+    let ok1 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
     let id1 = lo.place_order(ok1, 100);
 
     t0.increase_balance(simple_swapper.contract_address, 200);
@@ -800,7 +890,9 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
                 swap_params: SwapParameters {
                     amount: i129 { mag: 200, sign: false },
                     is_token1: false,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 1, sign: false }),
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(
+                        i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                    ),
                     skip_ahead: 0,
                 },
                 recipient: contract_address_const::<1>(),
@@ -816,7 +908,9 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
                 swap_params: SwapParameters {
                     amount: i129 { mag: 200, sign: false },
                     is_token1: true,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+                    sqrt_ratio_limit: tick_to_sqrt_ratio(
+                        i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                    ),
                     skip_ahead: 0,
                 },
                 recipient: contract_address_const::<1>(),
@@ -864,7 +958,11 @@ fn test_close_order_twice_fails_sell_token1() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
 
     t1.increase_balance(lo.contract_address, 100);
-    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } };
+    let ok1 = OrderKey {
+        token0: pk.token0,
+        token1: pk.token1,
+        tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+    };
     let id1 = lo.place_order(ok1, 100);
     lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
     lo.close_order(ok1, id1, recipient: contract_address_const::<1>());
@@ -883,7 +981,11 @@ fn test_place_order_fails_wrong_side_token1() {
     lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
     lo
         .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            OrderKey {
+                token0: pk.token0,
+                token1: pk.token1,
+                tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            },
             100
         );
 }
@@ -900,7 +1002,11 @@ fn test_place_order_fails_wrong_side_token0() {
     t1.increase_balance(lo.contract_address, 100);
     lo
         .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } },
+            OrderKey {
+                token0: pk.token0,
+                token1: pk.token1,
+                tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            },
             100
         );
     lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
@@ -923,6 +1029,11 @@ fn test_place_order_fails_zero_token1() {
 
     lo
         .place_order(
-            OrderKey { token0: pk.token0, token1: pk.token1, tick: i129 { mag: 1, sign: false } }, 0
+            OrderKey {
+                token0: pk.token0,
+                token1: pk.token1,
+                tick: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            },
+            0
         );
 }
