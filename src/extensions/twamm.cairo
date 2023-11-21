@@ -8,7 +8,6 @@ use traits::{Into, TryInto};
 struct OrderKey {
     token0: ContractAddress,
     token1: ContractAddress,
-    time_intervals: u64,
     expiry_time: u64,
 }
 
@@ -295,20 +294,15 @@ mod TWAMM {
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
-            self.validate_expiry_time(order_key.expiry_time);
-
             let token_key = to_token_key(order_key);
             self.execute_virtual_trades(token_key);
 
             let id = self.nft.read().mint(get_caller_address());
 
-            // calculate and store order sale rate
-            let current_time = get_block_timestamp();
-            let last_expiry_time = current_time - (current_time % self.order_time_interval.read());
-            let expiry_time = last_expiry_time
-                + (self.order_time_interval.read() * (order_key.time_intervals + 1));
+            let expiry_time = self.validate_expiry_time(order_key.expiry_time);
 
-            let sale_rate = self.scale_up(amount) / (expiry_time - current_time).into();
+            // calculate and store order sale rate
+            let sale_rate = self.scale_up(amount) / (expiry_time - get_block_timestamp()).into();
 
             self
                 .orders
@@ -571,17 +565,24 @@ mod TWAMM {
             assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
         }
 
-        fn validate_expiry_time(self: @ContractState, expiry_time: u64) {
+        fn validate_expiry_time(self: @ContractState, expiry_time: u64) -> u64 {
             let current_time = get_block_timestamp();
 
             assert(expiry_time > current_time, 'INVALID_EXPIRY_TIME');
 
-            // validate expiry time is a multiple of 
+            // calculate the closest timestamp at which an order can expire
+            // based on the step of the interval that the order expires in using
+            // an approximation of
             // = 16**(floor(log_16(expiry_time-current_time)))
             // = 2**(4 * (floor(log_2(expiry_time-current_time)) / 4))
             let step = exp2(4 * (msb((expiry_time - current_time).into()) / 4));
 
-            assert(expiry_time % step.try_into().unwrap() == 0, 'INVALID_EXPIRY_TIME');
+            let rem = expiry_time % step.try_into().unwrap();
+            if (rem == 0) {
+                expiry_time
+            } else {
+                expiry_time - rem
+            }
         }
 
         fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {

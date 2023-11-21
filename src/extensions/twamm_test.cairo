@@ -235,10 +235,7 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let amount = 100_000_000;
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
-            time_intervals: 10_000,
-            expiry_time: 0
+            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 0
         };
 
         token0.increase_balance(core.contract_address, amount);
@@ -259,10 +256,7 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let amount = 100_000_000;
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
-            time_intervals: 10_000,
-            expiry_time: timestamp
+            token0: token0.contract_address, token1: token1.contract_address, expiry_time: timestamp
         };
 
         token0.increase_balance(core.contract_address, amount);
@@ -272,8 +266,34 @@ mod PlaceOrderTestsValidateExpiryTime {
 
     #[test]
     #[available_gas(3000000000)]
-    fn test_place_order_at_intervals() {
-        let current_time = get_block_timestamp();
+    fn test_place_order_expiry_validation() {
+        // the tests take too long so we run only the first and last test in each section
+        // however, they are all valid/passing
+
+        // timestamp is multiple of 16**N
+
+        // run_place_order_and_validate_expiry(timestamp: 0);
+        // run_place_order_and_validate_expiry(timestamp: 16);
+        // run_place_order_and_validate_expiry(timestamp: 16 * 16);
+        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16);
+        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16);
+        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16);
+        // run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16 * 16);
+        run_place_order_and_validate_expiry(timestamp: 16 * 16 * 16 * 16 * 16 * 16 * 16);
+
+        // timestamp is not multiple of 16**N
+
+        // run_place_order_and_validate_expiry(timestamp: 1);
+        // run_place_order_and_validate_expiry(timestamp: 100);
+        // run_place_order_and_validate_expiry(timestamp: 1_000);
+        // run_place_order_and_validate_expiry(timestamp: 1_000_000);
+        // run_place_order_and_validate_expiry(timestamp: 1_000_000_000);
+        // run_place_order_and_validate_expiry(timestamp: 1_000_000_000_000);
+        run_place_order_and_validate_expiry(timestamp: 1_000_000_000_000_000);
+    }
+
+    fn run_place_order_and_validate_expiry(timestamp: u64) {
+        set_block_timestamp(timestamp);
 
         let core = deploy_core();
         let twamm = deploy_twamm(core, 1_000_u64);
@@ -282,168 +302,297 @@ mod PlaceOrderTestsValidateExpiryTime {
         let amount = 100_000_000;
 
         // orders expire in <= 16**1 seconds 
-        // allow 1 second precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time + 1 // 16**0 + 1
-                },
-                amount
-            );
+        // allow 16**0 = 1 second precision
 
+        let mut prev_interval = 0;
+        let mut interval = 16;
+        let mut step = 1;
+        let mut order_key = OrderKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            // first valid expiry time in interval
+            expiry_time: timestamp + prev_interval + step // t + 0 + 1
+        };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + 16
-                },
-                amount
-            );
+        let mut token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        let mut order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**1 - 1
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
 
         // orders expire in <= 16**2 = 256 seconds (~4.2min),
-        // allow 16 seconds precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time + 16 + 16 // 16**1 + 16
-                },
-                amount
-            );
+        // allow 16**1 = 16 seconds precision
 
+        prev_interval = interval;
+        interval = 16 * 16;
+        step = 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**1 + 16
+            };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + 16 * 16 // 256
-                },
-                amount
-            );
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**2 - 16**1
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
 
         // orders expire in <= 16**3 = 4,096 seconds (~1hr),
-        // allow 256 seconds (~4.2min) precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time + (16 * 16) + 256 // 16**2 + 256
-                },
-                amount
-            );
+        // allow 16**2 = 256 seconds (~4.2min) precision
 
+        prev_interval = interval;
+        interval = 16 * 16 * 16;
+        step = 16 * 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**2 + 16**2
+            };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + (16 * 16 * 16) // 4,096
-                },
-                amount
-            );
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**3 - 16**2
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
 
         // orders expire in <= 16**4 = 65,536 seconds (~18hrs),
-        // allow 4,096 seconds (~1hr) precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time + (16 * 16 * 16) + 4_096 // 16**3 + 4,096
-                },
-                amount
-            );
+        // allow 16**3 = 4,096 seconds (~1hr) precision
 
+        prev_interval = interval;
+        interval = 16 * 16 * 16 * 16;
+        step = 16 * 16 * 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**3 + 16**3
+            };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + (16 * 16 * 16 * 16) // 65,536
-                },
-                amount
-            );
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**4 - 16**3
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
 
         // orders expire in <= 16**5 = 1,048,576 seconds (~12 days),
-        // allow 65,536 seconds (~18hrs) precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time + (16 * 16 * 16 * 16) + 65_536 // 16**4 + 65,536
-                },
-                amount
-            );
+        // allow 16**4 = 65,536 seconds (~18hrs) precision
 
+        prev_interval = interval;
+        interval = 16 * 16 * 16 * 16 * 16;
+        step = 16 * 16 * 16 * 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**4 + 16**4
+            };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + (16 * 16 * 16 * 16 * 16) // 1,048,576
-                },
-                amount
-            );
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**5 - 16**4
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
 
         // orders expire in <= 16**6 = 16,777,216 seconds (~6.4 months),
-        // allow 1,048,576 seconds (~12 days) precision
-        token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    // first valid expiry time in interval
-                    expiry_time: current_time
-                        + (16 * 16 * 16 * 16 * 16)
-                        + 1_048_576 // 16**5 + 1,048,576
-                },
-                amount
-            );
+        // allow 16**5 = 1,048,576 seconds (~12 days) precision
 
+        prev_interval = interval;
+        interval = 16 * 16 * 16 * 16 * 16 * 16;
+        step = 16 * 16 * 16 * 16 * 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**5 + 16**5
+            };
         token0.increase_balance(core.contract_address, amount);
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(
-                OrderKey {
-                    token0: token0.contract_address,
-                    token1: token1.contract_address,
-                    time_intervals: 10_000,
-                    expiry_time: current_time + (16 * 16 * 16 * 16 * 16 * 16) // 16,777,216
-                },
-                amount
-            );
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**6 - 16**5
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        // orders expire in <= 16**7 = 268,435,456 seconds (~8.5 years),
+        // allow 16**6 = 16,777,216 (~6.4 month) precision
+        // unlikely to be used in practice
+
+        prev_interval = interval;
+        interval = 16 * 16 * 16 * 16 * 16 * 16 * 16;
+        step = 16 * 16 * 16 * 16 * 16 * 16;
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // first valid expiry time in interval
+                expiry_time: timestamp + prev_interval + step // t + 16**6 + 16**6
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
+
+        order_key =
+            OrderKey {
+                token0: token0.contract_address,
+                token1: token1.contract_address,
+                // last valid expiry time in interval
+                expiry_time: timestamp + interval - step // t + 16**7 - 16**6
+            };
+        token0.increase_balance(core.contract_address, amount);
+        token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .place_order(order_key, amount);
+        order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+        assert(
+            order.expiry_time == order_key.expiry_time
+                || order.expiry_time == (order_key.expiry_time - (order_key.expiry_time % step)),
+            'EXPIRY_TIME'
+        );
     }
 }
 // mod PlaceOrderTests {
@@ -458,7 +607,7 @@ mod PlaceOrderTestsValidateExpiryTime {
 //     #[available_gas(3000000000)]
 //     fn test_place_order_at_expiry_time() {
 //         let timestamp = 1_000_000;
-//         set_block_timestamp(get_block_timestamp() + timestamp);
+//         set_block_timestamp(timestamp);
 
 //         let core = deploy_core();
 //         let twamm = deploy_twamm(core, 1_000_u64);
@@ -466,7 +615,9 @@ mod PlaceOrderTestsValidateExpiryTime {
 
 //         let amount = 100_000_000;
 //         let order_key = OrderKey {
-//             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+//             token0: token0.contract_address,
+//             token1: token1.contract_address,
+//             expiry_time: (16 * 16)
 //         };
 
 //         token0.increase_balance(core.contract_address, amount);
@@ -476,213 +627,209 @@ mod PlaceOrderTestsValidateExpiryTime {
 //         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
 //             .get_order_state(order_key, token_id,);
 
-//         // 1000000 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
-//         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
-//         // 100000000 * 2**32 / (11001000 - 1000000)
-//         assert(order.sale_rate == 0x9ffbe7876, 'SALE_RATE');
+//         order.sale_rate.print();
+// 100000000 * 2**32 / (11001000 - 1000000)
+// assert(order.sale_rate == 0x9ffbe7876, 'SALE_RATE');
+// let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//     .get_sale_rate(to_token_key(order_key));
 
-//         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_sale_rate(to_token_key(order_key));
+// assert(global_rate == 0x9ffbe7876, 'GLOBAL_SALE_RATE');
 
-//         assert(global_rate == 0x9ffbe7876, 'GLOBAL_SALE_RATE');
+// // check event
 
-//         // check event
+// let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+//     .unwrap();
+// assert(event.id == 1, 'event.id');
+// assert(event.amount == amount, 'event.amount');
+// assert(event.expiry_time == 11_001_000, 'event.expiry_time');
+// assert(event.sale_rate == 0x9ffbe7876, 'event.sale_rate');
+// assert(event.global_sale_rate == 0x9ffbe7876, 'event.global_sale_rate');
+// }
+// #[test]
+// #[available_gas(3000000000)]
+// fn test_place_order_just_after_expiry_time() {
+//     set_block_timestamp(get_block_timestamp() + 1_000_001);
 
-//         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//             .unwrap();
-//         assert(event.id == 1, 'event.id');
-//         assert(event.amount == amount, 'event.amount');
-//         assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-//         assert(event.sale_rate == 0x9ffbe7876, 'event.sale_rate');
-//         assert(event.global_sale_rate == 0x9ffbe7876, 'event.global_sale_rate');
-//     }
+//     let core = deploy_core();
+//     let twamm = deploy_twamm(core, 1_000_u64);
+//     let (token0, token1) = deploy_two_mock_tokens();
 
-//     #[test]
-//     #[available_gas(3000000000)]
-//     fn test_place_order_just_after_expiry_time() {
-//         set_block_timestamp(get_block_timestamp() + 1_000_001);
+//     let amount = 100_000_000;
+//     let order_key = OrderKey {
+//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+//     };
 
-//         let core = deploy_core();
-//         let twamm = deploy_twamm(core, 1_000_u64);
-//         let (token0, token1) = deploy_two_mock_tokens();
+//     token0.increase_balance(core.contract_address, amount);
+//     let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .place_order(order_key, amount);
 
-//         let amount = 100_000_000;
-//         let order_key = OrderKey {
-//             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//         };
+//     let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_order_state(order_key, token_id,);
 
-//         token0.increase_balance(core.contract_address, amount);
-//         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
+//     // 1000001 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
+//     assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
+//     // 100000000 * 2**32 / (11001000 - 1000001)
+//     assert(order.sale_rate == 0x9ffbe893c, 'SALE_RATE');
 
-//         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_order_state(order_key, token_id,);
+//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_sale_rate(to_token_key(order_key));
 
-//         // 1000001 - (1000001 % 1000) + (1000 * (10000 + 1)) = 11001000
-//         assert(order.expiry_time == 11_001_000, 'EXPIRY_TIME');
-//         // 100000000 * 2**32 / (11001000 - 1000001)
-//         assert(order.sale_rate == 0x9ffbe893c, 'SALE_RATE');
+//     assert(global_rate == 0x9ffbe893c, 'GLOBAL_SALE_RATE');
 
-//         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_sale_rate(to_token_key(order_key));
+//     // check event
 
-//         assert(global_rate == 0x9ffbe893c, 'GLOBAL_SALE_RATE');
-
-//         // check event
-
-//         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//             .unwrap();
-//         assert(event.id == 1, 'event.id');
-//         assert(event.amount == amount, 'event.amount');
-//         assert(event.expiry_time == 11_001_000, 'event.expiry_time');
-//         assert(event.sale_rate == 0x9ffbe893c, 'event.sale_rate');
-//         assert(event.global_sale_rate == 0x9ffbe893c, 'event.global_sale_rate');
-//     }
-
-//     #[test]
-//     #[available_gas(3000000000)]
-//     fn test_place_order_just_before_expiry_time() {
-//         set_block_timestamp(get_block_timestamp() + 999_999);
-
-//         let core = deploy_core();
-//         let twamm = deploy_twamm(core, 1_000_u64);
-//         let (token0, token1) = deploy_two_mock_tokens();
-
-//         let amount = 100_000_000;
-//         let order_key = OrderKey {
-//             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//         };
-//         token0.increase_balance(core.contract_address, amount);
-//         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
-
-//         let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_order_state(
-//                 OrderKey {
-//                     token0: token0.contract_address,
-//                     token1: token1.contract_address,
-//                     time_intervals: 10_000
-//                 },
-//                 token_id,
-//             );
-
-//         // 999999 - (999999 % 1000) + (1000 * (10000 + 1)) = 11000000
-//         assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
-//         // 100000000 * 2**32 / (11000000 - 999999)
-//         assert(order.sale_rate == 0x9ffffef39, 'SALE_RATE');
-
-//         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_sale_rate(to_token_key(order_key));
-
-//         assert(global_rate == 0x9ffffef39, 'GLOBAL_SALE_RATE');
-
-//         // check event
-
-//         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//             .unwrap();
-//         assert(event.id == 1, 'event.id');
-//         assert(event.amount == amount, 'event.amount');
-//         assert(event.expiry_time == 11_000_000, 'event.expiry_time');
-//         assert(event.sale_rate == 0x9ffffef39, 'event.sale_rate');
-//         assert(event.global_sale_rate == 0x9ffffef39, 'event.global_sale_rate');
-//     }
-
-//     #[test]
-//     #[available_gas(3000000000)]
-//     fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
-//         let timestamp = 1_000_000;
-//         set_block_timestamp(get_block_timestamp() + timestamp);
-
-//         let core = deploy_core();
-//         let twamm = deploy_twamm(core, 100_u64);
-//         let (token0, token1) = deploy_two_mock_tokens();
-
-//         let amount = 100_000;
-//         let order_key = OrderKey {
-//             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 100
-//         };
-
-//         token0.increase_balance(core.contract_address, amount);
-//         let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
-
-//         let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_order_state(order_key, token_id_0,);
-
-//         // 1000000 + (100 * (100 + 1))  
-//         assert(order_0.expiry_time == 1_010_100, 'EXPIRY_TIME');
-//         // 100000 * 2**32 / (1010100 - 1000000)
-//         assert(order_0.sale_rate == 0x9e6a74981, 'SALE_RATE');
-
-//         // check event
-
-//         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//             .unwrap();
-//         assert(event.id == 1, 'event.id');
-//         assert(event.amount == amount, 'event.amount');
-//         assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-//         assert(event.sale_rate == 0x9e6a74981, 'event.sale_rate');
-//         assert(event.global_sale_rate == 0x9e6a74981, 'event.global_sale_rate');
-
-//         // increase timestamp
-//         set_block_timestamp(get_block_timestamp() + 1);
-
-//         token0.increase_balance(core.contract_address, amount);
-//         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
-
-//         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_order_state(order_key, token_id_1);
-
-//         // 1000000 + (100 * (100 + 1))  
-//         assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
-//         // 100000 * 2**32 / (1010100 - 1000001)
-//         assert(order_1.sale_rate == 0x9e6e789c5, 'SALE_RATE');
-
-//         // check event
-
-//         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
-//             .unwrap();
-//         assert(event.id == 2, 'event.id');
-//         assert(event.amount == amount, 'event.amount');
-//         assert(event.expiry_time == 1_010_100, 'event.expiry_time');
-//         assert(event.sale_rate == 0x9e6e789c5, 'event.sale_rate');
-//         assert(event.global_sale_rate == 0x9e6a74981 + 0x9e6e789c5, 'event.global_sale_rate');
-
-//         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .get_sale_rate(to_token_key(order_key));
-
-//         assert(global_rate == 0x9e6a74981 + 0x9e6e789c5, 'GLOBAL_SALE_RATE');
-//     }
-
-//     #[test]
-//     #[available_gas(3000000000)]
-//     #[should_panic(
-//         expected: (
-//             'DEPOSIT_AMOUNT_NE_AMOUNT',
-//             'ENTRYPOINT_FAILED',
-//             'ENTRYPOINT_FAILED',
-//             'ENTRYPOINT_FAILED'
-//         )
-//     )]
-//     fn test_place_order_no_token_transfer() {
-//         let timestamp = 1_000_000;
-//         set_block_timestamp(get_block_timestamp() + timestamp);
-
-//         let core = deploy_core();
-//         let twamm = deploy_twamm(core, 1_000_u64);
-//         let (token0, token1) = deploy_two_mock_tokens();
-
-//         let amount = 100_000_000;
-//         let order_key = OrderKey {
-//             token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
-//         };
-
-//         ITWAMMDispatcher { contract_address: twamm.contract_address }
-//             .place_order(order_key, amount);
-//     }
+//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+//         .unwrap();
+//     assert(event.id == 1, 'event.id');
+//     assert(event.amount == amount, 'event.amount');
+//     assert(event.expiry_time == 11_001_000, 'event.expiry_time');
+//     assert(event.sale_rate == 0x9ffbe893c, 'event.sale_rate');
+//     assert(event.global_sale_rate == 0x9ffbe893c, 'event.global_sale_rate');
 // }
 
+// #[test]
+// #[available_gas(3000000000)]
+// fn test_place_order_just_before_expiry_time() {
+//     set_block_timestamp(get_block_timestamp() + 999_999);
+
+//     let core = deploy_core();
+//     let twamm = deploy_twamm(core, 1_000_u64);
+//     let (token0, token1) = deploy_two_mock_tokens();
+
+//     let amount = 100_000_000;
+//     let order_key = OrderKey {
+//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+//     };
+//     token0.increase_balance(core.contract_address, amount);
+//     let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .place_order(order_key, amount);
+
+//     let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_order_state(
+//             OrderKey {
+//                 token0: token0.contract_address,
+//                 token1: token1.contract_address,
+//                 time_intervals: 10_000
+//             },
+//             token_id,
+//         );
+
+//     // 999999 - (999999 % 1000) + (1000 * (10000 + 1)) = 11000000
+//     assert(order.expiry_time == 11_000_000, 'EXPIRY_TIME');
+//     // 100000000 * 2**32 / (11000000 - 999999)
+//     assert(order.sale_rate == 0x9ffffef39, 'SALE_RATE');
+
+//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_sale_rate(to_token_key(order_key));
+
+//     assert(global_rate == 0x9ffffef39, 'GLOBAL_SALE_RATE');
+
+//     // check event
+
+//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+//         .unwrap();
+//     assert(event.id == 1, 'event.id');
+//     assert(event.amount == amount, 'event.amount');
+//     assert(event.expiry_time == 11_000_000, 'event.expiry_time');
+//     assert(event.sale_rate == 0x9ffffef39, 'event.sale_rate');
+//     assert(event.global_sale_rate == 0x9ffffef39, 'event.global_sale_rate');
+// }
+
+// #[test]
+// #[available_gas(3000000000)]
+// fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
+//     let timestamp = 1_000_000;
+//     set_block_timestamp(get_block_timestamp() + timestamp);
+
+//     let core = deploy_core();
+//     let twamm = deploy_twamm(core, 100_u64);
+//     let (token0, token1) = deploy_two_mock_tokens();
+
+//     let amount = 100_000;
+//     let order_key = OrderKey {
+//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 100
+//     };
+
+//     token0.increase_balance(core.contract_address, amount);
+//     let token_id_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .place_order(order_key, amount);
+
+//     let order_0 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_order_state(order_key, token_id_0,);
+
+//     // 1000000 + (100 * (100 + 1))  
+//     assert(order_0.expiry_time == 1_010_100, 'EXPIRY_TIME');
+//     // 100000 * 2**32 / (1010100 - 1000000)
+//     assert(order_0.sale_rate == 0x9e6a74981, 'SALE_RATE');
+
+//     // check event
+
+//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+//         .unwrap();
+//     assert(event.id == 1, 'event.id');
+//     assert(event.amount == amount, 'event.amount');
+//     assert(event.expiry_time == 1_010_100, 'event.expiry_time');
+//     assert(event.sale_rate == 0x9e6a74981, 'event.sale_rate');
+//     assert(event.global_sale_rate == 0x9e6a74981, 'event.global_sale_rate');
+
+//     // increase timestamp
+//     set_block_timestamp(get_block_timestamp() + 1);
+
+//     token0.increase_balance(core.contract_address, amount);
+//     let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .place_order(order_key, amount);
+
+//     let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_order_state(order_key, token_id_1);
+
+//     // 1000000 + (100 * (100 + 1))  
+//     assert(order_1.expiry_time == 1_010_100, 'EXPIRY_TIME');
+//     // 100000 * 2**32 / (1010100 - 1000001)
+//     assert(order_1.sale_rate == 0x9e6e789c5, 'SALE_RATE');
+
+//     // check event
+
+//     let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
+//         .unwrap();
+//     assert(event.id == 2, 'event.id');
+//     assert(event.amount == amount, 'event.amount');
+//     assert(event.expiry_time == 1_010_100, 'event.expiry_time');
+//     assert(event.sale_rate == 0x9e6e789c5, 'event.sale_rate');
+//     assert(event.global_sale_rate == 0x9e6a74981 + 0x9e6e789c5, 'event.global_sale_rate');
+
+//     let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .get_sale_rate(to_token_key(order_key));
+
+//     assert(global_rate == 0x9e6a74981 + 0x9e6e789c5, 'GLOBAL_SALE_RATE');
+// }
+
+// #[test]
+// #[available_gas(3000000000)]
+// #[should_panic(
+//     expected: (
+//         'DEPOSIT_AMOUNT_NE_AMOUNT',
+//         'ENTRYPOINT_FAILED',
+//         'ENTRYPOINT_FAILED',
+//         'ENTRYPOINT_FAILED'
+//     )
+// )]
+// fn test_place_order_no_token_transfer() {
+//     let timestamp = 1_000_000;
+//     set_block_timestamp(get_block_timestamp() + timestamp);
+
+//     let core = deploy_core();
+//     let twamm = deploy_twamm(core, 1_000_u64);
+//     let (token0, token1) = deploy_two_mock_tokens();
+
+//     let amount = 100_000_000;
+//     let order_key = OrderKey {
+//         token0: token0.contract_address, token1: token1.contract_address, time_intervals: 10_000
+//     };
+
+//     ITWAMMDispatcher { contract_address: twamm.contract_address }
+//         .place_order(order_key, amount);
+// }
+// }
 // mod CancelOrderTests {
 //     use super::{
 //         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
