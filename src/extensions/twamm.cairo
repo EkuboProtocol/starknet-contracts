@@ -103,8 +103,6 @@ mod TWAMM {
         core: ICoreDispatcher,
         nft: IEnumerableOwnedNFTDispatcher,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
-        // interval between timestamps where orders can expire
-        order_time_interval: u64,
         // current rate at which token0 is being sold for token1
         sale_rate: LegacyMap<TokenKey, u128>,
         // cumulative sale rate for token0 ending at a particular timestamp
@@ -143,9 +141,6 @@ mod TWAMM {
                     salt: 0
                 )
             );
-
-        // TODO: remove this
-        self.order_time_interval.write(10_000);
     }
 
     #[derive(starknet::Event, Drop)]
@@ -486,58 +481,58 @@ mod TWAMM {
                         .get_sorted_token_key(data.pool_key.token0, data.pool_key.token1);
 
                     let current_time = get_block_timestamp();
-                    let order_time_interval = self.order_time_interval.read();
 
-                    // if no trades have been executed, round down to closest trade execution time.
-                    // since placing orders executes trades before placing them, there won't be
-                    // any orders place before the first virtual trade.
-                    let mut last_virtual_order_time = if self
+                    let mut last_virtual_order_time = self
                         .last_virtual_order_time
-                        .read(shared_token_key) == 0 {
-                        current_time - (current_time % order_time_interval)
+                        .read(shared_token_key);
+
+                    let self_snap = @self;
+
+                    // TODO: double check sale rates are 0? that should never happen.
+                    if (last_virtual_order_time != 0) {
+                        loop {
+                            // find next expiry time on the bitmap
+                            let (next_expiry_time, found) = self_snap
+                                .next_initialized_expiry(
+                                    shared_token_key, last_virtual_order_time, current_time, 0
+                                );
+
+                            let price = core.get_pool_price(data.pool_key);
+                            let delta = Default::<Delta>::default();
+
+                            if next_expiry_time > current_time {
+                                break;
+                            }
+
+                            if price.sqrt_ratio != 0 {
+                                // TODO: Execute swap and accumulate all deltas.
+                                // sqrt_ratio_limit should be set to max on the direction of the trade.
+                                // skip_ahead should be 0
+                                // add up delta += swap
+                                let time_passed = (next_expiry_time - last_virtual_order_time)
+                                    .into();
+                                let token0_amount = self.sale_rate.read(token0_key) * time_passed;
+                                let token1_amount = self.sale_rate.read(token1_key) * time_passed;
+
+                                // TODO: Zero out deltas, and update rewards factor.
+
+                                // TODO: Expire orders and update rates
+                                if (token0_amount != 0
+                                    && token1_amount != 0) {} else if (token0_amount > 0) {} else if (token1_amount > 0) {}
+                            }
+
+                            // last timestamp at which virtual trades were executed
+                            last_virtual_order_time = next_expiry_time;
+                        };
+
+                        self
+                            .last_virtual_order_time
+                            .write(shared_token_key, last_virtual_order_time);
                     } else {
-                        self.last_virtual_order_time.read(shared_token_key)
-                    };
+                        // we haven't executed any trades yet, and no orders have been placed
 
-                    let mut next_expiry_time = last_virtual_order_time
-                        - (last_virtual_order_time % order_time_interval)
-                        + order_time_interval;
-
-                    let mut price = core.get_pool_price(data.pool_key);
-                    let mut delta = Default::<Delta>::default();
-
-                    loop {
-                        if next_expiry_time > current_time {
-                            break;
-                        }
-
-                        if price.sqrt_ratio != 0 {
-                            // TODO: Execute swap and accumulate all deltas.
-                            // sqrt_ratio_limit should be set to max on the direction of the trade.
-                            // skip_ahead should be 0
-                            // add up delta += swap
-                            let time_passed = (next_expiry_time - last_virtual_order_time).into();
-                            let token0_amount = self.sale_rate.read(token0_key) * time_passed;
-                            let token1_amount = self.sale_rate.read(token1_key) * time_passed;
-
-                            // TODO: Zero out deltas, and update rewards factor.
-
-                            // TODO: Expire orders and update rates
-                            if (token0_amount != 0
-                                && token1_amount != 0) {} else if (token0_amount > 0) {} else if (token1_amount > 0) {}
-                        }
-
-                        // last timestamp at which virtual trades were executed
-                        last_virtual_order_time = next_expiry_time;
-
-                        // update price
-                        price = core.get_pool_price(data.pool_key);
-
-                        // update next expiry time
-                        next_expiry_time += order_time_interval;
-                    };
-
-                    self.last_virtual_order_time.write(shared_token_key, last_virtual_order_time);
+                        self.last_virtual_order_time.write(shared_token_key, current_time);
+                    }
 
                     LockCallbackResult::Empty
                 },
@@ -621,6 +616,38 @@ mod TWAMM {
             let bitmap = self.expiry_time_bitmaps.read((token_key, word_index));
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
             self.expiry_time_bitmaps.write((token_key, word_index), bitmap.set_bit(bit_index));
+        }
+
+        fn next_initialized_expiry(
+            self: @ContractState, token_key: TokenKey, from: u64, max_time: u64, skip_ahead: u128
+        ) -> (u64, bool) {
+            let (word_index, bit_index) = expiry_to_word_and_bit_index(
+                from + BIT_MAP_SPACING, BIT_MAP_SPACING
+            );
+
+            let bitmap: Bitmap = self.expiry_time_bitmaps.read((token_key, word_index));
+
+            match bitmap.next_set_bit(bit_index) {
+                Option::Some(next_bit) => {
+                    (word_and_bit_index_to_expiry((word_index, next_bit), BIT_MAP_SPACING), true)
+                },
+                Option::None => {
+                    let next = word_and_bit_index_to_expiry((word_index, 0), BIT_MAP_SPACING);
+
+                    if (next > max_time) {
+                        return (next, false);
+                    }
+
+                    if (skip_ahead.is_zero()) {
+                        (next, false)
+                    } else {
+                        self
+                            .next_initialized_expiry(
+                                token_key, next, BIT_MAP_SPACING, skip_ahead - 1
+                            )
+                    }
+                },
+            }
         }
 
         fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {
