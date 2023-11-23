@@ -55,6 +55,15 @@ trait ITWAMM<TContractState> {
 }
 
 
+// TODO: move this to a separate file
+fn min(a: u64, b: u64) -> u64 {
+    if (a < b) {
+        a
+    } else {
+        b
+    }
+}
+
 #[starknet::contract]
 mod TWAMM {
     use array::{ArrayTrait};
@@ -93,6 +102,7 @@ mod TWAMM {
     use zeroable::{Zeroable};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::clear::{ClearImpl};
+    use super::{min};
 
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
@@ -278,6 +288,7 @@ mod TWAMM {
             params: UpdatePositionParameters
         ) {
             assert(params.bounds == max_bounds(pool_key.tick_spacing), 'BOUNDS');
+            self.internal_execute_virtual_orders(pool_key);
         }
 
         fn after_update_position(
@@ -312,11 +323,13 @@ mod TWAMM {
 
             let id = self.nft.read().mint(get_caller_address());
 
+            let current_time = get_block_timestamp();
+
             // get expiry time rounded down to the closest valid timestamp
-            let expiry_time = self.validate_expiry_time(order_key.expiry_time);
+            let expiry_time = validate_expiry_time(current_time, order_key.expiry_time);
 
             // calculate and store order sale rate
-            let sale_rate = self.scale_up(amount) / (expiry_time - get_block_timestamp()).into();
+            let sale_rate = (amount * 0x100000000) / (expiry_time - current_time).into();
 
             self
                 .orders
@@ -378,11 +391,9 @@ mod TWAMM {
             let remaining_amount = self.get_order_remaining_amount(token_key, order_state);
 
             // calculate token1 amount that was purchased
-            let purchased_amount = self
-                .scale_down(
-                    (self.reward_factor.read(token_key) - order_state.reward_factor)
-                        * order_state.sale_rate
-                );
+            let purchased_amount = ((self.reward_factor.read(token_key) - order_state.reward_factor)
+                * order_state.sale_rate)
+                / 0x100000000;
 
             // update global rates
             let sale_rate = self.sale_rate.read(token_key) - order_state.sale_rate;
@@ -462,7 +473,7 @@ mod TWAMM {
                 self.reward_factor.read(token_key) - order_state.reward_factor
             };
 
-            let total_reward = self.scale_down(total_reward_factor * order_state.sale_rate);
+            let total_reward = (total_reward_factor * order_state.sale_rate) / 0x100000000;
 
             // transfer purchased token1 
             if (total_reward.is_non_zero()) {
@@ -508,26 +519,23 @@ mod TWAMM {
                     if (last_virtual_order_time != 0 && last_virtual_order_time != current_time) {
                         loop {
                             // find next expiry time on the token0 bitmap
-                            let (token0_next_expiry_time, token0_found) = self_snap
+                            let token0_next_expiry_time = self_snap
                                 .next_initialized_expiry(
-                                    token0_key, last_virtual_order_time, current_time, 0
+                                    token0_key, last_virtual_order_time, current_time
                                 );
 
                             // find next expiry time on the token1 bitmap
-                            let (token1_next_expiry_time, token1_found) = self_snap
+                            let token1_next_expiry_time = self_snap
                                 .next_initialized_expiry(
-                                    token1_key, last_virtual_order_time, current_time, 0
+                                    token1_key, last_virtual_order_time, current_time
                                 );
 
-                            let next_virtual_order_time = self
-                                .get_virtual_order_time(
-                                    (token0_next_expiry_time, token0_found),
-                                    (token1_next_expiry_time, token1_found),
-                                    current_time
-                                );
+                            let next_virtual_order_time = min(
+                                min(token0_next_expiry_time, token1_next_expiry_time), current_time
+                            );
 
                             let price = core.get_pool_price(data.pool_key);
-                            let delta = Default::<Delta>::default();
+                            let delta = Zeroable::<Delta>::zero();
 
                             if price.sqrt_ratio != 0 {
                                 let virtual_order_time_window = (next_virtual_order_time
@@ -643,39 +651,6 @@ mod TWAMM {
             assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
         }
 
-        fn validate_expiry_time(self: @ContractState, expiry_time: u64) -> u64 {
-            let current_time = get_block_timestamp();
-
-            assert(expiry_time > current_time, 'INVALID_EXPIRY_TIME');
-
-            // calculate the closest timestamp at which an order can expire
-            // based on the step of the interval that the order expires in using
-            // an approximation of
-            // = 16**(floor(log_16(expiry_time-current_time)))
-            // = 2**(4 * (floor(log_2(expiry_time-current_time)) / 4))
-            let step = exp2(
-                LOG_SCALE_FACTOR * (msb((expiry_time - current_time).into()) / LOG_SCALE_FACTOR)
-            );
-
-            // enforce smallest granularity
-            assert(step >= BIT_MAP_SPACING.into(), 'INVALID_SPACING');
-
-            let rem = expiry_time % step.try_into().unwrap();
-
-            if (rem == 0) {
-                expiry_time
-            } else {
-                expiry_time - rem
-            }
-        }
-
-        // remove the initialized expiry time for the order
-        fn remove_initialized_expiry(ref self: ContractState, token_key: TokenKey, expiry: u64) {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry, BIT_MAP_SPACING);
-            let bitmap = self.expiry_time_bitmaps.read((token_key, word_index));
-            // it is assumed that bitmap already contains the set bit exp2(bit_index)
-            self.expiry_time_bitmaps.write((token_key, word_index), bitmap.unset_bit(bit_index));
-        }
 
         // insert the initialized expiry time for the order
         fn insert_initialized_expiry(ref self: ContractState, token_key: TokenKey, expiry: u64) {
@@ -686,8 +661,8 @@ mod TWAMM {
         }
 
         fn next_initialized_expiry(
-            self: @ContractState, token_key: TokenKey, from: u64, max_time: u64, skip_ahead: u128
-        ) -> (u64, bool) {
+            self: @ContractState, token_key: TokenKey, from: u64, max_time: u64
+        ) -> u64 {
             let (word_index, bit_index) = expiry_to_word_and_bit_index(
                 from + BIT_MAP_SPACING, BIT_MAP_SPACING
             );
@@ -696,22 +671,15 @@ mod TWAMM {
 
             match bitmap.next_set_bit(bit_index) {
                 Option::Some(next_bit) => {
-                    (word_and_bit_index_to_expiry((word_index, next_bit), BIT_MAP_SPACING), true)
+                    word_and_bit_index_to_expiry((word_index, next_bit), BIT_MAP_SPACING)
                 },
                 Option::None => {
                     let next = word_and_bit_index_to_expiry((word_index, 0), BIT_MAP_SPACING);
 
                     if (next > max_time) {
-                        return (next, false);
-                    }
-
-                    if (skip_ahead.is_zero()) {
-                        (next, false)
+                        max_time
                     } else {
-                        self
-                            .next_initialized_expiry(
-                                token_key, next, BIT_MAP_SPACING, skip_ahead - 1
-                            )
+                        self.next_initialized_expiry(token_key, next, BIT_MAP_SPACING)
                     }
                 },
             }
@@ -763,43 +731,16 @@ mod TWAMM {
             }
         }
 
-        fn get_virtual_order_time(
-            ref self: ContractState,
-            token0_next_initialized_expiry: (u64, bool),
-            token1_next_initialized_expiry: (u64, bool),
-            current_time: u64
-        ) -> u64 {
-            let (token0_next_expiry_time, token0_found) = token0_next_initialized_expiry;
-            let (token1_next_expiry_time, token1_found) = token1_next_initialized_expiry;
-
-            // TODO: double check found behavior
-            if ((!token0_found && !token1_found) || token0_next_expiry_time >= current_time
-                && token1_next_expiry_time >= current_time) {
-                // execute virtual orders up to current time
-                current_time
-            } else if (token0_next_expiry_time > token1_next_expiry_time) {
-                token1_next_expiry_time
-            } else if (token1_next_expiry_time < token1_next_expiry_time) {
-                token0_next_expiry_time
-            } else {
-                // token0_next_expiry_time == token1_next_expiry_time
-                token0_next_expiry_time
-            }
-        }
-
         // returns the amount of token0 that has not been sold
         fn get_order_remaining_amount(
             ref self: ContractState, token_key: TokenKey, order_state: OrderState
         ) -> u128 {
             let shared_token_key = self.get_sorted_token_key(token_key.token0, token_key.token1);
 
-            self
-                .scale_down(
-                    order_state.sale_rate
-                        * (order_state.expiry_time
-                            - self.last_virtual_order_time.read(shared_token_key))
-                            .into()
-                )
+            (order_state.sale_rate
+                * (order_state.expiry_time - self.last_virtual_order_time.read(shared_token_key))
+                    .into())
+                / 0x100000000
         }
 
         fn get_sorted_token_key(
@@ -811,21 +752,31 @@ mod TWAMM {
                 TokenKey { token0: token1, token1: token0 }
             }
         }
+    }
 
-        fn scale_up(ref self: ContractState, amount: u128) -> u128 {
-            // scale up by 2**32
-            let scaled_amount = amount * 0x100000000;
-            // TODO: Include allowable precision loss?
-            // assert(scaled_amount / 0x100000000 == amount, 'SCALE_UP_OVERFLOW');
-            scaled_amount
-        }
+    fn validate_expiry_time(order_time: u64, expiry_time: u64) -> u64 {
+        assert(expiry_time > order_time, 'INVALID_EXPIRY_TIME');
 
-        fn scale_down(ref self: ContractState, amount: u128) -> u128 {
-            // scale down by 2**32
-            let scaled_amount = amount / 0x100000000;
-            // TODO: Include allowable precision loss?
-            // assert(scaled_amount * 0x100000000 == amount, 'SCALE_DOWN_OVERFLOW');
-            scaled_amount
+        // calculate the closest timestamp at which an order can expire
+        // based on the step of the interval that the order expires in using
+        // an approximation of
+        // = 16**(floor(log_16(expiry_time-order_time)))
+        // = 2**(4 * (floor(log_2(expiry_time-order_time)) / 4))
+        let step = exp2(
+            LOG_SCALE_FACTOR * (msb((expiry_time - order_time).into()) / LOG_SCALE_FACTOR)
+        );
+
+        // enforce smallest granularity
+        assert(step >= BIT_MAP_SPACING.into(), 'INVALID_SPACING');
+
+        let rem = expiry_time.into() % step;
+
+        // TODO: assert rem is 0
+
+        if (rem == 0) {
+            expiry_time
+        } else {
+            expiry_time - rem.try_into().unwrap()
         }
     }
 }
