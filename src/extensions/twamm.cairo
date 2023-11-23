@@ -4,13 +4,13 @@ use integer::{u256_safe_divmod, u256_as_non_zero};
 use starknet::{ContractAddress, StorePacking};
 use traits::{Into, TryInto};
 
-// TODO: use the PoolKey on the order so we know 
-// which fee tier to swap on.
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
+    // TODO: replace token0 and token1 with is_selling_token1
     token0: ContractAddress,
     token1: ContractAddress,
-    expiry_time: u64,
+    pool_key: PoolKey,
+    expiry_time: u64
 }
 
 // State of a particular order, defined by the key
@@ -51,7 +51,7 @@ trait ITWAMM<TContractState> {
     fn withdraw_from_order(ref self: TContractState, order_key: OrderKey, id: u64);
 
     // Execute virtual orders
-    fn execute_virtual_orders(ref self: TContractState, token_key: TokenKey);
+    fn execute_virtual_orders(ref self: TContractState, pool_key: PoolKey);
 }
 
 
@@ -82,7 +82,7 @@ mod TWAMM {
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::keys::{PoolKey, PositionKey};
+    use ekubo::types::keys::{PoolKey, PoolKeyTrait};
     use option::{OptionTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
@@ -94,8 +94,6 @@ mod TWAMM {
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::clear::{ClearImpl};
 
-    // TODO: remove this and use the PoolKey
-    const POOL_FEE: u128 = 0;
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
 
@@ -260,13 +258,7 @@ mod TWAMM {
             pool_key: PoolKey,
             params: SwapParameters
         ) {
-            let token_key = if params.is_token1 {
-                TokenKey { token0: pool_key.token1, token1: pool_key.token0 }
-            } else {
-                TokenKey { token0: pool_key.token0, token1: pool_key.token1 }
-            };
-
-            self.execute_virtual_orders(token_key);
+            self.internal_execute_virtual_orders(pool_key);
         }
 
         fn after_swap(
@@ -314,8 +306,9 @@ mod TWAMM {
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
+            self.internal_execute_virtual_orders(order_key.pool_key);
+
             let token_key = to_token_key(order_key);
-            self.internal_execute_virtual_orders(token_key);
 
             let id = self.nft.read().mint(get_caller_address());
 
@@ -371,8 +364,9 @@ mod TWAMM {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
 
+            self.internal_execute_virtual_orders(order_key.pool_key);
+
             let token_key = to_token_key(order_key);
-            self.internal_execute_virtual_orders(token_key);
 
             let order_state = self.orders.read((order_key, id));
             let current_time = get_block_timestamp();
@@ -427,8 +421,9 @@ mod TWAMM {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
 
-            let token_key = TokenKey { token0: order_key.token0, token1: order_key.token1 };
-            self.internal_execute_virtual_orders(token_key);
+            self.internal_execute_virtual_orders(order_key.pool_key);
+
+            let token_key = to_token_key(order_key);
 
             let order_state = self.orders.read((order_key, id));
 
@@ -478,8 +473,8 @@ mod TWAMM {
         }
 
         // TODO: figure out if we want to add a skip_ahead parameter
-        fn execute_virtual_orders(ref self: ContractState, token_key: TokenKey) {
-            self.internal_execute_virtual_orders(token_key);
+        fn execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
+            self.internal_execute_virtual_orders(pool_key);
         }
     }
 
@@ -751,15 +746,8 @@ mod TWAMM {
             }
         }
 
-        fn internal_execute_virtual_orders(ref self: ContractState, token_key: TokenKey) {
-            let shared_token_key = self.get_sorted_token_key(token_key.token0, token_key.token1);
-            let pool_key = PoolKey {
-                token0: shared_token_key.token0,
-                token1: shared_token_key.token1,
-                tick_spacing: MAX_TICK_SPACING,
-                fee: POOL_FEE,
-                extension: get_contract_address()
-            };
+        fn internal_execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
+            pool_key.check_valid();
 
             match call_core_with_callback::<
                 LockCallbackData, LockCallbackResult

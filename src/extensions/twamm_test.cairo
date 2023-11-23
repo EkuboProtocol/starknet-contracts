@@ -244,9 +244,20 @@ mod PlaceOrderTestsValidateExpiryTime {
         let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
+
         let order_key = OrderKey {
             // current timestamp is 0
-            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 0
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            pool_key,
+            expiry_time: 0
         };
 
         let amount = 100_000_000;
@@ -356,10 +367,19 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let amount = 100_000_000;
 
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
+
         // expiry time at the interval time
         let mut order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
+            pool_key,
             expiry_time: timestamp + prev_interval
         };
         token0.increase_balance(core.contract_address, amount);
@@ -378,6 +398,7 @@ mod PlaceOrderTestsValidateExpiryTime {
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
+                pool_key,
                 expiry_time: timestamp + prev_interval + step
             };
         token0.increase_balance(core.contract_address, amount);
@@ -396,6 +417,7 @@ mod PlaceOrderTestsValidateExpiryTime {
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
+                pool_key,
                 expiry_time: timestamp + interval - step
             };
         token0.increase_balance(core.contract_address, amount);
@@ -494,8 +516,16 @@ mod PlaceOrderTests {
         let twamm = deploy_twamm(core);
         let (token0, token1) = deploy_two_mock_tokens();
 
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
+
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, expiry_time,
+            token0: token0.contract_address, token1: token1.contract_address, pool_key, expiry_time,
         };
 
         token0.increase_balance(core.contract_address, amount);
@@ -517,9 +547,20 @@ mod PlaceOrderTests {
 
         let amount = 100_000_000;
 
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
+
         // order 0
         let order_key_1 = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 16 * 16,
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            pool_key,
+            expiry_time: 16 * 16,
         };
         token0.increase_balance(core.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -545,6 +586,7 @@ mod PlaceOrderTests {
         let order_key_2 = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
+            pool_key,
             expiry_time: 16 * 16 * 16,
         };
         token0.increase_balance(core.contract_address, amount);
@@ -589,8 +631,18 @@ mod PlaceOrderTests {
         let (token0, token1) = deploy_two_mock_tokens();
 
         let amount = 100_000_000;
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, expiry_time: 16 * 16,
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            pool_key,
+            expiry_time: 16 * 16,
         };
 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -614,9 +666,17 @@ mod CancelOrderTests {
         let (token0, token1) = deploy_two_mock_tokens();
 
         let amount = 100_000_000;
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
+            pool_key,
             expiry_time: SIXTEEN_POW_THREE
         };
 
@@ -640,9 +700,17 @@ mod CancelOrderTests {
         let (token0, token1) = deploy_two_mock_tokens();
 
         let amount = 100_000_000;
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
+            pool_key,
             expiry_time: SIXTEEN_POW_THREE
         };
 
@@ -664,9 +732,17 @@ mod CancelOrderTests {
         let (token0, token1) = deploy_two_mock_tokens();
 
         let amount = 1_000;
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address,
+        };
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
+            pool_key,
             expiry_time: SIXTEEN_POW_THREE,
         };
 
@@ -800,6 +876,7 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         let order_key = OrderKey {
             token0: setup.token0.contract_address,
             token1: setup.token1.contract_address,
+            pool_key: setup.pool_key,
             expiry_time
         };
 
