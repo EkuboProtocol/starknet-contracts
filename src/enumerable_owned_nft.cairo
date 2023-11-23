@@ -42,7 +42,7 @@ mod EnumerableOwnedNFT {
     use traits::{Into, TryInto};
     use zeroable::{Zeroable};
 
-    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
@@ -90,7 +90,7 @@ mod EnumerableOwnedNFT {
     #[event]
     enum Event {
         #[flat]
-        ClassHashReplaced: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,

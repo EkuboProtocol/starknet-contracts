@@ -145,7 +145,7 @@ mod LimitOrders {
     const LIMIT_ORDER_TICK_SPACING: u128 = 100;
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;
 
-    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
@@ -249,7 +249,7 @@ mod LimitOrders {
     #[event]
     enum Event {
         #[flat]
-        ClassHashReplaced: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
     }

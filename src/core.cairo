@@ -44,7 +44,7 @@ mod Core {
     use traits::{Into};
     use zeroable::{Zeroable};
 
-    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
@@ -147,7 +147,7 @@ mod Core {
     #[event]
     enum Event {
         #[flat]
-        ClassHashReplaced: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
