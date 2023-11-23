@@ -65,6 +65,7 @@ mod Positions {
         id: u64,
         pool_key: PoolKey,
         bounds: Bounds,
+        referrer: ContractAddress,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -245,11 +246,18 @@ mod Positions {
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
+            self.mint_with_referrer(pool_key, bounds, Zeroable::zero())
+        }
+
+        #[inline(always)]
+        fn mint_with_referrer(
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
+        ) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
             // contains the associated pool key and bounds which is never stored,
             // so it's important for indexing
-            self.emit(PositionMinted { id, pool_key, bounds });
+            self.emit(PositionMinted { id, pool_key, bounds, referrer });
 
             id
         }
@@ -398,7 +406,18 @@ mod Positions {
         fn mint_and_deposit(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> (u64, u128) {
-            let id = self.mint(pool_key, bounds);
+            self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zeroable::zero())
+        }
+
+        #[inline(always)]
+        fn mint_and_deposit_with_referrer(
+            ref self: ContractState,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            min_liquidity: u128,
+            referrer: ContractAddress
+        ) -> (u64, u128) {
+            let id = self.mint_with_referrer(pool_key, bounds, referrer);
             let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
             (id, liquidity)
         }

@@ -39,6 +39,11 @@ trait IPositions<TStorage> {
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u64;
 
+    // Same as above but includes a referrer in the emitted event
+    fn mint_with_referrer(
+        ref self: TStorage, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
+    ) -> u64;
+
     // Delete the NFT. All liquidity controlled by the NFT (not withdrawn) is irrevocably locked.
     // Must be called by an operator, approved address or the owner.
     fn unsafe_burn(ref self: TStorage, id: u64);
@@ -56,6 +61,15 @@ trait IPositions<TStorage> {
     // Mint and deposit in a single call
     fn mint_and_deposit(
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+    ) -> (u64, u128);
+
+    // Same as above with a referrer
+    fn mint_and_deposit_with_referrer(
+        ref self: TStorage,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        min_liquidity: u128,
+        referrer: ContractAddress
     ) -> (u64, u128);
 
     // Mint and deposit in a single call, and also clear the tokens
