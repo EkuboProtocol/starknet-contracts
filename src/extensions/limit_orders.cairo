@@ -115,9 +115,7 @@ trait ILimitOrders<TContractState> {
 #[starknet::contract]
 mod LimitOrders {
     use array::{ArrayTrait};
-    use ekubo::enumerable_owned_nft::{
-        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-    };
+    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -153,7 +151,7 @@ mod LimitOrders {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        nft: IEnumerableOwnedNFTDispatcher,
+        nft: IOwnedNFTDispatcher,
         pools: LegacyMap<PoolKey, PoolState>,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         ticks_crossed_last_crossing: LegacyMap<(PoolKey, i129), u64>,
@@ -174,7 +172,7 @@ mod LimitOrders {
         self
             .nft
             .write(
-                EnumerableOwnedNFT::deploy(
+                OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
                     controller: get_contract_address(),
                     name: 'Ekubo Limit Order',

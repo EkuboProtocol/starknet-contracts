@@ -1,7 +1,7 @@
 import { Account, Contract, TransactionStatus } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
-import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.contract_class.json";
+import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
 import { POOL_CASES } from "./pool-cases";
@@ -58,7 +58,7 @@ describe("core", () => {
     );
 
     nft = new Contract(
-      EnumerableOwnedNFTContract.abi,
+      OwnedNFTContract.abi,
       ADDRESSES.nft,
       accounts[0]
     );

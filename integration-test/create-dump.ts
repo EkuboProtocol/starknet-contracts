@@ -3,8 +3,8 @@ import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import CoreCompiledContractCASM from "../target/dev/ekubo_Core.compiled_contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compiled_contract_class.json";
-import EnumerableOwnedNFTContract from "../target/dev/ekubo_EnumerableOwnedNFT.contract_class.json";
-import EnumerableOwnedNFTContractCASM from "../target/dev/ekubo_EnumerableOwnedNFT.compiled_contract_class.json";
+import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
+import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
 import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.compiled_contract_class.json";
 import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
@@ -58,8 +58,8 @@ import { getAccounts } from "./accounts";
 
   const declareNftResponse = await accounts[0].declare(
     {
-      contract: EnumerableOwnedNFTContract as any,
-      casm: EnumerableOwnedNFTContractCASM as any,
+      contract: OwnedNFTContract as any,
+      casm: OwnedNFTContractCASM as any,
     },
     { maxFee: 10000000000000 } // workaround
   );

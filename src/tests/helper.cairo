@@ -3,7 +3,7 @@ use array::{Array, ArrayTrait};
 use debug::PrintTrait;
 use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::core::{Core};
-use ekubo::enumerable_owned_nft::{EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher};
+use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::extensions::oracle::{Oracle};
 use ekubo::interfaces::core::{
@@ -73,9 +73,9 @@ fn deploy_simple_erc20(owner: ContractAddress) -> IERC20Dispatcher {
     return IERC20Dispatcher { contract_address: token_address };
 }
 
-fn deploy_enumerable_owned_nft(
+fn deploy_owned_nft(
     owner: ContractAddress, name: felt252, symbol: felt252, token_uri_base: felt252
-) -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
+) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
 
     Serde::serialize(@owner, ref constructor_args);
@@ -84,11 +84,11 @@ fn deploy_enumerable_owned_nft(
     Serde::serialize(@token_uri_base, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        EnumerableOwnedNFT::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+        OwnedNFT::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('nft deploy failed');
     return (
-        IEnumerableOwnedNFTDispatcher { contract_address: address },
+        IOwnedNFTDispatcher { contract_address: address },
         IERC721Dispatcher { contract_address: address }
     );
 }
@@ -108,7 +108,7 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
-    Serde::serialize(@EnumerableOwnedNFT::TEST_CLASS_HASH, ref constructor_args);
+    Serde::serialize(@OwnedNFT::TEST_CLASS_HASH, ref constructor_args);
     Serde::serialize(@'limit_orders://', ref constructor_args);
 
     let (address, _) = deploy_syscall(
@@ -212,7 +212,7 @@ fn deploy_positions_custom_uri(
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core.contract_address, ref constructor_args);
-    let ch: ClassHash = EnumerableOwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
+    let ch: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
     Serde::serialize(@ch, ref constructor_args);
     Serde::serialize(@token_uri_base, ref constructor_args);
 

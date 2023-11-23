@@ -45,7 +45,7 @@ CORE_CLASS_HASH=$(declare_class_hash Core)
 echo "Declaring positions"
 POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
 echo "Declaring NFT"
-NFT_CLASS_HASH=$(declare_class_hash EnumerableOwnedNFT)
+NFT_CLASS_HASH=$(declare_class_hash OwnedNFT)
 
 echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"

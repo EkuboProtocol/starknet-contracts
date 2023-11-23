@@ -41,7 +41,7 @@ jobs:
             --exclude="math/string.cairo" \
             --exclude="src/positions.cairo" \
             --exclude="src/interfaces/positions.cairo" \
-            --exclude="src/enumerable_owned_nft.cairo" \
+            --exclude="src/owned_nft.cairo" \
             --exclude="src/asset_recovery.cairo" \
             --exclude="src/owner.cairo" \
             --exclude="src/types.cairo" \

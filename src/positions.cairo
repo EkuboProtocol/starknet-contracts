@@ -1,9 +1,7 @@
 #[starknet::contract]
 mod Positions {
     use array::{ArrayTrait, SpanTrait};
-    use ekubo::enumerable_owned_nft::{
-        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-    };
+    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -37,7 +35,7 @@ mod Positions {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        nft: IEnumerableOwnedNFTDispatcher,
+        nft: IOwnedNFTDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage
     }
@@ -91,7 +89,7 @@ mod Positions {
         self
             .nft
             .write(
-                EnumerableOwnedNFT::deploy(
+                OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
                     controller: get_contract_address(),
                     name: 'Ekubo Position',
