@@ -13,7 +13,7 @@ trait IMockUpgradeable<TStorage> {
 mod MockUpgradeable {
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
 
-    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
@@ -28,6 +28,6 @@ mod MockUpgradeable {
     #[event]
     enum Event {
         #[flat]
-        ClassHashReplaced: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
     }
 }
