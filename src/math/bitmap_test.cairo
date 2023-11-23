@@ -361,11 +361,10 @@ fn test_expiry_spacing_one() {
 
 #[test]
 #[available_gas(3000000000)]
-fn test_expiry_spacing_twelve() {
-    assert_case_expiry(0, location: (0, 250), expiry_spacing: 12);
-    assert_case_expiry(12, location: (0, 249), expiry_spacing: 12);
-    assert_case_expiry(24, location: (0, 248), expiry_spacing: 12);
-    assert_case_expiry(3000, location: (0, 0), expiry_spacing: 12);
-    assert_case_expiry(3012, location: (1, 250), expiry_spacing: 12);
-    assert_case_expiry(6012, location: (1, 0), expiry_spacing: 12);
+fn test_expiry_spacing_sixteen() {
+    assert_case_expiry(0, location: (0, 250), expiry_spacing: 16);
+    assert_case_expiry(16, location: (0, 249), expiry_spacing: 16);
+    assert_case_expiry(4000, location: (0, 0), expiry_spacing: 16);
+    assert_case_expiry(4016, location: (1, 250), expiry_spacing: 16);
+    assert_case_expiry(8016, location: (1, 0), expiry_spacing: 16);
 }

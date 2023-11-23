@@ -4,6 +4,8 @@ use integer::{u256_safe_divmod, u256_as_non_zero};
 use starknet::{ContractAddress, StorePacking};
 use traits::{Into, TryInto};
 
+// TODO: use the PoolKey on the order so we know 
+// which fee tier to swap on.
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
     token0: ContractAddress,
@@ -47,7 +49,11 @@ trait ITWAMM<TContractState> {
 
     // Withdraws proceeds from a twamm order
     fn withdraw_from_order(ref self: TContractState, order_key: OrderKey, id: u64);
+
+    // Execute virtual orders
+    fn execute_virtual_orders(ref self: TContractState, token_key: TokenKey);
 }
+
 
 #[starknet::contract]
 mod TWAMM {
@@ -88,6 +94,7 @@ mod TWAMM {
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::clear::{ClearImpl};
 
+    // TODO: remove this and use the PoolKey
     const POOL_FEE: u128 = 0;
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
@@ -167,6 +174,14 @@ mod TWAMM {
     }
 
     #[derive(starknet::Event, Drop)]
+    struct VirtualOrdersExecuted {
+        last_virtual_order_time: u64,
+        next_virtual_order_time: u64,
+        token0_sale_rate: u128,
+        token1_sale_rate: u128
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
@@ -174,6 +189,7 @@ mod TWAMM {
         OrderPlaced: OrderPlaced,
         OrderCancelled: OrderCancelled,
         OrderWithdrawn: OrderWithdrawn,
+        VirtualOrdersExecuted: VirtualOrdersExecuted,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -250,7 +266,7 @@ mod TWAMM {
                 TokenKey { token0: pool_key.token0, token1: pool_key.token1 }
             };
 
-            self.execute_virtual_trades(token_key);
+            self.execute_virtual_orders(token_key);
         }
 
         fn after_swap(
@@ -299,7 +315,7 @@ mod TWAMM {
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let token_key = to_token_key(order_key);
-            self.execute_virtual_trades(token_key);
+            self.internal_execute_virtual_orders(token_key);
 
             let id = self.nft.read().mint(get_caller_address());
 
@@ -356,7 +372,7 @@ mod TWAMM {
             self.validate_caller(id, caller);
 
             let token_key = to_token_key(order_key);
-            self.execute_virtual_trades(token_key);
+            self.internal_execute_virtual_orders(token_key);
 
             let order_state = self.orders.read((order_key, id));
             let current_time = get_block_timestamp();
@@ -412,7 +428,7 @@ mod TWAMM {
             self.validate_caller(id, caller);
 
             let token_key = TokenKey { token0: order_key.token0, token1: order_key.token1 };
-            self.execute_virtual_trades(token_key);
+            self.internal_execute_virtual_orders(token_key);
 
             let order_state = self.orders.read((order_key, id));
 
@@ -460,6 +476,11 @@ mod TWAMM {
 
             self.emit(OrderWithdrawn { id, order_key });
         }
+
+        // TODO: figure out if we want to add a skip_ahead parameter
+        fn execute_virtual_orders(ref self: ContractState, token_key: TokenKey) {
+            self.internal_execute_virtual_orders(token_key);
+        }
     }
 
     #[external(v0)]
@@ -475,7 +496,7 @@ mod TWAMM {
                         TokenKey { token0: data.pool_key.token1, token1: data.pool_key.token0 }
                     );
 
-                    // since trades are executed at the same time for both tokens,
+                    // since virtual orders are executed at the same time for both tokens,
                     // last_virtual_order_time is the same for both tokens.
                     let shared_token_key = self
                         .get_sorted_token_key(data.pool_key.token0, data.pool_key.token1);
@@ -491,46 +512,95 @@ mod TWAMM {
                     // TODO: double check sale rates are 0? that should never happen.
                     if (last_virtual_order_time != 0) {
                         loop {
-                            // find next expiry time on the bitmap
-                            let (next_expiry_time, found) = self_snap
+                            // find next expiry time on the token0 bitmap
+                            let (token0_next_expiry_time, token0_found) = self_snap
                                 .next_initialized_expiry(
-                                    shared_token_key, last_virtual_order_time, current_time, 0
+                                    token0_key, last_virtual_order_time, current_time, 0
+                                );
+
+                            // find next expiry time on the token1 bitmap
+                            let (token1_next_expiry_time, token1_found) = self_snap
+                                .next_initialized_expiry(
+                                    token1_key, last_virtual_order_time, current_time, 0
+                                );
+
+                            let next_virtual_order_time = self
+                                .get_virtual_order_time(
+                                    (token0_next_expiry_time, token0_found),
+                                    (token1_next_expiry_time, token1_found),
+                                    current_time
                                 );
 
                             let price = core.get_pool_price(data.pool_key);
                             let delta = Default::<Delta>::default();
 
-                            if next_expiry_time > current_time {
-                                break;
-                            }
-
                             if price.sqrt_ratio != 0 {
+                                let virtual_order_time_window = (next_virtual_order_time
+                                    - last_virtual_order_time)
+                                    .into();
+                                let token0_sale_rate = self.sale_rate.read(token0_key);
+                                let token1_sale_rate = self.sale_rate.read(token1_key);
+                                let token0_amount = token0_sale_rate * virtual_order_time_window;
+                                let token1_amount = token1_sale_rate * virtual_order_time_window;
+
                                 // TODO: Execute swap and accumulate all deltas.
-                                // sqrt_ratio_limit should be set to max on the direction of the trade.
+                                // TODO: Zero out deltas, and update rewards factor.
+                                // sqrt_ratio_limit should be set to max on the direction of the swap.
                                 // skip_ahead should be 0
                                 // add up delta += swap
-                                let time_passed = (next_expiry_time - last_virtual_order_time)
-                                    .into();
-                                let token0_amount = self.sale_rate.read(token0_key) * time_passed;
-                                let token1_amount = self.sale_rate.read(token1_key) * time_passed;
-
-                                // TODO: Zero out deltas, and update rewards factor.
-
-                                // TODO: Expire orders and update rates
                                 if (token0_amount != 0
                                     && token1_amount != 0) {} else if (token0_amount > 0) {} else if (token1_amount > 0) {}
+
+                                self
+                                    .emit(
+                                        // TODO: Add values from swaps
+                                        VirtualOrdersExecuted {
+                                            last_virtual_order_time,
+                                            next_virtual_order_time,
+                                            token0_sale_rate,
+                                            token1_sale_rate
+                                        }
+                                    );
+
+                                // update token0 sale rate with expiring rates 
+                                if next_virtual_order_time == token0_next_expiry_time {
+                                    self
+                                        .sale_rate
+                                        .write(
+                                            token0_key,
+                                            self
+                                                .sale_rate_ending
+                                                .read((token0_key, next_virtual_order_time))
+                                        );
+                                }
+
+                                // update token1 sale rate with expiring rates 
+                                if next_virtual_order_time == token1_next_expiry_time {
+                                    self
+                                        .sale_rate
+                                        .write(
+                                            token1_key,
+                                            self
+                                                .sale_rate_ending
+                                                .read((token1_key, next_virtual_order_time))
+                                        );
+                                }
                             }
 
-                            // last timestamp at which virtual trades were executed
-                            last_virtual_order_time = next_expiry_time;
+                            // update last_virtual_order_time to next_virtual_order_time
+                            last_virtual_order_time = next_virtual_order_time;
+
+                            // virtual orders were executed up to current time
+                            if next_virtual_order_time == current_time {
+                                break;
+                            }
                         };
 
                         self
                             .last_virtual_order_time
                             .write(shared_token_key, last_virtual_order_time);
                     } else {
-                        // we haven't executed any trades yet, and no orders have been placed
-
+                        // we haven't executed any virtual orders yet, and no orders have been placed
                         self.last_virtual_order_time.write(shared_token_key, current_time);
                     }
 
@@ -681,10 +751,11 @@ mod TWAMM {
             }
         }
 
-        fn execute_virtual_trades(ref self: ContractState, token_key: TokenKey) {
+        fn internal_execute_virtual_orders(ref self: ContractState, token_key: TokenKey) {
+            let shared_token_key = self.get_sorted_token_key(token_key.token0, token_key.token1);
             let pool_key = PoolKey {
-                token0: token_key.token0,
-                token1: token_key.token1,
+                token0: shared_token_key.token0,
+                token1: shared_token_key.token1,
                 tick_spacing: MAX_TICK_SPACING,
                 fee: POOL_FEE,
                 extension: get_contract_address()
@@ -699,6 +770,29 @@ mod TWAMM {
                 )
             ) {
                 LockCallbackResult::Empty => {},
+            }
+        }
+
+        fn get_virtual_order_time(
+            ref self: ContractState,
+            token0_next_initialized_expiry: (u64, bool),
+            token1_next_initialized_expiry: (u64, bool),
+            current_time: u64
+        ) -> u64 {
+            let (token0_next_expiry_time, token0_found) = token0_next_initialized_expiry;
+            let (token1_next_expiry_time, token1_found) = token1_next_initialized_expiry;
+
+            if ((token0_found && token1_found) || token0_next_expiry_time >= current_time
+                && token1_next_expiry_time >= current_time) {
+                // execute virtual orders up to current time
+                current_time
+            } else if (token0_next_expiry_time > token1_next_expiry_time) {
+                token1_next_expiry_time
+            } else if (token1_next_expiry_time < token1_next_expiry_time) {
+                token0_next_expiry_time
+            } else {
+                // token0_next_expiry_time == token1_next_expiry_time
+                token0_next_expiry_time
             }
         }
 
