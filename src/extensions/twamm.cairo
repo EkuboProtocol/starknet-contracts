@@ -505,7 +505,7 @@ mod TWAMM {
                     let self_snap = @self;
 
                     // TODO: double check sale rates are 0? that should never happen.
-                    if (last_virtual_order_time != 0) {
+                    if (last_virtual_order_time != 0 && last_virtual_order_time != current_time) {
                         loop {
                             // find next expiry time on the token0 bitmap
                             let (token0_next_expiry_time, token0_found) = self_snap
@@ -563,9 +563,10 @@ mod TWAMM {
                                         .sale_rate
                                         .write(
                                             token0_key,
-                                            self
-                                                .sale_rate_ending
-                                                .read((token0_key, next_virtual_order_time))
+                                            token0_sale_rate
+                                                - self
+                                                    .sale_rate_ending
+                                                    .read((token0_key, next_virtual_order_time))
                                         );
                                 }
 
@@ -575,9 +576,10 @@ mod TWAMM {
                                         .sale_rate
                                         .write(
                                             token1_key,
-                                            self
-                                                .sale_rate_ending
-                                                .read((token1_key, next_virtual_order_time))
+                                            token1_sale_rate
+                                                - self
+                                                    .sale_rate_ending
+                                                    .read((token1_key, next_virtual_order_time))
                                         );
                                 }
                             }
@@ -594,7 +596,7 @@ mod TWAMM {
                         self
                             .last_virtual_order_time
                             .write(shared_token_key, last_virtual_order_time);
-                    } else {
+                    } else if (last_virtual_order_time == 0) {
                         // we haven't executed any virtual orders yet, and no orders have been placed
                         self.last_virtual_order_time.write(shared_token_key, current_time);
                     }
@@ -770,7 +772,8 @@ mod TWAMM {
             let (token0_next_expiry_time, token0_found) = token0_next_initialized_expiry;
             let (token1_next_expiry_time, token1_found) = token1_next_initialized_expiry;
 
-            if ((token0_found && token1_found) || token0_next_expiry_time >= current_time
+            // TODO: double check found behavior
+            if ((!token0_found && !token1_found) || token0_next_expiry_time >= current_time
                 && token1_next_expiry_time >= current_time) {
                 // execute virtual orders up to current time
                 current_time

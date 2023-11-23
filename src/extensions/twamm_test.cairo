@@ -1,6 +1,6 @@
 use debug::PrintTrait;
 use ekubo::owner::owner;
-use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait,};
+use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
 use ekubo::interfaces::core::{
     ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
 };
@@ -27,7 +27,7 @@ use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
 use ekubo::extensions::twamm::{OrderKey, TokenKey};
-use ekubo::extensions::twamm::TWAMM::{to_token_key};
+use ekubo::extensions::twamm::TWAMM::{to_token_key, OrderPlaced, VirtualOrdersExecuted};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
@@ -440,7 +440,7 @@ mod PlaceOrderTests {
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, TokenKey, SIXTEEN_POW_ZERO,
         SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
-        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN
+        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced,
     };
 
     #[test]
@@ -777,19 +777,20 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
+        OrderState
     };
 
     #[test]
     #[available_gas(3000000000)]
-    fn test_place_orders_expiring_after_current_time() {
+    fn test_place_orders_0() {
         // Both order expiries are after the current time
         // l = last virtual order time
         // t = current time
-        // 1 = order for token0 expiry
-        // 2 = order for token1 expiry
+        // 0 = order for token0 expiry
+        // 1 = order for token1 expiry
         // l---------------------t----0--1----------> time
-        // trade from l to t
+        // trade from l->t
 
         let core = deploy_core();
         let (twamm, setup) = set_up_twamm_with_liquidity(core);
@@ -798,14 +799,14 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         set_block_timestamp(timestamp);
 
         let order1_timestamp = timestamp;
-        let token_id1 = place_order(core, twamm, setup, timestamp + SIXTEEN_POW_THREE);
+        let (token_id1, _) = place_order(core, twamm, setup, timestamp + SIXTEEN_POW_THREE);
 
         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
             .unwrap();
 
         let order2_timestamp = timestamp + 16;
         set_block_timestamp(order2_timestamp);
-        let token_id2 = place_order(
+        let (token_id2, _) = place_order(
             core,
             twamm,
             SetupPoolResult {
@@ -818,13 +819,145 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
             timestamp + SIXTEEN_POW_THREE + 1
         );
 
-        let event: ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted = pop_log(
-            twamm.contract_address
-        )
-            .unwrap();
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(event.next_virtual_order_time == order2_timestamp, 'event.next_virtual_order_time');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_1() {
+        // Order 0 expiries before current time
+        // Order 1 expiries after current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0 expiry
+        // 2 = order for token1 expiry
+        // l---------------0-----t-------1----------> time
+        // execute from l->0 and from 0->t
+
+        let core = deploy_core();
+        let (twamm, setup) = set_up_twamm_with_liquidity(core);
+
+        let timestamp = 1_000_000;
+        set_block_timestamp(timestamp);
+
+        let order1_timestamp = timestamp;
+        let (token_id1, order1) = place_order(core, twamm, setup, timestamp + 16);
+
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let order2_timestamp = order1.expiry_time + 1;
+        set_block_timestamp(order2_timestamp);
+        let (token_id2, order2) = place_order(
+            core,
+            twamm,
+            SetupPoolResult {
+                core: setup.core,
+                locker: setup.locker,
+                token0: setup.token1,
+                token1: setup.token0,
+                pool_key: setup.pool_key,
+            },
+            timestamp + SIXTEEN_POW_THREE * 2
+        );
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert(event.last_virtual_order_time == order1_timestamp, 'event0.last_virtual_order_time');
+        assert(
+            event.next_virtual_order_time == order1.expiry_time, 'event0.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == order1.sale_rate, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == 0, 'event0.token1_sale_rate');
+
+        // second order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert(
+            event.last_virtual_order_time == order1.expiry_time, 'event1.last_virtual_order_time'
+        );
+        assert(event.next_virtual_order_time == order2_timestamp, 'event1.next_virtual_order_time');
+        assert(event.token0_sale_rate == 0, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == 0, 'event0.token1_sale_rate');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_2() {
+        // Order 0 expiries before current time
+        // Order 1 expiries before current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0 expiry
+        // 2 = order for token1 expiry
+        // l---------------0--1--t------------------> time
+        // execute from l->0, 0->1, 1->t
+
+        let core = deploy_core();
+        let (twamm, setup) = set_up_twamm_with_liquidity(core);
+
+        let timestamp = 1_000_000;
+        set_block_timestamp(timestamp);
+
+        let order1_timestamp = timestamp;
+        let (token_id1, order1) = place_order(core, twamm, setup, timestamp + SIXTEEN_POW_ONE);
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let (token_id2, order2) = place_order(
+            core,
+            twamm,
+            SetupPoolResult {
+                core: setup.core,
+                locker: setup.locker,
+                token0: setup.token1,
+                token1: setup.token0,
+                pool_key: setup.pool_key,
+            },
+            timestamp + SIXTEEN_POW_ONE * 2
+        );
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // after order2 expires
+        let order_execution_timestamp = order2.expiry_time + SIXTEEN_POW_ONE;
+        set_block_timestamp(order_execution_timestamp);
+
+        // manually trigger virtual order execution
+        twamm.execute_virtual_orders(setup.pool_key);
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert(event.last_virtual_order_time == order1_timestamp, 'event0.last_virtual_order_time');
+        assert(
+            event.next_virtual_order_time == order1.expiry_time, 'event0.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == order1.sale_rate, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == order2.sale_rate, 'event0.token1_sale_rate');
+
+        // second order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert(
+            event.last_virtual_order_time == order1.expiry_time, 'event1.last_virtual_order_time'
+        );
+        assert(
+            event.next_virtual_order_time == order2.expiry_time, 'event1.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == 0, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == order2.sale_rate, 'event0.token1_sale_rate');
+
+        // third order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert(
+            event.last_virtual_order_time == order2.expiry_time, 'event2.last_virtual_order_time'
+        );
+        assert(
+            event.next_virtual_order_time == order_execution_timestamp,
+            'event2.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == 0, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == 0, 'event0.token1_sale_rate');
     }
 
     fn set_up_twamm_with_liquidity(core: ICoreDispatcher) -> (ITWAMMDispatcher, SetupPoolResult) {
@@ -868,7 +1001,7 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
 
     fn place_order(
         core: ICoreDispatcher, twamm: ITWAMMDispatcher, setup: SetupPoolResult, expiry_time: u64
-    ) -> u64 {
+    ) -> (u64, OrderState) {
         let twamm_caller = contract_address_const::<43>();
         // place order
         set_contract_address(twamm_caller);
@@ -882,7 +1015,13 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
 
         setup.token0.increase_balance(core.contract_address, amount);
 
-        twamm.place_order(order_key, amount)
+        let token_id = twamm.place_order(order_key, amount);
+
+        let order = ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .get_order_state(order_key, token_id,);
+
+        // return token_id and potentially snapped (rounded-down) expiry time
+        (token_id, order)
     }
 }
 
