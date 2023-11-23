@@ -120,10 +120,7 @@ mod OwnedNFT {
         salt: felt252
     ) -> super::IOwnedNFTDispatcher {
         let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@controller, ref calldata);
-        Serde::serialize(@name, ref calldata);
-        Serde::serialize(@symbol, ref calldata);
-        Serde::serialize(@token_uri_base, ref calldata);
+        Serde::serialize(@(controller, name, symbol, token_uri_base), ref calldata);
 
         let (address, _) = deploy_syscall(
             class_hash: nft_class_hash,

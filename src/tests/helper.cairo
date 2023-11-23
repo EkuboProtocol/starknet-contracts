@@ -78,10 +78,7 @@ fn deploy_owned_nft(
 ) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
 
-    Serde::serialize(@owner, ref constructor_args);
-    Serde::serialize(@name, ref constructor_args);
-    Serde::serialize(@symbol, ref constructor_args);
-    Serde::serialize(@token_uri_base, ref constructor_args);
+    Serde::serialize(@(owner, name, symbol, token_uri_base), ref constructor_args);
 
     let (address, _) = deploy_syscall(
         OwnedNFT::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -95,7 +92,7 @@ fn deploy_owned_nft(
 
 fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         Oracle::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -107,9 +104,7 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
-    Serde::serialize(@OwnedNFT::TEST_CLASS_HASH, ref constructor_args);
-    Serde::serialize(@'limit_orders://', ref constructor_args);
+    Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, 'limit_orders://'), ref constructor_args);
 
     let (address, _) = deploy_syscall(
         LimitOrders::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -135,8 +130,7 @@ fn deploy_mock_extension(
     core: ICoreDispatcher, call_points: CallPoints
 ) -> IMockExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
-    Serde::serialize(@call_points, ref constructor_args);
+    Serde::serialize(@(core, call_points), ref constructor_args);
     let (address, _) = deploy_syscall(
         MockExtension::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
@@ -167,7 +161,7 @@ fn deploy_core() -> ICoreDispatcher {
 
 fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         Quoter::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -179,7 +173,7 @@ fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
 
 fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         SimpleSwapper::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -191,7 +185,7 @@ fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
+    Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
         CoreLocker::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -211,10 +205,7 @@ fn deploy_positions_custom_uri(
     core: ICoreDispatcher, token_uri_base: felt252
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core.contract_address, ref constructor_args);
-    let ch: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
-    Serde::serialize(@ch, ref constructor_args);
-    Serde::serialize(@token_uri_base, ref constructor_args);
+    Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args);
 
     let (address, _) = deploy_syscall(
         Positions::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
