@@ -68,9 +68,7 @@ fn min(a: u64, b: u64) -> u64 {
 #[starknet::contract]
 mod TWAMM {
     use array::{ArrayTrait};
-    use ekubo::enumerable_owned_nft::{
-        EnumerableOwnedNFT, IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-    };
+    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -117,7 +115,7 @@ mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        nft: IEnumerableOwnedNFTDispatcher,
+        nft: IOwnedNFTDispatcher,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         // current rate at which token0 is being sold for token1
         sale_rate: LegacyMap<TWAMMPoolKey, u128>,
@@ -148,7 +146,7 @@ mod TWAMM {
         self
             .nft
             .write(
-                EnumerableOwnedNFT::deploy(
+                OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
                     controller: get_contract_address(),
                     name: 'Ekubo TWAMM',
