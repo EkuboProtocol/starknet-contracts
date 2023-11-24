@@ -258,7 +258,7 @@ mod PlaceOrderTestsValidateExpiryTime {
         };
 
         let amount = 100_000_000;
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
     }
@@ -379,7 +379,7 @@ mod PlaceOrderTestsValidateExpiryTime {
             fee: 0,
             expiry_time: timestamp + prev_interval
         };
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let mut token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
         let mut order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -399,7 +399,7 @@ mod PlaceOrderTestsValidateExpiryTime {
                 fee: 0,
                 expiry_time: timestamp + prev_interval + step
             };
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
         order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -419,7 +419,7 @@ mod PlaceOrderTestsValidateExpiryTime {
                 fee: 0,
                 expiry_time: timestamp + interval - step
             };
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
         order = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -528,7 +528,7 @@ mod PlaceOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0, expiry_time,
         };
 
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -562,7 +562,7 @@ mod PlaceOrderTests {
             fee: 0,
             expiry_time: 16 * 16,
         };
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key_1, amount);
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -589,7 +589,7 @@ mod PlaceOrderTests {
             fee: 0,
             expiry_time: 16 * 16 * 16,
         };
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id_2 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key_2, amount);
         let order_2 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -621,7 +621,8 @@ mod PlaceOrderTests {
     #[available_gas(3000000000)]
     #[should_panic(
         expected: (
-            'DEPOSIT_AMOUNT_NE_AMOUNT',
+            'INSUFFICIENT_BALANCE',
+            'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED'
@@ -682,7 +683,7 @@ mod CancelOrderTests {
             expiry_time: SIXTEEN_POW_THREE
         };
 
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -716,7 +717,7 @@ mod CancelOrderTests {
             expiry_time: SIXTEEN_POW_THREE
         };
 
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -748,7 +749,7 @@ mod CancelOrderTests {
             expiry_time: SIXTEEN_POW_THREE,
         };
 
-        token0.increase_balance(core.contract_address, amount);
+        token0.increase_balance(twamm.contract_address, amount);
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
@@ -1021,7 +1022,7 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
             expiry_time
         };
 
-        setup.token0.increase_balance(core.contract_address, amount);
+        setup.token0.increase_balance(twamm.contract_address, amount);
 
         let token_id = twamm.place_order(order_key, amount);
 

@@ -614,6 +614,9 @@ mod TWAMM {
                     LockCallbackResult::Empty
                 },
                 LockCallbackData::DepositBalanceCallbackData(data) => {
+                    IERC20Dispatcher { contract_address: data.token }
+                        .transfer(recipient: core.contract_address, amount: data.amount.into());
+
                     let deposited_amount = core.deposit(data.token);
 
                     assert(deposited_amount == data.amount, 'DEPOSIT_AMOUNT_NE_AMOUNT');
