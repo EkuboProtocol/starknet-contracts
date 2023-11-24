@@ -26,7 +26,7 @@ use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
-use ekubo::extensions::twamm::{OrderKey, TokenKey};
+use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::extensions::twamm::TWAMM::{to_token_key, OrderPlaced, VirtualOrdersExecuted};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
@@ -254,10 +254,7 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let order_key = OrderKey {
             // current timestamp is 0
-            token0: token0.contract_address,
-            token1: token1.contract_address,
-            pool_key,
-            expiry_time: 0
+            token0: token0.contract_address, token1: token1.contract_address, fee: 0, expiry_time: 0
         };
 
         let amount = 100_000_000;
@@ -379,7 +376,7 @@ mod PlaceOrderTestsValidateExpiryTime {
         let mut order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: timestamp + prev_interval
         };
         token0.increase_balance(core.contract_address, amount);
@@ -398,7 +395,7 @@ mod PlaceOrderTestsValidateExpiryTime {
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
-                pool_key,
+                fee: 0,
                 expiry_time: timestamp + prev_interval + step
             };
         token0.increase_balance(core.contract_address, amount);
@@ -417,7 +414,7 @@ mod PlaceOrderTestsValidateExpiryTime {
             OrderKey {
                 token0: token0.contract_address,
                 token1: token1.contract_address,
-                pool_key,
+                fee: 0,
                 expiry_time: timestamp + interval - step
             };
         token0.increase_balance(core.contract_address, amount);
@@ -438,7 +435,7 @@ mod PlaceOrderTests {
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TokenKey, SIXTEEN_POW_ZERO,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TWAMMPoolKey, SIXTEEN_POW_ZERO,
         SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
         SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced,
     };
@@ -525,7 +522,7 @@ mod PlaceOrderTests {
         };
 
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, pool_key, expiry_time,
+            token0: token0.contract_address, token1: token1.contract_address, fee: 0, expiry_time,
         };
 
         token0.increase_balance(core.contract_address, amount);
@@ -559,7 +556,7 @@ mod PlaceOrderTests {
         let order_key_1 = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: 16 * 16,
         };
         token0.increase_balance(core.contract_address, amount);
@@ -586,7 +583,7 @@ mod PlaceOrderTests {
         let order_key_2 = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: 16 * 16 * 16,
         };
         token0.increase_balance(core.contract_address, amount);
@@ -609,7 +606,7 @@ mod PlaceOrderTests {
         // global rate
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_sale_rate(
-                TokenKey { token0: token0.contract_address, token1: token1.contract_address }
+                TWAMMPoolKey { token0: token0.contract_address, token1: token1.contract_address, fee: 0}
             );
 
         assert(global_rate == 0x5f5e100000000 + 0x5f5e10000000, 'GLOBAL_RATE');
@@ -641,7 +638,7 @@ mod PlaceOrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: 16 * 16,
         };
 
@@ -676,7 +673,7 @@ mod CancelOrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: SIXTEEN_POW_THREE
         };
 
@@ -710,7 +707,7 @@ mod CancelOrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: SIXTEEN_POW_THREE
         };
 
@@ -742,7 +739,7 @@ mod CancelOrderTests {
         let order_key = OrderKey {
             token0: token0.contract_address,
             token1: token1.contract_address,
-            pool_key,
+            fee: 0,
             expiry_time: SIXTEEN_POW_THREE,
         };
 
@@ -1009,7 +1006,7 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         let order_key = OrderKey {
             token0: setup.token0.contract_address,
             token1: setup.token1.contract_address,
-            pool_key: setup.pool_key,
+            fee: 0,
             expiry_time
         };
 
