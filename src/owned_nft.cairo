@@ -1,7 +1,7 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-trait IEnumerableOwnedNFT<TStorage> {
+trait IOwnedNFT<TStorage> {
     // Create a new token, only callable by the controller
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
 
@@ -17,7 +17,7 @@ trait IEnumerableOwnedNFT<TStorage> {
 }
 
 #[starknet::contract]
-mod EnumerableOwnedNFT {
+mod OwnedNFT {
     use array::{ArrayTrait};
     use core::array::SpanTrait;
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
@@ -38,7 +38,7 @@ mod EnumerableOwnedNFT {
         replace_class_syscall, deploy_syscall
     };
     use starknet::{SyscallResultTrait};
-    use super::{IEnumerableOwnedNFT, ContractAddress};
+    use super::{IOwnedNFT, ContractAddress};
     use traits::{Into, TryInto};
     use zeroable::{Zeroable};
 
@@ -118,12 +118,9 @@ mod EnumerableOwnedNFT {
         symbol: felt252,
         token_uri_base: felt252,
         salt: felt252
-    ) -> super::IEnumerableOwnedNFTDispatcher {
+    ) -> super::IOwnedNFTDispatcher {
         let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@controller, ref calldata);
-        Serde::serialize(@name, ref calldata);
-        Serde::serialize(@symbol, ref calldata);
-        Serde::serialize(@token_uri_base, ref calldata);
+        Serde::serialize(@(controller, name, symbol, token_uri_base), ref calldata);
 
         let (address, _) = deploy_syscall(
             class_hash: nft_class_hash,
@@ -132,7 +129,7 @@ mod EnumerableOwnedNFT {
             deploy_from_zero: false,
         )
             .unwrap_syscall();
-        super::IEnumerableOwnedNFTDispatcher { contract_address: address }
+        super::IOwnedNFTDispatcher { contract_address: address }
     }
 
     fn validate_token_id(token_id: u256) -> u64 {
@@ -273,7 +270,7 @@ mod EnumerableOwnedNFT {
     }
 
     #[external(v0)]
-    impl EnumerableOwnedNFTImpl of IEnumerableOwnedNFT<ContractState> {
+    impl OwnedNFTImpl of IOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
             self.require_controller();
 

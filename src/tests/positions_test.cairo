@@ -1,8 +1,6 @@
 use array::ArrayTrait;
 use debug::PrintTrait;
-use ekubo::enumerable_owned_nft::{
-    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };

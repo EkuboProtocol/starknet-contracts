@@ -1,7 +1,5 @@
 use debug::PrintTrait;
-use ekubo::enumerable_owned_nft::{
-    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::extensions::limit_orders::{
     ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
     GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}

@@ -1,11 +1,9 @@
 use array::{ArrayTrait};
-use ekubo::enumerable_owned_nft::{
-    IEnumerableOwnedNFTDispatcher, IEnumerableOwnedNFTDispatcherTrait
-};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::owner::owner;
-use ekubo::tests::helper::{deploy_enumerable_owned_nft};
+use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
@@ -23,16 +21,14 @@ fn switch_to_controller() {
     set_contract_address(default_controller());
 }
 
-fn deploy_default() -> (IEnumerableOwnedNFTDispatcher, IERC721Dispatcher) {
-    deploy_enumerable_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
-    )
+fn deploy_default() -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
+    deploy_owned_nft(default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/')
 }
 
 #[test]
 #[available_gas(300000000)]
 fn test_nft_name_symbol_token_uri() {
-    let (_, nft) = deploy_enumerable_owned_nft(
+    let (_, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
     assert(nft.name() == 'Ekubo Position', 'name');
@@ -92,9 +88,7 @@ fn test_nft_supports_interfaces() {
 #[test]
 #[available_gas(2000000)]
 fn test_replace_class_hash_can_be_called_by_owner() {
-    let (_, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
-    );
+    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
 
     let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
 
@@ -110,9 +104,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_custom_uri() {
-    let (_, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
-    );
+    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
     assert(nft.name() == 'abcde', 'name');
     assert(nft.symbol() == 'def', 'symbol');
     assert(nft.tokenURI(1_u256) == 'ipfs://abcdef/1', 'tokenURI');
@@ -122,7 +114,7 @@ fn test_nft_custom_uri() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_indexing_token_ids() {
-    let (controller, nft) = deploy_enumerable_owned_nft(
+    let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
@@ -181,7 +173,7 @@ fn test_nft_indexing_token_ids_not_sorted() {
 #[test]
 #[available_gas(300000000)]
 fn test_nft_indexing_token_ids_snake_case() {
-    let (controller, nft) = deploy_enumerable_owned_nft(
+    let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
@@ -211,7 +203,7 @@ fn test_nft_indexing_token_ids_snake_case() {
 #[test]
 #[available_gas(300000000)]
 fn test_burn_makes_token_non_transferrable() {
-    let (controller, nft) = deploy_enumerable_owned_nft(
+    let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
@@ -275,7 +267,7 @@ fn test_is_account_authorized() {
 #[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_burn_makes_token_non_transferrable_error() {
-    let (controller, nft) = deploy_enumerable_owned_nft(
+    let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
@@ -300,9 +292,7 @@ fn test_burn_makes_token_non_transferrable_error() {
 #[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_fails_id_not_exists() {
-    let (_, nft) = deploy_enumerable_owned_nft(
-        default_controller(), 'abcde', 'def', 'ipfs://abcdef/'
-    );
+    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
     set_contract_address(contract_address_const::<1>());
     nft.approve(contract_address_const::<2>(), 1);
 }
