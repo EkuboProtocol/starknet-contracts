@@ -66,6 +66,7 @@ fn min(a: u64, b: u64) -> u64 {
 #[starknet::contract]
 mod TWAMM {
     use array::{ArrayTrait};
+    use integer::{downcast, upcast, u128_sqrt};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -74,9 +75,7 @@ mod TWAMM {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::bits::{msb};
-    use ekubo::math::bitmap::{
-        Bitmap, BitmapTrait, expiry_to_word_and_bit_index, word_and_bit_index_to_expiry
-    };
+    use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::exp2::{exp2};
@@ -657,7 +656,7 @@ mod TWAMM {
         fn insert_initialized_expiry(
             ref self: ContractState, twamm_pool_key: TWAMMPoolKey, expiry: u64
         ) {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry, BIT_MAP_SPACING);
+            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry);
             let bitmap = self.expiry_time_bitmaps.read((twamm_pool_key, word_index));
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
             self.expiry_time_bitmaps.write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
@@ -666,18 +665,14 @@ mod TWAMM {
         fn next_initialized_expiry(
             self: @ContractState, twamm_pool_key: TWAMMPoolKey, from: u64, max_time: u64
         ) -> u64 {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(
-                from + BIT_MAP_SPACING, BIT_MAP_SPACING
-            );
+            let (word_index, bit_index) = expiry_to_word_and_bit_index(from + BIT_MAP_SPACING);
 
             let bitmap: Bitmap = self.expiry_time_bitmaps.read((twamm_pool_key, word_index));
 
             match bitmap.next_set_bit(bit_index) {
-                Option::Some(next_bit) => {
-                    word_and_bit_index_to_expiry((word_index, next_bit), BIT_MAP_SPACING)
-                },
+                Option::Some(next_bit) => { word_and_bit_index_to_expiry((word_index, next_bit)) },
                 Option::None => {
-                    let next = word_and_bit_index_to_expiry((word_index, 0), BIT_MAP_SPACING);
+                    let next = word_and_bit_index_to_expiry((word_index, 0));
 
                     if (next > max_time) {
                         max_time
@@ -791,5 +786,53 @@ mod TWAMM {
             tick_spacing: MAX_TICK_SPACING,
             extension: get_contract_address()
         }
+    }
+
+    fn expiry_to_word_and_bit_index(expiry: u64) -> (u128, u8) {
+        (
+            (expiry / (BIT_MAP_SPACING * 251)).into(),
+            250_u8 - downcast((expiry / BIT_MAP_SPACING) % 251).unwrap()
+        )
+    }
+
+    fn word_and_bit_index_to_expiry(word_and_bit_index: (u128, u8)) -> u64 {
+        let (word, bit) = word_and_bit_index;
+        ((word * 251 * BIT_MAP_SPACING.into()) + (upcast(250 - bit) * BIT_MAP_SPACING.into()))
+            .try_into()
+            .unwrap()
+    }
+
+    fn calculate_virtual_order_outputs(
+        sqrt_ratio: u128,
+        liquidity: u128,
+        token0_amount: u128,
+        token1_amount: u128,
+        sell_ratio: u128
+    ) -> (u128, u128, u128) {
+        // c
+        let c = if (sqrt_ratio > sell_ratio) {
+            i129 { mag: (sqrt_ratio - sell_ratio) / (sell_ratio + sqrt_ratio), sign: true }
+        } else {
+            i129 { mag: (sell_ratio - sqrt_ratio) / (sell_ratio + sqrt_ratio), sign: false }
+        };
+
+        // x_out
+        // TODO: exponentiate it should be e^mult
+        // let mult = ((2 / liquidity) * u128_sqrt(token0_amount * token1_amount).into());
+        // let x_amm_start = liquidity / sqrt_ratio;
+        // let x_amm_end = liquidity
+        //     * u128_sqrt(token0_amount / token1_amount).into()
+        //     * (mult + c / mult - c);
+        // let x_out = (liquidity / sqrt_ratio) + token0_amount - x_amm_end;
+
+        // // y_out
+        // let y_amm_start = liquidity * sqrt_ratio;
+        // let y_out = y_amm_start + token1_amount - ((token0_amount * y_amm_start) / x_amm_end);
+
+        // // sqrt_ratio_next
+        // let next_sqrt_ratio = (y_amm_start - y_out) / (x_amm_start - x_out);
+
+        // (x_out, y_out, next_sqrt_ratio)
+        (0, 0, 0)
     }
 }

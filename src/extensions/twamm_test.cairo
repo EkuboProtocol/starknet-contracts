@@ -26,8 +26,12 @@ use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::ticks::{min_tick, max_tick};
+use ekubo::math::string::{append, to_decimal};
 use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
-use ekubo::extensions::twamm::TWAMM::{to_token_key, OrderPlaced, VirtualOrdersExecuted};
+use ekubo::extensions::twamm::TWAMM::{
+    to_token_key, OrderPlaced, VirtualOrdersExecuted, expiry_to_word_and_bit_index,
+    word_and_bit_index_to_expiry
+};
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
@@ -47,7 +51,7 @@ mod UpgradableTest {
     use super::{
         deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
         update_position, ClassHash, MockUpgradeable, IMockUpgradeableDispatcher,
-        IMockUpgradeableDispatcherTrait, set_contract_address, owner, pop_log
+        IMockUpgradeableDispatcherTrait, set_contract_address, owner, pop_log, append
     };
 
     #[test]
@@ -67,6 +71,40 @@ mod UpgradableTest {
         )
             .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
+    }
+}
+
+mod BitmapTest {
+    use super::{
+        deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
+        update_position, ClassHash, MockUpgradeable, IMockUpgradeableDispatcher,
+        IMockUpgradeableDispatcherTrait, set_contract_address, owner, pop_log,
+        expiry_to_word_and_bit_index, word_and_bit_index_to_expiry, append, to_decimal
+    };
+
+
+    fn assert_case_expiry(expiry: u64, location: (u128, u8)) {
+        let (word, bit) = expiry_to_word_and_bit_index(expiry: expiry);
+        assert(
+            (word, bit) == location,
+            append(
+                append(append('w.', to_decimal(word).unwrap()).unwrap(), '.b.').unwrap(),
+                to_decimal(bit.into()).unwrap()
+            )
+                .unwrap()
+        );
+        let prev = word_and_bit_index_to_expiry(location);
+        assert((expiry - prev) < 16, 'reverse');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_expiry_spacing_sixteen() {
+        assert_case_expiry(0, location: (0, 250));
+        assert_case_expiry(16, location: (0, 249));
+        assert_case_expiry(4000, location: (0, 0));
+        assert_case_expiry(4016, location: (1, 250));
+        assert_case_expiry(8016, location: (1, 0));
     }
 }
 

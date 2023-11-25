@@ -1,6 +1,5 @@
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
-    expiry_to_word_and_bit_index, word_and_bit_index_to_expiry,
 };
 use ekubo::math::string::{append, to_decimal};
 use ekubo::types::i129::{i129};
@@ -332,39 +331,4 @@ fn test_negative_cases_tick_spacing_ten() {
     assert_case_ticks(
         tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
-}
-
-
-fn assert_case_expiry(expiry: u64, location: (u128, u8), expiry_spacing: u64) {
-    let (word, bit) = expiry_to_word_and_bit_index(expiry: expiry, expiry_spacing: expiry_spacing);
-    assert(
-        (word, bit) == location,
-        append(
-            append(append('w.', to_decimal(word).unwrap()).unwrap(), '.b.').unwrap(),
-            to_decimal(bit.into()).unwrap()
-        )
-            .unwrap()
-    );
-    let prev = word_and_bit_index_to_expiry(location, expiry_spacing);
-    assert((expiry - prev) < expiry_spacing, 'reverse');
-}
-
-#[test]
-#[available_gas(3000000000)]
-fn test_expiry_spacing_one() {
-    assert_case_expiry(0, location: (0, 250), expiry_spacing: 1);
-    assert_case_expiry(249, location: (0, 1), expiry_spacing: 1);
-    assert_case_expiry(250, location: (0, 0), expiry_spacing: 1);
-    assert_case_expiry(251, location: (1, 250), expiry_spacing: 1);
-    assert_case_expiry(252, location: (1, 249), expiry_spacing: 1);
-}
-
-#[test]
-#[available_gas(3000000000)]
-fn test_expiry_spacing_sixteen() {
-    assert_case_expiry(0, location: (0, 250), expiry_spacing: 16);
-    assert_case_expiry(16, location: (0, 249), expiry_spacing: 16);
-    assert_case_expiry(4000, location: (0, 0), expiry_spacing: 16);
-    assert_case_expiry(4016, location: (1, 250), expiry_spacing: 16);
-    assert_case_expiry(8016, location: (1, 0), expiry_spacing: 16);
 }

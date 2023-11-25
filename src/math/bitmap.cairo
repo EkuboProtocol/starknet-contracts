@@ -153,17 +153,3 @@ fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128
         i129 { mag: (word * 251 * tick_spacing) + (upcast(250 - bit) * tick_spacing), sign: false }
     }
 }
-
-fn expiry_to_word_and_bit_index(expiry: u64, expiry_spacing: u64) -> (u128, u8) {
-    (
-        (expiry / (expiry_spacing * 251)).into(),
-        250_u8 - downcast((expiry / expiry_spacing) % 251).unwrap()
-    )
-}
-
-fn word_and_bit_index_to_expiry(word_and_bit_index: (u128, u8), expiry_spacing: u64) -> u64 {
-    let (word, bit) = word_and_bit_index;
-    ((word * 251 * expiry_spacing.into()) + (upcast(250 - bit) * expiry_spacing.into()))
-        .try_into()
-        .unwrap()
-}
