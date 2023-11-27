@@ -79,8 +79,8 @@ mod TWAMM {
     use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::exp2::{exp2};
-    use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
-    use ekubo::math::ticks::{constants as tick_constants, min_tick, max_tick};
+    use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
+    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
@@ -93,12 +93,11 @@ mod TWAMM {
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
         get_block_timestamp,
     };
-    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
+    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey, min};
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::clear::{ClearImpl};
-    use super::{min};
 
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
@@ -518,6 +517,8 @@ mod TWAMM {
 
                     // TODO: double check sale rates are 0? that should never happen.
                     if (last_virtual_order_time != 0 && last_virtual_order_time != current_time) {
+                        let mut delta = Zeroable::<Delta>::zero();
+
                         loop {
                             // find next expiry time on the token0 bitmap
                             let token0_next_expiry_time = self_snap
@@ -536,7 +537,6 @@ mod TWAMM {
                             );
 
                             let price = core.get_pool_price(data.pool_key);
-                            let delta = Zeroable::<Delta>::zero();
 
                             if price.sqrt_ratio != 0 {
                                 let virtual_order_time_window = (next_virtual_order_time
@@ -544,16 +544,47 @@ mod TWAMM {
                                     .into();
                                 let token0_sale_rate = self.sale_rate.read(token0_key);
                                 let token1_sale_rate = self.sale_rate.read(token1_key);
-                                let token0_amount = token0_sale_rate * virtual_order_time_window;
-                                let token1_amount = token1_sale_rate * virtual_order_time_window;
+                                let token0_amount = (token0_sale_rate * virtual_order_time_window)
+                                    / 0x100000000;
+                                let token1_amount = (token1_sale_rate * virtual_order_time_window)
+                                    / 0x100000000;
 
                                 // TODO: Execute swap and accumulate all deltas.
                                 // TODO: Zero out deltas, and update rewards factor at expiry.
                                 // sqrt_ratio_limit should be set to max on the direction of the swap.
                                 // skip_ahead should be 0
                                 // add up delta += swap
+
                                 if (token0_amount != 0
-                                    && token1_amount != 0) {} else if (token0_amount > 0) {} else if (token1_amount > 0) {}
+                                    && token1_amount != 0) {} else if (token0_amount > 0) {
+                                        // swap token0 for token1
+                                        delta += core
+                                            .swap(
+                                                data.pool_key,
+                                                SwapParameters {
+                                                    amount: i129 {
+                                                        mag: token0_amount, sign: false
+                                                    },
+                                                    is_token1: false,
+                                                    sqrt_ratio_limit: min_sqrt_ratio(),
+                                                    skip_ahead: 0
+                                                }
+                                            );
+                                    } else if (token1_amount > 0) {
+                                        // swap token1 for token0
+                                        delta += core
+                                            .swap(
+                                                data.pool_key,
+                                                SwapParameters {
+                                                    amount: i129 {
+                                                        mag: token1_amount, sign: false
+                                                    },
+                                                    is_token1: true,
+                                                    sqrt_ratio_limit: max_sqrt_ratio(),
+                                                    skip_ahead: 0
+                                                }
+                                            );
+                                    }
 
                                 self
                                     .emit(
@@ -601,6 +632,38 @@ mod TWAMM {
                                 break;
                             }
                         };
+
+                        // zero out deltas
+                        if (delta.amount0.mag > 0) {
+                            if (delta.amount0.sign) {
+                                core
+                                    .save(
+                                        SavedBalanceKey {
+                                            owner: get_contract_address(),
+                                            token: token0_key.token0,
+                                            salt: 0
+                                        },
+                                        delta.amount0.mag
+                                    );
+                            } else {
+                                core.load(token0_key.token0, 0, delta.amount0.mag);
+                            }
+                        }
+                        if (delta.amount1.mag > 0) {
+                            if (delta.amount1.sign) {
+                                core
+                                    .save(
+                                        SavedBalanceKey {
+                                            owner: get_contract_address(),
+                                            token: token0_key.token1,
+                                            salt: 0
+                                        },
+                                        delta.amount1.mag
+                                    );
+                            } else {
+                                core.load(token0_key.token1, 0, delta.amount1.mag);
+                            }
+                        }
 
                         self
                             .last_virtual_order_time
