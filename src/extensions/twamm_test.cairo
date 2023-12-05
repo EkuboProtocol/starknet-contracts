@@ -30,7 +30,7 @@ use ekubo::math::string::{append, to_decimal};
 use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::extensions::twamm::TWAMM::{
     to_token_key, OrderPlaced, VirtualOrdersExecuted, expiry_to_word_and_bit_index,
-    word_and_bit_index_to_expiry
+    word_and_bit_index_to_expiry, calculate_virtual_order_outputs, c
 };
 use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
@@ -1072,3 +1072,36 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
     }
 }
 
+
+mod TWAMMMathTests {
+    use super::{
+        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
+        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
+        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
+        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
+        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
+        OrderState, calculate_virtual_order_outputs, c
+    };
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_c() {
+        let token0_sale_ratio: u128 = 0x2 * 0x100000000;
+        let token1_sale_ratio: u128 = 0x1 * 0x100000000;
+
+        // let sell_ratio = u256 { high: token1_sale_ratio, low: 0 } / token0_sale_ratio.into();
+
+        // let sell_ratio = u256 { high: 0xffffffffffffffffffffffffffffffff, low: 0 };
+        let sell_ratio = u256 { high: 0, low: 0xffffffffffffffffffffffffffffffff };
+
+        let sqrt_ratio = 1;
+        let (val, sign) = c(sqrt_ratio, sell_ratio);
+
+        'val'.print();
+        val.print();
+    }
+}

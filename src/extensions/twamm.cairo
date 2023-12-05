@@ -8,7 +8,6 @@ use traits::{Into, TryInto};
 struct OrderKey {
     token0: ContractAddress,
     token1: ContractAddress,
-    // pool fee
     fee: u128,
     expiry_time: u64
 }
@@ -26,6 +25,7 @@ struct OrderState {
 struct TWAMMPoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
+    // pool fee
     fee: u128,
 }
 
@@ -53,20 +53,12 @@ trait ITWAMM<TContractState> {
     fn execute_virtual_orders(ref self: TContractState, pool_key: PoolKey);
 }
 
-
-// TODO: move this to a separate file
-fn min(a: u64, b: u64) -> u64 {
-    if (a < b) {
-        a
-    } else {
-        b
-    }
-}
-
 #[starknet::contract]
 mod TWAMM {
+    use debug::PrintTrait;
     use array::{ArrayTrait};
-    use integer::{downcast, upcast, u128_sqrt};
+    use cmp::{min};
+    use integer::{downcast, upcast, u256_sqrt, u128_sqrt};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -88,16 +80,16 @@ mod TWAMM {
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::clear::{ClearImpl};
     use option::{OptionTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
         get_block_timestamp,
     };
-    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey, min};
+    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use ekubo::clear::{ClearImpl};
 
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
@@ -622,6 +614,7 @@ mod TWAMM {
                                                     .read((token1_key, next_virtual_order_time))
                                         );
                                 }
+                            // TODO: update rewards factor.
                             }
 
                             // update last_virtual_order_time to next_virtual_order_time
@@ -866,18 +859,17 @@ mod TWAMM {
     }
 
     fn calculate_virtual_order_outputs(
-        sqrt_ratio: u128,
+        sqrt_ratio: u256,
         liquidity: u128,
+        token0_sale_ratio: u128,
+        token1_sale_ratio: u128,
         token0_amount: u128,
-        token1_amount: u128,
-        sell_ratio: u128
+        token1_amount: u128
     ) -> (u128, u128, u128) {
+        // sell ratio
+        let sell_ratio = (u256 { high: token1_sale_ratio, low: 0 } / token0_sale_ratio.into());
         // c
-        let c = if (sqrt_ratio > sell_ratio) {
-            i129 { mag: (sqrt_ratio - sell_ratio) / (sell_ratio + sqrt_ratio), sign: true }
-        } else {
-            i129 { mag: (sell_ratio - sqrt_ratio) / (sell_ratio + sqrt_ratio), sign: false }
-        };
+        let (c, sign) = c(sqrt_ratio, sell_ratio);
 
         // x_out
         // TODO: exponentiate it should be e^mult
@@ -897,5 +889,17 @@ mod TWAMM {
 
         // (x_out, y_out, next_sqrt_ratio)
         (0, 0, 0)
+    }
+
+    fn c(sqrt_ratio: u256, sell_ratio: u256) -> (u256, bool) {
+        let sqrt_sell_ratio: u256 = u256_sqrt(sell_ratio).into();
+
+        let (num, sign) = if (sqrt_ratio > sqrt_sell_ratio) {
+            (sqrt_ratio - sqrt_sell_ratio, true)
+        } else {
+            (sqrt_sell_ratio - sqrt_ratio, false)
+        };
+
+        (num / (sqrt_sell_ratio + sqrt_ratio), sign)
     }
 }
