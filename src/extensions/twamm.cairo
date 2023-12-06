@@ -866,31 +866,24 @@ mod TWAMM {
     fn calculate_virtual_order_outputs(
         sqrt_ratio: u256,
         liquidity: u128,
-        buy_token_sale_ratio: u128,
-        token1_sale_ratio: u128,
-        buy_token_amount: u128,
-        token1_amount: u128
+        buy_token_sale_rate: u128,
+        sell_token_sale_rate: u128,
+        virtual_order_time_window: u64
     ) -> (u128, u128, u128) {
         // sell ratio
-        let sell_ratio = (u256 { high: token1_sale_ratio, low: 0 } / buy_token_sale_ratio.into());
+        // let sell_ratio = (u256 { high: sell_token_sale_rate, low: 0 } / buy_token_sale_rate.into());
+
         // c
-        let (c, sign) = c(sqrt_ratio, sell_ratio);
+        // let (c, sign) = c(sqrt_ratio, sell_ratio);
 
-        // x_out
-        // TODO: exponentiate it should be e^mult
-        // let mult = ((2 / liquidity) * u128_sqrt(buy_token_amount * token1_amount).into());
-        // let x_amm_start = liquidity / sqrt_ratio;
-        // let x_amm_end = liquidity
-        //     * u128_sqrt(buy_token_amount / token1_amount).into()
-        //     * (mult + c / mult - c);
-        // let x_out = (liquidity / sqrt_ratio) + buy_token_amount - x_amm_end;
+        // sell rate
+        // let sqrt_sell_rate = sqrt(buy_token_sell_rate * sell_token_sell_rate)
 
-        // // y_out
-        // let y_amm_start = liquidity * sqrt_ratio;
-        // let y_out = y_amm_start + token1_amount - ((buy_token_amount * y_amm_start) / x_amm_end);
+        // let mult = e^((2 * sqrt_sale_rate * virtual_order_time_window) / liquidity)
+        // let sqrt_ratio_next = sqrt_sell_ratio * ( mult - c ) / (mult + c)
 
-        // // sqrt_ratio_next
-        // let next_sqrt_ratio = (y_amm_start - y_out) / (x_amm_start - x_out);
+        // let y_out = amount1_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
+        // let x_out = amount0_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
 
         // (x_out, y_out, next_sqrt_ratio)
         (0, 0, 0)
