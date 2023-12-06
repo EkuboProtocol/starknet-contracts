@@ -876,11 +876,12 @@ mod TWAMM {
         // c
         // let (c, sign) = c(sqrt_ratio, sell_ratio);
 
-        // sell rate
+        // sqrt_sell_rate
         // let sqrt_sell_rate = sqrt(buy_token_sell_rate * sell_token_sell_rate)
 
         // let mult = e^((2 * sqrt_sale_rate * virtual_order_time_window) / liquidity)
         // let sqrt_ratio_next = sqrt_sell_ratio * ( mult - c ) / (mult + c)
+        // prob need to use sign in the above equation
 
         // let y_out = amount1_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
         // let x_out = amount0_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
