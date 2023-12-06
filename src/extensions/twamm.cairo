@@ -538,8 +538,7 @@ mod TWAMM {
                                     .into();
                                 let token0_sale_rate = self.sale_rate.read(buy_token0_key);
                                 let token1_sale_rate = self.sale_rate.read(buy_token1_key);
-                                let buy_token_amount = (token0_sale_rate
-                                    * virtual_order_time_window)
+                                let token0_amount = (token0_sale_rate * virtual_order_time_window)
                                     / 0x100000000;
                                 let token1_amount = (token1_sale_rate * virtual_order_time_window)
                                     / 0x100000000;
@@ -550,15 +549,15 @@ mod TWAMM {
                                 // skip_ahead should be 0
                                 // add up delta += swap
 
-                                if (buy_token_amount != 0
-                                    && token1_amount != 0) {} else if (buy_token_amount > 0) {
+                                if (token0_amount != 0
+                                    && token1_amount != 0) {} else if (token0_amount > 0) {
                                         // swap buy_token for sell_token
                                         delta += core
                                             .swap(
                                                 data.pool_key,
                                                 SwapParameters {
                                                     amount: i129 {
-                                                        mag: buy_token_amount, sign: false
+                                                        mag: token0_amount, sign: false
                                                     },
                                                     is_token1: false,
                                                     sqrt_ratio_limit: min_sqrt_ratio(),
