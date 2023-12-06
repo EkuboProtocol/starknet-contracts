@@ -1,7 +1,7 @@
 use array::{ArrayTrait};
-use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::owner::owner;
 use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{

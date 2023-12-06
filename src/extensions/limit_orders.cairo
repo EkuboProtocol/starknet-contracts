@@ -111,7 +111,7 @@ trait ILimitOrders<TContractState> {
 #[starknet::contract]
 mod LimitOrders {
     use array::{ArrayTrait};
-    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+    use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -122,6 +122,7 @@ mod LimitOrders {
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -135,7 +136,6 @@ mod LimitOrders {
     };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
-    use ekubo::clear::{ClearImpl};
 
     const LIMIT_ORDER_TICK_SPACING: u128 = 100;
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;

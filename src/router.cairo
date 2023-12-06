@@ -1,8 +1,8 @@
+use array::{Span};
 use ekubo::types::delta::{Delta};
+use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
-use ekubo::types::i129::{i129};
-use array::{Span};
 
 #[derive(Serde, Copy, Drop)]
 struct RouteNode {
@@ -34,8 +34,7 @@ trait IRouter<TStorage> {
 #[starknet::contract]
 mod Router {
     use array::{Array, ArrayTrait, SpanTrait};
-
-    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, Swap, TokenAmount};
+    use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::swap::{is_price_increasing};
@@ -46,9 +45,10 @@ mod Router {
     use starknet::syscalls::{call_contract_syscall};
 
     use starknet::{get_caller_address, get_contract_address};
+
+    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, Swap, TokenAmount};
     use traits::{Into};
     use zeroable::{Zeroable};
-    use ekubo::clear::{ClearImpl};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::clear::ClearImpl<ContractState>;
