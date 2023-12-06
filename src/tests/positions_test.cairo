@@ -1,15 +1,17 @@
 use array::ArrayTrait;
 use debug::PrintTrait;
-use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
+use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
     IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
 };
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::owner::owner;
 
 use ekubo::tests::helper::{
@@ -27,8 +29,6 @@ use option::OptionTrait;
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 use traits::{Into};
-use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use zeroable::{Zeroable};
 
 #[test]
