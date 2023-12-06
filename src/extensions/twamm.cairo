@@ -5,9 +5,20 @@ use starknet::{ContractAddress, StorePacking};
 use traits::{Into, TryInto};
 
 #[derive(Drop, Copy, Serde, Hash)]
+struct TWAMMPoolKey {
+    token0: ContractAddress,
+    token1: ContractAddress,
+    // pool fee
+    fee: u128,
+}
+
+#[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
+    // TODO: remove buy_token and sell_token
     buy_token: ContractAddress,
     sell_token: ContractAddress,
+    twamm_pool_key: TWAMMPoolKey,
+    is_sell_token1: bool,
     fee: u128,
     expiry_time: u64
 }
@@ -21,14 +32,6 @@ struct OrderState {
     reward_factor: u128,
 }
 
-#[derive(Drop, Copy, Serde, Hash)]
-struct TWAMMPoolKey {
-    buy_token: ContractAddress,
-    sell_token: ContractAddress,
-    // pool fee
-    fee: u128,
-}
-
 #[starknet::interface]
 trait ITWAMM<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
@@ -38,7 +41,7 @@ trait ITWAMM<TContractState> {
     fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
 
     // Returns the current sale rate for a token key
-    fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> u128;
+    fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128);
 
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
@@ -55,7 +58,6 @@ trait ITWAMM<TContractState> {
 
 #[starknet::contract]
 mod TWAMM {
-    use array::{ArrayTrait};
     use cmp::{min};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -104,8 +106,8 @@ mod TWAMM {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
-        // current rate at which buy_token is being sold for sell_token
-        sale_rate: LegacyMap<TWAMMPoolKey, u128>,
+        // current rate at which tokens are sold
+        sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
         // cumulative sale rate for buy_token ending at a particular timestamp
         sale_rate_ending: LegacyMap<(TWAMMPoolKey, u64), u128>,
         // used to find next timestamp at which orders expire
@@ -151,7 +153,7 @@ mod TWAMM {
         amount: u128,
         expiry_time: u64,
         sale_rate: u128,
-        global_sale_rate: u128,
+        global_sale_rate: (u128, u128),
         sale_rate_ending: u128
     }
 
@@ -298,7 +300,7 @@ mod TWAMM {
             self.orders.read((order_key, id))
         }
 
-        fn get_sale_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> u128 {
+        fn get_sale_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128) {
             self.sale_rate.read(twamm_pool_key)
         }
 
@@ -317,31 +319,79 @@ mod TWAMM {
             // calculate and store order sale rate
             let sale_rate = (amount * 0x100000000) / (order_key.expiry_time - current_time).into();
 
-            let twamm_pool_key = to_token_key(order_key);
+            let twamm_pool_key = order_key.twamm_pool_key;
 
             self
                 .orders
                 .write(
                     (order_key, id),
                     OrderState {
+                        // TODO: use shared state for reward_factor
                         sale_rate: sale_rate, reward_factor: self.reward_factor.read(twamm_pool_key)
                     }
                 );
 
             // update global sale rate
-            let global_sale_rate = self.sale_rate.read(twamm_pool_key) + sale_rate;
+            let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(twamm_pool_key);
+            let global_sale_rate = if (order_key.is_sell_token1) {
+                (token0_sale_rate, token1_sale_rate + sale_rate)
+            } else {
+                (token0_sale_rate + sale_rate, token1_sale_rate)
+            };
             self.sale_rate.write(twamm_pool_key, global_sale_rate);
 
             // update sale rate ending at expiry time
+            // TODO: use shared state for sale_rate_ending
             let sale_rate_ending = self
                 .sale_rate_ending
-                .read((twamm_pool_key, order_key.expiry_time))
+                .read(
+                    (
+                        if (!order_key.is_sell_token1) {
+                            twamm_pool_key
+                        } else {
+                            TWAMMPoolKey {
+                                token0: twamm_pool_key.token1,
+                                token1: twamm_pool_key.token0,
+                                fee: order_key.fee
+                            }
+                        },
+                        order_key.expiry_time
+                    )
+                )
                 + sale_rate;
-            self.sale_rate_ending.write((twamm_pool_key, order_key.expiry_time), sale_rate_ending);
+            self
+                .sale_rate_ending
+                .write(
+                    (
+                        if (!order_key.is_sell_token1) {
+                            twamm_pool_key
+                        } else {
+                            TWAMMPoolKey {
+                                token0: twamm_pool_key.token1,
+                                token1: twamm_pool_key.token0,
+                                fee: order_key.fee
+                            }
+                        },
+                        order_key.expiry_time
+                    ),
+                    sale_rate_ending
+                );
 
             // first order at this expiry time, insert the initialized expiry time
             if (sale_rate_ending == sale_rate) {
-                self.insert_initialized_expiry(twamm_pool_key, order_key.expiry_time);
+                self
+                    .insert_initialized_expiry(
+                        if (!order_key.is_sell_token1) {
+                            twamm_pool_key
+                        } else {
+                            TWAMMPoolKey {
+                                token0: twamm_pool_key.token1,
+                                token1: twamm_pool_key.token0,
+                                fee: order_key.fee
+                            }
+                        },
+                        order_key.expiry_time
+                    );
             }
 
             self
@@ -357,7 +407,15 @@ mod TWAMM {
                     }
                 );
 
-            self.deposit(twamm_pool_key.buy_token, amount);
+            self
+                .deposit(
+                    if (order_key.is_sell_token1) {
+                        twamm_pool_key.token1
+                    } else {
+                        twamm_pool_key.token0
+                    },
+                    amount
+                );
 
             id
         }
@@ -386,8 +444,14 @@ mod TWAMM {
                 / 0x100000000;
 
             // update global rates
-            let sale_rate = self.sale_rate.read(twamm_pool_key) - order_state.sale_rate;
+            let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(twamm_pool_key);
+            let sale_rate = if (order_key.is_sell_token1) {
+                (token0_sale_rate, token1_sale_rate - order_state.sale_rate)
+            } else {
+                (token0_sale_rate - order_state.sale_rate, token1_sale_rate)
+            };
             self.sale_rate.write(twamm_pool_key, sale_rate);
+
             self
                 .sale_rate_ending
                 .write(
@@ -403,12 +467,12 @@ mod TWAMM {
 
             // transfer remaining buy_token
             if (remaining_amount.is_non_zero()) {
-                self.withdraw(twamm_pool_key.buy_token, caller, remaining_amount);
+                self.withdraw(twamm_pool_key.token0, caller, remaining_amount);
             }
 
             // transfer purchased sell_token 
             if (purchased_amount.is_non_zero()) {
-                self.withdraw(twamm_pool_key.sell_token, caller, purchased_amount)
+                self.withdraw(twamm_pool_key.token1, caller, purchased_amount)
             }
 
             self.emit(OrderCancelled { id, order_key });
@@ -457,7 +521,7 @@ mod TWAMM {
 
             // transfer purchased sell_token 
             if (total_reward.is_non_zero()) {
-                self.withdraw(twamm_pool_key.sell_token, caller, total_reward);
+                self.withdraw(twamm_pool_key.token1, caller, total_reward);
             }
 
             self.emit(OrderWithdrawn { id, order_key });
@@ -477,24 +541,28 @@ mod TWAMM {
             let result: LockCallbackResult =
                 match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::ExecuteVirtualSwapsCallbackData(data) => {
+                    let twamm_pool_key = TWAMMPoolKey {
+                        token0: data.pool_key.token0,
+                        token1: data.pool_key.token1,
+                        fee: data.pool_key.fee
+                    };
+
                     let (buy_token0_key, buy_token1_key) = (
                         TWAMMPoolKey {
-                            buy_token: data.pool_key.token0,
-                            sell_token: data.pool_key.token1,
+                            token0: data.pool_key.token0,
+                            token1: data.pool_key.token1,
                             fee: data.pool_key.fee
                         },
                         TWAMMPoolKey {
-                            buy_token: data.pool_key.token1,
-                            sell_token: data.pool_key.token0,
+                            token0: data.pool_key.token1,
+                            token1: data.pool_key.token0,
                             fee: data.pool_key.fee
                         }
                     );
 
                     // since virtual orders are executed at the same time for both tokens,
                     // last_virtual_order_time is the same for both tokens.
-                    let shared_token_key = if (buy_token0_key
-                        .buy_token < buy_token0_key
-                        .sell_token) {
+                    let shared_token_key = if (buy_token0_key.token0 < buy_token0_key.token1) {
                         buy_token0_key
                     } else {
                         buy_token1_key
@@ -514,7 +582,7 @@ mod TWAMM {
 
                         loop {
                             // find next expiry time on the buy_token bitmap
-                            let buy_token_next_expiry_time = self_snap
+                            let token0_next_expiry_time = self_snap
                                 .next_initialized_expiry(
                                     buy_token0_key, last_virtual_order_time, current_time
                                 );
@@ -526,8 +594,7 @@ mod TWAMM {
                                 );
 
                             let next_virtual_order_time = min(
-                                min(buy_token_next_expiry_time, token1_next_expiry_time),
-                                current_time
+                                min(token0_next_expiry_time, token1_next_expiry_time), current_time
                             );
 
                             let price = core.get_pool_price(data.pool_key);
@@ -536,8 +603,9 @@ mod TWAMM {
                                 let virtual_order_time_window = (next_virtual_order_time
                                     - last_virtual_order_time)
                                     .into();
-                                let token0_sale_rate = self.sale_rate.read(buy_token0_key);
-                                let token1_sale_rate = self.sale_rate.read(buy_token1_key);
+                                let (token0_sale_rate, token1_sale_rate) = self
+                                    .sale_rate
+                                    .read(twamm_pool_key);
                                 let token0_amount = (token0_sale_rate * virtual_order_time_window)
                                     / 0x100000000;
                                 let token1_amount = (token1_sale_rate * virtual_order_time_window)
@@ -591,29 +659,44 @@ mod TWAMM {
                                         }
                                     );
 
-                                // update buy_token sale rate with expiring rates 
-                                if next_virtual_order_time == buy_token_next_expiry_time {
-                                    self
-                                        .sale_rate
-                                        .write(
-                                            buy_token0_key,
-                                            token0_sale_rate
-                                                - self
-                                                    .sale_rate_ending
-                                                    .read((buy_token0_key, next_virtual_order_time))
-                                        );
-                                }
+                                let token0_sale_rate_ending = self
+                                    .sale_rate_ending
+                                    .read((buy_token0_key, next_virtual_order_time));
+                                let token1_sale_rate_ending = self
+                                    .sale_rate_ending
+                                    .read((buy_token1_key, next_virtual_order_time));
 
-                                // update sell_token sale rate with expiring rates 
-                                if next_virtual_order_time == token1_next_expiry_time {
+                                // update sale rates
+                                if (next_virtual_order_time == token0_next_expiry_time
+                                    && next_virtual_order_time == token1_next_expiry_time) {
                                     self
                                         .sale_rate
                                         .write(
-                                            buy_token1_key,
-                                            token1_sale_rate
-                                                - self
-                                                    .sale_rate_ending
-                                                    .read((buy_token1_key, next_virtual_order_time))
+                                            twamm_pool_key,
+                                            (
+                                                token0_sale_rate - token0_sale_rate_ending,
+                                                token1_sale_rate - token1_sale_rate_ending
+                                            )
+                                        );
+                                } else if (next_virtual_order_time == token0_next_expiry_time) {
+                                    self
+                                        .sale_rate
+                                        .write(
+                                            twamm_pool_key,
+                                            (
+                                                token0_sale_rate - token0_sale_rate_ending,
+                                                token1_sale_rate
+                                            )
+                                        );
+                                } else if (next_virtual_order_time == token1_next_expiry_time) {
+                                    self
+                                        .sale_rate
+                                        .write(
+                                            twamm_pool_key,
+                                            (
+                                                token0_sale_rate,
+                                                token1_sale_rate - token1_sale_rate_ending
+                                            )
                                         );
                                 }
                             // TODO: update rewards factor.
@@ -635,13 +718,13 @@ mod TWAMM {
                                     .save(
                                         SavedBalanceKey {
                                             owner: get_contract_address(),
-                                            token: buy_token0_key.buy_token,
+                                            token: buy_token0_key.token0,
                                             salt: 0
                                         },
                                         delta.amount0.mag
                                     );
                             } else {
-                                core.load(buy_token0_key.buy_token, 0, delta.amount0.mag);
+                                core.load(buy_token0_key.token0, 0, delta.amount0.mag);
                             }
                         }
                         if (delta.amount1.mag > 0) {
@@ -650,13 +733,13 @@ mod TWAMM {
                                     .save(
                                         SavedBalanceKey {
                                             owner: get_contract_address(),
-                                            token: buy_token0_key.sell_token,
+                                            token: buy_token0_key.token1,
                                             salt: 0
                                         },
                                         delta.amount1.mag
                                     );
                             } else {
-                                core.load(buy_token0_key.sell_token, 0, delta.amount1.mag);
+                                core.load(buy_token0_key.token1, 0, delta.amount1.mag);
                             }
                         }
 
@@ -798,6 +881,8 @@ mod TWAMM {
                     OrderKey {
                         buy_token: order_key.sell_token,
                         sell_token: order_key.buy_token,
+                        twamm_pool_key: order_key.twamm_pool_key,
+                        is_sell_token1: !order_key.is_sell_token1,
                         fee: order_key.fee,
                         expiry_time: order_key.expiry_time
                     }
@@ -828,7 +913,7 @@ mod TWAMM {
 
     fn to_token_key(order_key: OrderKey) -> TWAMMPoolKey {
         TWAMMPoolKey {
-            buy_token: order_key.buy_token, sell_token: order_key.sell_token, fee: order_key.fee
+            token0: order_key.buy_token, token1: order_key.sell_token, fee: order_key.fee
         }
     }
 
