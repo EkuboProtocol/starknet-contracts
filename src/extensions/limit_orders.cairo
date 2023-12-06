@@ -106,10 +106,6 @@ trait ILimitOrders<TContractState> {
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
     ) -> (u128, u128);
-
-    // Clear the token balance held by this contract
-    // This contract is non-custodial, i.e. never holds a balance on behalf of a user
-    fn clear(ref self: TContractState, token: ContractAddress) -> u256;
 }
 
 #[starknet::contract]
@@ -139,9 +135,13 @@ mod LimitOrders {
     };
     use traits::{TryInto, Into};
     use zeroable::{Zeroable};
+    use ekubo::clear::{ClearImpl};
 
     const LIMIT_ORDER_TICK_SPACING: u128 = 100;
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;
+
+    #[abi(embed_v0)]
+    impl Clear = ekubo::clear::ClearImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -815,15 +815,6 @@ mod LimitOrders {
             };
 
             result
-        }
-
-        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
-            let dispatcher = IERC20Dispatcher { contract_address: token };
-            let balance = dispatcher.balanceOf(get_contract_address());
-            if (balance.is_non_zero()) {
-                dispatcher.transfer(get_caller_address(), balance);
-            }
-            balance
         }
     }
 }
