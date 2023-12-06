@@ -91,7 +91,7 @@ mod TWAMM {
     const LOG_SCALE_FACTOR: u8 = 4;
     const BIT_MAP_SPACING: u64 = 16;
 
-    component!(path: upgradeable_component, storage: upgradeable, event: ClassHashReplaced);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
@@ -179,7 +179,7 @@ mod TWAMM {
     #[event]
     enum Event {
         #[flat]
-        ClassHashReplaced: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         OrderPlaced: OrderPlaced,
         OrderCancelled: OrderCancelled,
         OrderWithdrawn: OrderWithdrawn,
