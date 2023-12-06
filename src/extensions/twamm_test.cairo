@@ -292,7 +292,10 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let order_key = OrderKey {
             // current timestamp is 0
-            token0: token0.contract_address, token1: token1.contract_address, fee: 0, expiry_time: 0
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
+            fee: 0,
+            expiry_time: 0
         };
 
         let amount = 100_000_000;
@@ -412,8 +415,8 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         // expiry time at the interval time
         let mut order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: timestamp + prev_interval
         };
@@ -432,8 +435,8 @@ mod PlaceOrderTestsValidateExpiryTime {
         // first valid expiry time in interval
         order_key =
             OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
+                buy_token: token0.contract_address,
+                sell_token: token1.contract_address,
                 fee: 0,
                 expiry_time: timestamp + prev_interval + step
             };
@@ -452,8 +455,8 @@ mod PlaceOrderTestsValidateExpiryTime {
         // last valid expiry time in interval
         order_key =
             OrderKey {
-                token0: token0.contract_address,
-                token1: token1.contract_address,
+                buy_token: token0.contract_address,
+                sell_token: token1.contract_address,
                 fee: 0,
                 expiry_time: timestamp + interval - step
             };
@@ -563,7 +566,10 @@ mod PlaceOrderTests {
         };
 
         let order_key = OrderKey {
-            token0: token0.contract_address, token1: token1.contract_address, fee: 0, expiry_time,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
+            fee: 0,
+            expiry_time,
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -595,8 +601,8 @@ mod PlaceOrderTests {
 
         // order 0
         let order_key_1 = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: 16 * 16,
         };
@@ -612,8 +618,8 @@ mod PlaceOrderTests {
             .unwrap();
 
         assert(event.id == 1, 'event.id');
-        assert(event.order_key.token0 == order_key_1.token0, 'event.order_key.token0');
-        assert(event.order_key.token1 == order_key_1.token1, 'event.order_key.token1');
+        assert(event.order_key.buy_token == order_key_1.buy_token, 'event.order_key.token0');
+        assert(event.order_key.sell_token == order_key_1.sell_token, 'event.order_key.token1');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == order_key_1.expiry_time, 'event.expiry_time');
         assert(event.sale_rate == 0x5f5e100000000, 'event.sale_rate');
@@ -622,8 +628,8 @@ mod PlaceOrderTests {
 
         // order 1
         let order_key_2 = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: 16 * 16 * 16,
         };
@@ -636,8 +642,8 @@ mod PlaceOrderTests {
         event = pop_log(twamm.contract_address).unwrap();
 
         assert(event.id == 2, 'event.id');
-        assert(event.order_key.token0 == order_key_2.token0, 'event.order_key.token0');
-        assert(event.order_key.token1 == order_key_2.token1, 'event.order_key.token1');
+        assert(event.order_key.buy_token == order_key_2.buy_token, 'event.order_key.token0');
+        assert(event.order_key.sell_token == order_key_2.sell_token, 'event.order_key.token1');
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == order_key_2.expiry_time, 'event.expiry_time');
         assert(event.sale_rate == 0x5f5e10000000, 'event.sale_rate');
@@ -648,7 +654,7 @@ mod PlaceOrderTests {
         let global_rate = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_sale_rate(
                 TWAMMPoolKey {
-                    token0: token0.contract_address, token1: token1.contract_address, fee: 0
+                    buy_token: token0.contract_address, sell_token: token1.contract_address, fee: 0
                 }
             );
 
@@ -680,8 +686,8 @@ mod PlaceOrderTests {
             extension: twamm.contract_address,
         };
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: 16 * 16,
         };
@@ -715,8 +721,8 @@ mod CancelOrderTests {
             extension: twamm.contract_address,
         };
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: SIXTEEN_POW_THREE
         };
@@ -749,8 +755,8 @@ mod CancelOrderTests {
             extension: twamm.contract_address,
         };
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: SIXTEEN_POW_THREE
         };
@@ -781,8 +787,8 @@ mod CancelOrderTests {
             extension: twamm.contract_address,
         };
         let order_key = OrderKey {
-            token0: token0.contract_address,
-            token1: token1.contract_address,
+            buy_token: token0.contract_address,
+            sell_token: token1.contract_address,
             fee: 0,
             expiry_time: SIXTEEN_POW_THREE,
         };
@@ -1054,8 +1060,8 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         set_contract_address(twamm_caller);
         let amount = 100_000 * 0x100000000;
         let order_key = OrderKey {
-            token0: setup.token0.contract_address,
-            token1: setup.token1.contract_address,
+            buy_token: setup.token0.contract_address,
+            sell_token: setup.token1.contract_address,
             fee: 0,
             expiry_time
         };
