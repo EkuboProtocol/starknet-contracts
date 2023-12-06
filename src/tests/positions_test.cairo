@@ -27,7 +27,9 @@ use option::OptionTrait;
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 use traits::{Into};
-use zeroable::Zeroable;
+use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::interfaces::erc20::{IERC20Dispatcher};
+use zeroable::{Zeroable};
 
 #[test]
 #[available_gas(20000000)]
@@ -134,8 +136,10 @@ fn test_deposit_liquidity_concentrated() {
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
     set_contract_address(contract_address_const::<2>());
-    let balance0 = positions.clear(setup.token0.contract_address);
-    let balance1 = positions.clear(setup.token1.contract_address);
+    let balance0 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+    let balance1 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -200,8 +204,10 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
     set_contract_address(contract_address_const::<2>());
-    let balance0 = positions.clear(setup.token0.contract_address);
-    let balance1 = positions.clear(setup.token1.contract_address);
+    let balance0 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+    let balance1 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
@@ -241,8 +247,10 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 
     set_contract_address(contract_address_const::<2>());
 
-    let balance0 = positions.clear(setup.token0.contract_address);
-    let balance1 = positions.clear(setup.token1.contract_address);
+    let balance0 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+    let balance1 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
@@ -282,8 +290,10 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
 
     set_contract_address(contract_address_const::<2>());
 
-    let balance0 = positions.clear(setup.token0.contract_address);
-    let balance1 = positions.clear(setup.token1.contract_address);
+    let balance0 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+    let balance1 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
@@ -322,8 +332,10 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
     set_contract_address(contract_address_const::<2>());
-    let balance0 = positions.clear(setup.token0.contract_address);
-    let balance1 = positions.clear(setup.token1.contract_address);
+    let balance0 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+    let balance1 = IClearDispatcher { contract_address: positions.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
         setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),

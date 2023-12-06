@@ -88,7 +88,4 @@ trait IPositions<TStorage> {
         min_token1: u128,
         collect_fees: bool
     ) -> (u128, u128);
-
-    // Clear the balance held by this contract. Used for collecting remaining tokens after doing a deposit, or collecting withdrawn tokens/fees
-    fn clear(ref self: TStorage, token: ContractAddress) -> u256;
 }

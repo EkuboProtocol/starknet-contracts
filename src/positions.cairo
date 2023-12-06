@@ -32,6 +32,10 @@ mod Positions {
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+
+
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
@@ -388,15 +392,6 @@ mod Positions {
             (delta.amount0.mag, delta.amount1.mag)
         }
 
-        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
-            let dispatcher = IERC20Dispatcher { contract_address: token };
-            let balance = dispatcher.balanceOf(get_contract_address());
-            if (balance.is_non_zero()) {
-                dispatcher.transfer(get_caller_address(), balance);
-            }
-            balance
-        }
-
         fn deposit_last(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> u128 {
@@ -426,8 +421,8 @@ mod Positions {
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> (u64, u128, u256, u256) {
             let (id, liquidity) = self.mint_and_deposit(pool_key, bounds, min_liquidity);
-            let amount0 = self.clear(pool_key.token0);
-            let amount1 = self.clear(pool_key.token1);
+            let amount0 = self.clear(IERC20Dispatcher { contract_address: pool_key.token0 });
+            let amount1 = self.clear(IERC20Dispatcher { contract_address: pool_key.token1 });
             (id, liquidity, amount0, amount1)
         }
     }

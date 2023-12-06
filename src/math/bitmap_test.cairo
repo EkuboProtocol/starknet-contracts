@@ -74,7 +74,7 @@ fn test_set_bit() {
             ) == Bitmap {
                 value: 0x400000000000000000000000000000000000000000000000000000000000000
             },
-        'set 251'
+        'set 250'
     );
 
     assert(Bitmap { value: 0 }.set_bit(250).unset_bit(250) == Bitmap { value: 0 }, 'set/unset 251');
@@ -332,4 +332,3 @@ fn test_negative_cases_tick_spacing_ten() {
         tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
 }
-

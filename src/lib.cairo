@@ -1,4 +1,5 @@
 mod asset_recovery;
+mod clear;
 mod core;
 mod owned_nft;
 mod extensions;

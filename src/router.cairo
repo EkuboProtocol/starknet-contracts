@@ -29,9 +29,6 @@ struct Swap {
 trait IRouter<TStorage> {
     // Execute a swap against a route. The input tokens must already be transferred to this contract.
     fn execute(ref self: TStorage, swap: Swap) -> TokenAmount;
-
-    // Clear the balance held by this contract. Used for collecting remaining tokens after a swap.
-    fn clear(ref self: TStorage, token: ContractAddress) -> u256;
 }
 
 #[starknet::contract]
@@ -51,6 +48,10 @@ mod Router {
     use starknet::{get_caller_address, get_contract_address};
     use traits::{Into};
     use zeroable::{Zeroable};
+    use ekubo::clear::{ClearImpl};
+
+    #[abi(embed_v0)]
+    impl Clear = ekubo::clear::ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -162,15 +163,6 @@ mod Router {
     impl RouterImpl of IRouter<ContractState> {
         fn execute(ref self: ContractState, swap: Swap) -> TokenAmount {
             call_core_with_callback(self.core.read(), @swap)
-        }
-
-        fn clear(ref self: ContractState, token: ContractAddress) -> u256 {
-            let dispatcher = IERC20Dispatcher { contract_address: token };
-            let balance = dispatcher.balanceOf(get_contract_address());
-            if (balance.is_non_zero()) {
-                dispatcher.transfer(get_caller_address(), balance);
-            }
-            balance
         }
     }
 }
