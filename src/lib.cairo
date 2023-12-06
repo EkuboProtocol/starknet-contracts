@@ -14,7 +14,6 @@ mod router;
 mod shared_locker;
 mod simple_erc20;
 mod simple_swapper;
-mod clear;
 
 #[cfg(test)]
 mod tests;

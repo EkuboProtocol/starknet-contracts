@@ -81,7 +81,6 @@ mod TWAMM {
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use ekubo::clear::{ClearImpl};
     use option::{OptionTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
@@ -98,7 +97,9 @@ mod TWAMM {
 
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
-    impl Clear = ClearImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl Clear = ekubo::clear::ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {
