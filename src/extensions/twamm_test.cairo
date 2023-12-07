@@ -1,7 +1,7 @@
 use debug::PrintTrait;
 use ekubo::extensions::twamm::TWAMM::{
-    to_token_key, OrderPlaced, VirtualOrdersExecuted, expiry_to_word_and_bit_index,
-    word_and_bit_index_to_expiry, calculate_virtual_order_outputs, c
+    OrderPlaced, VirtualOrdersExecuted, expiry_to_word_and_bit_index, word_and_bit_index_to_expiry,
+    calculate_virtual_order_outputs, c
 };
 use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
 use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
@@ -267,10 +267,10 @@ mod PlaceOrderTestsValidateExpiryTime {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE,
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX,
-        SIXTEEN_POW_SEVEN, TWAMMPoolKey
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
+        TWAMMPoolKey
     };
 
 
@@ -288,12 +288,7 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         let order_key = OrderKey {
             // current timestamp is 0
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: 0
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: 0
         };
 
         let amount = 100_000_000;
@@ -409,11 +404,8 @@ mod PlaceOrderTestsValidateExpiryTime {
 
         // expiry time at the interval time
         let mut order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
             twamm_pool_key: twamm_pool_key,
             is_sell_token1: false,
-            fee: 0,
             expiry_time: timestamp + prev_interval
         };
         token0.increase_balance(twamm.contract_address, amount);
@@ -431,11 +423,8 @@ mod PlaceOrderTestsValidateExpiryTime {
         // first valid expiry time in interval
         order_key =
             OrderKey {
-                buy_token: token0.contract_address,
-                sell_token: token1.contract_address,
                 twamm_pool_key: twamm_pool_key,
                 is_sell_token1: false,
-                fee: 0,
                 expiry_time: timestamp + prev_interval + step
             };
         token0.increase_balance(twamm.contract_address, amount);
@@ -453,11 +442,8 @@ mod PlaceOrderTestsValidateExpiryTime {
         // last valid expiry time in interval
         order_key =
             OrderKey {
-                buy_token: token0.contract_address,
-                sell_token: token1.contract_address,
                 twamm_pool_key: twamm_pool_key,
                 is_sell_token1: false,
-                fee: 0,
                 expiry_time: timestamp + interval - step
             };
         token0.increase_balance(twamm.contract_address, amount);
@@ -478,10 +464,10 @@ mod PlaceOrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TWAMMPoolKey, SIXTEEN_POW_ZERO,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
-        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, TWAMMPoolKey, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
+        OrderPlaced,
     };
 
     #[test]
@@ -562,12 +548,7 @@ mod PlaceOrderTests {
         };
 
         let order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time,
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time,
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -595,12 +576,7 @@ mod PlaceOrderTests {
 
         // order 0
         let order_key_1 = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: 16 * 16,
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: 16 * 16,
         };
         token0.increase_balance(twamm.contract_address, amount);
         let token_id_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -614,8 +590,14 @@ mod PlaceOrderTests {
             .unwrap();
 
         assert(event.id == 1, 'event.id');
-        assert(event.order_key.buy_token == order_key_1.buy_token, 'event.order_key.token0');
-        assert(event.order_key.sell_token == order_key_1.sell_token, 'event.order_key.token1');
+        assert(
+            event.order_key.twamm_pool_key.token0 == order_key_1.twamm_pool_key.token0,
+            'event.order_key.token0'
+        );
+        assert(
+            event.order_key.twamm_pool_key.token1 == order_key_1.twamm_pool_key.token1,
+            'event.order_key.token1'
+        );
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == order_key_1.expiry_time, 'event.expiry_time');
         assert(event.sale_rate == 0x5f5e100000000, 'event.sale_rate');
@@ -624,12 +606,7 @@ mod PlaceOrderTests {
 
         // order 1
         let order_key_2 = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: 16 * 16 * 16,
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: 16 * 16 * 16,
         };
         token0.increase_balance(twamm.contract_address, amount);
         let token_id_2 = ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -640,8 +617,14 @@ mod PlaceOrderTests {
         event = pop_log(twamm.contract_address).unwrap();
 
         assert(event.id == 2, 'event.id');
-        assert(event.order_key.buy_token == order_key_2.buy_token, 'event.order_key.token0');
-        assert(event.order_key.sell_token == order_key_2.sell_token, 'event.order_key.token1');
+        assert(
+            event.order_key.twamm_pool_key.token0 == order_key_2.twamm_pool_key.token0,
+            'event.order_key.token0'
+        );
+        assert(
+            event.order_key.twamm_pool_key.token1 == order_key_2.twamm_pool_key.token1,
+            'event.order_key.token1'
+        );
         assert(event.amount == amount, 'event.amount');
         assert(event.expiry_time == order_key_2.expiry_time, 'event.expiry_time');
         assert(event.sale_rate == 0x5f5e10000000, 'event.sale_rate');
@@ -680,12 +663,7 @@ mod PlaceOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
         };
         let order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: 16 * 16,
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: 16 * 16,
         };
 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
@@ -696,9 +674,8 @@ mod CancelOrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        get_contract_address, IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_THREE,
-        TWAMMPoolKey
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, get_contract_address,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_THREE, TWAMMPoolKey
     };
 
     #[test]
@@ -714,12 +691,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
         };
         let order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: SIXTEEN_POW_THREE
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: SIXTEEN_POW_THREE
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -746,12 +718,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
         };
         let order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: SIXTEEN_POW_THREE
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: SIXTEEN_POW_THREE
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -776,12 +743,7 @@ mod CancelOrderTests {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
         };
         let order_key = OrderKey {
-            buy_token: token0.contract_address,
-            sell_token: token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            fee: 0,
-            expiry_time: SIXTEEN_POW_THREE,
+            twamm_pool_key: twamm_pool_key, is_sell_token1: false, expiry_time: SIXTEEN_POW_THREE,
         };
 
         token0.increase_balance(twamm.contract_address, amount);
@@ -809,10 +771,10 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
-        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
+        setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
+        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
@@ -1032,12 +994,7 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         set_contract_address(twamm_caller);
         let amount = 100_000 * 0x100000000;
         let order_key = OrderKey {
-            buy_token: setup.token0.contract_address,
-            sell_token: setup.token1.contract_address,
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: is_sell_token1,
-            fee: setup.pool_key.fee,
-            expiry_time
+            twamm_pool_key: twamm_pool_key, is_sell_token1: is_sell_token1, expiry_time
         };
 
         if (is_sell_token1) {
@@ -1062,10 +1019,10 @@ mod TWAMMMathTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, to_token_key,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
-        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
+        setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
+        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
