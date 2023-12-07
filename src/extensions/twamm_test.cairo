@@ -936,6 +936,77 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         assert(event.token1_sale_rate == 0, 'event0.token1_sale_rate');
     }
 
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_3() {
+        // Order 0 expiries before current time
+        // Order 1 expiries before current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0 expiry
+        // 2 = order for token1 expiry
+        // l---------------0--1--t------------------> time
+        // execute from l->0, 0->1, 1->t
+
+        let core = deploy_core();
+        let (twamm, setup) = set_up_twamm_with_liquidity(core, 0);
+
+        let timestamp = 1_000_000;
+        set_block_timestamp(timestamp);
+
+        let order1_timestamp = timestamp;
+        let order1_expiry_time = timestamp + SIXTEEN_POW_ONE;
+        let (token_id1, order1) = place_order(core, twamm, setup, false, order1_expiry_time);
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let order2_expiry_time = timestamp
+            + SIXTEEN_POW_THREE
+            - 0x240; // ensure expiry time is valid and in a diff word
+        let (token_id2, order2) = place_order(core, twamm, setup, true, order2_expiry_time);
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // after order2 expires
+        let order_execution_timestamp = order2_expiry_time + SIXTEEN_POW_THREE;
+        set_block_timestamp(order_execution_timestamp);
+
+        // manually trigger virtual order execution
+        twamm.execute_virtual_orders(setup.pool_key);
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert(event.last_virtual_order_time == order1_timestamp, 'event0.last_virtual_order_time');
+        assert(
+            event.next_virtual_order_time == order1_expiry_time, 'event0.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == order1.sale_rate, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == order2.sale_rate, 'event0.token1_sale_rate');
+
+        // second order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert(
+            event.last_virtual_order_time == order1_expiry_time, 'event1.last_virtual_order_time'
+        );
+        assert(
+            event.next_virtual_order_time == order2_expiry_time, 'event1.next_virtual_order_time'
+        );
+
+        assert(event.token0_sale_rate == 0, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == order2.sale_rate, 'event0.token1_sale_rate');
+
+        // third order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert(
+            event.last_virtual_order_time == order2_expiry_time, 'event2.last_virtual_order_time'
+        );
+        assert(
+            event.next_virtual_order_time == order_execution_timestamp,
+            'event2.next_virtual_order_time'
+        );
+        assert(event.token0_sale_rate == 0, 'event0.token0_sale_rate');
+        assert(event.token1_sale_rate == 0, 'event0.token1_sale_rate');
+    }
+
     fn set_up_twamm_with_liquidity(
         core: ICoreDispatcher, fee: u128
     ) -> (ITWAMMDispatcher, SetupPoolResult) {
