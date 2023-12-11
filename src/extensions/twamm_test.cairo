@@ -793,7 +793,11 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         // trade from l->t
 
         let core = deploy_core();
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, 0);
+        let fee = 0;
+        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee);
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -802,6 +806,17 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
         let (token_id1, _) = place_order(
             core, twamm, setup, false, timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE
         );
+
+        let (token0_reward_factor, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
+
+        // no trades have been executed
+        assert(token0_reward_factor == 0x0, 'token0.reward_factor');
+        assert(token1_reward_factor == 0x0, 'token1.reward_factor');
+
+        'token0_reward_factor'.print();
+        token0_reward_factor.print();
+        'token1_reward_factor'.print();
+        token1_reward_factor.print();
 
         let event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(twamm.contract_address)
             .unwrap();
@@ -816,6 +831,11 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
 
         assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(event.next_virtual_order_time == order2_timestamp, 'event.next_virtual_order_time');
+
+        let (token0_reward_factor, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
+
+        assert(token0_reward_factor == 0x10, 'token0.reward_factor');
+        assert(token1_reward_factor == 0x00, 'token1.reward_factor');
     }
 
     #[test]
@@ -1057,15 +1077,17 @@ mod PlaceOrderAndCheckExpiryBitmapTests {
     ) -> (u64, OrderState) {
         let twamm_caller = contract_address_const::<43>();
 
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee: 0,
-        };
-
         // place order
         set_contract_address(twamm_caller);
         let amount = 100_000 * 0x100000000;
         let order_key = OrderKey {
-            twamm_pool_key: twamm_pool_key, is_sell_token1: is_sell_token1, expiry_time
+            twamm_pool_key: TWAMMPoolKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                fee: 0,
+            },
+            is_sell_token1: is_sell_token1,
+            expiry_time
         };
 
         if (is_sell_token1) {
@@ -1113,8 +1135,5 @@ mod TWAMMMathTests {
 
         let sqrt_ratio = 1;
         let (val, sign) = c(sqrt_ratio, sell_ratio);
-
-        'val'.print();
-        val.print();
     }
 }
