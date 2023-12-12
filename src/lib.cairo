@@ -2,7 +2,6 @@ mod asset_recovery;
 mod clear;
 mod core;
 mod extensions;
-mod extra_payment_taker;
 mod interfaces;
 mod math;
 mod owned_nft;
