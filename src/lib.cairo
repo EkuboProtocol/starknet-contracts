@@ -15,6 +15,7 @@ mod simple_swapper;
 
 #[cfg(test)]
 mod tests;
+mod token_registry;
 mod types;
 mod upgradeable;
 
