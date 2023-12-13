@@ -164,6 +164,7 @@ mod TWAMM {
     struct OrderWithdrawn {
         id: u64,
         order_key: OrderKey,
+        amount: u128
     }
 
     #[derive(starknet::Event, Drop)]
@@ -171,7 +172,8 @@ mod TWAMM {
         last_virtual_order_time: u64,
         next_virtual_order_time: u64,
         token0_sale_rate: u128,
-        token1_sale_rate: u128
+        token1_sale_rate: u128,
+        delta: Delta
     }
 
     #[derive(starknet::Event, Drop)]
@@ -433,7 +435,7 @@ mod TWAMM {
 
             let current_time = get_block_timestamp();
 
-            let total_reward_factor = if current_time > order_key.expiry_time {
+            let total_reward_factor = if current_time >= order_key.expiry_time {
                 // TODO: Should we burn the NFT? Probably not.
                 // update order state to reflect that the order has been fully executed
                 self.orders.write((order_key, id), OrderState { sale_rate: 0, reward_factor: 0 });
@@ -457,14 +459,23 @@ mod TWAMM {
                 reward_factor - order_state.reward_factor
             };
 
-            let total_reward = (total_reward_factor * order_state.sale_rate) / 0x100000000;
+            let total_reward = (total_reward_factor * order_state.sale_rate) / 0x1000000000000;
 
             // transfer purchased amount 
             if (total_reward.is_non_zero()) {
-                self.withdraw(order_key.twamm_pool_key.token1, caller, total_reward);
+                self
+                    .withdraw(
+                        if (order_key.is_sell_token1) {
+                            order_key.twamm_pool_key.token0
+                        } else {
+                            order_key.twamm_pool_key.token1
+                        },
+                        caller,
+                        total_reward
+                    );
             }
 
-            self.emit(OrderWithdrawn { id, order_key });
+            self.emit(OrderWithdrawn { id, order_key, amount: total_reward });
         }
 
         fn execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
@@ -496,7 +507,6 @@ mod TWAMM {
 
                     let self_snap = @self;
 
-                    // TODO: double check sale rates are 0? that should never happen.
                     if (last_virtual_order_time != 0 && last_virtual_order_time != current_time) {
                         let mut delta = Zeroable::<Delta>::zero();
 
@@ -509,28 +519,27 @@ mod TWAMM {
 
                             let next_virtual_order_time = min(next_expiry_time, current_time);
 
-                            let price = core.get_pool_price(data.pool_key);
+                            let (token0_sale_rate, token1_sale_rate) = self
+                                .sale_rate
+                                .read(twamm_pool_key);
 
-                            if price.sqrt_ratio != 0 {
-                                let virtual_order_time_window = (next_virtual_order_time
-                                    - last_virtual_order_time)
-                                    .into();
-                                let (token0_sale_rate, token1_sale_rate) = self
-                                    .sale_rate
-                                    .read(twamm_pool_key);
-                                let token0_amount = (token0_sale_rate * virtual_order_time_window)
-                                    / 0x100000000;
-                                let token1_amount = (token1_sale_rate * virtual_order_time_window)
-                                    / 0x100000000;
+                            if (token0_sale_rate > 0 || token1_sale_rate > 0) {
+                                let price = core.get_pool_price(data.pool_key);
 
-                                // TODO: Execute swap and accumulate all deltas.
-                                // TODO: Zero out deltas, and update rewards factor at expiry.
-                                // sqrt_ratio_limit should be set to max on the direction of the swap.
-                                // skip_ahead should be 0
-                                // add up delta += swap
+                                if price.sqrt_ratio != 0 {
+                                    let virtual_order_time_window = (next_virtual_order_time
+                                        - last_virtual_order_time)
+                                        .into();
+                                    let token0_amount = (token0_sale_rate
+                                        * virtual_order_time_window)
+                                        / 0x100000000;
+                                    let token1_amount = (token1_sale_rate
+                                        * virtual_order_time_window)
+                                        / 0x100000000;
 
-                                if (token0_amount != 0
-                                    && token1_amount != 0) {} else if (token0_amount > 0) {
+                                    if (token0_amount != 0
+                                        && token1_amount != 0) { // TODO: use twamm equations to calculate the amounts
+                                    } else if (token0_amount > 0) {
                                         // swap buy_token for sell_token
                                         delta += core
                                             .swap(
@@ -560,30 +569,33 @@ mod TWAMM {
                                             );
                                     }
 
-                                self
-                                    .emit(
-                                        // TODO: Add values from swaps
-                                        VirtualOrdersExecuted {
-                                            last_virtual_order_time,
-                                            next_virtual_order_time,
-                                            token0_sale_rate: token0_sale_rate,
-                                            token1_sale_rate: token1_sale_rate
-                                        }
-                                    );
+                                    self
+                                        .emit(
+                                            VirtualOrdersExecuted {
+                                                last_virtual_order_time,
+                                                next_virtual_order_time,
+                                                token0_sale_rate: token0_sale_rate,
+                                                token1_sale_rate: token1_sale_rate,
+                                                delta
+                                            }
+                                        );
 
-                                // update reward factor
-                                self
-                                    .update_reward_factor(
-                                        twamm_pool_key, (token0_sale_rate, token1_sale_rate), delta
-                                    );
+                                    // update reward factor
+                                    self
+                                        .update_reward_factor(
+                                            twamm_pool_key,
+                                            (token0_sale_rate, token1_sale_rate),
+                                            delta
+                                        );
 
-                                // update ending sale rates 
-                                self
-                                    .update_expiring_orders(
-                                        twamm_pool_key,
-                                        (token0_sale_rate, token1_sale_rate),
-                                        next_virtual_order_time
-                                    );
+                                    // update ending sale rates 
+                                    self
+                                        .update_expiring_orders(
+                                            twamm_pool_key,
+                                            (token0_sale_rate, token1_sale_rate),
+                                            next_virtual_order_time
+                                        );
+                                }
                             }
 
                             // update last_virtual_order_time to next_virtual_order_time
@@ -736,9 +748,9 @@ mod TWAMM {
                 .read(order_key.twamm_pool_key);
 
             if (order_key.is_sell_token1) {
-                token1_reward_factor
-            } else {
                 token0_reward_factor
+            } else {
+                token1_reward_factor
             }
         }
 
@@ -748,9 +760,9 @@ mod TWAMM {
                 .read((order_key.twamm_pool_key, order_key.expiry_time));
 
             if (order_key.is_sell_token1) {
-                token1_reward_factor
-            } else {
                 token0_reward_factor
+            } else {
+                token1_reward_factor
             }
         }
 
@@ -767,20 +779,24 @@ mod TWAMM {
                 .read(twamm_pool_key);
 
             let token0_rewards_delta = if (delta.amount0.mag > 0) {
-                if (delta.amount0.sign || token0_sale_rate == 0) {
+                if (!delta.amount0.sign || token1_sale_rate == 0) {
                     0
                 } else {
-                    delta.amount0.mag / (token0_sale_rate / 0x100000000)
+                    // sale rate is scaled by 2**32
+                    // scale by 2**48 to store reward factor scaled by 2**16
+                    delta.amount0.mag * 0x1000000000000 / token1_sale_rate
                 }
             } else {
                 0
             };
 
             let token1_rewards_delta = if (delta.amount1.mag > 0) {
-                if (delta.amount1.sign || token1_sale_rate == 0) {
+                if (!delta.amount1.sign || token0_sale_rate == 0) {
                     0
                 } else {
-                    delta.amount1.mag / (token1_sale_rate / 0x100000000)
+                    // sale rate is scaled by 2**32
+                    // scale by 2**48 to store reward factor scaled by 2**16
+                    delta.amount1.mag * 0x1000000000000 / token0_sale_rate
                 }
             } else {
                 0
