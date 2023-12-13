@@ -2,10 +2,8 @@ mod asset_recovery;
 mod clear;
 mod core;
 mod extensions;
-mod extra_payment_taker;
 mod interfaces;
 mod math;
-mod option_incentives;
 mod owned_nft;
 mod owner;
 mod positions;
@@ -17,6 +15,7 @@ mod simple_swapper;
 
 #[cfg(test)]
 mod tests;
+mod token_registry;
 mod types;
 mod upgradeable;
 
