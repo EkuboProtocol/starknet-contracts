@@ -1,12 +1,13 @@
 use debug::PrintTrait;
 use ekubo::extensions::twamm::TWAMM::{
     OrderPlaced, VirtualOrdersExecuted, OrderWithdrawn, expiry_to_word_and_bit_index,
-    word_and_bit_index_to_expiry, calculate_virtual_order_outputs, c
+    word_and_bit_index_to_expiry, calculate_virtual_order_outputs, calculate_sale_rate,
+    calculate_reward_rate_deltas, calculate_reward_amount, c
 };
 use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
 use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::interfaces::core::{
-    ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
+    ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher, Delta
 };
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
@@ -46,6 +47,7 @@ const SIXTEEN_POW_FOUR: u64 = 0x10000;
 const SIXTEEN_POW_FIVE: u64 = 0x100000;
 const SIXTEEN_POW_SIX: u64 = 0x1000000;
 const SIXTEEN_POW_SEVEN: u64 = 0x10000000;
+const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
 mod UpgradableTest {
     use super::{
@@ -75,12 +77,7 @@ mod UpgradableTest {
 }
 
 mod BitmapTest {
-    use super::{
-        deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
-        update_position, ClassHash, MockUpgradeable, IMockUpgradeableDispatcher,
-        IMockUpgradeableDispatcherTrait, set_contract_address, owner, pop_log,
-        expiry_to_word_and_bit_index, word_and_bit_index_to_expiry, append, to_decimal
-    };
+    use super::{expiry_to_word_and_bit_index, word_and_bit_index_to_expiry, append, to_decimal};
 
 
     fn assert_case_expiry(expiry: u64, location: (u128, u8)) {
@@ -105,6 +102,154 @@ mod BitmapTest {
         assert_case_expiry(4000, location: (0, 0));
         assert_case_expiry(4016, location: (1, 250));
         assert_case_expiry(8016, location: (1, 0));
+    }
+}
+
+mod SaleRateTest {
+    use debug::PrintTrait;
+    use super::{
+        calculate_sale_rate, append, to_decimal, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
+        SIXTEEN_POW_EIGHT
+    };
+
+
+    fn assert_case_sale_rate(amount: u128, expiry_time: u64, current_time: u64, expected: u128) {
+        let sale_rate = calculate_sale_rate(
+            amount: amount, expiry_time: expiry_time, current_time: current_time
+        );
+        assert(
+            sale_rate == expected,
+            append(
+                append(append('e.', to_decimal(expiry_time.into()).unwrap()).unwrap(), '.c.')
+                    .unwrap(),
+                to_decimal(current_time.into()).unwrap()
+            )
+                .unwrap()
+        );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_sale_rates_smallest_amount() {
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_ONE, current_time: 0, expected: 0x10000000
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_TWO, current_time: 0, expected: 0x1000000
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_THREE, current_time: 0, expected: 0x100000
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_FOUR, current_time: 0, expected: 0x10000
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_FIVE, current_time: 0, expected: 0x1000
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_SIX, current_time: 0, expected: 0x100
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_SEVEN, current_time: 0, expected: 0x10
+        );
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_EIGHT, current_time: 0, expected: 0x1
+        );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    #[should_panic(expected: ('SALE_RATE_ZERO',))]
+    fn test_sale_rates_smallest_amount_underflow() {
+        // sale window above 2**32 seconds (136.2 years) underflows to 0 sale rate.
+        assert_case_sale_rate(
+            amount: 1, expiry_time: SIXTEEN_POW_EIGHT + 1, current_time: 0, expected: 0x0
+        );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    #[should_panic(expected: ('SALE_RATE_OVERFLOW',))]
+    fn test_sale_rates_overflow() {
+        assert_case_sale_rate(
+            // 2**128 - 1
+            amount: 0xffffffffffffffffffffffffffffffff,
+            // 2**32 - 1
+            expiry_time: 0xffffffff,
+            current_time: 0,
+            expected: 0
+        );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_sale_rates_largest_amount() {
+        assert_case_sale_rate(
+            // 2**128 - 1
+            amount: 0xffffffffffffffffffffffffffffffff,
+            // 2**32
+            expiry_time: 0x1000000000,
+            current_time: 0,
+            expected: 0xfffffffffffffffffffffffffffffff
+        );
+    }
+}
+
+mod RewardRateTest {
+    use debug::PrintTrait;
+    use super::{
+        Delta, calculate_reward_rate_deltas, calculate_reward_amount, SIXTEEN_POW_ONE,
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX,
+        SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT, i129
+    };
+
+
+    fn assert_case_reward_rate(sale_rates: (u128, u128), delta: Delta, expected: (u256, u256)) {
+        let (sale_rate_0, sale_rate_1) = sale_rates;
+
+        let (reward_rate_0_delta, reward_rate_1_delta) = calculate_reward_rate_deltas(
+            sale_rates: sale_rates, delta: delta
+        );
+
+        let (expected_0, expected_1) = expected;
+
+        assert(reward_rate_0_delta == expected_0, 'reward_rate_0');
+        assert(reward_rate_1_delta == expected_1, 'reward_rate_1');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_reward_rates_largest_amount() {
+        // 2**128 - 1
+        let amount = 0xffffffffffffffffffffffffffffffff;
+        // ((2**128 - 1) * 2**48) / 2**32 = 2**144 - 2**16
+        let expected_reward_rate = u256 { high: 0xffff, low: 0xffffffffffffffffffffffffffff0000 };
+
+        assert_case_reward_rate(
+            // smallest possible sale rate
+            sale_rates: (SIXTEEN_POW_EIGHT.into(), SIXTEEN_POW_EIGHT.into()),
+            delta: Delta {
+                amount0: i129 { mag: amount, sign: true },
+                amount1: i129 { mag: amount, sign: true },
+            },
+            expected: (expected_reward_rate, expected_reward_rate)
+        );
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_largest_reward_amount_no_overflow() {
+        // 2**144 - 2**16
+        let reward_rate = u256 { high: 0xffff, low: 0xffffffffffffffffffffffffffff0000 };
+        // only way to get largest reward amount is with the smallest sale rate
+        let sale_rate = SIXTEEN_POW_EIGHT.into();
+        // 2**128 - 1
+        let expected_amount = 0xffffffffffffffffffffffffffffffff;
+
+        let amount = calculate_reward_amount(reward_rate: reward_rate, sale_rate: sale_rate);
+
+        assert(expected_amount == amount, 'amount');
     }
 }
 
@@ -1059,10 +1204,10 @@ mod PlaceOrderAndWithdrawProceeds {
             twamm, setup.token0, setup.token1, twamm_pool_key, false, order1_expiry_time, amount
         );
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
 
         // no trades have been executed
-        assert(token1_reward_factor == 0x0, 'token1.reward_factor');
+        assert(token1_reward_rate == 0x0, 'token1.reward_rate');
 
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
@@ -1087,16 +1232,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = 9,998.994829713355494901 / 2.4509803922
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = 9,998.994829713355494901 / 2.4509803922
         //               ~= 4,079.5898895263671875 (then scaled by 2**16)
-        assert(token1_reward_factor == 0xfef9703, 'token1.reward_factor');
+        assert(token1_reward_rate == 0xfef9703, 'token1.reward_rate');
 
         // Witdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
 
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 4,079.5898895263671875 * 2.4509803922
         //        ~= 9,998.994827270507812499 tokens
         assert(event.amount == 0x21e0bedb2751af55693, 'event.amount');
@@ -1123,16 +1268,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = prev_rewards_factor + (9,996.995431680968690346 / 2.4509803922)
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**16)
-        assert(token1_reward_factor == 0x1fde5d30, 'token1.reward_factor');
+        assert(token1_reward_rate == 0x1fde5d30, 'token1.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 4,078.774136054 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
         assert(event.amount == 0x21df02e500e572c5f4c, 'event.amount');
@@ -1162,10 +1307,10 @@ mod PlaceOrderAndWithdrawProceeds {
             twamm, setup.token0, setup.token1, twamm_pool_key, false, order1_expiry_time, amount
         );
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
 
         // no trades have been executed
-        assert(token1_reward_factor == 0x0, 'token1.reward_factor');
+        assert(token1_reward_rate == 0x0, 'token1.reward_rate');
 
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
@@ -1190,10 +1335,10 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = 9998.994829713355494901 / 2.4509803922
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = 9998.994829713355494901 / 2.4509803922
         //               ~= 4079.5898895263671875 (then scaled by 2**16)
-        assert(token1_reward_factor == 0xfef9703, 'token1.reward_factor');
+        assert(token1_reward_rate == 0xfef9703, 'token1.reward_rate');
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
@@ -1215,16 +1360,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_factor) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = prev_rewards_factor + (9,996.995431680968690346 / 2.4509803922)
+        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**16)
-        assert(token1_reward_factor == 0x1fde5d30, 'token1.reward_factor');
+        assert(token1_reward_rate == 0x1fde5d30, 'token1.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 8,158.364013671875 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
         assert(event.amount == 0x43bfc1c02837221b5e0, 'event.amount');
@@ -1254,10 +1399,10 @@ mod PlaceOrderAndWithdrawProceeds {
             twamm, setup.token0, setup.token1, twamm_pool_key, true, order1_expiry_time, amount
         );
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
 
         // no trades have been executed
-        assert(token0_reward_factor == 0x0, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x0, 'token0.reward_rate');
 
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
@@ -1282,16 +1427,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = 2,499.876324017182129212 / 2.4509803922
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**16)
-        assert(token0_reward_factor == 0x3fbf315, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x3fbf315, 'token0.reward_rate');
 
         // Witdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
 
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 1,019.9495391845703125 * 2.4509803922
         //        ~= 2,499.87632153080958946 tokens
         assert(event.amount == 0x8784c0cd85161a9ed4, 'event.amount');
@@ -1318,16 +1463,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = prev_rewards_factor + (2,499.626361381044024809 / 2.4509803922)
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2**16)
-        assert(token0_reward_factor == 0x7f7cc0e, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x7f7cc0e, 'token0.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 1,019.8475554255 * 2.4509803922
         //        ~= 2,499.626346662932751225 tokens
         assert(event.amount == 0x878148b6b3b387a379, 'event.amount');
@@ -1357,10 +1502,10 @@ mod PlaceOrderAndWithdrawProceeds {
             twamm, setup.token0, setup.token1, twamm_pool_key, true, order1_expiry_time, amount
         );
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
 
         // no trades have been executed
-        assert(token0_reward_factor == 0x0, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x0, 'token0.reward_rate');
 
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
@@ -1385,10 +1530,10 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = 2,499.876324017182129212 / 2.4509803922
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**16)
-        assert(token0_reward_factor == 0x3fbf315, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x3fbf315, 'token0.reward_rate');
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
@@ -1410,16 +1555,16 @@ mod PlaceOrderAndWithdrawProceeds {
         assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
         assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_factor, _) = twamm.get_reward_factor(twamm_pool_key);
-        // reward factor  = prev_rewards_factor + (2,499.626361381044024809 / 2.4509803922)
+        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
+        // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2**16)
-        assert(token0_reward_factor == 0x7f7cc0e, 'token0.reward_factor');
+        assert(token0_reward_rate == 0x7f7cc0e, 'token0.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
-        // amount  = reward_factor * sale_rate
+        // amount  = reward_rate * sale_rate
         //         = 2,039.797088623046875 * 2.4509803922
         //        ~= 4,999.5026682817 tokens
         assert(event.amount == 0x10f06098438c9a2424e, 'event.amount');
@@ -1465,7 +1610,6 @@ fn set_up_twamm_with_liquidity(
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
 
-    // 2:1 price
     let initial_tick = i129 { mag: initial_tick_mag, sign: false };
     let setup = setup_pool_with_core(
         core,
@@ -1521,7 +1665,7 @@ fn place_order(
 
     let token_id = twamm.place_order(order_key, amount);
 
-    // return token_id and order_state
+    // return token id, order key, and order state
     (
         token_id,
         order_key,
