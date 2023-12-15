@@ -205,7 +205,9 @@ mod RewardRateTest {
     };
 
 
-    fn assert_case_reward_rate(sale_rates: (u128, u128), delta: Delta, expected: (u256, u256)) {
+    fn assert_case_reward_rate(
+        sale_rates: (u128, u128), delta: Delta, expected: (felt252, felt252)
+    ) {
         let (sale_rate_0, sale_rate_1) = sale_rates;
 
         let (reward_rate_0_delta, reward_rate_1_delta) = calculate_reward_rate_deltas(
@@ -223,8 +225,8 @@ mod RewardRateTest {
     fn test_reward_rates_largest_amount() {
         // 2**128 - 1
         let amount = 0xffffffffffffffffffffffffffffffff;
-        // ((2**128 - 1) * 2**48) / 2**32 = 2**144 - 2**16
-        let expected_reward_rate = u256 { high: 0xffff, low: 0xffffffffffffffffffffffffffff0000 };
+        // (2**128 - 1) * (2**160 / 2**32) = 2**256 - 2**128
+        let expected_reward_rate = 0xffffffffffffffffffffffffffffffff000000000000000000000000;
 
         assert_case_reward_rate(
             // smallest possible sale rate
@@ -240,8 +242,8 @@ mod RewardRateTest {
     #[test]
     #[available_gas(3000000000)]
     fn test_largest_reward_amount_no_overflow() {
-        // 2**144 - 2**16
-        let reward_rate = u256 { high: 0xffff, low: 0xffffffffffffffffffffffffffff0000 };
+        // 2**256 - 2**128
+        let reward_rate = 0xffffffffffffffffffffffffffffffff000000000000000000000000;
         // only way to get largest reward amount is with the smallest sale rate
         let sale_rate = SIXTEEN_POW_EIGHT.into();
         // 2**128 - 1
@@ -1234,8 +1236,8 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 9,998.994829713355494901 / 2.4509803922
-        //               ~= 4,079.5898895263671875 (then scaled by 2**16)
-        assert(token1_reward_rate == 0xfef9703, 'token1.reward_rate');
+        //               ~= 4,079.5898895263671875 (then scaled by 2**96)
+        assert(token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e, 'token1.reward_rate');
 
         // Witdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1244,7 +1246,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 4,079.5898895263671875 * 2.4509803922
         //        ~= 9,998.994827270507812499 tokens
-        assert(event.amount == 0x21e0bedb2751af55693, 'event.amount');
+        assert(event.amount == 0x21e0bedb4ade006d5f4, 'event.amount');
 
         // withdraw the remaining proceeds after order expires
 
@@ -1271,8 +1273,8 @@ mod PlaceOrderAndWithdrawProceeds {
         let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
-        //               ~= 8,158.364013671875 (then scaled by 2**16)
-        assert(token1_reward_rate == 0x1fde5d30, 'token1.reward_rate');
+        //               ~= 8,158.364013671875 (then scaled by 2**96)
+        assert(token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf, 'token1.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1280,7 +1282,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 4,078.774136054 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
-        assert(event.amount == 0x21df02e500e572c5f4c, 'event.amount');
+        assert(event.amount == 0x21df02e6ac312ff0aa9, 'event.amount');
     }
 
     #[test]
@@ -1337,8 +1339,8 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 9998.994829713355494901 / 2.4509803922
-        //               ~= 4079.5898895263671875 (then scaled by 2**16)
-        assert(token1_reward_rate == 0xfef9703, 'token1.reward_rate');
+        //               ~= 4079.5898895263671875 (then scaled by 2**96)
+        assert(token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e, 'token1.reward_rate');
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
@@ -1363,8 +1365,8 @@ mod PlaceOrderAndWithdrawProceeds {
         let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
-        //               ~= 8,158.364013671875 (then scaled by 2**16)
-        assert(token1_reward_rate == 0x1fde5d30, 'token1.reward_rate');
+        //               ~= 8,158.364013671875 (then scaled by 2**96)
+        assert(token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf, 'token1.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1372,7 +1374,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 8,158.364013671875 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
-        assert(event.amount == 0x43bfc1c02837221b5e0, 'event.amount');
+        assert(event.amount == 0x43bfc1c1f70f305e09e, 'event.amount');
     }
 
     #[test]
@@ -1429,8 +1431,8 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
-        //               ~= 1,019.9495391845703125 (then scaled by 2**16)
-        assert(token0_reward_rate == 0x3fbf315, 'token0.reward_rate');
+        //               ~= 1,019.9495391845703125 (then scaled by 2**96)
+        assert(token0_reward_rate == 0x3fbf3151104fc924f597b256ca6, 'token0.reward_rate');
 
         // Witdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1439,7 +1441,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 1,019.9495391845703125 * 2.4509803922
         //        ~= 2,499.87632153080958946 tokens
-        assert(event.amount == 0x8784c0cd85161a9ed4, 'event.amount');
+        assert(event.amount == 0x8784c0cfc7fd74bc3b, 'event.amount');
 
         // withdraw the remaining proceeds after order expires
 
@@ -1466,8 +1468,8 @@ mod PlaceOrderAndWithdrawProceeds {
         let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
-        //               ~= 2,039.797088623046875 (then scaled by 2**16)
-        assert(token0_reward_rate == 0x7f7cc0e, 'token0.reward_rate');
+        //               ~= 2,039.797088623046875 (then scaled by 2**96)
+        assert(token0_reward_rate == 0x7f7cc0e75c4383db7609db75268, 'token0.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1475,7 +1477,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 1,019.8475554255 * 2.4509803922
         //        ~= 2,499.626346662932751225 tokens
-        assert(event.amount == 0x878148b6b3b387a379, 'event.amount');
+        assert(event.amount == 0x878148c4168752f5e8, 'event.amount');
     }
 
     #[test]
@@ -1532,8 +1534,8 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
-        //               ~= 1,019.9495391845703125 (then scaled by 2**16)
-        assert(token0_reward_rate == 0x3fbf315, 'token0.reward_rate');
+        //               ~= 1,019.9495391845703125 (then scaled by 2**96)
+        assert(token0_reward_rate == 0x3fbf3151104fc924f597b256ca6, 'token0.reward_rate');
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
@@ -1558,8 +1560,8 @@ mod PlaceOrderAndWithdrawProceeds {
         let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
-        //               ~= 2,039.797088623046875 (then scaled by 2**16)
-        assert(token0_reward_rate == 0x7f7cc0e, 'token0.reward_rate');
+        //               ~= 2,039.797088623046875 (then scaled by 2*96)
+        assert(token0_reward_rate == 0x7f7cc0e75c4383db7609db75268, 'token0.reward_rate');
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
@@ -1567,7 +1569,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 2,039.797088623046875 * 2.4509803922
         //        ~= 4,999.5026682817 tokens
-        assert(event.amount == 0x10f06098438c9a2424e, 'event.amount');
+        assert(event.amount == 0x10f060993de84c7b224, 'event.amount');
     }
 }
 

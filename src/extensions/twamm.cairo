@@ -23,7 +23,7 @@ struct OrderKey {
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
     sale_rate: u128,
-    reward_rate: u256,
+    reward_rate: felt252,
 }
 
 #[starknet::interface]
@@ -38,7 +38,7 @@ trait ITWAMM<TContractState> {
     fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128);
 
     // Return the current reward rate
-    fn get_reward_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u256, u256);
+    fn get_reward_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (felt252, felt252);
 
     // Creates a new twamm order
     fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
@@ -92,8 +92,8 @@ mod TWAMM {
     // sale rate is scaled by 2**32
     const SALE_RATE_SCALE_FACTOR_u128: u128 = 0x100000000_u128;
     const SALE_RATE_SCALE_FACTOR_u256: u256 = 0x100000000_u256;
-    // reward rate is scaled by 2**16, 2**48 is used to account for the sale rate scaling
-    const REWARD_RATE_SCALE_FACTOR_u256: u256 = 0x1000000000000_u256;
+    // reward rate is scaled by 2**128
+    const REWARD_RATE_SCALE_FACTOR: u256 = 0x100000000000000000000000000000000_u256;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -115,9 +115,9 @@ mod TWAMM {
         // used to find next timestamp at which orders expire
         expiry_time_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
         // current reward rates
-        reward_rate: LegacyMap<TWAMMPoolKey, (u256, u256)>,
+        reward_rate: LegacyMap<TWAMMPoolKey, (felt252, felt252)>,
         // reward rates at expiry times
-        reward_rate_at_time: LegacyMap<(TWAMMPoolKey, u64), (u256, u256)>,
+        reward_rate_at_time: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TWAMMPoolKey, u64>,
         // upgradable component storage (empty)
@@ -308,7 +308,9 @@ mod TWAMM {
             self.sale_rate.read(twamm_pool_key)
         }
 
-        fn get_reward_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> (u256, u256) {
+        fn get_reward_rate(
+            self: @ContractState, twamm_pool_key: TWAMMPoolKey
+        ) -> (felt252, felt252) {
             self.reward_rate.read(twamm_pool_key)
         }
 
@@ -747,7 +749,7 @@ mod TWAMM {
             sale_rate
         }
 
-        fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> u256 {
+        fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
             let (token0_reward_rate, token1_reward_rate) = self
                 .reward_rate
                 .read(order_key.twamm_pool_key);
@@ -759,7 +761,7 @@ mod TWAMM {
             }
         }
 
-        fn get_reward_rate_at_expiry(self: @ContractState, order_key: OrderKey) -> u256 {
+        fn get_reward_rate_at_expiry(self: @ContractState, order_key: OrderKey) -> felt252 {
             let (token0_reward_rate, token1_reward_rate) = self
                 .reward_rate_at_time
                 .read((order_key.twamm_pool_key, order_key.expiry_time));
@@ -942,28 +944,28 @@ mod TWAMM {
         sale_rate
     }
 
-    fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (u256, u256) {
+    fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
         let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
-        let token0_reward_delta: u256 = if (delta.amount0.mag > 0) {
+        let token0_reward_delta: felt252 = if (delta.amount0.mag > 0) {
             if (!delta.amount0.sign || token1_sale_rate == 0) {
                 0
             } else {
-                // sale rate is scaled by 2**32
-                // scale by 2**48 to store reward rate scaled by 2**16
-                delta.amount0.mag.into() * REWARD_RATE_SCALE_FACTOR_u256 / token1_sale_rate.into()
+                (u256 { high: delta.amount0.mag, low: 0 } / token1_sale_rate.into())
+                    .try_into()
+                    .expect('REWARD_DELTA_OVERFLOW')
             }
         } else {
             0
         };
 
-        let token1_reward_delta: u256 = if (delta.amount1.mag > 0) {
+        let token1_reward_delta: felt252 = if (delta.amount1.mag > 0) {
             if (!delta.amount1.sign || token0_sale_rate == 0) {
                 0
             } else {
-                // sale rate is scaled by 2**32
-                // scale by 2**48 to store reward rate scaled by 2**16
-                delta.amount1.mag.into() * REWARD_RATE_SCALE_FACTOR_u256 / token0_sale_rate.into()
+                (u256 { high: delta.amount1.mag, low: 0 } / token0_sale_rate.into())
+                    .try_into()
+                    .expect('REWARD_DELTA_OVERFLOW')
             }
         } else {
             0
@@ -972,9 +974,9 @@ mod TWAMM {
         (token0_reward_delta, token1_reward_delta)
     }
 
-    fn calculate_reward_amount(reward_rate: u256, sale_rate: u128) -> u128 {
+    fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
         // this should never overflow since total_sale_rate <= sale_rate 
-        ((reward_rate * sale_rate.into()) / REWARD_RATE_SCALE_FACTOR_u256)
+        ((reward_rate.into() * sale_rate.into()) / REWARD_RATE_SCALE_FACTOR)
             .try_into()
             .expect('REWARD_AMOUNT_OVERFLOW')
     }
