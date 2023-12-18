@@ -5,7 +5,7 @@ use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::core::{Core};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::extensions::oracle::{Oracle};
-use ekubo::extensions::twamm::{TWAMM};
+use ekubo::extensions::twamm::twamm::{TWAMM};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };

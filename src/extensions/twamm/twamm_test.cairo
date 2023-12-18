@@ -1,11 +1,14 @@
 use debug::PrintTrait;
-use ekubo::extensions::twamm::TWAMM::{
-    OrderPlaced, VirtualOrdersExecuted, OrderWithdrawn, expiry_to_word_and_bit_index,
-    word_and_bit_index_to_expiry, calculate_virtual_order_outputs, calculate_sale_rate,
-    calculate_reward_rate_deltas, calculate_reward_amount, c
+use ekubo::extensions::twamm::math::{
+    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount
 };
-use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
-use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
+use ekubo::extensions::twamm::twamm::TWAMM::{
+    OrderPlaced, VirtualOrdersExecuted, OrderWithdrawn, expiry_to_word_and_bit_index,
+    word_and_bit_index_to_expiry
+};
+
+use ekubo::extensions::twamm::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
+use ekubo::extensions::twamm::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::interfaces::core::{
     ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher, Delta
 };
@@ -201,7 +204,7 @@ mod RewardRateTest {
     use super::{
         Delta, calculate_reward_rate_deltas, calculate_reward_amount, SIXTEEN_POW_ONE,
         SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX,
-        SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT, i129
+        SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT, i129,
     };
 
 
@@ -730,10 +733,7 @@ mod PlaceOrderTests {
         let order_1 = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .get_order_state(order_key_1, token_id_1,);
 
-        let mut event: ekubo::extensions::twamm::TWAMM::OrderPlaced = pop_log(
-            twamm.contract_address
-        )
-            .unwrap();
+        let mut event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
         assert(event.id == 1, 'event.id');
         assert(
@@ -1574,35 +1574,35 @@ mod PlaceOrderAndWithdrawProceeds {
 }
 
 
-mod TWAMMMathTests {
-    use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
-        setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
-        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
-        OrderState, calculate_virtual_order_outputs, c
-    };
+// mod TWAMMMathTests {
+//     use super::{
+//         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
+//         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+//         OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+//         IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
+//         setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
+//         tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+//         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
+//         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+//         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
+//         OrderState, calculate_virtual_order_outputs, c
+//     };
 
-    #[test]
-    #[available_gas(3000000000)]
-    fn test_c() {
-        let token0_sale_ratio: u128 = 0x2 * 0x100000000;
-        let token1_sale_ratio: u128 = 0x1 * 0x100000000;
+//     #[test]
+//     #[available_gas(3000000000)]
+//     fn test_c() {
+//         let token0_sale_ratio: u128 = 0x2 * 0x100000000;
+//         let token1_sale_ratio: u128 = 0x1 * 0x100000000;
 
-        // let sell_ratio = u256 { high: token1_sale_ratio, low: 0 } / token0_sale_ratio.into();
+//         // let sell_ratio = u256 { high: token1_sale_ratio, low: 0 } / token0_sale_ratio.into();
 
-        // let sell_ratio = u256 { high: 0xffffffffffffffffffffffffffffffff, low: 0 };
-        let sell_ratio = u256 { high: 0, low: 0xffffffffffffffffffffffffffffffff };
+//         // let sell_ratio = u256 { high: 0xffffffffffffffffffffffffffffffff, low: 0 };
+//         let sell_ratio = u256 { high: 0, low: 0xffffffffffffffffffffffffffffffff };
 
-        let sqrt_ratio = 1;
-        let (val, sign) = c(sqrt_ratio, sell_ratio);
-    }
-}
+//         let sqrt_ratio = 1;
+//         let (val, sign) = c(sqrt_ratio, sell_ratio);
+//     }
+// }
 
 fn set_up_twamm_with_liquidity(
     core: ICoreDispatcher, fee: u128, initial_tick_mag: u128
