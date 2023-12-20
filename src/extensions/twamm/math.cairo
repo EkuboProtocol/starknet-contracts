@@ -1,6 +1,7 @@
 use ekubo::interfaces::core::{Delta};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
+use integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero};
 
 mod constants {
     const LOG_SCALE_FACTOR: u8 = 4;
@@ -10,8 +11,8 @@ mod constants {
     const SALE_RATE_SCALE_FACTOR_u128: u128 = 0x100000000_u128;
     const SALE_RATE_SCALE_FACTOR_u256: u256 = 0x100000000_u256;
 
-    // reward rate is scaled by 2**128
-    const REWARD_RATE_SCALE_FACTOR: u256 = 0x100000000000000000000000000000000_u256;
+    // 2**128
+    const X_128: u256 = 0x100000000000000000000000000000000_u256;
 }
 
 fn calculate_sale_rate(amount: u128, expiry_time: u64, current_time: u64) -> u128 {
@@ -57,7 +58,7 @@ fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt
 
 fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     // this should never overflow since total_sale_rate <= sale_rate 
-    ((reward_rate.into() * sale_rate.into()) / constants::REWARD_RATE_SCALE_FACTOR)
+    ((reward_rate.into() * sale_rate.into()) / constants::X_128)
         .try_into()
         .expect('REWARD_AMOUNT_OVERFLOW')
 }
@@ -81,32 +82,42 @@ fn validate_expiry_time(order_time: u64, expiry_time: u64) {
 fn calculate_virtual_order_outputs(
     sqrt_ratio: u256,
     liquidity: u128,
-    buy_token_sale_rate: u128,
-    sell_token_sale_rate: u128,
+    token0_sale_rate: u128,
+    token1_sale_rate: u128,
     virtual_order_time_window: u64
 ) -> (u128, u128, u128) {
-    // sell ratio
-    // let sell_ratio = (u256 { high: sell_token_sale_rate, low: 0 } / buy_token_sale_rate.into());
+    // // sqrt sell ratio
+    // let sell_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
+    // let sqrt_sell_ratio: u256 = u256_sqrt(sell_ratio).into();
 
-    // c
-    // let (c, sign) = c(sqrt_ratio, sell_ratio);
+    // // c
+    // let (c, sign) = calculate_c(sqrt_ratio, sell_ratio);
 
-    // sqrt_sell_rate
-    // let sqrt_sell_rate = sqrt(buy_token_sell_rate * sell_token_sell_rate)
+    // let sqrt_ratio_next = if (c.is_zero()) {
+    //     sqrt_sell_ratio
+    // } else {
+    //     // sqrt_sell_rate
+    //     let sqrt_sell_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
 
-    // let mult = e^((2 * sqrt_sale_rate * virtual_order_time_window) / liquidity)
-    // let sqrt_ratio_next = sqrt_sell_ratio * ( mult - c ) / (mult + c)
-    // prob need to use sign in the above equation
+    //     // TODO: e^((2 * sqrt_sell_rate * virtual_order_time_window) / liquidity)
+    //     let mult: u256 = (2 * sqrt_sell_rate.into() * virtual_order_time_window.into())
+    //         / liquidity.into();
+    //     // prob need to use sign in the above equation
+    //     sqrt_sell_ratio * (mult - c.into()) / (mult + c.into())
+    // };
 
-    // let y_out = amount1_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
-    // let x_out = amount0_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
+    // // let y_out = amount1_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
+    // // let x_out = amount0_delta(sqrt_ratio, sqrt_ratio_next, liquidity);
 
-    // (x_out, y_out, next_sqrt_ratio)
+    // // (x_out, y_out, next_sqrt_ratio)
     (0, 0, 0)
 }
 
-fn c(sqrt_ratio: u256, sell_ratio: u256) -> (u256, bool) {
-    let sqrt_sell_ratio: u256 = u256_sqrt(sell_ratio).into();
+// c = (sqrt_sell_ratio - sqrt_ratio) / (sqrt_sell_ratio + sqrt_ratio)
+fn calculate_c(sqrt_ratio: u256, sqrt_sell_ratio: u256) -> (u256, bool) {
+    if (sqrt_ratio == sqrt_sell_ratio) {
+        return (0, false);
+    }
 
     let (num, sign) = if (sqrt_ratio > sqrt_sell_ratio) {
         (sqrt_ratio - sqrt_sell_ratio, true)
@@ -114,5 +125,13 @@ fn c(sqrt_ratio: u256, sell_ratio: u256) -> (u256, bool) {
         (sqrt_sell_ratio - sqrt_ratio, false)
     };
 
-    (num / (sqrt_sell_ratio + sqrt_ratio), sign)
+    // denominator cannot overflow
+    let (div, rem) = u512_safe_div_rem_by_u256(
+        u256_wide_mul(num, constants::X_128), u256_as_non_zero(sqrt_sell_ratio + sqrt_ratio)
+    );
+
+    // value of c is between 0 and 1 scaled by 2**128, only the upper 256 bits are used
+    assert(div.limb2 == 0 && div.limb3 == 0, 'C_DIV_OVERFLOW');
+
+    (u256 { low: div.limb0, high: div.limb1 }, sign)
 }
