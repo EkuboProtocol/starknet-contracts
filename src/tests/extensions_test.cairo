@@ -17,7 +17,7 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address};
 use starknet::{get_contract_address};
-use zeroable::{Zeroable};
+use core::zeroable::{Zeroable};
 
 fn setup(
     fee: u128, tick_spacing: u128, call_points: CallPoints

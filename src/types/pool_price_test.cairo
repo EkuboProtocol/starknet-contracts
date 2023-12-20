@@ -4,8 +4,8 @@ use ekubo::types::call_points::{CallPoints, all_call_points};
 use ekubo::types::i129::i129;
 use ekubo::types::pool_price::{PoolPrice};
 use starknet::{storage_base_address_const, Store, StorePacking, SyscallResult, SyscallResultTrait};
-use traits::{Into};
-use zeroable::Zeroable;
+use core::traits::{Into};
+use core::zeroable::Zeroable;
 
 #[test]
 fn test_packing_round_trip_many_values() {

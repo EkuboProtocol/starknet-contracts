@@ -32,7 +32,7 @@ mod OwnedNFT {
 
     use ekubo::types::i129::{i129};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         replace_class_syscall, deploy_syscall
@@ -40,7 +40,7 @@ mod OwnedNFT {
     use starknet::{SyscallResultTrait};
     use super::{IOwnedNFT, ContractAddress};
     use traits::{Into, TryInto};
-    use zeroable::{Zeroable};
+    use core::zeroable::{Zeroable};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

@@ -1,7 +1,7 @@
 use ekubo::math::muldiv::{div};
-use option::{OptionTrait};
-use traits::{TryInto, Into};
-use zeroable::{Zeroable};
+use core::option::{OptionTrait};
+use core::traits::{TryInto, Into};
+use core::zeroable::{Zeroable};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store)]
 struct FeesPerLiquidity {

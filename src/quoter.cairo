@@ -48,7 +48,7 @@ mod Quoter {
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::math::ticks::{sqrt_ratio_to_tick};
     use ekubo::shared_locker::{consume_callback_data};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use result::{ResultTrait};
     use starknet::syscalls::{call_contract_syscall};
 
@@ -57,7 +57,7 @@ mod Quoter {
         i129, ContractAddress, IQuoter, PoolKey, Route, QuoteParameters, QuoteResult,
         QuoteSingleParameters, Delta
     };
-    use zeroable::{Zeroable};
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

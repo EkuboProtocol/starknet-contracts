@@ -2,8 +2,8 @@ use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PoolKey, PositionKey};
-use integer::{u256_safe_divmod, u256_as_non_zero};
-use option::{OptionTrait};
+use core::integer::{u256_safe_divmod, u256_as_non_zero};
+use core::option::{OptionTrait};
 use starknet::{StorePacking};
 use traits::{TryInto, Into};
 
@@ -108,11 +108,11 @@ mod Oracle {
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::i129::{i129};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use super::{IOracle, PoolKey, PositionKey, PoolState};
     use traits::{Into, TryInto};
-    use zeroable::{Zeroable};
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

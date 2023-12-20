@@ -32,11 +32,11 @@ mod MockExtension {
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use starknet::{get_caller_address};
     use super::{IMockExtension, ExtensionCalled, ContractAddress};
     use traits::{Into, TryInto};
-    use zeroable::{Zeroable};
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

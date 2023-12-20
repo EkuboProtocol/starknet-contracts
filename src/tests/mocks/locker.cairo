@@ -46,7 +46,7 @@ mod CoreLocker {
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
 
-    use option::{Option, OptionTrait};
+    use core::option::{Option, OptionTrait};
     use serde::Serde;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const

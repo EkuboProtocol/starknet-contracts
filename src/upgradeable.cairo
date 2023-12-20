@@ -3,6 +3,7 @@ mod Upgradeable {
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use starknet::{ClassHash, replace_class_syscall};
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {}

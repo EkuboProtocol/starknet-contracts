@@ -13,11 +13,11 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey};
-use option::{OptionTrait};
+use core::option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, StorePacking};
 use traits::{TryInto};
-use zeroable::{Zeroable};
+use core::zeroable::{Zeroable};
 
 fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {
     let core = deploy_core();

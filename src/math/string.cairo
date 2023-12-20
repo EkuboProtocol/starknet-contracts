@@ -1,9 +1,9 @@
-use array::{Array, ArrayTrait};
+use core::array::{Array, ArrayTrait};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
-use integer::{u128_safe_divmod, u128_as_non_zero, u256_overflow_mul, u256_overflowing_add};
-use option::{OptionTrait, Option};
-use traits::{TryInto, Into};
+use core::integer::{u128_safe_divmod, u128_as_non_zero, u256_overflow_mul, u256_overflowing_add};
+use core::option::{OptionTrait, Option};
+use core::traits::{TryInto, Into};
 
 // Convert a u128 number to a decimal string in a felt252
 fn to_decimal(mut x: u128) -> Option<felt252> {

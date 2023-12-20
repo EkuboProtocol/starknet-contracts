@@ -2,7 +2,7 @@ use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-use hash::{LegacyHash};
+use core::hash::{LegacyHash};
 use starknet::{contract_address_const};
 
 fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {

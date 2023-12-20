@@ -2,10 +2,10 @@ use ekubo::math::bits::{msb, lsb};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::types::i129::{i129, i129Trait};
-use integer::{downcast, upcast};
-use option::{OptionTrait};
-use traits::{Into, TryInto};
-use zeroable::{Zeroable};
+use core::integer::{downcast, upcast};
+use core::option::{OptionTrait};
+use core::traits::{Into, TryInto};
+use core::zeroable::{Zeroable};
 
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
 struct Bitmap {

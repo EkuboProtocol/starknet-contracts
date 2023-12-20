@@ -27,14 +27,14 @@ mod SimpleSwapper {
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::shared_locker::{consume_callback_data, call_core_with_callback};
     use ekubo::types::i129::{i129Trait};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use result::{ResultTrait};
     use starknet::syscalls::{call_contract_syscall};
 
     use starknet::{get_caller_address, get_contract_address};
     use super::{ContractAddress, PoolKey, Delta, ISimpleSwapper, SwapParameters};
     use traits::{Into};
-    use zeroable::{Zeroable};
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

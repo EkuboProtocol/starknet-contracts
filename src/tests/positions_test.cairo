@@ -25,11 +25,11 @@ use ekubo::tests::mocks::mock_upgradeable::{
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use option::OptionTrait;
+use core::option::OptionTrait;
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 use traits::{Into};
-use zeroable::{Zeroable};
+use core::zeroable::{Zeroable};
 
 #[test]
 #[available_gas(20000000)]

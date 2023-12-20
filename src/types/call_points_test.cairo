@@ -1,6 +1,6 @@
 use ekubo::types::call_points::{CallPoints, all_call_points};
-use option::{Option, OptionTrait};
-use traits::{Into, TryInto};
+use core::option::{Option, OptionTrait};
+use core::traits::{Into, TryInto};
 
 #[test]
 fn test_default_call_points_into_u8() {

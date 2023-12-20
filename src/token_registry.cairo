@@ -6,27 +6,32 @@ trait ITokenRegistry<ContractState> {
 }
 
 
+// A simplified interface for a fungible token standard. 
+#[starknet::interface]
+trait IERC20Metadata<TStorage> {
+    fn name(self: @TStorage) -> felt252;
+    fn symbol(self: @TStorage) -> felt252;
+    fn decimals(self: @TStorage) -> u8;
+    fn totalSupply(self: @TStorage) -> u256;
+}
+
+
 #[starknet::contract]
 mod TokenRegistry {
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use starknet::{ContractAddress, get_contract_address, get_caller_address};
-    use super::{IERC20Dispatcher, ITokenRegistry};
+    use super::{
+        IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
+    };
+    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
     }
 
-    // A simplified interface for a fungible token standard. 
-    #[starknet::interface]
-    trait IERC20Metadata<TStorage> {
-        fn name(self: @TStorage) -> felt252;
-        fn symbol(self: @TStorage) -> felt252;
-        fn decimals(self: @TStorage) -> u8;
-        fn totalSupply(self: @TStorage) -> u256;
-    }
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -77,8 +82,6 @@ mod TokenRegistry {
             let (name, symbol, decimals, total_supply) = (
                 metadata.name(), metadata.symbol(), metadata.decimals(), metadata.totalSupply()
             );
-
-            // todo: validate the name and symbol? or simply do filtering off chain
 
             assert(decimals < 78, 'Decimals too large');
             assert(total_supply.high.is_zero(), 'Total supply exceeds u128');

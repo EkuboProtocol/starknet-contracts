@@ -18,14 +18,14 @@ mod Positions {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use option::{Option, OptionTrait};
-    use serde::{Serde};
+    use core::option::{Option, OptionTrait};
+    use core::serde::{Serde};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
         deploy_syscall
     };
-    use traits::{Into};
-    use zeroable::{Zeroable};
+    use core::traits::{Into};
+    use core::zeroable::{Zeroable};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

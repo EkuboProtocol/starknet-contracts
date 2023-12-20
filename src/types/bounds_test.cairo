@@ -2,7 +2,7 @@ use ekubo::math::ticks::{max_tick, min_tick};
 use ekubo::types::bounds::{BoundsTrait, Bounds, max_bounds};
 use ekubo::types::i129::i129;
 use ekubo::types::keys_test::{check_hashes_differ};
-use hash::{LegacyHash};
+use core::hash::{LegacyHash};
 
 #[test]
 fn test_legacy_hash_bounds() {

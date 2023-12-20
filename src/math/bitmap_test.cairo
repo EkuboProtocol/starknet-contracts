@@ -3,9 +3,9 @@ use ekubo::math::bitmap::{
 };
 use ekubo::math::string::{append, to_decimal};
 use ekubo::types::i129::{i129};
-use option::{OptionTrait};
-use traits::{Into};
-use zeroable::{Zeroable};
+use core::option::{OptionTrait};
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 
 #[test]
 fn test_zeroable() {

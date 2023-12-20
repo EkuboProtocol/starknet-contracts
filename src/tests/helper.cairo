@@ -32,8 +32,8 @@ use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::i129;
 
 use ekubo::types::keys::PoolKey;
-use integer::{u256, u256_from_felt252, BoundedInt};
-use option::{Option, OptionTrait};
+use core::integer::{u256, u256_from_felt252, BoundedInt};
+use core::option::{Option, OptionTrait};
 use result::{Result, ResultTrait};
 use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_contract_address};

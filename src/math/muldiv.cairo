@@ -1,9 +1,9 @@
-use integer::{
+use core::integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_overflowing_add,
     u256_safe_divmod
 };
-use option::{Option, OptionTrait};
-use zeroable::{Zeroable};
+use core::option::{Option, OptionTrait};
+use core::zeroable::{Zeroable};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 #[inline(always)]

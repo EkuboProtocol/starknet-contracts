@@ -1,7 +1,7 @@
 use ekubo::types::i129::{i129, i129Trait};
-use integer::{u256_safe_divmod, u256_as_non_zero};
+use core::integer::{u256_safe_divmod, u256_as_non_zero};
 use starknet::{ContractAddress, StorePacking};
-use traits::{Into, TryInto};
+use core::traits::{Into, TryInto};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -110,7 +110,7 @@ trait ILimitOrders<TContractState> {
 
 #[starknet::contract]
 mod LimitOrders {
-    use array::{ArrayTrait};
+    use core::array::{ArrayTrait};
     use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -128,14 +128,14 @@ mod LimitOrders {
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use option::{OptionTrait};
+    use core::option::{OptionTrait};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
         GetOrderInfoRequest, GetOrderInfoResult
     };
-    use traits::{TryInto, Into};
-    use zeroable::{Zeroable};
+    use core::traits::{TryInto, Into};
+    use core::zeroable::{Zeroable};
 
     const LIMIT_ORDER_TICK_SPACING: u128 = 100;
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;

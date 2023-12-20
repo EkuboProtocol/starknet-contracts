@@ -7,11 +7,11 @@ use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
-use option::{OptionTrait};
+use core::option::{OptionTrait};
 use starknet::testing::{ContractAddress, set_contract_address, pop_log};
 use starknet::{contract_address_const, ClassHash};
 use traits::{Into};
-use zeroable::{Zeroable};
+use core::zeroable::{Zeroable};
 
 fn default_controller() -> ContractAddress {
     contract_address_const::<12345678>()
