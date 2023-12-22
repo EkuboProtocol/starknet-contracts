@@ -1,6 +1,10 @@
 #[starknet::contract]
 mod Core {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::hash::{LegacyHash};
+    use core::option::{Option, OptionTrait};
+    use core::traits::{Into};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -35,14 +39,10 @@ mod Core {
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use core::hash::{LegacyHash};
-    use core::option::{Option, OptionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252
     };
-    use core::traits::{Into};
-    use core::zeroable::{Zeroable};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

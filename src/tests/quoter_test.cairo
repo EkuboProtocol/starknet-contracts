@@ -1,5 +1,6 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
 use core::debug::PrintTrait;
+use core::zeroable::Zeroable;
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;
 use ekubo::quoter::{
@@ -14,7 +15,6 @@ use ekubo::types::i129::i129;
 use ekubo::types::keys::PoolKey;
 use starknet::testing::{set_contract_address};
 use starknet::{contract_address_const};
-use core::zeroable::Zeroable;
 
 
 #[test]

@@ -1,5 +1,8 @@
 use core::array::ArrayTrait;
 use core::debug::PrintTrait;
+use core::option::OptionTrait;
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
@@ -25,11 +28,8 @@ use ekubo::tests::mocks::mock_upgradeable::{
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use core::option::OptionTrait;
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
-use core::traits::{Into};
-use core::zeroable::{Zeroable};
 
 #[test]
 #[available_gas(20000000)]

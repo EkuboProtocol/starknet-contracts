@@ -1,6 +1,6 @@
 use core::debug::{PrintTrait};
-use ekubo::types::i129::{i129};
 use core::zeroable::Zeroable;
+use ekubo::types::i129::{i129};
 
 impl DeltaPrint of PrintTrait<Delta> {
     fn print(self: Delta) {

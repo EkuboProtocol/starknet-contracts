@@ -1,7 +1,7 @@
 use core::array::{ArrayTrait};
 use core::serde::{Serde};
-use starknet::storage_access::{StorePacking};
 use core::traits::{Into};
+use starknet::storage_access::{StorePacking};
 
 // The points at which an extension should be called
 #[derive(Copy, Drop, Serde, PartialEq)]

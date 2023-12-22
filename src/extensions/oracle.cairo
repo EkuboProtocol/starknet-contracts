@@ -1,11 +1,11 @@
+use core::integer::{u256_safe_divmod, u256_as_non_zero};
+use core::option::{OptionTrait};
+use core::traits::{TryInto, Into};
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PoolKey, PositionKey};
-use core::integer::{u256_safe_divmod, u256_as_non_zero};
-use core::option::{OptionTrait};
 use starknet::{StorePacking};
-use core::traits::{TryInto, Into};
 
 // 192 bits total, fits in a single felt
 #[derive(Copy, Drop, PartialEq)]
@@ -100,6 +100,9 @@ trait IOracle<TStorage> {
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
 #[starknet::contract]
 mod Oracle {
+    use core::option::{OptionTrait};
+    use core::traits::{Into, TryInto};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
@@ -108,11 +111,8 @@ mod Oracle {
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::i129::{i129};
-    use core::option::{OptionTrait};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use super::{IOracle, PoolKey, PositionKey, PoolState};
-    use core::traits::{Into, TryInto};
-    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

@@ -1,6 +1,6 @@
 use core::debug::PrintTrait;
-use ekubo::math::string::{to_decimal, append};
 use core::option::OptionTrait;
+use ekubo::math::string::{to_decimal, append};
 
 #[test]
 #[available_gas(50000000)]

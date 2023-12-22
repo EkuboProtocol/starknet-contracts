@@ -23,6 +23,9 @@ trait IMockExtension<TStorage> {
 mod MockExtension {
     use core::array::{ArrayTrait};
     use core::debug::PrintTrait;
+    use core::option::{OptionTrait};
+    use core::traits::{Into, TryInto};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
@@ -32,11 +35,8 @@ mod MockExtension {
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
-    use core::option::{OptionTrait};
     use starknet::{get_caller_address};
     use super::{IMockExtension, ExtensionCalled, ContractAddress};
-    use core::traits::{Into, TryInto};
-    use core::zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

@@ -1,5 +1,5 @@
-use ekubo::types::i129::i129;
 use core::integer::u128_wide_mul;
+use ekubo::types::i129::i129;
 
 mod constants {
     // price may not exceed 2**128 or 2**-128
@@ -23,13 +23,13 @@ mod constants {
 }
 
 mod internal {
-    use ekubo::math::bits::{msb};
-    use ekubo::math::exp2::{exp2};
-    use ekubo::types::i129::{i129};
     use core::integer::{downcast};
     use core::integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
     use core::option::{OptionTrait, Option};
     use core::traits::{Into, TryInto};
+    use ekubo::math::bits::{msb};
+    use ekubo::math::exp2::{exp2};
+    use ekubo::types::i129::{i129};
 
 
     // Each step in the approximation performs a multiplication and a shift

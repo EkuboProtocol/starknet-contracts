@@ -1,7 +1,7 @@
-use ekubo::math::muldiv::{div, muldiv};
 use core::integer::{u256_as_non_zero};
 use core::option::{OptionTrait};
 use core::zeroable::{Zeroable};
+use ekubo::math::muldiv::{div, muldiv};
 
 #[test]
 fn test_muldiv_div_by_zero() {

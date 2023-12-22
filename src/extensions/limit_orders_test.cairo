@@ -1,4 +1,7 @@
 use core::debug::PrintTrait;
+use core::option::{OptionTrait};
+use core::traits::{TryInto, Into};
+use core::zeroable::{Zeroable};
 use ekubo::extensions::limit_orders::{
     ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
     GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -25,11 +28,8 @@ use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey};
 use ekubo::types::keys_test::{check_hashes_differ};
-use core::option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
-use core::traits::{TryInto, Into};
-use core::zeroable::{Zeroable};
 
 fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
     let core = deploy_core();

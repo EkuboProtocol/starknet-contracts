@@ -1,9 +1,9 @@
 use core::array::{ArrayTrait};
+use core::serde::{Serde};
 use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta, IExtension};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
-use core::serde::{Serde};
 use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde)]
@@ -41,14 +41,14 @@ trait ICoreLocker<TStorage> {
 #[starknet::contract]
 mod CoreLocker {
     use core::array::ArrayTrait;
+    use core::option::{Option, OptionTrait};
+    use core::serde::Serde;
+
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
-
-    use core::zeroable::{Zeroable};
-    use core::option::{Option, OptionTrait};
-    use core::serde::Serde;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
     };

@@ -1,4 +1,7 @@
 use core::array::{ArrayTrait};
+use core::option::{OptionTrait};
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
@@ -7,11 +10,8 @@ use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
-use core::option::{OptionTrait};
 use starknet::testing::{ContractAddress, set_contract_address, pop_log};
 use starknet::{contract_address_const, ClassHash};
-use core::traits::{Into};
-use core::zeroable::{Zeroable};
 
 fn default_controller() -> ContractAddress {
     contract_address_const::<12345678>()

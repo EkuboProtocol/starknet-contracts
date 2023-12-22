@@ -1,11 +1,11 @@
+use core::integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
+use core::option::{OptionTrait, Option};
+use core::traits::{Into, TryInto};
+use core::zeroable::Zeroable;
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129, i129Trait};
-use core::integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
-use core::option::{OptionTrait, Option};
 use starknet::{StorageBaseAddress, StorePacking};
-use core::traits::{Into, TryInto};
-use core::zeroable::Zeroable;
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolPrice {

@@ -19,6 +19,9 @@ trait IOwnedNFT<TStorage> {
 #[starknet::contract]
 mod OwnedNFT {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::option::{OptionTrait};
+    use core::traits::{Into, TryInto};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -31,15 +34,12 @@ mod OwnedNFT {
 
     use ekubo::types::i129::{i129};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use core::option::{OptionTrait};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         replace_class_syscall, deploy_syscall
     };
     use starknet::{SyscallResultTrait};
     use super::{IOwnedNFT, ContractAddress};
-    use core::traits::{Into, TryInto};
-    use core::zeroable::{Zeroable};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

@@ -1,6 +1,6 @@
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use core::traits::{Into};
 use core::zeroable::{Zeroable};
+use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 
 // Represents a liquidity position
 // Packed together in a single struct because whenever liquidity changes we typically change fees per liquidity as well

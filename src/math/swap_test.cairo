@@ -1,10 +1,10 @@
 use core::debug::PrintTrait;
+use core::zeroable::{Zeroable};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::math::swap::{no_op_swap_result, swap_result, is_price_increasing, SwapResult};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::types::i129::{i129};
-use core::zeroable::{Zeroable};
 
 impl SwapResultPrintTrait of PrintTrait<SwapResult> {
     fn print(self: SwapResult) {

@@ -1,6 +1,7 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
 
 use core::debug::PrintTrait;
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
@@ -14,7 +15,6 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address};
 use starknet::{ContractAddress, contract_address_const};
-use core::zeroable::{Zeroable};
 
 fn recipient() -> ContractAddress {
     contract_address_const::<0x12345678>()

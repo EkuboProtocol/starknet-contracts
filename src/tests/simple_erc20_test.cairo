@@ -1,11 +1,11 @@
+use core::option::{OptionTrait};
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::simple_erc20::SimpleERC20::{Transfer};
 use ekubo::tests::helper::{deploy_simple_erc20};
-use core::option::{OptionTrait};
 use starknet::{
     get_contract_address, contract_address_const, testing::{set_contract_address, pop_log}
 };
-use core::zeroable::{Zeroable};
 
 
 #[test]
