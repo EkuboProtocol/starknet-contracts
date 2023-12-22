@@ -164,7 +164,6 @@ fn test_order_key_hash() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let core = deploy_core();
     let limit_orders = deploy_limit_orders(core);
@@ -183,7 +182,6 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('ONLY_FROM_PLACE_ORDER', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
 fn test_before_initialize_pool_not_from_extension() {
     let core = deploy_core();
@@ -204,7 +202,6 @@ fn test_before_initialize_pool_not_from_extension() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_sell_token0_initializes_pool_above_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
@@ -217,7 +214,6 @@ fn test_place_order_sell_token0_initializes_pool_above_tick() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_sell_token1_initializes_pool_above_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
@@ -238,7 +234,6 @@ fn test_place_order_sell_token1_initializes_pool_above_tick() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_on_both_sides_token1_first() {
     let (core, lo, pk) = setup_pool_with_extension();
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
@@ -279,7 +274,6 @@ fn test_place_order_on_both_sides_token1_first() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_on_both_sides_token0_first() {
     let (core, lo, pk) = setup_pool_with_extension();
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
@@ -321,7 +315,6 @@ fn test_place_order_on_both_sides_token0_first() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_token0_creates_position_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
 
@@ -362,7 +355,6 @@ fn test_place_order_token0_creates_position_at_tick() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_place_order_token1_creates_position_at_tick() {
     let (core, lo, pk) = setup_pool_with_extension();
 
@@ -403,7 +395,6 @@ fn test_place_order_token1_creates_position_at_tick() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_combined_complex_scenario_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -457,7 +448,6 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_combined_complex_scenario_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -509,7 +499,6 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_after_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -556,7 +545,6 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_after_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -600,7 +588,6 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -651,7 +638,6 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -699,7 +685,6 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -754,7 +739,6 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -803,7 +787,6 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -864,7 +847,6 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
     let (core, lo, pk) = setup_pool_with_extension();
     let simple_swapper = deploy_simple_swapper(core);
@@ -931,7 +913,6 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
@@ -947,7 +928,6 @@ fn test_close_order_twice_fails_sell_token0() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token1() {
     let (core, lo, pk) = setup_pool_with_extension();
@@ -967,7 +947,6 @@ fn test_close_order_twice_fails_sell_token1() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(
     expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
 )]
@@ -989,7 +968,6 @@ fn test_place_order_fails_wrong_side_token1() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(
     expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
 )]
@@ -1011,7 +989,6 @@ fn test_place_order_fails_wrong_side_token0() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_zero_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
@@ -1020,7 +997,6 @@ fn test_place_order_fails_zero_token0() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_zero_token1() {
     let (core, lo, pk) = setup_pool_with_extension();

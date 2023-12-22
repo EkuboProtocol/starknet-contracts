@@ -9,7 +9,6 @@ use starknet::{
 
 
 #[test]
-#[available_gas(30000000)]
 fn test_constructor() {
     let erc20 = deploy_simple_erc20(contract_address_const::<1234>());
     assert(
@@ -23,7 +22,6 @@ fn test_constructor() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_transfer() {
     let erc20 = deploy_simple_erc20(get_contract_address());
     pop_log::<Transfer>(erc20.contract_address).expect('CONSTRUCTOR');

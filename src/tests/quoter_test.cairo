@@ -18,7 +18,6 @@ use starknet::{contract_address_const};
 
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
@@ -56,7 +55,6 @@ fn test_quoter_quote_not_initialized_pool() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_quoter_quote_initialized_pool_no_liquidity() {
     let core = deploy_core();
     let quoter = deploy_quoter(core);
@@ -140,7 +138,6 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_quoter_quote_initialized_pool_with_liquidity() {
     let (quoter, pool_key, _) = setup_for_routing();
 
@@ -193,7 +190,6 @@ fn test_quoter_quote_initialized_pool_with_liquidity() {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
     let (quoter, pool_key, _) = setup_for_routing();
 
@@ -242,7 +238,6 @@ fn test_quoter_quote_single_same_result_initialized_pool_with_liquidity() {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_quoter_quote_to_delta() {
     let (quoter, pool_key, _) = setup_for_routing();
 
@@ -267,7 +262,6 @@ fn test_quoter_quote_to_delta() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_quoter_quote_multihop_routes() {
     let (quoter, pool_key_a, pool_key_b) = setup_for_routing();
 

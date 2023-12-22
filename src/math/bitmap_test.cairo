@@ -18,7 +18,6 @@ fn test_zeroable() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_set_all_bits() {
     let mut b: Bitmap = Zeroable::zero();
     let mut i: u8 = 0;
@@ -253,7 +252,6 @@ fn assert_case_ticks(tick: i129, location: (u128, u8), tick_spacing: u128) {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_tick_spacing_one() {
     assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 1);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 1);
@@ -264,7 +262,6 @@ fn test_positive_cases_tick_spacing_one() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_tick_spacing_ten() {
     assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 10);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 10);
@@ -275,7 +272,6 @@ fn test_positive_cases_tick_spacing_ten() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_non_one_tick_spacing() {
     assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 100);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 100);
@@ -287,7 +283,6 @@ fn test_positive_cases_non_one_tick_spacing() {
 
 
 #[test]
-#[available_gas(3000000000)]
 fn test_negative_cases_tick_spacing_one() {
     assert_case_ticks(
         tick: i129 { mag: 253, sign: true }, location: (0x100000001, 1), tick_spacing: 1
@@ -311,7 +306,6 @@ fn test_negative_cases_tick_spacing_one() {
 
 
 #[test]
-#[available_gas(3000000000)]
 fn test_negative_cases_tick_spacing_ten() {
     assert_case_ticks(
         tick: i129 { mag: 2525, sign: true }, location: (0x100000001, 1), tick_spacing: 10

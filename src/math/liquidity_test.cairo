@@ -6,7 +6,6 @@ use ekubo::math::ticks::{
 use ekubo::types::i129::{i129};
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
         0x100000000000000000000000000000000_u256,
@@ -20,7 +19,6 @@ fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price_withdraw() {
     let delta = liquidity_delta_to_amount_delta(
         0x100000000000000000000000000000000_u256,
@@ -34,7 +32,6 @@ fn test_liquidity_delta_to_amount_delta_full_range_mid_price_withdraw() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_low_price_in_range() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
@@ -48,7 +45,6 @@ fn test_liquidity_delta_to_amount_delta_low_price_in_range() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_low_price_in_range_withdraw() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
@@ -62,7 +58,6 @@ fn test_liquidity_delta_to_amount_delta_low_price_in_range_withdraw() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_high_price_in_range() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 4294967296 },
@@ -76,7 +71,6 @@ fn test_liquidity_delta_to_amount_delta_high_price_in_range() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
         sqrt_ratio: 0x100000000000000000000000000000000_u256,
@@ -94,7 +88,6 @@ fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
@@ -107,7 +100,6 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 4294967296 },
@@ -120,7 +112,6 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
 }
 
 #[test]
-#[available_gas(15000000)]
 fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
     let delta = liquidity_delta_to_amount_delta(
         tick_to_sqrt_ratio(Zeroable::zero()),

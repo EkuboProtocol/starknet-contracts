@@ -123,7 +123,6 @@ fn tick_magnitude_exceeds_max() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_log2_2_128() {
     let (log2, sign) = ticks_internal::log2(0x100000000000000000000000000000000_u256);
     assert(log2 == 0, 'log2(2**128).mag');
@@ -162,14 +161,12 @@ fn test_internal_div_by_2_127() {
 
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_zero() {
     let tick = sqrt_ratio_to_tick(0x100000000000000000000000000000000_u256);
     assert(tick.is_zero(), 'tick is 0');
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_one() {
     let expected_tick = i129 { mag: 1, sign: false };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
@@ -177,7 +174,6 @@ fn sqrt_ratio_to_tick_one() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_one_plus_one() {
     let expected_tick = i129 { mag: 1, sign: false };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick) + 1_u256);
@@ -185,14 +181,12 @@ fn sqrt_ratio_to_tick_one_plus_one() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_one_minus_one() {
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(i129 { mag: 1, sign: false }) - 1_u256);
     assert(tick.is_zero(), 'tick == expected_tick - 1');
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_one() {
     let expected_tick = i129 { mag: 1, sign: true };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
@@ -200,7 +194,6 @@ fn sqrt_ratio_to_tick_negative_one() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_within_ticks_example() {
     let sqrt_ratio = 21175949444679574865522613902772161611_u256;
     let tick = sqrt_ratio_to_tick(sqrt_ratio);
@@ -209,14 +202,12 @@ fn sqrt_ratio_to_tick_within_ticks_example() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_one_minus_one() {
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(i129 { mag: 1, sign: true }) - 1_u256);
     assert(tick == i129 { mag: 2, sign: true }, 'tick == expected_tick - 1');
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_one_plus_one() {
     let expected_tick = i129 { mag: 1, sign: true };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick) + 1_u256);
@@ -224,7 +215,6 @@ fn sqrt_ratio_to_tick_negative_one_plus_one() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_double() {
     let expected_tick = i129 { mag: constants::MAX_TICK_SPACING, sign: false };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
@@ -232,7 +222,6 @@ fn sqrt_ratio_to_tick_double() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_negative_double() {
     let expected_tick = i129 { mag: constants::MAX_TICK_SPACING, sign: true };
     let tick = sqrt_ratio_to_tick(tick_to_sqrt_ratio(expected_tick));
@@ -240,14 +229,12 @@ fn sqrt_ratio_to_tick_negative_double() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_max_sqrt_ratio() {
     let tick = sqrt_ratio_to_tick(max_sqrt_ratio() - 1_u256);
     assert(tick == max_tick() - i129 { mag: 1, sign: false }, 'max tick minus one');
 }
 
 #[test]
-#[available_gas(5000000)]
 fn sqrt_ratio_to_tick_min_sqrt_ratio() {
     let tick = sqrt_ratio_to_tick(min_sqrt_ratio());
     assert(tick == min_tick(), 'tick == min_tick()');
@@ -267,7 +254,6 @@ fn test_max_sqrt_ratio_size() {
 }
 
 #[test]
-#[available_gas(50000000000000)]
 fn sqrt_ratio_to_tick_powers_of_tick() {
     let mut sign = false;
     let mut pow: u8 = 0;

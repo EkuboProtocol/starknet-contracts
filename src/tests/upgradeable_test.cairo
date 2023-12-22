@@ -7,7 +7,6 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{class_hash_const, ClassHash};
 
 #[test]
-#[available_gas(2000000)]
 fn test_replace_class_hash() {
     let mock_upgradeable = deploy_mock_upgradeable();
     let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
@@ -23,7 +22,6 @@ fn test_replace_class_hash() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('INVALID_CLASS_HASH', 'ENTRYPOINT_FAILED'))]
 fn test_replace_zero_class_hash() {
     let mock_upgradeable = deploy_mock_upgradeable();

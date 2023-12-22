@@ -135,7 +135,6 @@ fn test_round_trip_many_values() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_1() {
     let packed = StorePacking::<i129, felt252>::pack(i129 { mag: 1, sign: false });
     let unpacked = StorePacking::<i129, felt252>::unpack(packed);
@@ -143,7 +142,6 @@ fn test_store_write_read_1() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_negative_1() {
     let value = i129 { mag: 1, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -152,7 +150,6 @@ fn test_store_write_read_negative_1() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_0() {
     let value = i129 { mag: 0, sign: false };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -161,7 +158,6 @@ fn test_store_write_read_0() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_negative_0() {
     let value = i129 { mag: 0, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -171,7 +167,6 @@ fn test_store_write_read_negative_0() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_max_value() {
     let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -180,7 +175,6 @@ fn test_store_write_read_max_value() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_min_value() {
     let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -189,7 +183,6 @@ fn test_store_write_read_min_value() {
 }
 
 #[test]
-#[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_min_value_minus_one() {
     StorePacking::<
@@ -198,7 +191,6 @@ fn test_store_write_min_value_minus_one() {
 }
 
 #[test]
-#[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_max_value_plus_one() {
     StorePacking::<

@@ -7,7 +7,6 @@ use ekubo::tests::mocks::mock_erc20::IMockERC20DispatcherTrait;
 use starknet::testing::{set_contract_address};
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
 fn test_recover_must_be_called_by_owner() {
     let ar = deploy_asset_recovery();
@@ -17,7 +16,6 @@ fn test_recover_must_be_called_by_owner() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_recover_by_owner_no_tokens() {
     let ar = deploy_asset_recovery();
     let token = deploy_mock_token();
@@ -26,7 +24,6 @@ fn test_recover_by_owner_no_tokens() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_recover_by_owner_with_tokens() {
     let ar = deploy_asset_recovery();
     let token = deploy_mock_token();

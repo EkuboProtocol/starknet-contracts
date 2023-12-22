@@ -55,13 +55,6 @@ impl i129Zeroable of Zeroable<i129> {
     }
 }
 
-impl i129PrintTrait of PrintTrait<i129> {
-    fn print(self: i129) {
-        self.sign.print();
-        self.mag.print();
-    }
-}
-
 impl u128IntoI129 of Into<u128, i129> {
     fn into(self: u128) -> i129 {
         i129 { mag: self, sign: false }

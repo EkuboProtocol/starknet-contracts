@@ -38,7 +38,6 @@ fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDis
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_before_initialize_call_points() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 3, sign: true });
 
@@ -201,7 +200,6 @@ fn test_pool_state_packing_round_trip_many_values() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_time_passes_seconds_per_liquidity_global() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 5, sign: true });
 
@@ -234,7 +232,6 @@ fn test_time_passes_seconds_per_liquidity_global() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_time_passed_position_out_of_range_only() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
 
@@ -287,7 +284,6 @@ fn test_time_passed_position_out_of_range_only() {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_swap_into_liquidity_time_passed() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
     let locker = deploy_locker(core);
@@ -338,7 +334,6 @@ fn test_swap_into_liquidity_time_passed() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_swap_through_liquidity_time_passed() {
     let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
     let locker = deploy_locker(core);

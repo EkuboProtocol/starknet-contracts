@@ -13,13 +13,11 @@ fn test_owner_hash() {
 
 #[test]
 #[should_panic(expected: ('OWNER_ONLY',))]
-#[available_gas(300000)]
 fn test_check_owner_only_invalid() {
     check_owner_only();
 }
 
 #[test]
-#[available_gas(300000)]
 fn test_check_owner_only_passes_if_caller_is_owner() {
     set_caller_address(owner());
     check_owner_only();

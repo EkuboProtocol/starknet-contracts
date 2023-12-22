@@ -21,7 +21,6 @@ fn recipient() -> ContractAddress {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
@@ -59,7 +58,6 @@ fn test_simple_swapper_swap_not_initialized_pool() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
     let core = deploy_core();
     let simple_swapper = deploy_simple_swapper(core);
@@ -97,7 +95,6 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_simple_swapper_swap_initialized_pool_no_liquidity_token1_in() {
     let core = deploy_core();
     let simple_swapper = deploy_simple_swapper(core);

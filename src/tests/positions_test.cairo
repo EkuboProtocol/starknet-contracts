@@ -32,7 +32,6 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 
 #[test]
-#[available_gas(20000000)]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT,
@@ -56,7 +55,6 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_full_range() {
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT,
@@ -81,7 +79,6 @@ fn test_deposit_liquidity_full_range() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
 fn test_locked_cannot_be_called_directly() {
     let setup = setup_pool(
@@ -95,7 +92,6 @@ fn test_locked_cannot_be_called_directly() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
 fn test_deposit_fails_min_liquidity() {
     let setup = setup_pool(
@@ -114,7 +110,6 @@ fn test_deposit_fails_min_liquidity() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -157,7 +152,6 @@ fn test_deposit_liquidity_concentrated() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_mint_and_deposit() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -182,7 +176,6 @@ fn test_deposit_liquidity_concentrated_mint_and_deposit() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -224,7 +217,6 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -267,7 +259,6 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -310,7 +301,6 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -352,7 +342,6 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
 }
 
 #[test]
-#[available_gas(80000000)]
 fn test_deposit_then_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -401,7 +390,6 @@ fn test_deposit_then_withdraw_with_fees() {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = contract_address_const::<12345678>();
     set_contract_address(caller);
@@ -559,7 +547,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
 
 #[test]
-#[available_gas(80000000)]
 fn test_deposit_withdraw_protocol_fee_then_deposit() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -610,7 +597,6 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
 }
 
 #[test]
-#[available_gas(80000000)]
 fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -670,7 +656,6 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
 }
 
 #[test]
-#[available_gas(80000000)]
 fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -724,7 +709,6 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
 }
 
 #[test]
-#[available_gas(80000000)]
 fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -778,7 +762,6 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_deposit_swap_round_trip_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -891,7 +874,6 @@ fn create_position(
 
 
 #[test]
-#[available_gas(1000000000)]
 fn test_deposit_existing_position() {
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT,
@@ -958,7 +940,6 @@ fn test_deposit_existing_position() {
 }
 
 #[test]
-#[available_gas(1000000000)]
 fn test_deposit_swap_multiple_positions() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -1043,7 +1024,6 @@ fn test_deposit_swap_multiple_positions() {
 
 
 #[test]
-#[available_gas(1000000000)]
 fn test_create_position_in_range_after_swap_no_fees() {
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT,
@@ -1148,7 +1128,6 @@ fn test_create_position_in_range_after_swap_no_fees() {
 }
 
 #[test]
-#[available_gas(1000000000)]
 #[should_panic(
     expected: (
         'MUST_COLLECT_FEES',
@@ -1200,7 +1179,6 @@ fn test_withdraw_not_collected_fees_token1() {
 }
 
 #[test]
-#[available_gas(1000000000)]
 #[should_panic(
     expected: (
         'MUST_COLLECT_FEES',
@@ -1253,7 +1231,6 @@ fn test_withdraw_not_collected_fees_token0() {
 
 
 #[test]
-#[available_gas(1000000000)]
 fn test_withdraw_partial_leave_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -1303,7 +1280,6 @@ fn test_withdraw_partial_leave_fees() {
 }
 
 #[test]
-#[available_gas(1000000000)]
 fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
