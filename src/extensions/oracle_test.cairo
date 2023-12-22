@@ -1,4 +1,4 @@
-use debug::PrintTrait;
+use core::debug::PrintTrait;
 use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait, PoolState};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
@@ -16,7 +16,7 @@ use ekubo::types::keys::{PoolKey, PositionKey};
 use core::option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, StorePacking};
-use traits::{TryInto};
+use core::traits::{TryInto};
 use core::zeroable::{Zeroable};
 
 fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {

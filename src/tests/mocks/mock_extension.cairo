@@ -21,8 +21,8 @@ trait IMockExtension<TStorage> {
 
 #[starknet::contract]
 mod MockExtension {
-    use array::{ArrayTrait};
-    use debug::PrintTrait;
+    use core::array::{ArrayTrait};
+    use core::debug::PrintTrait;
     use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
@@ -35,7 +35,7 @@ mod MockExtension {
     use core::option::{OptionTrait};
     use starknet::{get_caller_address};
     use super::{IMockExtension, ExtensionCalled, ContractAddress};
-    use traits::{Into, TryInto};
+    use core::traits::{Into, TryInto};
     use core::zeroable::{Zeroable};
 
     #[storage]

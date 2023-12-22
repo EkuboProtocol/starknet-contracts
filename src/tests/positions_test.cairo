@@ -1,5 +1,5 @@
-use array::ArrayTrait;
-use debug::PrintTrait;
+use core::array::ArrayTrait;
+use core::debug::PrintTrait;
 use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
@@ -28,7 +28,7 @@ use ekubo::types::keys::{PoolKey};
 use core::option::OptionTrait;
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
-use traits::{Into};
+use core::traits::{Into};
 use core::zeroable::{Zeroable};
 
 #[test]

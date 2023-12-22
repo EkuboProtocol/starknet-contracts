@@ -5,7 +5,7 @@ use ekubo::types::keys::{PoolKey, PositionKey};
 use core::integer::{u256_safe_divmod, u256_as_non_zero};
 use core::option::{OptionTrait};
 use starknet::{StorePacking};
-use traits::{TryInto, Into};
+use core::traits::{TryInto, Into};
 
 // 192 bits total, fits in a single felt
 #[derive(Copy, Drop, PartialEq)]
@@ -111,7 +111,7 @@ mod Oracle {
     use core::option::{OptionTrait};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use super::{IOracle, PoolKey, PositionKey, PoolState};
-    use traits::{Into, TryInto};
+    use core::traits::{Into, TryInto};
     use core::zeroable::{Zeroable};
 
     #[storage]

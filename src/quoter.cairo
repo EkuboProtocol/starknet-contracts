@@ -2,6 +2,8 @@ use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
+use core::zeroable::{Zeroable};
+
 
 #[derive(Drop, Copy, Serde)]
 struct Route {
@@ -41,7 +43,7 @@ trait IQuoter<TStorage> {
 
 #[starknet::contract]
 mod Quoter {
-    use array::{Array, ArrayTrait, SpanTrait};
+    use core::array::{Array, ArrayTrait, SpanTrait};
 
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};
@@ -49,7 +51,7 @@ mod Quoter {
     use ekubo::math::ticks::{sqrt_ratio_to_tick};
     use ekubo::shared_locker::{consume_callback_data};
     use core::option::{OptionTrait};
-    use result::{ResultTrait};
+    use core::result::{ResultTrait};
     use starknet::syscalls::{call_contract_syscall};
 
     use starknet::{get_caller_address};

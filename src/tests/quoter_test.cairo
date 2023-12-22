@@ -1,4 +1,4 @@
-use array::{Array, ArrayTrait, SpanTrait};
+use core::array::{Array, ArrayTrait, SpanTrait};
 use core::debug::PrintTrait;
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;

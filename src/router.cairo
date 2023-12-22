@@ -1,4 +1,4 @@
-use array::{Span};
+use core::array::{Span};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};

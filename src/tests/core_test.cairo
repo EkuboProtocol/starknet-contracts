@@ -1,4 +1,4 @@
-use array::{ArrayTrait};
+use core::array::{ArrayTrait};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -26,11 +26,11 @@ use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use core::option::{Option, OptionTrait};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
-use traits::{Into, TryInto};
+use core::traits::{Into, TryInto};
 use core::zeroable::{Zeroable};
 
 mod owner_tests {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
     use ekubo::owner::owner;
 
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -279,10 +279,10 @@ mod initialize_pool_tests {
 
 
 mod initialized_ticks {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zeroable
     };
 
     #[test]
@@ -644,7 +644,7 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
 
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{

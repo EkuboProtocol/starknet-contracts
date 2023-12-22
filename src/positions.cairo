@@ -1,6 +1,6 @@
 #[starknet::contract]
 mod Positions {
-    use array::{ArrayTrait, SpanTrait};
+    use core::array::{ArrayTrait, SpanTrait};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
