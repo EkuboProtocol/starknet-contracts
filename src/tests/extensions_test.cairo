@@ -1,3 +1,4 @@
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
     SwapParameters, UpdatePositionParameters
@@ -17,7 +18,6 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address};
 use starknet::{get_contract_address};
-use zeroable::{Zeroable};
 
 fn setup(
     fee: u128, tick_spacing: u128, call_points: CallPoints
@@ -45,7 +45,6 @@ fn setup(
 }
 
 #[test]
-#[available_gas(30000000)]
 #[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
 fn test_mock_extension_cannot_be_called_directly() {
     let (core, mock, extension, locker, pool_key) = setup(
@@ -55,7 +54,6 @@ fn test_mock_extension_cannot_be_called_directly() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_can_be_called_by_core() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
@@ -73,7 +71,6 @@ fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_initialize_pool_is_called() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
@@ -94,7 +91,6 @@ fn test_mock_extension_initialize_pool_is_called() {
 
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_swap_is_called() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
@@ -126,7 +122,6 @@ fn test_mock_extension_swap_is_called() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_update_position_is_called() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
@@ -156,7 +151,6 @@ fn test_mock_extension_update_position_is_called() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_no_call_points() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: Default::default()
@@ -192,7 +186,6 @@ fn test_mock_extension_no_call_points() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_after_initialize_pool_only() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0,
@@ -238,7 +231,6 @@ fn test_mock_extension_after_initialize_pool_only() {
 
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_before_swap_only() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0,
@@ -283,7 +275,6 @@ fn test_mock_extension_before_swap_only() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_after_swap_only() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0,
@@ -329,7 +320,6 @@ fn test_mock_extension_after_swap_only() {
 
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_before_update_position_only() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0,
@@ -374,7 +364,6 @@ fn test_mock_extension_before_update_position_only() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_after_update_position_only() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0,
@@ -419,7 +408,6 @@ fn test_mock_extension_after_update_position_only() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_is_called_back_into_other_pool() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()
@@ -467,7 +455,6 @@ fn test_mock_extension_is_called_back_into_other_pool() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_mock_extension_not_called_back_into_own_pool() {
     let (core, mock, extension, locker, pool_key) = setup(
         fee: 0, tick_spacing: 1, call_points: all_call_points()

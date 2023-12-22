@@ -1,4 +1,7 @@
-use array::{ArrayTrait};
+use core::array::{ArrayTrait};
+use core::option::{Option, OptionTrait};
+use core::traits::{Into, TryInto};
+use core::zeroable::{Zeroable};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -23,14 +26,11 @@ use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use option::{Option, OptionTrait};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
-use traits::{Into, TryInto};
-use zeroable::{Zeroable};
 
 mod owner_tests {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
     use ekubo::owner::owner;
 
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -43,7 +43,6 @@ mod owner_tests {
 
 
     #[test]
-    #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
@@ -54,7 +53,6 @@ mod owner_tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
         set_contract_address(owner());
@@ -70,7 +68,6 @@ mod owner_tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND',))]
     fn test_after_replacing_class_hash_calls_fail() {
         let core = deploy_core();
@@ -83,7 +80,6 @@ mod owner_tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
         let core = deploy_core();
         set_contract_address(owner());
@@ -108,7 +104,6 @@ mod initialize_pool_tests {
     };
 
     #[test]
-    #[available_gas(4000000)]
     fn test_initialize_pool_works_uninitialized() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -140,7 +135,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_same_token() {
         let core = deploy_core();
@@ -155,7 +149,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
         let core = deploy_core();
@@ -171,7 +164,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
@@ -186,7 +178,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
         let core = deploy_core();
@@ -201,7 +192,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     fn test_initialize_pool_succeeds_max_tick_spacing() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -215,7 +205,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
         let core = deploy_core();
@@ -230,7 +219,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_already_initialized() {
         let core = deploy_core();
@@ -246,7 +234,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_maybe_initialize_pool_twice() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -279,14 +266,13 @@ mod initialize_pool_tests {
 
 
 mod initialized_ticks {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zeroable
     };
 
     #[test]
-    #[available_gas(30000000)]
     #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED',))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
         let setup = setup_pool(
@@ -306,7 +292,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_prev_initialized_tick_min_tick() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -326,7 +311,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED',))]
     fn test_next_initialized_tick_max_tick() {
         let setup = setup_pool(
@@ -340,7 +324,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_initialized_tick_max_tick_minus_one() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -362,7 +345,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_initialized_tick_exceeds_max_tick_spacing() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -382,7 +364,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_prev_initialized_tick_exceeds_min_tick_spacing() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -411,7 +392,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_prev_initialized_tick_none_initialized() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -476,7 +456,6 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_next_prev_initialized_tick_several_initialized() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -644,7 +623,7 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
 
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
@@ -661,7 +640,6 @@ mod locks {
     };
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_LOCKED', 'ENTRYPOINT_FAILED'))]
     fn test_error_from_action_not_locked() {
         let setup = setup_pool(
@@ -698,7 +676,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_flash_borrow_balanced() {
         let core = deploy_core();
         let locker = deploy_locker(core);
@@ -731,7 +708,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_underpay() {
         let core = deploy_core();
@@ -751,7 +727,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_overpay() {
         let core = deploy_core();
@@ -771,7 +746,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'INSUFFICIENT_RESERVES',
@@ -800,7 +774,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -812,7 +785,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_relock_call() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -824,7 +796,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
@@ -841,7 +812,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'RL_INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
@@ -858,7 +828,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -898,7 +867,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -928,7 +896,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -959,7 +926,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -991,7 +957,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1017,7 +982,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'NOT_EXTENSION',
@@ -1056,7 +1020,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_accumulate_fees_per_liquidity_success() {
         let core = deploy_core();
         let (token0, token1) = deploy_two_mock_tokens();
@@ -1104,7 +1067,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_larger_amount_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1131,7 +1093,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1159,7 +1120,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_half_burn() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1211,7 +1171,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_full_burn() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1263,7 +1222,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(10000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1295,7 +1253,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_input_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1331,7 +1288,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_input_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1365,7 +1321,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_output_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1399,7 +1354,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_output_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1433,7 +1387,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(100000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1486,7 +1439,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(100000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross_example() {
         let FEE_THIRTY_BIPS = 1020847100762815411640772995208708096;
         let TICK_SPACING_60_BIPS = 5982;
@@ -1546,7 +1498,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1599,7 +1550,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(40000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1655,7 +1605,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(60000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1709,7 +1658,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1762,7 +1710,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1814,7 +1761,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1871,7 +1817,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(40000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -1925,7 +1870,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_swap_exact_input_token0_multiple_ticks_crossed_hit_limit() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -2008,7 +1952,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_swap_exact_input_token1_multiple_ticks_crossed_hit_limit() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
@@ -2101,7 +2044,6 @@ mod save_load_tests {
     };
 
     #[test]
-    #[available_gas(30000000)]
     fn test_save_load_1_token() {
         let core = deploy_core();
         let token = deploy_mock_token();

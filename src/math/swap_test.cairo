@@ -1,24 +1,9 @@
-use debug::PrintTrait;
+use core::zeroable::{Zeroable};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::math::swap::{no_op_swap_result, swap_result, is_price_increasing, SwapResult};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::types::i129::{i129};
-use zeroable::{Zeroable};
-
-impl SwapResultPrintTrait of PrintTrait<SwapResult> {
-    fn print(self: SwapResult) {
-        'consumed_amount:'.print();
-        self.consumed_amount.print();
-        'sqrt_ratio_next:'.print();
-        self.sqrt_ratio_next.print();
-        'calculated_amount:'.print();
-        self.calculated_amount.print();
-        'fee_amount:'.print();
-        self.fee_amount.print();
-    }
-}
-
 
 #[test]
 fn test_is_price_increasing_cases() {

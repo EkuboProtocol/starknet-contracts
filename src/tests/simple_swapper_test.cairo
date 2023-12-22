@@ -1,6 +1,7 @@
-use array::{Array, ArrayTrait, SpanTrait};
+use core::array::{Array, ArrayTrait, SpanTrait};
 
 use core::debug::PrintTrait;
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
@@ -14,14 +15,12 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address};
 use starknet::{ContractAddress, contract_address_const};
-use zeroable::{Zeroable};
 
 fn recipient() -> ContractAddress {
     contract_address_const::<0x12345678>()
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
@@ -59,7 +58,6 @@ fn test_simple_swapper_swap_not_initialized_pool() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
     let core = deploy_core();
     let simple_swapper = deploy_simple_swapper(core);
@@ -97,7 +95,6 @@ fn test_simple_swapper_swap_initialized_pool_no_liquidity_token0_in() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_simple_swapper_swap_initialized_pool_no_liquidity_token1_in() {
     let core = deploy_core();
     let simple_swapper = deploy_simple_swapper(core);

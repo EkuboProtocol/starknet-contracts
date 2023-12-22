@@ -1,4 +1,7 @@
-use array::{ArrayTrait};
+use core::array::{ArrayTrait};
+use core::option::{OptionTrait};
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
@@ -7,11 +10,8 @@ use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
 };
-use option::{OptionTrait};
 use starknet::testing::{ContractAddress, set_contract_address, pop_log};
 use starknet::{contract_address_const, ClassHash};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 fn default_controller() -> ContractAddress {
     contract_address_const::<12345678>()
@@ -26,7 +26,6 @@ fn deploy_default() -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_name_symbol_token_uri() {
     let (_, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
@@ -38,7 +37,6 @@ fn test_nft_name_symbol_token_uri() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_supports_interfaces() {
     let (_, nft) = deploy_default();
     let src = ISRC5Dispatcher { contract_address: nft.contract_address };
@@ -86,7 +84,6 @@ fn test_nft_supports_interfaces() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
 
@@ -102,7 +99,6 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_custom_uri() {
     let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
     assert(nft.name() == 'abcde', 'name');
@@ -112,7 +108,6 @@ fn test_nft_custom_uri() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_indexing_token_ids() {
     let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
@@ -142,7 +137,6 @@ fn test_nft_indexing_token_ids() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_indexing_token_ids_not_sorted() {
     let (controller, nft) = deploy_default();
 
@@ -171,7 +165,6 @@ fn test_nft_indexing_token_ids_not_sorted() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_indexing_token_ids_snake_case() {
     let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
@@ -201,7 +194,6 @@ fn test_nft_indexing_token_ids_snake_case() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_burn_makes_token_non_transferrable() {
     let (controller, nft) = deploy_owned_nft(
         default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
@@ -233,7 +225,6 @@ fn test_burn_makes_token_non_transferrable() {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_is_account_authorized() {
     let (controller, nft) = deploy_default();
 
@@ -264,7 +255,6 @@ fn test_is_account_authorized() {
 
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_burn_makes_token_non_transferrable_error() {
     let (controller, nft) = deploy_owned_nft(
@@ -289,7 +279,6 @@ fn test_burn_makes_token_non_transferrable_error() {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_fails_id_not_exists() {
     let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
@@ -298,7 +287,6 @@ fn test_nft_approve_fails_id_not_exists() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_approve_succeeds_after_mint() {
     let (controller, nft) = deploy_default();
 
@@ -313,7 +301,6 @@ fn test_nft_approve_succeeds_after_mint() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_transfer_from() {
     let (controller, nft) = deploy_default();
 
@@ -335,7 +322,6 @@ fn test_nft_transfer_from() {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('UNAUTHORIZED', 'ENTRYPOINT_FAILED'))]
 fn test_nft_transfer_from_fails_not_from_owner() {
     let (controller, nft) = deploy_default();
@@ -349,7 +335,6 @@ fn test_nft_transfer_from_fails_not_from_owner() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_transfer_from_succeeds_from_approved() {
     let (controller, nft) = deploy_default();
 
@@ -364,7 +349,6 @@ fn test_nft_transfer_from_succeeds_from_approved() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_transfer_from_succeeds_from_approved_for_all() {
     let (controller, nft) = deploy_default();
 
@@ -379,7 +363,6 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_token_uri() {
     let (controller, nft) = deploy_default();
 
@@ -398,7 +381,6 @@ fn test_nft_token_uri() {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('URI_LENGTH', 'ENTRYPOINT_FAILED'))]
 fn test_nft_token_uri_reverts_too_long() {
     let (controller, nft) = deploy_default();
@@ -407,7 +389,6 @@ fn test_nft_token_uri_reverts_too_long() {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
 fn test_nft_token_uri_reverts_token_id_too_big() {
     let (controller, nft) = deploy_default();
@@ -416,7 +397,6 @@ fn test_nft_token_uri_reverts_token_id_too_big() {
 }
 
 #[test]
-#[available_gas(300000000)]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_only_owner_can_approve() {
     let (controller, nft) = deploy_default();
@@ -429,7 +409,6 @@ fn test_nft_approve_only_owner_can_approve() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_nft_balance_of() {
     let (controller, nft) = deploy_default();
 

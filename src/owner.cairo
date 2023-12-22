@@ -1,7 +1,7 @@
-use hash::{HashStateTrait};
-use pedersen::{PedersenTrait};
+use core::hash::{HashStateTrait};
+use core::pedersen::{PedersenTrait};
+use core::traits::{Into};
 use starknet::{ContractAddress, get_caller_address, contract_address_const, ClassHash};
-use traits::{Into};
 
 // The owner is hard coded, but the owner checks are obfuscated in the contract code.
 fn owner() -> ContractAddress {

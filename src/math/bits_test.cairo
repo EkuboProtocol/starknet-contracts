@@ -81,7 +81,6 @@ fn msb_2_96_less_one() {
 }
 
 #[test]
-#[available_gas(80000000)]
 fn msb_many_iterations_min_gas() {
     let mut i: u128 = 0;
     loop {

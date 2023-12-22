@@ -1,7 +1,7 @@
+use core::option::{OptionTrait};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::math::ticks::{min_sqrt_ratio};
 use ekubo::types::i129::i129;
-use option::{OptionTrait};
 
 #[test]
 fn test_next_sqrt_ratio_from_amount0_add_price_goes_down() {

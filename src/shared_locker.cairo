@@ -1,7 +1,7 @@
-use array::{ArrayTrait};
+use core::array::{ArrayTrait};
+use core::option::{OptionTrait};
+use core::serde::Serde;
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-use option::{OptionTrait};
-use serde::Serde;
 use starknet::{get_caller_address, call_contract_syscall, ContractAddress, SyscallResultTrait};
 
 fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(

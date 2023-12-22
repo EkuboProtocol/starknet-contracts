@@ -1,5 +1,6 @@
 #[starknet::component]
 mod Upgradeable {
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::owner::{check_owner_only};
     use starknet::{ClassHash, replace_class_syscall};

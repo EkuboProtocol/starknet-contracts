@@ -1,9 +1,8 @@
-use debug::PrintTrait;
+use core::debug::PrintTrait;
+use core::option::OptionTrait;
 use ekubo::math::string::{to_decimal, append};
-use option::OptionTrait;
 
 #[test]
-#[available_gas(50000000)]
 fn test_to_decimal() {
     assert(to_decimal(0).unwrap() == '0', '0');
     assert(to_decimal(12345).unwrap() == '12345', '12345');
@@ -13,7 +12,6 @@ fn test_to_decimal() {
 
 
 #[test]
-#[available_gas(50000000)]
 fn test_large_numbers_to_decimal() {
     assert(to_decimal(12345678901234567890).unwrap() == '12345678901234567890', '20 decimals');
     assert(
@@ -31,13 +29,11 @@ fn test_large_numbers_to_decimal() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_number_too_large() {
     assert(to_decimal(10000000000000000000000000000000).is_none(), 'number');
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_append() {
     assert(append('abc', 'def').unwrap() == 'abcdef', 'abc+def');
     assert(append('', 'def').unwrap() == 'def', '+def');

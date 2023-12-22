@@ -1,10 +1,10 @@
 #[starknet::contract]
 mod SimpleERC20 {
+    use core::option::{OptionTrait};
+    use core::traits::{Into};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::erc20::{IERC20};
-    use option::{OptionTrait};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
-    use traits::{Into};
-    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {

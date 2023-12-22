@@ -1,4 +1,4 @@
-use debug::PrintTrait;
+use core::debug::PrintTrait;
 use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
 use ekubo::types::i129::i129;
 

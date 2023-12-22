@@ -1,6 +1,10 @@
 #[starknet::contract]
 mod Positions {
-    use array::{ArrayTrait, SpanTrait};
+    use core::array::{ArrayTrait, SpanTrait};
+    use core::option::{Option, OptionTrait};
+    use core::serde::{Serde};
+    use core::traits::{Into};
+    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -18,14 +22,10 @@ mod Positions {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
     use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use option::{Option, OptionTrait};
-    use serde::{Serde};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
         deploy_syscall
     };
-    use traits::{Into};
-    use zeroable::{Zeroable};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

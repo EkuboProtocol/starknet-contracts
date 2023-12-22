@@ -1,10 +1,10 @@
 use core::option::{OptionTrait};
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_before_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::types::i129::{i129};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 // consumed_amount is how much of the amount was used in this step, including the amount that was paid to fees
 // calculated_amount is how much of the other token is given

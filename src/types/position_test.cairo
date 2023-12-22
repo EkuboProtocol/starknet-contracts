@@ -1,17 +1,8 @@
-use debug::PrintTrait;
+use core::integer::{u256_wide_mul};
+use core::traits::{Into};
+use core::zeroable::{Zeroable};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::position::{Position, PositionTrait, internal::multiply_and_get_limb1};
-use integer::{u256_wide_mul};
-use traits::{Into};
-use zeroable::{Zeroable};
-
-impl PrintFees of PrintTrait<(u128, u128)> {
-    fn print(self: (u128, u128)) {
-        let (x, y) = self;
-        x.print();
-        y.print();
-    }
-}
 
 // todo: fuzz with this
 fn check_mul(a: u256, b: u128) {
