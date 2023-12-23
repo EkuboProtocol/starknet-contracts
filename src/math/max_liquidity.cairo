@@ -2,8 +2,8 @@ use core::integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
     u128_overflowing_add
 };
+use core::num::traits::{Zero};
 use core::result::{ResultTrait};
-use core::zeroable::{Zeroable};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::muldiv::{muldiv};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
@@ -15,7 +15,7 @@ use ekubo::types::i129::{i129, i129Trait};
 // In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
 fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount.is_zero()) {
-        return Zeroable::zero();
+        return Zero::zero();
     }
 
     let mul1 = u256_wide_mul(
@@ -68,7 +68,7 @@ fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
 // In other words, it computes the amount of liquidity corresponding to a given amount of token1 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
 fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount.is_zero()) {
-        return Zeroable::zero();
+        return Zero::zero();
     }
     let result = u256 { high: amount, low: 0 } / (sqrt_ratio_upper - sqrt_ratio_lower);
     assert(result.high == 0, 'OVERFLOW_MLFT1');

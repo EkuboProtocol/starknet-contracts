@@ -1,4 +1,4 @@
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{
     min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
@@ -114,7 +114,7 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
 #[test]
 fn test_liquidity_delta_to_amount_delta_concentrated_in_range() {
     let delta = liquidity_delta_to_amount_delta(
-        tick_to_sqrt_ratio(Zeroable::zero()),
+        tick_to_sqrt_ratio(Zero::zero()),
         i129 { mag: 1000000000, sign: false },
         tick_to_sqrt_ratio(i129 { mag: 10, sign: true }),
         tick_to_sqrt_ratio(i129 { mag: 10, sign: false })

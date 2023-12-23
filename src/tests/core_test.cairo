@@ -1,7 +1,7 @@
 use core::array::{ArrayTrait};
+use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
-use core::zeroable::{Zeroable};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -35,7 +35,7 @@ mod owner_tests {
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
         deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zeroable,
+        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
         IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log
     };
@@ -98,8 +98,8 @@ mod owner_tests {
 mod initialize_pool_tests {
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use super::{
-        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
-        OptionTrait, pop_log, tick_to_sqrt_ratio
+        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zero, OptionTrait,
+        pop_log, tick_to_sqrt_ratio
     };
 
     #[test]
@@ -110,7 +110,7 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         let (price, liquidity, fees_per_liquidity) = (
@@ -142,9 +142,9 @@ mod initialize_pool_tests {
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -156,10 +156,10 @@ mod initialize_pool_tests {
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
 
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -167,13 +167,13 @@ mod initialize_pool_tests {
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
         let pool_key = PoolKey {
-            token0: Zeroable::zero(),
+            token0: Zero::zero(),
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -185,9 +185,9 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 0,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -198,9 +198,9 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -212,9 +212,9 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING + 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
@@ -226,7 +226,7 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
@@ -238,13 +238,13 @@ mod initialize_pool_tests {
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
-            fee: Zeroable::zero(),
+            fee: Zero::zero(),
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         assert(
             core
-                .maybe_initialize_pool(pool_key, Zeroable::zero())
+                .maybe_initialize_pool(pool_key, Zero::zero())
                 .unwrap() == 0x100000000000000000000000000000000_u256,
             'price'
         );
@@ -267,7 +267,7 @@ mod initialize_pool_tests {
 mod initialized_ticks {
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zeroable
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zero
     };
 
     #[test]
@@ -276,8 +276,8 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -294,8 +294,8 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
@@ -314,8 +314,8 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.core.next_initialized_tick(pool_key: setup.pool_key, from: max_tick(), skip_ahead: 0);
@@ -326,8 +326,8 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
@@ -347,15 +347,15 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
                 ) == (max_tick(), false),
             'max tick limited'
         );
@@ -366,16 +366,16 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: Zeroable::zero(), sign: false }, false),
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                ) == (i129 { mag: Zero::zero(), sign: false }, false),
             'min tick 0'
         );
 
@@ -394,16 +394,16 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (Zeroable::zero(), false),
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                ) == (Zero::zero(), false),
             'prev from 0'
         );
 
@@ -411,7 +411,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 2
                 ) == (i129 { mag: 4994900, sign: true }, false), // 5014800 == 251*9950*2
             'prev from 0, skip 2'
         );
@@ -420,7 +420,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
                 ) == (i129 { mag: 12487250, sign: true }, false), // 2547200 == 251*9950*5
             'prev from 0, skip 5'
         );
@@ -429,7 +429,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
                 ) == (i129 { mag: 2487500, sign: false }, false),
             'next from 0'
         );
@@ -438,7 +438,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 1
                 ) == (i129 { mag: 4984950, sign: false }, false),
             'next from 0, skip 1'
         );
@@ -447,7 +447,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
                 ) == (i129 { mag: 14974750, sign: false }, false),
             'next from 0, skip 5'
         );
@@ -458,8 +458,8 @@ mod initialized_ticks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 100000000);
@@ -631,7 +631,7 @@ mod locks {
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, PoolKey,
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zero, PoolKey,
         accumulate_as_fees, max_bounds, deploy_core, deploy_mock_token, SavedBalanceKey
     };
 
@@ -641,8 +641,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         // should fail because not locked at all
         setup.core.deposit(contract_address_const::<1>());
@@ -774,8 +774,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::AssertLockerId(0));
     }
@@ -785,8 +785,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::Relock((0, 5)));
     }
@@ -801,8 +801,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::AssertLockerId(1));
     }
@@ -817,8 +817,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::Relock((1, 5)));
     }
@@ -828,8 +828,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         update_position(
             setup: setup,
@@ -837,7 +837,7 @@ mod locks {
                 lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
                 upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }
             },
-            liquidity_delta: Zeroable::zero(),
+            liquidity_delta: Zero::zero(),
             recipient: contract_address_const::<42>()
         );
         assert(
@@ -876,8 +876,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         update_position(
@@ -905,8 +905,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         update_position(
@@ -935,8 +935,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let delta = update_position(
@@ -944,11 +944,11 @@ mod locks {
             bounds: Bounds {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
-            liquidity_delta: Zeroable::zero(),
+            liquidity_delta: Zero::zero(),
             recipient: contract_address_const::<42>()
         );
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1');
     }
 
 
@@ -957,8 +957,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -991,8 +991,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1029,7 +1029,7 @@ mod locks {
             extension: locker.contract_address,
         };
 
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
 
         token0.increase_balance(locker.contract_address, 10000000);
         token1.increase_balance(locker.contract_address, 10000000);
@@ -1067,8 +1067,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000);
@@ -1093,8 +1093,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1120,8 +1120,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1171,8 +1171,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1222,21 +1222,21 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let delta = swap(
             setup,
-            amount: Zeroable::zero(), // input 0 token0, price decreasing
+            amount: Zero::zero(), // input 0 token0, price decreasing
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1253,8 +1253,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1270,8 +1270,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1288,8 +1288,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
@@ -1303,8 +1303,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1321,8 +1321,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
@@ -1336,8 +1336,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1354,8 +1354,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = 0x100000000000000000000000000000000_u256 / u256 { low: 2, high: 0 };
@@ -1369,8 +1369,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1387,8 +1387,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1447,7 +1447,7 @@ mod locks {
             fee: FEE_THIRTY_BIPS,
             tick_spacing: TICK_SPACING_60_BIPS,
             initial_tick: nearby_starting_tick,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 717193642384000);
@@ -1498,8 +1498,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 1000000000);
@@ -1550,8 +1550,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1605,8 +1605,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1658,8 +1658,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1710,8 +1710,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1761,8 +1761,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1817,8 +1817,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -1870,8 +1870,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -1952,8 +1952,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);

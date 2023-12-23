@@ -1,10 +1,10 @@
 #[starknet::contract]
 mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
     use core::traits::{Into};
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -159,7 +159,7 @@ mod Positions {
                                 }
                             )
                     } else {
-                        Zeroable::zero()
+                        Zero::zero()
                     };
 
                     if delta.amount0.is_non_zero() {
@@ -206,7 +206,7 @@ mod Positions {
                                 pool_key: data.pool_key, salt: data.salt, bounds: data.bounds
                             )
                     } else {
-                        Zeroable::zero()
+                        Zero::zero()
                     };
 
                     if data.liquidity.is_non_zero() {
@@ -250,7 +250,7 @@ mod Positions {
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
-            self.mint_with_referrer(pool_key, bounds, Zeroable::zero())
+            self.mint_with_referrer(pool_key, bounds, Zero::zero())
         }
 
         #[inline(always)]
@@ -401,7 +401,7 @@ mod Positions {
         fn mint_and_deposit(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> (u64, u128) {
-            self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zeroable::zero())
+            self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zero::zero())
         }
 
         #[inline(always)]

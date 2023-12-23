@@ -18,7 +18,7 @@ trait IERC20Metadata<TStorage> {
 
 #[starknet::contract]
 mod TokenRegistry {
-    use core::zeroable::{Zeroable};
+    use core::num::traits::{Zero};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};

@@ -1,6 +1,6 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use core::zeroable::{Zeroable};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_before_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
@@ -31,9 +31,9 @@ fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
 #[inline(always)]
 fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
     SwapResult {
-        consumed_amount: Zeroable::zero(),
-        calculated_amount: Zeroable::zero(),
-        fee_amount: Zeroable::zero(),
+        consumed_amount: Zero::zero(),
+        calculated_amount: Zero::zero(),
+        fee_amount: Zero::zero(),
         sqrt_ratio_next: next_sqrt_ratio
     }
 }

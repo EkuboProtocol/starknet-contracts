@@ -1,5 +1,5 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::zeroable::{Zeroable};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::simple_erc20::SimpleERC20::{Transfer};
 use ekubo::tests::helper::{deploy_simple_erc20};

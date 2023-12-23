@@ -1,5 +1,6 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
-use core::zeroable::Zeroable;
+use core::num::traits::{Zero};
+
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;
 use ekubo::quoter::{
@@ -36,7 +37,7 @@ fn test_quoter_quote_not_initialized_pool() {
         token1: token1.contract_address,
         fee: 0xc49ba5e353f7ced916872b020c49ba, // 30 bips as a 0.128 number
         tick_spacing: 5982, // 60 bips tick spacing
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     };
 
     let mut pool_keys: Array<PoolKey> = Default::default();
@@ -64,10 +65,10 @@ fn test_quoter_quote_initialized_pool_no_liquidity() {
         token1: token1.contract_address,
         fee: 0xc49ba5e353f7ced916872b020c49ba, // 30 bips as a 0.128 number
         tick_spacing: 5982, // 60 bips tick spacing
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     };
 
-    core.initialize_pool(pool_key, Zeroable::zero());
+    core.initialize_pool(pool_key, Zero::zero());
 
     let mut pool_keys: Array<PoolKey> = Default::default();
     pool_keys.append(pool_key);
@@ -99,7 +100,7 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
         token1: token1.contract_address,
         fee: 0xc49ba5e353f7ced916872b020c49ba, // 30 bips as a 0.128 number
         tick_spacing: 5982, // 60 bips tick spacing
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     };
 
     let pool_key_b = PoolKey {
@@ -107,15 +108,15 @@ fn setup_for_routing() -> (IQuoterDispatcher, PoolKey, PoolKey) {
         token1: token2.contract_address,
         fee: 0xc49ba5e353f7ced916872b020c49ba, // 30 bips as a 0.128 number
         tick_spacing: 5982, // 60 bips tick spacing
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     };
 
     let bounds = Bounds {
         lower: i129 { mag: 5982, sign: true }, upper: i129 { mag: 5982, sign: false }
     };
 
-    core.initialize_pool(pool_key_a, Zeroable::zero());
-    core.initialize_pool(pool_key_b, Zeroable::zero());
+    core.initialize_pool(pool_key_a, Zero::zero());
+    core.initialize_pool(pool_key_b, Zero::zero());
 
     let caller = contract_address_const::<1>();
     set_contract_address(caller);

@@ -1,6 +1,6 @@
 use core::integer::{u256_wide_mul};
+use core::num::traits::{Zero};
 use core::traits::{Into};
-use core::zeroable::{Zeroable};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::position::{Position, PositionTrait, internal::multiply_and_get_limb1};
 
@@ -40,7 +40,7 @@ fn test_multiply_and_get_limb1() {
 
 #[test]
 fn test_positions_zeroable() {
-    let p: Position = Zeroable::zero();
+    let p: Position = Zero::zero();
     assert(p.is_zero(), 'is_zero');
     assert(!p.is_non_zero(), 'is_non_zero');
 }
@@ -48,7 +48,7 @@ fn test_positions_zeroable() {
 #[test]
 fn test_is_zero_for_nonzero_fees() {
     let p = Position {
-        liquidity: Zeroable::zero(),
+        liquidity: Zero::zero(),
         fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1, },
     };
     assert(p.is_zero(), 'is_zero');
@@ -57,7 +57,7 @@ fn test_is_zero_for_nonzero_fees() {
 
 #[test]
 fn test_is_zero_for_nonzero_liquidity() {
-    let p = Position { liquidity: 1, fees_per_liquidity_inside_last: Zeroable::zero() };
+    let p = Position { liquidity: 1, fees_per_liquidity_inside_last: Zero::zero() };
     assert(!p.is_zero(), 'is_zero');
     assert(p.is_non_zero(), 'is_non_zero');
 }
@@ -65,7 +65,7 @@ fn test_is_zero_for_nonzero_liquidity() {
 #[test]
 fn test_fees_calculation_zero_liquidity() {
     let p = Position {
-        liquidity: Zeroable::zero(),
+        liquidity: Zero::zero(),
         fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 0, value1: 0, },
     };
 
@@ -88,7 +88,7 @@ fn test_fees_calculation_one_liquidity_max_difference() {
             liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
         }
             .fees(
-                Zeroable::zero()
+                Zero::zero()
             ) == (0x8000000000000110000000000000000, 0x8000000000000110000000000000000),
         'fees'
     );
@@ -100,7 +100,7 @@ fn test_fees_calculation_one_liquidity_max_difference_token0_only() {
         Position {
             liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 0 },
         }
-            .fees(Zeroable::zero()) == (0x8000000000000110000000000000000, 0),
+            .fees(Zero::zero()) == (0x8000000000000110000000000000000, 0),
         'fees'
     );
 }
@@ -111,7 +111,7 @@ fn test_fees_calculation_one_liquidity_max_difference_token1_only() {
         Position {
             liquidity: 1, fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 0, value1: 1 },
         }
-            .fees(Zeroable::zero()) == (0, 0x8000000000000110000000000000000),
+            .fees(Zero::zero()) == (0, 0x8000000000000110000000000000000),
         'fees'
     );
 }
@@ -125,7 +125,7 @@ fn test_fees_calculation_fees_pre_overflow() {
             fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
         }
             .fees(
-                Zeroable::zero()
+                Zero::zero()
             ) == (0xf80000000000020f0000000000000000, 0xf80000000000020f0000000000000000),
         'fees'
     );
@@ -138,7 +138,7 @@ fn test_fees_calculation_fees_overflow() {
             liquidity: 32,
             fees_per_liquidity_inside_last: FeesPerLiquidity { value0: 1, value1: 1 },
         }
-            .fees(Zeroable::zero()) == (0x2200000000000000000, 0x2200000000000000000),
+            .fees(Zero::zero()) == (0x2200000000000000000, 0x2200000000000000000),
         'fees'
     );
 }

@@ -100,9 +100,9 @@ trait IOracle<TStorage> {
 // This extension can be used with pools to track the liquidity-seconds per liquidity over time. This measure can be used to incentive positions in this pool.
 #[starknet::contract]
 mod Oracle {
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
         Delta
@@ -242,7 +242,7 @@ mod Oracle {
                     pool_key,
                     PoolState {
                         block_timestamp_last: get_block_timestamp(),
-                        tick_cumulative_last: Zeroable::zero(),
+                        tick_cumulative_last: Zero::zero(),
                         tick_last: initial_tick,
                     }
                 );

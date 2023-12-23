@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
+use core::num::traits::{Zero};
 use core::option::OptionTrait;
 use core::traits::{Into};
-use core::zeroable::{Zeroable};
 use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
@@ -33,10 +33,7 @@ use starknet::{contract_address_const, get_contract_address, ClassHash};
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
 
@@ -56,10 +53,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 #[test]
 fn test_deposit_liquidity_full_range() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: max_bounds(1));
@@ -81,10 +75,7 @@ fn test_deposit_liquidity_full_range() {
 #[should_panic(expected: ('CORE_ONLY', 'ENTRYPOINT_FAILED'))]
 fn test_locked_cannot_be_called_directly() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     ILockerDispatcher { contract_address: positions.contract_address }.locked(1, ArrayTrait::new());
@@ -94,10 +85,7 @@ fn test_locked_cannot_be_called_directly() {
 #[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
 fn test_deposit_fails_min_liquidity() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: max_bounds(1));
@@ -113,10 +101,7 @@ fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -136,16 +121,14 @@ fn test_deposit_liquidity_concentrated() {
         .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
 
     assert(
-        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance0 transfer'
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance0 transfer'
     );
     assert(
-        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance1 transfer'
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance1 transfer'
     );
 
-    assert(balance0 == Zeroable::zero(), 'balance0');
-    assert(balance1 == Zeroable::zero(), 'balance1');
+    assert(balance0 == Zero::zero(), 'balance0');
+    assert(balance1 == Zero::zero(), 'balance1');
 
     assert(liquidity == 200050104166, 'liquidity');
 }
@@ -155,10 +138,7 @@ fn test_deposit_liquidity_concentrated_mint_and_deposit() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -182,7 +162,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 500, sign: false },
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -206,12 +186,11 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
         'balance0 transfer'
     );
     assert(
-        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance1 transfer'
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance1 transfer'
     );
 
     assert(balance0 == u256 { low: 66674999, high: 0 }, 'balance0');
-    assert(balance1 == Zeroable::zero(), 'balance1');
+    assert(balance1 == Zero::zero(), 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
 }
 
@@ -223,7 +202,7 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 500, sign: true },
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -244,15 +223,14 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_lower() {
         .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
-        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance0 transfer'
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance0 transfer'
     );
     assert(
         setup.token1.balanceOf(contract_address_const::<2>()) == u256 { low: 66674999, high: 0 },
         'balance1 transfer'
     );
 
-    assert(balance0 == Zeroable::zero(), 'balance0');
+    assert(balance0 == Zero::zero(), 'balance0');
     assert(balance1 == u256 { low: 66674999, high: 0 }, 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
 }
@@ -265,7 +243,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 1000, sign: false },
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -290,12 +268,11 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_upper() {
         'balance0 transfer'
     );
     assert(
-        setup.token1.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance1 transfer'
+        setup.token1.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance1 transfer'
     );
 
     assert(balance0 == u256 { low: 100000000, high: 0 }, 'balance0');
-    assert(balance1 == Zeroable::zero(), 'balance1');
+    assert(balance1 == Zero::zero(), 'balance1');
     assert(liquidity == 100000045833, 'liquidity');
 }
 
@@ -307,7 +284,7 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
         fee: FEE_ONE_PERCENT,
         tick_spacing: 1,
         initial_tick: i129 { mag: 1000, sign: true },
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -327,15 +304,14 @@ fn test_deposit_liquidity_concentrated_out_of_range_price_lower() {
         .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
 
     assert(
-        setup.token0.balanceOf(contract_address_const::<2>()) == Zeroable::zero(),
-        'balance0 transfer'
+        setup.token0.balanceOf(contract_address_const::<2>()) == Zero::zero(), 'balance0 transfer'
     );
     assert(
         setup.token1.balanceOf(contract_address_const::<2>()) == u256 { low: 100000000, high: 0 },
         'balance1 transfer'
     );
 
-    assert(balance0 == Zeroable::zero(), 'balance0');
+    assert(balance0 == Zero::zero(), 'balance0');
     assert(balance1 == u256 { low: 100000000, high: 0 }, 'balance1');
     assert(liquidity == 100000045833, 'liquidity');
 }
@@ -345,10 +321,7 @@ fn test_deposit_then_withdraw_with_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -367,7 +340,7 @@ fn test_deposit_then_withdraw_with_fees() {
         amount: i129 { mag: 1000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: max_sqrt_ratio(),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     let delta_second_swap = swap(
@@ -375,7 +348,7 @@ fn test_deposit_then_withdraw_with_fees() {
         amount: i129 { mag: 2000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: min_sqrt_ratio(),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -393,10 +366,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = contract_address_const::<12345678>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -418,7 +388,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
         amount: i129 { mag: 1000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: max_sqrt_ratio(),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -426,7 +396,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
         amount: i129 { mag: 2000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: min_sqrt_ratio(),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -550,10 +520,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -600,10 +567,7 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -659,10 +623,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -691,7 +652,7 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
         amount: i129 { mag: 100000, sign: true },
         is_token1: false,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -712,10 +673,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -744,7 +702,7 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
         amount: i129 { mag: 100000, sign: true },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -765,10 +723,7 @@ fn test_deposit_swap_round_trip_accounting() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let bounds = Bounds {
@@ -798,7 +753,7 @@ fn test_deposit_swap_round_trip_accounting() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -806,7 +761,7 @@ fn test_deposit_swap_round_trip_accounting() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -814,7 +769,7 @@ fn test_deposit_swap_round_trip_accounting() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -875,10 +830,7 @@ fn create_position(
 #[test]
 fn test_deposit_existing_position() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
 
@@ -912,7 +864,7 @@ fn test_deposit_existing_position() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -943,10 +895,7 @@ fn test_deposit_swap_multiple_positions() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let p0 = create_position(
@@ -978,7 +927,7 @@ fn test_deposit_swap_multiple_positions() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -986,7 +935,7 @@ fn test_deposit_swap_multiple_positions() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -994,7 +943,7 @@ fn test_deposit_swap_multiple_positions() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -1025,10 +974,7 @@ fn test_deposit_swap_multiple_positions() {
 #[test]
 fn test_create_position_in_range_after_swap_no_fees() {
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
 
@@ -1050,7 +996,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 5, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
     swap(
@@ -1058,7 +1004,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -1140,10 +1086,7 @@ fn test_withdraw_not_collected_fees_token1() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let p0 = create_position(
@@ -1161,7 +1104,7 @@ fn test_withdraw_not_collected_fees_token1() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: true,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -1191,10 +1134,7 @@ fn test_withdraw_not_collected_fees_token0() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let p0 = create_position(
@@ -1212,7 +1152,7 @@ fn test_withdraw_not_collected_fees_token0() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -1234,10 +1174,7 @@ fn test_withdraw_partial_leave_fees() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
     let setup = setup_pool(
-        fee: FEE_ONE_PERCENT,
-        tick_spacing: 1,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
     let p0 = create_position(
@@ -1255,7 +1192,7 @@ fn test_withdraw_partial_leave_fees() {
         amount: i129 { mag: 100000, sign: false },
         is_token1: false,
         sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 
@@ -1286,8 +1223,8 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
         // 30 bips
         fee: 1020847100762815390390123822295304634,
         tick_spacing: 5982,
-        initial_tick: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        initial_tick: Zero::zero(),
+        extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
 
@@ -1301,7 +1238,7 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
         amount: i129 { mag: ONE_E18, sign: true },
         is_token1: false,
         sqrt_ratio_limit: u256 { high: 2, low: 0 },
-        recipient: Zeroable::zero(),
+        recipient: Zero::zero(),
         skip_ahead: 0
     );
 

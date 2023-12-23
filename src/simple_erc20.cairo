@@ -1,8 +1,8 @@
 #[starknet::contract]
 mod SimpleERC20 {
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into};
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::erc20::{IERC20};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
 

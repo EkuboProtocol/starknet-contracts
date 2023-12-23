@@ -34,10 +34,10 @@ trait IRouter<TStorage> {
 #[starknet::contract]
 mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
     use core::traits::{Into};
-    use core::zeroable::{Zeroable};
     use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};

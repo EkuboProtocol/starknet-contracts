@@ -1,6 +1,6 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use core::zeroable::{Zeroable};
 use ekubo::math::muldiv::{div};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store, Debug)]
@@ -23,15 +23,18 @@ impl SubFeesPerLiquidity of Sub<FeesPerLiquidity> {
     }
 }
 
-impl FeesPerLiquidityZeroable of Zeroable<FeesPerLiquidity> {
+impl FeesPerLiquidityZero of Zero<FeesPerLiquidity> {
+    #[inline(always)]
     fn zero() -> FeesPerLiquidity {
-        FeesPerLiquidity { value0: Zeroable::zero(), value1: Zeroable::zero() }
+        FeesPerLiquidity { value0: Zero::zero(), value1: Zero::zero() }
     }
-    fn is_zero(self: FeesPerLiquidity) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @FeesPerLiquidity) -> bool {
         (self.value0.is_zero()) & (self.value1.is_zero())
     }
-    fn is_non_zero(self: FeesPerLiquidity) -> bool {
-        !Zeroable::is_zero(self)
+    #[inline(always)]
+    fn is_non_zero(self: @FeesPerLiquidity) -> bool {
+        !Zero::is_zero(self)
     }
 }
 
@@ -51,14 +54,10 @@ fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> Fees
 
 #[inline(always)]
 fn fees_per_liquidity_from_amount0(amount0: u128, liquidity: u128) -> FeesPerLiquidity {
-    FeesPerLiquidity {
-        value0: to_fees_per_liquidity(amount0, liquidity), value1: Zeroable::zero(),
-    }
+    FeesPerLiquidity { value0: to_fees_per_liquidity(amount0, liquidity), value1: Zero::zero(), }
 }
 
 #[inline(always)]
 fn fees_per_liquidity_from_amount1(amount1: u128, liquidity: u128) -> FeesPerLiquidity {
-    FeesPerLiquidity {
-        value0: Zeroable::zero(), value1: to_fees_per_liquidity(amount1, liquidity),
-    }
+    FeesPerLiquidity { value0: Zero::zero(), value1: to_fees_per_liquidity(amount1, liquidity), }
 }

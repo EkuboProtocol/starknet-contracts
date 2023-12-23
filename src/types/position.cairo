@@ -1,5 +1,5 @@
+use core::num::traits::{Zero};
 use core::traits::{Into};
-use core::zeroable::{Zeroable};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 
 // Represents a liquidity position
@@ -13,16 +13,19 @@ struct Position {
 }
 
 // we only check liquidity is non-zero because fees per liquidity inside is irrelevant if liquidity is 0
-impl PositionZeroable of Zeroable<Position> {
+impl PositionZero of Zero<Position> {
+    #[inline(always)]
     fn zero() -> Position {
-        Position { liquidity: Zeroable::zero(), fees_per_liquidity_inside_last: Zeroable::zero() }
+        Position { liquidity: Zero::zero(), fees_per_liquidity_inside_last: Zero::zero() }
     }
 
-    fn is_zero(self: Position) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @Position) -> bool {
         self.liquidity.is_zero()
     }
 
-    fn is_non_zero(self: Position) -> bool {
+    #[inline(always)]
+    fn is_non_zero(self: @Position) -> bool {
         !self.liquidity.is_zero()
     }
 }

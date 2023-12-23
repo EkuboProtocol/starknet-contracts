@@ -41,10 +41,10 @@ trait ICoreLocker<TStorage> {
 #[starknet::contract]
 mod CoreLocker {
     use core::array::ArrayTrait;
+
+    use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::Serde;
-
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
@@ -77,13 +77,13 @@ mod CoreLocker {
             delta: i129,
             recipient: ContractAddress
         ) {
-            if (delta > Zeroable::zero()) {
+            if (delta > Zero::zero()) {
                 // transfer the token from self (assumes we have the balance)
                 IERC20Dispatcher { contract_address: token }
                     .transfer(core.contract_address, u256 { low: delta.mag, high: 0 });
                 // then call pay
                 assert(core.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
-            } else if (delta < Zeroable::zero()) {
+            } else if (delta < Zero::zero()) {
                 // withdraw to recipient
                 core.withdraw(token, recipient, delta.mag);
             }
@@ -171,7 +171,7 @@ mod CoreLocker {
                         assert(prev_state.nonzero_delta_count == 0, 'no deltas');
                     }
 
-                    if (relock_count != Zeroable::zero()) {
+                    if (relock_count != Zero::zero()) {
                         // relock
                         ICoreLockerDispatcher { contract_address: get_contract_address() }
                             .call(Action::Relock((locker_id + 1, relock_count - 1)));
@@ -192,12 +192,12 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0 == Zeroable::zero() {
+                            .nonzero_delta_count == ((if delta.amount0 == Zero::zero() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1 == Zeroable::zero() {
+                                + (if delta.amount1 == Zero::zero() {
                                     0
                                 } else {
                                     1
@@ -210,7 +210,7 @@ mod CoreLocker {
                     state = core.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
+                            .nonzero_delta_count == (if delta.amount1 == Zero::zero() {
                                 0
                             } else {
                                 1
@@ -239,12 +239,12 @@ mod CoreLocker {
 
                     assert(
                         state
-                            .nonzero_delta_count == ((if delta.amount0 == Zeroable::zero() {
+                            .nonzero_delta_count == ((if delta.amount0 == Zero::zero() {
                                 0
                             } else {
                                 1
                             })
-                                + (if delta.amount1 == Zeroable::zero() {
+                                + (if delta.amount1 == Zero::zero() {
                                     0
                                 } else {
                                     1
@@ -257,7 +257,7 @@ mod CoreLocker {
                     state = core.get_locker_state(id);
                     assert(
                         state
-                            .nonzero_delta_count == (if delta.amount1 == Zeroable::zero() {
+                            .nonzero_delta_count == (if delta.amount1 == Zero::zero() {
                                 0
                             } else {
                                 1
@@ -283,7 +283,7 @@ mod CoreLocker {
 
                     self
                         .handle_delta(
-                            core, key.token, i129 { mag: amount, sign: false }, Zeroable::zero()
+                            core, key.token, i129 { mag: amount, sign: false }, Zero::zero()
                         );
 
                     state = core.get_locker_state(id);

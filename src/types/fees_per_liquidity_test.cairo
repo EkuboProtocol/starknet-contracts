@@ -1,4 +1,4 @@
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::types::fees_per_liquidity::{
     FeesPerLiquidity, to_fees_per_liquidity, fees_per_liquidity_new
 };
@@ -15,16 +15,16 @@ fn test_MAX_PRIME_plus_one_is_zero() {
 
 #[test]
 fn test_fpl_zeroable() {
-    let fpl: FeesPerLiquidity = Zeroable::zero();
-    assert(fpl.value0 == Zeroable::zero(), 'fpl0');
-    assert(fpl.value1 == Zeroable::zero(), 'fpl1');
+    let fpl: FeesPerLiquidity = Zero::zero();
+    assert(fpl.value0 == Zero::zero(), 'fpl0');
+    assert(fpl.value1 == Zero::zero(), 'fpl1');
     assert(!fpl.is_non_zero(), 'nonzero');
     assert(fpl.is_zero(), 'zero');
 }
 
 #[test]
 fn test_fpl_add_sub_zeroable() {
-    let fpl: FeesPerLiquidity = Zeroable::zero();
+    let fpl: FeesPerLiquidity = Zero::zero();
     assert(!(fpl + fpl).is_non_zero(), 'nonzero');
     assert(!(fpl - fpl).is_non_zero(), 'nonzero');
     assert((fpl + fpl).is_zero(), 'zero');
@@ -33,7 +33,7 @@ fn test_fpl_add_sub_zeroable() {
 
 #[test]
 fn test_fpl_underflow_sub() {
-    let fpl_zero: FeesPerLiquidity = Zeroable::zero();
+    let fpl_zero: FeesPerLiquidity = Zero::zero();
     let fpl_one = FeesPerLiquidity { value0: 1, value1: 1 };
 
     let difference = fpl_zero - fpl_one;

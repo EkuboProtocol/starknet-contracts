@@ -1,6 +1,6 @@
 use core::integer::{u256_as_non_zero};
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::zeroable::{Zeroable};
 use ekubo::math::muldiv::{div, muldiv};
 
 #[test]

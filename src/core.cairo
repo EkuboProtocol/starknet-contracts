@@ -2,9 +2,9 @@
 mod Core {
     use core::array::{ArrayTrait, SpanTrait};
     use core::hash::{LegacyHash};
+    use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -475,7 +475,7 @@ mod Core {
             assert(self.get_nonzero_delta_count(id) == 0, 'NOT_ZEROED');
 
             self.lock_count.write(id);
-            self.set_locker_address(id, Zeroable::zero());
+            self.set_locker_address(id, Zero::zero());
 
             result
         }
@@ -721,7 +721,7 @@ mod Core {
                     'MUST_COLLECT_FEES'
                 );
                 // delete the position from storage
-                self.positions.write((pool_key, position_key), Zeroable::zero());
+                self.positions.write((pool_key, position_key), Zero::zero());
             }
 
             self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
@@ -820,7 +820,7 @@ mod Core {
 
             let mut liquidity: u128 = Store::read(0, liquidity_storage_address)
                 .expect('FAILED_READ_POOL_LIQUIDITY');
-            let mut calculated_amount: u128 = Zeroable::zero();
+            let mut calculated_amount: u128 = Zero::zero();
 
             let fees_per_liquidity_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(selector!("pool_fees"), pool_key)

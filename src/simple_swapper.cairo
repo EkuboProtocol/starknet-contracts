@@ -21,11 +21,10 @@ trait ISimpleSwapper<TStorage> {
 #[starknet::contract]
 mod SimpleSwapper {
     use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
     use core::traits::{Into};
-    use core::zeroable::{Zeroable};
-
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::swap::{is_price_increasing};

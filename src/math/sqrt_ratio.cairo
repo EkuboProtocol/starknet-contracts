@@ -1,8 +1,8 @@
 use core::integer::{
     u256_as_non_zero, u256_overflow_mul, u256_overflow_sub, u256_overflowing_add, u256_safe_divmod
 };
+use core::num::traits::{Zero};
 use core::option::{Option};
-use core::zeroable::{Zeroable};
 use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::{i129};
 

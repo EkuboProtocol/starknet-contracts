@@ -1,4 +1,4 @@
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey};
@@ -44,9 +44,9 @@ trait IQuoter<TStorage> {
 #[starknet::contract]
 mod Quoter {
     use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
-    use core::zeroable::{Zeroable};
 
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters, ILocker};
     use ekubo::math::swap::{is_price_increasing};

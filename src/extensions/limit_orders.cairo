@@ -111,9 +111,9 @@ trait ILimitOrders<TContractState> {
 #[starknet::contract]
 mod LimitOrders {
     use core::array::{ArrayTrait};
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
-    use core::zeroable::{Zeroable};
     use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,

@@ -1,7 +1,7 @@
 use core::array::{ArrayTrait};
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use core::zeroable::{Zeroable};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
@@ -244,7 +244,7 @@ fn test_is_account_authorized() {
     nft.approve(bob, id.into());
     assert(controller.is_account_authorized(id, bob), 'bob now auth');
 
-    nft.approve(Zeroable::zero(), id.into());
+    nft.approve(Zero::zero(), id.into());
     assert(!controller.is_account_authorized(id, bob), 'bob not auth');
 
     nft.set_approval_for_all(bob, true);

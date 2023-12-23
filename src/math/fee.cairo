@@ -1,5 +1,5 @@
 use core::integer::{u128_wide_mul, u256_safe_divmod, u256_as_non_zero};
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::types::i129::i129;
 
 // Returns the fee to charge based on the amount, which is the fee (a 0.128 number) times the amount, rounded up

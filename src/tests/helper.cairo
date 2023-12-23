@@ -1,10 +1,10 @@
 use core::array::{Array, ArrayTrait};
 
 use core::integer::{u256, u256_from_felt252, BoundedInt};
+use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
-use core::zeroable::{Zeroable};
 use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::core::{Core};
 use ekubo::extensions::limit_orders::{LimitOrders};
@@ -358,11 +358,11 @@ fn update_position_inner(
         ) {
         ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Relock => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::UpdatePosition(delta) => {
             let after: Balances = get_balances(
@@ -377,23 +377,23 @@ fn update_position_inner(
         },
         ActionResult::Swap(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::SaveBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::LoadBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::AccumulateAsFees(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::FlashBorrow(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         }
     }
 }
@@ -484,15 +484,15 @@ fn swap_inner(
         ) {
         ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Relock => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::UpdatePosition(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Swap(delta) => {
             let after: Balances = get_balances(
@@ -507,19 +507,19 @@ fn swap_inner(
         },
         ActionResult::SaveBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::LoadBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::AccumulateAsFees(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::FlashBorrow(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         }
     }
 }

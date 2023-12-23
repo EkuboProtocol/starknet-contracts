@@ -1,6 +1,6 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use core::zeroable::{Zeroable};
 use ekubo::extensions::limit_orders::{
     ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
     GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -49,7 +49,7 @@ fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, Pool
 #[test]
 fn test_round_trip_order_state() {
     assert_round_trip(
-        OrderState { liquidity: Zeroable::zero(), ticks_crossed_at_create: Zeroable::zero() }
+        OrderState { liquidity: Zero::zero(), ticks_crossed_at_create: Zero::zero() }
     );
 
     assert_round_trip(OrderState { liquidity: 0, ticks_crossed_at_create: 1 });
@@ -83,8 +83,8 @@ fn test_round_trip_order_state() {
 
 #[test]
 fn test_round_trip_pool_state() {
-    assert_round_trip(PoolState { ticks_crossed: 0, last_tick: Zeroable::zero() });
-    assert_round_trip(PoolState { ticks_crossed: 1, last_tick: Zeroable::zero() });
+    assert_round_trip(PoolState { ticks_crossed: 0, last_tick: Zero::zero() });
+    assert_round_trip(PoolState { ticks_crossed: 1, last_tick: Zero::zero() });
     assert_round_trip(PoolState { ticks_crossed: 0, last_tick: i129 { mag: 1, sign: false } });
     assert_round_trip(PoolState { ticks_crossed: 1, last_tick: i129 { mag: 1, sign: true } });
     assert_round_trip(PoolState { ticks_crossed: 123, last_tick: i129 { mag: 0, sign: true } });
@@ -140,7 +140,7 @@ fn test_round_trip_pool_state() {
 #[test]
 fn test_order_key_hash() {
     let base: OrderKey = OrderKey {
-        token0: Zeroable::zero(), token1: Zeroable::zero(), tick: Zeroable::zero(),
+        token0: Zero::zero(), token1: Zero::zero(), tick: Zero::zero(),
     };
 
     let mut other_token0 = base;
@@ -196,7 +196,7 @@ fn test_before_initialize_pool_not_from_extension() {
                 tick_spacing: LIMIT_ORDER_TICK_SPACING,
                 extension: limit_orders.contract_address,
             },
-            Zeroable::zero()
+            Zero::zero()
         );
 }
 
@@ -206,7 +206,7 @@ fn test_place_order_sell_token0_initializes_pool_above_tick() {
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     lo.place_order(order_key, 100);
     let price = core.get_pool_price(pk);
     assert(price.tick.is_zero() & price.sqrt_ratio.is_non_zero(), 'initialized');
@@ -551,14 +551,14 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
         bounds: Bounds {
-            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            lower: Zero::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
         },
     };
     assert(
@@ -644,14 +644,14 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
         bounds: Bounds {
-            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            lower: Zero::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
         },
     };
     assert(
@@ -745,14 +745,14 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t0.increase_balance(lo.contract_address, 100);
-    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let order_key = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     let id = lo.place_order(order_key, 100);
 
     let position_key = PositionKey {
         salt: 0,
         owner: lo.contract_address,
         bounds: Bounds {
-            lower: Zeroable::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+            lower: Zero::zero(), upper: i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
         },
     };
     assert(
@@ -794,7 +794,7 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
 
     t0.increase_balance(lo.contract_address, 100);
-    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() };
+    let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     let id1 = lo.place_order(ok1, 100);
 
     t1.increase_balance(simple_swapper.contract_address, 200);
@@ -954,7 +954,7 @@ fn test_place_order_fails_wrong_side_token1() {
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
-    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() }, 100);
     lo
         .place_order(
             OrderKey {
@@ -984,7 +984,7 @@ fn test_place_order_fails_wrong_side_token0() {
             },
             100
         );
-    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 100);
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() }, 100);
 }
 
 #[test]
@@ -992,7 +992,7 @@ fn test_place_order_fails_wrong_side_token0() {
 fn test_place_order_fails_zero_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
 
-    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zeroable::zero() }, 0);
+    lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() }, 0);
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::asset_recovery::{IAssetRecoveryDispatcher, IAssetRecoveryDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::owner::{owner};

@@ -1,4 +1,5 @@
-use core::zeroable::Zeroable;
+use core::num::traits::{Zero};
+
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
@@ -8,7 +9,7 @@ use ekubo::types::i129::i129;
 
 #[test]
 fn zero_tick() {
-    let sqrt_ratio = tick_to_sqrt_ratio(Zeroable::zero());
+    let sqrt_ratio = tick_to_sqrt_ratio(Zero::zero());
     assert(sqrt_ratio == 0x100000000000000000000000000000000_u256, 'sqrt_ratio is 1');
 }
 

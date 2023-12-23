@@ -1,4 +1,4 @@
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1, max_liquidity};
 use ekubo::math::ticks::{
@@ -18,14 +18,14 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
 #[should_panic(expected: ('OVERFLOW_MLFT0',))]
 fn test_max_liquidity_for_token0_max_lower_half_range() {
     let result = max_liquidity_for_token0(
-        tick_to_sqrt_ratio(Zeroable::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
+        tick_to_sqrt_ratio(Zero::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
 }
 
 #[test]
 fn test_max_liquidity_for_token0_max_upper_half_range() {
     let result = max_liquidity_for_token0(
-        min_sqrt_ratio(), tick_to_sqrt_ratio(Zeroable::zero()), 0xffffffffffffffffffffffffffffffff
+        min_sqrt_ratio(), tick_to_sqrt_ratio(Zero::zero()), 0xffffffffffffffffffffffffffffffff
     );
     assert(result == 18446748437148339062, 'max at half range');
 }
@@ -42,14 +42,14 @@ fn test_max_liquidity_for_token1_max_at_full_range() {
 #[should_panic(expected: ('OVERFLOW_MLFT1',))]
 fn test_max_liquidity_for_token1_max_lower_half_range() {
     let result = max_liquidity_for_token1(
-        min_sqrt_ratio(), tick_to_sqrt_ratio(Zeroable::zero()), 0xffffffffffffffffffffffffffffffff
+        min_sqrt_ratio(), tick_to_sqrt_ratio(Zero::zero()), 0xffffffffffffffffffffffffffffffff
     );
 }
 
 #[test]
 fn test_max_liquidity_for_token1_max_upper_half_range() {
     let result = max_liquidity_for_token1(
-        tick_to_sqrt_ratio(Zeroable::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
+        tick_to_sqrt_ratio(Zero::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
     assert(result == 18446748437148339062, 'max at half range');
 }

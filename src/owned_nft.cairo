@@ -19,9 +19,9 @@ trait IOwnedNFT<TStorage> {
 #[starknet::contract]
 mod OwnedNFT {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
-    use core::zeroable::{Zeroable};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -191,7 +191,7 @@ mod OwnedNFT {
             assert(authorized, 'UNAUTHORIZED');
 
             self.owners.write(id, to);
-            self.approvals.write(id, Zeroable::zero());
+            self.approvals.write(id, Zero::zero());
 
             self.balances.write(to, self.balances.read(to) + 1);
             self.balances.write(from, self.balances.read(from) - 1);
@@ -283,9 +283,7 @@ mod OwnedNFT {
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(),
-                        to: owner,
-                        token_id: u256 { low: id.into(), high: 0 }
+                        from: Zero::zero(), to: owner, token_id: u256 { low: id.into(), high: 0 }
                     }
                 );
 
@@ -298,11 +296,11 @@ mod OwnedNFT {
             let owner = self.owners.read(id);
 
             // delete the storage variables
-            self.owners.write(id, Zeroable::zero());
-            self.approvals.write(id, Zeroable::zero());
+            self.owners.write(id, Zero::zero());
+            self.approvals.write(id, Zero::zero());
             self.balances.write(owner, self.balances.read(owner) - 1);
 
-            self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id: id.into() });
+            self.emit(Transfer { from: owner, to: Zero::zero(), token_id: id.into() });
         }
 
         fn get_next_token_id(self: @ContractState) -> u64 {

@@ -1,9 +1,9 @@
 use core::array::{ArrayTrait};
 use core::hash::{HashStateTrait, Hash};
 use core::integer::{u128_safe_divmod, u128_as_non_zero};
+use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
-use core::zeroable::{Zeroable};
 use starknet::storage_access::{StorePacking};
 
 // Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128 bits are magnitude
@@ -40,16 +40,19 @@ fn i129_new(mag: u128, sign: bool) -> i129 {
     i129 { mag, sign: sign & (mag != 0) }
 }
 
-impl i129Zeroable of Zeroable<i129> {
+impl i129Zero of Zero<i129> {
+    #[inline(always)]
     fn zero() -> i129 {
         i129 { mag: 0, sign: false }
     }
 
-    fn is_zero(self: i129) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @i129) -> bool {
         self.mag.is_zero()
     }
 
-    fn is_non_zero(self: i129) -> bool {
+    #[inline(always)]
+    fn is_non_zero(self: @i129) -> bool {
         self.mag.is_non_zero()
     }
 }

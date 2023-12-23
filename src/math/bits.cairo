@@ -1,6 +1,6 @@
 use core::integer::{u128_overflowing_sub};
+use core::num::traits::{Zero};
 use core::result::ResultTrait;
-use core::zeroable::{Zeroable};
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
 fn msb(mut x: u128) -> u8 {

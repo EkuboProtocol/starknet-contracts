@@ -1,6 +1,6 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto};
-use core::zeroable::{Zeroable};
 use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait, PoolState};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
@@ -116,9 +116,9 @@ fn deposit(
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
             tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: false },
-            tick_last: Zeroable::zero(),
+            tick_last: Zero::zero(),
         }
     );
 }
@@ -128,9 +128,9 @@ fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
             tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: true },
-            tick_last: Zeroable::zero(),
+            tick_last: Zero::zero(),
         }
     );
 }
@@ -140,8 +140,8 @@ fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
 fn test_pool_state_store_packing_fails_tick_last_too_large() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
             tick_last: i129 { mag: 0x80000000, sign: false },
         }
     );
@@ -152,8 +152,8 @@ fn test_pool_state_store_packing_fails_tick_last_too_large() {
 fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
             tick_last: i129 { mag: 0x80000000, sign: true },
         }
     );
@@ -163,9 +163,9 @@ fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
 fn test_pool_state_packing_round_trip_many_values() {
     assert_round_trip(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
-            tick_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
+            tick_last: Zero::zero(),
         }
     );
     assert_round_trip(
@@ -232,7 +232,7 @@ fn test_time_passes_seconds_per_liquidity_global() {
 
 #[test]
 fn test_time_passed_position_out_of_range_only() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zero::zero());
 
     let positions = deploy_positions(core);
 
@@ -284,7 +284,7 @@ fn test_time_passed_position_out_of_range_only() {
 
 #[test]
 fn test_swap_into_liquidity_time_passed() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zero::zero());
     let locker = deploy_locker(core);
     let positions = deploy_positions(core);
 
@@ -334,7 +334,7 @@ fn test_swap_into_liquidity_time_passed() {
 
 #[test]
 fn test_swap_through_liquidity_time_passed() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zero::zero());
     let locker = deploy_locker(core);
     let positions = deploy_positions(core);
 

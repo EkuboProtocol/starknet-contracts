@@ -1,4 +1,4 @@
-use core::zeroable::Zeroable;
+use core::num::traits::{Zero};
 use ekubo::types::i129::{i129};
 
 // From the perspective of the core contract, this represents the change in balances.
@@ -10,14 +10,17 @@ struct Delta {
     amount1: i129,
 }
 
-impl ZeroableDelta of Zeroable<Delta> {
+impl ZeroDelta of Zero<Delta> {
+    #[inline(always)]
     fn zero() -> Delta {
-        Delta { amount0: Zeroable::zero(), amount1: Zeroable::zero() }
+        Delta { amount0: Zero::zero(), amount1: Zero::zero() }
     }
-    fn is_zero(self: Delta) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @Delta) -> bool {
         self.amount0.is_zero() & self.amount1.is_zero()
     }
-    fn is_non_zero(self: Delta) -> bool {
+    #[inline(always)]
+    fn is_non_zero(self: @Delta) -> bool {
         self.amount0.is_non_zero() | self.amount1.is_non_zero()
     }
 }

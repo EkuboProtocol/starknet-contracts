@@ -1,5 +1,5 @@
 use core::hash::{LegacyHash};
-use core::zeroable::{Zeroable};
+use core::num::traits::{Zero};
 use ekubo::math::ticks::{max_tick, min_tick};
 use ekubo::types::bounds::{BoundsTrait, Bounds, max_bounds};
 use ekubo::types::i129::i129;
@@ -78,22 +78,20 @@ fn test_check_valid_fails_default_123() {
 #[test]
 #[should_panic(expected: ('BOUNDS_ORDER',))]
 fn test_check_valid_fails_zero() {
-    Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() }.check_valid(123);
+    Bounds { lower: Zero::zero(), upper: Zero::zero() }.check_valid(123);
 }
 
 #[test]
 #[should_panic(expected: ('BOUNDS_MAX',))]
 fn test_check_valid_fails_exceed_max_tick() {
-    Bounds { lower: Zeroable::zero(), upper: max_tick() + i129 { mag: 1, sign: false } }
-        .check_valid(1);
+    Bounds { lower: Zero::zero(), upper: max_tick() + i129 { mag: 1, sign: false } }.check_valid(1);
 }
 
 
 #[test]
 #[should_panic(expected: ('BOUNDS_MIN',))]
 fn test_check_valid_fails_below_min_tick() {
-    Bounds { lower: min_tick() - i129 { mag: 1, sign: false }, upper: Zeroable::zero() }
-        .check_valid(1);
+    Bounds { lower: min_tick() - i129 { mag: 1, sign: false }, upper: Zero::zero() }.check_valid(1);
 }
 
 #[test]
