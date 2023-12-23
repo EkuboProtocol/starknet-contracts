@@ -1,4 +1,3 @@
-use core::debug::PrintTrait;
 use core::zeroable::Zeroable;
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{

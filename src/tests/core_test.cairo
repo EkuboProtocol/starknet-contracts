@@ -30,7 +30,6 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
 mod owner_tests {
-    use core::debug::PrintTrait;
     use ekubo::owner::owner;
 
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -266,7 +265,6 @@ mod initialize_pool_tests {
 
 
 mod initialized_ticks {
-    use core::debug::PrintTrait;
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
         ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zeroable
@@ -623,8 +621,6 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use core::debug::PrintTrait;
-
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
         deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,

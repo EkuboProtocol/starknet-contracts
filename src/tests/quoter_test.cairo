@@ -1,5 +1,4 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
-use core::debug::PrintTrait;
 use core::zeroable::Zeroable;
 use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::interfaces::positions::IPositionsDispatcherTrait;

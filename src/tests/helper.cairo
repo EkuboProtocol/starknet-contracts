@@ -1,6 +1,5 @@
 use core::array::{Array, ArrayTrait};
 
-use core::debug::PrintTrait;
 use core::integer::{u256, u256_from_felt252, BoundedInt};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};

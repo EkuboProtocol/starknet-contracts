@@ -22,7 +22,6 @@ trait IMockExtension<TStorage> {
 #[starknet::contract]
 mod MockExtension {
     use core::array::{ArrayTrait};
-    use core::debug::PrintTrait;
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
     use core::zeroable::{Zeroable};

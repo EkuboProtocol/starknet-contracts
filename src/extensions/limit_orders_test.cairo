@@ -1,4 +1,3 @@
-use core::debug::PrintTrait;
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
 use core::zeroable::{Zeroable};
