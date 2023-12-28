@@ -32,7 +32,6 @@ fn msb(mut x: u128) -> u8 {
         res += 2;
     }
     if (x >= 0x02) {
-        x /= 2;
         res += 1;
     }
 
