@@ -107,41 +107,52 @@ mod Router {
                     swap, calculated_amount_threshold, recipient
                 )) => {
                     let mut calculated_token_amount: TokenAmount = swap.token_amount;
-                    let mut route = swap.route.span();
+                    let mut route = swap.route;
 
-                    calculated_token_amount =
-                        loop {
-                            calculated_token_amount = match route.pop_front() {
-                                Option::Some(node) => {
-                                    let is_token1 = calculated_token_amount
-                                        .token == *node
-                                        .pool_key
-                                        .token1;
+                    loop {
+                        calculated_token_amount = match route.pop_front() {
+                            Option::Some(node) => {
+                                let is_token1 = calculated_token_amount
+                                    .token == node
+                                    .pool_key
+                                    .token1;
 
-                                    let delta = core
-                                        .swap(
-                                            *node.pool_key,
-                                            SwapParameters {
-                                                amount: calculated_token_amount.amount,
-                                                is_token1: is_token1,
-                                                sqrt_ratio_limit: *node.sqrt_ratio_limit,
-                                                skip_ahead: *node.skip_ahead,
-                                            }
-                                        );
+                                let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
+                                if (sqrt_ratio_limit.is_zero()) {
+                                    sqrt_ratio_limit =
+                                        if is_price_increasing(
+                                            calculated_token_amount.amount.sign, is_token1
+                                        ) {
+                                            max_sqrt_ratio()
+                                        } else {
+                                            min_sqrt_ratio()
+                                        };
+                                }
 
-                                    if (is_token1) {
-                                        TokenAmount {
-                                            amount: -delta.amount0, token: *node.pool_key.token0
+                                let delta = core
+                                    .swap(
+                                        node.pool_key,
+                                        SwapParameters {
+                                            amount: calculated_token_amount.amount,
+                                            is_token1: is_token1,
+                                            sqrt_ratio_limit,
+                                            skip_ahead: node.skip_ahead,
                                         }
-                                    } else {
-                                        TokenAmount {
-                                            amount: -delta.amount1, token: *node.pool_key.token1
-                                        }
+                                    );
+
+                                if (is_token1) {
+                                    TokenAmount {
+                                        amount: -delta.amount0, token: node.pool_key.token0
                                     }
-                                },
-                                Option::None => { break calculated_token_amount; }
-                            };
+                                } else {
+                                    TokenAmount {
+                                        amount: -delta.amount1, token: node.pool_key.token1
+                                    }
+                                }
+                            },
+                            Option::None => { break calculated_token_amount; }
                         };
+                    };
 
                     // check the result of the swap exceeds the threshold
                     if swap.token_amount.amount.sign {
@@ -216,13 +227,15 @@ mod Router {
                                     true
                                 };
 
-                                let sqrt_ratio_limit = if is_price_increasing(
-                                    amount.sign, is_token1
-                                ) {
-                                    max_sqrt_ratio()
-                                } else {
-                                    min_sqrt_ratio()
-                                };
+                                let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
+                                if (sqrt_ratio_limit.is_zero()) {
+                                    sqrt_ratio_limit =
+                                        if is_price_increasing(amount.sign, is_token1) {
+                                            max_sqrt_ratio()
+                                        } else {
+                                            min_sqrt_ratio()
+                                        };
+                                }
 
                                 let delta = core
                                     .swap(
