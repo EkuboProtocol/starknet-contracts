@@ -255,10 +255,13 @@ fn test_place_order_on_both_sides_token1_first() {
     t0.increase_balance(lo.contract_address, 200);
     let id2 = lo.place_order(ok2, 200);
 
-    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
-    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
-    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
-    let mut results = lo.get_order_info(arr.span());
+    let mut results = lo
+        .get_order_info(
+            array![
+                GetOrderInfoRequest { order_key: ok1, id: id1 },
+                GetOrderInfoRequest { order_key: ok2, id: id2 }
+            ]
+        );
 
     let status1 = results.pop_front().unwrap();
     let status2 = results.pop_front().unwrap();
@@ -296,10 +299,13 @@ fn test_place_order_on_both_sides_token0_first() {
     t1.increase_balance(lo.contract_address, 200);
     let id2 = lo.place_order(ok2, 200);
 
-    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
-    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
-    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
-    let mut results = lo.get_order_info(arr.span());
+    let mut results = lo
+        .get_order_info(
+            array![
+                GetOrderInfoRequest { order_key: ok1, id: id1 },
+                GetOrderInfoRequest { order_key: ok2, id: id2 }
+            ]
+        );
 
     let status1 = results.pop_front().unwrap();
     let status2 = results.pop_front().unwrap();
