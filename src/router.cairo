@@ -108,6 +108,7 @@ mod Router {
                 )) => {
                     let mut calculated_token_amount: TokenAmount = swap.token_amount;
                     let mut route = swap.route;
+                    let mut payment_amount: Option<u128> = Option::None;
 
                     loop {
                         calculated_token_amount = match route.pop_front() {
@@ -140,11 +141,20 @@ mod Router {
                                         }
                                     );
 
+                                let is_first_exact_input = !swap.token_amount.amount.sign
+                                    & payment_amount.is_none();
+
                                 if (is_token1) {
+                                    if (is_first_exact_input) {
+                                        payment_amount = Option::Some(delta.amount1.mag);
+                                    }
                                     TokenAmount {
                                         amount: -delta.amount0, token: node.pool_key.token0
                                     }
                                 } else {
+                                    if (is_first_exact_input) {
+                                        payment_amount = Option::Some(delta.amount0.mag);
+                                    }
                                     TokenAmount {
                                         amount: -delta.amount1, token: node.pool_key.token1
                                     }
@@ -154,7 +164,6 @@ mod Router {
                         };
                     };
 
-                    // check the result of the swap exceeds the threshold
                     if swap.token_amount.amount.sign {
                         assert(
                             calculated_token_amount.amount.mag <= calculated_amount_threshold,
@@ -175,6 +184,7 @@ mod Router {
                                     paid_amount - calculated_token_amount.amount.mag
                                 );
                         }
+
                         // withdraw the output amount
                         core
                             .withdraw(
@@ -186,17 +196,24 @@ mod Router {
                             'MIN_AMOUNT_OUT'
                         );
 
-                        // pay the specified input amount
-                        IERC20Dispatcher { contract_address: swap.token_amount.token }
-                            .transfer(core.contract_address, swap.token_amount.amount.mag.into());
-                        let paid_amount = core.deposit(swap.token_amount.token);
-                        if (paid_amount > swap.token_amount.amount.mag) {
-                            core
-                                .withdraw(
-                                    swap.token_amount.token,
-                                    get_contract_address(),
-                                    paid_amount - swap.token_amount.amount.mag
-                                );
+                        // pay the computed input amount
+                        match payment_amount {
+                            Option::Some(amount) => {
+                                if (amount > 0) {
+                                    IERC20Dispatcher { contract_address: swap.token_amount.token }
+                                        .transfer(core.contract_address, amount.into());
+                                    let paid_amount = core.deposit(swap.token_amount.token);
+                                    if (paid_amount > amount) {
+                                        core
+                                            .withdraw(
+                                                swap.token_amount.token,
+                                                get_contract_address(),
+                                                paid_amount - swap.token_amount.amount.mag
+                                            );
+                                    }
+                                }
+                            },
+                            Option::None => {}
                         }
 
                         // withdraw the calculated output amount
