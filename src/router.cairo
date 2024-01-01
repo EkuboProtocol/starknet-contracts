@@ -157,8 +157,8 @@ mod Router {
                     // check the result of the swap exceeds the threshold
                     if swap.token_amount.amount.sign {
                         assert(
-                            calculated_token_amount.amount.mag >= calculated_amount_threshold,
-                            'MIN_AMOUNT_OUT'
+                            calculated_token_amount.amount.mag <= calculated_amount_threshold,
+                            'MAX_AMOUNT_IN'
                         );
 
                         // pay the computed input amount
@@ -182,8 +182,8 @@ mod Router {
                             );
                     } else {
                         assert(
-                            calculated_token_amount.amount.mag <= calculated_amount_threshold,
-                            'MAX_AMOUNT_IN'
+                            calculated_token_amount.amount.mag >= calculated_amount_threshold,
+                            'MIN_AMOUNT_OUT'
                         );
 
                         // pay the specified input amount
