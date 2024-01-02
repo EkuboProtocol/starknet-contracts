@@ -4,18 +4,18 @@ import { Account, Provider } from "starknet";
 const accounts = [
   {
     address:
-      "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
-    privateKey: "0xe3e70682c2094cac629f6fbed82c07cd",
+      "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
+    privateKey: "0x71d7bb07b9a64f6f78ac4c816aff4da9",
   },
   {
     address:
-      "0x69b49c2cc8b16e80e86bfc5b0614a59aa8c9b601569c7b80dde04d3f3151b79",
-    privateKey: "0xf728b4fa42485e3a0a5d2f346baa9455",
+      "0x78662e7352d062084b0010068b99288486c2d8b914f6e2a55ce945f8792c8b1",
+    privateKey: "0xe1406455b7d66b1690803be066cbe5e",
   },
   {
     address:
-      "0x7447084f620ba316a42c72ca5b8eefb3fe9a05ca5fe6430c65a69ecc4349b3b",
-    privateKey: "0xeb1167b367a9c3787c65c1e582e2e662",
+      "0x49dfb8ce986e21d354ac93ea65e6a11f639c1934ea253e5ff14ca62eca0f38e",
+    privateKey: "0xa20a02f0ac53692d144b20cb371a60d7",
   },
 ];
 

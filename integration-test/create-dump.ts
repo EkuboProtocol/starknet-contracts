@@ -22,8 +22,7 @@ import { getAccounts } from "./accounts";
     {
       contract: SimpleERC20 as any,
       casm: SimpleERC20CASM as any,
-    },
-    { maxFee: 10000000000000 } // workaround
+    }
   );
 
   const {
@@ -50,8 +49,7 @@ import { getAccounts } from "./accounts";
     {
       contract: CoreCompiledContract as any,
       casm: CoreCompiledContractCASM as any,
-    },
-    { maxFee: 10000000000000 } // workaround
+    }
   );
 
   console.log("Declaring NFTs");
@@ -60,8 +58,7 @@ import { getAccounts } from "./accounts";
     {
       contract: OwnedNFTContract as any,
       casm: OwnedNFTContractCASM as any,
-    },
-    { maxFee: 10000000000000 } // workaround
+    }
   );
 
   const positionsConstructorCalldata = [
@@ -77,8 +74,7 @@ import { getAccounts } from "./accounts";
       contract: PositionsCompiledContract as any,
       casm: PositionsCompiledContractCASM as any,
       constructorCalldata: positionsConstructorCalldata,
-    },
-    { maxFee: 10000000000000 } // workaround
+    }
   );
 
   const positions = new Contract(
@@ -96,8 +92,7 @@ import { getAccounts } from "./accounts";
       contract: SimpleSwapper as any,
       casm: SimpleSwapperCASM as any,
       constructorCalldata: [coreResponse.deploy.address],
-    },
-    { maxFee: 10000000000000 } // workaround
+    }
   );
 
   await provider.dumpState();

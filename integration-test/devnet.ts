@@ -6,7 +6,7 @@ export class DevnetProvider extends Provider {
   private readonly port: number;
 
   constructor(port: number = 5050) {
-    super({ sequencer: { baseUrl: `http://127.0.0.1:${port}` } });
+    super({ rpc: { nodeUrl: `http://127.0.0.1:${port}` } });
     this.port = port;
   }
 
