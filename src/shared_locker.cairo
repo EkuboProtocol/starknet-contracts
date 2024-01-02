@@ -1,8 +1,14 @@
 use core::array::{ArrayTrait};
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::serde::Serde;
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-use starknet::{get_caller_address, call_contract_syscall, ContractAddress, SyscallResultTrait};
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::types::i129::{i129};
+use starknet::{
+    get_caller_address, get_contract_address, call_contract_syscall, ContractAddress,
+    SyscallResultTrait
+};
 
 fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
     core: ICoreDispatcher, input: @TInput
@@ -21,4 +27,22 @@ fn consume_callback_data<TInput, +Serde<TInput>>(
     assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
     let mut span = callback_data.span();
     Serde::deserialize(ref span).expect('DESERIALIZE_INPUT_FAILED')
+}
+
+fn handle_delta(
+    core: ICoreDispatcher, token: IERC20Dispatcher, delta: i129, recipient: ContractAddress
+) {
+    if (delta.is_non_zero()) {
+        // core owes tokens
+        if (delta.sign) {
+            core.withdraw(token.contract_address, recipient, delta.mag);
+        } else { // owe tokens to core
+            token.transfer(core.contract_address, delta.mag.into());
+            // tokens already in the contract
+            let paid = core.deposit(token.contract_address);
+            if (paid > delta.mag) {
+                core.withdraw(token.contract_address, recipient, paid - delta.mag);
+            }
+        }
+    }
 }

@@ -256,9 +256,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1890,
+      "range_check_builtin": 1863,
     },
-    "n_steps": 23727,
+    "n_steps": 22968,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941866287043816850431081895n,
@@ -276,9 +276,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 81,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1928,
+      "range_check_builtin": 1901,
     },
-    "n_steps": 25639,
+    "n_steps": 24881,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935060639705398047133577709n,
@@ -288,25 +288,81 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": -500000000000000000n,
+    "amount1": 1003009027081243732n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 40,
+      "range_check_builtin": 1837,
+    },
+    "n_steps": 23911,
+  },
+  "liquidity_after": 1000000000000000000n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": -999999999999999996n,
+    "amount1": 18466747002319258406770079872888746570n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 299,
+      "pedersen_builtin": 110,
+      "range_check_builtin": 11071,
+    },
+    "n_steps": 108004,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": 1003009027081243732n,
+    "amount1": -500000000000000000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 40,
+      "range_check_builtin": 2663,
+    },
+    "n_steps": 29522,
+  },
+  "liquidity_after": 1000000000000000000n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": 18466747002319258406770079872888746569n,
+    "amount1": -999999999999999994n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 327,
+      "pedersen_builtin": 111,
+      "range_check_builtin": 11939,
+    },
+    "n_steps": 119895,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -318,10 +374,10 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -337,10 +393,10 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -370,9 +426,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 81,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1859,
+      "range_check_builtin": 1831,
     },
-    "n_steps": 25232,
+    "n_steps": 24462,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935070848176405709111855138n,
@@ -390,9 +446,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1834,
+      "range_check_builtin": 1806,
     },
-    "n_steps": 23378,
+    "n_steps": 22609,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941856078572809188248941300n,
@@ -410,9 +466,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 40,
-      "range_check_builtin": 2124,
+      "range_check_builtin": 2096,
     },
-    "n_steps": 26642,
+    "n_steps": 25872,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
@@ -430,9 +486,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2346,
+      "range_check_builtin": 2318,
     },
-    "n_steps": 29431,
+    "n_steps": 28661,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
@@ -450,9 +506,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 40,
-      "range_check_builtin": 2009,
+      "range_check_builtin": 1981,
     },
-    "n_steps": 25711,
+    "n_steps": 24942,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
@@ -470,9 +526,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2433,
+      "range_check_builtin": 2405,
     },
-    "n_steps": 29178,
+    "n_steps": 28409,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
@@ -490,9 +546,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 945,
       "pedersen_builtin": 72,
-      "range_check_builtin": 24949,
+      "range_check_builtin": 24921,
     },
-    "n_steps": 206140,
+    "n_steps": 205370,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 4307890968852183321656454888n,
@@ -510,9 +566,9 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
     "builtin_instance_counter": {
       "bitwise_builtin": 918,
       "pedersen_builtin": 71,
-      "range_check_builtin": 24717,
+      "range_check_builtin": 24689,
     },
-    "n_steps": 198225,
+    "n_steps": 197456,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 26879066827489470242203952493307087579544590886863n,
@@ -530,9 +586,9 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1902,
+      "range_check_builtin": 1875,
     },
-    "n_steps": 23853,
+    "n_steps": 23094,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941866287043816850431081895n,
@@ -542,31 +598,101 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1649,
+      "pedersen_builtin": 95,
+      "range_check_builtin": 27080,
+    },
+    "n_steps": 215081,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": -500000000000000000n,
+    "amount1": 1003009027081243732n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 28,
+      "pedersen_builtin": 40,
+      "range_check_builtin": 1849,
+    },
+    "n_steps": 24037,
+  },
+  "liquidity_after": 1000000000000000000n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": -999999999999999996n,
+    "amount1": 18466747002319258406770079872888746570n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 300,
+      "pedersen_builtin": 110,
+      "range_check_builtin": 11083,
+    },
+    "n_steps": 108130,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 83,
+      "pedersen_builtin": 38,
+      "range_check_builtin": 2482,
+    },
+    "n_steps": 26697,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 299,
+      "pedersen_builtin": 95,
+      "range_check_builtin": 8390,
+    },
+    "n_steps": 90855,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -578,10 +704,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -597,10 +723,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -629,10 +755,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1649,
-      "pedersen_builtin": 102,
-      "range_check_builtin": 27111,
+      "pedersen_builtin": 95,
+      "range_check_builtin": 27020,
     },
-    "n_steps": 216948,
+    "n_steps": 214543,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -650,9 +776,9 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1846,
+      "range_check_builtin": 1818,
     },
-    "n_steps": 23504,
+    "n_steps": 22735,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920941856078572809188248941300n,
@@ -669,10 +795,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 83,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2572,
+      "pedersen_builtin": 38,
+      "range_check_builtin": 2481,
     },
-    "n_steps": 29095,
+    "n_steps": 26690,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -689,10 +815,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 299,
-      "pedersen_builtin": 102,
-      "range_check_builtin": 8471,
+      "pedersen_builtin": 95,
+      "range_check_builtin": 8380,
     },
-    "n_steps": 93172,
+    "n_steps": 90767,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -710,9 +836,9 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 40,
-      "range_check_builtin": 2021,
+      "range_check_builtin": 1993,
     },
-    "n_steps": 25837,
+    "n_steps": 25068,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
@@ -730,9 +856,9 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2445,
+      "range_check_builtin": 2417,
     },
-    "n_steps": 29304,
+    "n_steps": 28535,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 679543886741114111536359091041241118277n,
@@ -749,10 +875,10 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1649,
-      "pedersen_builtin": 102,
-      "range_check_builtin": 27111,
+      "pedersen_builtin": 95,
+      "range_check_builtin": 27020,
     },
-    "n_steps": 216948,
+    "n_steps": 214543,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -770,9 +896,9 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 919,
       "pedersen_builtin": 71,
-      "range_check_builtin": 24729,
+      "range_check_builtin": 24701,
     },
-    "n_steps": 198351,
+    "n_steps": 197582,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 26879066827489470242203952493307087579544590886863n,
@@ -796,9 +922,9 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 83,
       "pedersen_builtin": 51,
-      "range_check_builtin": 1988,
+      "range_check_builtin": 1961,
     },
-    "n_steps": 26613,
+    "n_steps": 25855,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935060639705398047133577709n,
@@ -808,25 +934,81 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 28,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1438,
+    },
+    "n_steps": 18188,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 271,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7957,
+    },
+    "n_steps": 81143,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": 1003009027081243732n,
+    "amount1": -500000000000000000n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 83,
+      "pedersen_builtin": 53,
+      "range_check_builtin": 2882,
+    },
+    "n_steps": 32478,
+  },
+  "liquidity_after": 1000000000000000000n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "NOT_ZEROED",
+  "delta": {
+    "amount0": 18466747002319258406770079872888746567n,
+    "amount1": -999999999999999994n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 329,
+      "pedersen_builtin": 113,
+      "range_check_builtin": 11389,
+    },
+    "n_steps": 117134,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -838,10 +1020,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -857,10 +1039,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -890,9 +1072,9 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 83,
       "pedersen_builtin": 51,
-      "range_check_builtin": 1919,
+      "range_check_builtin": 1891,
     },
-    "n_steps": 26206,
+    "n_steps": 25436,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 340282366920935070848176405709111855138n,
@@ -909,10 +1091,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1621,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27659,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27568,
     },
-    "n_steps": 213061,
+    "n_steps": 210657,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -930,9 +1112,9 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 56,
       "pedersen_builtin": 53,
-      "range_check_builtin": 2342,
+      "range_check_builtin": 2314,
     },
-    "n_steps": 29589,
+    "n_steps": 28819,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
@@ -950,9 +1132,9 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 56,
       "pedersen_builtin": 56,
-      "range_check_builtin": 2534,
+      "range_check_builtin": 2506,
     },
-    "n_steps": 32231,
+    "n_steps": 31461,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 170396778628411849505946223050459795422n,
@@ -969,10 +1151,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
-      "pedersen_builtin": 32,
-      "range_check_builtin": 1529,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1438,
     },
-    "n_steps": 20594,
+    "n_steps": 18190,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -989,10 +1171,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 271,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 8039,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7948,
     },
-    "n_steps": 83468,
+    "n_steps": 81064,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -1010,9 +1192,9 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 947,
       "pedersen_builtin": 84,
-      "range_check_builtin": 25009,
+      "range_check_builtin": 24981,
     },
-    "n_steps": 207114,
+    "n_steps": 206344,
   },
   "liquidity_after": 1000000000000000000n,
   "sqrt_ratio_after": 4307890968852183321656454888n,
@@ -1029,10 +1211,10 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1621,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27659,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27568,
     },
-    "n_steps": 213061,
+    "n_steps": 210657,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -1050,9 +1232,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1938,
+      "range_check_builtin": 1911,
     },
-    "n_steps": 23993,
+    "n_steps": 23234,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431771614280n,
@@ -1070,9 +1252,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 84,
       "pedersen_builtin": 39,
-      "range_check_builtin": 2012,
+      "range_check_builtin": 1985,
     },
-    "n_steps": 26400,
+    "n_steps": 25642,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431764808632n,
@@ -1090,9 +1272,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1946,
+      "range_check_builtin": 1919,
     },
-    "n_steps": 24048,
+    "n_steps": 23289,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
@@ -1110,9 +1292,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1947,
+      "range_check_builtin": 1920,
     },
-    "n_steps": 24047,
+    "n_steps": 23288,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
@@ -1130,9 +1312,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 57,
       "pedersen_builtin": 39,
-      "range_check_builtin": 2016,
+      "range_check_builtin": 1989,
     },
-    "n_steps": 25783,
+    "n_steps": 25025,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
@@ -1150,9 +1332,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 57,
       "pedersen_builtin": 39,
-      "range_check_builtin": 2016,
+      "range_check_builtin": 1989,
     },
-    "n_steps": 25791,
+    "n_steps": 25033,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
@@ -1168,10 +1350,10 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1187,10 +1369,10 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1220,9 +1402,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 84,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1945,
+      "range_check_builtin": 1917,
     },
-    "n_steps": 25998,
+    "n_steps": 25228,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431764808633n,
@@ -1240,9 +1422,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1884,
+      "range_check_builtin": 1856,
     },
-    "n_steps": 23649,
+    "n_steps": 22880,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431771614279n,
@@ -1260,9 +1442,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 57,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1950,
+      "range_check_builtin": 1922,
     },
-    "n_steps": 25390,
+    "n_steps": 24620,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
@@ -1280,9 +1462,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 57,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1950,
+      "range_check_builtin": 1922,
     },
-    "n_steps": 25398,
+    "n_steps": 24628,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
@@ -1300,9 +1482,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1892,
+      "range_check_builtin": 1864,
     },
-    "n_steps": 23704,
+    "n_steps": 22935,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
@@ -1320,9 +1502,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1893,
+      "range_check_builtin": 1865,
     },
-    "n_steps": 23703,
+    "n_steps": 22934,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
@@ -1340,9 +1522,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 84,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1955,
+      "range_check_builtin": 1927,
     },
-    "n_steps": 26058,
+    "n_steps": 25288,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282339960993932299601503360233022685n,
@@ -1360,9 +1542,9 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
     "builtin_instance_counter": {
       "bitwise_builtin": 28,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1894,
+      "range_check_builtin": 1866,
     },
-    "n_steps": 23709,
+    "n_steps": 22940,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282393880885130614014402098783298475n,
@@ -1380,9 +1562,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1880,
+      "range_check_builtin": 1853,
     },
-    "n_steps": 23667,
+    "n_steps": 22908,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374650381441171457n,
@@ -1400,9 +1582,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 81,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1916,
+      "range_check_builtin": 1889,
     },
-    "n_steps": 25506,
+    "n_steps": 24748,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374564482095251456n,
@@ -1420,9 +1602,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 40,
-      "range_check_builtin": 1856,
+      "range_check_builtin": 1829,
     },
-    "n_steps": 24491,
+    "n_steps": 23732,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925233430759428817540393170906n,
@@ -1440,9 +1622,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2280,
+      "range_check_builtin": 2253,
     },
-    "n_steps": 27958,
+    "n_steps": 27199,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925233430759428817540393170906n,
@@ -1460,9 +1642,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
       "pedersen_builtin": 40,
-      "range_check_builtin": 1980,
+      "range_check_builtin": 1953,
     },
-    "n_steps": 25743,
+    "n_steps": 24985,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916643496167374607431768211456n,
@@ -1480,9 +1662,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2202,
+      "range_check_builtin": 2175,
     },
-    "n_steps": 28532,
+    "n_steps": 27774,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916643496167374607431768211456n,
@@ -1498,10 +1680,10 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1517,10 +1699,10 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1550,9 +1732,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 81,
       "pedersen_builtin": 39,
-      "range_check_builtin": 1851,
+      "range_check_builtin": 1823,
     },
-    "n_steps": 25184,
+    "n_steps": 24414,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374564610944270337n,
@@ -1570,9 +1752,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 38,
-      "range_check_builtin": 1826,
+      "range_check_builtin": 1798,
     },
-    "n_steps": 23330,
+    "n_steps": 22561,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366920938463463374650252592152576n,
@@ -1590,9 +1772,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
       "pedersen_builtin": 40,
-      "range_check_builtin": 1923,
+      "range_check_builtin": 1895,
     },
-    "n_steps": 25472,
+    "n_steps": 24702,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916656381069316492767631040557n,
@@ -1610,9 +1792,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2145,
+      "range_check_builtin": 2117,
     },
-    "n_steps": 28261,
+    "n_steps": 27491,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366916656381069316492767631040557n,
@@ -1630,9 +1812,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 40,
-      "range_check_builtin": 1807,
+      "range_check_builtin": 1779,
     },
-    "n_steps": 24184,
+    "n_steps": 23415,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925220545857486607431768211456n,
@@ -1650,9 +1832,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 43,
-      "range_check_builtin": 2231,
+      "range_check_builtin": 2203,
     },
-    "n_steps": 27651,
+    "n_steps": 26882,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 340282366925220545857486607431768211456n,
@@ -1670,9 +1852,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
       "pedersen_builtin": 39,
-      "range_check_builtin": 2071,
+      "range_check_builtin": 2043,
     },
-    "n_steps": 26468,
+    "n_steps": 25698,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 170396778628411849505946223051528149971n,
@@ -1690,9 +1872,9 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
       "pedersen_builtin": 38,
-      "range_check_builtin": 2042,
+      "range_check_builtin": 2014,
     },
-    "n_steps": 24938,
+    "n_steps": 24169,
   },
   "liquidity_after": 79228162514264337593543950336n,
   "sqrt_ratio_after": 679543886741114111536359091036980510720n,
@@ -1708,7 +1890,21 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 53759,
+    },
+    "n_steps": 416596,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -1726,13 +1922,41 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 594,
+      "pedersen_builtin": 85,
+      "range_check_builtin": 14061,
+    },
+    "n_steps": 127054,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 15729,
+    },
+    "n_steps": 163644,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -1744,10 +1968,10 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 376,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 285,
     },
-    "n_steps": 11241,
+    "n_steps": 8836,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -1782,10 +2006,10 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 3240,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 53731,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 53640,
     },
-    "n_steps": 417932,
+    "n_steps": 415527,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -1808,10 +2032,10 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 594,
-      "pedersen_builtin": 92,
-      "range_check_builtin": 14132,
+      "pedersen_builtin": 85,
+      "range_check_builtin": 14041,
     },
-    "n_steps": 129281,
+    "n_steps": 126876,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -1828,10 +2052,10 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 540,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 15801,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 15710,
     },
-    "n_steps": 165880,
+    "n_steps": 163475,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -1860,10 +2084,10 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 3240,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 53731,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 53640,
     },
-    "n_steps": 417932,
+    "n_steps": 415527,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -1879,25 +2103,80 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 3240,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 54076,
+    },
+    "n_steps": 410882,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 22,
+      "range_check_builtin": 289,
+    },
+    "n_steps": 8940,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 567,
+      "pedersen_builtin": 85,
+      "range_check_builtin": 12597,
+    },
+    "n_steps": 116921,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 540,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 15466,
+    },
+    "n_steps": 155493,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
@@ -1909,7 +2188,20 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "pedersen_builtin": 22,
+      "range_check_builtin": 289,
+    },
+    "n_steps": 8940,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722883n,
 }
 `;
 
@@ -1921,10 +2213,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 380,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 289,
     },
-    "n_steps": 11323,
+    "n_steps": 8918,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -1940,10 +2232,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 379,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 288,
     },
-    "n_steps": 11313,
+    "n_steps": 8909,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -1960,10 +2252,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27945,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 27854,
     },
-    "n_steps": 218922,
+    "n_steps": 216518,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1980,10 +2272,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27945,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 27854,
     },
-    "n_steps": 218922,
+    "n_steps": 216518,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1999,10 +2291,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 381,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 290,
     },
-    "n_steps": 11356,
+    "n_steps": 8951,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2019,10 +2311,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 3240,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 54048,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 53957,
     },
-    "n_steps": 412217,
+    "n_steps": 409813,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2044,10 +2336,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 381,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 290,
     },
-    "n_steps": 11356,
+    "n_steps": 8951,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2064,10 +2356,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 567,
-      "pedersen_builtin": 92,
-      "range_check_builtin": 12668,
+      "pedersen_builtin": 85,
+      "range_check_builtin": 12577,
     },
-    "n_steps": 119147,
+    "n_steps": 116743,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -2084,10 +2376,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 540,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 15538,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 15447,
     },
-    "n_steps": 157728,
+    "n_steps": 155324,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2103,10 +2395,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 381,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 290,
     },
-    "n_steps": 11356,
+    "n_steps": 8951,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2123,10 +2415,10 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 3240,
-      "pedersen_builtin": 149,
-      "range_check_builtin": 54048,
+      "pedersen_builtin": 142,
+      "range_check_builtin": 53957,
     },
-    "n_steps": 412217,
+    "n_steps": 409813,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2136,37 +2428,121 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1620,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27615,
+    },
+    "n_steps": 211060,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 27020,
+    },
+    "n_steps": 214100,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1426,
+    },
+    "n_steps": 18062,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 270,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7945,
+    },
+    "n_steps": 81017,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 2263,
+    },
+    "n_steps": 23734,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 297,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 8754,
+    },
+    "n_steps": 91966,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2178,10 +2554,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2197,10 +2573,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2229,10 +2605,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27051,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 26960,
     },
-    "n_steps": 215967,
+    "n_steps": 213562,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2249,10 +2625,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1620,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27647,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27556,
     },
-    "n_steps": 212935,
+    "n_steps": 210531,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2269,10 +2645,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
-      "pedersen_builtin": 32,
-      "range_check_builtin": 2354,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 2263,
     },
-    "n_steps": 26141,
+    "n_steps": 23736,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -2289,10 +2665,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 297,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 8835,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 8744,
     },
-    "n_steps": 94283,
+    "n_steps": 91878,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2309,10 +2685,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 32,
-      "range_check_builtin": 1517,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1426,
     },
-    "n_steps": 20468,
+    "n_steps": 18064,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -2329,10 +2705,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 270,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 8027,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7936,
     },
-    "n_steps": 83342,
+    "n_steps": 80938,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2349,10 +2725,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27051,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 26960,
     },
-    "n_steps": 215967,
+    "n_steps": 213562,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2369,10 +2745,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1620,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27647,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27556,
     },
-    "n_steps": 212935,
+    "n_steps": 210531,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2382,37 +2758,121 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token0 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1620,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27615,
+    },
+    "n_steps": 211060,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 1647,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 27020,
+    },
+    "n_steps": 214100,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1426,
+    },
+    "n_steps": 18062,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 270,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7945,
+    },
+    "n_steps": 81017,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 2263,
+    },
+    "n_steps": 23734,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 297,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 8754,
+    },
+    "n_steps": 91966,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2424,10 +2884,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2443,10 +2903,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2475,10 +2935,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27051,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 26960,
     },
-    "n_steps": 215967,
+    "n_steps": 213562,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2495,10 +2955,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1620,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27647,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27556,
     },
-    "n_steps": 212935,
+    "n_steps": 210531,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2515,10 +2975,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
-      "pedersen_builtin": 32,
-      "range_check_builtin": 2354,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 2263,
     },
-    "n_steps": 26141,
+    "n_steps": 23736,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -2535,10 +2995,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 297,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 8835,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 8744,
     },
-    "n_steps": 94283,
+    "n_steps": 91878,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2555,10 +3015,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 32,
-      "range_check_builtin": 1517,
+      "pedersen_builtin": 25,
+      "range_check_builtin": 1426,
     },
-    "n_steps": 20468,
+    "n_steps": 18064,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -2575,10 +3035,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 270,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 8027,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 7936,
     },
-    "n_steps": 83342,
+    "n_steps": 80938,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2595,10 +3055,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1647,
-      "pedersen_builtin": 90,
-      "range_check_builtin": 27051,
+      "pedersen_builtin": 83,
+      "range_check_builtin": 26960,
     },
-    "n_steps": 215967,
+    "n_steps": 213562,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2615,10 +3075,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 1620,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 27647,
+      "pedersen_builtin": 82,
+      "range_check_builtin": 27556,
     },
-    "n_steps": 212935,
+    "n_steps": 210531,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2670,10 +3130,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2689,10 +3149,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2762,37 +3222,121 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token0 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 758,
+    },
+    "n_steps": 12301,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token1 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 813,
+    },
+    "n_steps": 13865,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 1513,
+    },
+    "n_steps": 17546,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 758,
+    },
+    "n_steps": 12301,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 54,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 2258,
+    },
+    "n_steps": 23133,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 0n,
+    "amount1": 0n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 27,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 808,
+    },
+    "n_steps": 13202,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -2804,10 +3348,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2823,10 +3367,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -2855,10 +3399,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
-      "pedersen_builtin": 31,
-      "range_check_builtin": 903,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 812,
     },
-    "n_steps": 16263,
+    "n_steps": 13858,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2875,10 +3419,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 30,
-      "range_check_builtin": 849,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 758,
     },
-    "n_steps": 14707,
+    "n_steps": 12303,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2895,10 +3439,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
-      "pedersen_builtin": 31,
-      "range_check_builtin": 2349,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 2258,
     },
-    "n_steps": 25540,
+    "n_steps": 23135,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -2915,10 +3459,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 31,
-      "range_check_builtin": 899,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 808,
     },
-    "n_steps": 15609,
+    "n_steps": 13204,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2935,10 +3479,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 30,
-      "range_check_builtin": 1604,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 1513,
     },
-    "n_steps": 19952,
+    "n_steps": 17548,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -2955,10 +3499,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 30,
-      "range_check_builtin": 849,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 758,
     },
-    "n_steps": 14707,
+    "n_steps": 12303,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -2975,10 +3519,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 54,
-      "pedersen_builtin": 31,
-      "range_check_builtin": 903,
+      "pedersen_builtin": 24,
+      "range_check_builtin": 812,
     },
-    "n_steps": 16263,
+    "n_steps": 13858,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -2995,10 +3539,10 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
   "execution_resources": {
     "builtin_instance_counter": {
       "bitwise_builtin": 27,
-      "pedersen_builtin": 30,
-      "range_check_builtin": 849,
+      "pedersen_builtin": 23,
+      "range_check_builtin": 758,
     },
-    "n_steps": 14707,
+    "n_steps": 12303,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -3016,9 +3560,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 83,
       "pedersen_builtin": 51,
-      "range_check_builtin": 2953,
+      "range_check_builtin": 2926,
     },
-    "n_steps": 32585,
+    "n_steps": 31826,
   },
   "liquidity_after": 150019n,
   "sqrt_ratio_after": 358548395291435633147515612429947974483n,
@@ -3036,9 +3580,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 114,
       "pedersen_builtin": 54,
-      "range_check_builtin": 2857,
+      "range_check_builtin": 2830,
     },
-    "n_steps": 33949,
+    "n_steps": 33191,
   },
   "liquidity_after": 100009n,
   "sqrt_ratio_after": 318197518696337062819639931106676301593n,
@@ -3048,25 +3592,81 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": -15232n,
+    "amount1": 16564n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 84,
+      "pedersen_builtin": 56,
+      "range_check_builtin": 2869,
+    },
+    "n_steps": 33088,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
+  "tick_after": 1386295n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": -15232n,
+    "amount1": 16564n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 327,
+      "pedersen_builtin": 113,
+      "range_check_builtin": 9388,
+    },
+    "n_steps": 96048,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
+  "tick_after": 88722883n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 13101n,
+    "amount1": -12092n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 142,
+      "pedersen_builtin": 59,
+      "range_check_builtin": 3838,
+    },
+    "n_steps": 41423,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
+  "tick_after": -1386296n,
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "INSUFFICIENT_RESERVES",
+  "delta": {
+    "amount0": 13101n,
+    "amount1": -12092n,
+  },
+  "execution_resources": {
+    "builtin_instance_counter": {
+      "bitwise_builtin": 358,
+      "pedersen_builtin": 116,
+      "range_check_builtin": 9746,
+    },
+    "n_steps": 105581,
+  },
+  "liquidity_after": 0n,
+  "sqrt_ratio_after": 18446748437148339061n,
+  "tick_after": -88722884n,
 }
 `;
 
@@ -3078,10 +3678,10 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11242,
+    "n_steps": 8837,
   },
   "liquidity_after": 230021n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -3097,10 +3697,10 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
   },
   "execution_resources": {
     "builtin_instance_counter": {
-      "pedersen_builtin": 29,
-      "range_check_builtin": 375,
+      "pedersen_builtin": 22,
+      "range_check_builtin": 284,
     },
-    "n_steps": 11236,
+    "n_steps": 8832,
   },
   "liquidity_after": 230021n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -3130,9 +3730,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 114,
       "pedersen_builtin": 54,
-      "range_check_builtin": 2883,
+      "range_check_builtin": 2855,
     },
-    "n_steps": 34156,
+    "n_steps": 33386,
   },
   "liquidity_after": 100009n,
   "sqrt_ratio_after": 320125855863226297598523424027276983985n,
@@ -3150,9 +3750,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 56,
       "pedersen_builtin": 51,
-      "range_check_builtin": 2536,
+      "range_check_builtin": 2508,
     },
-    "n_steps": 29838,
+    "n_steps": 29069,
   },
   "liquidity_after": 150019n,
   "sqrt_ratio_after": 357384707370995463786432309339396758729n,
@@ -3170,9 +3770,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 142,
       "pedersen_builtin": 59,
-      "range_check_builtin": 3925,
+      "range_check_builtin": 3897,
     },
-    "n_steps": 42827,
+    "n_steps": 42057,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 170141183460469231731687303715884105728n,
@@ -3190,9 +3790,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 358,
       "pedersen_builtin": 116,
-      "range_check_builtin": 9824,
+      "range_check_builtin": 9796,
     },
-    "n_steps": 106904,
+    "n_steps": 106134,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,
@@ -3210,9 +3810,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 84,
       "pedersen_builtin": 56,
-      "range_check_builtin": 2891,
+      "range_check_builtin": 2863,
     },
-    "n_steps": 33970,
+    "n_steps": 33201,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 680564733841876926926749214863536422912n,
@@ -3230,9 +3830,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 327,
       "pedersen_builtin": 113,
-      "range_check_builtin": 9401,
+      "range_check_builtin": 9373,
     },
-    "n_steps": 96849,
+    "n_steps": 96080,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
@@ -3250,9 +3850,9 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
     "builtin_instance_counter": {
       "bitwise_builtin": 1708,
       "pedersen_builtin": 116,
-      "range_check_builtin": 28464,
+      "range_check_builtin": 28436,
     },
-    "n_steps": 230680,
+    "n_steps": 229910,
   },
   "liquidity_after": 0n,
   "sqrt_ratio_after": 18446748437148339061n,

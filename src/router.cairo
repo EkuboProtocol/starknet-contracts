@@ -30,26 +30,29 @@ struct Depth {
 }
 
 #[starknet::interface]
-trait IRouter<TStorage> {
+trait IRouter<TContractState> {
     // Execute a swap against a route, and revert if it does not return at least the calculated amount. 
     // The required input amount must already be transferred to this contract.
     fn execute(
-        ref self: TStorage,
+        ref self: TContractState,
         swap: Swap,
         calculated_amount_threshold: u128,
         recipient: ContractAddress
     ) -> TokenAmount;
 
+    // Does a single swap against a single node using tokens held by this contract, and receives the output to this contract
+    fn raw_swap(ref self: TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
+
     // Quote the given token amount against the route in the swap
-    fn quote(ref self: TStorage, swap: Swap) -> TokenAmount;
+    fn quote(ref self: TContractState, swap: Swap) -> TokenAmount;
 
     // Returns the delta for swapping a pool to the given price
-    fn get_delta_to_sqrt_ratio(self: @TStorage, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
+    fn get_delta_to_sqrt_ratio(self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
 
     // Returns the amount available for purchase for swapping +/- the given percent, expressed as a 0.128 number
     // Note this is a square root of the percent
     // e.g. if you want to get the 2% market depth, you'd pass FLOOR((sqrt(1.02) - 1) * 2**128) = 3385977594616997568912048723923598803
-    fn get_market_depth(self: @TStorage, pool_key: PoolKey, sqrt_percent: u128) -> Depth;
+    fn get_market_depth(self: @TContractState, pool_key: PoolKey, sqrt_percent: u128) -> Depth;
 }
 
 #[starknet::contract]
@@ -62,10 +65,10 @@ mod Router {
     use ekubo::clear::{ClearImpl};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use ekubo::math::muldiv::{muldiv};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, sqrt_ratio_to_tick};
-    use ekubo::math::muldiv::{muldiv};
-    use ekubo::shared_locker::{consume_callback_data, call_core_with_callback};
+    use ekubo::shared_locker::{consume_callback_data, handle_delta, call_core_with_callback};
     use ekubo::types::i129::{i129, i129Trait};
     use starknet::syscalls::{call_contract_syscall};
 
@@ -89,6 +92,7 @@ mod Router {
     #[derive(Drop, Serde)]
     enum CallbackParameters {
         Execute: (Swap, u128, ContractAddress),
+        RawSwap: (RouteNode, TokenAmount),
         Quote: Swap,
         GetDeltaToSqrtRatio: (PoolKey, u256),
         GetMarketDepth: (PoolKey, u128),
@@ -227,6 +231,50 @@ mod Router {
 
                     let mut output: Array<felt252> = ArrayTrait::new();
                     Serde::serialize(@calculated_token_amount, ref output);
+                    output
+                },
+                CallbackParameters::RawSwap((
+                    node, token_amount
+                )) => {
+                    let is_token1 = token_amount.token == node.pool_key.token1;
+
+                    let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
+                    if (sqrt_ratio_limit.is_zero()) {
+                        sqrt_ratio_limit =
+                            if is_price_increasing(token_amount.amount.sign, is_token1) {
+                                max_sqrt_ratio()
+                            } else {
+                                min_sqrt_ratio()
+                            };
+                    }
+
+                    let delta = core
+                        .swap(
+                            node.pool_key,
+                            SwapParameters {
+                                amount: token_amount.amount,
+                                is_token1,
+                                sqrt_ratio_limit,
+                                skip_ahead: node.skip_ahead,
+                            }
+                        );
+
+                    let contract_address = get_contract_address();
+                    handle_delta(
+                        core,
+                        IERC20Dispatcher { contract_address: node.pool_key.token0 },
+                        delta.amount0,
+                        contract_address
+                    );
+                    handle_delta(
+                        core,
+                        IERC20Dispatcher { contract_address: node.pool_key.token1 },
+                        delta.amount1,
+                        contract_address
+                    );
+
+                    let mut output: Array<felt252> = ArrayTrait::new();
+                    Serde::serialize(@delta, ref output);
                     output
                 },
                 CallbackParameters::Quote(swap) => {
@@ -440,6 +488,12 @@ mod Router {
             call_core_with_callback(
                 self.core.read(),
                 @CallbackParameters::Execute((swap, calculated_amount_threshold, recipient))
+            )
+        }
+
+        fn raw_swap(ref self: ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
+            call_core_with_callback(
+                self.core.read(), @CallbackParameters::RawSwap((node, token_amount))
             )
         }
 

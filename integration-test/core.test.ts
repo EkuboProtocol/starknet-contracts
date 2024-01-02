@@ -111,12 +111,12 @@ describe("core", () => {
             bounds,
           });
           await token0.invoke("transfer", [
-            positionsContract.address, // recipient
-            amount0, // amount
+            positionsContract.address,
+            amount0,
           ]);
           await token1.invoke("transfer", [
-            positionsContract.address, // recipient
-            amount1, // amount
+            positionsContract.address,
+            amount1,
           ]);
 
           const { transaction_hash } = await positionsContract.invoke(
@@ -225,8 +225,6 @@ describe("core", () => {
         }
       });
 
-      const RECIPIENT = "0xabcd";
-
       for (const swapCase of SWAP_CASES) {
         (swapCase.only ? it.only : it)(
           `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
@@ -240,24 +238,17 @@ describe("core", () => {
             let transaction_hash: string;
             try {
               ({ transaction_hash } = await router.invoke(
-                "execute",
+                "raw_swap",
                 [
                   {
-                    token_amount: {
-                      amount: toI129(swapCase.amount),
-                      token: swapCase.isToken1 ? token1.address : token0.address
-                    },
-                    route: [
-                      {
-                        pool_key: poolKey,
-                        sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
-                        skip_ahead: swapCase.skipAhead ?? 0,
-                      }
-                    ]
+                    pool_key: poolKey,
+                    sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
+                    skip_ahead: swapCase.skipAhead ?? 0,
                   },
-                  swapCase.amountLimit ??
-                  (swapCase.amount < 0 ? 2n ** 128n - 1n : 0n),
-                  RECIPIENT,
+                  {
+                    amount: toI129(swapCase.amount),
+                    token: swapCase.isToken1 ? token1.address : token0.address
+                  },
                 ],
                 {
                   maxFee: 1_000_000_000_000_000n,

@@ -379,7 +379,6 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
 
     core.initialize_pool(pool_key, Zero::zero());
 
-    
     let delta = router
         .execute(
             swap: Swap {
