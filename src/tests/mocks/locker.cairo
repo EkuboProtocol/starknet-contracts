@@ -183,12 +183,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: pool_key.token0 },
-                        delta.amount0,
-                        recipient
-                    );
+                    handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
                     state = core.get_locker_state(id);
                     assert(
@@ -201,12 +196,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: pool_key.token1 },
-                        delta.amount1,
-                        recipient
-                    );
+                    handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -240,12 +230,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: pool_key.token0 },
-                        delta.amount0,
-                        recipient
-                    );
+                    handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
                     state = core.get_locker_state(id);
                     assert(
@@ -258,12 +243,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: pool_key.token1 },
-                        delta.amount1,
-                        recipient
-                    );
+                    handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -279,12 +259,7 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: key.token },
-                        i129 { mag: amount, sign: false },
-                        Zero::zero()
-                    );
+                    handle_delta(core, key.token, i129 { mag: amount, sign: false }, Zero::zero());
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
@@ -300,12 +275,7 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: token },
-                        i129 { mag: amount, sign: true },
-                        recipient
-                    );
+                    handle_delta(core, token, i129 { mag: amount, sign: true }, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
@@ -319,13 +289,13 @@ mod CoreLocker {
 
                     handle_delta(
                         core,
-                        IERC20Dispatcher { contract_address: pool_key.token0 },
+                        pool_key.token0,
                         i129 { mag: amount0, sign: false },
                         contract_address_const::<0>()
                     );
                     handle_delta(
                         core,
-                        IERC20Dispatcher { contract_address: pool_key.token1 },
+                        pool_key.token1,
                         i129 { mag: amount1, sign: false },
                         contract_address_const::<0>()
                     );

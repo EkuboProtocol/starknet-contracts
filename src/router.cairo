@@ -260,18 +260,8 @@ mod Router {
                         );
 
                     let contract_address = get_contract_address();
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: node.pool_key.token0 },
-                        delta.amount0,
-                        contract_address
-                    );
-                    handle_delta(
-                        core,
-                        IERC20Dispatcher { contract_address: node.pool_key.token1 },
-                        delta.amount1,
-                        contract_address
-                    );
+                    handle_delta(core, node.pool_key.token0, delta.amount0, contract_address);
+                    handle_delta(core, node.pool_key.token1, delta.amount1, contract_address);
 
                     let mut output: Array<felt252> = ArrayTrait::new();
                     Serde::serialize(@delta, ref output);

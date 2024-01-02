@@ -30,18 +30,18 @@ fn consume_callback_data<TInput, +Serde<TInput>>(
 }
 
 fn handle_delta(
-    core: ICoreDispatcher, token: IERC20Dispatcher, delta: i129, recipient: ContractAddress
+    core: ICoreDispatcher, token: ContractAddress, delta: i129, recipient: ContractAddress
 ) {
     if (delta.is_non_zero()) {
-        // core owes tokens
         if (delta.sign) {
-            core.withdraw(token.contract_address, recipient, delta.mag);
-        } else { // owe tokens to core
-            token.transfer(core.contract_address, delta.mag.into());
+            core.withdraw(token, recipient, delta.mag);
+        } else {
+            IERC20Dispatcher { contract_address: token }
+                .transfer(core.contract_address, delta.mag.into());
             // tokens already in the contract
-            let paid = core.deposit(token.contract_address);
+            let paid = core.deposit(token);
             if (paid > delta.mag) {
-                core.withdraw(token.contract_address, recipient, paid - delta.mag);
+                core.withdraw(token, recipient, paid - delta.mag);
             }
         }
     }
