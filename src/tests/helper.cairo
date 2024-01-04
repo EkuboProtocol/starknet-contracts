@@ -19,9 +19,8 @@ use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::positions::{Positions};
-use ekubo::quoter::{IQuoterDispatcher, Quoter};
+use ekubo::router::{IRouterDispatcher, Router};
 use ekubo::simple_erc20::{SimpleERC20};
-use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
@@ -159,28 +158,16 @@ fn deploy_core() -> ICoreDispatcher {
 }
 
 
-fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
+fn deploy_router(core: ICoreDispatcher) -> IRouterDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Quoter::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+        Router::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
-        .expect('rf deploy failed');
+        .expect('router deploy failed');
 
-    IQuoterDispatcher { contract_address: address }
-}
-
-fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
-    let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core, ref constructor_args);
-
-    let (address, _) = deploy_syscall(
-        SimpleSwapper::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('ss deploy failed');
-
-    ISimpleSwapperDispatcher { contract_address: address }
+    IRouterDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
