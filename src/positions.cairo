@@ -287,7 +287,7 @@ mod Positions {
                                 self.get_token_info(*request.id, *request.pool_key, *request.bounds)
                             );
                     },
-                    Option::None(()) => { break (); }
+                    Option::None => { break (); }
                 };
             };
 

@@ -12,10 +12,10 @@ use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::owner::owner;
-use ekubo::simple_swapper::{ISimpleSwapperDispatcherTrait};
+use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode, Swap};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
-    deploy_locker, deploy_simple_swapper
+    deploy_locker, deploy_router
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_upgradeable::{
@@ -255,10 +255,13 @@ fn test_place_order_on_both_sides_token1_first() {
     t0.increase_balance(lo.contract_address, 200);
     let id2 = lo.place_order(ok2, 200);
 
-    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
-    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
-    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
-    let mut results = lo.get_order_info(arr.span());
+    let mut results = lo
+        .get_order_info(
+            array![
+                GetOrderInfoRequest { order_key: ok1, id: id1 },
+                GetOrderInfoRequest { order_key: ok2, id: id2 }
+            ]
+        );
 
     let status1 = results.pop_front().unwrap();
     let status2 = results.pop_front().unwrap();
@@ -296,10 +299,13 @@ fn test_place_order_on_both_sides_token0_first() {
     t1.increase_balance(lo.contract_address, 200);
     let id2 = lo.place_order(ok2, 200);
 
-    let mut arr: Array<GetOrderInfoRequest> = ArrayTrait::new();
-    arr.append(GetOrderInfoRequest { order_key: ok1, id: id1 });
-    arr.append(GetOrderInfoRequest { order_key: ok2, id: id2 });
-    let mut results = lo.get_order_info(arr.span());
+    let mut results = lo
+        .get_order_info(
+            array![
+                GetOrderInfoRequest { order_key: ok1, id: id1 },
+                GetOrderInfoRequest { order_key: ok2, id: id2 }
+            ]
+        );
 
     let status1 = results.pop_front().unwrap();
     let status2 = results.pop_front().unwrap();
@@ -396,7 +402,7 @@ fn test_place_order_token1_creates_position_at_tick() {
 #[test]
 fn test_limit_order_combined_complex_scenario_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -421,23 +427,28 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
     let id_3 = lo.place_order(ok_3, 250);
     let id_4 = lo.place_order(ok_5, 100);
 
-    t0.increase_balance(simple_swapper.contract_address, 2000);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 2000, sign: false },
-                is_token1: false,
-                // halfway between -3 and -2
-                sqrt_ratio_limit: (tick_to_sqrt_ratio(
-                    i129 { mag: 3 * LIMIT_ORDER_TICK_SPACING, sign: true }
-                )
-                    * 10000005)
-                    / 10000000,
-                skip_ahead: 0,
+    t0.increase_balance(router.contract_address, 2000);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token0, amount: i129 { mag: 2000, sign: false }
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        // halfway between -3 and -2
+                        sqrt_ratio_limit: (tick_to_sqrt_ratio(
+                            i129 { mag: 3 * LIMIT_ORDER_TICK_SPACING, sign: true }
+                        )
+                            * 10000005)
+                            / 10000000,
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     lo.close_order(ok_1, id_1, recipient: contract_address_const::<1>());
@@ -449,7 +460,7 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
 #[test]
 fn test_limit_order_combined_complex_scenario_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -472,23 +483,28 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
     let id_3 = lo.place_order(ok_3, 250);
     let id_4 = lo.place_order(ok_5, 100);
 
-    t1.increase_balance(simple_swapper.contract_address, 2000);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 2000, sign: false },
-                is_token1: true,
-                // halfway between -3 and -2
-                sqrt_ratio_limit: (tick_to_sqrt_ratio(
-                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                )
-                    * 10000005)
-                    / 10000000,
-                skip_ahead: 0,
+    t1.increase_balance(router.contract_address, 2000);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token1, amount: i129 { mag: 2000, sign: false }
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        // halfway between -3 and -2
+                        sqrt_ratio_limit: (tick_to_sqrt_ratio(
+                            i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                        )
+                            * 10000005)
+                            / 10000000,
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     lo.close_order(ok_1, id_1, recipient: contract_address_const::<1>());
@@ -500,7 +516,7 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
 #[test]
 fn test_limit_order_is_pulled_after_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -524,18 +540,23 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t0.increase_balance(simple_swapper.contract_address, 200);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 200, sign: false },
-                is_token1: false,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-                skip_ahead: 0,
+    t0.increase_balance(router.contract_address, 200);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token0, amount: i129 { mag: 200, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
@@ -546,7 +567,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
 #[test]
 fn test_limit_order_is_pulled_after_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -565,20 +586,25 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t1.increase_balance(simple_swapper.contract_address, 200);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 200, sign: false },
-                is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(
-                    i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
-                ),
-                skip_ahead: 0,
+    t1.increase_balance(router.contract_address, 200);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token1, amount: i129 { mag: 200, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(
+                            i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                        ),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(core.get_position(pk, position_key).liquidity.is_zero(), 'position liquidity pulled');
@@ -589,7 +615,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 #[test]
 fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -613,18 +639,23 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t0.increase_balance(simple_swapper.contract_address, 50);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 50, sign: false },
-                is_token1: false,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-                skip_ahead: 0,
+    t0.increase_balance(router.contract_address, 50);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token0, amount: i129 { mag: 50, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(
@@ -639,7 +670,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
 #[test]
 fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -658,20 +689,25 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t1.increase_balance(simple_swapper.contract_address, 200);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 50, sign: false },
-                is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(
-                    i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
-                ),
-                skip_ahead: 0,
+    t1.increase_balance(router.contract_address, 200);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token1, amount: i129 { mag: 50, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(
+                            i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                        ),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(
@@ -686,7 +722,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
 #[test]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -710,20 +746,25 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t0.increase_balance(simple_swapper.contract_address, 200);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 200, sign: false },
-                is_token1: false,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(
-                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                ),
-                skip_ahead: 0,
+    t0.increase_balance(router.contract_address, 200);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token0, amount: i129 { mag: 200, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(
+                            i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                        ),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(
@@ -740,7 +781,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
 #[test]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -759,20 +800,25 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
         core.get_position(pk, position_key).liquidity.is_non_zero(), 'position liquidity nonzero'
     );
 
-    t1.increase_balance(simple_swapper.contract_address, 200);
-    let delta = simple_swapper
-        .swap(
-            pool_key: pk,
-            swap_params: SwapParameters {
-                amount: i129 { mag: 200, sign: false },
-                is_token1: true,
-                sqrt_ratio_limit: tick_to_sqrt_ratio(
-                    i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                ),
-                skip_ahead: 0,
+    t1.increase_balance(router.contract_address, 200);
+    let delta = router
+        .execute(
+            swap: Swap {
+                token_amount: TokenAmount {
+                    token: pk.token1, amount: i129 { mag: 200, sign: false },
+                },
+                route: array![
+                    RouteNode {
+                        pool_key: pk,
+                        sqrt_ratio_limit: tick_to_sqrt_ratio(
+                            i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                        ),
+                        skip_ahead: 0,
+                    }
+                ]
             },
+            calculated_amount_threshold: 0,
             recipient: contract_address_const::<1>(),
-            calculated_amount_threshold: 0
         );
 
     assert(
@@ -788,7 +834,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 #[test]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -797,38 +843,50 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
     let ok1 = OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() };
     let id1 = lo.place_order(ok1, 100);
 
-    t1.increase_balance(simple_swapper.contract_address, 200);
+    t1.increase_balance(router.contract_address, 200);
     assert(
-        simple_swapper
-            .swap(
-                pool_key: pk,
-                swap_params: SwapParameters {
-                    amount: i129 { mag: 200, sign: false },
-                    is_token1: true,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(
-                        i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                    ),
-                    skip_ahead: 0,
+        router
+            .execute(
+                swap: Swap {
+                    token_amount: TokenAmount {
+                        token: pk.token1, amount: i129 { mag: 200, sign: false },
+                    },
+                    route: array![
+                        RouteNode {
+                            pool_key: pk,
+                            sqrt_ratio_limit: tick_to_sqrt_ratio(
+                                i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                            ),
+                            skip_ahead: 0,
+                        }
+                    ]
                 },
+                calculated_amount_threshold: 0,
                 recipient: contract_address_const::<1>(),
-                calculated_amount_threshold: 0
             )
+            .amount
             .is_non_zero(),
         'swap forward'
     );
     assert(
-        simple_swapper
-            .swap(
-                pool_key: pk,
-                swap_params: SwapParameters {
-                    amount: i129 { mag: 200, sign: false },
-                    is_token1: false,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
-                    skip_ahead: 0,
+        router
+            .execute(
+                swap: Swap {
+                    token_amount: TokenAmount {
+                        token: pk.token0, amount: i129 { mag: 200, sign: false },
+                    },
+                    route: array![
+                        RouteNode {
+                            pool_key: pk,
+                            sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 0, sign: false }),
+                            skip_ahead: 0,
+                        }
+                    ]
                 },
+                calculated_amount_threshold: 0,
                 recipient: contract_address_const::<1>(),
-                calculated_amount_threshold: 0
             )
+            .amount
             .is_zero(),
         'zero swap back'
     );
@@ -848,7 +906,7 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
 #[test]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -861,40 +919,52 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
     };
     let id1 = lo.place_order(ok1, 100);
 
-    t0.increase_balance(simple_swapper.contract_address, 200);
+    t0.increase_balance(router.contract_address, 200);
     assert(
-        simple_swapper
-            .swap(
-                pool_key: pk,
-                swap_params: SwapParameters {
-                    amount: i129 { mag: 200, sign: false },
-                    is_token1: false,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(
-                        i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                    ),
-                    skip_ahead: 0,
+        router
+            .execute(
+                swap: Swap {
+                    token_amount: TokenAmount {
+                        token: pk.token0, amount: i129 { mag: 200, sign: false },
+                    },
+                    route: array![
+                        RouteNode {
+                            pool_key: pk,
+                            sqrt_ratio_limit: tick_to_sqrt_ratio(
+                                i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                            ),
+                            skip_ahead: 0,
+                        }
+                    ]
                 },
+                calculated_amount_threshold: 0,
                 recipient: contract_address_const::<1>(),
-                calculated_amount_threshold: 0
             )
+            .amount
             .is_non_zero(),
         'swap forward'
     );
     assert(
-        simple_swapper
-            .swap(
-                pool_key: pk,
-                swap_params: SwapParameters {
-                    amount: i129 { mag: 200, sign: false },
-                    is_token1: true,
-                    sqrt_ratio_limit: tick_to_sqrt_ratio(
-                        i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
-                    ),
-                    skip_ahead: 0,
+        router
+            .execute(
+                swap: Swap {
+                    token_amount: TokenAmount {
+                        token: pk.token1, amount: i129 { mag: 200, sign: false },
+                    },
+                    route: array![
+                        RouteNode {
+                            pool_key: pk,
+                            sqrt_ratio_limit: tick_to_sqrt_ratio(
+                                i129 { mag: 2 * LIMIT_ORDER_TICK_SPACING, sign: false }
+                            ),
+                            skip_ahead: 0,
+                        }
+                    ]
                 },
+                calculated_amount_threshold: 0,
                 recipient: contract_address_const::<1>(),
-                calculated_amount_threshold: 0
             )
+            .amount
             .is_zero(),
         'zero swap back'
     );
@@ -915,7 +985,7 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token0() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
 
@@ -930,7 +1000,7 @@ fn test_close_order_twice_fails_sell_token0() {
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token1() {
     let (core, lo, pk) = setup_pool_with_extension();
-    let simple_swapper = deploy_simple_swapper(core);
+    let router = deploy_router(core);
 
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
 
