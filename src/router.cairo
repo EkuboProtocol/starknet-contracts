@@ -344,7 +344,7 @@ mod Router {
                             pool_key,
                             SwapParameters {
                                 amount: i129 {
-                                    mag: 340282366920938463463374607431768211455, sign: true
+                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                 },
                                 is_token1: sqrt_ratio <= current_pool_price.sqrt_ratio,
                                 sqrt_ratio_limit: sqrt_ratio,
@@ -450,7 +450,7 @@ mod Router {
 
         let output = call_contract_syscall(
             core.contract_address,
-            0x168652c307c1e813ca11cfb3a601f1cf3b22452021a5052d8b05f1f1f8a3e92,
+            selector!("lock"),
             lock_call_arguments.span()
         )
             .unwrap_err();
