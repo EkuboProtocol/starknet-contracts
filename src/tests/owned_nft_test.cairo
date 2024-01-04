@@ -363,6 +363,22 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 }
 
 #[test]
+fn test_our_uris_fit() {
+    assert_eq!(
+        'https://mainnet-api.ekubo.org/',
+        720921236364732369706534923124483860251178706923075318028571232657631023
+    );
+    assert_eq!(
+        'https://goerli-api.ekubo.org/',
+        2816098579549735819157462870646613929535768190509430455118393030895407
+    );
+    assert_eq!(
+        'https://sepolia-api.ekubo.org/',
+        720921236364732369708785675631036703012891917686160277264444065418733359
+    );
+}
+
+#[test]
 fn test_nft_token_uri() {
     let (controller, nft) = deploy_default();
 
