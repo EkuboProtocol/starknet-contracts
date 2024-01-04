@@ -385,7 +385,7 @@ mod Router {
                             pool_key,
                             SwapParameters {
                                 amount: i129 {
-                                    mag: 340282366920938463463374607431768211455, sign: true
+                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                 },
                                 is_token1: false,
                                 sqrt_ratio_limit: price_high,
@@ -399,7 +399,7 @@ mod Router {
                             pool_key,
                             SwapParameters {
                                 amount: i129 {
-                                    mag: 340282366920938463463374607431768211455, sign: true
+                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                 },
                                 is_token1: true,
                                 sqrt_ratio_limit: current_pool_price.sqrt_ratio,
@@ -412,7 +412,7 @@ mod Router {
                             pool_key,
                             SwapParameters {
                                 amount: i129 {
-                                    mag: 340282366920938463463374607431768211455, sign: true
+                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                 },
                                 is_token1: true,
                                 sqrt_ratio_limit: price_low,
