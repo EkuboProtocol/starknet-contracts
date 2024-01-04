@@ -7,8 +7,8 @@ import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
 import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.compiled_contract_class.json";
-import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
-import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.compiled_contract_class.json";
+import Router from "../target/dev/ekubo_Router.contract_class.json";
+import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
 import { DevnetProvider } from "./devnet";
 import { writeFileSync } from "fs";
 import { getAccounts } from "./accounts";
@@ -91,10 +91,10 @@ import { getAccounts } from "./accounts";
 
   console.log("Deploying swapper");
 
-  const swapperResponse = await accounts[0].declareAndDeploy(
+  const routerResponse = await accounts[0].declareAndDeploy(
     {
-      contract: SimpleSwapper as any,
-      casm: SimpleSwapperCASM as any,
+      contract: Router as any,
+      casm: RouterCASM as any,
       constructorCalldata: [coreResponse.deploy.address],
     },
     { maxFee: 10000000000000 } // workaround
@@ -107,7 +107,7 @@ import { getAccounts } from "./accounts";
     token1,
     core: coreResponse.deploy.address,
     positions: positions.address,
-    swapper: swapperResponse.deploy.address,
+    router: routerResponse.deploy.address,
     nft: `0x${nftAddress.toString(16)}`,
   };
 

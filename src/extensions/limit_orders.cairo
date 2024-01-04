@@ -95,7 +95,7 @@ trait ILimitOrders<TContractState> {
 
     // Return information on each of the given orders
     fn get_order_info(
-        self: @TContractState, requests: Span<GetOrderInfoRequest>
+        self: @TContractState, requests: Array<GetOrderInfoRequest>
     ) -> Array<GetOrderInfoResult>;
 
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
@@ -717,7 +717,7 @@ mod LimitOrders {
         }
 
         fn get_order_info(
-            self: @ContractState, mut requests: Span<GetOrderInfoRequest>
+            self: @ContractState, mut requests: Array<GetOrderInfoRequest>
         ) -> Array<GetOrderInfoResult> {
             let mut result: Array<GetOrderInfoResult> = ArrayTrait::new();
 
@@ -726,12 +726,12 @@ mod LimitOrders {
             loop {
                 match requests.pop_front() {
                     Option::Some(request) => {
-                        let is_selling_token1 = (*request
+                        let is_selling_token1 = (request
                             .order_key
                             .tick
                             .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
                             .is_non_zero();
-                        let pool_key = to_pool_key(*request.order_key);
+                        let pool_key = to_pool_key(request.order_key);
                         let price = core.get_pool_price(pool_key);
 
                         assert(price.sqrt_ratio.is_non_zero(), 'INVALID_ORDER_KEY');
@@ -742,21 +742,21 @@ mod LimitOrders {
                                 (
                                     pool_key,
                                     if is_selling_token1 {
-                                        *request.order_key.tick
+                                        request.order_key.tick
                                     } else {
-                                        *request.order_key.tick
+                                        request.order_key.tick
                                             + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                     }
                                 )
                             );
 
-                        let order = self.orders.read((*request.order_key, *request.id));
+                        let order = self.orders.read((request.order_key, request.id));
 
                         // the order is fully executed, just withdraw the saved balance
                         if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
-                            let sqrt_ratio_a = tick_to_sqrt_ratio(*request.order_key.tick);
+                            let sqrt_ratio_a = tick_to_sqrt_ratio(request.order_key.tick);
                             let sqrt_ratio_b = tick_to_sqrt_ratio(
-                                *request.order_key.tick
+                                request.order_key.tick
                                     + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                             );
 
@@ -792,9 +792,9 @@ mod LimitOrders {
                             let delta = liquidity_delta_to_amount_delta(
                                 sqrt_ratio: price.sqrt_ratio,
                                 liquidity_delta: i129 { mag: order.liquidity, sign: true },
-                                sqrt_ratio_lower: tick_to_sqrt_ratio(*request.order_key.tick),
+                                sqrt_ratio_lower: tick_to_sqrt_ratio(request.order_key.tick),
                                 sqrt_ratio_upper: tick_to_sqrt_ratio(
-                                    *request.order_key.tick
+                                    request.order_key.tick
                                         + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                 )
                             );
