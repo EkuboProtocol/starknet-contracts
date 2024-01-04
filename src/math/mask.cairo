@@ -1,4 +1,4 @@
-// Returns 2**n
+// Returns (2**n) - 1
 fn mask(n: u8) -> u128 {
     assert(n < 128, 'mask');
     if (n == 0) {
