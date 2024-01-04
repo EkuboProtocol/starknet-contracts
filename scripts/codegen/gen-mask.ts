@@ -1,34 +1,10 @@
-
-function indent(s: string, amt: number): string {
-    return s.split(/\n/g).map(x => ' '.repeat(amt) + x).join('\n')
-}
-
-function genMask(lower: bigint, upper: bigint, idt: number): string {
-    if (lower == upper) {
-        const val = (2n ** (lower + 1n)) - 1n
-        return `0x${val.toString(16)}`
-    }
-
-    if ((lower + 1n) == upper) {
-        return indent(`if (n == ${lower}) {
-    ${genMask(lower, lower, idt + 2)}
-} else {
-    ${genMask(upper, upper, idt + 2)}
-}`, idt)
-    }
-
-    const mid = (lower + upper) / 2n
-
-    return indent(`if (n > ${mid}) {
-    ${genMask(mid + 1n, upper, idt + 2)}
-} else {
-    ${genMask(lower, mid, idt + 2)}
-}`, idt)
-}
-
 console.log(`
-// Returns (2**n) - 1
+// Returns 2**n - 1
 fn mask(n: u8) -> u128 {
-    assert(n < 128, 'mask');
-    ${genMask(0n, 127n, 0)}
+    assert(n < 128, 'exp2');
+    ${Array(127).fill(null).map((_, i) => {
+    return `if (n == ${i}) { 0x${(2n ** BigInt(i + 1) - 1n).toString(16)} }`
+}).join('\nelse ')
+    }
+    else { 0x${(2n ** 128n - 1n).toString(16)} }
 }`)
