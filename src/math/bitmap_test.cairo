@@ -4,7 +4,7 @@ use core::traits::{Into};
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
 };
-use ekubo::math::string::{append, to_decimal};
+use ekubo::math::string::{to_decimal};
 use ekubo::types::i129::{i129};
 
 #[test]
@@ -234,14 +234,7 @@ fn test_next_set_bit_complex_scenario() {
 
 fn assert_case_ticks(tick: i129, location: (u128, u8), tick_spacing: u128) {
     let (word, bit) = tick_to_word_and_bit_index(tick: tick, tick_spacing: tick_spacing);
-    assert(
-        (word, bit) == location,
-        append(
-            append(append('w.', to_decimal(word).unwrap()).unwrap(), '.b.').unwrap(),
-            to_decimal(bit.into()).unwrap()
-        )
-            .unwrap()
-    );
+    assert_eq!((word, bit), location);
     let prev = word_and_bit_index_to_tick(location, tick_spacing: tick_spacing);
     assert((tick - prev) < i129 { mag: tick_spacing, sign: false }, 'reverse');
 }
