@@ -324,12 +324,11 @@ mod Router {
     #[external(v0)]
     impl RouterImpl of IRouter<ContractState> {
         fn swap(ref self: ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
-            let mut deltas: Array<Delta> = call_core_with_callback(
-                self.core.read(), @CallbackParameters::Swap((array![node], token_amount, false))
-            );
+            let mut deltas: Array<Delta> = self.multihop_swap(array![node], token_amount);
             deltas.pop_front().unwrap()
         }
 
+        #[inline(always)]
         fn multihop_swap(
             ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
         ) -> Array<Delta> {
