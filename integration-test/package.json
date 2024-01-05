@@ -4,10 +4,8 @@
   "version": "0.0.0",
   "description": "Integration tests for the core contracts of Ekubo Protocol",
   "scripts": {
-    "devnet": "/Users/moody/IdeaProjects/ekubo/starknet-devnet-rs/target/debug/starknet-devnet --seed 0",
-    "test": "start-server-and-test --expect 405 devnet http://127.0.0.1:5050 \"jest\"",
-    "test:update": "start-server-and-test --expect 405 devnet http://127.0.0.1:5050 \"jest -u\"",
-    "create-dump": "start-server-and-test --expect 405 devnet http://127.0.0.1:5050 \"ts-node create-dump.ts\""
+    "devnet": "katana --invoke-max-steps 4294967295 --silent",
+    "test": "start-server-and-test devnet \"http-get://0.0.0.0:5050\" \"jest -u\""
   },
   "author": "Moody Salem",
   "devDependencies": {
