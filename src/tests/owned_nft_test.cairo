@@ -32,8 +32,8 @@ fn test_nft_name_symbol_token_uri() {
     );
     assert(nft.name() == 'Ekubo Position', 'name');
     assert(nft.symbol() == 'EkuPo', 'symbol');
-    assert(nft.tokenURI(1_u256) == 'https://z.ekubo.org/1', 'tokenURI');
-    assert(nft.token_uri(1_u256) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == array!['https://z.ekubo.org/', '1'], 'tokenURI');
+    assert(nft.token_uri(1_u256) == array!['https://z.ekubo.org/', '1'], 'token_uri');
 }
 
 #[test]
@@ -103,8 +103,8 @@ fn test_nft_custom_uri() {
     let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
     assert(nft.name() == 'abcde', 'name');
     assert(nft.symbol() == 'def', 'symbol');
-    assert(nft.tokenURI(1_u256) == 'ipfs://abcdef/1', 'tokenURI');
-    assert(nft.token_uri(1_u256) == 'ipfs://abcdef/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == array!['ipfs://abcdef/', '1'], 'tokenURI');
+    assert(nft.token_uri(1_u256) == array!['ipfs://abcdef/', '1'], 'token_uri');
 }
 
 #[test]
@@ -363,29 +363,52 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 }
 
 #[test]
+fn test_our_uris_fit() {
+    assert_eq!(
+        'https://mainnet-api.ekubo.org/',
+        720921236364732369706534923124483860251178706923075318028571232657631023
+    );
+    assert_eq!(
+        'https://goerli-api.ekubo.org/',
+        2816098579549735819157462870646613929535768190509430455118393030895407
+    );
+    assert_eq!(
+        'https://sepolia-api.ekubo.org/',
+        720921236364732369708785675631036703012891917686160277264444065418733359
+    );
+}
+
+#[test]
 fn test_nft_token_uri() {
     let (controller, nft) = deploy_default();
 
-    assert(nft.tokenURI(1_u256) == 'https://z.ekubo.org/1', 'token_uri');
+    assert(nft.tokenURI(1_u256) == array!['https://z.ekubo.org/', '1'], 'token_uri');
     assert(
-        nft.tokenURI(u256 { low: 9999999, high: 0 }) == 'https://z.ekubo.org/9999999', 'token_uri'
-    );
-    assert(
-        nft.tokenURI(u256 { low: 239020510, high: 0 }) == 'https://z.ekubo.org/239020510',
+        nft.tokenURI(u256 { low: 9999999, high: 0 }) == array!['https://z.ekubo.org/', '9999999'],
         'token_uri'
     );
     assert(
-        nft.tokenURI(u256 { low: 99999999999, high: 0 }) == 'https://z.ekubo.org/99999999999',
+        nft
+            .tokenURI(
+                u256 { low: 239020510, high: 0 }
+            ) == array!['https://z.ekubo.org/', '239020510'],
+        'token_uri'
+    );
+    assert(
+        nft
+            .tokenURI(
+                u256 { low: 99999999999, high: 0 }
+            ) == array!['https://z.ekubo.org/', '99999999999'],
         'max token_uri'
     );
 }
 
 #[test]
-#[should_panic(expected: ('URI_LENGTH', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
 fn test_nft_token_uri_reverts_too_long() {
     let (controller, nft) = deploy_default();
-
-    nft.tokenURI(u256 { low: 999999999999, high: 0 });
+    // 2**64 is an invalid id
+    nft.token_uri(0x10000000000000000);
 }
 
 #[test]
