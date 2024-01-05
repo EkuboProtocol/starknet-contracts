@@ -449,9 +449,7 @@ mod Router {
         Serde::<Array<felt252>>::serialize(@input_data, ref lock_call_arguments);
 
         let output = call_contract_syscall(
-            core.contract_address,
-            selector!("lock"),
-            lock_call_arguments.span()
+            core.contract_address, selector!("lock"), lock_call_arguments.span()
         )
             .unwrap_err();
 
