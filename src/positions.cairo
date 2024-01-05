@@ -108,7 +108,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
     }
@@ -116,7 +116,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
         collect_fees: bool,

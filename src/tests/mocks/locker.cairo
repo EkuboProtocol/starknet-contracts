@@ -15,7 +15,7 @@ enum Action {
     // save that amount of balance to the given address
     SaveBalance: (SavedBalanceKey, u128),
     // loads the balance to the address
-    LoadBalance: (ContractAddress, u64, u128, ContractAddress),
+    LoadBalance: (ContractAddress, felt252, u128, ContractAddress),
     // accumulates some tokens as fees
     AccumulateAsFees: (PoolKey, u128, u128),
     FlashBorrow: (ContractAddress, u128, u128),
