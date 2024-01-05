@@ -533,7 +533,9 @@ mod Core {
             delta.low
         }
 
-        fn load(ref self: ContractState, token: ContractAddress, salt: felt252, amount: u128) -> u128 {
+        fn load(
+            ref self: ContractState, token: ContractAddress, salt: felt252, amount: u128
+        ) -> u128 {
             let id = self.get_current_locker_id();
 
             // the contract calling load does not have to be the locker! 
