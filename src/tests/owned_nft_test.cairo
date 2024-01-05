@@ -4,12 +4,10 @@ use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
-use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::owner::owner;
 use ekubo::tests::helper::{deploy_owned_nft};
-use ekubo::tests::mocks::mock_upgradeable::{
-    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
-};
 use starknet::testing::{ContractAddress, set_contract_address, pop_log};
 use starknet::{contract_address_const, ClassHash};
 
@@ -87,10 +85,10 @@ fn test_nft_supports_interfaces() {
 fn test_replace_class_hash_can_be_called_by_owner() {
     let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
 
-    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+    let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
 
     set_contract_address(owner());
-    IMockUpgradeableDispatcher { contract_address: nft.contract_address }
+    IUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 
     let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(nft.contract_address)

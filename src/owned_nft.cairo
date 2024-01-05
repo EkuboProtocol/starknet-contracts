@@ -33,7 +33,7 @@ mod OwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         replace_class_syscall, deploy_syscall
@@ -152,6 +152,13 @@ mod OwnedNFT {
                 }
             }
             return (true, owner);
+        }
+    }
+
+    #[external(v0)]
+    impl OwnedNFTHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::owned_nft::OwnedNFT");
         }
     }
 

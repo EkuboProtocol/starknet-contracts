@@ -130,7 +130,7 @@ mod LimitOrders {
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
@@ -250,6 +250,13 @@ mod LimitOrders {
         UpgradeableEvent: upgradeable_component::Event,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
+    }
+
+    #[external(v0)]
+    impl LimitOrdersHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::extensions::limit_orders::LimitOrders");
+        }
     }
 
     #[external(v0)]

@@ -21,7 +21,7 @@ mod Positions {
     use ekubo::types::i129::{i129};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
         deploy_syscall
@@ -138,6 +138,13 @@ mod Positions {
                 .balanceOf(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
+        }
+    }
+
+    #[external(v0)]
+    impl PositionsHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::positions::Positions");
         }
     }
 

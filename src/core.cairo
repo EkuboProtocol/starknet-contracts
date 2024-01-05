@@ -38,7 +38,7 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252
@@ -348,6 +348,13 @@ mod Core {
                     }
                 }
             }
+        }
+    }
+
+    #[external(v0)]
+    impl CoreHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::core::Core");
         }
     }
 

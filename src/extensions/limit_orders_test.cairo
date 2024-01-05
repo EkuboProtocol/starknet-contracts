@@ -2,12 +2,13 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
 use ekubo::extensions::limit_orders::{
-    ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState, PoolState,
-    GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
+    LimitOrders, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState,
+    PoolState, GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
 };
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
@@ -18,9 +19,6 @@ use ekubo::tests::helper::{
     deploy_locker, deploy_router
 };
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use ekubo::tests::mocks::mock_upgradeable::{
-    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
-};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
@@ -167,10 +165,10 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     let core = deploy_core();
     let limit_orders = deploy_limit_orders(core);
 
-    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+    let class_hash: ClassHash = LimitOrders::TEST_CLASS_HASH.try_into().unwrap();
 
     set_contract_address(owner());
-    IMockUpgradeableDispatcher { contract_address: limit_orders.contract_address }
+    IUpgradeableDispatcher { contract_address: limit_orders.contract_address }
         .replace_class_hash(class_hash);
 
     let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
