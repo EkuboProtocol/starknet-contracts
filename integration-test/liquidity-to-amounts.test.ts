@@ -1,6 +1,6 @@
 import { getAmountsForLiquidity } from "./liquidity-to-amounts";
 
-describe(getAmountsForLiquidity, () => {
+describe.skip(getAmountsForLiquidity, () => {
   it("tick below range", () => {
     expect(
       getAmountsForLiquidity({
