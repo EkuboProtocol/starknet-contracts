@@ -15,6 +15,7 @@ mod Positions {
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+    use ekubo::owner::{check_owner_only};
     use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::delta::{Delta};
@@ -108,7 +109,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
     }
@@ -116,7 +117,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
         collect_fees: bool,
@@ -252,6 +253,12 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
+        // Update the token URI base of the owned NFT
+        fn update_token_uri_base(self: @ContractState, token_uri_base: felt252) {
+            check_owner_only();
+            self.nft.read().set_token_uri_base(token_uri_base);
+        }
+
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
         }

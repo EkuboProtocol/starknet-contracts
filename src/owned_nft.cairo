@@ -14,11 +14,14 @@ trait IOwnedNFT<TStorage> {
     // Returns the next token ID, 
     // i.e. the ID of the token that will be minted on the next call to mint from the controller
     fn get_next_token_id(self: @TStorage) -> u64;
+
+    // Allows the controller to set a new token URI base
+    fn set_token_uri_base(ref self: TStorage, token_uri_base: felt252);
 }
 
 #[starknet::contract]
 mod OwnedNFT {
-    use core::array::{ArrayTrait, SpanTrait};
+    use core::array::{Array, ArrayTrait, SpanTrait};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
@@ -29,7 +32,7 @@ mod OwnedNFT {
         ERC165_ERC721_ID, ERC165_ERC165_ID
     };
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use ekubo::math::string::{to_decimal, append};
+    use ekubo::math::string::{to_decimal};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
@@ -222,12 +225,11 @@ mod OwnedNFT {
             self.operators.read((owner, operator))
         }
 
-        fn tokenURI(self: @ContractState, token_id: u256) -> felt252 {
+        fn tokenURI(self: @ContractState, token_id: u256) -> Array<felt252> {
             let id = validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
-            append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
-                .expect('URI_LENGTH')
+            array![self.token_uri_base.read(), to_decimal(id)]
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -254,7 +256,7 @@ mod OwnedNFT {
         ) -> bool {
             self.isApprovedForAll(owner, operator)
         }
-        fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+        fn token_uri(self: @ContractState, token_id: u256) -> Array<felt252> {
             self.tokenURI(token_id)
         }
     }
@@ -317,6 +319,11 @@ mod OwnedNFT {
         fn is_account_authorized(self: @ContractState, id: u64, account: ContractAddress) -> bool {
             let (authorized, _) = self.is_account_authorized_internal(id, account);
             authorized
+        }
+
+        fn set_token_uri_base(ref self: ContractState, token_uri_base: felt252) {
+            self.require_controller();
+            self.token_uri_base.write(token_uri_base);
         }
     }
 }

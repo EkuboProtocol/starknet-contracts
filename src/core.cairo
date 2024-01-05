@@ -540,7 +540,7 @@ mod Core {
             delta.low
         }
 
-        fn load(ref self: ContractState, token: ContractAddress, salt: u64, amount: u128) -> u128 {
+        fn load(ref self: ContractState, token: ContractAddress, salt: felt252, amount: u128) -> u128 {
             let id = self.get_current_locker_id();
 
             // the contract calling load does not have to be the locker! 
@@ -756,7 +756,7 @@ mod Core {
         }
 
         fn collect_fees(
-            ref self: ContractState, pool_key: PoolKey, salt: u64, bounds: Bounds
+            ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
