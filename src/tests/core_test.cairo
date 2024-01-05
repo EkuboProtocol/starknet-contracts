@@ -2046,7 +2046,7 @@ mod save_load_tests {
         let locker = deploy_locker(core);
 
         token.increase_balance(locker.contract_address, 1);
-        let cache_key: u64 = 5678;
+        let cache_key: felt252 = 5678;
 
         set_contract_address(contract_address_const::<1234567>());
 

@@ -21,7 +21,7 @@ trait ILocker<TStorage> {
 // liquidity_delta is how the position's liquidity should be updated.
 #[derive(Copy, Drop, Serde)]
 struct UpdatePositionParameters {
-    salt: u64,
+    salt: felt252,
     bounds: Bounds,
     liquidity_delta: i129,
 }
@@ -183,7 +183,7 @@ trait ICore<TStorage> {
     // Recall a balance previously saved via #save
     // Must be called within a ILocker#locked, but it can be called by addresses other than the locker
     // Returns the next saved balance for the given key
-    fn load(ref self: TStorage, token: ContractAddress, salt: u64, amount: u128) -> u128;
+    fn load(ref self: TStorage, token: ContractAddress, salt: felt252, amount: u128) -> u128;
 
     // Initialize a pool. This can happen outside of a lock callback because it does not require any tokens to be spent.
     fn initialize_pool(ref self: TStorage, pool_key: PoolKey, initial_tick: i129) -> u256;
@@ -200,7 +200,7 @@ trait ICore<TStorage> {
     ) -> Delta;
 
     // Collect the fees owed on a position
-    fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: u64, bounds: Bounds) -> Delta;
+    fn collect_fees(ref self: TStorage, pool_key: PoolKey, salt: felt252, bounds: Bounds) -> Delta;
 
     // Make a swap against a pool.
     // You must call this within a lock callback.

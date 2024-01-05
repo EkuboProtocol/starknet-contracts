@@ -41,7 +41,7 @@ impl PoolKeyTraitImpl of PoolKeyTrait {
 // bounds is the price range where the liquidity of the position is active
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
 struct PositionKey {
-    salt: u64,
+    salt: felt252,
     owner: ContractAddress,
     bounds: Bounds,
 }
@@ -54,5 +54,5 @@ struct PositionKey {
 struct SavedBalanceKey {
     owner: ContractAddress,
     token: ContractAddress,
-    salt: u64,
+    salt: felt252,
 }
