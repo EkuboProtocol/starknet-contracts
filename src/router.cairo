@@ -1,4 +1,3 @@
-use core::array::{Span};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
@@ -17,12 +16,6 @@ struct TokenAmount {
     amount: i129,
 }
 
-#[derive(Serde, Drop)]
-struct Swap {
-    token_amount: TokenAmount,
-    route: Array<RouteNode>
-}
-
 #[derive(Serde, Copy, Drop)]
 struct Depth {
     token0: u128,
@@ -31,20 +24,19 @@ struct Depth {
 
 #[starknet::interface]
 trait IRouter<TContractState> {
-    // Execute a swap against a route, and revert if it does not return at least the calculated amount. 
-    // The required input amount must already be transferred to this contract.
-    fn execute(
-        ref self: TContractState,
-        swap: Swap,
-        calculated_amount_threshold: u128,
-        recipient: ContractAddress
-    ) -> TokenAmount;
-
     // Does a single swap against a single node using tokens held by this contract, and receives the output to this contract
-    fn raw_swap(ref self: TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
+    fn swap(ref self: TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
+
+    // Does a multihop swap, where the output/input of each hop is passed as input/output of the next swap
+    // Note to do exact output swaps, the route must be given in reverse
+    fn multihop_swap(
+        ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount
+    ) -> Array<Delta>;
 
     // Quote the given token amount against the route in the swap
-    fn quote(ref self: TContractState, swap: Swap) -> TokenAmount;
+    fn quote(
+        ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount
+    ) -> Array<Delta>;
 
     // Returns the delta for swapping a pool to the given price
     fn get_delta_to_sqrt_ratio(self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
@@ -74,7 +66,7 @@ mod Router {
 
     use starknet::{get_caller_address, get_contract_address};
 
-    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, Swap, TokenAmount, Depth};
+    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, TokenAmount, Depth};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::clear::ClearImpl<ContractState>;
@@ -91,15 +83,12 @@ mod Router {
 
     #[derive(Drop, Serde)]
     enum CallbackParameters {
-        Execute: (Swap, u128, ContractAddress),
-        RawSwap: (RouteNode, TokenAmount),
-        Quote: Swap,
+        Swap: (Array<RouteNode>, TokenAmount, bool),
         GetDeltaToSqrtRatio: (PoolKey, u256),
         GetMarketDepth: (PoolKey, u128),
     }
 
-    const FUNCTION_DID_NOT_ERROR_FLAG: felt252 =
-        0x3f532df6e73f94d604f4eb8c661635595c91adc1d387931451eacd418cfbd14; // hash of function_did_not_error
+    const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
 
     #[external(v0)]
     impl LockerImpl of ILocker<ContractState> {
@@ -107,26 +96,23 @@ mod Router {
             let core = self.core.read();
 
             match consume_callback_data::<CallbackParameters>(core, data) {
-                CallbackParameters::Execute((
-                    swap, calculated_amount_threshold, recipient
+                CallbackParameters::Swap((
+                    mut route, mut token_amount, simulate
                 )) => {
-                    let mut calculated_token_amount: TokenAmount = swap.token_amount;
-                    let mut route = swap.route;
-                    let mut payment_amount: Option<u128> = Option::None;
+                    let mut deltas: Array<Delta> = ArrayTrait::new();
+                    // we track this to know how much to pay in the case of exact input and how much to pull in the case of exact output
+                    let mut first_swap_amount: Option<TokenAmount> = Option::None;
 
                     loop {
-                        calculated_token_amount = match route.pop_front() {
+                        match route.pop_front() {
                             Option::Some(node) => {
-                                let is_token1 = calculated_token_amount
-                                    .token == node
-                                    .pool_key
-                                    .token1;
+                                let is_token1 = token_amount.token == node.pool_key.token1;
 
                                 let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
                                 if (sqrt_ratio_limit.is_zero()) {
                                     sqrt_ratio_limit =
                                         if is_price_increasing(
-                                            calculated_token_amount.amount.sign, is_token1
+                                            token_amount.amount.sign, is_token1
                                         ) {
                                             max_sqrt_ratio()
                                         } else {
@@ -138,195 +124,65 @@ mod Router {
                                     .swap(
                                         node.pool_key,
                                         SwapParameters {
-                                            amount: calculated_token_amount.amount,
+                                            amount: token_amount.amount,
                                             is_token1: is_token1,
                                             sqrt_ratio_limit,
                                             skip_ahead: node.skip_ahead,
                                         }
                                     );
 
-                                let is_first_exact_input = !swap.token_amount.amount.sign
-                                    & payment_amount.is_none();
+                                deltas.append(delta);
 
-                                if (is_token1) {
-                                    if (is_first_exact_input) {
-                                        payment_amount = Option::Some(delta.amount1.mag);
-                                    }
-                                    TokenAmount {
-                                        amount: -delta.amount0, token: node.pool_key.token0
-                                    }
-                                } else {
-                                    if (is_first_exact_input) {
-                                        payment_amount = Option::Some(delta.amount0.mag);
-                                    }
-                                    TokenAmount {
-                                        amount: -delta.amount1, token: node.pool_key.token1
-                                    }
-                                }
-                            },
-                            Option::None => { break calculated_token_amount; }
-                        };
-                    };
-
-                    if swap.token_amount.amount.sign {
-                        assert(
-                            calculated_token_amount.amount.mag <= calculated_amount_threshold,
-                            'MAX_AMOUNT_IN'
-                        );
-
-                        // pay the computed input amount
-                        IERC20Dispatcher { contract_address: calculated_token_amount.token }
-                            .transfer(
-                                core.contract_address, calculated_token_amount.amount.mag.into()
-                            );
-                        let paid_amount = core.deposit(calculated_token_amount.token);
-                        if (paid_amount > calculated_token_amount.amount.mag) {
-                            core
-                                .withdraw(
-                                    calculated_token_amount.token,
-                                    get_contract_address(),
-                                    paid_amount - calculated_token_amount.amount.mag
-                                );
-                        }
-
-                        // withdraw the output amount
-                        core
-                            .withdraw(
-                                swap.token_amount.token, recipient, swap.token_amount.amount.mag
-                            );
-                    } else {
-                        assert(
-                            calculated_token_amount.amount.mag >= calculated_amount_threshold,
-                            'MIN_AMOUNT_OUT'
-                        );
-
-                        // pay the computed input amount
-                        match payment_amount {
-                            Option::Some(amount) => {
-                                if (amount > 0) {
-                                    IERC20Dispatcher { contract_address: swap.token_amount.token }
-                                        .transfer(core.contract_address, amount.into());
-                                    let paid_amount = core.deposit(swap.token_amount.token);
-                                    if (paid_amount > amount) {
-                                        core
-                                            .withdraw(
-                                                swap.token_amount.token,
-                                                get_contract_address(),
-                                                paid_amount - swap.token_amount.amount.mag
-                                            );
-                                    }
-                                }
-                            },
-                            Option::None => {}
-                        }
-
-                        // withdraw the calculated output amount
-                        core
-                            .withdraw(
-                                calculated_token_amount.token,
-                                recipient,
-                                calculated_token_amount.amount.mag
-                            );
-                    }
-
-                    let mut output: Array<felt252> = ArrayTrait::new();
-                    Serde::serialize(@calculated_token_amount, ref output);
-                    output
-                },
-                CallbackParameters::RawSwap((
-                    node, token_amount
-                )) => {
-                    let is_token1 = token_amount.token == node.pool_key.token1;
-
-                    let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
-                    if (sqrt_ratio_limit.is_zero()) {
-                        sqrt_ratio_limit =
-                            if is_price_increasing(token_amount.amount.sign, is_token1) {
-                                max_sqrt_ratio()
-                            } else {
-                                min_sqrt_ratio()
-                            };
-                    }
-
-                    let delta = core
-                        .swap(
-                            node.pool_key,
-                            SwapParameters {
-                                amount: token_amount.amount,
-                                is_token1,
-                                sqrt_ratio_limit,
-                                skip_ahead: node.skip_ahead,
-                            }
-                        );
-
-                    let contract_address = get_contract_address();
-                    handle_delta(core, node.pool_key.token0, delta.amount0, contract_address);
-                    handle_delta(core, node.pool_key.token1, delta.amount1, contract_address);
-
-                    let mut output: Array<felt252> = ArrayTrait::new();
-                    Serde::serialize(@delta, ref output);
-                    output
-                },
-                CallbackParameters::Quote(swap) => {
-                    let mut route = swap.route;
-                    let mut amount: i129 = swap.token_amount.amount;
-                    let mut current_token: ContractAddress = swap.token_amount.token;
-
-                    loop {
-                        match route.pop_front() {
-                            Option::Some(node) => {
-                                let is_token1 = if (node.pool_key.token0 == current_token) {
-                                    false
-                                } else {
-                                    assert(node.pool_key.token1 == current_token, 'INVALID_ROUTE');
-                                    true
-                                };
-
-                                let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
-                                if (sqrt_ratio_limit.is_zero()) {
-                                    sqrt_ratio_limit =
-                                        if is_price_increasing(amount.sign, is_token1) {
-                                            max_sqrt_ratio()
+                                if first_swap_amount.is_none() {
+                                    first_swap_amount =
+                                        if is_token1 {
+                                            Option::Some(
+                                                TokenAmount {
+                                                    token: node.pool_key.token1,
+                                                    amount: delta.amount1
+                                                }
+                                            )
                                         } else {
-                                            min_sqrt_ratio()
-                                        };
+                                            Option::Some(
+                                                TokenAmount {
+                                                    token: node.pool_key.token0,
+                                                    amount: delta.amount0
+                                                }
+                                            )
+                                        }
                                 }
 
-                                let delta = core
-                                    .swap(
-                                        node.pool_key,
-                                        SwapParameters {
-                                            amount: amount,
-                                            is_token1: is_token1,
-                                            sqrt_ratio_limit: sqrt_ratio_limit,
-                                            skip_ahead: 0,
+                                token_amount =
+                                    if (is_token1) {
+                                        TokenAmount {
+                                            amount: -delta.amount0, token: node.pool_key.token0
                                         }
-                                    );
-
-                                if is_token1 {
-                                    amount = delta.amount0;
-                                    current_token = node.pool_key.token0;
-                                } else {
-                                    amount = delta.amount1;
-                                    current_token = node.pool_key.token1;
-                                };
-
-                                if (route.len().is_non_zero()) {
-                                    amount = -amount;
-                                };
+                                    } else {
+                                        TokenAmount {
+                                            amount: -delta.amount1, token: node.pool_key.token1
+                                        }
+                                    };
                             },
-                            Option::None => { break (); },
+                            Option::None => { break (); }
                         };
                     };
 
+                    let recipient = get_contract_address();
+
                     let mut output: Array<felt252> = ArrayTrait::new();
 
-                    Serde::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
-                    Serde::serialize(@TokenAmount { amount, token: current_token }, ref output);
-                    panic(output);
+                    if (simulate) {
+                        Serde::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
+                        Serde::serialize(@deltas, ref output);
+                        panic(output);
+                    } else {
+                        let first = first_swap_amount.unwrap();
+                        handle_delta(core, token_amount.token, -token_amount.amount, recipient);
+                        handle_delta(core, first.token, first.amount, recipient);
+                        Serde::serialize(@deltas, ref output);
+                    }
 
-                    // this isn't actually used, but we have to return it because panic is not recognized as end of execution
-                    ArrayTrait::new()
+                    output
                 },
                 CallbackParameters::GetDeltaToSqrtRatio((
                     pool_key, sqrt_ratio
@@ -467,27 +323,27 @@ mod Router {
 
     #[external(v0)]
     impl RouterImpl of IRouter<ContractState> {
-        fn execute(
-            ref self: ContractState,
-            swap: Swap,
-            calculated_amount_threshold: u128,
-            recipient: ContractAddress
-        ) -> TokenAmount {
-            call_core_with_callback(
-                self.core.read(),
-                @CallbackParameters::Execute((swap, calculated_amount_threshold, recipient))
-            )
+        fn swap(ref self: ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
+            let mut deltas: Array<Delta> = self.multihop_swap(array![node], token_amount);
+            deltas.pop_front().unwrap()
         }
 
-        fn raw_swap(ref self: ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
+        #[inline(always)]
+        fn multihop_swap(
+            ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
+        ) -> Array<Delta> {
             call_core_with_callback(
-                self.core.read(), @CallbackParameters::RawSwap((node, token_amount))
+                self.core.read(), @CallbackParameters::Swap((route, token_amount, false))
             )
         }
 
         // Quote the given token amount against the route in the swap
-        fn quote(ref self: ContractState, swap: Swap) -> TokenAmount {
-            call_core_with_reverting_callback(self.core.read(), @CallbackParameters::Quote(swap))
+        fn quote(
+            ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
+        ) -> Array<Delta> {
+            call_core_with_reverting_callback(
+                self.core.read(), @CallbackParameters::Swap((route, token_amount, true))
+            )
         }
 
         // Returns the delta for swapping a pool to the given price

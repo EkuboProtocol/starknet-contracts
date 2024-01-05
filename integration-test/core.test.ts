@@ -238,7 +238,7 @@ describe("core", () => {
             let transaction_hash: string;
             try {
               ({ transaction_hash } = await router.invoke(
-                "raw_swap",
+                "swap",
                 [
                   {
                     pool_key: poolKey,
