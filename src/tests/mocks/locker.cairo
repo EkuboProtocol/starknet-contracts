@@ -46,7 +46,7 @@ mod CoreLocker {
     use core::option::{Option, OptionTrait};
     use core::serde::Serde;
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data, handle_delta};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{
@@ -66,28 +66,6 @@ mod CoreLocker {
     #[constructor]
     fn constructor(ref self: ContractState, core: ICoreDispatcher) {
         self.core.write(core);
-    }
-
-    #[generate_trait]
-    impl Internal of CoreLocker {
-        fn handle_delta(
-            ref self: ContractState,
-            core: ICoreDispatcher,
-            token: ContractAddress,
-            delta: i129,
-            recipient: ContractAddress
-        ) {
-            if (delta > Zero::zero()) {
-                // transfer the token from self (assumes we have the balance)
-                IERC20Dispatcher { contract_address: token }
-                    .transfer(core.contract_address, u256 { low: delta.mag, high: 0 });
-                // then call pay
-                assert(core.deposit(token) == delta.mag, 'DEPOSIT_FAILED');
-            } else if (delta < Zero::zero()) {
-                // withdraw to recipient
-                core.withdraw(token, recipient, delta.mag);
-            }
-        }
     }
 
     #[external(v0)]
@@ -205,7 +183,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(core, pool_key.token0, delta.amount0, recipient);
+                    handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
                     state = core.get_locker_state(id);
                     assert(
@@ -218,7 +196,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(core, pool_key.token1, delta.amount1, recipient);
+                    handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -252,7 +230,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(core, pool_key.token0, delta.amount0, recipient);
+                    handle_delta(core, pool_key.token0, delta.amount0, recipient);
 
                     state = core.get_locker_state(id);
                     assert(
@@ -265,7 +243,7 @@ mod CoreLocker {
                         'deltas'
                     );
 
-                    self.handle_delta(core, pool_key.token1, delta.amount1, recipient);
+                    handle_delta(core, pool_key.token1, delta.amount1, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, 'deltas');
@@ -281,10 +259,7 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    self
-                        .handle_delta(
-                            core, key.token, i129 { mag: amount, sign: false }, Zero::zero()
-                        );
+                    handle_delta(core, key.token, i129 { mag: amount, sign: false }, Zero::zero());
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
@@ -300,7 +275,7 @@ mod CoreLocker {
                     assert(state.address == get_contract_address(), 'is locker');
                     assert(state.nonzero_delta_count == 1, '1 delta');
 
-                    self.handle_delta(core, token, i129 { mag: amount, sign: true }, recipient);
+                    handle_delta(core, token, i129 { mag: amount, sign: true }, recipient);
 
                     state = core.get_locker_state(id);
                     assert(state.nonzero_delta_count == 0, '0 delta');
@@ -312,20 +287,18 @@ mod CoreLocker {
                 )) => {
                     core.accumulate_as_fees(pool_key, amount0, amount1);
 
-                    self
-                        .handle_delta(
-                            core,
-                            pool_key.token0,
-                            i129 { mag: amount0, sign: false },
-                            contract_address_const::<0>()
-                        );
-                    self
-                        .handle_delta(
-                            core,
-                            pool_key.token1,
-                            i129 { mag: amount1, sign: false },
-                            contract_address_const::<0>()
-                        );
+                    handle_delta(
+                        core,
+                        pool_key.token0,
+                        i129 { mag: amount0, sign: false },
+                        contract_address_const::<0>()
+                    );
+                    handle_delta(
+                        core,
+                        pool_key.token1,
+                        i129 { mag: amount1, sign: false },
+                        contract_address_const::<0>()
+                    );
 
                     ActionResult::AccumulateAsFees
                 },

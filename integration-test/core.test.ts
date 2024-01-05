@@ -3,7 +3,7 @@ import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
-import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
+import Router from "../target/dev/ekubo_Router.contract_class.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
 import { DevnetProvider } from "./devnet";
@@ -39,7 +39,7 @@ describe("core", () => {
   let nft: Contract;
   let token0: Contract;
   let token1: Contract;
-  let swapper: Contract;
+  let router: Contract;
 
   beforeAll(async () => {
     provider = new DevnetProvider();
@@ -63,7 +63,7 @@ describe("core", () => {
       accounts[0]
     );
 
-    swapper = new Contract(SimpleSwapper.abi, ADDRESSES.swapper, accounts[0]);
+    router = new Contract(Router.abi, ADDRESSES.router, accounts[0]);
   });
 
   for (const {
@@ -111,12 +111,12 @@ describe("core", () => {
             bounds,
           });
           await token0.invoke("transfer", [
-            positionsContract.address, // recipient
-            amount0, // amount
+            positionsContract.address,
+            amount0,
           ]);
           await token1.invoke("transfer", [
-            positionsContract.address, // recipient
-            amount1, // amount
+            positionsContract.address,
+            amount1,
           ]);
 
           const { transaction_hash } = await positionsContract.invoke(
@@ -141,11 +141,11 @@ describe("core", () => {
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
         await token0.invoke("transfer", [
-          swapper.address,
+          router.address,
           await token0.call("balanceOf", [accounts[0].address]),
         ]);
         await token1.invoke("transfer", [
-          swapper.address,
+          router.address,
           await token1.call("balanceOf", [accounts[0].address]),
         ]);
 
@@ -225,8 +225,6 @@ describe("core", () => {
         }
       });
 
-      const RECIPIENT = "0xabcd";
-
       for (const swapCase of SWAP_CASES) {
         (swapCase.only ? it.only : it)(
           `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
@@ -239,23 +237,18 @@ describe("core", () => {
           async () => {
             let transaction_hash: string;
             try {
-              ({ transaction_hash } = await swapper.invoke(
-                "swap",
+              ({ transaction_hash } = await router.invoke(
+                "raw_swap",
                 [
-                  poolKey,
                   {
-                    amount: toI129(swapCase.amount),
-                    is_token1: swapCase.isToken1,
-                    sqrt_ratio_limit:
-                      swapCase.sqrtRatioLimit ??
-                      (swapCase.isToken1 != swapCase.amount < 0
-                        ? MAX_SQRT_RATIO
-                        : MIN_SQRT_RATIO),
+                    pool_key: poolKey,
+                    sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
                     skip_ahead: swapCase.skipAhead ?? 0,
                   },
-                  RECIPIENT,
-                  swapCase.amountLimit ??
-                  (swapCase.amount < 0 ? 2n ** 128n - 1n : 0n),
+                  {
+                    amount: toI129(swapCase.amount),
+                    token: swapCase.isToken1 ? token1.address : token0.address
+                  },
                 ],
                 {
                   maxFee: 1_000_000_000_000_000n,

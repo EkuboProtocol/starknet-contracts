@@ -561,7 +561,7 @@ mod Core {
             if (price.sqrt_ratio.is_zero()) {
                 Option::Some(self.initialize_pool(pool_key, initial_tick))
             } else {
-                Option::None(())
+                Option::None
             }
         }
 
@@ -836,7 +836,7 @@ mod Core {
 
             let tick_bitmap_storage_prefix = LegacyHash::hash(selector!("tick_bitmaps"), pool_key);
 
-            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None(());
+            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None;
 
             loop {
                 if (amount_remaining.is_zero()) {

@@ -1035,12 +1035,15 @@ fn test_create_position_in_range_after_swap_no_fees() {
     let p2_info = positions.get_token_info(p2.id, setup.pool_key, p2.bounds);
     let p3_info = positions.get_token_info(p3.id, setup.pool_key, p3.bounds);
 
-    let mut arr: Array<GetTokenInfoRequest> = ArrayTrait::new();
-    arr.append(GetTokenInfoRequest { id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds });
-    arr.append(GetTokenInfoRequest { id: p1.id, pool_key: setup.pool_key, bounds: p1.bounds });
-    arr.append(GetTokenInfoRequest { id: p2.id, pool_key: setup.pool_key, bounds: p2.bounds });
-    arr.append(GetTokenInfoRequest { id: p3.id, pool_key: setup.pool_key, bounds: p3.bounds });
-    let mut all_info = positions.get_tokens_info(arr);
+    let mut all_info = positions
+        .get_tokens_info(
+            array![
+                GetTokenInfoRequest { id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds },
+                GetTokenInfoRequest { id: p1.id, pool_key: setup.pool_key, bounds: p1.bounds },
+                GetTokenInfoRequest { id: p2.id, pool_key: setup.pool_key, bounds: p2.bounds },
+                GetTokenInfoRequest { id: p3.id, pool_key: setup.pool_key, bounds: p3.bounds },
+            ]
+        );
     assert(all_info.pop_front().unwrap() == p0_info, 'p0_info');
     assert(all_info.pop_front().unwrap() == p1_info, 'p1_info');
     assert(all_info.pop_front().unwrap() == p2_info, 'p2_info');
