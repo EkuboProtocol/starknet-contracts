@@ -5,6 +5,8 @@ mod Core {
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
+    use ekubo::components::owner::{check_owner_only};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -26,7 +28,6 @@ mod Core {
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
     };
-    use ekubo::owner::{check_owner_only};
     use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
@@ -38,7 +39,6 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252

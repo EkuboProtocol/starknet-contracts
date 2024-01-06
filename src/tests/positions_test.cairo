@@ -2,7 +2,8 @@ use core::array::ArrayTrait;
 use core::num::traits::{Zero};
 use core::option::OptionTrait;
 use core::traits::{Into};
-use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::components::owner::owner;
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -14,7 +15,6 @@ use ekubo::interfaces::positions::{
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::owner::owner;
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
@@ -43,7 +43,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IMockUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         positions.contract_address
     )
         .unwrap();

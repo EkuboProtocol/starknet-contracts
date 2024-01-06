@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use ekubo::asset_recovery::{IAssetRecoveryDispatcher, IAssetRecoveryDispatcherTrait};
+use ekubo::components::owner::{owner};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::owner::{owner};
 use ekubo::tests::helper::{deploy_asset_recovery, deploy_mock_token};
 use ekubo::tests::mocks::mock_erc20::IMockERC20DispatcherTrait;
 use starknet::testing::{set_contract_address};

@@ -54,13 +54,15 @@ mod Router {
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
     use core::traits::{Into};
-    use ekubo::clear::{ClearImpl};
+    use ekubo::components::clear::{ClearImpl};
+    use ekubo::components::shared_locker::{
+        consume_callback_data, handle_delta, call_core_with_callback
+    };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::muldiv::{muldiv};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, sqrt_ratio_to_tick};
-    use ekubo::shared_locker::{consume_callback_data, handle_delta, call_core_with_callback};
     use ekubo::types::i129::{i129, i129Trait};
     use starknet::syscalls::{call_contract_syscall};
 
@@ -69,7 +71,7 @@ mod Router {
     use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, TokenAmount, Depth};
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {

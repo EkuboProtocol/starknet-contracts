@@ -11,7 +11,7 @@ trait IMockUpgradeable<TStorage> {
 // component, and does not have any other functionality.
 #[starknet::contract]
 mod MockUpgradeable {
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

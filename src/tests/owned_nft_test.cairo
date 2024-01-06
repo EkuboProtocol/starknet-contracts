@@ -2,10 +2,10 @@ use core::array::{ArrayTrait};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
+use ekubo::components::owner::owner;
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::owner::owner;
 use ekubo::tests::helper::{deploy_owned_nft};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
@@ -93,7 +93,9 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IMockUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(nft.contract_address)
+    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        nft.contract_address
+    )
         .unwrap();
     assert(event.new_class_hash == class_hash, 'event.class_hash');
 }

@@ -8,8 +8,8 @@ trait IAssetRecovery<TStorage> {
 
 #[starknet::contract]
 mod AssetRecovery {
+    use ekubo::components::owner::{check_owner_only};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
-    use ekubo::owner::{check_owner_only};
     use starknet::{get_contract_address};
     use super::{IERC20Dispatcher, IAssetRecovery};
 

@@ -5,6 +5,9 @@ mod Positions {
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
     use core::traits::{Into};
+    use ekubo::components::owner::{check_owner_only};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -15,14 +18,11 @@ mod Positions {
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::owner::{check_owner_only};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
         deploy_syscall
@@ -34,7 +34,7 @@ mod Positions {
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
 
     #[storage]

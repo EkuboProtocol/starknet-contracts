@@ -1,4 +1,4 @@
-use ekubo::owner::owner;
+use ekubo::components::owner::owner;
 use ekubo::tests::helper::{deploy_mock_upgradeable};
 use ekubo::tests::mocks::mock_upgradeable::{
     MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
@@ -14,7 +14,7 @@ fn test_replace_class_hash() {
     IMockUpgradeableDispatcher { contract_address: mock_upgradeable.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         mock_upgradeable.contract_address
     )
         .unwrap();

@@ -45,8 +45,10 @@ mod CoreLocker {
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::Serde;
+    use ekubo::components::shared_locker::{
+        call_core_with_callback, consume_callback_data, handle_delta
+    };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data, handle_delta};
     use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{

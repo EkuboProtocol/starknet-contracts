@@ -1,8 +1,8 @@
 #[starknet::component]
 mod Upgradeable {
     use core::num::traits::{Zero};
+    use ekubo::components::owner::{check_owner_only};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use ekubo::owner::{check_owner_only};
     use starknet::{ClassHash, replace_class_syscall};
 
     #[storage]

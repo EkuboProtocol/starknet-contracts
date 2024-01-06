@@ -25,10 +25,10 @@ mod MockExtension {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints, all_call_points};
     use ekubo::types::delta::{Delta};

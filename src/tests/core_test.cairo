@@ -30,7 +30,7 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
 mod owner_tests {
-    use ekubo::owner::owner;
+    use ekubo::components::owner::owner;
 
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
@@ -59,7 +59,7 @@ mod owner_tests {
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
             core.contract_address
         )
             .unwrap();
