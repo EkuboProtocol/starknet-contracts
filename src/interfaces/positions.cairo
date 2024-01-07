@@ -80,7 +80,12 @@ trait IPositions<TStorage> {
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> (u64, u128, u256, u256);
 
-    // Withdraw liquidity from a specific token ID. Must be called by an operator, approved address or the owner
+    // Collect fees for the token ID to the caller. Must be called by an operator, approved address or the owner.
+    fn collect_fees(ref self: TStorage, id: u64, pool_key: PoolKey, bounds: Bounds) -> (u128, u128);
+
+    // Withdraw liquidity from a specific token ID to the caller and optionally also collect fees.
+    // Must be called by an operator, approved address or the owner.
+    // Deprecated: you should call withdraw_v2 instead, and call collect fees separately
     fn withdraw(
         ref self: TStorage,
         id: u64,
@@ -90,5 +95,16 @@ trait IPositions<TStorage> {
         min_token0: u128,
         min_token1: u128,
         collect_fees: bool
+    ) -> (u128, u128);
+
+    // Withdraw liquidity from a specific token ID to the caller. Must be called by an operator, approved address or the owner.
+    fn withdraw_v2(
+        ref self: TStorage,
+        id: u64,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        liquidity: u128,
+        min_token0: u128,
+        min_token1: u128
     ) -> (u128, u128);
 }
