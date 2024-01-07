@@ -45,11 +45,19 @@ mod Positions {
         upgradeable: upgradeable_component::Storage
     }
 
+
+    #[derive(starknet::Event, Drop)]
+    struct PositionMintedWithReferrer {
+        id: u64,
+        referrer: ContractAddress,
+    }
+
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        PositionMintedWithReferrer: PositionMintedWithReferrer,
     }
 
     #[constructor]
@@ -243,6 +251,10 @@ mod Positions {
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
         ) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
+
+            if (referrer.is_non_zero()) {
+                self.emit(PositionMintedWithReferrer { id, referrer })
+            }
 
             id
         }
