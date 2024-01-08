@@ -47,6 +47,9 @@ trait IPositions<TStorage> {
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
     ) -> u64;
 
+    // Same as above but includes a referrer in the emitted event
+    fn mint_v2(ref self: TStorage, referrer: ContractAddress) -> u64;
+
     // Delete the NFT. All liquidity controlled by the NFT (not withdrawn) is irrevocably locked.
     // Must be called by an operator, approved address or the owner.
     fn unsafe_burn(ref self: TStorage, id: u64);
