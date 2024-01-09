@@ -1,4 +1,4 @@
-use ekubo::owner::{hash_for_owner_check, check_owner_only, owner};
+use ekubo::components::owner::{hash_for_owner_check, check_owner_only, owner};
 use starknet::testing::{set_caller_address};
 
 #[test]

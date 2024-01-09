@@ -4,7 +4,7 @@ use starknet::{ClassHash};
 // component, and does not have any other functionality.
 #[starknet::contract]
 mod MockUpgradeable {
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

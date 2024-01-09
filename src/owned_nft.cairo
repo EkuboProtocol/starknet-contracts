@@ -25,6 +25,7 @@ mod OwnedNFT {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -36,7 +37,6 @@ mod OwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         replace_class_syscall, deploy_syscall

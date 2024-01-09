@@ -1,6 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
+use ekubo::components::owner::owner;
 use ekubo::extensions::limit_orders::{
     LimitOrders, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState,
     PoolState, GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -12,7 +13,6 @@ use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatc
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::owner::owner;
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
@@ -171,7 +171,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IUpgradeableDispatcher { contract_address: limit_orders.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         limit_orders.contract_address
     )
         .unwrap();

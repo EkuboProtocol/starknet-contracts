@@ -114,7 +114,9 @@ mod LimitOrders {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
-    use ekubo::clear::{ClearImpl};
+    use ekubo::components::clear::{ClearImpl};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -126,11 +128,9 @@ mod LimitOrders {
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
@@ -141,7 +141,7 @@ mod LimitOrders {
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

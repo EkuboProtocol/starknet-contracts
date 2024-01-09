@@ -2,7 +2,8 @@ use core::array::ArrayTrait;
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::components::owner::owner;
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -15,8 +16,6 @@ use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatc
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::owner::owner;
-use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
@@ -44,7 +43,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         positions.contract_address
     )
         .unwrap();
@@ -436,42 +435,46 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(token_info.fees0 == 18, 'fees0');
     assert(token_info.fees1 == 8, 'fees1');
 
-    // withdraw fees only
+    // withdraw 0 liquidity
     let (amount0, amount1) = positions
-        .withdraw(
+        .withdraw_v2(
             id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: 0,
             min_token0: 0,
             min_token1: 0,
-            collect_fees: true,
         );
 
-    assert(amount0 == 18, 'fees0 withdrawn');
-    assert(amount1 == 8, 'fees1 withdrawn');
+    assert(amount0 == 0, 'fees not withdrawn');
+    assert(amount1 == 0, 'fees not withdrawn');
+
+    let (amount0, amount1) = positions
+        .collect_fees(id: token_id, pool_key: setup.pool_key, bounds: bounds,);
+
+    assert(amount0 == 17, 'fees0 withdrawn');
+    assert(amount1 == 7, 'fees1 withdrawn');
 
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 18),
+            .balanceOf(caller) == (49500489 + 17),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 8),
+            .balanceOf(caller) == (49499508 + 7),
         'balance1'
     );
 
     // withdraw quarter
     let (amount0, amount1) = positions
-        .withdraw(
+        .withdraw_v2(
             id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: (liquidity / 4),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 
     assert(amount0 == 24750244, 'quarter');
@@ -479,25 +482,24 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 18 + 24750244),
+            .balanceOf(caller) == (49500489 + 17 + 24750244),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 8 + 24749754),
+            .balanceOf(caller) == (49499508 + 7 + 24749754),
         'balance1'
     );
 
     // withdraw remainder
     let (amount0, amount1) = positions
-        .withdraw(
+        .withdraw_v2(
             id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: liquidity - (liquidity / 2) - (liquidity / 4),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 
     assert(amount0 == 24750244, 'remainder');
@@ -505,12 +507,12 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 18 + 24750244 + amount0.into()),
+            .balanceOf(caller) == (49500489 + 17 + 24750244 + amount0.into()),
         'balance0'
     );
     assert(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 8 + 24749754 + amount1.into()),
+            .balanceOf(caller) == (49499508 + 7 + 24749754 + amount1.into()),
         'balance1'
     );
 }
@@ -537,14 +539,13 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
     let withdrawn = positions
-        .withdraw(
+        .withdraw_v2(
             id: token_id,
             pool_key: setup.pool_key,
             bounds: bounds,
             liquidity: liquidity,
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 
     let caller = get_contract_address();
@@ -1113,14 +1114,13 @@ fn test_withdraw_not_collected_fees_token1() {
     );
 
     positions
-        .withdraw(
+        .withdraw_v2(
             id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 }
 
@@ -1161,14 +1161,13 @@ fn test_withdraw_not_collected_fees_token0() {
     );
 
     positions
-        .withdraw(
+        .withdraw_v2(
             id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 }
 
@@ -1201,14 +1200,13 @@ fn test_withdraw_partial_leave_fees() {
     );
 
     positions
-        .withdraw(
+        .withdraw_v2(
             id: p0.id,
             pool_key: setup.pool_key,
             bounds: p0.bounds,
             liquidity: (p0.liquidity / 3),
             min_token0: 0,
             min_token1: 0,
-            collect_fees: false,
         );
 
     let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);

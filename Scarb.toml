@@ -3,11 +3,11 @@ name = "ekubo"
 version = "0.1.0"
 description = "An AMM protocol built in Cairo featuring concentrated liquidity"
 homepage = "https://ekubo.org"
-cairo-version = "2.4.2"
+cairo-version = "2.4.3"
 edition = '2023_10'
 
 [dependencies]
-starknet = "=2.4.2"
+starknet = "=2.4.3"
 
 [tool.fmt]
 sort-module-level-items = true
