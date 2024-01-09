@@ -36,11 +36,7 @@ mod Upgradeable {
             assert(!class_hash.is_zero(), 'INVALID_CLASS_HASH');
             check_owner_only();
 
-            let has_interface_dispatcher = IHasInterfaceDispatcher {
-                contract_address: get_contract_address()
-            };
-
-            let id = has_interface_dispatcher.get_primary_interface_id();
+            let id = self.get_contract().get_primary_interface_id();
 
             let mut result = library_call_syscall(
                 class_hash, selector!("get_primary_interface_id"), array![].span()
