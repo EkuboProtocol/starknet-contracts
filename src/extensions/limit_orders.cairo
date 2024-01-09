@@ -116,7 +116,7 @@ mod LimitOrders {
     use core::traits::{TryInto, Into};
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -250,6 +250,13 @@ mod LimitOrders {
         UpgradeableEvent: upgradeable_component::Event,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
+    }
+
+    #[external(v0)]
+    impl LimitOrdersHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::extensions::limit_orders::LimitOrders");
+        }
     }
 
     #[external(v0)]

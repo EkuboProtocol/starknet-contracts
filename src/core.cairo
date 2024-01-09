@@ -6,7 +6,7 @@ mod Core {
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
     use ekubo::components::owner::{check_owner_only};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -348,6 +348,13 @@ mod Core {
                     }
                 }
             }
+        }
+    }
+
+    #[external(v0)]
+    impl CoreHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::core::Core");
         }
     }
 

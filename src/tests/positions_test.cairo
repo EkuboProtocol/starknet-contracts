@@ -1,6 +1,6 @@
 use core::array::ArrayTrait;
 use core::num::traits::{Zero};
-use core::option::OptionTrait;
+use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::components::owner::owner;
@@ -10,25 +10,26 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest,
 };
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
     IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
+
 use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
-use ekubo::tests::mocks::mock_upgradeable::{
-    MockUpgradeable, IMockUpgradeableDispatcher, IMockUpgradeableDispatcherTrait
-};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
+
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
@@ -37,10 +38,10 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     );
     let positions = deploy_positions(setup.core);
 
-    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+    let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
 
     set_contract_address(owner());
-    IMockUpgradeableDispatcher { contract_address: positions.contract_address }
+    IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
     let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(

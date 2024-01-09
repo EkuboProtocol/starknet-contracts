@@ -25,7 +25,7 @@ mod OwnedNFT {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -155,6 +155,13 @@ mod OwnedNFT {
                 }
             }
             return (true, owner);
+        }
+    }
+
+    #[external(v0)]
+    impl OwnedNFTHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::owned_nft::OwnedNFT");
         }
     }
 

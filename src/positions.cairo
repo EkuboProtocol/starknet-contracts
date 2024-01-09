@@ -7,7 +7,7 @@ mod Positions {
     use core::traits::{Into};
     use ekubo::components::owner::{check_owner_only};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -124,6 +124,13 @@ mod Positions {
                 .balanceOf(get_contract_address());
             assert(balance.high == 0, 'BALANCE_OVERFLOW');
             balance.low
+        }
+    }
+
+    #[external(v0)]
+    impl PositionsHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::positions::Positions");
         }
     }
 

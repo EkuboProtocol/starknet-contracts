@@ -15,6 +15,7 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
 use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
@@ -29,7 +30,7 @@ use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC2
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
 };
-use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable, IMockUpgradeableDispatcher};
+use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::i129;
@@ -226,13 +227,13 @@ fn setup_pool(
     SetupPoolResult { token0, token1, pool_key, core, locker }
 }
 
-fn deploy_mock_upgradeable() -> IMockUpgradeableDispatcher {
+fn deploy_mock_upgradeable() -> IUpgradeableDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     let (address, _) = deploy_syscall(
         MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('upgradeable deploy failed');
-    return IMockUpgradeableDispatcher { contract_address: address };
+    return IUpgradeableDispatcher { contract_address: address };
 }
 
 #[derive(Drop, Copy)]
