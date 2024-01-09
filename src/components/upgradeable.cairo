@@ -6,9 +6,9 @@ trait IHasInterface<TContractState> {
 
 #[starknet::component]
 mod Upgradeable {
-    use core::result::ResultTrait;
     use core::array::SpanTrait;
     use core::num::traits::{Zero};
+    use core::result::ResultTrait;
     use ekubo::components::owner::{check_owner_only};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use starknet::{ClassHash, replace_class_syscall, get_contract_address, library_call_syscall};
