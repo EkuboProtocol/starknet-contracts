@@ -233,7 +233,7 @@ mod Positions {
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
         // Update the token URI base of the owned NFT
-        fn update_token_uri_base(self: @ContractState, token_uri_base: felt252) {
+        fn update_token_uri_base(ref self: ContractState, token_uri_base: felt252) {
             check_owner_only();
             self.nft.read().set_token_uri_base(token_uri_base);
         }
