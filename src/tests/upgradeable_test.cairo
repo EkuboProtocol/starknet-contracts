@@ -1,6 +1,6 @@
 use ekubo::components::owner::owner;
-use ekubo::tests::helper::{deploy_mock_upgradeable};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use ekubo::tests::helper::{deploy_mock_upgradeable};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{class_hash_const, ClassHash};
