@@ -6,10 +6,12 @@ trait IHasInterface<TContractState> {
 
 #[starknet::component]
 mod Upgradeable {
+    use core::result::ResultTrait;
+    use core::array::SpanTrait;
     use core::num::traits::{Zero};
     use ekubo::components::owner::{check_owner_only};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use starknet::{ClassHash, replace_class_syscall, get_contract_address};
+    use starknet::{ClassHash, replace_class_syscall, get_contract_address, library_call_syscall};
     use super::{IHasInterface, IHasInterfaceDispatcher, IHasInterfaceDispatcherTrait};
 
     #[storage]
@@ -40,11 +42,16 @@ mod Upgradeable {
 
             let id = has_interface_dispatcher.get_primary_interface_id();
 
-            replace_class_syscall(class_hash);
+            let mut result = library_call_syscall(
+                class_hash, selector!("get_primary_interface_id"), array![].span()
+            )
+                .expect('MISSING_PRIMARY_INTERFACE_ID');
 
-            assert(
-                id == has_interface_dispatcher.get_primary_interface_id(), 'UPGRADEABLE_ID_MISMATCH'
-            );
+            let next_id = result.pop_front().expect('INVALID_RETURN_DATA');
+
+            assert(@id == next_id, 'UPGRADEABLE_ID_MISMATCH');
+
+            replace_class_syscall(class_hash);
 
             self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }

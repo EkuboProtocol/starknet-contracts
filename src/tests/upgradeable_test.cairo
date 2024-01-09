@@ -36,7 +36,8 @@ fn test_replace_non_zero_class_hash_not_owner() {
 
 
 #[test]
-fn test_replace_non_zero_class_hash() {
+#[should_panic(expected: ('MISSING_PRIMARY_INTERFACE_ID', 'ENTRYPOINT_FAILED'))]
+fn test_replace_non_zero_class_hash_without_interface_id() {
     let mock_upgradeable = deploy_mock_upgradeable();
     set_contract_address(owner());
     mock_upgradeable.replace_class_hash(class_hash_const::<0xabcdef>());

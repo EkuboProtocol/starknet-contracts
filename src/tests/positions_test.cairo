@@ -10,12 +10,13 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest,
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
