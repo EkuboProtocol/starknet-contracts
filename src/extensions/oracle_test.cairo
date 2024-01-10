@@ -6,10 +6,10 @@ use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_oracle, deploy_two_mock_tokens, swap_inner, deploy_locker
 };
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
@@ -89,13 +89,13 @@ fn deposit(
 
     assert(
         IMockERC20Dispatcher { contract_address: pool_key.token0 }
-            .balanceOf(address: positions.contract_address)
+            .balanceOf(account: positions.contract_address)
             .is_zero(),
         'token0 balance'
     );
     assert(
         IMockERC20Dispatcher { contract_address: pool_key.token1 }
-            .balanceOf(address: positions.contract_address)
+            .balanceOf(account: positions.contract_address)
             .is_zero(),
         'token1 balance'
     );

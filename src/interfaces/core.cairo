@@ -139,9 +139,6 @@ trait ICore<TStorage> {
         self: @TStorage, pool_key: PoolKey, position_key: PositionKey
     ) -> GetPositionWithFeesResult;
 
-    // Get the last recorded balance of a token for core, used by core for computing payment amounts
-    fn get_reserves(self: @TStorage, token: ContractAddress) -> u256;
-
     // Get the balance that is saved in core for a given account for use in a future lock (i.e. methods #save and #load)
     fn get_saved_balance(self: @TStorage, key: SavedBalanceKey) -> u128;
 
@@ -176,9 +173,11 @@ trait ICore<TStorage> {
     // Returns the next saved balance for the given key
     fn save(ref self: TStorage, key: SavedBalanceKey, amount: u128) -> u128;
 
-    // Deposit a given token into core. This is how payments are made. First send the token to core, and then call deposit to account the delta.
+    // Pay a given token into core. This is how payments are made. 
+    // First approve the core contract for the amount you want to spend, and then call pay.
+    // The core contract always takes the full allowance, so as not to leave any allowances.
     // Must be called within a ILocker#locked
-    fn deposit(ref self: TStorage, token_address: ContractAddress) -> u128;
+    fn pay(ref self: TStorage, token_address: ContractAddress);
 
     // Recall a balance previously saved via #save
     // Must be called within a ILocker#locked, but it can be called by addresses other than the locker

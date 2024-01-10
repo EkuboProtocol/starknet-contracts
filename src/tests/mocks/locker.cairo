@@ -49,7 +49,7 @@ mod CoreLocker {
         call_core_with_callback, consume_callback_data, handle_delta
     };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
@@ -313,8 +313,8 @@ mod CoreLocker {
 
                     if (amount_repay.is_non_zero()) {
                         IERC20Dispatcher { contract_address: token }
-                            .transfer(core.contract_address, amount_repay.into());
-                        core.deposit(token);
+                            .approve(core.contract_address, amount_repay.into());
+                        core.pay(token);
                     }
 
                     ActionResult::FlashBorrow(())

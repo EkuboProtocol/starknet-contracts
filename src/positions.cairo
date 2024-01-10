@@ -156,38 +156,15 @@ mod Positions {
                     };
 
                     if delta.amount0.is_non_zero() {
-                        IERC20Dispatcher { contract_address: data.pool_key.token0 }
-                            .transfer(
-                                core.contract_address, u256 { low: delta.amount0.mag, high: 0 }
-                            );
-                        let amount_paid = core.deposit(data.pool_key.token0);
-                        if (amount_paid > delta.amount0.mag) {
-                            // withdraw back to self, and the subsequent clear should get it
-                            core
-                                .withdraw(
-                                    data.pool_key.token0,
-                                    get_contract_address(),
-                                    amount_paid - delta.amount0.mag
-                                );
-                        }
+                        let token = IERC20Dispatcher { contract_address: data.pool_key.token0 };
+                        token.approve(core.contract_address, delta.amount0.mag.into());
+                        core.pay(data.pool_key.token0);
                     }
 
                     if delta.amount1.is_non_zero() {
-                        IERC20Dispatcher { contract_address: data.pool_key.token1 }
-                            .transfer(
-                                core.contract_address, u256 { low: delta.amount1.mag, high: 0 }
-                            );
-
-                        let amount_paid = core.deposit(data.pool_key.token1);
-                        if (amount_paid > delta.amount1.mag) {
-                            // withdraw back to self, and the subsequent clear should get it
-                            core
-                                .withdraw(
-                                    data.pool_key.token1,
-                                    get_contract_address(),
-                                    amount_paid - delta.amount1.mag
-                                );
-                        }
+                        let token = IERC20Dispatcher { contract_address: data.pool_key.token1 };
+                        token.approve(core.contract_address, delta.amount1.mag.into());
+                        core.pay(data.pool_key.token1);
                     }
 
                     delta
@@ -337,6 +314,9 @@ mod Positions {
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
             let core = self.core.read();
+
+            // todo: how do we handle before/after update position that changes the price? 
+            // https://github.com/EkuboProtocol/contracts/issues/102
             let price = core.get_pool_price(pool_key);
 
             // compute how much liquidity we can deposit based on token balances

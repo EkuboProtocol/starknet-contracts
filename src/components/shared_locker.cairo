@@ -36,13 +36,9 @@ fn handle_delta(
         if (delta.sign) {
             core.withdraw(token, recipient, delta.mag);
         } else {
-            IERC20Dispatcher { contract_address: token }
-                .transfer(core.contract_address, delta.mag.into());
-            // tokens already in the contract
-            let paid = core.deposit(token);
-            if (paid > delta.mag) {
-                core.withdraw(token, recipient, paid - delta.mag);
-            }
+            let token = IERC20Dispatcher { contract_address: token };
+            token.approve(core.contract_address, delta.mag.into());
+            core.pay(token.contract_address);
         }
     }
 }

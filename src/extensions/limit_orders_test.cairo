@@ -12,13 +12,13 @@ use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTra
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
     deploy_locker, deploy_router
 };
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};

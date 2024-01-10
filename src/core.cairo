@@ -53,8 +53,6 @@ mod Core {
     struct Storage {
         // withdrawal fees collected, controlled by the owner
         protocol_fees_collected: LegacyMap<ContractAddress, u128>,
-        // the last recorded balance of each token, used for checking payment
-        reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
         lock_count: u32,
         // the rest of transient state is accessed directly using Store::read and Store::write to save on hashes
@@ -384,10 +382,6 @@ mod Core {
             self.pool_fees.read(pool_key)
         }
 
-        fn get_reserves(self: @ContractState, token: ContractAddress) -> u256 {
-            self.reserves.read(token)
-        }
-
         fn get_pool_tick_liquidity_delta(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> i129 {
@@ -464,9 +458,11 @@ mod Core {
 
             let collected: u128 = self.protocol_fees_collected.read(token);
             self.protocol_fees_collected.write(token, collected - amount);
-            self.reserves.write(token, self.reserves.read(token) - amount.into());
 
-            IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
+            assert(
+                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
@@ -495,15 +491,14 @@ mod Core {
         ) {
             let (id, _) = self.require_locker();
 
-            let res = self.reserves.read(token_address);
-            let amount_large: u256 = amount.into();
-            assert(res >= amount_large, 'INSUFFICIENT_RESERVES');
-            self.reserves.write(token_address, res - amount_large);
-
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
 
-            IERC20Dispatcher { contract_address: token_address }.transfer(recipient, amount_large);
+            assert(
+                IERC20Dispatcher { contract_address: token_address }
+                    .transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
         }
 
         fn save(ref self: ContractState, key: SavedBalanceKey, amount: u128) -> u128 {
@@ -521,23 +516,26 @@ mod Core {
             balance_next
         }
 
-        fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
-            let (id, _) = self.require_locker();
+        fn pay(ref self: ContractState, token_address: ContractAddress) {
+            let (id, payer) = self.require_locker();
 
-            let balance = IERC20Dispatcher { contract_address: token_address }
-                .balanceOf(get_contract_address());
+            let token = IERC20Dispatcher { contract_address: token_address };
 
-            let reserve = self.reserves.read(token_address);
-            // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
-            assert(balance >= reserve, 'BALANCE_LT_RESERVE');
-            let delta = balance - reserve;
-            // the delta is limited to u128
-            assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
+            let this_address = get_contract_address();
+            let allowance = token.allowance(payer, this_address);
+            let balance_before = token.balanceOf(this_address);
+
+            assert(
+                token.transferFrom(sender: payer, recipient: this_address, amount: allowance),
+                'TOKEN_TRANSFERFROM_FAILED'
+            );
+
+            let delta = token.balanceOf(this_address) - balance_before;
+
+            assert(delta.high.is_zero(), 'DELTA_TOO_LARGE');
+            assert(delta == allowance, 'TRANSFER_FROM_INVARIANT');
 
             self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
-            self.reserves.write(token_address, balance);
-
-            delta.low
         }
 
         fn load(

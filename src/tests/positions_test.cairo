@@ -15,6 +15,8 @@ use ekubo::interfaces::positions::{
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::positions::{Positions};
 
@@ -22,8 +24,6 @@ use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
     IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
-
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
