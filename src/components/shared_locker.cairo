@@ -38,7 +38,7 @@ fn handle_delta(
         } else {
             let token = IERC20Dispatcher { contract_address: token };
             token.approve(core.contract_address, delta.mag.into());
-            core.pay(token.contract_address, delta.mag);
+            core.pay(token.contract_address);
         }
     }
 }

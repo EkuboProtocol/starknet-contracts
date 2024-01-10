@@ -639,7 +639,7 @@ mod locks {
             extension: Zero::zero(),
         );
         // should fail because not locked at all
-        setup.core.pay(contract_address_const::<1>(), 1);
+        setup.core.pay(contract_address_const::<1>());
     }
 
     fn save_to_core(locker: ICoreLockerDispatcher, token: ContractAddress, amount: u128) {

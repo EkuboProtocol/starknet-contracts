@@ -173,9 +173,11 @@ trait ICore<TStorage> {
     // Returns the next saved balance for the given key
     fn save(ref self: TStorage, key: SavedBalanceKey, amount: u128) -> u128;
 
-    // Pay a given token into core. This is how payments are made. First approve the core contract to spend the token, and then call pay.
+    // Pay a given token into core. This is how payments are made. 
+    // First approve the core contract for the amount you want to spend, and then call pay.
+    // The core contract always takes the full allowance, so as not to leave any allowances.
     // Must be called within a ILocker#locked
-    fn pay(ref self: TStorage, token_address: ContractAddress, amount: u128);
+    fn pay(ref self: TStorage, token_address: ContractAddress);
 
     // Recall a balance previously saved via #save
     // Must be called within a ILocker#locked, but it can be called by addresses other than the locker

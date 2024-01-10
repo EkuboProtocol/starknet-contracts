@@ -365,7 +365,7 @@ mod LimitOrders {
 
                     IERC20Dispatcher { contract_address: pay_token }
                         .approve(core.contract_address, pay_amount.into());
-                    core.pay(pay_token, pay_amount);
+                    core.pay(pay_token);
 
                     LockCallbackResult::Empty
                 },

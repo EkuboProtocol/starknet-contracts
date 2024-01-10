@@ -133,7 +133,7 @@ mod TokenRegistry {
 
             token.approve(core.contract_address, amount.into());
 
-            core.pay(token.contract_address, amount);
+            core.pay(token.contract_address);
 
             core.withdraw(token.contract_address, refund_to, amount);
 

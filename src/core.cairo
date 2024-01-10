@@ -516,27 +516,26 @@ mod Core {
             balance_next
         }
 
-        fn pay(ref self: ContractState, token_address: ContractAddress, amount: u128) {
+        fn pay(ref self: ContractState, token_address: ContractAddress) {
             let (id, payer) = self.require_locker();
 
             let token = IERC20Dispatcher { contract_address: token_address };
 
             let this_address = get_contract_address();
+            let allowance = token.allowance(payer, this_address);
             let balance_before = token.balanceOf(this_address);
 
             assert(
-                token.transferFrom(sender: payer, recipient: this_address, amount: amount.into()),
+                token.transferFrom(sender: payer, recipient: this_address, amount: allowance),
                 'TOKEN_TRANSFERFROM_FAILED'
             );
-
-            assert(token.allowance(payer, this_address).is_zero(), 'NONZERO_ALLOWANCE');
 
             let delta = token.balanceOf(this_address) - balance_before;
 
             assert(delta.high.is_zero(), 'DELTA_TOO_LARGE');
-            assert(delta.low == amount, 'TRANSFER_FROM_INVARIANT');
+            assert(delta == allowance, 'TRANSFER_FROM_INVARIANT');
 
-            self.account_delta(id, token_address, i129 { mag: amount, sign: true });
+            self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
         }
 
         fn load(

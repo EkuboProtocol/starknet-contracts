@@ -314,7 +314,7 @@ mod CoreLocker {
                     if (amount_repay.is_non_zero()) {
                         IERC20Dispatcher { contract_address: token }
                             .approve(core.contract_address, amount_repay.into());
-                        core.pay(token, amount_repay);
+                        core.pay(token);
                     }
 
                     ActionResult::FlashBorrow(())

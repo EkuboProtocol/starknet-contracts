@@ -158,13 +158,13 @@ mod Positions {
                     if delta.amount0.is_non_zero() {
                         let token = IERC20Dispatcher { contract_address: data.pool_key.token0 };
                         token.approve(core.contract_address, delta.amount0.mag.into());
-                        core.pay(data.pool_key.token0, delta.amount0.mag);
+                        core.pay(data.pool_key.token0);
                     }
 
                     if delta.amount1.is_non_zero() {
                         let token = IERC20Dispatcher { contract_address: data.pool_key.token1 };
                         token.approve(core.contract_address, delta.amount1.mag.into());
-                        core.pay(data.pool_key.token1, delta.amount1.mag);
+                        core.pay(data.pool_key.token1);
                     }
 
                     delta
