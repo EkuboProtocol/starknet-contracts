@@ -459,7 +459,10 @@ mod Core {
             let collected: u128 = self.protocol_fees_collected.read(token);
             self.protocol_fees_collected.write(token, collected - amount);
 
-            IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
+            assert(
+                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
@@ -491,7 +494,11 @@ mod Core {
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
 
-            IERC20Dispatcher { contract_address: token_address }.transfer(recipient, amount.into());
+            assert(
+                IERC20Dispatcher { contract_address: token_address }
+                    .transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
         }
 
         fn save(ref self: ContractState, key: SavedBalanceKey, amount: u128) -> u128 {
@@ -517,7 +524,10 @@ mod Core {
             let this_address = get_contract_address();
             let balance_before = token.balanceOf(this_address);
 
-            token.transferFrom(sender: payer, recipient: this_address, amount: amount.into());
+            assert(
+                token.transferFrom(sender: payer, recipient: this_address, amount: amount.into()),
+                'TOKEN_TRANSFERFROM_FAILED'
+            );
 
             assert(token.allowance(payer, this_address).is_zero(), 'NONZERO_ALLOWANCE');
 
