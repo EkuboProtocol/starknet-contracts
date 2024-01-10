@@ -21,12 +21,13 @@ use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
-use ekubo::simple_erc20::{SimpleERC20};
+use ekubo::mock_erc20::{
+    MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait
+};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
 };
@@ -55,22 +56,18 @@ fn deploy_asset_recovery() -> IAssetRecoveryDispatcher {
 }
 
 fn deploy_mock_token() -> IMockERC20Dispatcher {
-    let constructor_args: Array<felt252> = ArrayTrait::new();
+    deploy_mock_token_with_balance(Zero::zero(), Zero::zero())
+}
+
+fn deploy_mock_token_with_balance(
+    owner: ContractAddress, starting_balance: u128
+) -> IMockERC20Dispatcher {
+    let constructor_args: Array<felt252> = array![owner.into(), starting_balance.into()];
     let (token_address, _) = deploy_syscall(
         MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('token deploy failed');
     return IMockERC20Dispatcher { contract_address: token_address };
-}
-
-fn deploy_simple_erc20(owner: ContractAddress) -> IERC20Dispatcher {
-    let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@owner, ref constructor_args);
-    let (token_address, _) = deploy_syscall(
-        SimpleERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('simpleerc20 deploy');
-    return IERC20Dispatcher { contract_address: token_address };
 }
 
 fn deploy_owned_nft(

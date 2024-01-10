@@ -23,7 +23,7 @@ use ekubo::tests::helper::{
     IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
 };
 
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};

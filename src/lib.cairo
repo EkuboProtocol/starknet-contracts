@@ -3,7 +3,7 @@ mod core;
 mod owned_nft;
 mod positions;
 mod router;
-mod simple_erc20;
+mod mock_erc20;
 mod token_registry;
 
 mod components {
@@ -86,14 +86,13 @@ mod tests {
     mod owner_test;
     mod positions_test;
     mod router_test;
-    mod simple_erc20_test;
+    mod mock_erc20_test;
     mod store_packing_test;
     mod token_registry_test;
     mod upgradeable_test;
 
     mod mocks {
         mod locker;
-        mod mock_erc20;
         mod mock_extension;
         mod mock_upgradeable;
     }

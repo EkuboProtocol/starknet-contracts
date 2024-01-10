@@ -20,7 +20,7 @@ use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
@@ -639,7 +639,7 @@ mod locks {
             extension: Zero::zero(),
         );
         // should fail because not locked at all
-        setup.core.deposit(contract_address_const::<1>());
+        setup.core.pay(contract_address_const::<1>(), 1);
     }
 
     fn save_to_core(locker: ICoreLockerDispatcher, token: ContractAddress, amount: u128) {
@@ -738,7 +738,8 @@ mod locks {
     #[test]
     #[should_panic(
         expected: (
-            'INSUFFICIENT_RESERVES',
+            'INSUFFICIENT_BALANCE',
+            'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',

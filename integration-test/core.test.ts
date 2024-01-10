@@ -2,7 +2,7 @@ import { Account, Contract, TransactionStatus } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
-import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
+import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
 import Router from "../target/dev/ekubo_Router.contract_class.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
@@ -46,8 +46,8 @@ describe("core", () => {
     accounts = getAccounts(provider);
 
     await provider.loadDump();
-    token0 = new Contract(SimpleERC20.abi, ADDRESSES.token0, accounts[0]);
-    token1 = new Contract(SimpleERC20.abi, ADDRESSES.token1, accounts[0]);
+    token0 = new Contract(MockERC20.abi, ADDRESSES.token0, accounts[0]);
+    token1 = new Contract(MockERC20.abi, ADDRESSES.token1, accounts[0]);
 
     core = new Contract(CoreCompiledContract.abi, ADDRESSES.core, accounts[0]);
 

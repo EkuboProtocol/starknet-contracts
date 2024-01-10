@@ -363,12 +363,8 @@ mod LimitOrders {
 
                     assert(other_is_zero, 'TICK_WRONG_SIDE');
 
-                    IERC20Dispatcher { contract_address: pay_token }
-                        .transfer(core.contract_address, pay_amount.into());
-                    let paid_amount = core.deposit(pay_token);
-                    if (paid_amount > pay_amount) {
-                        core.withdraw(pay_token, get_contract_address(), paid_amount - pay_amount);
-                    }
+                    IERC20Dispatcher { contract_address: pay_token }.approve(core.contract_address, pay_amount.into());
+                    core.pay(pay_token, pay_amount);
 
                     LockCallbackResult::Empty
                 },
