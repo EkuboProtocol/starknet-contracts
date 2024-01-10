@@ -132,11 +132,11 @@ describe("core", () => {
             transaction_hash
           );
 
-          const parsed = positionsContract.parseEvents(receipt);
+          const parsed = core.parseEvents(receipt);
 
-          const [{ PositionMinted }, { Deposit }] = parsed;
+          const [{ PositionUpdated }] = parsed;
 
-          liquiditiesActual.push(Deposit.liquidity as bigint);
+          liquiditiesActual.push((PositionUpdated as unknown as { params: { liquidity_delta: { mag: bigint, sign: boolean } } }).params.liquidity_delta.mag);
         }
 
         // transfer remaining balances to swapper, so it can swap whatever is needed

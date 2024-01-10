@@ -363,7 +363,8 @@ mod LimitOrders {
 
                     assert(other_is_zero, 'TICK_WRONG_SIDE');
 
-                    IERC20Dispatcher { contract_address: pay_token }.approve(core.contract_address, pay_amount.into());
+                    IERC20Dispatcher { contract_address: pay_token }
+                        .approve(core.contract_address, pay_amount.into());
                     core.pay(pay_token, pay_amount);
 
                     LockCallbackResult::Empty

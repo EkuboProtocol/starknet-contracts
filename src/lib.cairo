@@ -1,9 +1,9 @@
 mod asset_recovery;
 mod core;
+mod mock_erc20;
 mod owned_nft;
 mod positions;
 mod router;
-mod mock_erc20;
 mod token_registry;
 
 mod components {
@@ -82,11 +82,11 @@ mod tests {
     mod core_test;
     mod extensions_test;
     mod helper;
+    mod mock_erc20_test;
     mod owned_nft_test;
     mod owner_test;
     mod positions_test;
     mod router_test;
-    mod mock_erc20_test;
     mod store_packing_test;
     mod token_registry_test;
     mod upgradeable_test;
