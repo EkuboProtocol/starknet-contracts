@@ -20,6 +20,7 @@ trait IERC20Metadata<TStorage> {
 mod TokenRegistry {
     use core::num::traits::{Zero};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
@@ -33,6 +34,8 @@ mod TokenRegistry {
         core: ICoreDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
 
@@ -49,9 +52,17 @@ mod TokenRegistry {
         Registration: Registration,
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
     }
 
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
+
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    #[abi(embed_v0)]
+    impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[derive(starknet::Event, Drop)]
     struct Registration {

@@ -14,6 +14,7 @@ mod MockUpgradeable {
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
     #[external(v0)]
     impl MockUpgradeableHasInterface of IHasInterface<ContractState> {

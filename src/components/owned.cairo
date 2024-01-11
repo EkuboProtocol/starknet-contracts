@@ -43,11 +43,9 @@ mod Owned {
         OwnershipTransferred: OwnershipTransferred
     }
 
-    impl OwnableImpl<
-        TContractState, +HasComponent<TContractState>
-    > of Ownable<ComponentState<TContractState>> {
-        fn require_owner(self: @ComponentState<TContractState>) -> ContractAddress {
-            let owner = self.get_owner();
+    impl OwnableImpl<TContractState, +HasComponent<TContractState>> of Ownable<TContractState> {
+        fn require_owner(self: @TContractState) -> ContractAddress {
+            let owner = self.get_component().get_owner();
             assert(get_caller_address() == owner, 'OWNER_ONLY');
             return owner;
         }
@@ -70,7 +68,7 @@ mod Owned {
         fn transfer_ownership(
             ref self: ComponentState<TContractState>, new_owner: ContractAddress
         ) {
-            let old_owner = self.require_owner();
+            let old_owner = self.get_contract().require_owner();
             self.owner.write(new_owner);
             self.emit(OwnershipTransferred { old_owner, new_owner });
         }

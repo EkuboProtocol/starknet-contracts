@@ -48,6 +48,8 @@ mod Core {
     #[abi(embed_v0)]
     impl Owned = owned_component::OwnedImpl<ContractState>;
 
+    impl Ownable = owned_component::OwnableImpl<ContractState>;
+
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
