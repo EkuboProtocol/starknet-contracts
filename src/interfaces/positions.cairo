@@ -23,9 +23,6 @@ struct GetTokenInfoRequest {
 
 #[starknet::interface]
 trait IPositions<TStorage> {
-    // Update the token URI base of the owned NFT
-    fn update_token_uri_base(ref self: TStorage, token_uri_base: felt252);
-
     // Returns the address of the NFT contract that represents ownership of a position
     fn get_nft_address(self: @TStorage) -> ContractAddress;
 

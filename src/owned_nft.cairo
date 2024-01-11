@@ -44,6 +44,12 @@ mod OwnedNFT {
     use starknet::{SyscallResultTrait};
     use super::{IOwnedNFT, ContractAddress};
 
+    use ekubo::components::owned::{Owned as owned_component};
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
@@ -61,9 +67,10 @@ mod OwnedNFT {
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
 
@@ -93,6 +100,7 @@ mod OwnedNFT {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,

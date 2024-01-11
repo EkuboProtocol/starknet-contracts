@@ -5,7 +5,6 @@ mod Positions {
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
     use core::traits::{Into};
-    use ekubo::components::owner::{check_owner_only};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
@@ -216,12 +215,6 @@ mod Positions {
 
     #[external(v0)]
     impl PositionsImpl of IPositions<ContractState> {
-        // Update the token URI base of the owned NFT
-        fn update_token_uri_base(ref self: ContractState, token_uri_base: felt252) {
-            check_owner_only();
-            self.nft.read().set_token_uri_base(token_uri_base);
-        }
-
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
         }

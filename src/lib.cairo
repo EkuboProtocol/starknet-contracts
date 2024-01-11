@@ -1,4 +1,3 @@
-mod asset_recovery;
 mod core;
 mod mock_erc20;
 mod owned_nft;
@@ -8,7 +7,7 @@ mod token_registry;
 
 mod components {
     mod clear;
-    mod owner;
+    mod owned;
     mod shared_locker;
     mod upgradeable;
 }
@@ -78,13 +77,11 @@ mod math {
 
 #[cfg(test)]
 mod tests {
-    mod asset_recovery_test;
     mod core_test;
     mod extensions_test;
     mod helper;
     mod mock_erc20_test;
     mod owned_nft_test;
-    mod owner_test;
     mod positions_test;
     mod router_test;
     mod store_packing_test;

@@ -5,8 +5,8 @@ mod Core {
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
-    use ekubo::components::owner::{check_owner_only};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -44,8 +44,11 @@ mod Core {
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252
     };
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -68,9 +71,10 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<SavedBalanceKey, u128>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -146,6 +150,7 @@ mod Core {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
@@ -454,7 +459,7 @@ mod Core {
             token: ContractAddress,
             amount: u128
         ) {
-            check_owner_only();
+            self.require_owner();
 
             let collected: u128 = self.protocol_fees_collected.read(token);
             self.protocol_fees_collected.write(token, collected - amount);

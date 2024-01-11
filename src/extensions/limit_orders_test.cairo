@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use ekubo::components::owner::owner;
+use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::extensions::limit_orders::{
     LimitOrders, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState,
     PoolState, GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -167,7 +167,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 
     let class_hash: ClassHash = LimitOrders::TEST_CLASS_HASH.try_into().unwrap();
 
-    set_contract_address(owner());
+    set_contract_address(default_owner());
     IUpgradeableDispatcher { contract_address: limit_orders.contract_address }
         .replace_class_hash(class_hash);
 
