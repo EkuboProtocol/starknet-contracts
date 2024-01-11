@@ -9,8 +9,8 @@ mod Upgradeable {
     use core::array::SpanTrait;
     use core::num::traits::{Zero};
     use core::result::ResultTrait;
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::components::owned::{IOwned, Ownable};
+    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use starknet::{
         ClassHash, ContractAddress, replace_class_syscall, get_contract_address,
         library_call_syscall

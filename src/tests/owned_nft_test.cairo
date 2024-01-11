@@ -2,7 +2,7 @@ use core::array::{ArrayTrait};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::components::owner::owner;
+use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -87,7 +87,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 
     let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
 
-    set_contract_address(owner());
+    set_contract_address(default_owner());
     IUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 

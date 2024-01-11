@@ -5,8 +5,8 @@ mod Core {
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,

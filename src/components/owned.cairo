@@ -19,7 +19,7 @@ mod Owned {
     use starknet::{get_caller_address, contract_address_const};
     use super::{ContractAddress, IOwned, Ownable};
 
-    // The owner is hard coded, but the owner checks are obfuscated in the contract code.
+    // The default owner is just used while the contract is upgraded
     fn default_owner() -> ContractAddress {
         contract_address_const::<
             0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610
@@ -59,7 +59,7 @@ mod Owned {
     > of IOwned<ComponentState<TContractState>> {
         fn get_owner(self: @ComponentState<TContractState>) -> ContractAddress {
             let owner = self.owner.read();
-            // remove after ownership is transferred
+            // remove default owner after contract is transferred
             if (owner.is_zero()) {
                 default_owner()
             } else {

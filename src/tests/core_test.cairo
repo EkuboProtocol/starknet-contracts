@@ -30,7 +30,7 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
 mod owner_tests {
-    use ekubo::components::owner::{owner};
+    use ekubo::components::owned::{Owned::{default_owner}};
 
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -55,7 +55,7 @@ mod owner_tests {
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
-        set_contract_address(owner());
+        set_contract_address(default_owner());
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
@@ -71,7 +71,7 @@ mod owner_tests {
     #[should_panic(expected: ('MISSING_PRIMARY_INTERFACE_ID', 'ENTRYPOINT_FAILED'))]
     fn test_fails_upgrading_to_other_contract_without_interface_id() {
         let core = deploy_core();
-        set_contract_address(owner());
+        set_contract_address(default_owner());
         // MockERC20 is not upgradeable, first call succeeds, second fails
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
@@ -83,7 +83,7 @@ mod owner_tests {
     #[should_panic(expected: ('UPGRADEABLE_ID_MISMATCH', 'ENTRYPOINT_FAILED'))]
     fn test_fails_upgrading_to_other_contract() {
         let core = deploy_core();
-        set_contract_address(owner());
+        set_contract_address(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(Positions::TEST_CLASS_HASH.try_into().unwrap());
     }

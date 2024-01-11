@@ -5,6 +5,7 @@ mod Positions {
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
     use core::traits::{Into};
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
@@ -27,8 +28,11 @@ mod Positions {
         deploy_syscall
     };
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -41,7 +45,9 @@ mod Positions {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
 
@@ -56,6 +62,7 @@ mod Positions {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         PositionMintedWithReferrer: PositionMintedWithReferrer,
     }
 
