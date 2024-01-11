@@ -1,4 +1,3 @@
-mod asset_recovery;
 mod core;
 mod mock_erc20;
 mod owned_nft;
@@ -78,7 +77,6 @@ mod math {
 
 #[cfg(test)]
 mod tests {
-    mod asset_recovery_test;
     mod core_test;
     mod extensions_test;
     mod helper;

@@ -5,7 +5,6 @@ use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
-use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
 use ekubo::core::{Core};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::extensions::oracle::{Oracle};
@@ -45,15 +44,6 @@ use starknet::{
 };
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
-
-fn deploy_asset_recovery() -> IAssetRecoveryDispatcher {
-    let constructor_args: Array<felt252> = ArrayTrait::new();
-    let (address, _) = deploy_syscall(
-        AssetRecovery::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('asset recovery deploy');
-    return IAssetRecoveryDispatcher { contract_address: address };
-}
 
 fn deploy_mock_token() -> IMockERC20Dispatcher {
     deploy_mock_token_with_balance(Zero::zero(), Zero::zero())
