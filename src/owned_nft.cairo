@@ -25,6 +25,8 @@ mod OwnedNFT {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
+
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
@@ -44,8 +46,12 @@ mod OwnedNFT {
     use starknet::{SyscallResultTrait};
     use super::{IOwnedNFT, ContractAddress};
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -61,9 +67,10 @@ mod OwnedNFT {
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
 
@@ -93,6 +100,7 @@ mod OwnedNFT {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,

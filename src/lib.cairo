@@ -7,7 +7,7 @@ mod token_registry;
 
 mod components {
     mod clear;
-    mod owner;
+    mod owned;
     mod shared_locker;
     mod upgradeable;
 }
@@ -82,7 +82,6 @@ mod tests {
     mod helper;
     mod mock_erc20_test;
     mod owned_nft_test;
-    mod owner_test;
     mod positions_test;
     mod router_test;
     mod store_packing_test;

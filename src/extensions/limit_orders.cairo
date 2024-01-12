@@ -115,6 +115,7 @@ mod LimitOrders {
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
     use ekubo::components::clear::{ClearImpl};
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
@@ -143,8 +144,12 @@ mod LimitOrders {
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -155,9 +160,10 @@ mod LimitOrders {
         pools: LegacyMap<PoolKey, PoolState>,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         ticks_crossed_last_crossing: LegacyMap<(PoolKey, i129), u64>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
     #[constructor]
@@ -248,6 +254,7 @@ mod LimitOrders {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
     }

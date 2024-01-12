@@ -4,13 +4,17 @@ use starknet::{ClassHash};
 // component, and does not have any other functionality.
 #[starknet::contract]
 mod MockUpgradeable {
+    use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
-
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
     #[external(v0)]
     impl MockUpgradeableHasInterface of IHasInterface<ContractState> {
@@ -22,7 +26,9 @@ mod MockUpgradeable {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -30,5 +36,6 @@ mod MockUpgradeable {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
     }
 }
