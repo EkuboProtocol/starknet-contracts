@@ -79,10 +79,8 @@ fn test_nft_supports_interfaces() {
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let (_, nft) = deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
-    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            nft.contract_address
-        )
-            .unwrap();
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(nft.contract_address)
+        .unwrap();
 
     let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
 

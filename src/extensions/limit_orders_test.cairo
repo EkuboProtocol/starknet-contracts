@@ -164,9 +164,9 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     let core = deploy_core();
     let limit_orders = deploy_limit_orders(core);
     let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            limit_orders.contract_address
-        )
-            .unwrap();
+        limit_orders.contract_address
+    )
+        .unwrap();
 
     let class_hash: ClassHash = LimitOrders::TEST_CLASS_HASH.try_into().unwrap();
 

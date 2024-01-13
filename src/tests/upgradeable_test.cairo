@@ -11,8 +11,10 @@ fn test_replace_class_hash() {
     let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
     set_contract_address(default_owner());
     mock_upgradeable.replace_class_hash(class_hash);
-    
-    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(mock_upgradeable.contract_address)
+
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        mock_upgradeable.contract_address
+    )
         .unwrap();
     let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         mock_upgradeable.contract_address
