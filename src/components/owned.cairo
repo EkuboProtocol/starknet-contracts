@@ -9,6 +9,9 @@ trait IOwned<TContractState> {
 }
 
 trait Ownable<TContractState> {
+    // Initialize the owner of the contract
+    fn initialize_owned(ref self: TContractState, owner: ContractAddress);
+
     // Any ownable contract can require that the owner is calling a particular method
     fn require_owner(self: @TContractState) -> ContractAddress;
 }
@@ -18,13 +21,6 @@ mod Owned {
     use core::num::traits::{Zero};
     use starknet::{get_caller_address, contract_address_const};
     use super::{ContractAddress, IOwned, Ownable};
-
-    // The default owner is just used while the contract is upgraded
-    fn default_owner() -> ContractAddress {
-        contract_address_const::<
-            0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610
-        >()
-    }
 
     #[storage]
     struct Storage {
@@ -43,7 +39,15 @@ mod Owned {
         OwnershipTransferred: OwnershipTransferred
     }
 
-    impl OwnableImpl<TContractState, +HasComponent<TContractState>> of Ownable<TContractState> {
+
+    impl OwnableImpl<
+        TContractState, +Drop<TContractState>, +HasComponent<TContractState>
+    > of Ownable<TContractState> {
+        fn initialize_owned(ref self: TContractState, owner: ContractAddress) {
+            let mut comp = self.get_component_mut();
+            comp.owner.write(owner);
+        }
+
         fn require_owner(self: @TContractState) -> ContractAddress {
             let owner = self.get_component().get_owner();
             assert(get_caller_address() == owner, 'OWNER_ONLY');
@@ -53,16 +57,10 @@ mod Owned {
 
     #[embeddable_as(OwnedImpl)]
     impl Owned<
-        TContractState, +HasComponent<TContractState>
+        TContractState, +Drop<TContractState>, +HasComponent<TContractState>
     > of IOwned<ComponentState<TContractState>> {
         fn get_owner(self: @ComponentState<TContractState>) -> ContractAddress {
-            let owner = self.owner.read();
-            // remove default owner after contract is transferred
-            if (owner.is_zero()) {
-                default_owner()
-            } else {
-                owner
-            }
+            self.owner.read()
         }
 
         fn transfer_ownership(

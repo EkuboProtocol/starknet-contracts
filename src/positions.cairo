@@ -13,7 +13,9 @@ mod Positions {
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::interfaces::upgradeable::{
+        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
+    };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
@@ -70,10 +72,12 @@ mod Positions {
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252
     ) {
+        self.initialize_owned(owner);
         self.core.write(core);
 
         self
@@ -81,7 +85,7 @@ mod Positions {
             .write(
                 OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
-                    controller: get_contract_address(),
+                    owner: get_contract_address(),
                     name: 'Ekubo Position',
                     symbol: 'EkuPo',
                     token_uri_base: token_uri_base,
@@ -225,6 +229,12 @@ mod Positions {
     impl PositionsImpl of IPositions<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
+        }
+
+        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
+            self.require_owner();
+            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
+                .replace_class_hash(class_hash);
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {

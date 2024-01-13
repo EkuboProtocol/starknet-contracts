@@ -14,7 +14,7 @@ use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTra
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
-    update_position, accumulate_as_fees, SetupPoolResult, core_owner
+    update_position, accumulate_as_fees, SetupPoolResult, default_owner
 };
 
 use ekubo::tests::mocks::locker::{
@@ -30,7 +30,7 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
 mod owner_tests {
-    use ekubo::components::owned::{Owned::{default_owner}, IOwnedDispatcher, IOwnedDispatcherTrait};
+    use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -38,7 +38,7 @@ mod owner_tests {
         Core, deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
-        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log
+        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner
     };
 
 

@@ -1,7 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::extensions::limit_orders::{
     LimitOrders, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState,
     PoolState, GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -17,7 +16,7 @@ use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
-    deploy_locker, deploy_router
+    deploy_locker, deploy_router, default_owner
 };
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};

@@ -5,6 +5,7 @@ mod Core {
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
+    use ekubo::components::owned::Owned::HasComponent;
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
@@ -47,7 +48,6 @@ mod Core {
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
     impl Owned = owned_component::OwnedImpl<ContractState>;
-
     impl Ownable = owned_component::OwnableImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -77,6 +77,11 @@ mod Core {
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
         owned: owned_component::Storage,
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        self.initialize_owned(owner);
     }
 
     #[derive(starknet::Event, Drop)]
