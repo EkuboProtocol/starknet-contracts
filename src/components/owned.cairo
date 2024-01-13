@@ -44,8 +44,10 @@ mod Owned {
         TContractState, +Drop<TContractState>, +HasComponent<TContractState>
     > of Ownable<TContractState> {
         fn initialize_owned(ref self: TContractState, owner: ContractAddress) {
-            let mut comp = self.get_component_mut();
-            comp.owner.write(owner);
+            let mut component = self.get_component_mut();
+            let old_owner = component.owner.read();
+            component.owner.write(owner);
+            component.emit(OwnershipTransferred { old_owner, new_owner: owner });
         }
 
         fn require_owner(self: @TContractState) -> ContractAddress {

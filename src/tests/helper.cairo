@@ -186,8 +186,9 @@ fn deploy_positions_custom_uri(
     core: ICoreDispatcher, token_uri_base: felt252
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@default_owner(), ref constructor_args);
-    Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args);
+    Serde::serialize(
+        @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args
+    );
 
     let (address, _) = deploy_syscall(
         Positions::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -223,7 +224,7 @@ fn setup_pool(
 
 fn deploy_mock_upgradeable() -> IUpgradeableDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@(default_owner()), ref constructor_args);
+    Serde::serialize(@default_owner(), ref constructor_args);
     let (address, _) = deploy_syscall(
         MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )

@@ -55,6 +55,11 @@ mod owner_tests {
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+
         set_contract_address(default_owner());
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
@@ -71,10 +76,17 @@ mod owner_tests {
     fn test_transfer_ownership() {
         let core = deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
+
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        assert(event.old_owner.is_zero(), 'zero');
+        assert(event.new_owner == default_owner(), 'initial owner');
+        assert(owned.get_owner() == default_owner(), 'is default');
+
         set_contract_address(default_owner());
         let new_owner = contract_address_const::<123456789>();
-
-        assert(owned.get_owner() == default_owner(), 'is default');
         owned.transfer_ownership(new_owner);
 
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -166,6 +178,10 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
         let event: ekubo::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');

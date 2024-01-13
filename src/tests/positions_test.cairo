@@ -36,6 +36,11 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     );
     let positions = deploy_positions(setup.core);
 
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        positions.contract_address
+    )
+        .unwrap();
+
     let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
 
     set_contract_address(default_owner());
