@@ -1,9 +1,9 @@
-use ekubo::components::owned::{Owned::{default_owner}};
+use ekubo::components::owned::{Owned::{default_owner}, IOwnedDispatcher, IOwnedDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::tests::helper::{deploy_mock_upgradeable};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use starknet::testing::{set_contract_address, pop_log};
-use starknet::{class_hash_const, ClassHash};
+use starknet::{class_hash_const, ClassHash, contract_address_const};
 
 #[test]
 fn test_replace_class_hash() {
@@ -17,6 +17,29 @@ fn test_replace_class_hash() {
     )
         .unwrap();
     assert(event.new_class_hash == class_hash, 'event.class_hash');
+}
+
+#[test]
+#[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED'))]
+fn test_replace_class_hash_not_owner_after_transfer() {
+    let mock_upgradeable = deploy_mock_upgradeable();
+    let owned = IOwnedDispatcher { contract_address: mock_upgradeable.contract_address };
+    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+    set_contract_address(default_owner());
+    owned.transfer_ownership(contract_address_const::<12345678>());
+    mock_upgradeable.replace_class_hash(class_hash);
+}
+
+#[test]
+fn test_replace_class_hash_after_owner_change() {
+    let mock_upgradeable = deploy_mock_upgradeable();
+    let owned = IOwnedDispatcher { contract_address: mock_upgradeable.contract_address };
+    let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+    set_contract_address(default_owner());
+    let new_owner = contract_address_const::<12345678>();
+    owned.transfer_ownership(new_owner);
+    set_contract_address(new_owner);
+    mock_upgradeable.replace_class_hash(class_hash);
 }
 
 #[test]

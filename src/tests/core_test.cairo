@@ -30,7 +30,7 @@ use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
 mod owner_tests {
-    use ekubo::components::owned::{Owned::{default_owner}};
+    use ekubo::components::owned::{Owned::{default_owner}, IOwnedDispatcher, IOwnedDispatcherTrait};
 
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
@@ -65,6 +65,52 @@ mod owner_tests {
         )
             .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
+    }
+
+    #[test]
+    fn test_transfer_ownership() {
+        let core = deploy_core();
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+
+        assert(owned.get_owner() == default_owner(), 'is default');
+        owned.transfer_ownership(new_owner);
+
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        assert(event.old_owner == default_owner(), 'old owner');
+        assert(event.new_owner == new_owner, 'new owner');
+        assert(owned.get_owner() == new_owner, 'is new owner');
+    }
+
+    #[test]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
+    fn test_transfer_ownership_then_replace_class_hash_fails() {
+        let core = deploy_core();
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+        owned.transfer_ownership(new_owner);
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(class_hash);
+    }
+
+    #[test]
+    fn test_transfer_ownership_then_replace_class_hash_succeeds() {
+        let core = deploy_core();
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+        owned.transfer_ownership(new_owner);
+        set_contract_address(new_owner);
+
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(class_hash);
     }
 
     #[test]
