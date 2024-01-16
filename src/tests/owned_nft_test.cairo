@@ -2,31 +2,26 @@ use core::array::{ArrayTrait};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::tests::helper::{deploy_owned_nft};
+use ekubo::tests::helper::{deploy_owned_nft, default_owner};
 use starknet::testing::{ContractAddress, set_contract_address, pop_log};
 use starknet::{contract_address_const, ClassHash};
 
-fn default_controller() -> ContractAddress {
-    contract_address_const::<12345678>()
-}
-
 fn switch_to_controller() {
-    set_contract_address(default_controller());
+    set_contract_address(default_owner());
 }
 
 fn deploy_default() -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
-    deploy_owned_nft(default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/')
+    deploy_owned_nft(default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/')
 }
 
 #[test]
 fn test_nft_name_symbol_token_uri() {
     let (_, nft) = deploy_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
+        default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
     assert(nft.name() == 'Ekubo Position', 'name');
     assert(nft.symbol() == 'EkuPo', 'symbol');
@@ -83,7 +78,9 @@ fn test_nft_supports_interfaces() {
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
-    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
+    let (_, nft) = deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(nft.contract_address)
+        .unwrap();
 
     let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
 
@@ -99,8 +96,19 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 }
 
 #[test]
+fn test_set_metadata_callable_by_owner() {
+    let (owned_nft, nft) = deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
+
+    set_contract_address(default_owner());
+    owned_nft.set_metadata('new name', 'new symbol', 'new base');
+    assert(nft.name() == 'new name', 'name');
+    assert(nft.symbol() == 'new symbol', 'symbol');
+    assert(nft.token_uri(1) == array!['new base', '1'], 'token_uri');
+}
+
+#[test]
 fn test_nft_custom_uri() {
-    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
+    let (_, nft) = deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
     assert(nft.name() == 'abcde', 'name');
     assert(nft.symbol() == 'def', 'symbol');
     assert(nft.tokenURI(1_u256) == array!['ipfs://abcdef/', '1'], 'tokenURI');
@@ -110,7 +118,7 @@ fn test_nft_custom_uri() {
 #[test]
 fn test_nft_indexing_token_ids() {
     let (controller, nft) = deploy_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
+        default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -167,7 +175,7 @@ fn test_nft_indexing_token_ids_not_sorted() {
 #[test]
 fn test_nft_indexing_token_ids_snake_case() {
     let (controller, nft) = deploy_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
+        default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -196,7 +204,7 @@ fn test_nft_indexing_token_ids_snake_case() {
 #[test]
 fn test_burn_makes_token_non_transferrable() {
     let (controller, nft) = deploy_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
+        default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -237,7 +245,7 @@ fn test_is_account_authorized() {
     assert(
         !controller.is_account_authorized(id, contract_address_const::<912344>()), 'random is not'
     );
-    assert(!controller.is_account_authorized(id, default_controller()), 'controller is not');
+    assert(!controller.is_account_authorized(id, default_owner()), 'controller is not');
 
     set_contract_address(alice);
     assert(!controller.is_account_authorized(id, bob), 'bob not auth');
@@ -258,7 +266,7 @@ fn test_is_account_authorized() {
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_burn_makes_token_non_transferrable_error() {
     let (controller, nft) = deploy_owned_nft(
-        default_controller(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
+        default_owner(), 'Ekubo Position', 'EkuPo', 'https://z.ekubo.org/'
     );
 
     switch_to_controller();
@@ -281,7 +289,7 @@ fn test_burn_makes_token_non_transferrable_error() {
 #[test]
 #[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
 fn test_nft_approve_fails_id_not_exists() {
-    let (_, nft) = deploy_owned_nft(default_controller(), 'abcde', 'def', 'ipfs://abcdef/');
+    let (_, nft) = deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
     set_contract_address(contract_address_const::<1>());
     nft.approve(contract_address_const::<2>(), 1);
 }

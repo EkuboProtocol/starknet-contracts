@@ -1,7 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::extensions::limit_orders::{
     LimitOrders, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait, OrderKey, OrderState,
     PoolState, GetOrderInfoRequest, GetOrderInfoResult, LimitOrders::{LIMIT_ORDER_TICK_SPACING}
@@ -17,7 +16,7 @@ use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
 use ekubo::tests::helper::{
     deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
-    deploy_locker, deploy_router
+    deploy_locker, deploy_router, default_owner
 };
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
@@ -164,6 +163,10 @@ fn test_order_key_hash() {
 fn test_replace_class_hash_can_be_called_by_owner() {
     let core = deploy_core();
     let limit_orders = deploy_limit_orders(core);
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        limit_orders.contract_address
+    )
+        .unwrap();
 
     let class_hash: ClassHash = LimitOrders::TEST_CLASS_HASH.try_into().unwrap();
 
@@ -175,7 +178,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         limit_orders.contract_address
     )
         .unwrap();
-    assert(event.new_class_hash == class_hash, 'event.class_hash');
+    assert(event.new_class_hash == class_hash, 'event.new_class_hash');
 }
 
 #[test]

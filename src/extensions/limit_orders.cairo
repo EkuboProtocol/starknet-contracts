@@ -1,7 +1,7 @@
 use core::integer::{u256_safe_divmod, u256_as_non_zero};
 use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129, i129Trait};
-use starknet::{ContractAddress, StorePacking};
+use starknet::{ContractAddress, ClassHash, StorePacking};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -106,6 +106,8 @@ trait ILimitOrders<TContractState> {
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
     ) -> (u128, u128);
+
+    fn upgrade_nft(ref self: TContractState, class_hash: ClassHash);
 }
 
 #[starknet::contract]
@@ -123,7 +125,9 @@ mod LimitOrders {
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::interfaces::upgradeable::{
+        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
+    };
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
@@ -169,10 +173,12 @@ mod LimitOrders {
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252,
     ) {
+        self.initialize_owned(owner);
         self.core.write(core);
 
         self
@@ -180,7 +186,7 @@ mod LimitOrders {
             .write(
                 OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
-                    controller: get_contract_address(),
+                    owner: get_contract_address(),
                     name: 'Ekubo Limit Order',
                     symbol: 'eLO',
                     token_uri_base: token_uri_base,
@@ -554,6 +560,12 @@ mod LimitOrders {
     impl LimitOrderImpl of ILimitOrders<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
+        }
+
+        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
+            self.require_owner();
+            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
+                .replace_class_hash(class_hash);
         }
 
 

@@ -53,11 +53,11 @@ fn deploy_mock_token_with_balance(
     owner: ContractAddress, starting_balance: u128
 ) -> IMockERC20Dispatcher {
     let constructor_args: Array<felt252> = array![owner.into(), starting_balance.into()];
-    let (token_address, _) = deploy_syscall(
+    let (address, _) = deploy_syscall(
         MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('token deploy failed');
-    return IMockERC20Dispatcher { contract_address: token_address };
+    return IMockERC20Dispatcher { contract_address: address };
 }
 
 fn deploy_owned_nft(
@@ -91,6 +91,7 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
     Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, 'limit_orders://'), ref constructor_args);
 
     let (address, _) = deploy_syscall(
@@ -135,9 +136,14 @@ struct SetupPoolResult {
     locker: ICoreLockerDispatcher
 }
 
+fn default_owner() -> ContractAddress {
+    contract_address_const::<12121212121212>()
+}
 
 fn deploy_core() -> ICoreDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
+
     let (address, _) = deploy_syscall(
         Core::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
@@ -180,7 +186,9 @@ fn deploy_positions_custom_uri(
     core: ICoreDispatcher, token_uri_base: felt252
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args);
+    Serde::serialize(
+        @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args
+    );
 
     let (address, _) = deploy_syscall(
         Positions::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -216,6 +224,7 @@ fn setup_pool(
 
 fn deploy_mock_upgradeable() -> IUpgradeableDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
     let (address, _) = deploy_syscall(
         MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
@@ -253,12 +262,6 @@ fn get_balances(
         token0_balance_locker,
         token1_balance_locker,
     }
-}
-
-
-// this is only shown in the tests, but hidden in the deployed code since we only check against the hash
-fn core_owner() -> ContractAddress {
-    contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
 }
 
 

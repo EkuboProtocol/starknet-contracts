@@ -1,6 +1,6 @@
-use ekubo::components::owned::{Owned::{default_owner}, IOwnedDispatcher, IOwnedDispatcherTrait};
+use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::tests::helper::{deploy_mock_upgradeable};
+use ekubo::tests::helper::{deploy_mock_upgradeable, default_owner};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{class_hash_const, ClassHash, contract_address_const};
@@ -12,6 +12,10 @@ fn test_replace_class_hash() {
     set_contract_address(default_owner());
     mock_upgradeable.replace_class_hash(class_hash);
 
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        mock_upgradeable.contract_address
+    )
+        .unwrap();
     let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         mock_upgradeable.contract_address
     )

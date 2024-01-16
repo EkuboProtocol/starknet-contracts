@@ -3,7 +3,6 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::components::owned::{Owned::{default_owner}};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -22,7 +21,7 @@ use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     deploy_core, setup_pool, deploy_positions, deploy_positions_custom_uri, FEE_ONE_PERCENT, swap,
-    IPositionsDispatcherIntoILockerDispatcher, core_owner, SetupPoolResult
+    IPositionsDispatcherIntoILockerDispatcher, SetupPoolResult, default_owner
 };
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
@@ -30,13 +29,17 @@ use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 
-
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let setup = setup_pool(
         fee: FEE_ONE_PERCENT, tick_spacing: 1, initial_tick: Zero::zero(), extension: Zero::zero(),
     );
     let positions = deploy_positions(setup.core);
+
+    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        positions.contract_address
+    )
+        .unwrap();
 
     let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
 
@@ -550,7 +553,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
         );
 
     let caller = get_contract_address();
-    set_contract_address(core_owner());
+    set_contract_address(default_owner());
     setup
         .core
         .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);

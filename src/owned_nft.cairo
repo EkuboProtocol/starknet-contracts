@@ -2,7 +2,7 @@ use starknet::{ContractAddress};
 
 #[starknet::interface]
 trait IOwnedNFT<TStorage> {
-    // Create a new token, only callable by the controller
+    // Create a new token, only callable by the owner
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
 
     // Burn the token with the given ID
@@ -12,11 +12,11 @@ trait IOwnedNFT<TStorage> {
     fn is_account_authorized(self: @TStorage, id: u64, account: ContractAddress) -> bool;
 
     // Returns the next token ID, 
-    // i.e. the ID of the token that will be minted on the next call to mint from the controller
+    // i.e. the ID of the token that will be minted on the next call to mint from the owner
     fn get_next_token_id(self: @TStorage) -> u64;
 
-    // Allows the controller to set a new token URI base
-    fn set_token_uri_base(ref self: TStorage, token_uri_base: felt252);
+    // Allows the owner to update the metadata
+    fn set_metadata(ref self: TStorage, name: felt252, symbol: felt252, token_uri_base: felt252);
 }
 
 #[starknet::contract]
@@ -57,8 +57,6 @@ mod OwnedNFT {
 
     #[storage]
     struct Storage {
-        // set only in the constructor
-        controller: ContractAddress,
         token_uri_base: felt252,
         name: felt252,
         symbol: felt252,
@@ -109,12 +107,12 @@ mod OwnedNFT {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        controller: ContractAddress,
+        owner: ContractAddress,
         name: felt252,
         symbol: felt252,
         token_uri_base: felt252
     ) {
-        self.controller.write(controller);
+        self.initialize_owned(owner);
         self.name.write(name);
         self.symbol.write(symbol);
         self.token_uri_base.write(token_uri_base);
@@ -123,14 +121,14 @@ mod OwnedNFT {
 
     fn deploy(
         nft_class_hash: ClassHash,
-        controller: ContractAddress,
+        owner: ContractAddress,
         name: felt252,
         symbol: felt252,
         token_uri_base: felt252,
         salt: felt252
     ) -> super::IOwnedNFTDispatcher {
         let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@(controller, name, symbol, token_uri_base), ref calldata);
+        Serde::serialize(@(owner, name, symbol, token_uri_base), ref calldata);
 
         let (address, _) = deploy_syscall(
             class_hash: nft_class_hash,
@@ -149,10 +147,6 @@ mod OwnedNFT {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn require_controller(self: @ContractState) {
-            assert(get_caller_address() == self.controller.read(), 'CONTROLLER_ONLY');
-        }
-
         fn is_account_authorized_internal(
             self: @ContractState, id: u64, account: ContractAddress
         ) -> (bool, ContractAddress) {
@@ -288,7 +282,7 @@ mod OwnedNFT {
     #[external(v0)]
     impl OwnedNFTImpl of IOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
-            self.require_controller();
+            self.require_owner();
 
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
@@ -308,7 +302,7 @@ mod OwnedNFT {
         }
 
         fn burn(ref self: ContractState, id: u64) {
-            self.require_controller();
+            self.require_owner();
 
             let owner = self.owners.read(id);
 
@@ -329,9 +323,13 @@ mod OwnedNFT {
             authorized
         }
 
-        fn set_token_uri_base(ref self: ContractState, token_uri_base: felt252) {
-            self.require_controller();
+        fn set_metadata(
+            ref self: ContractState, name: felt252, symbol: felt252, token_uri_base: felt252
+        ) {
+            self.require_owner();
             self.token_uri_base.write(token_uri_base);
+            self.name.write(name);
+            self.symbol.write(symbol);
         }
     }
 }

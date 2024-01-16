@@ -1,11 +1,10 @@
-use starknet::{ClassHash};
-
 // Mock upgradeable contract. This contract only implements the upgradeable
 // component, and does not have any other functionality.
 #[starknet::contract]
 mod MockUpgradeable {
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use starknet::{ContractAddress};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -21,6 +20,11 @@ mod MockUpgradeable {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::tests::mocks::mock_upgradeable::MockUpgradeable");
         }
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        self.initialize_owned(owner);
     }
 
     #[storage]

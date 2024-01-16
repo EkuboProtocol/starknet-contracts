@@ -2,7 +2,7 @@ use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use ekubo::types::pool_price::{PoolPrice};
-use starknet::{ContractAddress};
+use starknet::{ContractAddress, ClassHash};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 struct GetTokenInfoResult {
@@ -25,6 +25,9 @@ struct GetTokenInfoRequest {
 trait IPositions<TStorage> {
     // Returns the address of the NFT contract that represents ownership of a position
     fn get_nft_address(self: @TStorage) -> ContractAddress;
+
+    // Upgrades the classhash of the nft
+    fn upgrade_nft(ref self: TStorage, class_hash: ClassHash);
 
     // Returns the principal and fee amount for a set of positions
     fn get_tokens_info(
