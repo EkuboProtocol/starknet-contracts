@@ -365,11 +365,8 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
 fn test_router_get_market_depth() {
     let (router, pool_key_a, pool_key_b) = setup_for_routing();
 
-    assert_eq!(
-        // +/-0%
-        router.get_market_depth(pool_key_a, 0),
-        Depth { token0: 0, token1: 0 }
-    );
+    assert_eq!( // +/-0%
+    router.get_market_depth(pool_key_a, 0), Depth { token0: 0, token1: 0 });
 
     assert_eq!(
         // +/-0.01%
@@ -392,6 +389,42 @@ fn test_router_get_market_depth() {
     assert_eq!(
         // +/-max%
         router.get_market_depth(pool_key_a, 0xffffffffffffffffffffffffffffffff),
+        Depth { token0: 9999, token1: 9999 }
+    );
+}
+
+#[test]
+fn test_router_get_market_depth_v2() {
+    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+
+    assert_eq!( // +/-0%
+    router.get_market_depth_v2(pool_key_a, 0), Depth { token0: 0, token1: 0 });
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth_v2(pool_key_a, 1844674407370955), Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth_v2(pool_key_a, 1844674407370955), Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.1%
+        router.get_market_depth_v2(pool_key_a, 18446744073709551),
+        Depth { token0: 1672, token1: 1672 }
+    );
+
+    assert_eq!(
+        // +/-2%
+        router.get_market_depth_v2(pool_key_a, 368934881474191032),
+        Depth { token0: 9999, token1: 9999 }
+    );
+
+    assert_eq!(
+        // +/-max%
+        router.get_market_depth_v2(pool_key_a, 0xffffffffffffffffffffffffffffffff),
         Depth { token0: 9999, token1: 9999 }
     );
 }

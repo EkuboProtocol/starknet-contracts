@@ -45,12 +45,16 @@ trait IRouter<TContractState> {
     // Note this is a square root of the percent
     // e.g. if you want to get the 2% market depth, you'd pass FLOOR((sqrt(1.02) - 1) * 2**128) = 3385977594616997568912048723923598803
     fn get_market_depth(self: @TContractState, pool_key: PoolKey, sqrt_percent: u128) -> Depth;
+
+    // Same return value as above, but the percent is expressed simply as a 64.64 number, e.g. 1% is FLOOR(0.01 * 2**64)
+    fn get_market_depth_v2(self: @TContractState, pool_key: PoolKey, percent_64x64: u128) -> Depth;
 }
 
 #[starknet::contract]
 mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::cmp::{min, max};
+    use core::integer::{u256_sqrt};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
@@ -221,26 +225,27 @@ mod Router {
                     ArrayTrait::new()
                 },
                 CallbackParameters::GetMarketDepth((
-                    pool_key, sqrt_percent
+                    pool_key, percent_64x64
                 )) => {
+                    // takes the 64x64 percent, shifts it left 64 and sqrts it to get a 32.64. we add 1 so the sqrt always makes it smaller
+                    let sqrt_percent: u256 = u256_sqrt(
+                        0x100000000000000000000000000000000
+                            + (percent_64x64.into() * 0x10000000000000000)
+                    )
+                        .into()
+                        - 0x10000000000000000;
+                    // this is 2**64, or the value 1 as a 1.64 number
+                    let denom = 0x10000000000000000_u256;
+                    let num = denom + sqrt_percent;
+
                     let current_pool_price = core.get_pool_price(pool_key);
                     let price_high = min(
-                        muldiv(
-                            current_pool_price.sqrt_ratio,
-                            u256 { high: 1, low: sqrt_percent },
-                            u256 { high: 1, low: 0 },
-                            false
-                        )
+                        muldiv(current_pool_price.sqrt_ratio, num, denom, false)
                             .unwrap_or(max_sqrt_ratio()),
                         max_sqrt_ratio()
                     );
                     let price_low = max(
-                        muldiv(
-                            current_pool_price.sqrt_ratio,
-                            u256 { high: 1, low: 0 },
-                            u256 { high: 1, low: sqrt_percent },
-                            true
-                        )
+                        muldiv(current_pool_price.sqrt_ratio, denom, num, true)
                             .unwrap_or(min_sqrt_ratio()),
                         min_sqrt_ratio()
                     );
@@ -374,10 +379,26 @@ mod Router {
             )
         }
 
-        // Returns the amount available for purchase for swapping +/- the given percent, expressed as a 0.128 number
         fn get_market_depth(self: @ContractState, pool_key: PoolKey, sqrt_percent: u128) -> Depth {
+            // we add 1 so that squaring it doesn't make it smaller
+            let p_plus_one = u256 { high: 1, low: sqrt_percent };
+            let percent_64x64_plus_one = muldiv(
+                p_plus_one, p_plus_one, 0x1000000000000000000000000000000000000000000000000, false
+            )
+                .unwrap();
+
+            self
+                .get_market_depth_v2(
+                    pool_key, (percent_64x64_plus_one - 0x10000000000000000).try_into().unwrap()
+                )
+        }
+
+        #[inline(always)]
+        fn get_market_depth_v2(
+            self: @ContractState, pool_key: PoolKey, percent_64x64: u128
+        ) -> Depth {
             call_core_with_reverting_callback(
-                self.core.read(), @CallbackParameters::GetMarketDepth((pool_key, sqrt_percent))
+                self.core.read(), @CallbackParameters::GetMarketDepth((pool_key, percent_64x64))
             )
         }
     }
