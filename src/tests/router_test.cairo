@@ -5,7 +5,7 @@ use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
 use ekubo::mock_erc20::{IMockERC20DispatcherTrait};
-use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
+use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode, Depth};
 use ekubo::tests::helper::{
     deploy_core, deploy_router, deploy_two_mock_tokens, deploy_positions, deploy_mock_token
 };
@@ -360,3 +360,38 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
     assert(pp.tick == max_tick(), 'traded to end');
 }
 
+
+#[test]
+fn test_router_get_market_depth() {
+    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+
+    assert_eq!(
+        // +/-0%
+        router.get_market_depth(pool_key_a, 0),
+        Depth { token0: 0, token1: 0 }
+    );
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth(pool_key_a, 17013693014354590797691252010145372),
+        Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.1%
+        router.get_market_depth(pool_key_a, 170098669418969064647561320363379535),
+        Depth { token0: 1672, token1: 1672 }
+    );
+
+    assert_eq!(
+        // +/-2%
+        router.get_market_depth(pool_key_a, 3385977594616997568912048723923598803),
+        Depth { token0: 9999, token1: 9999 }
+    );
+
+    assert_eq!(
+        // +/-max%
+        router.get_market_depth(pool_key_a, 0xffffffffffffffffffffffffffffffff),
+        Depth { token0: 9999, token1: 9999 }
+    );
+}

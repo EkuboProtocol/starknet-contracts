@@ -16,7 +16,7 @@ struct TokenAmount {
     amount: i129,
 }
 
-#[derive(Serde, Copy, Drop)]
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
 struct Depth {
     token0: u128,
     token1: u128,
@@ -50,6 +50,7 @@ trait IRouter<TContractState> {
 #[starknet::contract]
 mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::cmp::{min, max};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
@@ -223,60 +224,76 @@ mod Router {
                     pool_key, sqrt_percent
                 )) => {
                     let current_pool_price = core.get_pool_price(pool_key);
-                    let price_high = muldiv(
-                        current_pool_price.sqrt_ratio,
-                        u256 { high: 1, low: sqrt_percent },
-                        u256 { high: 1, low: 0 },
-                        false
-                    )
-                        .unwrap_or(max_sqrt_ratio());
-                    let price_low = muldiv(
-                        current_pool_price.sqrt_ratio,
-                        u256 { high: 1, low: 0 } - u256 { high: 0, low: sqrt_percent },
-                        u256 { high: 1, low: 0 },
-                        false
-                    )
-                        .unwrap_or(min_sqrt_ratio());
+                    let price_high = min(
+                        muldiv(
+                            current_pool_price.sqrt_ratio,
+                            u256 { high: 1, low: sqrt_percent },
+                            u256 { high: 1, low: 0 },
+                            false
+                        )
+                            .unwrap_or(max_sqrt_ratio()),
+                        max_sqrt_ratio()
+                    );
+                    let price_low = max(
+                        muldiv(
+                            current_pool_price.sqrt_ratio,
+                            u256 { high: 1, low: 0 },
+                            u256 { high: 1, low: sqrt_percent },
+                            true
+                        )
+                            .unwrap_or(min_sqrt_ratio()),
+                        min_sqrt_ratio()
+                    );
 
-                    let delta_high = core
-                        .swap(
-                            pool_key,
-                            SwapParameters {
-                                amount: i129 {
-                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
-                                },
-                                is_token1: false,
-                                sqrt_ratio_limit: price_high,
-                                skip_ahead: 0,
-                            }
-                        );
+                    let delta_high = if current_pool_price.sqrt_ratio == price_high {
+                        Zero::zero()
+                    } else {
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 {
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                    },
+                                    is_token1: false,
+                                    sqrt_ratio_limit: price_high,
+                                    skip_ahead: 0,
+                                }
+                            )
+                    };
 
                     // swap back to starting price
-                    core
-                        .swap(
-                            pool_key,
-                            SwapParameters {
-                                amount: i129 {
-                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
-                                },
-                                is_token1: true,
-                                sqrt_ratio_limit: current_pool_price.sqrt_ratio,
-                                skip_ahead: 0,
-                            }
-                        );
+                    if current_pool_price.sqrt_ratio != price_high {
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 {
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                    },
+                                    is_token1: true,
+                                    sqrt_ratio_limit: current_pool_price.sqrt_ratio,
+                                    skip_ahead: 0,
+                                }
+                            );
+                    }
 
-                    let delta_low = core
-                        .swap(
-                            pool_key,
-                            SwapParameters {
-                                amount: i129 {
-                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
-                                },
-                                is_token1: true,
-                                sqrt_ratio_limit: price_low,
-                                skip_ahead: 0,
-                            }
-                        );
+                    let delta_low = if current_pool_price.sqrt_ratio == price_low {
+                        Zero::zero()
+                    } else {
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 {
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                    },
+                                    is_token1: true,
+                                    sqrt_ratio_limit: price_low,
+                                    skip_ahead: 0,
+                                }
+                            )
+                    };
 
                     let mut output: Array<felt252> = ArrayTrait::new();
 
