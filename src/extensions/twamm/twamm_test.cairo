@@ -1,7 +1,8 @@
 use debug::PrintTrait;
+use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
 use ekubo::extensions::twamm::twamm::TWAMM::{
     OrderPlaced, VirtualOrdersExecuted, OrderWithdrawn, expiry_to_word_and_bit_index,
-    word_and_bit_index_to_expiry
+    word_and_bit_index_to_expiry,
 };
 
 use ekubo::extensions::twamm::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
@@ -13,6 +14,7 @@ use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
     IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
 };
+use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::string::{append, to_decimal};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
@@ -77,8 +79,10 @@ mod UpgradableTest {
 }
 
 mod BitmapTest {
-    use super::{expiry_to_word_and_bit_index, word_and_bit_index_to_expiry, append, to_decimal};
-
+    use super::{
+        expiry_to_word_and_bit_index, word_and_bit_index_to_expiry, append, to_decimal, Bitmap,
+        BitmapTrait
+    };
 
     fn assert_case_expiry(expiry: u64, location: (u128, u8)) {
         let (word, bit) = expiry_to_word_and_bit_index(expiry: expiry);
@@ -269,7 +273,6 @@ mod PlaceOrderTestsValidateExpiryTime {
         SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
         TWAMMPoolKey
     };
-
 
     #[test]
     #[available_gas(3000000000)]
@@ -663,6 +666,7 @@ mod PlaceOrderTests {
             .place_order(order_key, amount);
     }
 }
+
 mod CancelOrderTests {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
@@ -759,7 +763,6 @@ mod CancelOrderTests {
     }
 }
 
-
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
@@ -771,7 +774,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
-        OrderState, TWAMMPoolKey, set_up_twamm_with_liquidity, place_order
+        OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity, place_order
     };
 
     #[test]
@@ -787,7 +790,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let core = deploy_core();
         let fee = 0;
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, 693147);
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -836,7 +840,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let core = deploy_core();
         let fee = 0;
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, 693147);
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -888,7 +893,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let core = deploy_core();
         let fee = 0;
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, 693147);
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -957,7 +963,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let core = deploy_core();
         let fee = 0;
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, 693147);
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -1015,7 +1022,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
     }
 }
 
-mod PlaceOrderAndWithdrawProceeds {
+mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
         PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
         ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
@@ -1026,7 +1033,8 @@ mod PlaceOrderAndWithdrawProceeds {
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
-        OrderState, TWAMMPoolKey, set_up_twamm_with_liquidity, place_order, OrderWithdrawn
+        OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity, place_order, OrderWithdrawn,
+        Swapped, LoadedBalance, SavedBalance, PoolInitialized, PositionUpdated
     };
 
     #[test]
@@ -1037,11 +1045,13 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let core = deploy_core();
         let fee = 0;
-        let initial_tick_mag = 693147; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, initial_tick_mag);
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -1058,6 +1068,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // no trades have been executed
         assert(token1_reward_rate == 0x0, 'token1.reward_rate');
 
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
         // halfway through the order duration
@@ -1065,29 +1076,42 @@ mod PlaceOrderAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(setup.pool_key);
 
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
-        assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(
-            event.next_virtual_order_time == execution_timestamp, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == order1_timestamp,
+            'event.last_virtual_order_time'
         );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
         // bought amount ~= 9,998.994829713355494901 tokens
-        assert(!event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
-        assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 9,998.994829713355494901 / 2.4509803922
         //               ~= 4,079.5898895263671875 (then scaled by 2**96)
-        assert(token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e, 'token1.reward_rate');
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e,
+            'token1.reward_rate'
+        );
 
-        // Witdraw proceeds
+        // Withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // amount  = reward_rate * sale_rate
@@ -1099,32 +1123,44 @@ mod PlaceOrderAndWithdrawProceeds {
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
         assert(
-            event.last_virtual_order_time == execution_timestamp, 'event.last_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
         );
         assert(
-            event.next_virtual_order_time == order1_expiry_time, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.next_virtual_order_time == order1_expiry_time,
+            'event.next_virtual_order_time'
         );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 1.9996:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
         // bought amount ~= 9,996.995431680968690346 tokens
-        assert(!event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
-        assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**96)
-        assert(token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf, 'token1.reward_rate');
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf,
+            'token1.reward_rate'
+        );
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
         //         = 4,078.774136054 * 2.4509803922
@@ -1140,11 +1176,13 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let core = deploy_core();
         let fee = 0;
-        let initial_tick_mag = 693147; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, initial_tick_mag);
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -1161,6 +1199,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // no trades have been executed
         assert(token1_reward_rate == 0x0, 'token1.reward_rate');
 
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
         // halfway through the order duration
@@ -1168,55 +1207,79 @@ mod PlaceOrderAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(setup.pool_key);
 
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
-        assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(
-            event.next_virtual_order_time == execution_timestamp, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == order1_timestamp,
+            'event.last_virtual_order_time'
         );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
         // bought amount ~= 9,998.994829713355494901 tokens
-        assert(!event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
-        assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x21e0bedb4ade006d5f5, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 9998.994829713355494901 / 2.4509803922
         //               ~= 4079.5898895263671875 (then scaled by 2**96)
-        assert(token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e, 'token1.reward_rate');
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfef970310b8b749c2bcbffcbb3e,
+            'token1.reward_rate'
+        );
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
         assert(
-            event.last_virtual_order_time == execution_timestamp, 'event.last_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
         );
         assert(
-            event.next_virtual_order_time == order1_expiry_time, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.next_virtual_order_time == order1_expiry_time,
+            'event.next_virtual_order_time'
         );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 1.9996:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
         // bought amount ~= 9,996.995431680968690346 tokens
-        assert(!event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
-        assert(event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x10f0cf064dd591fffff, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x21df02e6ac312ff0aaa, 'event.delta.amount1.mag');
 
-        let (_, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**96)
-        assert(token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf, 'token1.reward_rate');
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x1fde5d30d9b7d4955dc39bced5bf,
+            'token1.reward_rate'
+        );
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
         //         = 8,158.364013671875 * 2.4509803922
@@ -1232,11 +1295,13 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let core = deploy_core();
         let fee = 0;
-        let initial_tick_mag = 693147; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, initial_tick_mag);
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -1253,6 +1318,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // no trades have been executed
         assert(token0_reward_rate == 0x0, 'token0.reward_rate');
 
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
         // halfway through the order duration
@@ -1260,29 +1326,42 @@ mod PlaceOrderAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(setup.pool_key);
 
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
-        assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(
-            event.next_virtual_order_time == execution_timestamp, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == order1_timestamp,
+            'event.last_virtual_order_time'
         );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
         // bought amount ~= 2,499.876324017182129212 tokens
-        assert(event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x8784c0cfc7fd74bc3c, 'event.delta.amount0.mag');
-        assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x8784c0cfc7fd74bc3c, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**96)
-        assert(token0_reward_rate == 0x3fbf3151104fc924f597b256ca6, 'token0.reward_rate');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fbf3151104fc924f597b256ca6,
+            'token0.reward_rate'
+        );
 
-        // Witdraw proceeds
+        // Withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // amount  = reward_rate * sale_rate
@@ -1294,32 +1373,44 @@ mod PlaceOrderAndWithdrawProceeds {
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
         assert(
-            event.last_virtual_order_time == execution_timestamp, 'event.last_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
         );
         assert(
-            event.next_virtual_order_time == order1_expiry_time, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.next_virtual_order_time == order1_expiry_time,
+            'event.next_virtual_order_time'
         );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2.0002:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
         // bought amount ~= 2,499.626361381044024809 tokens
-        assert(event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x878148c4168752f5e9, 'event.delta.amount0.mag');
-        assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x878148c4168752f5e9, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2**96)
-        assert(token0_reward_rate == 0x7f7cc0e75c4383db7609db75268, 'token0.reward_rate');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x7f7cc0e75c4383db7609db75268,
+            'token0.reward_rate'
+        );
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
         //         = 1,019.8475554255 * 2.4509803922
@@ -1335,11 +1426,13 @@ mod PlaceOrderAndWithdrawProceeds {
 
         let core = deploy_core();
         let fee = 0;
-        let initial_tick_mag = 693147; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_liquidity(core, fee, initial_tick_mag);
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -1356,6 +1449,7 @@ mod PlaceOrderAndWithdrawProceeds {
         // no trades have been executed
         assert(token0_reward_rate == 0x0, 'token0.reward_rate');
 
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
 
         // halfway through the order duration
@@ -1363,55 +1457,78 @@ mod PlaceOrderAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(setup.pool_key);
 
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
-        assert(event.last_virtual_order_time == order1_timestamp, 'event.last_virtual_order_time');
         assert(
-            event.next_virtual_order_time == execution_timestamp, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == order1_timestamp,
+            'event.last_virtual_order_time'
         );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
         // bought amount ~= 2,499.876324017182129212 tokens
-        assert(event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x8784c0cfc7fd74bc3c, 'event.delta.amount0.mag');
-        assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x8784c0cfc7fd74bc3c, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**96)
-        assert(token0_reward_rate == 0x3fbf3151104fc924f597b256ca6, 'token0.reward_rate');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fbf3151104fc924f597b256ca6,
+            'token0.reward_rate'
+        );
 
         set_block_timestamp(order1_expiry_time + 1);
         twamm.execute_virtual_orders(setup.pool_key);
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
         assert(
-            event.last_virtual_order_time == execution_timestamp, 'event.last_virtual_order_time'
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
         );
         assert(
-            event.next_virtual_order_time == order1_expiry_time, 'event.next_virtual_order_time'
+            virtual_orders_executed_event.next_virtual_order_time == order1_expiry_time,
+            'event.next_virtual_order_time'
         );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
         // price 2.0002:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
         // bought amount ~= 2,499.626361381044024809 tokens
-        assert(event.delta.amount0.sign, 'event.delta.amount0.sign');
-        assert(event.delta.amount0.mag == 0x878148c4168752f5e9, 'event.delta.amount0.mag');
-        assert(!event.delta.amount1.sign, 'event.delta.amount1.sign');
-        assert(event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x878148c4168752f5e9, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f0cf064dd591fffff, 'event.delta.amount1.mag');
 
-        let (token0_reward_rate, _) = twamm.get_reward_rate(twamm_pool_key);
         // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2*96)
-        assert(token0_reward_rate == 0x7f7cc0e75c4383db7609db75268, 'token0.reward_rate');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x7f7cc0e75c4383db7609db75268,
+            'token0.reward_rate'
+        );
 
         // withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
         //         = 2,039.797088623046875 * 2.4509803922
@@ -1420,16 +1537,781 @@ mod PlaceOrderAndWithdrawProceeds {
     }
 }
 
+mod PlaceOrderOnBothSides {
+    use super::{
+        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
+        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
+        setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
+        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
+        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
+        OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity, set_up_twamm_with_liquidity,
+        place_order, OrderWithdrawn, PoolInitialized, PositionUpdated, SavedBalance, Swapped,
+        LoadedBalance,
+    };
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_0() {
+        // place one order on both sides expiring at the same time.
+
+        let core = deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_expiry_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+
+        let amount = 10_000 * 1000000000000000000;
+        let (token_id1, order1_key, order1) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let (token_id2, order2_key, order2) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, true, order_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+
+        // no trades have been executed
+        assert(token0_reward_rate == 0x0, 'token0.reward_rate');
+        assert(token1_reward_rate == 0x0, 'token1.reward_rate');
+
+        // halfway through the order duration
+        let execution_timestamp = timestamp + 2040;
+        set_block_timestamp(execution_timestamp);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 2:1 (sqrt_ratio ~= 1.414213)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // token1 sale-rate      = 10,000 / 4,080 ~= 5,019.6078432256 per sec
+        // token1 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 1.999798:1 (sqrt_ratio ~= 1.414142)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 4999.494749712193339072
+        // token1 spent amount ~= 2500.126326390625943362
+        // token0 reward rate = (5,000 + 4999.494749712193339072) / 2.4509803922 = 4,079.7938578108
+        // token1 reward rate = (5,000 - 2500.126326390625943362) / 2.4509803922 = 1,019.9484588147
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x8784b7653fd58bc0bd, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f05ed6267a1bebec0, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fc0d31cd4c46627c3796b2cf51,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfefcb3a452b54b7b1496111025a,
+            'token1_reward_rate'
+        );
+
+        // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 4,079.7938578108 * 2.4509803922
+        //        ~= 9,999.4947497123 tokens
+        assert(event.amount == 0x21e12ddc744fadebebe, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 1,019.9484588147 * 2.4509803922
+        //        ~= 2,499.8736736094 tokens
+        assert(event.amount == 0x878838ff9d83943f41, 'event.amount');
+
+        // withdraw the remaining proceeds after order expires
+
+        set_block_timestamp(order_expiry_time + 1);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == order_expiry_time,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 1.999798:1 (sqrt_ratio ~= 1.414142)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // token1 sale-rate      = 10,000 / 4,080 ~= 5,019.6078432256 per sec
+        // token1 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 1.999599:1 (sqrt_ratio ~= 1.414071)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 4998.495001254941931263
+        // token1 spent amount ~= 2499.623686244762987583
+        // token0 reward rate = (5,000 + 4998.495001254941931263) / 2.4509803922 = 4,079.3859604402
+        // token1 reward rate = (5,000 - 2499.623686244762987583) / 2.4509803922 = 1,020.1535359942
+
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x87813f4310d3912c3f, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10ef80d907ad687b6ff, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fc0d31cd4c46627c3796b2cf51
+                + 0x3fc274e22d6e2a8edef843d3da0,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfefcb3a452b54b7b1496111025a
+                + 0xfef62ce4ee0a84f2597557a639e,
+            'token1_reward_rate'
+        );
+
+        // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 4,079.3859604402 * 2.4509803922
+        //        ~= 9,998.4950012549 tokens
+        assert(event.amount == 0x21e04fdf5582fa7b6fd, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 1,020.1535359942 * 2.4509803922
+        //        ~= 2,500.3763137553 tokens
+        assert(event.amount == 0x878bb121cc858ed3bf, 'event.amount');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_1() {
+        // place two orders on both sides expiring at the same time.
+        // sale rate is the same for both orders but smaller than the previous test
+        // since it loses 1 wei of precision.
+
+        let core = deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_expiry_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+
+        let amount = 5_000 * 1000000000000000000;
+        let (token_id1, order1_key, order1) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order_expiry_time, amount
+        );
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        let (token_id2, order2_key, order2) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order_expiry_time, amount
+        );
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        let (token_id3, order3_key, order3) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, true, order_expiry_time, amount
+        );
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        let (token_id4, order4_key, order4) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, true, order_expiry_time, amount
+        );
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(twamm_pool_key);
+
+        // no trades have been executed
+        assert(token0_reward_rate == 0x0, 'token0.reward_rate');
+        assert(token1_reward_rate == 0x0, 'token1.reward_rate');
+
+        // halfway through the order duration
+        let execution_timestamp = timestamp + 2040;
+        set_block_timestamp(execution_timestamp);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 2:1 (sqrt_ratio ~= 1.414213)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = (5,000 / 4,080) + (5,000 / 4,080) ~= 2.4509803921 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803921 = 4,999.999999884 tokens
+        // token1 sale-rate      = 10,000 / 4,080 ~= 5,019.6078432256 per sec
+        // token1 sold-amount   ~= 2,040 * 2.4509803921 = 4,999.999999884 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 1.999798:1 (sqrt_ratio ~= 1.414142)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 4999.494749712193339072
+        // token1 spent amount ~= 2500.126326390625943362
+        // token0 reward rate = (4,999.999999884 + 4999.494749712193339072) / 2.4509803921 ~= 4,079.7938578108
+        // token1 reward rate = (4,999.999999884 - 2500.126326390625943362) / 2.4509803921 ~= 1,019.9484588147
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x8784b7653fd58bc0bd, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10f05ed6267a1bebec0, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fc0d31cd4c46627c3796b2ed4e,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfefcb3a452b54b7b14961117a4b,
+            'token1_reward_rate'
+        );
+
+        set_block_timestamp(order_expiry_time + 1);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == order_expiry_time,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 1.999798:1 (sqrt_ratio ~= 1.414142)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803921 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803921 = 4,999.999999884 tokens
+        // token1 sale-rate      = 10,000 / 4,080 ~= 5,019.6078432256 per sec
+        // token1 sold-amount   ~= 2,040 * 2.4509803921 = 4,999.999999884 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 1.999599:1 (sqrt_ratio ~= 1.414071)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 4998.495001254941931263
+        // token1 spent amount ~= 2499.623686244762987583
+        // token0 reward rate = (4,999.999999884 + 4998.495001254941931263) / 2.4509803921 ~= 4,079.3859604402
+        // token1 reward rate = (4,999.999999884 - 2499.623686244762987583) / 2.4509803921 ~= 1,020.1535359942
+
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x87813f4310d3912c3f, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x10ef80d907ad687b6ff, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x3fc0d31cd4c46627c3796b2ed4e
+                + 0x3fc274e22d6e2a8edef843d5b9e,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0xfefcb3a452b54b7b14961117a4b
+                + 0xfef62ce4ee0a84f2597557adb8c,
+            'token1_reward_rate'
+        );
+
+        // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 8159.17981839459 * 1.225490196
+        //        ~= 9,998.9948748436 tokens
+        assert(event.amount == 0x21e0bedde4e95433ade, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 8159.17981839459 * 1.225490196
+        //        ~= 9,998.9948748436 tokens
+        assert(event.amount == 0x21e0bedde4e95433ade, 'event.amount');
+
+        // Withdraw proceeds for order3
+        twamm.withdraw_from_order(order3_key, token_id3);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 2040.205077179512 * 1.225490196
+        //        ~= 2,500.2513199129 tokens
+        assert(event.amount == 0x8789f510b504918980, 'event.amount');
+
+        // Withdraw proceeds for order4
+        twamm.withdraw_from_order(order4_key, token_id4);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 2040.205077179512 * 1.225490196
+        //        ~= 2,500.2513199129 tokens
+        assert(event.amount == 0x8789f510b504918980, 'event.amount');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_2() {
+        // place one order on both sides expiring at the same time.
+        // price is 100_000_000:1
+
+        let core = deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 18420685, sign: false }; // ~ 100_000_000:1 price
+        let token0_liquidity = 2 * 1000000000000000000;
+        let token1_liquidity = 100_000_000 * 1000000000000000000;
+        let (twamm, setup) = set_up_twamm_with_liquidity(
+            core, fee, initial_tick, token0_liquidity, token1_liquidity
+        );
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_expiry_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+
+        let amount = 1 * 1000000000000000000;
+        let (token_id1, order1_key, order1) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let amount = 1_000_000 * 1000000000000000000;
+        let (token_id2, order2_key, order2) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, true, order_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // halfway through the order duration
+        let execution_timestamp = timestamp + 2040;
+        set_block_timestamp(execution_timestamp);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 100_000_000:1 (sqrt_ratio ~= 9999.97522858)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 1 / 4,080 ~= 0.0002450980392 per sec
+        // token0 sold-amount   ~= 2,040 * 0.0002450980392 = 0.5 tokens
+        // token1 sale-rate      = 1,000,000 / 4,080 ~= 245.09803921569 per sec
+        // token1 sold-amount   ~= 2,040 * 245.09803921569 = 0.0000000001 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 44,914,477.923269:1 (sqrt_ratio ~= 6701.826461)
+        // trade token1 for token0 up to the next price
+        // token0 spent amount ~= 0.492129291275836651
+        // token1 bought amount ~= 32,981,569.368484
+        // token0 reward rate = (0.5 - 0.492129291275836651) / 245.09803921569 = 0.00003211249159
+        // token1 reward rate = (500,000 + 32,981,569.368484) / 0.0002450980392 = 136,604,803,032.1574273941
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x6d464fba60f9ceb, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(
+            swapped_event.delta.amount1.mag == 0x1b481e7543b8f6e80d6858, 'event.delta.amount1.mag'
+        );
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x21ac219e7b5159136ec1b,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event
+                .token1_reward_rate == 0x1fce47dfcf6ab370510ff7e0f5fd7b2586,
+            'token1_reward_rate'
+        );
+
+        // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 136,604,803,032.1574273941 * 0.0002450980392
+        //        ~= 33,481,569.368484 tokens
+        assert(event.amount == 0x1bb1ff832b1f6db88d6856, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 0.00003211249159 * 245.09803921569
+        //        ~= 0.007870708723 tokens
+        assert(event.amount == 0x1bf65e2da26313, 'event.amount');
+
+        // withdraw the remaining proceeds after order expires
+
+        set_block_timestamp(order_expiry_time + 1);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == order_expiry_time,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 44,914,477.923269:1 (sqrt_ratio ~= 6701.826461)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 1 / 4,080 ~= 0.0002450980392 per sec
+        // token0 sold-amount   ~= 2,040 * 0.0002450980392 = 0.5 tokens
+        // token1 sale-rate      = 1,000,000 / 4,080 ~= 245.09803921569 per sec
+        // token1 sold-amount   ~= 2,040 * 245.09803921569 = 0.0000000001 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 25,585,698.172961:1 (sqrt_ratio ~= 5058.230735)
+        // trade token1 for token0 up to the next price
+        // token0 spent amount ~= 0.484846500162564586
+        // token1 bought amount ~= 16,435,997.977271
+        // token0 reward rate = (0.5 - 0.484846500162564586) / 245.09803921569 = 0.00006182627934
+        // token1 reward rate = (500,000 + 16,435,997.977271) / 0.0002450980392 = 69,098,871,751.6880077921
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x6ba8552b4c7f1ea, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(
+            swapped_event.delta.amount1.mag == 0xd98753c569731dadf4437, 'event.delta.amount1.mag'
+        );
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0x21ac219e7b5159136ec1b
+                + 0x40d45d9086a1710200e1a,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x1fce47dfcf6ab370510ff7e0f5fd7b2586
+                + 0x10169d1bc344c4208a5f189024f1e4194e,
+            'token1_reward_rate'
+        );
+
+        // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 69,098,871,751.6880077921 * 0.0002450980392
+        //        ~= 16,935,997.977271 tokens
+        assert(event.amount == 0xe02564a3dfda8ab5f4435, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 0.00006182627934 * 245.09803921569
+        //        ~= 0.01515349984 tokens
+        assert(event.amount == 0x35d6071eea0e14, 'event.amount');
+    }
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_place_orders_3() {
+        // place one order on both sides expiring at different
+        // price is 0.5:1
+
+        let core = deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
+        let token0_liquidity = 10_000_000 * 1000000000000000000;
+        let token1_liquidity = 10_000_000 * 1000000000000000000;
+        let (twamm, setup) = set_up_twamm_with_liquidity(
+            core, fee, initial_tick, token0_liquidity, token1_liquidity
+        );
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+        let event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_expiry_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+        let order2_expiry_time = order_expiry_time - SIXTEEN_POW_TWO;
+
+        let amount = 10_000 * 1000000000000000000;
+        let (token_id1, order1_key, order1) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        let amount = 10_000 * 1000000000000000000;
+        let (token_id2, order2_key, order2) = place_order(
+            twamm, setup.token0, setup.token1, twamm_pool_key, true, order2_expiry_time, amount
+        );
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // // halfway through the first order duration
+        let execution_timestamp = timestamp + 2040;
+        set_block_timestamp(execution_timestamp);
+        twamm.execute_virtual_orders(setup.pool_key);
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == execution_timestamp,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 0.5:1 (sqrt_ratio ~= 0.707106)
+        // token0 time window    = 2,040 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // token0 time window    = 2,040 sec
+        // token1 sale-rate      = 10,000 / 3,824 ~= 2.6150627615 per sec
+        // token1 sold-amount   ~= 2,040 * 2.6150627615 = 5,334.72803346 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 0.500566586531:1 (sqrt_ratio ~= 0.707507304931)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 5663.417520346737948877
+        // token1 spent amount  ~= 2833.312044061176392644
+        // token0 reward rate = (5,334.72803346 - 2833.312044061176392644) / 2.4509803922 = 1,020.5777236568
+        // token1 reward rate = (5663.417520346737948877 + 5,000.000000088) / 2.6150627615 = 4,077.690859824
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x13303b4e4aeeeec38cd, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x99981a748b06546bc4, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0xfedb0dc2fc3c454a61475d9de69,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x3fc93e5b2f77bbee137ec9327fb,
+            'token1_reward_rate'
+        );
+
+        // Two swaps are executed since order2 expires before order1
+        set_block_timestamp(order_expiry_time + 1);
+        twamm.execute_virtual_orders(setup.pool_key);
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == execution_timestamp,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == order2_expiry_time,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+
+        // price 0.500566586531:1 (sqrt_ratio ~= 0.707507304931)
+        // token0 time window    = 1,784 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 1,784 * 2.4509803922 = 4,372.5490196848 tokens
+        // token0 time window    = 1,784 sec
+        // token1 sale-rate      = 10,000 / 3,824 ~= 2.6150627615 per sec
+        // token1 sold-amount   ~= 1,784 * 2.6150627615 = 4,665.271966516 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 0.5010620.:1 (sqrt_ratio ~= 0.707857)
+        // trade token1 for token0 up to the next price
+        // token0 bought amount ~= 5663.417520346737948877
+        // token1 spent amount  ~= 2833.312044061176392644
+        // token0 reward rate = (4,665.271966516 - 2475.436672241311162156) / 2.4509803922 = 893.4528000483
+        // token1 reward rate = (4,942.823753641352512967 + 4,372.5490196848) / 2.6150627615 = 3,562.1985485285
+        assert(swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x10bf3758fbbf3b845c7, 'event.delta.amount0.mag');
+        assert(!swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x863195b9fa566c1f2c, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0xfedb0dc2fc3c454a61475d9de69
+                + 0xdea32d412e955c8e116da1e4344,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x3fc93e5b2f77bbee137ec9327fb
+                + 0x37d73eab48e70dbc4b11d38adfb,
+            'token1_reward_rate'
+        );
+
+        // check second swap 
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert(
+            virtual_orders_executed_event.last_virtual_order_time == order2_expiry_time,
+            'event.last_virtual_order_time'
+        );
+        assert(
+            virtual_orders_executed_event.next_virtual_order_time == order_expiry_time,
+            'event.next_virtual_order_time'
+        );
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 0.5010620.:1 (sqrt_ratio ~= 0.707857)
+        // token0 time window    = 256 sec (difference between order1 and order2 expiry times)
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 256 * 2.4509803922 = 627.4509804032 tokens
+        // token0 spent amount ~= 5663.417520346737948877
+        // token1 bought amount  ~= 2833.312044061176392644
+        // token1 reward rate = (314.372145175661757901 + 0) / 2.4509803922 = 128.2638352294
+        assert(!swapped_event.delta.amount0.sign, 'event.delta.amount0.sign');
+        assert(swapped_event.delta.amount0.mag == 0x2203a1ae49f5191919, 'event.delta.amount0.mag');
+        assert(swapped_event.delta.amount1.sign, 'event.delta.amount1.sign');
+        assert(swapped_event.delta.amount1.mag == 0x110aca386c18d9c5cd, 'event.delta.amount1.mag');
+        assert(
+            virtual_orders_executed_event.token0_reward_rate == 0xfedb0dc2fc3c454a61475d9de69
+                + 0xdea32d412e955c8e116da1e4344,
+            'token0_reward_rate'
+        );
+        assert(
+            virtual_orders_executed_event.token1_reward_rate == 0x3fc93e5b2f77bbee137ec9327fb
+                + 0x37d73eab48e70dbc4b11d38adfb
+                + 0x80438ab4ab8e22ffb381aaadd8,
+            'token1_reward_rate'
+        );
+
+        // // Withdraw proceeds for order1
+        twamm.withdraw_from_order(order1_key, token_id1);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 2042.294358 * 2.4509803922
+        //        ~= 5,005.6234265587 tokens
+        assert(event.amount == 0x10f5afad3a16e593adb, 'event.amount');
+
+        // Withdraw proceeds for order2
+        twamm.withdraw_from_order(order2_key, token_id2);
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 7639.88940827108 * 2.6150627615
+        //        ~= 19,978.790293548 tokens
+        assert(event.amount == 0x43b0d698fdb9fcb6578, 'event.amount');
+    }
+}
+
+fn set_up_twamm_with_default_liquidity(
+    core: ICoreDispatcher, fee: u128, initial_tick: i129
+) -> (ITWAMMDispatcher, SetupPoolResult) {
+    let token0_liquidity = 100_000_000 * 1000000000000000000;
+    let token1_liquidity = 100_000_000 * 1000000000000000000;
+    set_up_twamm_with_liquidity(core, fee, initial_tick, token0_liquidity, token1_liquidity)
+}
 
 fn set_up_twamm_with_liquidity(
-    core: ICoreDispatcher, fee: u128, initial_tick_mag: u128
+    core: ICoreDispatcher,
+    fee: u128,
+    initial_tick: i129,
+    token0_liquidity: u128,
+    token1_liquidity: u128
 ) -> (ITWAMMDispatcher, SetupPoolResult) {
+    set_block_timestamp(1);
+
     let twamm = deploy_twamm(core);
 
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
 
-    let initial_tick = i129 { mag: initial_tick_mag, sign: false };
     let setup = setup_pool_with_core(
         core,
         fee: fee,
@@ -1441,8 +2323,6 @@ fn set_up_twamm_with_liquidity(
     let bounds = max_bounds(MAX_TICK_SPACING);
 
     let price = core.get_pool_price(pool_key: setup.pool_key);
-    let token0_liquidity = 100_000_000 * 1000000000000000000;
-    let token1_liquidity = 100_000_000 * 1000000000000000000;
     let max_liquidity = max_liquidity(
         tick_to_sqrt_ratio(initial_tick),
         tick_to_sqrt_ratio(bounds.lower),

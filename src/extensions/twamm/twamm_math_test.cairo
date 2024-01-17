@@ -1,12 +1,12 @@
 use debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
-    calculate_virtual_order_outputs, calculate_c
+    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, exp, calculate_c,
+    constants
 };
+use ekubo::interfaces::core::{Delta};
 use ekubo::math::string::{append, to_decimal};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
-use ekubo::interfaces::core::{Delta};
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
 const SIXTEEN_POW_ONE: u64 = 0x10;
@@ -166,7 +166,7 @@ mod RewardRateTest {
 
 mod TWAMMMathTest {
     use debug::PrintTrait;
-    use super::{calculate_virtual_order_outputs, calculate_c, tick_to_sqrt_ratio, i129};
+    use super::{calculate_c, exp, tick_to_sqrt_ratio, i129, constants, SIXTEEN_POW_SEVEN};
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
@@ -218,6 +218,11 @@ mod TWAMMMathTest {
         // positive
         assert_case_c(
             sqrt_ratio: 10,
+            sqrt_sell_ratio: 15,
+            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, false)
+        );
+        assert_case_c(
+            sqrt_ratio: 10,
             sqrt_sell_ratio: 20,
             expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, false)
         );
@@ -258,6 +263,11 @@ mod TWAMMMathTest {
         );
         // negative
         assert_case_c(
+            sqrt_ratio: 15,
+            sqrt_sell_ratio: 10,
+            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, true)
+        );
+        assert_case_c(
             sqrt_ratio: 20,
             sqrt_sell_ratio: 10,
             expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, true)
@@ -297,5 +307,12 @@ mod TWAMMMathTest {
             sqrt_sell_ratio: 10,
             expected: (u256 { low: 0xe6666666666666666666666666666666, high: 0 }, true)
         );
+    }
+
+
+    #[test]
+    #[available_gas(3000000000)]
+    fn test_exp() {
+        assert(exp(2 * constants::X_64) == 0x763992e34a0de88b8, 'exp(2) invalid');
     }
 }

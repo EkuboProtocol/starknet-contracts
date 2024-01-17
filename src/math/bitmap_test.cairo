@@ -332,3 +332,15 @@ fn test_negative_cases_tick_spacing_ten() {
         tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
 }
+
+
+#[test]
+#[available_gas(3000000000)]
+fn test_is_set() {
+    assert(Bitmap { value: 0 }.set_bit(0).is_set(0), 'is_set_0');
+    assert(Bitmap { value: 0 }.set_bit(128).is_set(128), 'is_set_128');
+    assert(Bitmap { value: 0 }.set_bit(250).is_set(250), 'is_set_250');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(1), '!is_set_1');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(128), '!is_set_128');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(250), '!is_set_250');
+}
