@@ -1,8 +1,8 @@
+use core::integer::{u256_safe_divmod, u256_as_non_zero};
+use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PoolKey};
-use integer::{u256_safe_divmod, u256_as_non_zero};
-use starknet::{ContractAddress, StorePacking};
-use traits::{Into, TryInto};
+use starknet::{ContractAddress, ClassHash, StorePacking};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct TWAMMPoolKey {
@@ -31,6 +31,9 @@ trait ITWAMM<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
     fn get_nft_address(self: @TContractState) -> ContractAddress;
 
+    // Upgrade the NFT contract to a new version
+    fn upgrade_nft(ref self: TContractState, class_hash: ClassHash);
+
     // Return the stored order state
     fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
 
@@ -55,7 +58,14 @@ trait ITWAMM<TContractState> {
 
 #[starknet::contract]
 mod TWAMM {
-    use cmp::{min};
+    use core::cmp::{min};
+    use core::integer::{downcast, upcast, u256_sqrt, u128_sqrt};
+    use core::num::traits::{Zero};
+    use core::option::{OptionTrait};
+    use core::traits::{TryInto, Into};
+    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::extensions::twamm::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
         validate_expiry_time, calculate_next_sqrt_ratio
@@ -65,7 +75,9 @@ mod TWAMM {
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::interfaces::upgradeable::{
+        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
+    };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::bits::{msb};
     use ekubo::math::contract_address::{ContractAddressOrder};
@@ -76,28 +88,26 @@ mod TWAMM {
     use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use integer::{downcast, upcast, u256_sqrt, u128_sqrt};
-    use option::{OptionTrait};
     use starknet::{
-        get_contract_address, get_caller_address, replace_class_syscall, ClassHash,
-        get_block_timestamp,
+        get_contract_address, get_caller_address, replace_class_syscall, get_block_timestamp,
+        ClassHash
     };
     use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
-    use traits::{TryInto, Into};
-    use zeroable::{Zeroable};
+
+    #[abi(embed_v0)]
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
-
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
-
-    #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -116,18 +126,21 @@ mod TWAMM {
         reward_rate_at_time: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TWAMMPoolKey, u64>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252
     ) {
+        self.initialize_owned(owner);
         self.core.write(core);
 
         self
@@ -135,7 +148,7 @@ mod TWAMM {
             .write(
                 OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
-                    controller: get_contract_address(),
+                    owner: get_contract_address(),
                     name: 'Ekubo TWAMM',
                     symbol: 'eTWAMM',
                     token_uri_base: token_uri_base,
@@ -183,6 +196,7 @@ mod TWAMM {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         OrderPlaced: OrderPlaced,
         OrderCancelled: OrderCancelled,
         OrderWithdrawn: OrderWithdrawn,
@@ -225,6 +239,13 @@ mod TWAMM {
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackResult {
         Empty: (),
+    }
+
+    #[external(v0)]
+    impl TWAMMHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::extensions::twamm::twamm::TWAMM");
+        }
     }
 
     #[external(v0)]
@@ -293,6 +314,12 @@ mod TWAMM {
     impl TWAMMImpl of ITWAMM<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
+        }
+
+        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
+            self.require_owner();
+            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
+                .replace_class_hash(class_hash);
         }
 
         fn get_order_state(self: @ContractState, order_key: OrderKey, id: u64) -> OrderState {
@@ -513,11 +540,11 @@ mod TWAMM {
                         // we haven't executed any virtual orders yet, and no orders have been placed
                         self.last_virtual_order_time.write(twamm_pool_key, current_time);
                     } else if (last_virtual_order_time != current_time) {
-                        let mut total_delta = Zeroable::<Delta>::zero();
+                        let mut total_delta = Zero::<Delta>::zero();
                         let mut token_reward_rate = (0, 0);
 
                         loop {
-                            let mut delta = Zeroable::<Delta>::zero();
+                            let mut delta = Zero::<Delta>::zero();
 
                             // find next expiry time 
                             let next_expiry_time = self_snap
@@ -688,11 +715,8 @@ mod TWAMM {
                 },
                 LockCallbackData::DepositBalanceCallbackData(data) => {
                     IERC20Dispatcher { contract_address: data.token }
-                        .transfer(recipient: core.contract_address, amount: data.amount.into());
-
-                    let deposited_amount = core.deposit(data.token);
-
-                    assert(deposited_amount == data.amount, 'DEPOSIT_AMOUNT_NE_AMOUNT');
+                        .approve(core.contract_address, data.amount.into());
+                    core.pay(data.token);
 
                     core
                         .save(

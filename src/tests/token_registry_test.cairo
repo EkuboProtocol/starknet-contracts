@@ -1,7 +1,6 @@
 use ekubo::token_registry::TokenRegistry::{ten_pow};
 
 #[test]
-#[available_gas(3000000)]
 fn test_ten_pow() {
     assert(ten_pow(0) == 1, '10^0');
     assert(ten_pow(1) == 10, '10^1');

@@ -5,10 +5,10 @@ import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_cl
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compiled_contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
-import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
-import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.compiled_contract_class.json";
-import SimpleSwapper from "../target/dev/ekubo_SimpleSwapper.contract_class.json";
-import SimpleSwapperCASM from "../target/dev/ekubo_SimpleSwapper.compiled_contract_class.json";
+import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
+import MockERC20CASM from "../target/dev/ekubo_MockERC20.compiled_contract_class.json";
+import Router from "../target/dev/ekubo_Router.contract_class.json";
+import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
 import { DevnetProvider } from "./devnet";
 import { writeFileSync } from "fs";
 import { getAccounts } from "./accounts";
@@ -20,8 +20,8 @@ import { getAccounts } from "./accounts";
   console.log("Deploying tokens");
   const simpleTokenContractDeclare = await accounts[0].declare(
     {
-      contract: SimpleERC20 as any,
-      casm: SimpleERC20CASM as any,
+      contract: MockERC20 as any,
+      casm: MockERC20CASM as any,
     },
     { maxFee: 10000000000000 } // workaround
   );
@@ -30,14 +30,14 @@ import { getAccounts } from "./accounts";
     contract_address: [tokenAddressA],
   } = await accounts[0].deploy({
     classHash: simpleTokenContractDeclare.class_hash,
-    constructorCalldata: [accounts[0].address],
+    constructorCalldata: [accounts[0].address, 0xffffffffffffffffffffffffffffffffn],
   });
 
   const {
     contract_address: [tokenAddressB],
   } = await accounts[0].deploy({
     classHash: simpleTokenContractDeclare.class_hash,
-    constructorCalldata: [accounts[0].address],
+    constructorCalldata: [accounts[0].address, 0xffffffffffffffffffffffffffffffffn],
   });
 
   const [token0, token1] =
@@ -91,10 +91,10 @@ import { getAccounts } from "./accounts";
 
   console.log("Deploying swapper");
 
-  const swapperResponse = await accounts[0].declareAndDeploy(
+  const routerResponse = await accounts[0].declareAndDeploy(
     {
-      contract: SimpleSwapper as any,
-      casm: SimpleSwapperCASM as any,
+      contract: Router as any,
+      casm: RouterCASM as any,
       constructorCalldata: [coreResponse.deploy.address],
     },
     { maxFee: 10000000000000 } // workaround
@@ -107,7 +107,7 @@ import { getAccounts } from "./accounts";
     token1,
     core: coreResponse.deploy.address,
     positions: positions.address,
-    swapper: swapperResponse.deploy.address,
+    router: routerResponse.deploy.address,
     nft: `0x${nftAddress.toString(16)}`,
   };
 

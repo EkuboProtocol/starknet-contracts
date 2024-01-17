@@ -21,22 +21,21 @@ trait IMockExtension<TStorage> {
 
 #[starknet::contract]
 mod MockExtension {
-    use array::{ArrayTrait};
-    use debug::PrintTrait;
+    use core::array::{ArrayTrait};
+    use core::num::traits::{Zero};
+    use core::option::{OptionTrait};
+    use core::traits::{Into, TryInto};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints, all_call_points};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
-    use option::{OptionTrait};
     use starknet::{get_caller_address};
     use super::{IMockExtension, ExtensionCalled, ContractAddress};
-    use traits::{Into, TryInto};
-    use zeroable::{Zeroable};
 
     #[storage]
     struct Storage {
@@ -155,13 +154,13 @@ mod MockExtension {
             let core = self.core.read();
             let data = consume_callback_data::<CallbackData>(core, data);
 
-            let mut delta: Delta = Zeroable::zero();
+            let mut delta: Delta = Zero::zero();
 
             delta += core
                 .swap(
                     data.pool_key,
                     SwapParameters {
-                        amount: Zeroable::zero(),
+                        amount: Zero::zero(),
                         is_token1: false,
                         sqrt_ratio_limit: min_sqrt_ratio(),
                         skip_ahead: 0
@@ -172,9 +171,9 @@ mod MockExtension {
                 .update_position(
                     data.pool_key,
                     UpdatePositionParameters {
-                        salt: Zeroable::zero(),
+                        salt: Zero::zero(),
                         bounds: max_bounds(data.pool_key.tick_spacing),
-                        liquidity_delta: Zeroable::zero()
+                        liquidity_delta: Zero::zero()
                     }
                 );
 

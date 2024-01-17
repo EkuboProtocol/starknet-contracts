@@ -1,12 +1,12 @@
+use core::num::traits::{Zero};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
-use zeroable::{Zeroable};
 
 #[test]
 fn test_delta_zeroable() {
-    let delta: Delta = Zeroable::zero();
-    assert(delta.amount0 == Zeroable::zero(), 'amount0');
-    assert(delta.amount1 == Zeroable::zero(), 'amount1');
+    let delta: Delta = Zero::zero();
+    assert(delta.amount0 == Zero::zero(), 'amount0');
+    assert(delta.amount1 == Zero::zero(), 'amount1');
     assert(delta.is_zero(), 'is_zero');
     assert(!delta.is_non_zero(), 'is_non_zero');
 }

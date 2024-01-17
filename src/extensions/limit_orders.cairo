@@ -1,7 +1,7 @@
+use core::integer::{u256_safe_divmod, u256_as_non_zero};
+use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129, i129Trait};
-use integer::{u256_safe_divmod, u256_as_non_zero};
-use starknet::{ContractAddress, StorePacking};
-use traits::{Into, TryInto};
+use starknet::{ContractAddress, ClassHash, StorePacking};
 
 #[derive(Drop, Copy, Serde, Hash)]
 struct OrderKey {
@@ -95,7 +95,7 @@ trait ILimitOrders<TContractState> {
 
     // Return information on each of the given orders
     fn get_order_info(
-        self: @TContractState, requests: Span<GetOrderInfoRequest>
+        self: @TContractState, requests: Array<GetOrderInfoRequest>
     ) -> Array<GetOrderInfoResult>;
 
     // Creates a new limit order, selling the given `sell_token` for the given `buy_token` at the specified tick
@@ -106,45 +106,54 @@ trait ILimitOrders<TContractState> {
     fn close_order(
         ref self: TContractState, order_key: OrderKey, id: u64, recipient: ContractAddress
     ) -> (u128, u128);
+
+    fn upgrade_nft(ref self: TContractState, class_hash: ClassHash);
 }
 
 #[starknet::contract]
 mod LimitOrders {
-    use array::{ArrayTrait};
-    use ekubo::clear::{ClearImpl};
+    use core::array::{ArrayTrait};
+    use core::num::traits::{Zero};
+    use core::option::{OptionTrait};
+    use core::traits::{TryInto, Into};
+    use ekubo::components::clear::{ClearImpl};
+    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::interfaces::upgradeable::{
+        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
+    };
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use option::{OptionTrait};
     use starknet::{get_contract_address, get_caller_address, replace_class_syscall, ClassHash};
     use super::{
         ILimitOrders, i129, i129Trait, ContractAddress, OrderKey, OrderState, PoolState,
         GetOrderInfoRequest, GetOrderInfoResult
     };
-    use traits::{TryInto, Into};
-    use zeroable::{Zeroable};
 
     const LIMIT_ORDER_TICK_SPACING: u128 = 100;
     const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 200;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
-
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -155,18 +164,21 @@ mod LimitOrders {
         pools: LegacyMap<PoolKey, PoolState>,
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         ticks_crossed_last_crossing: LegacyMap<(PoolKey, i129), u64>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252,
     ) {
+        self.initialize_owned(owner);
         self.core.write(core);
 
         self
@@ -174,7 +186,7 @@ mod LimitOrders {
             .write(
                 OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
-                    controller: get_contract_address(),
+                    owner: get_contract_address(),
                     name: 'Ekubo Limit Order',
                     symbol: 'eLO',
                     token_uri_base: token_uri_base,
@@ -248,8 +260,16 @@ mod LimitOrders {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         OrderPlaced: OrderPlaced,
         OrderClosed: OrderClosed,
+    }
+
+    #[external(v0)]
+    impl LimitOrdersHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::extensions::limit_orders::LimitOrders");
+        }
     }
 
     #[external(v0)]
@@ -357,11 +377,8 @@ mod LimitOrders {
                     assert(other_is_zero, 'TICK_WRONG_SIDE');
 
                     IERC20Dispatcher { contract_address: pay_token }
-                        .transfer(core.contract_address, pay_amount.into());
-                    let paid_amount = core.deposit(pay_token);
-                    if (paid_amount > pay_amount) {
-                        core.withdraw(pay_token, get_contract_address(), paid_amount - pay_amount);
-                    }
+                        .approve(core.contract_address, pay_amount.into());
+                    core.pay(pay_token);
 
                     LockCallbackResult::Empty
                 },
@@ -545,6 +562,12 @@ mod LimitOrders {
             self.nft.read().contract_address
         }
 
+        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
+            self.require_owner();
+            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
+                .replace_class_hash(class_hash);
+        }
+
 
         fn get_order_state(self: @ContractState, order_key: OrderKey, id: u64) -> OrderState {
             self.orders.read((order_key, id))
@@ -717,7 +740,7 @@ mod LimitOrders {
         }
 
         fn get_order_info(
-            self: @ContractState, mut requests: Span<GetOrderInfoRequest>
+            self: @ContractState, mut requests: Array<GetOrderInfoRequest>
         ) -> Array<GetOrderInfoResult> {
             let mut result: Array<GetOrderInfoResult> = ArrayTrait::new();
 
@@ -726,12 +749,12 @@ mod LimitOrders {
             loop {
                 match requests.pop_front() {
                     Option::Some(request) => {
-                        let is_selling_token1 = (*request
+                        let is_selling_token1 = (request
                             .order_key
                             .tick
                             .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
                             .is_non_zero();
-                        let pool_key = to_pool_key(*request.order_key);
+                        let pool_key = to_pool_key(request.order_key);
                         let price = core.get_pool_price(pool_key);
 
                         assert(price.sqrt_ratio.is_non_zero(), 'INVALID_ORDER_KEY');
@@ -742,21 +765,21 @@ mod LimitOrders {
                                 (
                                     pool_key,
                                     if is_selling_token1 {
-                                        *request.order_key.tick
+                                        request.order_key.tick
                                     } else {
-                                        *request.order_key.tick
+                                        request.order_key.tick
                                             + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                     }
                                 )
                             );
 
-                        let order = self.orders.read((*request.order_key, *request.id));
+                        let order = self.orders.read((request.order_key, request.id));
 
                         // the order is fully executed, just withdraw the saved balance
                         if (ticks_crossed_at_order_tick > order.ticks_crossed_at_create) {
-                            let sqrt_ratio_a = tick_to_sqrt_ratio(*request.order_key.tick);
+                            let sqrt_ratio_a = tick_to_sqrt_ratio(request.order_key.tick);
                             let sqrt_ratio_b = tick_to_sqrt_ratio(
-                                *request.order_key.tick
+                                request.order_key.tick
                                     + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                             );
 
@@ -792,9 +815,9 @@ mod LimitOrders {
                             let delta = liquidity_delta_to_amount_delta(
                                 sqrt_ratio: price.sqrt_ratio,
                                 liquidity_delta: i129 { mag: order.liquidity, sign: true },
-                                sqrt_ratio_lower: tick_to_sqrt_ratio(*request.order_key.tick),
+                                sqrt_ratio_lower: tick_to_sqrt_ratio(request.order_key.tick),
                                 sqrt_ratio_upper: tick_to_sqrt_ratio(
-                                    *request.order_key.tick
+                                    request.order_key.tick
                                         + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                                 )
                             );

@@ -1,4 +1,7 @@
-use array::{ArrayTrait};
+use core::array::{ArrayTrait};
+use core::num::traits::{Zero};
+use core::option::{Option, OptionTrait};
+use core::traits::{Into, TryInto};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -7,62 +10,62 @@ use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants,
     tick_to_sqrt_ratio
 };
+use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
-    update_position, accumulate_as_fees, SetupPoolResult, core_owner
+    update_position, accumulate_as_fees, SetupPoolResult, default_owner
 };
 
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use option::{Option, OptionTrait};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
-use traits::{Into, TryInto};
-use zeroable::{Zeroable};
 
 mod owner_tests {
-    use debug::PrintTrait;
-    use ekubo::owner::owner;
+    use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 
+    use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
-        deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zeroable,
+        Core, deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
+        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
-        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log
+        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner
     };
 
 
     #[test]
-    #[available_gas(2000000)]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let core = deploy_core();
         set_contract_address(contract_address_const::<1>());
-        let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let core = deploy_core();
-        set_contract_address(owner());
-        let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+
+        set_contract_address(default_owner());
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
             core.contract_address
         )
             .unwrap();
@@ -70,11 +73,63 @@ mod owner_tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
-    #[should_panic(expected: ('ENTRYPOINT_NOT_FOUND',))]
-    fn test_after_replacing_class_hash_calls_fail() {
+    fn test_transfer_ownership() {
         let core = deploy_core();
-        set_contract_address(owner());
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        assert(event.old_owner.is_zero(), 'zero');
+        assert(event.new_owner == default_owner(), 'initial owner');
+        assert(owned.get_owner() == default_owner(), 'is default');
+
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+        owned.transfer_ownership(new_owner);
+
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        assert(event.old_owner == default_owner(), 'old owner');
+        assert(event.new_owner == new_owner, 'new owner');
+        assert(owned.get_owner() == new_owner, 'is new owner');
+    }
+
+    #[test]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
+    fn test_transfer_ownership_then_replace_class_hash_fails() {
+        let core = deploy_core();
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+        owned.transfer_ownership(new_owner);
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(class_hash);
+    }
+
+    #[test]
+    fn test_transfer_ownership_then_replace_class_hash_succeeds() {
+        let core = deploy_core();
+        let owned = IOwnedDispatcher { contract_address: core.contract_address };
+        set_contract_address(default_owner());
+        let new_owner = contract_address_const::<123456789>();
+        owned.transfer_ownership(new_owner);
+        set_contract_address(new_owner);
+
+        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        IUpgradeableDispatcher { contract_address: core.contract_address }
+            .replace_class_hash(class_hash);
+    }
+
+    #[test]
+    #[should_panic(expected: ('MISSING_PRIMARY_INTERFACE_ID', 'ENTRYPOINT_FAILED'))]
+    fn test_fails_upgrading_to_other_contract_without_interface_id() {
+        let core = deploy_core();
+        set_contract_address(default_owner());
         // MockERC20 is not upgradeable, first call succeeds, second fails
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
@@ -83,32 +138,23 @@ mod owner_tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
-    fn test_after_replacing_class_hash_calls_as_new_contract_succeed() {
+    #[should_panic(expected: ('UPGRADEABLE_ID_MISMATCH', 'ENTRYPOINT_FAILED'))]
+    fn test_fails_upgrading_to_other_contract() {
         let core = deploy_core();
-        set_contract_address(owner());
+        set_contract_address(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
-        // these won't fail because it has a new implementation
-        IMockERC20Dispatcher { contract_address: core.contract_address }
-            .increase_balance(contract_address_const::<1>(), 100);
-        assert(
-            IMockERC20Dispatcher { contract_address: core.contract_address }
-                .balanceOf(contract_address_const::<1>()) == 100,
-            'balance'
-        );
+            .replace_class_hash(Positions::TEST_CLASS_HASH.try_into().unwrap());
     }
 }
 
 mod initialize_pool_tests {
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use super::{
-        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zeroable,
-        OptionTrait, pop_log, tick_to_sqrt_ratio
+        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zero, OptionTrait,
+        pop_log, tick_to_sqrt_ratio
     };
 
     #[test]
-    #[available_gas(4000000)]
     fn test_initialize_pool_works_uninitialized() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -116,7 +162,7 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         let (price, liquidity, fees_per_liquidity) = (
@@ -132,6 +178,10 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
+        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
         let event: ekubo::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
@@ -140,7 +190,6 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_same_token() {
         let core = deploy_core();
@@ -149,13 +198,12 @@ mod initialize_pool_tests {
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
         let core = deploy_core();
@@ -164,29 +212,27 @@ mod initialize_pool_tests {
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
 
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let core = deploy_core();
         let pool_key = PoolKey {
-            token0: Zeroable::zero(),
+            token0: Zero::zero(),
             token1: contract_address_const::<1>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
         let core = deploy_core();
@@ -195,13 +241,12 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 0,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(3000000)]
     fn test_initialize_pool_succeeds_max_tick_spacing() {
         let core = deploy_core();
         let pool_key = PoolKey {
@@ -209,13 +254,12 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(3000000)]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
         let core = deploy_core();
@@ -224,13 +268,12 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING + 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
     }
 
     #[test]
-    #[available_gas(4000000)]
     #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_already_initialized() {
         let core = deploy_core();
@@ -239,26 +282,25 @@ mod initialize_pool_tests {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
         core.initialize_pool(pool_key, i129 { mag: 1000, sign: true });
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_maybe_initialize_pool_twice() {
         let core = deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
-            fee: Zeroable::zero(),
+            fee: Zero::zero(),
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         };
         assert(
             core
-                .maybe_initialize_pool(pool_key, Zeroable::zero())
+                .maybe_initialize_pool(pool_key, Zero::zero())
                 .unwrap() == 0x100000000000000000000000000000000_u256,
             'price'
         );
@@ -279,21 +321,19 @@ mod initialize_pool_tests {
 
 
 mod initialized_ticks {
-    use debug::PrintTrait;
     use super::{
         setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds
+        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zero
     };
 
     #[test]
-    #[available_gas(30000000)]
     #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED',))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -306,13 +346,12 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_prev_initialized_tick_min_tick() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
@@ -326,27 +365,25 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED',))]
     fn test_next_initialized_tick_max_tick() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.core.next_initialized_tick(pool_key: setup.pool_key, from: max_tick(), skip_ahead: 0);
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_initialized_tick_max_tick_minus_one() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
@@ -362,41 +399,39 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_initialized_tick_exceeds_max_tick_spacing() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
                 ) == (max_tick(), false),
             'max tick limited'
         );
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_prev_initialized_tick_exceeds_min_tick_spacing() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (i129 { mag: Zeroable::zero(), sign: false }, false),
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                ) == (i129 { mag: Zero::zero(), sign: false }, false),
             'min tick 0'
         );
 
@@ -411,21 +446,20 @@ mod initialized_ticks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_next_prev_initialized_tick_none_initialized() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
-                ) == (Zeroable::zero(), false),
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                ) == (Zero::zero(), false),
             'prev from 0'
         );
 
@@ -433,7 +467,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 2
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 2
                 ) == (i129 { mag: 4994900, sign: true }, false), // 5014800 == 251*9950*2
             'prev from 0, skip 2'
         );
@@ -442,7 +476,7 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
                 ) == (i129 { mag: 12487250, sign: true }, false), // 2547200 == 251*9950*5
             'prev from 0, skip 5'
         );
@@ -451,7 +485,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
                 ) == (i129 { mag: 2487500, sign: false }, false),
             'next from 0'
         );
@@ -460,7 +494,7 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 1
                 ) == (i129 { mag: 4984950, sign: false }, false),
             'next from 0, skip 1'
         );
@@ -469,20 +503,19 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zeroable::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
                 ) == (i129 { mag: 14974750, sign: false }, false),
             'next from 0, skip 5'
         );
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_next_prev_initialized_tick_several_initialized() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 100000000);
@@ -644,8 +677,6 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use debug::PrintTrait;
-
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
         deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
@@ -656,22 +687,21 @@ mod locks {
         tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zeroable, PoolKey,
+        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zero, PoolKey,
         accumulate_as_fees, max_bounds, deploy_core, deploy_mock_token, SavedBalanceKey
     };
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_LOCKED', 'ENTRYPOINT_FAILED'))]
     fn test_error_from_action_not_locked() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         // should fail because not locked at all
-        setup.core.deposit(contract_address_const::<1>());
+        setup.core.pay(contract_address_const::<1>());
     }
 
     fn save_to_core(locker: ICoreLockerDispatcher, token: ContractAddress, amount: u128) {
@@ -698,7 +728,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_flash_borrow_balanced() {
         let core = deploy_core();
         let locker = deploy_locker(core);
@@ -731,7 +760,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_underpay() {
         let core = deploy_core();
@@ -751,7 +779,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_overpay() {
         let core = deploy_core();
@@ -771,10 +798,10 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
-            'INSUFFICIENT_RESERVES',
+            'INSUFFICIENT_BALANCE',
+            'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
@@ -800,31 +827,28 @@ mod locks {
 
 
     #[test]
-    #[available_gas(500000000)]
     fn test_assert_locker_id_call() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::AssertLockerId(0));
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_relock_call() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::Relock((0, 5)));
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
@@ -834,14 +858,13 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::AssertLockerId(1));
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'RL_INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
@@ -851,20 +874,19 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         setup.locker.call(Action::Relock((1, 5)));
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_zero_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
         update_position(
             setup: setup,
@@ -872,7 +894,7 @@ mod locks {
                 lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
                 upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }
             },
-            liquidity_delta: Zeroable::zero(),
+            liquidity_delta: Zero::zero(),
             recipient: contract_address_const::<42>()
         );
         assert(
@@ -898,7 +920,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -912,8 +933,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         update_position(
@@ -928,7 +949,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -942,8 +962,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         update_position(
@@ -959,7 +979,6 @@ mod locks {
 
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'BOUNDS_TICK_SPACING',
@@ -973,8 +992,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let delta = update_position(
@@ -982,22 +1001,21 @@ mod locks {
             bounds: Bounds {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
-            liquidity_delta: Zeroable::zero(),
+            liquidity_delta: Zero::zero(),
             recipient: contract_address_const::<42>()
         );
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1');
     }
 
 
     #[test]
-    #[available_gas(500000000)]
     fn test_small_amount_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1017,7 +1035,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     #[should_panic(
         expected: (
             'NOT_EXTENSION',
@@ -1031,8 +1048,8 @@ mod locks {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1056,7 +1073,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_accumulate_fees_per_liquidity_success() {
         let core = deploy_core();
         let (token0, token1) = deploy_two_mock_tokens();
@@ -1070,7 +1086,7 @@ mod locks {
             extension: locker.contract_address,
         };
 
-        core.initialize_pool(pool_key, Zeroable::zero());
+        core.initialize_pool(pool_key, Zero::zero());
 
         token0.increase_balance(locker.contract_address, 10000000);
         token1.increase_balance(locker.contract_address, 10000000);
@@ -1104,13 +1120,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_larger_amount_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000);
@@ -1131,13 +1146,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1159,13 +1173,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_half_burn() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1211,13 +1224,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(500000000)]
     fn test_full_range_liquidity_add_and_full_burn() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: 1,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup
@@ -1263,26 +1275,25 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(10000000)]
     fn test_swap_token0_zero_amount_zero_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let delta = swap(
             setup,
-            amount: Zeroable::zero(), // input 0 token0, price decreasing
+            amount: Zero::zero(), // input 0 token0, price decreasing
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1295,13 +1306,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_input_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1317,8 +1327,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1331,13 +1341,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_input_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
@@ -1351,8 +1360,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1365,13 +1374,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_output_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
@@ -1385,8 +1393,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1399,13 +1407,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_output_no_liquidity() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         let sqrt_ratio_limit = 0x100000000000000000000000000000000_u256 / u256 { low: 2, high: 0 };
@@ -1419,8 +1426,8 @@ mod locks {
             skip_ahead: 0,
         );
 
-        assert(delta.amount0 == Zeroable::zero(), 'amount0');
-        assert(delta.amount1 == Zeroable::zero(), 'amount1_delta');
+        assert(delta.amount0 == Zero::zero(), 'amount0');
+        assert(delta.amount1 == Zero::zero(), 'amount1_delta');
 
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
@@ -1433,13 +1440,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(100000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1486,7 +1492,6 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(100000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross_example() {
         let FEE_THIRTY_BIPS = 1020847100762815411640772995208708096;
         let TICK_SPACING_60_BIPS = 5982;
@@ -1499,7 +1504,7 @@ mod locks {
             fee: FEE_THIRTY_BIPS,
             tick_spacing: TICK_SPACING_60_BIPS,
             initial_tick: nearby_starting_tick,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 717193642384000);
@@ -1546,13 +1551,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 1000000000);
@@ -1599,13 +1603,12 @@ mod locks {
 
 
     #[test]
-    #[available_gas(40000000)]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1655,13 +1658,12 @@ mod locks {
 
 
     #[test]
-    #[available_gas(60000000)]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1709,13 +1711,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1762,13 +1763,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1814,13 +1814,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(50000000)]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
@@ -1871,13 +1870,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(40000000)]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -1925,13 +1923,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_swap_exact_input_token0_multiple_ticks_crossed_hit_limit() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -2008,13 +2005,12 @@ mod locks {
     }
 
     #[test]
-    #[available_gas(300000000)]
     fn test_swap_exact_input_token1_multiple_ticks_crossed_hit_limit() {
         let setup = setup_pool(
             fee: FEE_ONE_PERCENT,
             tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zeroable::zero(),
-            extension: Zeroable::zero(),
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
         );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -2101,14 +2097,13 @@ mod save_load_tests {
     };
 
     #[test]
-    #[available_gas(30000000)]
     fn test_save_load_1_token() {
         let core = deploy_core();
         let token = deploy_mock_token();
         let locker = deploy_locker(core);
 
         token.increase_balance(locker.contract_address, 1);
-        let cache_key: u64 = 5678;
+        let cache_key: felt252 = 5678;
 
         set_contract_address(contract_address_const::<1234567>());
 

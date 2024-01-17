@@ -1,10 +1,9 @@
-use debug::PrintTrait;
+use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, exp, calculate_c,
     constants
 };
 use ekubo::interfaces::core::{Delta};
-use ekubo::math::string::{append, to_decimal};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
 
@@ -20,9 +19,8 @@ const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
 mod SaleRateTest {
     use super::{
-        calculate_sale_rate, append, to_decimal, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
-        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
-        SIXTEEN_POW_EIGHT
+        calculate_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT
     };
 
 
@@ -30,15 +28,7 @@ mod SaleRateTest {
         let sale_rate = calculate_sale_rate(
             amount: amount, expiry_time: expiry_time, current_time: current_time
         );
-        assert(
-            sale_rate == expected,
-            append(
-                append(append('e.', to_decimal(expiry_time.into()).unwrap()).unwrap(), '.c.')
-                    .unwrap(),
-                to_decimal(current_time.into()).unwrap()
-            )
-                .unwrap()
-        );
+        assert(sale_rate == expected, 'sale_rate');
     }
 
     #[test]
@@ -165,7 +155,7 @@ mod RewardRateTest {
 }
 
 mod TWAMMMathTest {
-    use debug::PrintTrait;
+    use core::debug::PrintTrait;
     use super::{calculate_c, exp, tick_to_sqrt_ratio, i129, constants, SIXTEEN_POW_SEVEN};
 
 

@@ -1,6 +1,6 @@
-use integer::{u256_from_felt252, u128_wrapping_sub};
+use core::integer::{u256_from_felt252, u128_wrapping_sub};
+use core::traits::{Into};
 use starknet::{ContractAddress, ContractAddressIntoFelt252};
-use traits::{Into};
 
 // Allows comparing contract addresses as if they are integers
 impl ContractAddressOrder of PartialOrd<ContractAddress> {

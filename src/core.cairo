@@ -1,6 +1,12 @@
 #[starknet::contract]
 mod Core {
-    use array::{ArrayTrait, SpanTrait};
+    use core::array::{ArrayTrait, SpanTrait};
+    use core::hash::{LegacyHash};
+    use core::num::traits::{Zero};
+    use core::option::{Option, OptionTrait};
+    use core::traits::{Into};
+    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
         LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -22,7 +28,6 @@ mod Core {
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
         constants as tick_constants
     };
-    use ekubo::owner::{check_owner_only};
     use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
@@ -34,18 +39,17 @@ mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
-    use hash::{LegacyHash};
-    use option::{Option, OptionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, replace_class_syscall, storage_base_address_from_felt252
     };
-    use traits::{Into};
-    use zeroable::{Zeroable};
+
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl Ownable = owned_component::OwnableImpl<ContractState>;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
-
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
@@ -53,8 +57,6 @@ mod Core {
     struct Storage {
         // withdrawal fees collected, controlled by the owner
         protocol_fees_collected: LegacyMap<ContractAddress, u128>,
-        // the last recorded balance of each token, used for checking payment
-        reserves: LegacyMap<ContractAddress, u256>,
         // transient state of the lockers, which always starts and ends at zero
         lock_count: u32,
         // the rest of transient state is accessed directly using Store::read and Store::write to save on hashes
@@ -70,9 +72,15 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<SavedBalanceKey, u128>,
-        // upgradable component storage (empty)
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        self.initialize_owned(owner);
     }
 
     #[derive(starknet::Event, Drop)]
@@ -148,6 +156,7 @@ mod Core {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
@@ -209,7 +218,7 @@ mod Core {
             ref self: ContractState, id: u32, token_address: ContractAddress, delta: i129
         ) {
             let delta_storage_location = storage_base_address_from_felt252(
-                pedersen::pedersen(id.into(), token_address.into())
+                core::pedersen::pedersen(id.into(), token_address.into())
             );
             let current: i129 = Store::read(0, delta_storage_location).expect('FAILED_READ_DELTA');
             let next = current + delta;
@@ -352,6 +361,13 @@ mod Core {
     }
 
     #[external(v0)]
+    impl CoreHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::core::Core");
+        }
+    }
+
+    #[external(v0)]
     impl Core of ICore<ContractState> {
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
             self.protocol_fees_collected.read(token)
@@ -375,10 +391,6 @@ mod Core {
             self: @ContractState, pool_key: PoolKey
         ) -> FeesPerLiquidity {
             self.pool_fees.read(pool_key)
-        }
-
-        fn get_reserves(self: @ContractState, token: ContractAddress) -> u256 {
-            self.reserves.read(token)
         }
 
         fn get_pool_tick_liquidity_delta(
@@ -453,13 +465,15 @@ mod Core {
             token: ContractAddress,
             amount: u128
         ) {
-            check_owner_only();
+            self.require_owner();
 
             let collected: u128 = self.protocol_fees_collected.read(token);
             self.protocol_fees_collected.write(token, collected - amount);
-            self.reserves.write(token, self.reserves.read(token) - amount.into());
 
-            IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into());
+            assert(
+                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
@@ -475,7 +489,7 @@ mod Core {
             assert(self.get_nonzero_delta_count(id) == 0, 'NOT_ZEROED');
 
             self.lock_count.write(id);
-            self.set_locker_address(id, Zeroable::zero());
+            self.set_locker_address(id, Zero::zero());
 
             result
         }
@@ -488,15 +502,14 @@ mod Core {
         ) {
             let (id, _) = self.require_locker();
 
-            let res = self.reserves.read(token_address);
-            let amount_large: u256 = amount.into();
-            assert(res >= amount_large, 'INSUFFICIENT_RESERVES');
-            self.reserves.write(token_address, res - amount_large);
-
             // tracks the delta for the given token address
             self.account_delta(id, token_address, i129 { mag: amount, sign: false });
 
-            IERC20Dispatcher { contract_address: token_address }.transfer(recipient, amount_large);
+            assert(
+                IERC20Dispatcher { contract_address: token_address }
+                    .transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED'
+            );
         }
 
         fn save(ref self: ContractState, key: SavedBalanceKey, amount: u128) -> u128 {
@@ -514,26 +527,31 @@ mod Core {
             balance_next
         }
 
-        fn deposit(ref self: ContractState, token_address: ContractAddress) -> u128 {
-            let (id, _) = self.require_locker();
+        fn pay(ref self: ContractState, token_address: ContractAddress) {
+            let (id, payer) = self.require_locker();
 
-            let balance = IERC20Dispatcher { contract_address: token_address }
-                .balanceOf(get_contract_address());
+            let token = IERC20Dispatcher { contract_address: token_address };
 
-            let reserve = self.reserves.read(token_address);
-            // should never happen, assuming token is well-behaving, e.g. not rebasing or collecting fees on transfers from sender
-            assert(balance >= reserve, 'BALANCE_LT_RESERVE');
-            let delta = balance - reserve;
-            // the delta is limited to u128
-            assert(delta.high == 0, 'DELTA_EXCEEDED_MAX');
+            let this_address = get_contract_address();
+            let allowance = token.allowance(payer, this_address);
+            let balance_before = token.balanceOf(this_address);
+
+            assert(
+                token.transferFrom(sender: payer, recipient: this_address, amount: allowance),
+                'TOKEN_TRANSFERFROM_FAILED'
+            );
+
+            let delta = token.balanceOf(this_address) - balance_before;
+
+            assert(delta.high.is_zero(), 'DELTA_TOO_LARGE');
+            assert(delta == allowance, 'TRANSFER_FROM_INVARIANT');
 
             self.account_delta(id, token_address, i129 { mag: delta.low, sign: true });
-            self.reserves.write(token_address, balance);
-
-            delta.low
         }
 
-        fn load(ref self: ContractState, token: ContractAddress, salt: u64, amount: u128) -> u128 {
+        fn load(
+            ref self: ContractState, token: ContractAddress, salt: felt252, amount: u128
+        ) -> u128 {
             let id = self.get_current_locker_id();
 
             // the contract calling load does not have to be the locker! 
@@ -561,7 +579,7 @@ mod Core {
             if (price.sqrt_ratio.is_zero()) {
                 Option::Some(self.initialize_pool(pool_key, initial_tick))
             } else {
-                Option::None(())
+                Option::None
             }
         }
 
@@ -721,7 +739,7 @@ mod Core {
                     'MUST_COLLECT_FEES'
                 );
                 // delete the position from storage
-                self.positions.write((pool_key, position_key), Zeroable::zero());
+                self.positions.write((pool_key, position_key), Zero::zero());
             }
 
             self.update_tick(pool_key, params.bounds.lower, params.liquidity_delta, false);
@@ -749,7 +767,7 @@ mod Core {
         }
 
         fn collect_fees(
-            ref self: ContractState, pool_key: PoolKey, salt: u64, bounds: Bounds
+            ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
@@ -820,7 +838,7 @@ mod Core {
 
             let mut liquidity: u128 = Store::read(0, liquidity_storage_address)
                 .expect('FAILED_READ_POOL_LIQUIDITY');
-            let mut calculated_amount: u128 = Zeroable::zero();
+            let mut calculated_amount: u128 = Zero::zero();
 
             let fees_per_liquidity_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(selector!("pool_fees"), pool_key)
@@ -836,7 +854,7 @@ mod Core {
 
             let tick_bitmap_storage_prefix = LegacyHash::hash(selector!("tick_bitmaps"), pool_key);
 
-            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None(());
+            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None;
 
             loop {
                 if (amount_remaining.is_zero()) {

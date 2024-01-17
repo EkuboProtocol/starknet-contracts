@@ -1,9 +1,9 @@
+use core::integer::{u256_wide_mul, u256_as_non_zero};
+use core::num::traits::{Zero};
+use core::option::{OptionTrait};
+use core::traits::{Into};
 use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::i129;
-use integer::{u256_wide_mul, u256_as_non_zero};
-use option::{OptionTrait};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
@@ -18,7 +18,7 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO');
 
     if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
-        return Zeroable::zero();
+        return Zero::zero();
     }
 
     let result_0 = muldiv(
@@ -47,7 +47,7 @@ fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     assert(sqrt_ratio_lower.is_non_zero(), 'NONZERO');
 
     if (liquidity.is_zero() | (sqrt_ratio_lower == sqrt_ratio_upper)) {
-        return Zeroable::zero();
+        return Zero::zero();
     }
 
     let result = u256_wide_mul(liquidity.into(), sqrt_ratio_upper - sqrt_ratio_lower);

@@ -1,24 +1,9 @@
-use debug::PrintTrait;
+use core::num::traits::{Zero};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::math::swap::{no_op_swap_result, swap_result, is_price_increasing, SwapResult};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::types::i129::{i129};
-use zeroable::{Zeroable};
-
-impl SwapResultPrintTrait of PrintTrait<SwapResult> {
-    fn print(self: SwapResult) {
-        'consumed_amount:'.print();
-        self.consumed_amount.print();
-        'sqrt_ratio_next:'.print();
-        self.sqrt_ratio_next.print();
-        'calculated_amount:'.print();
-        self.calculated_amount.print();
-        'fee_amount:'.print();
-        self.fee_amount.print();
-    }
-}
-
 
 #[test]
 fn test_is_price_increasing_cases() {
@@ -36,10 +21,10 @@ fn test_no_op_swap_result() {
         no_op_swap_result(
             0_u256
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(),
+            consumed_amount: Zero::zero(),
             sqrt_ratio_next: 0_u256,
-            calculated_amount: Zeroable::zero(),
-            fee_amount: Zeroable::zero(),
+            calculated_amount: Zero::zero(),
+            fee_amount: Zero::zero(),
         },
         'no-op'
     );
@@ -47,10 +32,10 @@ fn test_no_op_swap_result() {
         no_op_swap_result(
             1_u256
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(),
+            consumed_amount: Zero::zero(),
             sqrt_ratio_next: 1_u256,
-            calculated_amount: Zeroable::zero(),
-            fee_amount: Zeroable::zero(),
+            calculated_amount: Zero::zero(),
+            fee_amount: Zero::zero(),
         },
         'no-op'
     );
@@ -58,10 +43,10 @@ fn test_no_op_swap_result() {
         no_op_swap_result(
             0x100000000000000000000000000000000_u256
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(),
+            consumed_amount: Zero::zero(),
             sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
-            calculated_amount: Zeroable::zero(),
-            fee_amount: Zeroable::zero(),
+            calculated_amount: Zero::zero(),
+            fee_amount: Zero::zero(),
         },
         'no-op'
     );
@@ -69,10 +54,10 @@ fn test_no_op_swap_result() {
         no_op_swap_result(
             u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff }
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(),
+            consumed_amount: Zero::zero(),
             sqrt_ratio_next: u256 { low: 0, high: 0xffffffffffffffffffffffffffffffff },
-            calculated_amount: Zeroable::zero(),
-            fee_amount: Zeroable::zero(),
+            calculated_amount: Zero::zero(),
+            fee_amount: Zero::zero(),
         },
         'no-op'
     );
@@ -85,14 +70,14 @@ fn test_swap_zero_amount_token0() {
             sqrt_ratio: 0x100000000000000000000000000000000_u256,
             liquidity: 100000,
             sqrt_ratio_limit: u256 { high: 0, low: 0 },
-            amount: Zeroable::zero(),
+            amount: Zero::zero(),
             is_token1: false,
             fee: 0,
         ) == SwapResult {
-            consumed_amount: Zeroable::zero(),
+            consumed_amount: Zero::zero(),
             sqrt_ratio_next: 0x100000000000000000000000000000000_u256,
-            calculated_amount: Zeroable::zero(),
-            fee_amount: Zeroable::zero(),
+            calculated_amount: Zero::zero(),
+            fee_amount: Zero::zero(),
         },
         'result'
     );
@@ -104,7 +89,7 @@ fn test_swap_zero_amount_token1() {
         sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity: 100000,
         sqrt_ratio_limit: u256 { high: 2, low: 0 },
-        amount: Zeroable::zero(),
+        amount: Zero::zero(),
         is_token1: true,
         fee: 0,
     );

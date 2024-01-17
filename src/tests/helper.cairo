@@ -1,7 +1,10 @@
-use array::{Array, ArrayTrait};
+use core::array::{Array, ArrayTrait};
 
-use debug::PrintTrait;
-use ekubo::asset_recovery::{IAssetRecoveryDispatcher, AssetRecovery};
+use core::integer::{u256, u256_from_felt252, BoundedInt};
+use core::num::traits::{Zero};
+use core::option::{Option, OptionTrait};
+use core::result::{Result, ResultTrait};
+use core::traits::{Into, TryInto};
 use ekubo::core::{Core};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::extensions::oracle::{Oracle};
@@ -12,66 +15,50 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
 use ekubo::math::contract_address::ContractAddressOrder;
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
+use ekubo::mock_erc20::{
+    MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait
+};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::positions::{Positions};
-use ekubo::quoter::{IQuoterDispatcher, Quoter};
-use ekubo::simple_erc20::{SimpleERC20};
-use ekubo::simple_swapper::{ISimpleSwapperDispatcher, SimpleSwapper};
+use ekubo::router::{IRouterDispatcher, Router};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
     UpdatePositionParameters, SwapParameters
 };
-use ekubo::tests::mocks::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
 };
-use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable, IMockUpgradeableDispatcher};
+use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::i129;
 
 use ekubo::types::keys::PoolKey;
-use integer::{u256, u256_from_felt252, BoundedInt};
-use option::{Option, OptionTrait};
-use result::{Result, ResultTrait};
 use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_contract_address};
 
 use starknet::{
     get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
 };
-use traits::{Into, TryInto};
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
-fn deploy_asset_recovery() -> IAssetRecoveryDispatcher {
-    let constructor_args: Array<felt252> = ArrayTrait::new();
-    let (address, _) = deploy_syscall(
-        AssetRecovery::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('asset recovery deploy');
-    return IAssetRecoveryDispatcher { contract_address: address };
+fn deploy_mock_token() -> IMockERC20Dispatcher {
+    deploy_mock_token_with_balance(Zero::zero(), Zero::zero())
 }
 
-fn deploy_mock_token() -> IMockERC20Dispatcher {
-    let constructor_args: Array<felt252> = ArrayTrait::new();
-    let (token_address, _) = deploy_syscall(
+fn deploy_mock_token_with_balance(
+    owner: ContractAddress, starting_balance: u128
+) -> IMockERC20Dispatcher {
+    let constructor_args: Array<felt252> = array![owner.into(), starting_balance.into()];
+    let (address, _) = deploy_syscall(
         MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('token deploy failed');
-    return IMockERC20Dispatcher { contract_address: token_address };
-}
-
-fn deploy_simple_erc20(owner: ContractAddress) -> IERC20Dispatcher {
-    let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@owner, ref constructor_args);
-    let (token_address, _) = deploy_syscall(
-        SimpleERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('simpleerc20 deploy');
-    return IERC20Dispatcher { contract_address: token_address };
+    return IMockERC20Dispatcher { contract_address: address };
 }
 
 fn deploy_owned_nft(
@@ -105,6 +92,7 @@ fn deploy_oracle(core: ICoreDispatcher) -> IExtensionDispatcher {
 
 fn deploy_limit_orders(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
     Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, 'limit_orders://'), ref constructor_args);
 
     let (address, _) = deploy_syscall(
@@ -142,6 +130,7 @@ fn deploy_mock_extension(
 
 fn deploy_twamm(core: ICoreDispatcher) -> IExtensionDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
     Serde::serialize(@core.contract_address, ref constructor_args);
     Serde::serialize(@OwnedNFT::TEST_CLASS_HASH, ref constructor_args);
     Serde::serialize(@'twamm://', ref constructor_args);
@@ -163,9 +152,14 @@ struct SetupPoolResult {
     locker: ICoreLockerDispatcher
 }
 
+fn default_owner() -> ContractAddress {
+    contract_address_const::<12121212121212>()
+}
 
 fn deploy_core() -> ICoreDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
+
     let (address, _) = deploy_syscall(
         Core::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
@@ -174,28 +168,16 @@ fn deploy_core() -> ICoreDispatcher {
 }
 
 
-fn deploy_quoter(core: ICoreDispatcher) -> IQuoterDispatcher {
+fn deploy_router(core: ICoreDispatcher) -> IRouterDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
     Serde::serialize(@core, ref constructor_args);
 
     let (address, _) = deploy_syscall(
-        Quoter::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
+        Router::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
-        .expect('rf deploy failed');
+        .expect('router deploy failed');
 
-    IQuoterDispatcher { contract_address: address }
-}
-
-fn deploy_simple_swapper(core: ICoreDispatcher) -> ISimpleSwapperDispatcher {
-    let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@core, ref constructor_args);
-
-    let (address, _) = deploy_syscall(
-        SimpleSwapper::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
-    )
-        .expect('ss deploy failed');
-
-    ISimpleSwapperDispatcher { contract_address: address }
+    IRouterDispatcher { contract_address: address }
 }
 
 fn deploy_locker(core: ICoreDispatcher) -> ICoreLockerDispatcher {
@@ -220,7 +202,9 @@ fn deploy_positions_custom_uri(
     core: ICoreDispatcher, token_uri_base: felt252
 ) -> IPositionsDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(@(core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args);
+    Serde::serialize(
+        @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base), ref constructor_args
+    );
 
     let (address, _) = deploy_syscall(
         Positions::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
@@ -277,13 +261,14 @@ fn setup_pool_with_core(
     SetupPoolResult { token0, token1, pool_key, core, locker }
 }
 
-fn deploy_mock_upgradeable() -> IMockUpgradeableDispatcher {
+fn deploy_mock_upgradeable() -> IUpgradeableDispatcher {
     let mut constructor_args: Array<felt252> = ArrayTrait::new();
+    Serde::serialize(@default_owner(), ref constructor_args);
     let (address, _) = deploy_syscall(
         MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(), 0, constructor_args.span(), true
     )
         .expect('upgradeable deploy failed');
-    return IMockUpgradeableDispatcher { contract_address: address };
+    return IUpgradeableDispatcher { contract_address: address };
 }
 
 #[derive(Drop, Copy)]
@@ -316,12 +301,6 @@ fn get_balances(
         token0_balance_locker,
         token1_balance_locker,
     }
-}
-
-
-// this is only shown in the tests, but hidden in the deployed code since we only check against the hash
-fn core_owner() -> ContractAddress {
-    contract_address_const::<0x03F60aFE30844F556ac1C674678Ac4447840b1C6c26854A2DF6A8A3d2C015610>()
 }
 
 
@@ -396,11 +375,11 @@ fn update_position_inner(
         ) {
         ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Relock => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::UpdatePosition(delta) => {
             let after: Balances = get_balances(
@@ -415,23 +394,23 @@ fn update_position_inner(
         },
         ActionResult::Swap(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::SaveBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::LoadBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::AccumulateAsFees(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::FlashBorrow(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         }
     }
 }
@@ -522,15 +501,15 @@ fn swap_inner(
         ) {
         ActionResult::AssertLockerId => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Relock => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::UpdatePosition(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::Swap(delta) => {
             let after: Balances = get_balances(
@@ -545,19 +524,19 @@ fn swap_inner(
         },
         ActionResult::SaveBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::LoadBalance(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::AccumulateAsFees(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         },
         ActionResult::FlashBorrow(_) => {
             assert(false, 'unexpected');
-            Zeroable::zero()
+            Zero::zero()
         }
     }
 }

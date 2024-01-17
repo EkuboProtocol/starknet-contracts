@@ -1,8 +1,9 @@
+use core::hash::{LegacyHash};
+use core::num::traits::{Zero};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-use hash::{LegacyHash};
 use starknet::{contract_address_const};
 
 fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
@@ -16,11 +17,11 @@ fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
 #[test]
 fn test_pool_key_hash_differs_for_any_field_or_state_change() {
     let base = PoolKey {
-        token0: Zeroable::zero(),
-        token1: Zeroable::zero(),
-        fee: Zeroable::zero(),
-        tick_spacing: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        token0: Zero::zero(),
+        token1: Zero::zero(),
+        fee: Zero::zero(),
+        tick_spacing: Zero::zero(),
+        extension: Zero::zero(),
     };
 
     let mut other_token0 = base;
@@ -64,9 +65,9 @@ fn test_pool_key_check_valid_order_wrong_order() {
     PoolKey {
         token0: contract_address_const::<2>(),
         token1: contract_address_const::<0>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: 1,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 }
@@ -77,9 +78,9 @@ fn test_pool_key_check_valid_order_same_token() {
     PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<1>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: 1,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 }
@@ -90,9 +91,9 @@ fn test_pool_key_check_non_zero() {
     PoolKey {
         token0: contract_address_const::<0>(),
         token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: 1,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 }
@@ -103,9 +104,9 @@ fn test_pool_key_check_tick_spacing_non_zero() {
     PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
-        tick_spacing: Zeroable::zero(),
-        extension: Zeroable::zero(),
+        fee: Zero::zero(),
+        tick_spacing: Zero::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 }
@@ -116,9 +117,9 @@ fn test_pool_key_check_tick_spacing_max() {
     PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING + 1,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 }
@@ -128,18 +129,18 @@ fn test_pool_key_check_valid_is_valid() {
     PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: 1,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 
     PoolKey {
         token0: contract_address_const::<1>(),
         token1: contract_address_const::<2>(),
-        fee: Zeroable::zero(),
+        fee: Zero::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 
@@ -148,7 +149,7 @@ fn test_pool_key_check_valid_is_valid() {
         token1: contract_address_const::<2>(),
         fee: 0xffffffffffffffffffffffffffffffff,
         tick_spacing: tick_constants::MAX_TICK_SPACING,
-        extension: Zeroable::zero(),
+        extension: Zero::zero(),
     }
         .check_valid();
 
@@ -173,7 +174,7 @@ fn test_pool_key_hash() {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         }
     );
     let hash_with_different_extension = LegacyHash::<
@@ -197,7 +198,7 @@ fn test_pool_key_hash() {
             token1: contract_address_const::<2>(),
             fee: 1,
             tick_spacing: 1,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         }
     );
     let hash_with_different_tick_spacing = LegacyHash::<
@@ -209,7 +210,7 @@ fn test_pool_key_hash() {
             token1: contract_address_const::<2>(),
             fee: 0,
             tick_spacing: 2,
-            extension: Zeroable::zero(),
+            extension: Zero::zero(),
         }
     );
     assert(hash != hash_with_different_extension, 'not equal');
@@ -260,9 +261,9 @@ fn test_pool_key_hash_result_reverse() {
 #[test]
 fn test_position_key_hash_differs_for_any_field_or_state_change() {
     let base = PositionKey {
-        salt: Zeroable::zero(),
-        owner: Zeroable::zero(),
-        bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() }
+        salt: Zero::zero(),
+        owner: Zero::zero(),
+        bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() }
     };
 
     let mut other_salt = base;
@@ -301,7 +302,7 @@ fn test_position_key_hash() {
         PositionKey {
             salt: 0,
             owner: contract_address_const::<1>(),
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
+            bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         }
     );
 
@@ -312,7 +313,7 @@ fn test_position_key_hash() {
         PositionKey {
             salt: 1,
             owner: contract_address_const::<1>(),
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
+            bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         }
     );
 
@@ -323,7 +324,7 @@ fn test_position_key_hash() {
         PositionKey {
             salt: 1,
             owner: contract_address_const::<1>(),
-            bounds: Bounds { lower: Zeroable::zero(), upper: Zeroable::zero() },
+            bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         }
     );
     assert(hash != hash_with_diff_salt, 'not equal');

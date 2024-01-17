@@ -6,26 +6,30 @@ trait ITokenRegistry<ContractState> {
 }
 
 
+// A simplified interface for a fungible token standard. 
+#[starknet::interface]
+trait IERC20Metadata<TStorage> {
+    fn name(self: @TStorage) -> felt252;
+    fn symbol(self: @TStorage) -> felt252;
+    fn decimals(self: @TStorage) -> u8;
+    fn totalSupply(self: @TStorage) -> u256;
+}
+
+
 #[starknet::contract]
 mod TokenRegistry {
+    use core::num::traits::{Zero};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use starknet::{ContractAddress, get_contract_address, get_caller_address};
-    use super::{IERC20Dispatcher, ITokenRegistry};
+    use super::{
+        IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
+    };
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-    }
-
-    // A simplified interface for a fungible token standard. 
-    #[starknet::interface]
-    trait IERC20Metadata<TStorage> {
-        fn name(self: @TStorage) -> felt252;
-        fn symbol(self: @TStorage) -> felt252;
-        fn decimals(self: @TStorage) -> u8;
-        fn totalSupply(self: @TStorage) -> u256;
     }
 
     #[event]
@@ -78,8 +82,6 @@ mod TokenRegistry {
                 metadata.name(), metadata.symbol(), metadata.decimals(), metadata.totalSupply()
             );
 
-            // todo: validate the name and symbol? or simply do filtering off chain
-
             assert(decimals < 78, 'Decimals too large');
             assert(total_supply.high.is_zero(), 'Total supply exceeds u128');
 
@@ -112,19 +114,13 @@ mod TokenRegistry {
                 (ContractAddress, IERC20Dispatcher, u128)
             >(core, data);
 
-            let reserves = core.get_reserves(token.contract_address);
             let core_balance = token.balanceOf(core.contract_address);
-            let already_paid: u128 = (core_balance - reserves)
-                .try_into()
-                .expect('Core balance exceeds u128');
 
-            token.transfer(core.contract_address, amount.into());
+            token.approve(core.contract_address, amount.into());
 
-            let amount_paid = core.deposit(token.contract_address);
+            core.pay(token.contract_address);
 
-            assert(amount_paid == (already_paid + amount), 'Unexpected deposit behavior');
-
-            core.withdraw(token.contract_address, refund_to, amount_paid);
+            core.withdraw(token.contract_address, refund_to, amount);
 
             Default::default()
         }
