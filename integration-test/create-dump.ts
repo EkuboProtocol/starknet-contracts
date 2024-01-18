@@ -15,10 +15,10 @@ import { getAccounts } from "./accounts";
 
 (async function () {
   const provider = new DevnetProvider();
-  const accounts = getAccounts(provider);
+  const [deployer] = getAccounts(provider);
 
   console.log("Deploying tokens");
-  const simpleTokenContractDeclare = await accounts[0].declare(
+  const simpleTokenContractDeclare = await deployer.declare(
     {
       contract: MockERC20 as any,
       casm: MockERC20CASM as any,
@@ -28,16 +28,22 @@ import { getAccounts } from "./accounts";
 
   const {
     contract_address: [tokenAddressA],
-  } = await accounts[0].deploy({
+  } = await deployer.deploy({
     classHash: simpleTokenContractDeclare.class_hash,
-    constructorCalldata: [accounts[0].address, 0xffffffffffffffffffffffffffffffffn],
+    constructorCalldata: [
+      deployer.address,
+      0xffffffffffffffffffffffffffffffffn,
+    ],
   });
 
   const {
     contract_address: [tokenAddressB],
-  } = await accounts[0].deploy({
+  } = await deployer.deploy({
     classHash: simpleTokenContractDeclare.class_hash,
-    constructorCalldata: [accounts[0].address, 0xffffffffffffffffffffffffffffffffn],
+    constructorCalldata: [
+      deployer.address,
+      0xffffffffffffffffffffffffffffffffn,
+    ],
   });
 
   const [token0, token1] =
@@ -46,17 +52,18 @@ import { getAccounts } from "./accounts";
       : [tokenAddressB, tokenAddressA];
 
   console.log("Deploying core");
-  const coreResponse = await accounts[0].declareAndDeploy(
+  const coreResponse = await deployer.declareAndDeploy(
     {
       contract: CoreCompiledContract as any,
       casm: CoreCompiledContractCASM as any,
+      constructorCalldata: [deployer.address],
     },
     { maxFee: 10000000000000 } // workaround
   );
 
   console.log("Declaring NFTs");
 
-  const declareNftResponse = await accounts[0].declare(
+  const declareNftResponse = await deployer.declare(
     {
       contract: OwnedNFTContract as any,
       casm: OwnedNFTContractCASM as any,
@@ -65,6 +72,7 @@ import { getAccounts } from "./accounts";
   );
 
   const positionsConstructorCalldata = [
+    deployer.address,
     coreResponse.deploy.address,
     declareNftResponse.class_hash,
     `0x${Buffer.from("https://f.ekubo.org/", "ascii").toString("hex")}`,
@@ -72,7 +80,7 @@ import { getAccounts } from "./accounts";
 
   console.log("Deploying positions");
 
-  const positionsResponse = await accounts[0].declareAndDeploy(
+  const positionsResponse = await deployer.declareAndDeploy(
     {
       contract: PositionsCompiledContract as any,
       casm: PositionsCompiledContractCASM as any,
@@ -84,14 +92,14 @@ import { getAccounts } from "./accounts";
   const positions = new Contract(
     PositionsCompiledContract.abi,
     positionsResponse.deploy.address,
-    accounts[0]
+    deployer
   );
 
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
   console.log("Deploying swapper");
 
-  const routerResponse = await accounts[0].declareAndDeploy(
+  const routerResponse = await deployer.declareAndDeploy(
     {
       contract: Router as any,
       casm: RouterCASM as any,
