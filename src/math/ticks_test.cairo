@@ -3,9 +3,18 @@ use core::num::traits::{Zero};
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
-    constants, internal as ticks_internal
+    constants, internal as ticks_internal, exp2_fractional
 };
 use ekubo::types::i129::i129;
+
+#[test]
+fn test_exp2_fractional() {
+    assert_eq!(exp2_fractional(0), 0x100000000000000000000000000000000);
+    // 2^1
+    assert_eq!(exp2_fractional(0x10000000000000000), 0x200000000000000000000000000000000 - 1);
+    // 2^0.5
+    assert_eq!(exp2_fractional(0x08000000000000000), 481231938336009023090067544955250113854);
+}
 
 #[test]
 fn zero_tick() {

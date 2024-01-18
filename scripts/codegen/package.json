@@ -6,7 +6,8 @@
   "scripts": {
     "gen-exp2": "ts-node gen-exp2.ts",
     "gen-mask": "ts-node gen-mask.ts",
-    "gen-tick-math": "ts-node gen-tick-math.ts"
+    "gen-tick-math": "ts-node gen-tick-math.ts",
+    "gen-exp2-fractional": "ts-node gen-exp2-fractional.ts"
   },
   "author": "Moody Salem",
   "license": "ISC",

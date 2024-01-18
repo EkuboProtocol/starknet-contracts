@@ -384,6 +384,231 @@ fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     return ratio;
 }
 
+
+fn exp2_fractional(x: u128) -> u256 {
+    let mut ratio = 0x100000000000000000000000000000000_u256;
+    if ((x & 0x1) != 0) {
+        ratio = u256 { high: 0, low: 0xffffffffffffffff4e8de8082e308654 };
+    }
+    if ((x & 0x2) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffffe9d1bd0105c610ca9);
+    }
+    if ((x & 0x4) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffffd3a37a020b8c21955);
+    }
+    if ((x & 0x8) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffffa746f4041718432b1);
+    }
+    if ((x & 0x10) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffff4e8de8082e3086581);
+    }
+    if ((x & 0x20) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffffe9d1bd0105c610cb7d);
+    }
+    if ((x & 0x40) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffffd3a37a020b8c2198e5);
+    }
+    if ((x & 0x80) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffffa746f404171843397b);
+    }
+    if ((x & 0x100) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffff4e8de8082e308691b6);
+    }
+    if ((x & 0x200) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffe9d1bd0105c610d9e6a);
+    }
+    if ((x & 0x400) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffd3a37a020b8c21d28d0);
+    }
+    if ((x & 0x800) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffffa746f40417184420190);
+    }
+    if ((x & 0x1000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffff4e8de8082e308a2c2de);
+    }
+    if ((x & 0x2000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffe9d1bd0105c611c084b4);
+    }
+    if ((x & 0x4000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffd3a37a020b8c256d0547);
+    }
+    if ((x & 0x8000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffffa746f40417185289fa0e);
+    }
+    if ((x & 0x10000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffff4e8de8082e30c3d3b21b);
+    }
+    if ((x & 0x20000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffe9d1bd0105c6202a65c35);
+    }
+    if ((x & 0x40000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffd3a37a020b8c5f1489862);
+    }
+    if ((x & 0x80000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffffa746f404171939280b0a4);
+    }
+    if ((x & 0x100000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffff4e8de8082e345e4bf60ca);
+    }
+    if ((x & 0x200000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffe9d1bd0105c706c876bfa0);
+    }
+    if ((x & 0x400000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffd3a37a020b8ff98ccd776c);
+    }
+    if ((x & 0x800000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffffa746f4041727a3091acf87);
+    }
+    if ((x & 0x1000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffff4e8de8082e6e05d03521c9);
+    }
+    if ((x & 0x2000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffe9d1bd0105d570a98684e54);
+    }
+    if ((x & 0x4000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffd3a37a020bc9a1110c8c656);
+    }
+    if ((x & 0x8000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffffa746f404180e411a17228c0);
+    }
+    if ((x & 0x10000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffff4e8de80832087e142666c8c);
+    }
+    if ((x & 0x20000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffe9d1bd0106bc0eba82d29b40);
+    }
+    if ((x & 0x40000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffd3a37a020f641954fda6eedd);
+    }
+    if ((x & 0x80000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffffa746f40426782229daaa3cfb);
+    }
+    if ((x & 0x100000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffff4e8de8086bb002532d71e54d);
+    }
+    if ((x & 0x200000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffe9d1bd011525efca410b8eab8);
+    }
+    if ((x & 0x400000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffd3a37a02490b9d93da3c1ebd0);
+    }
+    if ((x & 0x800000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffffa746f4050d1633246a8a0e09a);
+    }
+    if ((x & 0x1000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffff4e8de80c062846365949b61af);
+    }
+    if ((x & 0x2000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffe9d1bd01fbc400bf822dc936b5);
+    }
+    if ((x & 0x4000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffd3a37a05e383e14c90273c94f6);
+    }
+    if ((x & 0x8000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffffa746f41376f74124cd483186d4);
+    }
+    if ((x & 0x10000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffff4e8de845adac77243cd0914b37);
+    }
+    if ((x & 0x20000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffe9d1bd1065a50971275792f1c84);
+    }
+    if ((x & 0x40000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffd3a37a3f8b07e7c4871dc00d76f);
+    }
+    if ((x & 0x80000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffffa746f4fa1506788fbc89750bf71);
+    }
+    if ((x & 0x100000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffff4e8debe025e24128a3d460731f2);
+    }
+    if ((x & 0x200000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffe9d1bdf703aef21ea4dcfb0682d8);
+    }
+    if ((x & 0x400000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffd3a37dda03133bde87a8379c8933);
+    }
+    if ((x & 0x800000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffffa7470363f4515426d76c762b6b62);
+    }
+    if ((x & 0x1000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffff4e8e25879bfa09ea263360240c1a);
+    }
+    if ((x & 0x2000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffe9d1cc60ddab126de1aec4a87e7b9);
+    }
+    if ((x & 0x4000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffd3a3b7814eb53cd7629d70fea116a);
+    }
+    if ((x & 0x8000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfffa747ea0040664238f92f792405806);
+    }
+    if ((x & 0x10000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfff4e91bff1b8c3d88338e0ebf284a4e);
+    }
+    if ((x & 0x20000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffe9d2b2f7db2755ddf1d28a378a438c);
+    }
+    if ((x & 0x40000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffd3a751c0f7e10bd3b9f8ae012fbe07);
+    }
+    if ((x & 0x80000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xffa756521c8daed19f3a1b48fb94c589);
+    }
+    if ((x & 0x100000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xff4ecb59511ec8a5301ba217ef18dd7c);
+    }
+    if ((x & 0x200000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfe9e115c7b8f884badd25995e79d2f09);
+    }
+    if ((x & 0x400000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfd3e0c0cf486c174853f3a5931e0ee03);
+    }
+    if ((x & 0x800000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xfa83b2db722a033a7c25bb14315d7fcd);
+    }
+    if ((x & 0x1000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xf5257d152486cc2c7b9d0c7aed980fc3);
+    }
+    if ((x & 0x2000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xeac0c6e7dd24392ed02d75b3706e54fb);
+    }
+    if ((x & 0x4000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xd744fccad69d6af439a68bb9902d3fde);
+    }
+    if ((x & 0x8000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0xb504f333f9de6484597d89b3754abe9f);
+    }
+    if ((x & 0x10000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x80000000000000000000000000000000);
+    }
+    if ((x & 0x20000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x40000000000000000000000000000000);
+    }
+    if ((x & 0x40000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x10000000000000000000000000000000);
+    }
+    if ((x & 0x80000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x1000000000000000000000000000000);
+    }
+    if ((x & 0x100000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x10000000000000000000000000000);
+    }
+    if ((x & 0x200000000000000000) != 0) {
+        ratio = internal::unsafe_mul_shift(ratio, 0x1000000000000000000000000);
+    }
+
+    if (x != 0) {
+        ratio =
+            u256 {
+                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
+            }
+            / ratio;
+    }
+
+    ratio
+}
+
 // Computes the tick corresponding to the price, i.e. log base sqrt(1.000001) of the ratio aligned with the above function s.t. sqrt_ratio_to_tick(tick_to_sqrt_ratio(tick)) == tick
 fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
     // max price from max tick, exclusive check because this function should never be called on a price equal to max price
