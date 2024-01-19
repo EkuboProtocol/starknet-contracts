@@ -43,8 +43,8 @@ function genTickMath({
 }
 
 genTickMath({
-    base: new Decimal('1.0000000000000000000375755839507647455133556151917687744689917354'),
+    base: new Decimal('1.0000000000000000000542101086242752217018420079820249449562765347'),
     outputFixedPointRadix: 128,
-    maxRatio: new Decimal(2).pow(64),
+    maxRatio: new Decimal(2).pow(128),
 });
 

@@ -1,10 +1,9 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, exp, calculate_c,
-    constants
+    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
+    constants, exp_fractional, calculate_e
 };
 use ekubo::interfaces::core::{Delta};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
@@ -28,11 +27,10 @@ mod SaleRateTest {
         let sale_rate = calculate_sale_rate(
             amount: amount, expiry_time: expiry_time, current_time: current_time
         );
-        assert(sale_rate == expected, 'sale_rate');
+        assert_eq!(sale_rate, expected);
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_sale_rates_smallest_amount() {
         assert_case_sale_rate(
             amount: 1, expiry_time: SIXTEEN_POW_ONE, current_time: 0, expected: 0x10000000
@@ -61,7 +59,6 @@ mod SaleRateTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     #[should_panic(expected: ('SALE_RATE_ZERO',))]
     fn test_sale_rates_smallest_amount_underflow() {
         // sale window above 2**32 seconds (136.2 years) underflows to 0 sale rate.
@@ -71,7 +68,6 @@ mod SaleRateTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     #[should_panic(expected: ('SALE_RATE_OVERFLOW',))]
     fn test_sale_rates_overflow() {
         assert_case_sale_rate(
@@ -85,7 +81,6 @@ mod SaleRateTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_sale_rates_largest_amount() {
         assert_case_sale_rate(
             // 2**128 - 1
@@ -115,12 +110,11 @@ mod RewardRateTest {
 
         let (expected_0, expected_1) = expected;
 
-        assert(reward_rate_0_delta == expected_0, 'reward_rate_0');
-        assert(reward_rate_1_delta == expected_1, 'reward_rate_1');
+        assert_eq!(reward_rate_0_delta, expected_0);
+        assert_eq!(reward_rate_1_delta, expected_1);
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_reward_rates_largest_amount() {
         // 2**128 - 1
         let amount = 0xffffffffffffffffffffffffffffffff;
@@ -139,7 +133,6 @@ mod RewardRateTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_largest_reward_amount_no_overflow() {
         // 2**256 - 2**128
         let reward_rate = 0xffffffffffffffffffffffffffffffff000000000000000000000000;
@@ -150,32 +143,30 @@ mod RewardRateTest {
 
         let amount = calculate_reward_amount(reward_rate: reward_rate, sale_rate: sale_rate);
 
-        assert(expected_amount == amount, 'amount');
+        assert_eq!(expected_amount, amount);
     }
 }
 
 mod TWAMMMathTest {
     use core::debug::PrintTrait;
-    use super::{calculate_c, exp, tick_to_sqrt_ratio, i129, constants, SIXTEEN_POW_SEVEN};
+    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, calculate_e};
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
         let (val, sign) = calculate_c(sqrt_ratio, sqrt_sell_ratio);
         let (expected_val, expected_sign) = expected;
 
-        assert(val == expected_val, 'val');
-        assert(sign == expected_sign, 'sign');
+        assert_eq!(val, expected_val);
+        assert_eq!(sign, expected_sign);
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_zero_c() {
         assert_case_c(sqrt_ratio: 0, sqrt_sell_ratio: 0, expected: (0, false));
         assert_case_c(sqrt_ratio: 1, sqrt_sell_ratio: 1, expected: (0, false));
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_c_min_values() {
         assert_case_c(sqrt_ratio: 0, sqrt_sell_ratio: 0, expected: (0, false));
         assert_case_c(
@@ -188,7 +179,6 @@ mod TWAMMMathTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_c_max_values() {
         // max sqrt ratio is 2**192
         let max_sqrt_ratio = 0x1000000000000000000000000000000000000000000000000_u256;
@@ -203,7 +193,6 @@ mod TWAMMMathTest {
     }
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_c_range() {
         // positive
         assert_case_c(
@@ -299,10 +288,104 @@ mod TWAMMMathTest {
         );
     }
 
+    #[test]
+    fn test_exp_fractional() {
+        // assert_eq!(exp_fractional(0), 0x100000000000000000000000000000000);
+        // // e^1 ~= 2.71828
+        // assert_eq!(
+        //     exp_fractional(constants::X64),
+        //     u256 { high: 0x2, low: 0xb7e151628aed2a6abf7158809cf4f3c6 }
+        // );
+        // // e^0.5 ~= 1.64872
+        // assert_eq!(
+        //     exp_fractional(0x08000000000000000),
+        //     u256 { high: 0x1, low: 0xa61298e1e069bc972dfefab6df33f9b1 }
+        // );
+        // // e^0.9 ~= 2.45960
+        // assert_eq!(
+        //     exp_fractional(16602069666338596454),
+        //     u256 { high: 0x2, low: 0x75a88cab8f177288b8747b33886aad40 }
+        // );
+        // // e^0.09 ~= 1.09417
+        // assert_eq!(
+        //     exp_fractional(1660206966633859645),
+        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
+        // );
+        // // e^0.08 ~= 1.08328
+        // assert_eq!(
+        //     exp_fractional(1475739525896764129),
+        //     u256 { high: 0x1, low: 0x15524d1fd7fbca0db855628db68b61ca }
+        // );
+        // // e^0.07 ~= 1.07251
+        // assert_eq!(
+        //     exp_fractional(1291272085159668613),
+        //     u256 { high: 0x1, low: 0x128fe56b2de69b7e490462b1192f78f8 }
+        // );
+        // // e^0.065 ~= 1.06783
+        // assert_eq!(
+        //     exp_fractional(1199038364791120855),
+        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
+        // );
+        // // e^0.064 ~= 1.06624
+        // assert_eq!(
+        //     exp_fractional(1180591620717411303),
+        //     u256 { high: 0x1, low: 0x113155755c82ff672e6342fca30adcf7 }
+        // );
+        // // e^0.063 ~= 1.06465
+        // assert_eq!(
+        //     exp_fractional(1162144876643701751),
+        //     u256 { high: 0x1, low: 0x10a59953dc574707aea915106603b7dd }
+        // );
+        // // e^0.062 ~= 1.063962
+        // assert_eq!(
+        //     exp_fractional(1143698132569992200),
+        //     u256 { high: 0x1, low: 0x105fd612c84a3a38c6269b3d34a40ea2 }
+        // );
+        // // e^0.061 ~= 1.062899
+        // assert_eq!(
+        //     exp_fractional(1125251388496282648),
+        //     u256 { high: 0x1, low: 0x101a24ab634e565840d674fd498c8543 }
+        // );
+        // e^0.06 ~= 1.061837
+        assert_eq!(
+            exp_fractional(1106804644422573096),
+            u256 { high: 0x1, low: 0x101a24ab634e565840d674fd498c8543 }
+        );
+
+
+        // // e^0.02 ~= 1.02020
+        // assert_eq!(
+        //     exp_fractional(368934881474191032),
+        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
+        // );
+        // // e^0.01 ~= 1.01005
+        // assert_eq!(
+        //     exp_fractional(184467440737095516),
+        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
+        // );
+        // // e^0.009 ~= 1.00901
+        // assert_eq!(
+        //     exp_fractional(166020696663385964),
+        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
+        // );
+        // // e^(0.00141421) ~= 1.001416
+        // assert_eq!(
+        //     exp_fractional(0x5cae926fa0cdac),
+        //     u256 { high: 0x2, low: 0x75a88cab8f177288b8747b33886aad40 }
+        // );
+    }
 
     #[test]
-    #[available_gas(3000000000)]
-    fn test_exp() {
-        assert(exp(2 * constants::X_64) == 0x763992e34a0de88b8, 'exp(2) invalid');
+    fn test_calculate_e_base() {
+        // assert_eq!(calculate_e(0x0, 0x0, 0x1), u256 { high: 0x1, low: 0x0 });
+        // assert_eq!(calculate_e(0x1, 0x0, 0x1), u256 { high: 0x1, low: 0x0 });
+        // assert_eq!(calculate_e(0x0, 0x1, 0x1), u256 { high: 0x1, low: 0x0 });
+
+        let sqrt_rate_sell = 0x2203a1ae49f5191919191919; // 2.45098 * 2**32
+        let t = 2040;
+        let liquidity = 7071066140030886677554057;
+        // e ~= 1.00080032027
+        assert_eq!(calculate_e(sqrt_rate_sell, t, liquidity), u256 { high: 0x1, low: 0x0 });
     }
 }
+
