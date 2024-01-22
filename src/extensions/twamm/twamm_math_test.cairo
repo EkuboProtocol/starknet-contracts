@@ -1,7 +1,7 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_e
+    constants, exp_fractional, exp2_fractional, calculate_e
 };
 use ekubo::interfaces::core::{Delta};
 use ekubo::types::i129::{i129};
@@ -47,15 +47,11 @@ mod SaleRateTest {
         assert_case_sale_rate(
             amount: 1, end_time: SIXTEEN_POW_FIVE, start_time: 0, expected: 0x1000
         );
-        assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_SIX, start_time: 0, expected: 0x100
-        );
+        assert_case_sale_rate(amount: 1, end_time: SIXTEEN_POW_SIX, start_time: 0, expected: 0x100);
         assert_case_sale_rate(
             amount: 1, end_time: SIXTEEN_POW_SEVEN, start_time: 0, expected: 0x10
         );
-        assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_EIGHT, start_time: 0, expected: 0x1
-        );
+        assert_case_sale_rate(amount: 1, end_time: SIXTEEN_POW_EIGHT, start_time: 0, expected: 0x1);
     }
 
     #[test]
@@ -149,7 +145,10 @@ mod RewardRateTest {
 
 mod TWAMMMathTest {
     use core::debug::PrintTrait;
-    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, calculate_e};
+    use super::{
+        calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, exp2_fractional,
+        calculate_e
+    };
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
@@ -289,63 +288,103 @@ mod TWAMMMathTest {
     }
 
     #[test]
+    fn test_exp2_fractional() {
+        // 2^(0.1) ~= 1.07177
+        assert_eq!(
+            exp2_fractional(1844674407370955161),
+            u256 { low: 0x125fbee2506642623830c83bae224c5e, high: 0x1 }
+        );
+        // 2^(0.9) ~= 1.96863
+        assert_eq!(
+            exp2_fractional(16602069666338596454),
+            u256 { low: 0xddb680117ab120d98717d5d67dd8448a, high: 0x1 }
+        );
+        // 2^(0.09) ~= 1.035265
+        assert_eq!(
+            exp2_fractional(1660206966633859645),
+            u256 { low: 0x107a9074798826e66cff3fe85087a782, high: 0x1 }
+        );
+        // 2^(0.08) ~= 1.029563
+        assert_eq!(
+            exp2_fractional(1475739525896764129),
+            u256 { low: 0xddb680117ab120d98717d5d67dd8448a, high: 0x1 }
+        );
+
+        // 2^(0.05) ~= 1.035265
+        assert_eq!(
+            exp2_fractional(922337203685477580),
+            u256 { low: 0xddb680117ab120d98717d5d67dd8448a, high: 0x1 }
+        );
+        // 2^(0.06) ~= 1.042466
+        assert_eq!(
+            exp2_fractional(1106804644422573096),
+            u256 { low: 0xddb680117ab120d98717d5d67dd8448a, high: 0x1 }
+        );
+    }
+
+    #[test]
     fn test_exp_fractional() {
-        //     assert_eq!(exp_fractional(0), 0x100000000000000000000000000000000);
-        //     // e^1 ~= 2.71828
-        //     assert_eq!(
-        //         exp_fractional(constants::X64),
-        //         u256 { high: 0x2, low: 0xb7e151628aed2a6abf7158809cf4f3c6 }
-        //     );
-        // // e^0.5 ~= 1.64872
-        // assert_eq!(
-        //     exp_fractional(0x08000000000000000),
-        //     u256 { high: 0x1, low: 0xa61298e1e069bc972dfefab6df33f9b1 }
-        // );
-        // // e^0.9 ~= 2.45960
-        // assert_eq!(
-        //     exp_fractional(16602069666338596454),
-        //     u256 { high: 0x2, low: 0x75a88cab8f177288b8747b33886aad40 }
-        // );
-        // // e^0.09 ~= 1.09417
-        // assert_eq!(
-        //     exp_fractional(1660206966633859645),
-        //     u256 { high: 0x1, low: 0x181bce4ca35acbdb046f24c2ae3f638f }
-        // );
-        // // e^0.08 ~= 1.08328
-        // assert_eq!(
-        //     exp_fractional(1475739525896764129),
-        //     u256 { high: 0x1, low: 0x15524d1fd7fbca0db855628db68b61ca }
-        // );
-        // // e^0.07 ~= 1.07251
-        // assert_eq!(
-        //     exp_fractional(1291272085159668613),
-        //     u256 { high: 0x1, low: 0x128fe56b2de69b7e490462b1192f78f8 }
-        // );
+        assert_eq!(exp_fractional(0), 0x100000000000000000000000000000000);
+        // e^2 ~= 7.38906
+        assert_eq!(
+            exp_fractional(2 * constants::X64),
+            u256 { high: 0x7, low: 0x63992e35376b7307e7ddb6de30897cb0 }
+        );
+        // e^1 ~= 2.71828
+        assert_eq!(
+            exp_fractional(constants::X64),
+            u256 { high: 0x2, low: 0xb7e151628aed2a69d3cdcbcefd34c084 }
+        );
+        // e^0.5 ~= 1.64872
+        assert_eq!(
+            exp_fractional(0x08000000000000000),
+            u256 { high: 0x1, low: 0xa61298e1e069bc965441746cf3d73230 }
+        );
+        // e^0.9 ~= 2.45960
+        assert_eq!(
+            exp_fractional(16602069666338596454),
+            u256 { high: 0x2, low: 0x75a88cab8f177287c2e9af100638b6ac }
+        );
+        // e^0.09 ~= 1.09417
+        assert_eq!(
+            exp_fractional(1660206966633859645),
+            u256 { high: 0x1, low: 0x181bce4ca35acbda59bc40b7468d5314 }
+        );
+        // e^0.08 ~= 1.08328
+        assert_eq!(
+            exp_fractional(1475739525896764129),
+            u256 { high: 0x1, low: 0x15524d1fd7fbca0d837280b9a96534f8 }
+        );
+        // e^0.07 ~= 1.07251
+        assert_eq!(
+            exp_fractional(1291272085159668613),
+            u256 { high: 0x1, low: 0x128fe56b2de69b7dc94dc9872015b628 }
+        );
         // // e^0.065 ~= 1.06783
-        // assert_eq!(
-        //     exp_fractional(1199038364791120855),
-        //     u256 { high: 0x1, low: 0x113155755c82ff672e6342fca30adcf7 }
-        // );
-        // // e^0.064 ~= 1.06624
-        // assert_eq!(
-        //     exp_fractional(1180591620717411303),
-        //     u256 { high: 0x1, low: 0x10eb6e7331e213f13432fca5237e3e63 }
-        // );
-        // // e^0.063 ~= 1.06465
-        // assert_eq!(
-        //     exp_fractional(1162144876643701751),
-        //     u256 { high: 0x1, low: 0x10a59953dc574707aea915106603b7dd }
-        // );
-        // // e^0.062 ~= 1.063962
-        // assert_eq!(
-        //     exp_fractional(1143698132569992200),
-        //     u256 { high: 0x1, low: 0x105fd612c84a3a38c6269b3d34a40ea2 }
-        // );
-        // // e^0.061 ~= 1.062899
-        // assert_eq!(
-        //     exp_fractional(1125251388496282648),
-        //     u256 { high: 0x1, low: 0x101a24ab634e565840d674fd498c8543 }
-        // );
+        assert_eq!(
+            exp_fractional(1199038364791120855),
+            u256 { high: 0x1, low: 0x113155755c82ff6689d29e722ded2b68 }
+        );
+        // e^0.064 ~= 1.06624
+        assert_eq!(
+            exp_fractional(1180591620717411303),
+            u256 { high: 0x1, low: 0x10eb6e7331e213f0f579ebbfe96a0750 }
+        );
+        // e^0.063 ~= 1.06465
+        assert_eq!(
+            exp_fractional(1162144876643701751),
+            u256 { high: 0x1, low: 0x10a59953dc57470718978254dd14a4b6 }
+        );
+        // e^0.062 ~= 1.063962
+        assert_eq!(
+            exp_fractional(1143698132569992200),
+            u256 { high: 0x1, low: 0x105fd612c84a3a384220b5f0813c777a }
+        );
+        // e^0.061 ~= 1.062899
+        assert_eq!(
+            exp_fractional(1125251388496282648),
+            u256 { high: 0x1, low: 0x101a24ab634e56582251d70dbb1e2e0e }
+        );
         // e^0.06 ~= 1.061837
         assert_eq!(
             exp_fractional(1106804644422573096),
