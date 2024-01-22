@@ -218,7 +218,7 @@ fn calculate_e(sqrt_sell_rate: u128, t: u64, liquidity: u128) -> u256 {
 // calculates exp(x) as 2^(x * log_2(e))
 fn exp_fractional(x: u128) -> u256 {
     // base = 1.00000000000
-    // number of iterations = 71
+    // number of iterations = 70
     // denominator = 1<<128
     let mut ratio = 0x100000000000000000000000000000000_u256;
     if ((x & 0x1) != 0) {
@@ -430,9 +430,6 @@ fn exp_fractional(x: u128) -> u256 {
     }
     if ((x & 0x200000000000000000) != 0) {
         ratio = unsafe_mul_shift(ratio, 0x3908c9eec2c8d03c53340);
-    }
-    if ((x & 0x400000000000000000) != 0) {
-        ratio = unsafe_mul_shift(ratio, 0xcb4ea3991);
     }
 
     if (x != 0) {
