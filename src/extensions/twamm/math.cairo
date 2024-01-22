@@ -35,9 +35,10 @@ mod constants {
     const LOG2_E_X128: u256 = 490923683258796565746369346286093237521_u256;
 }
 
-fn calculate_sale_rate(amount: u128, expiry_time: u64, current_time: u64) -> u128 {
-    let sale_rate: u128 = ((amount.into() * constants::X32_u256)
-        / (expiry_time - current_time).into())
+
+fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
+    let sale_rate: u128 = ((amount.into() * constants::X_32_u256)
+        / (end_time - start_time).into())
         .try_into()
         .expect('SALE_RATE_OVERFLOW');
 
@@ -83,21 +84,21 @@ fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
         .expect('REWARD_AMOUNT_OVERFLOW')
 }
 
-fn validate_expiry_time(order_time: u64, expiry_time: u64) {
-    assert(expiry_time > order_time, 'INVALID_EXPIRY_TIME');
+fn validate_time(start_time: u64, end_time: u64) {
+    assert(end_time > start_time, 'INVALID_END_TIME');
 
     // calculate the closest timestamp at which an order can expire
     // based on the step of the interval that the order expires in using
     // an approximation of
-    // = 16**(floor(log_16(expiry_time-order_time)))
-    // = 2**(4 * (floor(log_2(expiry_time-order_time)) / 4))
+    // = 16**(floor(log_16(end_time-start_time)))
+    // = 2**(4 * (floor(log_2(end_time-start_time)) / 4))
     let step = exp2_int(
         constants::LOG_SCALE_FACTOR
-            * (msb((expiry_time - order_time).into()) / constants::LOG_SCALE_FACTOR)
+            * (msb((end_time - start_time).into()) / constants::LOG_SCALE_FACTOR)
     );
 
     assert(step >= constants::BITMAP_SPACING.into(), 'INVALID_SPACING');
-    assert(expiry_time.into() % step == 0, 'INVALID_EXPIRY_TIME');
+    assert(end_time.into() % step == 0, 'INVALID_TIME');
 }
 
 fn calculate_next_sqrt_ratio(

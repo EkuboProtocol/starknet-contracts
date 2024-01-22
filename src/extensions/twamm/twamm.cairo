@@ -16,14 +16,15 @@ struct TWAMMPoolKey {
 struct OrderKey {
     twamm_pool_key: TWAMMPoolKey,
     is_sell_token1: bool,
-    expiry_time: u64
+    start_time: u64,
+    end_time: u64
 }
 
 // state of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
 struct OrderState {
     sale_rate: u128,
-    reward_rate: felt252,
+    reward_rate_start_time: u64
 }
 
 #[starknet::interface]
@@ -68,7 +69,7 @@ mod TWAMM {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::extensions::twamm::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
-        validate_expiry_time, calculate_next_sqrt_ratio
+        validate_time, calculate_next_sqrt_ratio
     };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -90,12 +91,13 @@ mod TWAMM {
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
+    use ekubo::types::i129::{i129, i129Trait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, get_block_timestamp,
         ClassHash
     };
-    use super::{ITWAMM, i129, i129Trait, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
+    use super::{ITWAMM, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
@@ -116,13 +118,13 @@ mod TWAMM {
         orders: LegacyMap<(OrderKey, u64), OrderState>,
         // current rate at which tokens are sold
         sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
-        // cumulative sale rate for buy_token ending at a particular timestamp
-        sale_rate_ending: LegacyMap<(TWAMMPoolKey, u64), (u128, u128)>,
-        // used to find next timestamp at which orders expire
-        expiry_time_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
+        // sale rate deltas
+        sale_rate_delta: LegacyMap<(TWAMMPoolKey, u64), (i129, i129)>,
+        // used to find next timestamp at which sale rate changes
+        sale_rate_time_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
         // current reward rates
         reward_rate: LegacyMap<TWAMMPoolKey, (felt252, felt252)>,
-        // reward rates at expiry times
+        // reward rates 
         reward_rate_at_time: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TWAMMPoolKey, u64>,
@@ -162,10 +164,7 @@ mod TWAMM {
         id: u64,
         order_key: OrderKey,
         amount: u128,
-        expiry_time: u64,
-        sale_rate: u128,
-        global_sale_rate: (u128, u128),
-        sale_rate_ending: u128
+        sale_rate: u128
     }
 
     #[derive(starknet::Event, Drop)]
@@ -339,8 +338,19 @@ mod TWAMM {
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             let current_time = get_block_timestamp();
 
-            // validate that the order has a valid expiry time
-            validate_expiry_time(current_time, order_key.expiry_time);
+            // validate order starts now or in the future
+            assert(
+                order_key.start_time == 0 || order_key.start_time > current_time,
+                'INVALID_START_TIME'
+            );
+
+            let order_start_time = if (order_key.start_time == 0) {
+                current_time
+            } else {
+                validate_time(current_time, order_key.start_time);
+                order_key.start_time
+            };
+            validate_time(order_start_time, order_key.end_time);
 
             // execute virtual orders up to current time
             self.internal_execute_virtual_orders(to_pool_key(order_key));
@@ -349,41 +359,36 @@ mod TWAMM {
             let id = self.nft.read().mint(get_caller_address());
 
             // calculate and store order sale rate
-            let sale_rate = calculate_sale_rate(amount, order_key.expiry_time, current_time);
-            let reward_rate = self.get_current_reward_rate(order_key);
-            self.orders.write((order_key, id), OrderState { sale_rate, reward_rate });
+            let sale_rate = calculate_sale_rate(amount, order_key.end_time, order_start_time);
 
-            // increase global sale rate
-            let global_sale_rate = self.update_global_sale_rate(order_key, sale_rate, true);
-
-            // increase sale rate ending at expiry time
-            let (token0_sale_rate_ending, token1_sale_rate_ending) = self
-                .update_sale_rate_ending(order_key, sale_rate, true);
-
-            // insert the initialized expiry time if this is the first order at this expiry time
-            let order_token_sale_rate_ending = if (order_key.is_sell_token1) {
-                token1_sale_rate_ending
-            } else {
-                token0_sale_rate_ending
-            };
-            if (order_token_sale_rate_ending == sale_rate) {
-                self.insert_initialized_expiry(order_key.twamm_pool_key, order_key.expiry_time);
-            }
-
+            // store order state
             self
-                .emit(
-                    OrderPlaced {
-                        id,
-                        order_key,
-                        amount,
-                        expiry_time: order_key.expiry_time,
-                        sale_rate,
-                        global_sale_rate,
-                        sale_rate_ending: order_token_sale_rate_ending
-                    }
+                .orders
+                .write(
+                    (order_key, id),
+                    OrderState { sale_rate, reward_rate_start_time: order_start_time }
                 );
 
-            // transfer token amount to core contract
+            if (order_key.start_time.is_zero()) {
+                // increase global sale rate
+                self.update_global_sale_rate(order_key, sale_rate, true);
+            } else {
+                // add sale rate to sale rate delta
+                self
+                    .update_sale_rate_delta(
+                        order_key, order_key.start_time, i129 { mag: sale_rate, sign: false }
+                    );
+            }
+
+            // update sale rate delta at end time
+            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+                .update_sale_rate_delta(
+                    order_key, order_key.end_time, i129 { mag: sale_rate, sign: true }
+                );
+
+            self.emit(OrderPlaced { id, order_key, amount, sale_rate });
+
+            // deposit token amount to core contract
             self
                 .deposit(
                     if (order_key.is_sell_token1) {
@@ -407,7 +412,7 @@ mod TWAMM {
             let current_time = get_block_timestamp();
 
             // validate that the order has not expired
-            assert(order_key.expiry_time > current_time, 'ORDER_EXPIRED');
+            assert(order_key.end_time > current_time, 'ORDER_EXPIRED');
 
             // calculate amount that was not sold
             let remaining_amount = self.get_order_remaining_amount(order_key, order_state);
@@ -415,35 +420,40 @@ mod TWAMM {
             // decrease global rates
             self.update_global_sale_rate(order_key, order_state.sale_rate, false);
 
-            // decrease sale rate ending at expiry time
-            let (token0_sale_rate_ending, token1_sale_rate_ending) = self
-                .update_sale_rate_ending(order_key, order_state.sale_rate, false);
+            // update sale rate delta at end time (zero out the delta)
+            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+                .update_sale_rate_delta(
+                    order_key, order_key.end_time, i129 { mag: order_state.sale_rate, sign: false }
+                );
 
-            // remove the initialized expiry time if this is the last order at this expiry time
-            if (token0_sale_rate_ending == 0 && token1_sale_rate_ending == 0) {
-                self.remove_initialized_expiry(order_key.twamm_pool_key, order_key.expiry_time);
+            // remove the initialized time if this is the last order 
+            if (token0_sale_rate_delta.mag == 0 && token1_sale_rate_delta.mag == 0) {
+                self.remove_initialized_time(order_key.twamm_pool_key, order_key.end_time);
             }
 
             // update order state to reflect that the order has been cancelled
-            self.orders.write((order_key, id), OrderState { sale_rate: 0, reward_rate: 0 });
+            self
+                .orders
+                .write((order_key, id), OrderState { sale_rate: 0, reward_rate_start_time: 0 });
 
             // burn the NFT
             self.nft.read().burn(id);
 
-            // calculate amount that was purchased
-            let reward_rate = self.get_current_reward_rate(order_key);
-            let purchased_amount = calculate_reward_amount(
-                reward_rate - order_state.reward_rate, order_state.sale_rate
-            );
+            if (order_key.start_time <= current_time) {
+                // calculate amount that was purchased
+                let reward_rate = (self.get_current_reward_rate(order_key)
+                    - self.get_reward_rate_at(order_key, order_key.start_time));
+                let purchased_amount = calculate_reward_amount(reward_rate, order_state.sale_rate);
 
-            // transfer remaining amount
-            if (remaining_amount.is_non_zero()) {
-                self.withdraw(order_key.twamm_pool_key.token0, caller, remaining_amount);
-            }
+                // transfer remaining amount
+                if (remaining_amount.is_non_zero()) {
+                    self.withdraw(order_key.twamm_pool_key.token0, caller, remaining_amount);
+                }
 
-            // transfer purchased amount 
-            if (purchased_amount.is_non_zero()) {
-                self.withdraw(order_key.twamm_pool_key.token1, caller, purchased_amount)
+                // transfer purchased amount 
+                if (purchased_amount.is_non_zero()) {
+                    self.withdraw(order_key.twamm_pool_key.token1, caller, purchased_amount)
+                }
             }
 
             self.emit(OrderCancelled { id, order_key });
@@ -462,13 +472,18 @@ mod TWAMM {
 
             let current_time = get_block_timestamp();
 
-            let total_reward_rate = if current_time >= order_key.expiry_time {
+            let start_time_reward = self
+                .get_reward_rate_at(order_key, order_state.reward_rate_start_time);
+
+            let total_reward_rate = if current_time >= order_key.end_time {
                 // TODO: Should we burn the NFT? Probably not.
                 // update order state to reflect that the order has been fully executed
-                self.orders.write((order_key, id), OrderState { sale_rate: 0, reward_rate: 0 });
+                self
+                    .orders
+                    .write((order_key, id), OrderState { sale_rate: 0, reward_rate_start_time: 0 });
 
                 // reward rate at expiration/full-execution time
-                self.get_reward_rate_at_expiry(order_key) - order_state.reward_rate
+                self.get_reward_rate_at(order_key, order_key.end_time) - start_time_reward
             } else {
                 // update order state to reflect that the order has been partially executed
                 let reward_rate = self.get_current_reward_rate(order_key);
@@ -478,12 +493,11 @@ mod TWAMM {
                     .write(
                         (order_key, id),
                         OrderState {
-                            sale_rate: order_state.sale_rate,
-                            reward_rate: reward_rate // use current reward rate
+                            sale_rate: order_state.sale_rate, reward_rate_start_time: current_time
                         }
                     );
 
-                reward_rate - order_state.reward_rate
+                reward_rate - start_time_reward
             };
 
             let purchased_amount = calculate_reward_amount(
@@ -546,13 +560,13 @@ mod TWAMM {
                         loop {
                             let mut delta = Zero::<Delta>::zero();
 
-                            // find next expiry time 
-                            let next_expiry_time = self_snap
-                                .next_initialized_expiry(
+                            // find next time with sale rate delta
+                            let next_initialized_time = self_snap
+                                .next_initialized_time(
                                     twamm_pool_key, last_virtual_order_time, current_time
                                 );
 
-                            let next_virtual_order_time = min(next_expiry_time, current_time);
+                            let next_virtual_order_time = min(next_initialized_time, current_time);
 
                             let (token0_sale_rate, token1_sale_rate) = self
                                 .sale_rate
@@ -609,7 +623,8 @@ mod TWAMM {
                                                         amount1: i129 {
                                                             mag: token1_amount, sign: true
                                                         }
-                                                    }
+                                                    },
+                                                next_virtual_order_time
                                             );
                                     } else {
                                         let (amount, is_token1, sqrt_ratio_limit) =
@@ -635,7 +650,8 @@ mod TWAMM {
                                             .update_reward_rate(
                                                 twamm_pool_key,
                                                 (token0_sale_rate, token1_sale_rate),
-                                                delta
+                                                delta,
+                                                next_virtual_order_time
                                             );
                                     }
 
@@ -661,7 +677,7 @@ mod TWAMM {
 
                             // update ending sale rates 
                             self
-                                .update_expiring_orders(
+                                .update_sale_rate(
                                     twamm_pool_key,
                                     (token0_sale_rate, token1_sale_rate),
                                     next_virtual_order_time
@@ -749,33 +765,26 @@ mod TWAMM {
             assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
         }
 
-        // update the sale rate ending at expiry time, and returns the updated value
-        fn update_sale_rate_ending(
-            ref self: ContractState, order_key: OrderKey, sale_rate: u128, increase: bool
-        ) -> (u128, u128) {
-            let (token0_sale_rate_ending, token1_sale_rate_ending) = self
-                .sale_rate_ending
-                .read((order_key.twamm_pool_key, order_key.expiry_time));
+        // update the sale rate deltas at a time, and returns the updated value
+        fn update_sale_rate_delta(
+            ref self: ContractState, order_key: OrderKey, time: u64, sale_rate: i129,
+        ) -> (i129, i129) {
+            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+                .sale_rate_delta
+                .read((order_key.twamm_pool_key, time));
 
-            let sale_rate_ending = if (increase) {
-                if (order_key.is_sell_token1) {
-                    (token0_sale_rate_ending, token1_sale_rate_ending + sale_rate)
-                } else {
-                    (token0_sale_rate_ending + sale_rate, token1_sale_rate_ending)
-                }
+            let sale_rate_delta = if (order_key.is_sell_token1) {
+                (token0_sale_rate_delta, token1_sale_rate_delta + sale_rate)
             } else {
-                if (order_key.is_sell_token1) {
-                    (token0_sale_rate_ending, token1_sale_rate_ending - sale_rate)
-                } else {
-                    (token0_sale_rate_ending - sale_rate, token1_sale_rate_ending)
-                }
+                (token0_sale_rate_delta + sale_rate, token1_sale_rate_delta)
             };
 
-            self
-                .sale_rate_ending
-                .write((order_key.twamm_pool_key, order_key.expiry_time), sale_rate_ending);
+            self.sale_rate_delta.write((order_key.twamm_pool_key, time), sale_rate_delta);
 
-            sale_rate_ending
+            // TODO: figure out if we can avoid retrieving the bitmap
+            self.insert_initialized_time(order_key.twamm_pool_key, time);
+
+            sale_rate_delta
         }
 
         // update the global sale rate, and return the updated value
@@ -817,10 +826,10 @@ mod TWAMM {
             }
         }
 
-        fn get_reward_rate_at_expiry(self: @ContractState, order_key: OrderKey) -> felt252 {
+        fn get_reward_rate_at(self: @ContractState, order_key: OrderKey, time: u64) -> felt252 {
             let (token0_reward_rate, token1_reward_rate) = self
                 .reward_rate_at_time
-                .read((order_key.twamm_pool_key, order_key.expiry_time));
+                .read((order_key.twamm_pool_key, time));
 
             if (order_key.is_sell_token1) {
                 token0_reward_rate
@@ -833,24 +842,34 @@ mod TWAMM {
             ref self: ContractState,
             twamm_pool_key: TWAMMPoolKey,
             sale_rates: (u128, u128),
-            delta: Delta
+            delta: Delta,
+            time: u64
         ) -> (felt252, felt252) {
             let (token0_reward_delta, token1_reward_delta) = calculate_reward_rate_deltas(
                 sale_rates, delta
             );
 
-            let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(twamm_pool_key);
+            let (current_token0_reward_rate, current_token1_reward_rate) = self
+                .reward_rate
+                .read(twamm_pool_key);
 
             let reward_rate = (
-                token0_reward_rate + token0_reward_delta, token1_reward_rate + token1_reward_delta
+                current_token0_reward_rate + token0_reward_delta,
+                current_token1_reward_rate + token1_reward_delta
             );
 
             self.reward_rate.write(twamm_pool_key, reward_rate);
 
+            let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(twamm_pool_key);
+
+            self
+                .reward_rate_at_time
+                .write((twamm_pool_key, time), (token0_reward_rate, token1_reward_rate));
+
             reward_rate
         }
 
-        fn update_expiring_orders(
+        fn update_sale_rate(
             ref self: ContractState,
             twamm_pool_key: TWAMMPoolKey,
             sale_rates: (u128, u128),
@@ -858,18 +877,20 @@ mod TWAMM {
         ) {
             let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
-            let (token0_sale_rate_ending, token1_sale_rate_ending) = self
-                .sale_rate_ending
+            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+                .sale_rate_delta
                 .read((twamm_pool_key, time));
 
-            if (token0_sale_rate_ending > 0 || token1_sale_rate_ending > 0) {
+            if (token0_sale_rate_delta.mag > 0 || token1_sale_rate_delta.mag > 0) {
                 self
                     .sale_rate
                     .write(
                         twamm_pool_key,
                         (
-                            token0_sale_rate - token0_sale_rate_ending,
-                            token1_sale_rate - token1_sale_rate_ending
+                            (i129 { mag: token0_sale_rate, sign: false } + token0_sale_rate_delta)
+                                .mag,
+                            (i129 { mag: token1_sale_rate, sign: false } + token1_sale_rate_delta)
+                                .mag
                         )
                     );
 
@@ -888,61 +909,60 @@ mod TWAMM {
             ref self: ContractState, order_key: OrderKey, order_state: OrderState
         ) -> u128 {
             (order_state.sale_rate
-                * (order_key.expiry_time
-                    - self.last_virtual_order_time.read(order_key.twamm_pool_key))
+                * (order_key.end_time - self.last_virtual_order_time.read(order_key.twamm_pool_key))
                     .into())
                 / constants::X32_u128
         }
 
-        // remove the initialized expiry time for the order
-        fn remove_initialized_expiry(
-            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, expiry: u64
+        // remove the initialized time for the order
+        fn remove_initialized_time(
+            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
         ) {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry);
+            let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.expiry_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
 
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
             self
-                .expiry_time_bitmaps
+                .sale_rate_time_bitmaps
                 .write((twamm_pool_key, word_index), bitmap.unset_bit(bit_index));
         }
 
-        // insert the initialized expiry time for the order
-        fn insert_initialized_expiry(
-            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, expiry: u64
+        // insert the initialized time for the order
+        fn insert_initialized_time(
+            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
         ) {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(expiry);
+            let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.expiry_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
 
             if (!bitmap.is_set(bit_index)) {
-                // only initialize the expiry time if it is not already initialized
+                // only initialize the time if it is not already initialized
                 self
-                    .expiry_time_bitmaps
+                    .sale_rate_time_bitmaps
                     .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
             }
         }
 
-        // return the next initialized expiry time
-        fn next_initialized_expiry(
+        // return the next initialized time
+        fn next_initialized_time(
             self: @ContractState, twamm_pool_key: TWAMMPoolKey, from: u64, max_time: u64
         ) -> u64 {
-            let (word_index, bit_index) = expiry_to_word_and_bit_index(
+            let (word_index, bit_index) = time_to_word_and_bit_index(
                 from + constants::BITMAP_SPACING
             );
 
-            let bitmap: Bitmap = self.expiry_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap: Bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
 
             match bitmap.next_set_bit(bit_index) {
-                Option::Some(next_bit) => { word_and_bit_index_to_expiry((word_index, next_bit)) },
+                Option::Some(next_bit) => { word_and_bit_index_to_time((word_index, next_bit)) },
                 Option::None => {
-                    let next = word_and_bit_index_to_expiry((word_index, 0));
+                    let next = word_and_bit_index_to_time((word_index, 0));
 
                     if (next > max_time) {
                         max_time
                     } else {
-                        self.next_initialized_expiry(twamm_pool_key, next, max_time)
+                        self.next_initialized_time(twamm_pool_key, next, max_time)
                     }
                 },
             }
@@ -1005,14 +1025,14 @@ mod TWAMM {
         }
     }
 
-    fn expiry_to_word_and_bit_index(expiry: u64) -> (u128, u8) {
+    fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
         (
-            (expiry / (constants::BITMAP_SPACING * 251)).into(),
-            250_u8 - downcast((expiry / constants::BITMAP_SPACING) % 251).unwrap()
+            (time / (constants::BITMAP_SPACING * 251)).into(),
+            250_u8 - downcast((time / constants::BITMAP_SPACING) % 251).unwrap()
         )
     }
 
-    fn word_and_bit_index_to_expiry(word_and_bit_index: (u128, u8)) -> u64 {
+    fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
         let (word, bit) = word_and_bit_index;
         ((word * 251 * constants::BITMAP_SPACING.into())
             + (upcast(250 - bit) * constants::BITMAP_SPACING.into()))
