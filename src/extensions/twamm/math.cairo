@@ -76,7 +76,7 @@ fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
         .expect('REWARD_AMOUNT_OVERFLOW')
 }
 
-fn validate_end_time(start_time: u64, end_time: u64) {
+fn validate_time(start_time: u64, end_time: u64) {
     assert(end_time > start_time, 'INVALID_END_TIME');
 
     // calculate the closest timestamp at which an order can expire
@@ -90,7 +90,7 @@ fn validate_end_time(start_time: u64, end_time: u64) {
     );
 
     assert(step >= constants::BITMAP_SPACING.into(), 'INVALID_SPACING');
-    assert(end_time.into() % step == 0, 'INVALID_END_TIME');
+    assert(end_time.into() % step == 0, 'INVALID_TIME');
 }
 
 fn calculate_next_sqrt_ratio(

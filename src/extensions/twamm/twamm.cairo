@@ -69,7 +69,7 @@ mod TWAMM {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::extensions::twamm::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
-        validate_end_time, calculate_next_sqrt_ratio
+        validate_time, calculate_next_sqrt_ratio
     };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
@@ -347,11 +347,10 @@ mod TWAMM {
             let order_start_time = if (order_key.start_time == 0) {
                 current_time
             } else {
+                validate_time(current_time, order_key.start_time);
                 order_key.start_time
             };
-
-            // validate that the order has a valid order time
-            validate_end_time(order_start_time, order_key.end_time);
+            validate_time(order_start_time, order_key.end_time);
 
             // execute virtual orders up to current time
             self.internal_execute_virtual_orders(to_pool_key(order_key));
@@ -389,7 +388,7 @@ mod TWAMM {
 
             self.emit(OrderPlaced { id, order_key, amount, sale_rate });
 
-            // transfer token amount to core contract
+            // deposit token amount to core contract
             self
                 .deposit(
                     if (order_key.is_sell_token1) {
