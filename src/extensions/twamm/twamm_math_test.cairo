@@ -24,9 +24,9 @@ mod SaleRateTest {
     };
 
 
-    fn assert_case_sale_rate(amount: u128, expiry_time: u64, current_time: u64, expected: u128) {
+    fn assert_case_sale_rate(amount: u128, end_time: u64, start_time: u64, expected: u128) {
         let sale_rate = calculate_sale_rate(
-            amount: amount, expiry_time: expiry_time, current_time: current_time
+            amount: amount, end_time: end_time, start_time: start_time
         );
         assert(sale_rate == expected, 'sale_rate');
     }
@@ -35,28 +35,28 @@ mod SaleRateTest {
     #[available_gas(3000000000)]
     fn test_sale_rates_smallest_amount() {
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_ONE, current_time: 0, expected: 0x10000000
+            amount: 1, end_time: SIXTEEN_POW_ONE, start_time: 0, expected: 0x10000000
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_TWO, current_time: 0, expected: 0x1000000
+            amount: 1, end_time: SIXTEEN_POW_TWO, start_time: 0, expected: 0x1000000
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_THREE, current_time: 0, expected: 0x100000
+            amount: 1, end_time: SIXTEEN_POW_THREE, start_time: 0, expected: 0x100000
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_FOUR, current_time: 0, expected: 0x10000
+            amount: 1, end_time: SIXTEEN_POW_FOUR, start_time: 0, expected: 0x10000
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_FIVE, current_time: 0, expected: 0x1000
+            amount: 1, end_time: SIXTEEN_POW_FIVE, start_time: 0, expected: 0x1000
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_SIX, current_time: 0, expected: 0x100
+            amount: 1, end_time: SIXTEEN_POW_SIX, start_time: 0, expected: 0x100
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_SEVEN, current_time: 0, expected: 0x10
+            amount: 1, end_time: SIXTEEN_POW_SEVEN, start_time: 0, expected: 0x10
         );
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_EIGHT, current_time: 0, expected: 0x1
+            amount: 1, end_time: SIXTEEN_POW_EIGHT, start_time: 0, expected: 0x1
         );
     }
 
@@ -66,7 +66,7 @@ mod SaleRateTest {
     fn test_sale_rates_smallest_amount_underflow() {
         // sale window above 2**32 seconds (136.2 years) underflows to 0 sale rate.
         assert_case_sale_rate(
-            amount: 1, expiry_time: SIXTEEN_POW_EIGHT + 1, current_time: 0, expected: 0x0
+            amount: 1, end_time: SIXTEEN_POW_EIGHT + 1, start_time: 0, expected: 0x0
         );
     }
 
@@ -78,8 +78,8 @@ mod SaleRateTest {
             // 2**128 - 1
             amount: 0xffffffffffffffffffffffffffffffff,
             // 2**32 - 1
-            expiry_time: 0xffffffff,
-            current_time: 0,
+            end_time: 0xffffffff,
+            start_time: 0,
             expected: 0
         );
     }
@@ -91,8 +91,8 @@ mod SaleRateTest {
             // 2**128 - 1
             amount: 0xffffffffffffffffffffffffffffffff,
             // 2**32
-            expiry_time: 0x1000000000,
-            current_time: 0,
+            end_time: 0x1000000000,
+            start_time: 0,
             expected: 0xfffffffffffffffffffffffffffffff
         );
     }
