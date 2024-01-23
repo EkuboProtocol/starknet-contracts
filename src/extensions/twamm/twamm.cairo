@@ -81,7 +81,6 @@ mod TWAMM {
     };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::bits::{msb};
-    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
@@ -240,14 +239,14 @@ mod TWAMM {
         Empty: (),
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::extensions::twamm::twamm::TWAMM");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -309,7 +308,7 @@ mod TWAMM {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
@@ -526,7 +525,7 @@ mod TWAMM {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();

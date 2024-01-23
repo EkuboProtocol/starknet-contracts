@@ -26,8 +26,7 @@ use ekubo::math::ticks::{min_tick, max_tick};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::mock_erc20::{IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
-    deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
-    update_position, SetupPoolResult, default_owner
+    Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner
 };
 use ekubo::tests::mocks::locker::{UpdatePositionParameters};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
@@ -52,16 +51,16 @@ const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 mod UpgradableTest {
     use ekubo::extensions::twamm::twamm::TWAMM;
     use super::{
-        deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
-        update_position, ClassHash, MockUpgradeable, set_contract_address, pop_log,
-        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, default_owner
+        Deployer, DeployerTrait, update_position, ClassHash, MockUpgradeable, set_contract_address,
+        pop_log, IUpgradeableDispatcher, IUpgradeableDispatcherTrait, default_owner
     };
 
     #[test]
     #[available_gas(3000000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             twamm.contract_address
         )
@@ -105,19 +104,20 @@ mod BitmapTest {
 
 mod PoolTests {
     use super::{
-        deploy_core, deploy_twamm, deploy_two_mock_tokens, deploy_positions, setup_pool_with_core,
-        update_position, ClassHash, set_contract_address, pop_log, IPositionsDispatcher,
-        IPositionsDispatcherTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        max_bounds, max_liquidity, contract_address_const, tick_to_sqrt_ratio, Bounds, i129,
-        TICKS_IN_ONE_PERCENT, Zero, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait
+        Deployer, DeployerTrait, update_position, ClassHash, set_contract_address, pop_log,
+        IPositionsDispatcher, IPositionsDispatcherTrait, ICoreDispatcher, ICoreDispatcherTrait,
+        PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity, contract_address_const,
+        tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero, IMockERC20,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait
     };
 
     #[test]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_before_initialize_pool_invalid_tick_spacing() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         core
             .initialize_pool(
@@ -134,9 +134,10 @@ mod PoolTests {
 
     #[test]
     fn test_before_initialize_pool_valid_tick_spacing() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         core
             .initialize_pool(
@@ -163,20 +164,22 @@ mod PoolTests {
         )
     )]
     fn test_before_update_position_invalid_bounds() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);
 
-        let setup = setup_pool_with_core(
-            core,
-            fee: 0,
-            tick_spacing: MAX_TICK_SPACING,
-            initial_tick: Zero::zero(),
-            extension: twamm.contract_address,
-        );
-        let positions = deploy_positions(setup.core);
+        let setup = d
+            .setup_pool_with_core(
+                core,
+                fee: 0,
+                tick_spacing: MAX_TICK_SPACING,
+                initial_tick: Zero::zero(),
+                extension: twamm.contract_address,
+            );
+        let positions = d.deploy_positions(setup.core);
         let bounds = max_bounds(MAX_TICK_SPACING);
 
         setup.token0.increase_balance(positions.contract_address, 100_000_000);
@@ -209,20 +212,22 @@ mod PoolTests {
 
     #[test]
     fn test_before_update_position_valid_bounds() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);
 
-        let setup = setup_pool_with_core(
-            core,
-            fee: 0,
-            tick_spacing: MAX_TICK_SPACING,
-            initial_tick: Zero::zero(),
-            extension: twamm.contract_address,
-        );
-        let positions = deploy_positions(setup.core);
+        let setup = d
+            .setup_pool_with_core(
+                core,
+                fee: 0,
+                tick_spacing: MAX_TICK_SPACING,
+                initial_tick: Zero::zero(),
+                extension: twamm.contract_address,
+            );
+        let positions = d.deploy_positions(setup.core);
         let bounds = max_bounds(MAX_TICK_SPACING);
 
         setup.token0.increase_balance(positions.contract_address, 100_000_000);
@@ -255,20 +260,20 @@ mod PoolTests {
 
 mod PlaceOrderTestsValidateTime {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE,
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX,
-        SIXTEEN_POW_SEVEN, TWAMMPoolKey, Zero
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, TWAMMPoolKey, Zero
     };
 
     #[test]
     #[should_panic(expected: ('INVALID_END_TIME', 'ENTRYPOINT_FAILED'))]
     fn test_place_order_at_timestamp() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let twamm_pool_key = TWAMMPoolKey {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
@@ -378,9 +383,10 @@ mod PlaceOrderTestsValidateTime {
     ) {
         set_block_timestamp(timestamp);
 
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 100_000_000;
 
@@ -451,12 +457,11 @@ mod PlaceOrderTestsValidateTime {
 
 mod PlaceOrderTests {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, TWAMMPoolKey, SIXTEEN_POW_ZERO,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
-        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, Zero
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        TWAMMPoolKey, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
+        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, Zero
     };
 
     #[test]
@@ -526,9 +531,10 @@ mod PlaceOrderTests {
     ) {
         set_block_timestamp(timestamp);
 
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let twamm_pool_key = TWAMMPoolKey {
             token0: token0.contract_address, token1: token1.contract_address, fee: 0,
@@ -550,13 +556,14 @@ mod PlaceOrderTests {
 
     #[test]
     fn test_two_orders_and_global_rate_no_virtual_orders_executed() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             twamm.contract_address
         )
             .unwrap();
-        let (token0, token1) = deploy_two_mock_tokens();
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 100_000_000;
 
@@ -635,9 +642,10 @@ mod PlaceOrderTests {
         )
     )]
     fn test_place_order_no_token_transfer() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 100_000_000;
         let twamm_pool_key = TWAMMPoolKey {
@@ -654,19 +662,20 @@ mod PlaceOrderTests {
 
 mod CancelOrderTests {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, get_contract_address,
-        IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_THREE,
-        TWAMMPoolKey, IERC20Dispatcher, IERC20DispatcherTrait
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher,
+        IMockERC20DispatcherTrait, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher,
+        IERC20DispatcherTrait
     };
 
     #[test]
     #[should_panic(expected: ('ORDER_EXPIRED', 'ENTRYPOINT_FAILED'))]
     fn test_place_order_and_cancel_after_end_time() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 100_000_000;
         let twamm_pool_key = TWAMMPoolKey {
@@ -693,9 +702,10 @@ mod CancelOrderTests {
     }
     #[test]
     fn test_place_order_and_withdraw() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 100_000_000;
         let twamm_pool_key = TWAMMPoolKey {
@@ -721,9 +731,10 @@ mod CancelOrderTests {
 
     #[test]
     fn test_place_order_and_cancel_before_order_execution() {
-        let core = deploy_core();
-        let twamm = deploy_twamm(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let (token0, token1) = d.deploy_two_mock_tokens();
 
         let amount = 1_000;
         let twamm_pool_key = TWAMMPoolKey {
@@ -759,12 +770,11 @@ mod CancelOrderTests {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
-        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
@@ -782,10 +792,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         // l---------------------t----0--1----------> time
         // trade from l->t
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -831,10 +842,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         // l---------------0-----t-------1----------> time
         // execute from l->0 and from 0->t
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -881,10 +893,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         // l---------------0--1--t------------------> time
         // execute from l->0, 0->1, 1->t
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -944,10 +957,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         // l---------------0--1--t------------------> time
         // execute from l->0, 0->1, 1->t
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -1001,12 +1015,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
-        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
@@ -1020,7 +1033,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // place one order to sell token0
         // withdraw once before it expires then again at end time
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
@@ -1028,7 +1042,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1139,14 +1153,15 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // place one order to sell token0
         // withdraw afer end time
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1245,14 +1260,15 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // Place one order to sell token1
         // withdraw once before it expires then again at end time
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1361,14 +1377,15 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // place one order to sell token1
         // withdraw afer end
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1464,12 +1481,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
-        setup_pool_with_core, deploy_positions, max_bounds, update_position, max_liquidity, Bounds,
-        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
@@ -1483,14 +1499,15 @@ mod PlaceOrderOnBothSides {
     fn test_place_orders_0() {
         // place one order on both sides expiring at the same time.
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1643,14 +1660,15 @@ mod PlaceOrderOnBothSides {
         // sale rate is the same for both orders but smaller than the previous test
         // since it loses 1 wei of precision.
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -1812,7 +1830,8 @@ mod PlaceOrderOnBothSides {
         // place one order on both sides expiring at the same time.
         // price is 100_000_000:1
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
@@ -1822,7 +1841,7 @@ mod PlaceOrderOnBothSides {
         let token0_liquidity = 2 * 1000000000000000000;
         let token1_liquidity = 100_000_000 * 1000000000000000000;
         let (twamm, setup) = set_up_twamm_with_liquidity(
-            core, fee, initial_tick, token0_liquidity, token1_liquidity
+            ref d, core, fee, initial_tick, token0_liquidity, token1_liquidity
         );
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
@@ -1971,7 +1990,8 @@ mod PlaceOrderOnBothSides {
         // place one order on both sides expiring at different
         // price is 0.5:1
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
@@ -1981,7 +2001,7 @@ mod PlaceOrderOnBothSides {
         let token0_liquidity = 10_000_000 * 1000000000000000000;
         let token1_liquidity = 10_000_000 * 1000000000000000000;
         let (twamm, setup) = set_up_twamm_with_liquidity(
-            core, fee, initial_tick, token0_liquidity, token1_liquidity
+            ref d, core, fee, initial_tick, token0_liquidity, token1_liquidity
         );
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
@@ -2140,12 +2160,11 @@ mod PlaceOrderOnBothSides {
 
 mod PlaceFutureOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        PrintTrait, deploy_core, deploy_twamm, deploy_two_mock_tokens, ICoreDispatcher,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait,
-        OrderKey, get_block_timestamp, set_block_timestamp, pop_log, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, setup_pool_with_core, deploy_positions, max_bounds, update_position,
-        max_liquidity, Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        PrintTrait, ICoreDispatcher, ICoreDispatcherTrait, Deployer, DeployerTrait, PoolKey,
+        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
+        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
@@ -2158,7 +2177,8 @@ mod PlaceFutureOrderOnOneSideAndWithdrawProceeds {
         // place one order to sell token0
         // withdraw once before it expires then again at end time
 
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address
         )
@@ -2166,7 +2186,7 @@ mod PlaceFutureOrderOnOneSideAndWithdrawProceeds {
 
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup) = set_up_twamm_with_default_liquidity(core, fee, initial_tick);
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
         let twamm_pool_key = TWAMMPoolKey {
             token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
         };
@@ -2283,14 +2303,15 @@ mod PlaceFutureOrderOnOneSideAndWithdrawProceeds {
 }
 
 fn set_up_twamm_with_default_liquidity(
-    core: ICoreDispatcher, fee: u128, initial_tick: i129
+    ref d: Deployer, core: ICoreDispatcher, fee: u128, initial_tick: i129
 ) -> (ITWAMMDispatcher, SetupPoolResult) {
     let token0_liquidity = 100_000_000 * 1000000000000000000;
     let token1_liquidity = 100_000_000 * 1000000000000000000;
-    set_up_twamm_with_liquidity(core, fee, initial_tick, token0_liquidity, token1_liquidity)
+    set_up_twamm_with_liquidity(ref d, core, fee, initial_tick, token0_liquidity, token1_liquidity)
 }
 
 fn set_up_twamm_with_liquidity(
+    ref d: Deployer,
     core: ICoreDispatcher,
     fee: u128,
     initial_tick: i129,
@@ -2299,7 +2320,7 @@ fn set_up_twamm_with_liquidity(
 ) -> (ITWAMMDispatcher, SetupPoolResult) {
     set_block_timestamp(1);
 
-    let twamm = deploy_twamm(core);
+    let twamm = d.deploy_twamm(core);
     let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
         twamm.contract_address
     )
@@ -2308,14 +2329,15 @@ fn set_up_twamm_with_liquidity(
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
 
-    let setup = setup_pool_with_core(
-        core,
-        fee: fee,
-        tick_spacing: MAX_TICK_SPACING,
-        initial_tick: initial_tick,
-        extension: twamm.contract_address,
-    );
-    let positions = deploy_positions(setup.core);
+    let setup = d
+        .setup_pool_with_core(
+            core,
+            fee: fee,
+            tick_spacing: MAX_TICK_SPACING,
+            initial_tick: initial_tick,
+            extension: twamm.contract_address,
+        );
+    let positions = d.deploy_positions(setup.core);
     let bounds = max_bounds(MAX_TICK_SPACING);
 
     let price = core.get_pool_price(pool_key: setup.pool_key);

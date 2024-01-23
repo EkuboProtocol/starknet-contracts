@@ -313,14 +313,15 @@ impl DeployerTraitImpl of DeployerTrait {
     }
 
     fn setup_pool_with_core(
+        ref self: Deployer,
         core: ICoreDispatcher,
         fee: u128,
         tick_spacing: u128,
         initial_tick: i129,
         extension: ContractAddress
     ) -> SetupPoolResult {
-        let locker = deploy_locker(core);
-        let (token0, token1) = deploy_two_mock_tokens();
+        let locker = self.deploy_locker(core);
+        let (token0, token1) = self.deploy_two_mock_tokens();
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
