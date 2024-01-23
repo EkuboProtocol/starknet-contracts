@@ -84,7 +84,7 @@ mod MockExtension {
         self.call_points.write(call_points.into());
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -148,7 +148,7 @@ mod MockExtension {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionLocked of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -188,12 +188,12 @@ mod MockExtension {
         pool_key: PoolKey
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
         fn call_into_pool(self: @ContractState, pool_key: PoolKey) {
-            let unused_output: () = call_core_with_callback(
-                self.core.read(), @CallbackData { pool_key }
-            );
+            call_core_with_callback::<
+                CallbackData, ()
+            >(self.core.read(), @CallbackData { pool_key });
         }
         fn get_num_calls(self: @ContractState) -> u32 {
             self.num_calls.read()

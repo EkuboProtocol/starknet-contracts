@@ -70,7 +70,7 @@ mod CoreLocker {
         self.core.write(core);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -120,7 +120,7 @@ mod CoreLocker {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl CoreLockerLockedImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -327,7 +327,7 @@ mod CoreLocker {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl CoreLockerImpl of ICoreLocker<ContractState> {
         fn call(ref self: ContractState, action: Action) -> ActionResult {
             call_core_with_callback(self.core.read(), @action)

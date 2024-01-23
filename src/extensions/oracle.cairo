@@ -147,7 +147,8 @@ mod Oracle {
 
             let liquidity = core.get_pool_liquidity(pool_key);
 
-            let seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
+            // todo: use this value
+            let _seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
                 self.pool_seconds_per_liquidity.read(pool_key)
                     + (u256 { low: 0, high: time_passed } / u256 { low: liquidity, high: 0 })
                         .try_into()
@@ -174,7 +175,7 @@ mod Oracle {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl OracleImpl of IOracle<ContractState> {
         // Returns the number of seconds that the position has held the full liquidity of the pool, as a fixed point number with 128 bits after the radix
         fn get_seconds_per_liquidity_inside(
@@ -229,7 +230,7 @@ mod Oracle {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl OracleExtension of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129

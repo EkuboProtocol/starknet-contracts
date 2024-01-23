@@ -160,14 +160,14 @@ mod OwnedNFT {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl OwnedNFTHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::owned_nft::OwnedNFT");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721Impl of IERC721<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.name.read()
@@ -263,7 +263,7 @@ mod OwnedNFT {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
             interfaceId == SRC5_SRC5_ID
@@ -279,7 +279,7 @@ mod OwnedNFT {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl OwnedNFTImpl of IOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
             self.require_owner();

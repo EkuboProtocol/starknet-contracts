@@ -47,9 +47,6 @@ mod math {
     mod bits;
     #[cfg(test)]
     mod bits_test;
-    mod contract_address;
-    #[cfg(test)]
-    mod contract_address_test;
     mod delta;
     #[cfg(test)]
     mod delta_test;

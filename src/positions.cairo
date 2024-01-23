@@ -26,8 +26,7 @@ mod Positions {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
-        deploy_syscall
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -138,14 +137,14 @@ mod Positions {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::positions::Positions");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -225,7 +224,7 @@ mod Positions {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl PositionsImpl of IPositions<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
@@ -340,7 +339,7 @@ mod Positions {
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-            let delta: Delta = call_core_with_callback(
+            let _delta: Delta = call_core_with_callback(
                 core,
                 @LockCallbackData::Deposit(
                     DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
