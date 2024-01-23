@@ -430,7 +430,7 @@ fn flash_borrow_inner(
 ) {
     match locker.call(Action::FlashBorrow((token, amount_borrow, amount_repay))) {
         ActionResult::FlashBorrow(_) => {},
-        _ => { assert(false, 'unexpected'); }
+        _ => { assert(false, 'expected flash borrow'); }
     }
 }
 

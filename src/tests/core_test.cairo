@@ -746,7 +746,8 @@ mod locks {
                     )
                 )
             ) {
-            _ => { assert(false, 'unexpected'); },
+            ActionResult::SaveBalance => {},
+            _ => { assert(false, 'expected save'); },
         };
     }
 
