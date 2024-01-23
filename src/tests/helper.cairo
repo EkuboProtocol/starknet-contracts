@@ -272,10 +272,15 @@ impl DeployerTraitImpl of DeployerTrait {
 
     fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
         let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, 'twamm://'), ref constructor_args);
+        Serde::serialize(
+            @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, 'twamm://'), ref constructor_args
+        );
 
         let (address, _) = deploy_syscall(
-            TWAMM::TEST_CLASS_HASH.try_into().unwrap(), self.get_next_nonce(), constructor_args.span(), true
+            TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            constructor_args.span(),
+            true
         )
             .expect('twamm deploy failed');
 
@@ -294,28 +299,28 @@ impl DeployerTraitImpl of DeployerTrait {
         let locker = self.deploy_locker(core);
         let (token0, token1) = self.deploy_two_mock_tokens();
 
-    let pool_key = PoolKey {
-        token0: token0.contract_address,
-        token1: token1.contract_address,
-        fee,
-        tick_spacing,
-        extension
-    };
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee,
+            tick_spacing,
+            extension
+        };
 
-    core.initialize_pool(pool_key, initial_tick);
+        core.initialize_pool(pool_key, initial_tick);
 
-    SetupPoolResult { token0, token1, pool_key, core, locker }
-}
+        SetupPoolResult { token0, token1, pool_key, core, locker }
+    }
 
-fn setup_pool_with_core(
-    core: ICoreDispatcher,
-    fee: u128,
-    tick_spacing: u128,
-    initial_tick: i129,
-    extension: ContractAddress
-) -> SetupPoolResult {
-    let locker = deploy_locker(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    fn setup_pool_with_core(
+        core: ICoreDispatcher,
+        fee: u128,
+        tick_spacing: u128,
+        initial_tick: i129,
+        extension: ContractAddress
+    ) -> SetupPoolResult {
+        let locker = deploy_locker(core);
+        let (token0, token1) = deploy_two_mock_tokens();
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
