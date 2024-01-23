@@ -2267,7 +2267,8 @@ mod PlaceFutureOrderOnOneSideAndWithdrawProceeds {
         //               ~= 271.9690334787 + 207.9347327979
         //               ~= 479.9037662766 (then scaled by 2**96)
         assert_eq!(
-            virtual_orders_executed_event.token1_reward_rate, 0x10ff81293fcb4f42479c86aacc2 + 0xcfef4aa5ff0c41d1fc76a425ce
+            virtual_orders_executed_event.token1_reward_rate,
+            0x10ff81293fcb4f42479c86aacc2 + 0xcfef4aa5ff0c41d1fc76a425ce
         );
 
         // withdraw proceeds

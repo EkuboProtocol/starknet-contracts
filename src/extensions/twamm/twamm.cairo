@@ -580,10 +580,10 @@ mod TWAMM {
                                         - last_virtual_order_time;
                                     let token0_amount = (token0_sale_rate
                                         * virtual_order_time_window.into())
-                                        / constants::X_32_u128;
+                                        / constants::X32_u128;
                                     let token1_amount = (token1_sale_rate
                                         * virtual_order_time_window.into())
-                                        / constants::X_32_u128;
+                                        / constants::X32_u128;
 
                                     if (token0_amount != 0 && token1_amount != 0) {
                                         let sqrt_ratio_limit = calculate_next_sqrt_ratio(
@@ -911,7 +911,7 @@ mod TWAMM {
             (order_state.sale_rate
                 * (order_key.end_time - self.last_virtual_order_time.read(order_key.twamm_pool_key))
                     .into())
-                / constants::X_32_u128
+                / constants::X32_u128
         }
 
         // remove the initialized time for the order
