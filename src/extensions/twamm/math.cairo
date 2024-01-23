@@ -101,10 +101,11 @@ fn calculate_next_sqrt_ratio(
     let (c, sign) = calculate_c(sqrt_ratio, sqrt_sell_ratio * constants::X64_u256);
 
     let sqrt_ratio_next = if (c.is_zero()) {
-        sqrt_sell_ratio.try_into().expect('SQRT_RATIO_OVERFLOW')
+        sqrt_sell_ratio
     } else {
         let sqrt_sell_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
 
+        // TODO: check if term will overflow exp_fractional and use sqrt_sell_ratio.
         let e = calculate_e(sqrt_sell_rate, virtual_order_time_window, liquidity);
 
         let term1 = e - c;
@@ -179,7 +180,7 @@ fn calculate_e(sqrt_sell_rate: u128, t: u64, liquidity: u128) -> u256 {
 
 fn exp_fractional(x: u128) -> u256 {
     // base = 1.00000000000
-    // number of iterations = 71
+    // number of iterations = 128
     // denominator = 1<<128
     let mut ratio = 0x100000000000000000000000000000000_u256;
     if ((x & 0x1) != 0) {

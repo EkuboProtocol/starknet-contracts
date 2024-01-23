@@ -351,28 +351,41 @@ mod TWAMMMathTest {
         // e^1, error 1
         assert_eq!(exp_fractional(0x10000000000000000), 924983374546220337150911035843336795078);
         // e^2, error 4
-        assert_eq!(exp_fractional(2 * constants::X64_u128), 2514365498655717699434277416465328696989);
+        assert_eq!(
+            exp_fractional(2 * constants::X64_u128), 2514365498655717699434277416465328696989
+        );
         // e^3, error -91
-        assert_eq!(exp_fractional(3 * constants::X64_u128), 6834754045100203352782362684486003079520);
+        assert_eq!(
+            exp_fractional(3 * constants::X64_u128), 6834754045100203352782362684486003079520
+        );
         // e^4, error -477
-        assert_eq!(exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914658);
+        assert_eq!(
+            exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914658
+        );
         // e^5, error -17044
-        assert_eq!(exp_fractional(5 * constants::X64_u128), 50502381061638590010053149766929220261826);
+        assert_eq!(
+            exp_fractional(5 * constants::X64_u128), 50502381061638590010053149766929220261826
+        );
         // e^6, error -5470
-        assert_eq!(exp_fractional(6 * constants::X64_u128), 137279704733766404528564625531825993814935);
+        assert_eq!(
+            exp_fractional(6 * constants::X64_u128), 137279704733766404528564625531825993814935
+        );
         // e^7, error -649328
-        assert_eq!(exp_fractional(7 * constants::X64_u128), 373164926794020389796596697795276277774728);
+        assert_eq!(
+            exp_fractional(7 * constants::X64_u128), 373164926794020389796596697795276277774728
+        );
         // e^8, error 2876165
-        assert_eq!(exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796518133789);
+        assert_eq!(
+            exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796518133789
+        );
         // e^9, error -17021283
-        assert_eq!(exp_fractional(9 * constants::X64_u128), 2757336578234365975078160713954485358860547);
+        assert_eq!(
+            exp_fractional(9 * constants::X64_u128), 2757336578234365975078160713954485358860547
+        );
         // e^(10), error -460038890
         assert_eq!(
             exp_fractional(10 * constants::X64_u128), 7495217915559919573679589385952004979444847
         );
-
-        // e^(0.0001414213189633673557928095210201036024955101311206817626953125) 
-        assert_eq!(exp_fractional(0x944a7f09d9aa5), 0);
     }
 
     #[test]
