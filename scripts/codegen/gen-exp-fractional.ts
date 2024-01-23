@@ -53,7 +53,7 @@ function genExpFractionalInput({
 }
 
 genExpFractionalInput({
-    base: Decimal.exp('1.0000000000000000000542101086242752217018420079820249449562765347'),
+    base: Decimal.exp(1),
     maxInput: new Decimal(2).pow(64),
     inputFixedPointRadix: 64,
     outputFixedPointRadix: 128,
