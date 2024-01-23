@@ -265,14 +265,14 @@ mod LimitOrders {
         OrderClosed: OrderClosed,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LimitOrdersHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::extensions::limit_orders::LimitOrders");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -345,7 +345,7 @@ mod LimitOrders {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -556,7 +556,7 @@ mod LimitOrders {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LimitOrderImpl of ILimitOrders<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address

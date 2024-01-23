@@ -54,7 +54,7 @@ mod Upgradeable {
 
             assert(@id == next_id, 'UPGRADEABLE_ID_MISMATCH');
 
-            replace_class_syscall(class_hash);
+            replace_class_syscall(class_hash).expect('UPGRADE_FAILED');
 
             self.emit(ClassHashReplaced { new_class_hash: class_hash });
         }
