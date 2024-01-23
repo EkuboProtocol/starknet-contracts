@@ -10,7 +10,7 @@ use starknet::{
     SyscallResultTrait
 };
 
-fn call_core_with_callback<TInput, TOutput, +Serde<TOutput>, +Serde<TInput>>(
+fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
     core: ICoreDispatcher, input: @TInput
 ) -> TOutput {
     let mut input_data: Array<felt252> = ArrayTrait::new();
