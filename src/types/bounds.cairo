@@ -1,8 +1,8 @@
+use core::traits::{Into};
 use ekubo::math::ticks::{min_tick, max_tick, constants as tick_constants};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PositionKey, PoolKey};
 use starknet::ContractAddress;
-use traits::{Into};
 
 // Tick bounds for a position
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
@@ -21,6 +21,7 @@ fn max_bounds(tick_spacing: u128) -> Bounds {
 
 #[generate_trait]
 impl BoudnsTraitImpl of BoundsTrait {
+    #[inline(always)]
     fn check_valid(self: Bounds, tick_spacing: u128) {
         assert(self.lower < self.upper, 'BOUNDS_ORDER');
         assert(self.lower >= min_tick(), 'BOUNDS_MIN');

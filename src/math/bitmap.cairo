@@ -1,11 +1,11 @@
+use core::integer::{downcast, upcast};
+use core::num::traits::{Zero};
+use core::option::{OptionTrait};
+use core::traits::{Into, TryInto};
 use ekubo::math::bits::{msb, lsb};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::types::i129::{i129, i129Trait};
-use integer::{downcast, upcast};
-use option::{OptionTrait};
-use traits::{Into, TryInto};
-use zeroable::{Zeroable};
 
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
 struct Bitmap {
@@ -13,14 +13,17 @@ struct Bitmap {
     value: felt252
 }
 
-impl BitmapZeroable of Zeroable<Bitmap> {
+impl BitmapZero of Zero<Bitmap> {
+    #[inline(always)]
     fn zero() -> Bitmap {
-        Bitmap { value: Zeroable::zero() }
+        Bitmap { value: Zero::zero() }
     }
-    fn is_zero(self: Bitmap) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @Bitmap) -> bool {
         self.value.is_zero()
     }
-    fn is_non_zero(self: Bitmap) -> bool {
+    #[inline(always)]
+    fn is_non_zero(self: @Bitmap) -> bool {
         self.value.is_non_zero()
     }
 }

@@ -1,12 +1,12 @@
+use core::hash::{LegacyHash};
+use core::num::traits::{Zero};
+use core::option::{Option, OptionTrait};
+use core::traits::{Into};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::i129::{i129, AddDeltaTrait};
 use ekubo::types::keys_test::{check_hashes_differ};
-use hash::{LegacyHash};
-use option::{Option, OptionTrait};
 use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
 use starknet::{SyscallResult, SyscallResultTrait};
-use traits::{Into};
-use zeroable::Zeroable;
 
 #[test]
 fn test_legacy_hash_i129() {
@@ -23,10 +23,10 @@ fn test_legacy_hash_i129() {
 }
 
 #[test]
-fn test_zeroable() {
-    assert(Zeroable::<i129>::zero() == i129 { mag: 0, sign: false }, 'zero()');
-    assert(Zeroable::<i129>::zero().is_zero(), '0.is_zero()');
-    assert(!Zeroable::<i129>::zero().is_non_zero(), '0.is_non_zero()');
+fn test_zero() {
+    assert(Zero::<i129>::zero() == i129 { mag: 0, sign: false }, 'zero()');
+    assert(Zero::<i129>::zero().is_zero(), '0.is_zero()');
+    assert(!Zero::<i129>::zero().is_non_zero(), '0.is_non_zero()');
     assert(i129 { mag: 0, sign: true }.is_zero(), '-0.is_zero()');
     assert(!i129 { mag: 0, sign: true }.is_non_zero(), '-0.is_non_zero()');
 
@@ -60,38 +60,38 @@ fn test_div_i129() {
 
 #[test]
 fn test_gt() {
-    assert((Zeroable::zero() > i129 { mag: 0, sign: true }) == false, '0 > -0');
+    assert((Zero::zero() > i129 { mag: 0, sign: true }) == false, '0 > -0');
     assert((i129 { mag: 1, sign: false } > i129 { mag: 0, sign: true }) == true, '1 > -0');
     assert((i129 { mag: 1, sign: true } > i129 { mag: 0, sign: true }) == false, '-1 > -0');
-    assert((i129 { mag: 1, sign: true } > Zeroable::zero()) == false, '-1 > 0');
+    assert((i129 { mag: 1, sign: true } > Zero::zero()) == false, '-1 > 0');
     assert((i129 { mag: 1, sign: false } > i129 { mag: 1, sign: false }) == false, '1 > 1');
 }
 
 #[test]
 fn test_lt() {
-    assert((Zeroable::zero() < i129 { mag: 0, sign: true }) == false, '0 < -0');
-    assert((Zeroable::zero() < i129 { mag: 1, sign: true }) == false, '0 < -1');
+    assert((Zero::zero() < i129 { mag: 0, sign: true }) == false, '0 < -0');
+    assert((Zero::zero() < i129 { mag: 1, sign: true }) == false, '0 < -1');
     assert((i129 { mag: 1, sign: false } < i129 { mag: 1, sign: false }) == false, '1 < 1');
 
-    assert((i129 { mag: 1, sign: true } < Zeroable::zero()) == true, '-1 < 0');
+    assert((i129 { mag: 1, sign: true } < Zero::zero()) == true, '-1 < 0');
     assert((i129 { mag: 1, sign: true } < i129 { mag: 0, sign: true }) == true, '-1 < -0');
-    assert((Zeroable::zero() < i129 { mag: 1, sign: false }) == true, '0 < 1');
+    assert((Zero::zero() < i129 { mag: 1, sign: false }) == true, '0 < 1');
     assert((i129 { mag: 1, sign: false } < i129 { mag: 2, sign: false }) == true, '1 < 2');
 }
 
 #[test]
 fn test_gte() {
-    assert((Zeroable::zero() >= i129 { mag: 0, sign: true }) == true, '0 >= -0');
+    assert((Zero::zero() >= i129 { mag: 0, sign: true }) == true, '0 >= -0');
     assert((i129 { mag: 1, sign: false } >= i129 { mag: 0, sign: true }) == true, '1 >= -0');
     assert((i129 { mag: 1, sign: true } >= i129 { mag: 0, sign: true }) == false, '-1 >= -0');
-    assert((i129 { mag: 1, sign: true } >= Zeroable::zero()) == false, '-1 >= 0');
-    assert((Zeroable::<i129>::zero() >= Zeroable::zero()) == true, '0 >= 0');
+    assert((i129 { mag: 1, sign: true } >= Zero::zero()) == false, '-1 >= 0');
+    assert((Zero::<i129>::zero() >= Zero::zero()) == true, '0 >= 0');
 }
 
 #[test]
 fn test_eq() {
-    assert((Zeroable::zero() == i129 { mag: 0, sign: true }) == true, '0 == -0');
-    assert((Zeroable::zero() == i129 { mag: 1, sign: true }) == false, '0 != -1');
+    assert((Zero::zero() == i129 { mag: 0, sign: true }) == true, '0 == -0');
+    assert((Zero::zero() == i129 { mag: 1, sign: true }) == false, '0 != -1');
     assert((i129 { mag: 1, sign: false } == i129 { mag: 1, sign: true }) == false, '1 != -1');
     assert((i129 { mag: 1, sign: true } == i129 { mag: 1, sign: true }) == true, '-1 = -1');
     assert((i129 { mag: 1, sign: false } == i129 { mag: 1, sign: false }) == true, '1 = 1');
@@ -99,11 +99,11 @@ fn test_eq() {
 
 #[test]
 fn test_lte() {
-    assert((Zeroable::zero() <= i129 { mag: 0, sign: true }) == true, '0 <= -0');
+    assert((Zero::zero() <= i129 { mag: 0, sign: true }) == true, '0 <= -0');
     assert((i129 { mag: 1, sign: false } <= i129 { mag: 0, sign: true }) == false, '1 <= -0');
     assert((i129 { mag: 1, sign: true } <= i129 { mag: 0, sign: true }) == true, '-1 <= -0');
-    assert((i129 { mag: 1, sign: true } <= Zeroable::zero()) == true, '-1 <= 0');
-    assert((Zeroable::<i129>::zero() <= Zeroable::zero()) == true, '0 <= 0');
+    assert((i129 { mag: 1, sign: true } <= Zero::zero()) == true, '-1 <= 0');
+    assert((Zero::<i129>::zero() <= Zero::zero()) == true, '0 <= 0');
 }
 
 #[test]
@@ -135,7 +135,6 @@ fn test_round_trip_many_values() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_1() {
     let packed = StorePacking::<i129, felt252>::pack(i129 { mag: 1, sign: false });
     let unpacked = StorePacking::<i129, felt252>::unpack(packed);
@@ -143,7 +142,6 @@ fn test_store_write_read_1() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_negative_1() {
     let value = i129 { mag: 1, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -152,7 +150,6 @@ fn test_store_write_read_negative_1() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_0() {
     let value = i129 { mag: 0, sign: false };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -161,7 +158,6 @@ fn test_store_write_read_0() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_negative_0() {
     let value = i129 { mag: 0, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -171,7 +167,6 @@ fn test_store_write_read_negative_0() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_max_value() {
     let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: false };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -180,7 +175,6 @@ fn test_store_write_read_max_value() {
 }
 
 #[test]
-#[available_gas(3000000)]
 fn test_store_write_read_min_value() {
     let value = i129 { mag: 0x7fffffffffffffffffffffffffffffff, sign: true };
     let packed = StorePacking::<i129, felt252>::pack(value);
@@ -189,7 +183,6 @@ fn test_store_write_read_min_value() {
 }
 
 #[test]
-#[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_min_value_minus_one() {
     StorePacking::<
@@ -198,7 +191,6 @@ fn test_store_write_min_value_minus_one() {
 }
 
 #[test]
-#[available_gas(3000000)]
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_max_value_plus_one() {
     StorePacking::<
@@ -218,8 +210,7 @@ fn test_add_delta_no_overflow() {
         'max-1 +1'
     );
     assert(
-        0xffffffffffffffffffffffffffffffff
-            .add(Zeroable::zero()) == 0xffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffff.add(Zero::zero()) == 0xffffffffffffffffffffffffffffffff,
         'max+0'
     );
 }

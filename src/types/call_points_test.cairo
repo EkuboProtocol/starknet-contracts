@@ -1,6 +1,6 @@
+use core::option::{Option, OptionTrait};
+use core::traits::{Into, TryInto};
 use ekubo::types::call_points::{CallPoints, all_call_points};
-use option::{Option, OptionTrait};
-use traits::{Into, TryInto};
 
 #[test]
 fn test_default_call_points_into_u8() {
@@ -31,7 +31,6 @@ fn test_u8_into_all_call_points() {
 }
 
 #[test]
-#[available_gas(1000000)]
 fn test_lower_bits_result_in_none() {
     let mut i = 7_u8;
     loop {
@@ -123,7 +122,6 @@ fn test_u8_into_after_update_position_call_points() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_conversion_all_possible_values() {
     let mut i: u128 = 0;
 

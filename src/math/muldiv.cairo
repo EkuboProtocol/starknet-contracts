@@ -1,31 +1,42 @@
-use integer::{
+use core::integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_overflowing_add,
     u256_safe_divmod
 };
-use option::{Option, OptionTrait};
-use zeroable::Zeroable;
+use core::num::traits::{Zero};
+use core::option::{Option, OptionTrait};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
-fn div(x: u256, z: u256, round_up: bool) -> u256 {
-    let (quotient, remainder, _) = u256_safe_divmod(x, u256_as_non_zero(z));
+#[inline(always)]
+fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
+    let (quotient, remainder, _) = u256_safe_divmod(x, z);
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {
-        quotient + 1_u256
+        // we know this cannot overflow because max real result of x/z where x and z are both u256 is [0, 2**256-1]
+        let (result, _) = u256_overflowing_add(quotient, 1_u256);
+        result
     };
 }
 
 // Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
+#[inline(always)]
 fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
+    if (z.is_zero()) {
+        return Option::None(());
+    }
+
     let numerator = u256_wide_mul(x, y);
 
+    // we didn't overflow the 256 bit container, so just div
     if ((numerator.limb3 == 0) & (numerator.limb2 == 0)) {
-        return Option::Some(div(u256 { low: numerator.limb0, high: numerator.limb1 }, z, round_up));
+        return Option::Some(
+            div(u256 { low: numerator.limb0, high: numerator.limb1 }, u256_as_non_zero(z), round_up)
+        );
     }
 
     let (quotient, remainder) = u512_safe_div_rem_by_u256(numerator, u256_as_non_zero(z));
 
-    if (z <= u256 { low: numerator.limb2, high: numerator.limb3 }) {
+    if (quotient.limb3.is_non_zero() | quotient.limb2.is_non_zero()) {
         Option::None(())
     } else if (!round_up | (remainder.is_zero())) {
         Option::Some(u256 { low: quotient.limb0, high: quotient.limb1 })

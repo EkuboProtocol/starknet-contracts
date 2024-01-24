@@ -1,7 +1,7 @@
-use core::array::ArrayTrait;
-use serde::Serde;
+use core::array::{ArrayTrait};
+use core::serde::{Serde};
+use core::traits::{Into};
 use starknet::storage_access::{StorePacking};
-use traits::{Into};
 
 // The points at which an extension should be called
 #[derive(Copy, Drop, Serde, PartialEq)]
@@ -38,6 +38,7 @@ fn all_call_points() -> CallPoints {
 }
 
 impl CallPointsIntoU8 of Into<CallPoints, u8> {
+    #[inline(always)]
     fn into(self: CallPoints) -> u8 {
         let mut res: u8 = 0;
         if (self.after_initialize_pool) {
@@ -60,6 +61,7 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
 }
 
 impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
+    #[inline(always)]
     fn try_into(mut self: u8) -> Option<CallPoints> {
         let after_initialize_pool = if (self >= 128) {
             self -= 128;

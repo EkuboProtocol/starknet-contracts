@@ -1,15 +1,15 @@
+use core::num::traits::{Zero};
+use core::option::{OptionTrait};
+use core::traits::{Into};
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
 };
-use ekubo::math::string::{append, to_decimal};
+use ekubo::math::string::{to_decimal};
 use ekubo::types::i129::{i129};
-use option::{OptionTrait};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 #[test]
 fn test_zeroable() {
-    let b: Bitmap = Zeroable::zero();
+    let b: Bitmap = Zero::zero();
     assert(b.is_zero(), 'is_zero');
     assert(!b.is_non_zero(), 'is_non_ero');
     assert(b.value.is_zero(), 'value.is_zero');
@@ -18,9 +18,8 @@ fn test_zeroable() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_set_all_bits() {
-    let mut b: Bitmap = Zeroable::zero();
+    let mut b: Bitmap = Zero::zero();
     let mut i: u8 = 0;
     loop {
         if (i == 251) {
@@ -74,7 +73,7 @@ fn test_set_bit() {
             ) == Bitmap {
                 value: 0x400000000000000000000000000000000000000000000000000000000000000
             },
-        'set 251'
+        'set 250'
     );
 
     assert(Bitmap { value: 0 }.set_bit(250).unset_bit(250) == Bitmap { value: 0 }, 'set/unset 251');
@@ -108,7 +107,7 @@ fn test_unset_not_set() {
 
 #[test]
 fn test_next_set_bit_zero() {
-    let b: Bitmap = Zeroable::zero();
+    let b: Bitmap = Zero::zero();
     assert(b.next_set_bit(0).is_none(), '0');
     assert(b.next_set_bit(1).is_none(), '1');
     assert(b.next_set_bit(128).is_none(), '128');
@@ -119,7 +118,7 @@ fn test_next_set_bit_zero() {
 
 #[test]
 fn test_prev_set_bit_zero() {
-    let b: Bitmap = Zeroable::zero();
+    let b: Bitmap = Zero::zero();
     assert(b.prev_set_bit(0).is_none(), '0');
     assert(b.prev_set_bit(1).is_none(), '1');
     assert(b.prev_set_bit(128).is_none(), '128');
@@ -130,7 +129,7 @@ fn test_prev_set_bit_zero() {
 
 #[test]
 fn test_next_set_bit_only_max_bit_set() {
-    let b: Bitmap = Zeroable::zero().set_bit(250);
+    let b: Bitmap = Zero::zero().set_bit(250);
     assert(b.next_set_bit(0).is_none(), '0');
     assert(b.next_set_bit(1).is_none(), '1');
     assert(b.next_set_bit(128).is_none(), '128');
@@ -142,7 +141,7 @@ fn test_next_set_bit_only_max_bit_set() {
 
 #[test]
 fn test_next_set_bit_only_min_bit_set() {
-    let b: Bitmap = Zeroable::zero().set_bit(0);
+    let b: Bitmap = Zero::zero().set_bit(0);
     assert(b.next_set_bit(0).unwrap() == 0, '0');
     assert(b.next_set_bit(1).unwrap() == 0, '1');
     assert(b.next_set_bit(128).unwrap() == 0, '128');
@@ -154,7 +153,7 @@ fn test_next_set_bit_only_min_bit_set() {
 
 #[test]
 fn test_prev_set_bit_only_min_bit_set() {
-    let b: Bitmap = Zeroable::zero().set_bit(0);
+    let b: Bitmap = Zero::zero().set_bit(0);
     assert(b.prev_set_bit(0).unwrap() == 0, '0');
     assert(b.prev_set_bit(1).is_none(), '1');
     assert(b.prev_set_bit(128).is_none(), '128');
@@ -166,7 +165,7 @@ fn test_prev_set_bit_only_min_bit_set() {
 
 #[test]
 fn test_prev_set_bit_only_max_bit_set() {
-    let b: Bitmap = Zeroable::zero().set_bit(250);
+    let b: Bitmap = Zero::zero().set_bit(250);
     assert(b.prev_set_bit(0).unwrap() == 250, '0');
     assert(b.prev_set_bit(1).unwrap() == 250, '1');
     assert(b.prev_set_bit(128).unwrap() == 250, '128');
@@ -178,12 +177,7 @@ fn test_prev_set_bit_only_max_bit_set() {
 
 #[test]
 fn test_next_set_bit_complex_scenario() {
-    let b: Bitmap = Zeroable::zero()
-        .set_bit(53)
-        .set_bit(127)
-        .set_bit(128)
-        .set_bit(200)
-        .set_bit(213);
+    let b: Bitmap = Zero::zero().set_bit(53).set_bit(127).set_bit(128).set_bit(200).set_bit(213);
 
     assert(b.prev_set_bit(0).unwrap() == 53, '0.prev');
     assert(b.next_set_bit(0).is_none(), '0.next');
@@ -240,22 +234,14 @@ fn test_next_set_bit_complex_scenario() {
 
 fn assert_case_ticks(tick: i129, location: (u128, u8), tick_spacing: u128) {
     let (word, bit) = tick_to_word_and_bit_index(tick: tick, tick_spacing: tick_spacing);
-    assert(
-        (word, bit) == location,
-        append(
-            append(append('w.', to_decimal(word).unwrap()).unwrap(), '.b.').unwrap(),
-            to_decimal(bit.into()).unwrap()
-        )
-            .unwrap()
-    );
+    assert_eq!((word, bit), location);
     let prev = word_and_bit_index_to_tick(location, tick_spacing: tick_spacing);
     assert((tick - prev) < i129 { mag: tick_spacing, sign: false }, 'reverse');
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_tick_spacing_one() {
-    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 1);
+    assert_case_ticks(tick: Zero::zero(), location: (0, 250), tick_spacing: 1);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 1);
     assert_case_ticks(tick: i129 { mag: 249, sign: false }, location: (0, 1), tick_spacing: 1);
     assert_case_ticks(tick: i129 { mag: 250, sign: false }, location: (0, 0), tick_spacing: 1);
@@ -264,9 +250,8 @@ fn test_positive_cases_tick_spacing_one() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_tick_spacing_ten() {
-    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 10);
+    assert_case_ticks(tick: Zero::zero(), location: (0, 250), tick_spacing: 10);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 10);
     assert_case_ticks(tick: i129 { mag: 2493, sign: false }, location: (0, 1), tick_spacing: 10);
     assert_case_ticks(tick: i129 { mag: 2506, sign: false }, location: (0, 0), tick_spacing: 10);
@@ -275,9 +260,8 @@ fn test_positive_cases_tick_spacing_ten() {
 }
 
 #[test]
-#[available_gas(3000000000)]
 fn test_positive_cases_non_one_tick_spacing() {
-    assert_case_ticks(tick: Zeroable::zero(), location: (0, 250), tick_spacing: 100);
+    assert_case_ticks(tick: Zero::zero(), location: (0, 250), tick_spacing: 100);
     assert_case_ticks(tick: i129 { mag: 0, sign: true }, location: (0, 250), tick_spacing: 100);
     assert_case_ticks(tick: i129 { mag: 50, sign: false }, location: (0, 250), tick_spacing: 100);
     assert_case_ticks(tick: i129 { mag: 99, sign: false }, location: (0, 250), tick_spacing: 100);
@@ -287,7 +271,6 @@ fn test_positive_cases_non_one_tick_spacing() {
 
 
 #[test]
-#[available_gas(3000000000)]
 fn test_negative_cases_tick_spacing_one() {
     assert_case_ticks(
         tick: i129 { mag: 253, sign: true }, location: (0x100000001, 1), tick_spacing: 1
@@ -311,7 +294,6 @@ fn test_negative_cases_tick_spacing_one() {
 
 
 #[test]
-#[available_gas(3000000000)]
 fn test_negative_cases_tick_spacing_ten() {
     assert_case_ticks(
         tick: i129 { mag: 2525, sign: true }, location: (0x100000001, 1), tick_spacing: 10
@@ -332,4 +314,3 @@ fn test_negative_cases_tick_spacing_ten() {
         tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
 }
-

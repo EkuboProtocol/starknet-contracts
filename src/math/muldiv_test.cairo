@@ -1,33 +1,42 @@
+use core::integer::{u256_as_non_zero};
+use core::num::traits::{Zero};
+use core::option::{OptionTrait};
 use ekubo::math::muldiv::{div, muldiv};
-use option::{OptionTrait};
-use zeroable::{Zeroable};
 
 #[test]
-#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_div_by_zero() {
-    muldiv(
-        0x100000000000000000000000000000000_u256,
-        0x100000000000000000000000000000000_u256,
-        0_u256,
-        false
+    assert(
+        muldiv(
+            0x100000000000000000000000000000000_u256,
+            0x100000000000000000000000000000000_u256,
+            0_u256,
+            false
+        )
+            .is_none(),
+        'div by zero'
     );
 }
 
 #[test]
-#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_up_div_by_zero() {
-    muldiv(
-        0x100000000000000000000000000000000_u256,
-        0x100000000000000000000000000000000_u256,
-        0_u256,
-        false
+    assert(
+        muldiv(
+            0x100000000000000000000000000000000_u256,
+            0x100000000000000000000000000000000_u256,
+            0_u256,
+            false
+        )
+            .is_none(),
+        'div by zero'
     );
 }
 
 #[test]
-#[should_panic(expected: ('u256 is 0',))]
 fn test_muldiv_up_div_by_zero_no_overflow() {
-    muldiv(0x100000000000000000000000000000000_u256, 1_u256, 0_u256, false);
+    assert(
+        muldiv(0x100000000000000000000000000000000_u256, 1_u256, 0_u256, false).is_none(),
+        'div by zero'
+    );
 }
 
 #[test]
@@ -40,6 +49,35 @@ fn test_muldiv_overflows_exactly() {
         false
     );
     assert(result.is_none(), 'result');
+}
+
+
+#[test]
+fn test_muldiv_overflows_round_up() {
+    assert(
+        muldiv(
+            535006138814359,
+            432862656469423142931042426214547535783388063929571229938474969,
+            2,
+            true
+        )
+            .is_none(),
+        'none'
+    );
+}
+
+#[test]
+fn test_muldiv_no_overflows_round_down() {
+    assert(
+        muldiv(
+            535006138814359,
+            432862656469423142931042426214547535783388063929571229938474969,
+            2,
+            false
+        )
+            .unwrap() == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        'max u256'
+    );
 }
 
 #[test]
@@ -149,12 +187,12 @@ fn test_muldiv_up_overflow_with_rounding() {
 
 #[test]
 fn test_div() {
-    assert(div(0_u256, u256 { low: 2, high: 0 }, false).is_zero(), 'floor(0/2)');
-    assert(div(0_u256, u256 { low: 2, high: 0 }, true).is_zero(), 'ceil(0/2)');
+    assert(div(0_u256, u256_as_non_zero(2), false).is_zero(), 'floor(0/2)');
+    assert(div(0_u256, u256_as_non_zero(2), true).is_zero(), 'ceil(0/2)');
 
-    assert(div(1_u256, u256 { low: 2, high: 0 }, false).is_zero(), 'floor(1/2)');
-    assert(div(1_u256, u256 { low: 2, high: 0 }, true) == 1_u256, 'ceil(1/2)');
+    assert(div(1_u256, u256_as_non_zero(2), false).is_zero(), 'floor(1/2)');
+    assert(div(1_u256, u256_as_non_zero(2), true) == 1_u256, 'ceil(1/2)');
 
-    assert(div(u256 { low: 2, high: 0 }, u256 { low: 2, high: 0 }, false) == 1_u256, 'floor(2/2)');
-    assert(div(u256 { low: 2, high: 0 }, u256 { low: 2, high: 0 }, true) == 1_u256, 'ceil(2/2)');
+    assert(div(2, u256_as_non_zero(2), false) == 1_u256, 'floor(2/2)');
+    assert(div(2, u256_as_non_zero(2), true) == 1_u256, 'ceil(2/2)');
 }

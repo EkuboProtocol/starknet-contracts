@@ -1,10 +1,10 @@
+use core::num::traits::{Zero};
 use core::option::{OptionTrait};
+use core::traits::{Into};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_before_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::types::i129::{i129};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 // consumed_amount is how much of the amount was used in this step, including the amount that was paid to fees
 // calculated_amount is how much of the other token is given
@@ -22,18 +22,18 @@ struct SwapResult {
 fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
     // sqrt_ratio is expressed in token1/token0, thus:
     // negative token0 = true ^ false = true = increasing
-    // positive token0 = false ^ false = false = decreasing
     // negative token1 = true ^ true = false = decreasing
-    // negative token0 = true ^ false = true = increasing
+    // positive token0 = false ^ false = false = decreasing
+    // positive token1 = false ^ true = true = increasing
     exact_output ^ is_token1
 }
 
 #[inline(always)]
 fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
     SwapResult {
-        consumed_amount: Zeroable::zero(),
-        calculated_amount: Zeroable::zero(),
-        fee_amount: Zeroable::zero(),
+        consumed_amount: Zero::zero(),
+        calculated_amount: Zero::zero(),
+        fee_amount: Zero::zero(),
         sqrt_ratio_next: next_sqrt_ratio
     }
 }

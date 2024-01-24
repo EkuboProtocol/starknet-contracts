@@ -1,11 +1,10 @@
-use ekubo::math::contract_address::{ContractAddressOrder};
+use core::num::traits::{Zero};
+use core::option::{Option, OptionTrait};
+use core::traits::{Into, TryInto};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
-use option::{Option, OptionTrait};
 use starknet::{contract_address_const, ContractAddress};
-use traits::{Into, TryInto};
-use zeroable::{Zeroable};
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)
@@ -24,6 +23,7 @@ struct PoolKey {
 
 #[generate_trait]
 impl PoolKeyTraitImpl of PoolKeyTrait {
+    #[inline(always)]
     fn check_valid(self: PoolKey) {
         assert(self.token0 < self.token1, 'TOKEN_ORDER');
         assert(self.token0.is_non_zero(), 'TOKEN_NON_ZERO');
@@ -40,7 +40,7 @@ impl PoolKeyTraitImpl of PoolKeyTrait {
 // bounds is the price range where the liquidity of the position is active
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
 struct PositionKey {
-    salt: u64,
+    salt: felt252,
     owner: ContractAddress,
     bounds: Bounds,
 }
@@ -53,5 +53,5 @@ struct PositionKey {
 struct SavedBalanceKey {
     owner: ContractAddress,
     token: ContractAddress,
-    salt: u64,
+    salt: felt252,
 }

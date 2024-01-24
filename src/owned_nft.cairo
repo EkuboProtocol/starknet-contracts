@@ -1,8 +1,8 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-trait IEnumerableOwnedNFT<TStorage> {
-    // Create a new token, only callable by the controller
+trait IOwnedNFT<TStorage> {
+    // Create a new token, only callable by the owner
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
 
     // Burn the token with the given ID
@@ -12,14 +12,22 @@ trait IEnumerableOwnedNFT<TStorage> {
     fn is_account_authorized(self: @TStorage, id: u64, account: ContractAddress) -> bool;
 
     // Returns the next token ID, 
-    // i.e. the ID of the token that will be minted on the next call to mint from the controller
+    // i.e. the ID of the token that will be minted on the next call to mint from the owner
     fn get_next_token_id(self: @TStorage) -> u64;
+
+    // Allows the owner to update the metadata
+    fn set_metadata(ref self: TStorage, name: felt252, symbol: felt252, token_uri_base: felt252);
 }
 
 #[starknet::contract]
-mod EnumerableOwnedNFT {
-    use array::{ArrayTrait};
-    use core::array::SpanTrait;
+mod OwnedNFT {
+    use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::num::traits::{Zero};
+    use core::option::{OptionTrait};
+    use core::traits::{Into, TryInto};
+
+    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -27,25 +35,28 @@ mod EnumerableOwnedNFT {
         ERC165_ERC721_ID, ERC165_ERC165_ID
     };
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use ekubo::math::string::{to_decimal, append};
+    use ekubo::math::string::{to_decimal};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::owner::{check_owner_only};
 
     use ekubo::types::i129::{i129};
-    use option::{OptionTrait};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         replace_class_syscall, deploy_syscall
     };
     use starknet::{SyscallResultTrait};
-    use super::{IEnumerableOwnedNFT, ContractAddress};
-    use traits::{Into, TryInto};
-    use zeroable::{Zeroable};
+    use super::{IOwnedNFT, ContractAddress};
+
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
+
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    #[abi(embed_v0)]
+    impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
     struct Storage {
-        // set only in the constructor
-        controller: ContractAddress,
         token_uri_base: felt252,
         name: felt252,
         symbol: felt252,
@@ -54,12 +65,10 @@ mod EnumerableOwnedNFT {
         owners: LegacyMap<u64, ContractAddress>,
         balances: LegacyMap<ContractAddress, u64>,
         operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
-    }
-
-
-    #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
 
@@ -87,7 +96,9 @@ mod EnumerableOwnedNFT {
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        ClassHashReplaced: ClassHashReplaced,
+        #[flat]
+        UpgradeableEvent: upgradeable_component::Event,
+        OwnedEvent: owned_component::Event,
         Transfer: Transfer,
         Approval: Approval,
         ApprovalForAll: ApprovalForAll,
@@ -96,12 +107,12 @@ mod EnumerableOwnedNFT {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        controller: ContractAddress,
+        owner: ContractAddress,
         name: felt252,
         symbol: felt252,
         token_uri_base: felt252
     ) {
-        self.controller.write(controller);
+        self.initialize_owned(owner);
         self.name.write(name);
         self.symbol.write(symbol);
         self.token_uri_base.write(token_uri_base);
@@ -110,17 +121,14 @@ mod EnumerableOwnedNFT {
 
     fn deploy(
         nft_class_hash: ClassHash,
-        controller: ContractAddress,
+        owner: ContractAddress,
         name: felt252,
         symbol: felt252,
         token_uri_base: felt252,
         salt: felt252
-    ) -> super::IEnumerableOwnedNFTDispatcher {
+    ) -> super::IOwnedNFTDispatcher {
         let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@controller, ref calldata);
-        Serde::serialize(@name, ref calldata);
-        Serde::serialize(@symbol, ref calldata);
-        Serde::serialize(@token_uri_base, ref calldata);
+        Serde::serialize(@(owner, name, symbol, token_uri_base), ref calldata);
 
         let (address, _) = deploy_syscall(
             class_hash: nft_class_hash,
@@ -129,7 +137,7 @@ mod EnumerableOwnedNFT {
             deploy_from_zero: false,
         )
             .unwrap_syscall();
-        super::IEnumerableOwnedNFTDispatcher { contract_address: address }
+        super::IOwnedNFTDispatcher { contract_address: address }
     }
 
     fn validate_token_id(token_id: u256) -> u64 {
@@ -139,10 +147,6 @@ mod EnumerableOwnedNFT {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn require_controller(self: @ContractState) {
-            assert(get_caller_address() == self.controller.read(), 'CONTROLLER_ONLY');
-        }
-
         fn is_account_authorized_internal(
             self: @ContractState, id: u64, account: ContractAddress
         ) -> (bool, ContractAddress) {
@@ -156,16 +160,14 @@ mod EnumerableOwnedNFT {
         }
     }
 
-    #[external(v0)]
-    impl Upgradeable of IUpgradeable<ContractState> {
-        fn replace_class_hash(ref self: ContractState, class_hash: ClassHash) {
-            check_owner_only();
-            replace_class_syscall(class_hash);
-            self.emit(ClassHashReplaced { new_class_hash: class_hash });
+    #[abi(embed_v0)]
+    impl OwnedNFTHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::owned_nft::OwnedNFT");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721Impl of IERC721<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.name.read()
@@ -201,7 +203,7 @@ mod EnumerableOwnedNFT {
             assert(authorized, 'UNAUTHORIZED');
 
             self.owners.write(id, to);
-            self.approvals.write(id, Zeroable::zero());
+            self.approvals.write(id, Zero::zero());
 
             self.balances.write(to, self.balances.read(to) + 1);
             self.balances.write(from, self.balances.read(from) - 1);
@@ -225,12 +227,11 @@ mod EnumerableOwnedNFT {
             self.operators.read((owner, operator))
         }
 
-        fn tokenURI(self: @ContractState, token_id: u256) -> felt252 {
+        fn tokenURI(self: @ContractState, token_id: u256) -> Array<felt252> {
             let id = validate_token_id(token_id);
             // the prefix takes up 20 characters and leaves 11 for the decimal token id
             // 10^11 == ~2**36 tokens can be supported by this method
-            append(self.token_uri_base.read(), to_decimal(id.into()).expect('TOKEN_ID'))
-                .expect('URI_LENGTH')
+            array![self.token_uri_base.read(), to_decimal(id)]
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -257,12 +258,12 @@ mod EnumerableOwnedNFT {
         ) -> bool {
             self.isApprovedForAll(owner, operator)
         }
-        fn token_uri(self: @ContractState, token_id: u256) -> felt252 {
+        fn token_uri(self: @ContractState, token_id: u256) -> Array<felt252> {
             self.tokenURI(token_id)
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
             interfaceId == SRC5_SRC5_ID
@@ -278,10 +279,10 @@ mod EnumerableOwnedNFT {
         }
     }
 
-    #[external(v0)]
-    impl EnumerableOwnedNFTImpl of IEnumerableOwnedNFT<ContractState> {
+    #[abi(embed_v0)]
+    impl OwnedNFTImpl of IOwnedNFT<ContractState> {
         fn mint(ref self: ContractState, owner: ContractAddress) -> u64 {
-            self.require_controller();
+            self.require_owner();
 
             let id = self.next_token_id.read();
             self.next_token_id.write(id + 1);
@@ -293,9 +294,7 @@ mod EnumerableOwnedNFT {
             self
                 .emit(
                     Transfer {
-                        from: Zeroable::zero(),
-                        to: owner,
-                        token_id: u256 { low: id.into(), high: 0 }
+                        from: Zero::zero(), to: owner, token_id: u256 { low: id.into(), high: 0 }
                     }
                 );
 
@@ -303,16 +302,16 @@ mod EnumerableOwnedNFT {
         }
 
         fn burn(ref self: ContractState, id: u64) {
-            self.require_controller();
+            self.require_owner();
 
             let owner = self.owners.read(id);
 
             // delete the storage variables
-            self.owners.write(id, Zeroable::zero());
-            self.approvals.write(id, Zeroable::zero());
+            self.owners.write(id, Zero::zero());
+            self.approvals.write(id, Zero::zero());
             self.balances.write(owner, self.balances.read(owner) - 1);
 
-            self.emit(Transfer { from: owner, to: Zeroable::zero(), token_id: id.into() });
+            self.emit(Transfer { from: owner, to: Zero::zero(), token_id: id.into() });
         }
 
         fn get_next_token_id(self: @ContractState) -> u64 {
@@ -322,6 +321,15 @@ mod EnumerableOwnedNFT {
         fn is_account_authorized(self: @ContractState, id: u64, account: ContractAddress) -> bool {
             let (authorized, _) = self.is_account_authorized_internal(id, account);
             authorized
+        }
+
+        fn set_metadata(
+            ref self: ContractState, name: felt252, symbol: felt252, token_uri_base: felt252
+        ) {
+            self.require_owner();
+            self.token_uri_base.write(token_uri_base);
+            self.name.write(name);
+            self.symbol.write(symbol);
         }
     }
 }

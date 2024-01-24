@@ -1,6 +1,6 @@
+use core::num::traits::{Zero};
+use core::traits::{Into};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use traits::{Into};
-use zeroable::{Zeroable};
 
 // Represents a liquidity position
 // Packed together in a single struct because whenever liquidity changes we typically change fees per liquidity as well
@@ -13,22 +13,25 @@ struct Position {
 }
 
 // we only check liquidity is non-zero because fees per liquidity inside is irrelevant if liquidity is 0
-impl PositionZeroable of Zeroable<Position> {
+impl PositionZero of Zero<Position> {
+    #[inline(always)]
     fn zero() -> Position {
-        Position { liquidity: Zeroable::zero(), fees_per_liquidity_inside_last: Zeroable::zero() }
+        Position { liquidity: Zero::zero(), fees_per_liquidity_inside_last: Zero::zero() }
     }
 
-    fn is_zero(self: Position) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @Position) -> bool {
         self.liquidity.is_zero()
     }
 
-    fn is_non_zero(self: Position) -> bool {
+    #[inline(always)]
+    fn is_non_zero(self: @Position) -> bool {
         !self.liquidity.is_zero()
     }
 }
 
 mod internal {
-    use integer::{u128_wide_mul, u128_add_with_carry};
+    use core::integer::{u128_wide_mul, u128_add_with_carry};
 
     fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
         let (limb1_p0, _) = u128_wide_mul(a.low, b);

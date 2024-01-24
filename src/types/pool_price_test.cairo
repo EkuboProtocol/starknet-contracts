@@ -1,18 +1,19 @@
+use core::num::traits::{Zero};
+use core::traits::{Into};
+
 use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::call_points::{CallPoints, all_call_points};
 use ekubo::types::i129::i129;
 use ekubo::types::pool_price::{PoolPrice};
 use starknet::{storage_base_address_const, Store, StorePacking, SyscallResult, SyscallResultTrait};
-use traits::{Into};
-use zeroable::Zeroable;
 
 #[test]
 fn test_packing_round_trip_many_values() {
     assert_round_trip(
         PoolPrice {
             sqrt_ratio: 0x100000000000000000000000000000000_u256,
-            tick: Zeroable::zero(),
+            tick: Zero::zero(),
             call_points: Default::default()
         }
     );
@@ -51,9 +52,7 @@ fn test_fails_if_sqrt_ratio_out_of_range_max() {
         PoolPrice, felt252
     >::pack(
         PoolPrice {
-            sqrt_ratio: max_sqrt_ratio() + 1,
-            tick: Zeroable::zero(),
-            call_points: Default::default()
+            sqrt_ratio: max_sqrt_ratio() + 1, tick: Zero::zero(), call_points: Default::default()
         }
     );
 }
@@ -64,9 +63,7 @@ fn test_fails_if_sqrt_ratio_zero() {
     StorePacking::<
         PoolPrice, felt252
     >::pack(
-        PoolPrice {
-            sqrt_ratio: Zeroable::zero(), tick: Zeroable::zero(), call_points: Default::default()
-        }
+        PoolPrice { sqrt_ratio: Zero::zero(), tick: Zero::zero(), call_points: Default::default() }
     );
 }
 
@@ -75,7 +72,7 @@ fn test_fails_if_sqrt_ratio_zero() {
 fn test_fails_if_sqrt_ratio_one() {
     StorePacking::<
         PoolPrice, felt252
-    >::pack(PoolPrice { sqrt_ratio: 1, tick: Zeroable::zero(), call_points: Default::default() });
+    >::pack(PoolPrice { sqrt_ratio: 1, tick: Zero::zero(), call_points: Default::default() });
 }
 
 #[test]
@@ -85,9 +82,7 @@ fn test_fails_if_sqrt_ratio_out_of_range_min() {
         PoolPrice, felt252
     >::pack(
         PoolPrice {
-            sqrt_ratio: min_sqrt_ratio() - 1,
-            tick: Zeroable::zero(),
-            call_points: Default::default()
+            sqrt_ratio: min_sqrt_ratio() - 1, tick: Zero::zero(), call_points: Default::default()
         }
     );
 }

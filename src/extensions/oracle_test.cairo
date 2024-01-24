@@ -1,28 +1,27 @@
-use debug::PrintTrait;
+use core::num::traits::{Zero};
+use core::option::{OptionTrait};
+use core::traits::{TryInto};
 use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait, PoolState};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::tests::helper::{
-    deploy_core, deploy_positions, deploy_oracle, deploy_two_mock_tokens, swap_inner, deploy_locker
-};
-use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
+use ekubo::tests::helper::{swap_inner, Deployer, DeployerTrait};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey};
-use option::{OptionTrait};
 use starknet::testing::{set_contract_address, set_block_timestamp};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, StorePacking};
-use traits::{TryInto};
-use zeroable::{Zeroable};
 
-fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {
-    let core = deploy_core();
-    let oracle = deploy_oracle(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+fn setup_pool_with_extension(
+    ref d: Deployer, initial_tick: i129
+) -> (ICoreDispatcher, IOracleDispatcher, PoolKey) {
+    let core = d.deploy_core();
+    let oracle = d.deploy_oracle(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let key = PoolKey {
         token0: token0.contract_address,
@@ -38,9 +37,11 @@ fn setup_pool_with_extension(initial_tick: i129) -> (ICoreDispatcher, IOracleDis
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_before_initialize_call_points() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 3, sign: true });
+    let mut d: Deployer = Default::default();
+    let (core, oracle, key) = setup_pool_with_extension(
+        ref d, initial_tick: i129 { mag: 3, sign: true }
+    );
 
     let price = core.get_pool_price(key);
 
@@ -91,13 +92,13 @@ fn deposit(
 
     assert(
         IMockERC20Dispatcher { contract_address: pool_key.token0 }
-            .balanceOf(address: positions.contract_address)
+            .balanceOf(account: positions.contract_address)
             .is_zero(),
         'token0 balance'
     );
     assert(
         IMockERC20Dispatcher { contract_address: pool_key.token1 }
-            .balanceOf(address: positions.contract_address)
+            .balanceOf(account: positions.contract_address)
             .is_zero(),
         'token1 balance'
     );
@@ -118,9 +119,9 @@ fn deposit(
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
             tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: false },
-            tick_last: Zeroable::zero(),
+            tick_last: Zero::zero(),
         }
     );
 }
@@ -130,9 +131,9 @@ fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large() {
 fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
             tick_cumulative_last: i129 { mag: 0x800000000000000000000000, sign: true },
-            tick_last: Zeroable::zero(),
+            tick_last: Zero::zero(),
         }
     );
 }
@@ -142,8 +143,8 @@ fn test_pool_state_store_packing_fails_tick_cumulative_last_too_large_neg() {
 fn test_pool_state_store_packing_fails_tick_last_too_large() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
             tick_last: i129 { mag: 0x80000000, sign: false },
         }
     );
@@ -154,8 +155,8 @@ fn test_pool_state_store_packing_fails_tick_last_too_large() {
 fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
     StorePacking::pack(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
             tick_last: i129 { mag: 0x80000000, sign: true },
         }
     );
@@ -165,9 +166,9 @@ fn test_pool_state_store_packing_fails_tick_last_too_large_neg() {
 fn test_pool_state_packing_round_trip_many_values() {
     assert_round_trip(
         PoolState {
-            block_timestamp_last: Zeroable::zero(),
-            tick_cumulative_last: Zeroable::zero(),
-            tick_last: Zeroable::zero(),
+            block_timestamp_last: Zero::zero(),
+            tick_cumulative_last: Zero::zero(),
+            tick_last: Zero::zero(),
         }
     );
     assert_round_trip(
@@ -201,11 +202,12 @@ fn test_pool_state_packing_round_trip_many_values() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_time_passes_seconds_per_liquidity_global() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: i129 { mag: 5, sign: true });
-
-    let positions = deploy_positions(core);
+    let mut d: Deployer = Default::default();
+    let (core, oracle, key) = setup_pool_with_extension(
+        ref d, initial_tick: i129 { mag: 5, sign: true }
+    );
+    let positions = d.deploy_positions(core);
 
     let bounds = Bounds {
         lower: i129 { mag: 100, sign: true }, upper: i129 { mag: 100, sign: false }
@@ -234,11 +236,11 @@ fn test_time_passes_seconds_per_liquidity_global() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_time_passed_position_out_of_range_only() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
+    let mut d: Deployer = Default::default();
+    let (core, oracle, key) = setup_pool_with_extension(ref d, initial_tick: Zero::zero());
 
-    let positions = deploy_positions(core);
+    let positions = d.deploy_positions(core);
 
     let bounds_above = Bounds {
         lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
@@ -287,11 +289,11 @@ fn test_time_passed_position_out_of_range_only() {
 
 
 #[test]
-#[available_gas(300000000)]
 fn test_swap_into_liquidity_time_passed() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
-    let locker = deploy_locker(core);
-    let positions = deploy_positions(core);
+    let mut d: Deployer = Default::default();
+    let (core, oracle, key) = setup_pool_with_extension(ref d, initial_tick: Zero::zero());
+    let locker = d.deploy_locker(core);
+    let positions = d.deploy_positions(core);
 
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
@@ -338,11 +340,11 @@ fn test_swap_into_liquidity_time_passed() {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_swap_through_liquidity_time_passed() {
-    let (core, oracle, key) = setup_pool_with_extension(initial_tick: Zeroable::zero());
-    let locker = deploy_locker(core);
-    let positions = deploy_positions(core);
+    let mut d: Deployer = Default::default();
+    let (core, oracle, key) = setup_pool_with_extension(ref d, initial_tick: Zero::zero());
+    let locker = d.deploy_locker(core);
+    let positions = d.deploy_positions(core);
 
     let bounds = Bounds {
         lower: i129 { mag: 1, sign: false }, upper: i129 { mag: 100, sign: false }
