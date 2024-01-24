@@ -12,7 +12,11 @@ mod components {
     mod upgradeable;
 }
 
-mod extensions {}
+mod extensions {
+    mod limit_orders;
+    #[cfg(test)]
+    mod limit_orders_test;
+}
 
 mod interfaces {
     mod core;
