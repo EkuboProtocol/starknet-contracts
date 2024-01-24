@@ -12,7 +12,11 @@ mod components {
     mod upgradeable;
 }
 
-mod extensions {}
+mod extensions {
+    mod oracle;
+    #[cfg(test)]
+    mod oracle_test;
+}
 
 mod interfaces {
     mod core;
