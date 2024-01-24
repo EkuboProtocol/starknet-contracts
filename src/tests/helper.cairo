@@ -121,41 +121,6 @@ impl DeployerTraitImpl of DeployerTrait {
     }
 
 
-    fn deploy_oracle(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@core, ref constructor_args);
-
-        let (address, _) = deploy_syscall(
-            Oracle::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            constructor_args.span(),
-            true
-        )
-            .expect('oracle deploy failed');
-
-        IExtensionDispatcher { contract_address: address }
-    }
-
-
-    fn deploy_limit_orders(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@default_owner(), ref constructor_args);
-        Serde::serialize(
-            @(core, OwnedNFT::TEST_CLASS_HASH, 'limit_orders://'), ref constructor_args
-        );
-
-        let (address, _) = deploy_syscall(
-            LimitOrders::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            constructor_args.span(),
-            true
-        )
-            .expect('limit_orders deploy failed');
-
-        IExtensionDispatcher { contract_address: address }
-    }
-
-
     fn deploy_two_mock_tokens(ref self: Deployer) -> (IMockERC20Dispatcher, IMockERC20Dispatcher) {
         let tokenA = self.deploy_mock_token();
         let tokenB = self.deploy_mock_token();
