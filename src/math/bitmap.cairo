@@ -117,17 +117,6 @@ impl BitmapTraitImpl of BitmapTrait {
             }
         }
     }
-
-    fn is_set(self: Bitmap, index: u8) -> bool {
-        let x: u256 = self.value.into();
-
-        if (index < 128) {
-            (x.low & exp2(index)).is_non_zero()
-        } else {
-            assert(index < 251, 'MAX_INDEX');
-            (x.high & exp2(index - 128)).is_non_zero()
-        }
-    }
 }
 
 mod internal {

@@ -69,7 +69,7 @@ mod TWAMM {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::extensions::twamm::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
-        validate_time, calculate_next_sqrt_ratio
+        validate_time, calculate_next_sqrt_ratio, BitmapIsSetTraitImpl
     };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,

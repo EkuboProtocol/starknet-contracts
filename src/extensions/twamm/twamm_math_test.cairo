@@ -1,10 +1,12 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_e
+    constants, exp_fractional, calculate_e, BitmapIsSetTraitImpl
 };
 use ekubo::interfaces::core::{Delta};
 use ekubo::types::i129::{i129};
+use ekubo::math::bitmap::{Bitmap, BitmapTrait};
+
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
 const SIXTEEN_POW_ONE: u64 = 0x10;
@@ -98,8 +100,6 @@ mod RewardRateTest {
     fn assert_case_reward_rate(
         sale_rates: (u128, u128), delta: Delta, expected: (felt252, felt252)
     ) {
-        let (sale_rate_0, sale_rate_1) = sale_rates;
-
         let (reward_rate_0_delta, reward_rate_1_delta) = calculate_reward_rate_deltas(
             sale_rates: sale_rates, delta: delta
         );
@@ -399,3 +399,14 @@ mod TWAMMMathTest {
     }
 }
 
+
+#[test]
+#[available_gas(3000000000)]
+fn test_is_set() {
+    assert(Bitmap { value: 0 }.set_bit(0).is_set(0), 'is_set_0');
+    assert(Bitmap { value: 0 }.set_bit(128).is_set(128), 'is_set_128');
+    assert(Bitmap { value: 0 }.set_bit(250).is_set(250), 'is_set_250');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(1), '!is_set_1');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(128), '!is_set_128');
+    assert(!Bitmap { value: 0 }.set_bit(0).is_set(250), '!is_set_250');
+}

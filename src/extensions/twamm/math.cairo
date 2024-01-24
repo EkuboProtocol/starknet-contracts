@@ -5,6 +5,7 @@ use core::integer::{
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
 use ekubo::interfaces::core::{Delta};
+use ekubo::math::bitmap::{Bitmap};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
 
@@ -411,4 +412,18 @@ fn exp_fractional(x: u128) -> u256 {
 fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
     let (res, _) = u256_overflow_mul(x, u256 { low: mul, high: 0 });
     u256 { low: res.high, high: 0 }
+}
+
+#[generate_trait]
+impl BitmapIsSetTraitImpl of BitmapIsSetTrait {
+    fn is_set(self: Bitmap, index: u8) -> bool {
+        let x: u256 = self.value.into();
+
+        if (index < 128) {
+            (x.low & exp2(index)).is_non_zero()
+        } else {
+            assert(index < 251, 'MAX_INDEX');
+            (x.high & exp2(index - 128)).is_non_zero()
+        }
+    }
 }
