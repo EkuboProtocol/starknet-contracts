@@ -1,11 +1,11 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_e, BitmapIsSetTraitImpl
+    constants, exp_fractional, calculate_e
 };
 use ekubo::interfaces::core::{Delta};
-use ekubo::types::i129::{i129};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
+use ekubo::types::i129::{i129};
 
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
@@ -354,37 +354,43 @@ mod TWAMMMathTest {
         assert_eq!(
             exp_fractional(2 * constants::X64_u128), 2514365498655717699434277416465328696989
         );
-        // e^3, error -91
+        // e^3, error -86
         assert_eq!(
-            exp_fractional(3 * constants::X64_u128), 6834754045100203352782362684486003079520
+            exp_fractional(3 * constants::X64_u128), 6834754045100203352782362684486003079515
         );
-        // e^4, error -477
+        // e^4, error 61
         assert_eq!(
-            exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914658
+            exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914120
         );
-        // e^5, error -17044
+        // e^5, error -1150
         assert_eq!(
-            exp_fractional(5 * constants::X64_u128), 50502381061638590010053149766929220261826
+            exp_fractional(5 * constants::X64_u128), 50502381061638590010053149766929220245932
         );
-        // e^6, error -5470
+        // e^6, error -3433
         assert_eq!(
-            exp_fractional(6 * constants::X64_u128), 137279704733766404528564625531825993814935
+            exp_fractional(6 * constants::X64_u128), 137279704733766404528564625531825993812898
         );
-        // e^7, error -649328
+        // e^7, error -27603
         assert_eq!(
-            exp_fractional(7 * constants::X64_u128), 373164926794020389796596697795276277774728
+            exp_fractional(7 * constants::X64_u128), 373164926794020389796596697795276277152463
         );
-        // e^8, error 2876165
+        // e^8, error 6725
         assert_eq!(
-            exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796518133789
+            exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796521003229
         );
-        // e^9, error -17021283
+        // e^9, error 10252
         assert_eq!(
-            exp_fractional(9 * constants::X64_u128), 2757336578234365975078160713954485358860547
+            exp_fractional(9 * constants::X64_u128), 2757336578234365975078160713954485341829012
         );
-        // e^(10), error -460038890
+        // e^(10), error -341285
         assert_eq!(
-            exp_fractional(10 * constants::X64_u128), 7495217915559919573679589385952004979444847
+            exp_fractional(10 * constants::X64_u128), 7495217915559919573679589385952004519747242
+        );
+
+        // last valid input
+        // e^(88), error -28250270430280119449491910663393939268384
+        assert_eq!(
+            exp_fractional(88 * constants::X64_u128), 56202269414179362208214868742863362868341779313762687677660940959816606662721
         );
     }
 
@@ -397,16 +403,4 @@ mod TWAMMMathTest {
             calculate_e(sqrt_rate_sell, t, liquidity), 340282366920938463481821351505477763073
         );
     }
-}
-
-
-#[test]
-#[available_gas(3000000000)]
-fn test_is_set() {
-    assert(Bitmap { value: 0 }.set_bit(0).is_set(0), 'is_set_0');
-    assert(Bitmap { value: 0 }.set_bit(128).is_set(128), 'is_set_128');
-    assert(Bitmap { value: 0 }.set_bit(250).is_set(250), 'is_set_250');
-    assert(!Bitmap { value: 0 }.set_bit(0).is_set(1), '!is_set_1');
-    assert(!Bitmap { value: 0 }.set_bit(0).is_set(128), '!is_set_128');
-    assert(!Bitmap { value: 0 }.set_bit(0).is_set(250), '!is_set_250');
 }

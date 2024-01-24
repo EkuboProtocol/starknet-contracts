@@ -1,3 +1,9 @@
+mod math;
+#[cfg(test)]
+mod twamm_math_test;
+
+#[cfg(test)]
+mod twamm_test;
 use core::integer::{u256_safe_divmod, u256_as_non_zero};
 use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129, i129Trait};
@@ -67,10 +73,6 @@ mod TWAMM {
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
-    use ekubo::extensions::twamm::math::{
-        constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
-        validate_time, calculate_next_sqrt_ratio, BitmapIsSetTraitImpl
-    };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait, SavedBalanceKey
@@ -90,11 +92,15 @@ mod TWAMM {
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::i129::{i129, i129Trait};
+    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait};
     use starknet::{
         get_contract_address, get_caller_address, replace_class_syscall, get_block_timestamp,
         ClassHash
+    };
+    use super::math::{
+        constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
+        validate_time, calculate_next_sqrt_ratio
     };
     use super::{ITWAMM, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
 
@@ -380,7 +386,7 @@ mod TWAMM {
             }
 
             // update sale rate delta at end time
-            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+            self
                 .update_sale_rate_delta(
                     order_key, order_key.end_time, i129 { mag: sale_rate, sign: true }
                 );
@@ -420,15 +426,10 @@ mod TWAMM {
             self.update_global_sale_rate(order_key, order_state.sale_rate, false);
 
             // update sale rate delta at end time (zero out the delta)
-            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
+            self
                 .update_sale_rate_delta(
                     order_key, order_key.end_time, i129 { mag: order_state.sale_rate, sign: false }
                 );
-
-            // remove the initialized time if this is the last order 
-            if (token0_sale_rate_delta.mag == 0 && token1_sale_rate_delta.mag == 0) {
-                self.remove_initialized_time(order_key.twamm_pool_key, order_key.end_time);
-            }
 
             // update order state to reflect that the order has been cancelled
             self
@@ -767,34 +768,48 @@ mod TWAMM {
         // update the sale rate deltas at a time, and returns the updated value
         fn update_sale_rate_delta(
             ref self: ContractState, order_key: OrderKey, time: u64, sale_rate: i129,
-        ) -> (i129, i129) {
+        ) {
             let (token0_sale_rate_delta, token1_sale_rate_delta) = self
                 .sale_rate_delta
                 .read((order_key.twamm_pool_key, time));
 
-            let sale_rate_delta = if (order_key.is_sell_token1) {
-                (token0_sale_rate_delta, token1_sale_rate_delta + sale_rate)
+            let (sale_rate_delta, sale_rate_delta_current, sale_rate_delta_next) = if (order_key
+                .is_sell_token1) {
+                let token1_sale_rate_delta_next = token1_sale_rate_delta + sale_rate;
+                (
+                    (token0_sale_rate_delta, token1_sale_rate_delta_next),
+                    token1_sale_rate_delta,
+                    token1_sale_rate_delta_next
+                )
             } else {
-                (token0_sale_rate_delta + sale_rate, token1_sale_rate_delta)
+                let token0_sale_rate_delta_next = token0_sale_rate_delta + sale_rate;
+                (
+                    (token0_sale_rate_delta_next, token1_sale_rate_delta),
+                    token0_sale_rate_delta,
+                    token0_sale_rate_delta_next
+                )
             };
 
             self.sale_rate_delta.write((order_key.twamm_pool_key, time), sale_rate_delta);
 
-            // TODO: figure out if we can avoid retrieving the bitmap
-            self.insert_initialized_time(order_key.twamm_pool_key, time);
-
-            sale_rate_delta
+            if ((sale_rate_delta_next.mag == 0) != (sale_rate_delta_current.mag == 0)) {
+                if (sale_rate_delta_next.mag == 0) {
+                    self.remove_initialized_time(order_key.twamm_pool_key, time);
+                } else {
+                    self.insert_initialized_time(order_key.twamm_pool_key, time);
+                }
+            };
         }
 
         // update the global sale rate, and return the updated value
         fn update_global_sale_rate(
             ref self: ContractState, order_key: OrderKey, sale_rate: u128, increase: bool
-        ) -> (u128, u128) {
+        ) {
             let (token0_sale_rate, token1_sale_rate) = self
                 .sale_rate
                 .read(order_key.twamm_pool_key);
 
-            let sale_rate = if (increase) {
+            self.sale_rate.write(order_key.twamm_pool_key, if (increase) {
                 if (order_key.is_sell_token1) {
                     (token0_sale_rate, token1_sale_rate + sale_rate)
                 } else {
@@ -806,11 +821,7 @@ mod TWAMM {
                 } else {
                     (token0_sale_rate - sale_rate, token1_sale_rate)
                 }
-            };
-
-            self.sale_rate.write(order_key.twamm_pool_key, sale_rate);
-
-            sale_rate
+            });
         }
 
         fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
@@ -935,12 +946,9 @@ mod TWAMM {
 
             let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
 
-            if (!bitmap.is_set(bit_index)) {
-                // only initialize the time if it is not already initialized
                 self
                     .sale_rate_time_bitmaps
                     .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
-            }
         }
 
         // return the next initialized time
