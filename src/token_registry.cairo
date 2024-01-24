@@ -68,7 +68,7 @@ mod TokenRegistry {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl TokenRegistryImpl of ITokenRegistry<ContractState> {
         fn register_token(ref self: ContractState, token: IERC20Dispatcher) {
             let metadata = IERC20MetadataDispatcher { contract_address: token.contract_address };
@@ -106,15 +106,13 @@ mod TokenRegistry {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
             let (refund_to, token, amount) = consume_callback_data::<
                 (ContractAddress, IERC20Dispatcher, u128)
             >(core, data);
-
-            let core_balance = token.balanceOf(core.contract_address);
 
             token.approve(core.contract_address, amount.into());
 

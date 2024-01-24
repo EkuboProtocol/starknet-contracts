@@ -18,7 +18,6 @@ mod Core {
         Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
     };
     use ekubo::math::bits::{msb, lsb};
-    use ekubo::math::contract_address::{ContractAddressOrder};
     use ekubo::math::exp2::{exp2};
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
@@ -360,14 +359,14 @@ mod Core {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl CoreHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::core::Core");
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl Core of ICore<ContractState> {
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
             self.protocol_fees_collected.read(token)
@@ -936,8 +935,9 @@ mod Core {
                         };
 
                     if (is_initialized) {
+                        // only compute the storage prefixes if we haven't already
                         tick_crossing_storage_prefixes = match tick_crossing_storage_prefixes {
-                            Option::Some(prefixes) => { tick_crossing_storage_prefixes },
+                            Option::Some => { tick_crossing_storage_prefixes },
                             Option::None => {
                                 Option::Some(
                                     (

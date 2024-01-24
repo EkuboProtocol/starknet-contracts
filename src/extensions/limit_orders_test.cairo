@@ -14,10 +14,7 @@ use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode};
-use ekubo::tests::helper::{
-    deploy_core, deploy_positions, deploy_limit_orders, deploy_two_mock_tokens, swap_inner,
-    deploy_locker, deploy_router, default_owner
-};
+use ekubo::tests::helper::{swap_inner, Deployer, DeployerTrait, default_owner};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
@@ -27,10 +24,12 @@ use ekubo::types::keys_test::{check_hashes_differ};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{get_contract_address, get_block_timestamp, contract_address_const, ClassHash};
 
-fn setup_pool_with_extension() -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
-    let core = deploy_core();
-    let limit_orders = deploy_limit_orders(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+fn setup_pool_with_extension(
+    ref d: Deployer
+) -> (ICoreDispatcher, ILimitOrdersDispatcher, PoolKey) {
+    let core = d.deploy_core();
+    let limit_orders = d.deploy_limit_orders(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let key = PoolKey {
         token0: token0.contract_address,
@@ -161,11 +160,10 @@ fn test_order_key_hash() {
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
-    let core = deploy_core();
-    let limit_orders = deploy_limit_orders(core);
-    let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-        limit_orders.contract_address
-    )
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let limit_orders = d.deploy_limit_orders(core);
+    pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(limit_orders.contract_address)
         .unwrap();
 
     let class_hash: ClassHash = LimitOrders::TEST_CLASS_HASH.try_into().unwrap();
@@ -184,9 +182,10 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 #[test]
 #[should_panic(expected: ('ONLY_FROM_PLACE_ORDER', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
 fn test_before_initialize_pool_not_from_extension() {
-    let core = deploy_core();
-    let limit_orders = deploy_limit_orders(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let limit_orders = d.deploy_limit_orders(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     core
         .initialize_pool(
@@ -203,7 +202,8 @@ fn test_before_initialize_pool_not_from_extension() {
 
 #[test]
 fn test_place_order_sell_token0_initializes_pool_above_tick() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
@@ -215,7 +215,8 @@ fn test_place_order_sell_token0_initializes_pool_above_tick() {
 
 #[test]
 fn test_place_order_sell_token1_initializes_pool_above_tick() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
@@ -235,7 +236,8 @@ fn test_place_order_sell_token1_initializes_pool_above_tick() {
 
 #[test]
 fn test_place_order_on_both_sides_token1_first() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
@@ -278,7 +280,8 @@ fn test_place_order_on_both_sides_token1_first() {
 
 #[test]
 fn test_place_order_on_both_sides_token0_first() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
     assert(core.get_pool_price(pk).sqrt_ratio.is_zero(), 'not initialized');
 
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -322,7 +325,8 @@ fn test_place_order_on_both_sides_token0_first() {
 
 #[test]
 fn test_place_order_token0_creates_position_at_tick() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
@@ -362,7 +366,8 @@ fn test_place_order_token0_creates_position_at_tick() {
 
 #[test]
 fn test_place_order_token1_creates_position_at_tick() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
 
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
@@ -402,8 +407,9 @@ fn test_place_order_token1_creates_position_at_tick() {
 
 #[test]
 fn test_limit_order_combined_complex_scenario_swap_token0_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -429,7 +435,7 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
     let id_4 = lo.place_order(ok_5, 100);
 
     t0.increase_balance(router.contract_address, 2000);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -452,8 +458,9 @@ fn test_limit_order_combined_complex_scenario_swap_token0_input() {
 
 #[test]
 fn test_limit_order_combined_complex_scenario_swap_token1_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -477,7 +484,7 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
     let id_4 = lo.place_order(ok_5, 100);
 
     t1.increase_balance(router.contract_address, 2000);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -500,8 +507,9 @@ fn test_limit_order_combined_complex_scenario_swap_token1_input() {
 
 #[test]
 fn test_limit_order_is_pulled_after_swap_token0_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -526,7 +534,7 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
     );
 
     t0.increase_balance(router.contract_address, 200);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -543,8 +551,9 @@ fn test_limit_order_is_pulled_after_swap_token0_input() {
 
 #[test]
 fn test_limit_order_is_pulled_after_swap_token1_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -564,7 +573,7 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
     );
 
     t1.increase_balance(router.contract_address, 200);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -583,8 +592,9 @@ fn test_limit_order_is_pulled_after_swap_token1_input() {
 
 #[test]
 fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -609,7 +619,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
     );
 
     t0.increase_balance(router.contract_address, 50);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -630,8 +640,9 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token0_input() {
 
 #[test]
 fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -651,7 +662,7 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
     );
 
     t1.increase_balance(router.contract_address, 200);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -674,8 +685,9 @@ fn test_limit_order_is_not_pulled_after_partial_swap_token1_input() {
 
 #[test]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -700,7 +712,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
     );
 
     t0.increase_balance(router.contract_address, 200);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -725,8 +737,9 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token0_input() {
 
 #[test]
 fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -746,7 +759,7 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
     );
 
     t1.increase_balance(router.contract_address, 200);
-    let delta = router
+    router
         .swap(
             node: RouteNode {
                 pool_key: pk,
@@ -770,8 +783,9 @@ fn test_limit_order_is_pulled_swap_exactly_to_limit_token1_input() {
 
 #[test]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -828,8 +842,9 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token0() {
 
 #[test]
 fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (core, lo, pk) = setup_pool_with_extension(ref d);
+    let router = d.deploy_router(core);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
@@ -893,8 +908,8 @@ fn test_limit_order_is_pulled_for_one_order_and_not_another_sell_token1() {
 #[test]
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
 
@@ -908,8 +923,8 @@ fn test_close_order_twice_fails_sell_token0() {
 #[test]
 #[should_panic(expected: ('INVALID_ORDER_KEY', 'ENTRYPOINT_FAILED'))]
 fn test_close_order_twice_fails_sell_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
-    let router = deploy_router(core);
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
 
@@ -929,7 +944,8 @@ fn test_close_order_twice_fails_sell_token1() {
     expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
 )]
 fn test_place_order_fails_wrong_side_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     let t0 = IMockERC20Dispatcher { contract_address: pk.token0 };
     t0.increase_balance(lo.contract_address, 100);
@@ -950,7 +966,8 @@ fn test_place_order_fails_wrong_side_token1() {
     expected: ('TICK_WRONG_SIDE', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',)
 )]
 fn test_place_order_fails_wrong_side_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     let t1 = IMockERC20Dispatcher { contract_address: pk.token1 };
     t1.increase_balance(lo.contract_address, 100);
@@ -969,7 +986,8 @@ fn test_place_order_fails_wrong_side_token0() {
 #[test]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_zero_token0() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     lo.place_order(OrderKey { token0: pk.token0, token1: pk.token1, tick: Zero::zero() }, 0);
 }
@@ -977,7 +995,8 @@ fn test_place_order_fails_zero_token0() {
 #[test]
 #[should_panic(expected: ('SELL_AMOUNT_TOO_SMALL', 'ENTRYPOINT_FAILED'))]
 fn test_place_order_fails_zero_token1() {
-    let (core, lo, pk) = setup_pool_with_extension();
+    let mut d: Deployer = Default::default();
+    let (_, lo, pk) = setup_pool_with_extension(ref d);
 
     lo
         .place_order(

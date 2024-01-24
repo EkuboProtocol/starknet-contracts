@@ -28,7 +28,6 @@ fn to_decimal(mut x: u64) -> felt252 {
 
     let mut ix: u8 = 0_u8;
     let mut result: u256 = 0;
-    let num_digits = code_points.len();
     loop {
         match code_points.pop_front() {
             Option::Some(code_point) => {

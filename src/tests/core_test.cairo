@@ -13,8 +13,8 @@ use ekubo::math::ticks::{
 use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 
 use ekubo::tests::helper::{
-    FEE_ONE_PERCENT, deploy_core, deploy_mock_token, deploy_locker, setup_pool, swap,
-    update_position, accumulate_as_fees, SetupPoolResult, default_owner
+    FEE_ONE_PERCENT, Deployer, DeployerTrait, swap, update_position, accumulate_as_fees,
+    SetupPoolResult, default_owner
 };
 
 use ekubo::tests::mocks::locker::{
@@ -35,7 +35,7 @@ mod owner_tests {
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
     use super::{
-        Core, deploy_core, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
+        Core, Deployer, DeployerTrait, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
         IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner
@@ -45,7 +45,8 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         set_contract_address(contract_address_const::<1>());
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
@@ -54,10 +55,9 @@ mod owner_tests {
 
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
-        let core = deploy_core();
-        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
-        )
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(core.contract_address)
             .unwrap();
 
         set_contract_address(default_owner());
@@ -74,7 +74,8 @@ mod owner_tests {
 
     #[test]
     fn test_transfer_ownership() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -101,7 +102,8 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
     fn test_transfer_ownership_then_replace_class_hash_fails() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
         set_contract_address(default_owner());
         let new_owner = contract_address_const::<123456789>();
@@ -113,7 +115,8 @@ mod owner_tests {
 
     #[test]
     fn test_transfer_ownership_then_replace_class_hash_succeeds() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
         set_contract_address(default_owner());
         let new_owner = contract_address_const::<123456789>();
@@ -128,7 +131,8 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: ('MISSING_PRIMARY_INTERFACE_ID', 'ENTRYPOINT_FAILED'))]
     fn test_fails_upgrading_to_other_contract_without_interface_id() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         set_contract_address(default_owner());
         // MockERC20 is not upgradeable, first call succeeds, second fails
         IUpgradeableDispatcher { contract_address: core.contract_address }
@@ -140,7 +144,8 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: ('UPGRADEABLE_ID_MISMATCH', 'ENTRYPOINT_FAILED'))]
     fn test_fails_upgrading_to_other_contract() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         set_contract_address(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(Positions::TEST_CLASS_HASH.try_into().unwrap());
@@ -150,13 +155,14 @@ mod owner_tests {
 mod initialize_pool_tests {
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use super::{
-        PoolKey, deploy_core, ICoreDispatcherTrait, i129, contract_address_const, Zero, OptionTrait,
-        pop_log, tick_to_sqrt_ratio
+        PoolKey, Deployer, DeployerTrait, ICoreDispatcherTrait, i129, contract_address_const, Zero,
+        OptionTrait, pop_log, tick_to_sqrt_ratio
     };
 
     #[test]
     fn test_initialize_pool_works_uninitialized() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -178,9 +184,7 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
-        )
+        pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(core.contract_address)
             .unwrap();
         let event: ekubo::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
@@ -192,7 +196,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_same_token() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<1>(),
@@ -206,7 +211,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<2>(),
             token1: contract_address_const::<1>(),
@@ -221,7 +227,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_token_order_zero_token() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: Zero::zero(),
             token1: contract_address_const::<1>(),
@@ -235,7 +242,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -248,7 +256,8 @@ mod initialize_pool_tests {
 
     #[test]
     fn test_initialize_pool_succeeds_max_tick_spacing() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -262,7 +271,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -276,7 +286,8 @@ mod initialize_pool_tests {
     #[test]
     #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED',))]
     fn test_initialize_pool_fails_already_initialized() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -290,7 +301,8 @@ mod initialize_pool_tests {
 
     #[test]
     fn test_maybe_initialize_pool_twice() {
-        let core = deploy_core();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: contract_address_const::<1>(),
             token1: contract_address_const::<2>(),
@@ -322,19 +334,22 @@ mod initialize_pool_tests {
 
 mod initialized_ticks {
     use super::{
-        setup_pool, update_position, contract_address_const, FEE_ONE_PERCENT, tick_constants,
-        ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick, Bounds, Zero
+        Deployer, DeployerTrait, update_position, contract_address_const, FEE_ONE_PERCENT,
+        tick_constants, ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick,
+        Bounds, Zero
     };
 
     #[test]
     #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED',))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup
             .core
@@ -347,12 +362,14 @@ mod initialized_ticks {
 
     #[test]
     fn test_prev_initialized_tick_min_tick() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         assert(
             setup
@@ -367,24 +384,28 @@ mod initialized_ticks {
     #[test]
     #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED',))]
     fn test_next_initialized_tick_max_tick() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.core.next_initialized_tick(pool_key: setup.pool_key, from: max_tick(), skip_ahead: 0);
     }
 
     #[test]
     fn test_next_initialized_tick_max_tick_minus_one() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         assert(
             setup
@@ -400,12 +421,14 @@ mod initialized_ticks {
 
     #[test]
     fn test_next_initialized_tick_exceeds_max_tick_spacing() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::MAX_TICK_SPACING,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         assert(
             setup
@@ -419,12 +442,14 @@ mod initialized_ticks {
 
     #[test]
     fn test_prev_initialized_tick_exceeds_min_tick_spacing() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::MAX_TICK_SPACING,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::MAX_TICK_SPACING,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         assert(
             setup
@@ -447,12 +472,14 @@ mod initialized_ticks {
 
     #[test]
     fn test_next_prev_initialized_tick_none_initialized() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         assert(
             setup
@@ -511,12 +538,14 @@ mod initialized_ticks {
 
     #[test]
     fn test_next_prev_initialized_tick_several_initialized() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 100000000);
         setup.token1.increase_balance(setup.locker.contract_address, 100000000);
@@ -679,27 +708,28 @@ mod initialized_ticks {
 mod locks {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
-        deploy_two_mock_tokens, deploy_locker, update_position_inner, accumulate_as_fees_inner,
-        flash_borrow_inner
+        Deployer, DeployerTrait, update_position_inner, accumulate_as_fees_inner, flash_borrow_inner
     };
     use super::{
-        FeesPerLiquidity, setup_pool, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult,
-        tick_constants, div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
+        FeesPerLiquidity, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants,
+        div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zero, PoolKey,
-        accumulate_as_fees, max_bounds, deploy_core, deploy_mock_token, SavedBalanceKey
+        accumulate_as_fees, max_bounds, SavedBalanceKey
     };
 
     #[test]
     #[should_panic(expected: ('NOT_LOCKED', 'ENTRYPOINT_FAILED'))]
     fn test_error_from_action_not_locked() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         // should fail because not locked at all
         setup.core.pay(contract_address_const::<1>());
     }
@@ -716,22 +746,17 @@ mod locks {
                     )
                 )
             ) {
-            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
-            ActionResult::Relock => { assert(false, 'unexpected'); },
-            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
-            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
-            ActionResult::SaveBalance(_) => {},
-            ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
-            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
-            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
+            ActionResult::SaveBalance => {},
+            _ => { assert(false, 'expected save'); },
         };
     }
 
     #[test]
     fn test_flash_borrow_balanced() {
-        let core = deploy_core();
-        let locker = deploy_locker(core);
-        let token = deploy_mock_token();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let locker = d.deploy_locker(core);
+        let token = d.deploy_mock_token();
 
         token.increase_balance(locker.contract_address, 100000000);
         save_to_core(locker, token.contract_address, 100000000);
@@ -762,9 +787,10 @@ mod locks {
     #[test]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_underpay() {
-        let core = deploy_core();
-        let locker = deploy_locker(core);
-        let token = deploy_mock_token();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let locker = d.deploy_locker(core);
+        let token = d.deploy_mock_token();
 
         token.increase_balance(locker.contract_address, 100000000);
         save_to_core(locker, token.contract_address, 100000000);
@@ -781,9 +807,10 @@ mod locks {
     #[test]
     #[should_panic(expected: ('NOT_ZEROED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn test_flash_borrow_overpay() {
-        let core = deploy_core();
-        let locker = deploy_locker(core);
-        let token = deploy_mock_token();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let locker = d.deploy_locker(core);
+        let token = d.deploy_mock_token();
 
         token.increase_balance(locker.contract_address, 100000000 + 100);
         save_to_core(locker, token.contract_address, 100000000);
@@ -809,9 +836,10 @@ mod locks {
         )
     )]
     fn test_flash_borrow_more_than_core_balance() {
-        let core = deploy_core();
-        let locker = deploy_locker(core);
-        let token = deploy_mock_token();
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let locker = d.deploy_locker(core);
+        let token = d.deploy_mock_token();
 
         token.increase_balance(locker.contract_address, 100000000);
         save_to_core(locker, token.contract_address, 100000000);
@@ -828,23 +856,27 @@ mod locks {
 
     #[test]
     fn test_assert_locker_id_call() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         setup.locker.call(Action::AssertLockerId(0));
     }
 
     #[test]
     fn test_relock_call() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         setup.locker.call(Action::Relock((0, 5)));
     }
 
@@ -855,12 +887,14 @@ mod locks {
         )
     )]
     fn test_assert_locker_id_call_wrong() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         setup.locker.call(Action::AssertLockerId(1));
     }
 
@@ -871,23 +905,27 @@ mod locks {
         )
     )]
     fn test_relock_call_fails_invalid_id() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         setup.locker.call(Action::Relock((1, 5)));
     }
 
     #[test]
     fn test_zero_liquidity_add() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
         update_position(
             setup: setup,
             bounds: Bounds {
@@ -930,12 +968,14 @@ mod locks {
         )
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         update_position(
             setup: setup,
@@ -959,12 +999,14 @@ mod locks {
         )
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         update_position(
             setup: setup,
@@ -989,12 +1031,14 @@ mod locks {
         )
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let delta = update_position(
             setup: setup,
@@ -1011,12 +1055,14 @@ mod locks {
 
     #[test]
     fn test_small_amount_liquidity_add() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: 1,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1045,12 +1091,14 @@ mod locks {
         )
     )]
     fn test_accumulate_fees_per_liquidity_not_extension() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: 1,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1074,9 +1122,10 @@ mod locks {
 
     #[test]
     fn test_accumulate_fees_per_liquidity_success() {
-        let core = deploy_core();
-        let (token0, token1) = deploy_two_mock_tokens();
-        let locker = deploy_locker(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let (token0, token1) = d.deploy_two_mock_tokens();
+        let locker = d.deploy_locker(core);
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
@@ -1121,12 +1170,14 @@ mod locks {
 
     #[test]
     fn test_larger_amount_liquidity_add() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000000);
@@ -1147,12 +1198,14 @@ mod locks {
 
     #[test]
     fn test_full_range_liquidity_add() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: 1,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup
             .token0
@@ -1174,12 +1227,14 @@ mod locks {
 
     #[test]
     fn test_full_range_liquidity_add_and_half_burn() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: 1,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup
             .token0
@@ -1225,12 +1280,14 @@ mod locks {
 
     #[test]
     fn test_full_range_liquidity_add_and_full_burn() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: 1,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup
             .token0
@@ -1276,12 +1333,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_zero_amount_zero_liquidity() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let delta = swap(
             setup,
@@ -1307,12 +1366,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_input_no_liquidity() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
             i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 3, sign: true }
@@ -1342,12 +1403,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_input_no_liquidity() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
 
@@ -1375,12 +1438,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_output_no_liquidity() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let sqrt_ratio_limit = u256 { low: 0, high: 2 };
 
@@ -1408,12 +1473,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_output_no_liquidity() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         let sqrt_ratio_limit = 0x100000000000000000000000000000000_u256 / u256 { low: 2, high: 0 };
 
@@ -1441,12 +1508,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_input_against_small_liquidity_no_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1500,12 +1569,14 @@ mod locks {
         let upper_tick = i129 { mag: 5551296 - (5982 * 20), sign: true };
         let lower_tick = i129 { mag: 5551296 + (5982 * 20), sign: true };
 
-        let setup = setup_pool(
-            fee: FEE_THIRTY_BIPS,
-            tick_spacing: TICK_SPACING_60_BIPS,
-            initial_tick: nearby_starting_tick,
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_THIRTY_BIPS,
+                tick_spacing: TICK_SPACING_60_BIPS,
+                initial_tick: nearby_starting_tick,
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 717193642384000);
         setup.token1.increase_balance(setup.locker.contract_address, 717193642384000);
@@ -1552,12 +1623,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_output_against_small_liquidity_no_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 1000000000);
         setup.token1.increase_balance(setup.locker.contract_address, 1000000000);
@@ -1604,12 +1677,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_input_against_small_liquidity_with_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1659,12 +1734,14 @@ mod locks {
 
     #[test]
     fn test_swap_token0_exact_output_against_small_liquidity_with_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1712,12 +1789,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_input_against_small_liquidity_no_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1764,12 +1843,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_output_against_small_liquidity_no_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1815,12 +1896,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_input_against_small_liquidity_with_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000);
@@ -1871,12 +1954,14 @@ mod locks {
 
     #[test]
     fn test_swap_token1_exact_output_against_small_liquidity_with_tick_cross() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -1924,12 +2009,14 @@ mod locks {
 
     #[test]
     fn test_swap_exact_input_token0_multiple_ticks_crossed_hit_limit() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -2006,12 +2093,14 @@ mod locks {
 
     #[test]
     fn test_swap_exact_input_token1_multiple_ticks_crossed_hit_limit() {
-        let setup = setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
+        let mut d: Deployer = Default::default();
+        let setup = d
+            .setup_pool(
+                fee: FEE_ONE_PERCENT,
+                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                initial_tick: Zero::zero(),
+                extension: Zero::zero(),
+            );
 
         setup.token0.increase_balance(setup.locker.contract_address, 10000000000000000);
         setup.token1.increase_balance(setup.locker.contract_address, 10000000000000000);
@@ -2091,16 +2180,16 @@ mod locks {
 mod save_load_tests {
     use ekubo::tests::mocks::locker::{Action, ActionResult};
     use super::{
-        deploy_core, deploy_mock_token, deploy_locker, IMockERC20DispatcherTrait,
-        ICoreLockerDispatcherTrait, ICoreDispatcherTrait, contract_address_const,
-        set_contract_address, SavedBalanceKey
+        Deployer, DeployerTrait, IMockERC20DispatcherTrait, ICoreLockerDispatcherTrait,
+        ICoreDispatcherTrait, contract_address_const, set_contract_address, SavedBalanceKey
     };
 
     #[test]
     fn test_save_load_1_token() {
-        let core = deploy_core();
-        let token = deploy_mock_token();
-        let locker = deploy_locker(core);
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let token = d.deploy_mock_token();
+        let locker = d.deploy_locker(core);
 
         token.increase_balance(locker.contract_address, 1);
         let cache_key: felt252 = 5678;
@@ -2121,16 +2210,10 @@ mod save_load_tests {
                     )
                 )
             ) {
-            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
-            ActionResult::Relock => { assert(false, 'unexpected'); },
-            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
-            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
             ActionResult::SaveBalance(balance_next) => {
                 assert(balance_next == 1, 'balance_next');
             },
-            ActionResult::LoadBalance(_) => { assert(false, 'unexpected'); },
-            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
-            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
+            _ => { assert(false, 'unexpected'); },
         };
 
         assert(
@@ -2153,16 +2236,10 @@ mod save_load_tests {
         );
 
         match locker.call(Action::LoadBalance((token.contract_address, cache_key, 1, recipient))) {
-            ActionResult::AssertLockerId => { assert(false, 'unexpected'); },
-            ActionResult::Relock => { assert(false, 'unexpected'); },
-            ActionResult::UpdatePosition(delta) => { assert(false, 'unexpected'); },
-            ActionResult::Swap(_) => { assert(false, 'unexpected'); },
-            ActionResult::SaveBalance(_) => { assert(false, 'unexpected'); },
             ActionResult::LoadBalance(balance_next) => {
                 assert(balance_next == 0, 'balance_next');
             },
-            ActionResult::AccumulateAsFees(_) => { assert(false, 'unexpected') },
-            ActionResult::FlashBorrow(_) => { assert(false, 'unexpected') },
+            _ => { assert(false, 'unexpected') },
         };
     }
 }

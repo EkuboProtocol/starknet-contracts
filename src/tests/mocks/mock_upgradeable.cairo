@@ -15,7 +15,7 @@ mod MockUpgradeable {
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MockUpgradeableHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::tests::mocks::mock_upgradeable::MockUpgradeable");
