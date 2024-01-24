@@ -22,6 +22,9 @@ mod constants {
 
     // 2**128
     const X128: u256 = 0x100000000000000000000000000000000_u256;
+
+    // ~ ln(2**128) * 2**64
+    const EXPONENT_LIMIT: u256 = 1623313478486440542208;
 }
 
 fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
@@ -105,31 +108,47 @@ fn calculate_next_sqrt_ratio(
     } else {
         let sqrt_sell_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
 
-        // TODO: check if term will overflow exp_fractional and use sqrt_sell_ratio.
-        let e = calculate_e(sqrt_sell_rate, virtual_order_time_window, liquidity);
-
-        let term1 = e - c;
-        let term2 = e + c;
-
-        let scale: u256 = if (sign) {
-            let (q, _) = u512_safe_div_rem_by_u256(
-                u256_wide_mul(term2, constants::X128), u256_as_non_zero(term1)
-            );
-            u256 { low: q.limb0, high: q.limb1 }
-        } else {
-            let (q, _) = u512_safe_div_rem_by_u256(
-                u256_wide_mul(term1, constants::X128), u256_as_non_zero(term2)
-            );
-            u256 { low: q.limb0, high: q.limb1 }
-        };
-
-        let (q, _) = u512_safe_div_rem_by_u256(
-            u256_wide_mul(sqrt_sell_ratio, scale), u256_as_non_zero(constants::X64_u256)
+        // calculate e
+        let (high, low) = u128_wide_mul(
+            (constants::X32_u128 * 2 * virtual_order_time_window.into()), sqrt_sell_rate
         );
 
-        assert(q.limb2.is_zero() && q.limb3.is_zero(), 'SCALE_MUL_OVERFLOW');
+        let (exponent, _) = u256_safe_div_rem(
+            u256 { high: high, low: low }, u256_as_non_zero(liquidity.into())
+        );
 
-        u256 { low: q.limb0, high: q.limb1 }
+        if (exponent > constants::EXPONENT_LIMIT) {
+            // sale_rate * t >> liquidity
+            sqrt_sell_ratio
+        } else {
+            // validate high is 0, integer piece should be < 128
+            assert(exponent.high == 0, 'E_MUL_OVERFLOW');
+
+            let e = exp_fractional(exponent.low);
+
+            let term1 = e - c;
+            let term2 = e + c;
+
+            let scale: u256 = if (sign) {
+                let (q, _) = u512_safe_div_rem_by_u256(
+                    u256_wide_mul(term2, constants::X128), u256_as_non_zero(term1)
+                );
+                u256 { low: q.limb0, high: q.limb1 }
+            } else {
+                let (q, _) = u512_safe_div_rem_by_u256(
+                    u256_wide_mul(term1, constants::X128), u256_as_non_zero(term2)
+                );
+                u256 { low: q.limb0, high: q.limb1 }
+            };
+
+            let (q, _) = u512_safe_div_rem_by_u256(
+                u256_wide_mul(sqrt_sell_ratio, scale), u256_as_non_zero(constants::X64_u256)
+            );
+
+            assert(q.limb2.is_zero() && q.limb3.is_zero(), 'SCALE_MUL_OVERFLOW');
+
+            u256 { low: q.limb0, high: q.limb1 }
+        }
     };
 
     sqrt_ratio_next
@@ -158,29 +177,9 @@ fn calculate_c(sqrt_ratio: u256, sqrt_sell_ratio: u256) -> (u256, bool) {
     (u256 { low: div.limb0, high: div.limb1 }, sign)
 }
 
-//  e = exp(2 * t * sqrt_sell_rate / liquidity) as 32.64
-fn calculate_e(sqrt_sell_rate: u128, t: u64, liquidity: u128) -> u256 {
-    // sqrt_sell_rate is 96.32
-    // scaled numerator is 64.32
-    // combined is 160.64
-    // liquidity is 128
-    // exponent is 32.64
-
-    let (high, low) = u128_wide_mul((constants::X32_u128 * 2 * t.into()), sqrt_sell_rate);
-
-    let (exponent, _) = u256_safe_div_rem(
-        u256 { high: high, low: low }, u256_as_non_zero(liquidity.into())
-    );
-
-    // validate high is 0, integer piece should be < 128
-    assert(exponent.high == 0, 'E_MUL_OVERFLOW');
-
-    exp_fractional(exponent.low)
-}
-
 fn exp_fractional(x: u128) -> u256 {
-    let res = if (x > 2 * constants::X64_u128) {
-        let half = exp_fractional(x / 2);
+    let res = if (x > 0b10 * constants::X64_u128) {
+        let half = exp_fractional(x / 0b10);
         let (div, _) = u512_safe_div_rem_by_u256(
             u256_wide_mul(half, half), u256_as_non_zero(constants::X128)
         );

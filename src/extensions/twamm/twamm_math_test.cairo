@@ -1,7 +1,7 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_e
+    constants, exp_fractional
 };
 use ekubo::interfaces::core::{Delta};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
@@ -145,7 +145,7 @@ mod RewardRateTest {
 
 mod TWAMMMathTest {
     use core::debug::PrintTrait;
-    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, calculate_e};
+    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional};
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
@@ -390,17 +390,8 @@ mod TWAMMMathTest {
         // last valid input
         // e^(88), error -28250270430280119449491910663393939268384
         assert_eq!(
-            exp_fractional(88 * constants::X64_u128), 56202269414179362208214868742863362868341779313762687677660940959816606662721
-        );
-    }
-
-    #[test]
-    fn test_calculate_e_base() {
-        let sqrt_rate_sell = 0x1;
-        let t = 16;
-        let liquidity = 0x2000000000;
-        assert_eq!(
-            calculate_e(sqrt_rate_sell, t, liquidity), 340282366920938463481821351505477763073
+            exp_fractional(88 * constants::X64_u128),
+            56202269414179362208214868742863362868341779313762687677660940959816606662721
         );
     }
 }

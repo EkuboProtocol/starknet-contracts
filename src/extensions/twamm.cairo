@@ -578,6 +578,7 @@ mod TWAMM {
                                 if price.sqrt_ratio != 0 {
                                     let virtual_order_time_window = next_virtual_order_time
                                         - last_virtual_order_time;
+
                                     let token0_amount = (token0_sale_rate
                                         * virtual_order_time_window.into())
                                         / constants::X32_u128;
@@ -773,27 +774,36 @@ mod TWAMM {
                 .sale_rate_delta
                 .read((order_key.twamm_pool_key, time));
 
-            let (sale_rate_delta, sale_rate_delta_current, sale_rate_delta_next) = if (order_key
+            let (
+                sale_rate_delta,
+                sale_rate_delta_current,
+                token_sale_rate_delta_next,
+                other_token_sale_rate_delta
+            ) =
+                if (order_key
                 .is_sell_token1) {
                 let token1_sale_rate_delta_next = token1_sale_rate_delta + sale_rate;
                 (
                     (token0_sale_rate_delta, token1_sale_rate_delta_next),
                     token1_sale_rate_delta,
-                    token1_sale_rate_delta_next
+                    token1_sale_rate_delta_next,
+                    token0_sale_rate_delta
                 )
             } else {
                 let token0_sale_rate_delta_next = token0_sale_rate_delta + sale_rate;
                 (
                     (token0_sale_rate_delta_next, token1_sale_rate_delta),
                     token0_sale_rate_delta,
-                    token0_sale_rate_delta_next
+                    token0_sale_rate_delta_next,
+                    token1_sale_rate_delta
                 )
             };
 
             self.sale_rate_delta.write((order_key.twamm_pool_key, time), sale_rate_delta);
 
-            if ((sale_rate_delta_next.mag == 0) != (sale_rate_delta_current.mag == 0)) {
-                if (sale_rate_delta_next.mag == 0) {
+            if ((token_sale_rate_delta_next.mag == 0) != (sale_rate_delta_current.mag == 0)
+                && other_token_sale_rate_delta.mag == 0) {
+                if (token_sale_rate_delta_next.mag == 0) {
                     self.remove_initialized_time(order_key.twamm_pool_key, time);
                 } else {
                     self.insert_initialized_time(order_key.twamm_pool_key, time);
@@ -809,19 +819,24 @@ mod TWAMM {
                 .sale_rate
                 .read(order_key.twamm_pool_key);
 
-            self.sale_rate.write(order_key.twamm_pool_key, if (increase) {
-                if (order_key.is_sell_token1) {
-                    (token0_sale_rate, token1_sale_rate + sale_rate)
-                } else {
-                    (token0_sale_rate + sale_rate, token1_sale_rate)
-                }
-            } else {
-                if (order_key.is_sell_token1) {
-                    (token0_sale_rate, token1_sale_rate - sale_rate)
-                } else {
-                    (token0_sale_rate - sale_rate, token1_sale_rate)
-                }
-            });
+            self
+                .sale_rate
+                .write(
+                    order_key.twamm_pool_key,
+                    if (increase) {
+                        if (order_key.is_sell_token1) {
+                            (token0_sale_rate, token1_sale_rate + sale_rate)
+                        } else {
+                            (token0_sale_rate + sale_rate, token1_sale_rate)
+                        }
+                    } else {
+                        if (order_key.is_sell_token1) {
+                            (token0_sale_rate, token1_sale_rate - sale_rate)
+                        } else {
+                            (token0_sale_rate - sale_rate, token1_sale_rate)
+                        }
+                    }
+                );
         }
 
         fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
@@ -946,9 +961,9 @@ mod TWAMM {
 
             let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
 
-                self
-                    .sale_rate_time_bitmaps
-                    .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
+            self
+                .sale_rate_time_bitmaps
+                .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
         }
 
         // return the next initialized time
