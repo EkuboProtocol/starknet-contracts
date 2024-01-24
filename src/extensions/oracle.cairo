@@ -142,20 +142,23 @@ mod Oracle {
             let time_passed: u128 = (time - state.block_timestamp_last).into();
 
             if (time_passed.is_zero()) {
-                return ();
+                return;
             }
 
             let liquidity = core.get_pool_liquidity(pool_key);
 
-            // todo: use this value
-            let _seconds_per_liquidity_global_next = if (liquidity.is_non_zero()) {
-                self.pool_seconds_per_liquidity.read(pool_key)
-                    + (u256 { low: 0, high: time_passed } / u256 { low: liquidity, high: 0 })
-                        .try_into()
-                        .unwrap()
-            } else {
-                self.pool_seconds_per_liquidity.read(pool_key)
-            };
+            if (liquidity.is_non_zero()) {
+                self
+                    .pool_seconds_per_liquidity
+                    .write(
+                        pool_key,
+                        self.pool_seconds_per_liquidity.read(pool_key)
+                            + (u256 { low: 0, high: time_passed }
+                                / u256 { low: liquidity, high: 0 })
+                                .try_into()
+                                .unwrap()
+                    )
+            }
 
             let price = core.get_pool_price(pool_key);
 
