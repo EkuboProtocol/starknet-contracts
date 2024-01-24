@@ -661,8 +661,8 @@ mod CancelOrderTests {
         PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher,
-        IERC20DispatcherTrait
+        IMockERC20DispatcherTrait, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey,
+        IERC20Dispatcher, IERC20DispatcherTrait
     };
 
     #[test]
@@ -693,6 +693,7 @@ mod CancelOrderTests {
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .cancel_order(order_key, token_id);
     }
+
     #[test]
     fn test_place_order_and_withdraw() {
         let mut d: Deployer = Default::default();
@@ -736,7 +737,7 @@ mod CancelOrderTests {
         let order_key = OrderKey {
             twamm_pool_key: twamm_pool_key,
             is_sell_token1: false,
-            start_time: 0,
+            start_time: SIXTEEN_POW_TWO,
             end_time: SIXTEEN_POW_THREE,
         };
 
@@ -744,7 +745,7 @@ mod CancelOrderTests {
         let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
             .place_order(order_key, amount);
 
-        set_block_timestamp(get_block_timestamp() + 1);
+        set_block_timestamp(get_block_timestamp() + SIXTEEN_POW_TWO - 1);
 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .cancel_order(order_key, token_id);
@@ -753,7 +754,7 @@ mod CancelOrderTests {
             .balanceOf(get_contract_address());
 
         assert(
-            amount.into() - token_balance == 1 || token_balance == amount.into(), 'token0.balance'
+            token_balance == amount.into(), 'token0.balance'
         );
     }
 }

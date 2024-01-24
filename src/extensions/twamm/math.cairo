@@ -110,7 +110,7 @@ fn calculate_next_sqrt_ratio(
 
         // calculate e
         let (high, low) = u128_wide_mul(
-            (constants::X32_u128 * 2 * virtual_order_time_window.into()), sqrt_sell_rate
+            (constants::X32_u128 * 0b10 * virtual_order_time_window.into()), sqrt_sell_rate
         );
 
         let (exponent, _) = u256_safe_div_rem(

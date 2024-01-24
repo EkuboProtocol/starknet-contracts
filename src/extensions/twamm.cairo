@@ -341,6 +341,9 @@ mod TWAMM {
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
+            // execute virtual orders up to current time
+            self.internal_execute_virtual_orders(to_pool_key(order_key));
+
             let current_time = get_block_timestamp();
 
             // validate order starts now or in the future
@@ -357,9 +360,6 @@ mod TWAMM {
             };
             validate_time(order_start_time, order_key.end_time);
 
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(to_pool_key(order_key));
-
             // mint TWAMM NFT
             let id = self.nft.read().mint(get_caller_address());
 
@@ -375,10 +375,10 @@ mod TWAMM {
                 );
 
             if (order_key.start_time.is_zero()) {
-                // increase global sale rate
+                // order starts now, increase global sale rate
                 self.update_global_sale_rate(order_key, sale_rate, true);
             } else {
-                // add sale rate to sale rate delta
+                // add sale rate to future sale rate delta
                 self
                     .update_sale_rate_delta(
                         order_key, order_key.start_time, i129 { mag: sale_rate, sign: false }
@@ -411,6 +411,7 @@ mod TWAMM {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
 
+            // execute virtual orders up to current time
             self.internal_execute_virtual_orders(to_pool_key(order_key));
 
             let order_state = self.orders.read((order_key, id));
@@ -418,18 +419,6 @@ mod TWAMM {
 
             // validate that the order has not expired
             assert(order_key.end_time > current_time, 'ORDER_EXPIRED');
-
-            // calculate amount that was not sold
-            let remaining_amount = self.get_order_remaining_amount(order_key, order_state);
-
-            // decrease global rates
-            self.update_global_sale_rate(order_key, order_state.sale_rate, false);
-
-            // update sale rate delta at end time (zero out the delta)
-            self
-                .update_sale_rate_delta(
-                    order_key, order_key.end_time, i129 { mag: order_state.sale_rate, sign: false }
-                );
 
             // update order state to reflect that the order has been cancelled
             self
@@ -439,22 +428,43 @@ mod TWAMM {
             // burn the NFT
             self.nft.read().burn(id);
 
-            if (order_key.start_time <= current_time) {
+            // if order started, send amount swapped
+            if (order_key.start_time < current_time) {
+                // decrease global rates
+                self.update_global_sale_rate(order_key, order_state.sale_rate, false);
+
                 // calculate amount that was purchased
                 let reward_rate = (self.get_current_reward_rate(order_key)
-                    - self.get_reward_rate_at(order_key, order_key.start_time));
+                    - self.get_reward_rate_at(order_key, order_state.reward_rate_start_time));
                 let purchased_amount = calculate_reward_amount(reward_rate, order_state.sale_rate);
-
-                // transfer remaining amount
-                if (remaining_amount.is_non_zero()) {
-                    self.withdraw(order_key.twamm_pool_key.token0, caller, remaining_amount);
-                }
 
                 // transfer purchased amount 
                 if (purchased_amount.is_non_zero()) {
                     self.withdraw(order_key.twamm_pool_key.token1, caller, purchased_amount)
                 }
+            } else {
+                // order has not started, remove sale rate delta at start time 
+                self
+                    .update_sale_rate_delta(
+                        order_key,
+                        order_key.start_time,
+                        i129 { mag: order_state.sale_rate, sign: true }
+                    );
             }
+
+            // calculate amount that was not swapped
+            let remaining_amount = self.get_order_remaining_amount(order_key, order_state);
+
+            // transfer remaining amount
+            if (remaining_amount.is_non_zero()) {
+                self.withdraw(order_key.twamm_pool_key.token0, caller, remaining_amount);
+            }
+
+            // update sale rate delta at end time 
+            self
+                .update_sale_rate_delta(
+                    order_key, order_key.end_time, i129 { mag: order_state.sale_rate, sign: false }
+                );
 
             self.emit(OrderCancelled { id, order_key });
         }
@@ -463,6 +473,7 @@ mod TWAMM {
             let caller = get_caller_address();
             self.validate_caller(id, caller);
 
+            // execute virtual orders up to current time
             self.internal_execute_virtual_orders(to_pool_key(order_key));
 
             let order_state = self.orders.read((order_key, id));
@@ -522,6 +533,7 @@ mod TWAMM {
         }
 
         fn execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
+            // execute virtual orders up to current time
             self.internal_execute_virtual_orders(pool_key);
         }
     }
@@ -597,6 +609,7 @@ mod TWAMM {
 
                                         let is_token1 = price.sqrt_ratio < sqrt_ratio_limit;
 
+                                        // swap up/down to sqrt_ratio_limit
                                         delta = core
                                             .swap(
                                                 data.pool_key,
