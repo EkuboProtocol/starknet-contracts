@@ -16,6 +16,12 @@ struct TokenAmount {
     amount: i129,
 }
 
+#[derive(Serde, Drop)]
+struct Swap {
+    route: Array<RouteNode>,
+    token_amount: TokenAmount,
+}
+
 #[derive(Serde, Copy, Drop, PartialEq, Debug)]
 struct Depth {
     token0: u128,
@@ -33,10 +39,11 @@ trait IRouter<TContractState> {
         ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount
     ) -> Array<Delta>;
 
+    // Does multiple multihop swaps
+    fn multi_multihop_swap(ref self: TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
+
     // Quote the given token amount against the route in the swap
-    fn quote(
-        ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount
-    ) -> Array<Delta>;
+    fn quote(ref self: TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
 
     // Returns the delta for swapping a pool to the given price
     fn get_delta_to_sqrt_ratio(self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
@@ -73,7 +80,7 @@ mod Router {
 
     use starknet::{get_caller_address, get_contract_address};
 
-    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, TokenAmount, Depth};
+    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, TokenAmount, Swap, Depth};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
@@ -90,7 +97,7 @@ mod Router {
 
     #[derive(Drop, Serde)]
     enum CallbackParameters {
-        Swap: (Array<RouteNode>, TokenAmount, bool),
+        Swap: (Array<Swap>, bool),
         GetDeltaToSqrtRatio: (PoolKey, u256),
         GetMarketDepth: (PoolKey, u128),
     }
@@ -104,92 +111,117 @@ mod Router {
 
             match consume_callback_data::<CallbackParameters>(core, data) {
                 CallbackParameters::Swap((
-                    mut route, mut token_amount, simulate
+                    mut swaps, simulate
                 )) => {
-                    let mut deltas: Array<Delta> = ArrayTrait::new();
-                    // we track this to know how much to pay in the case of exact input and how much to pull in the case of exact output
-                    let mut first_swap_amount: Option<TokenAmount> = Option::None;
+                    let mut outputs: Array<Array<Delta>> = ArrayTrait::new();
 
                     loop {
-                        match route.pop_front() {
-                            Option::Some(node) => {
-                                let is_token1 = token_amount.token == node.pool_key.token1;
+                        match swaps.pop_front() {
+                            Option::Some(swap) => {
+                                let mut route = swap.route;
+                                let mut token_amount = swap.token_amount;
 
-                                let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
-                                if (sqrt_ratio_limit.is_zero()) {
-                                    sqrt_ratio_limit =
-                                        if is_price_increasing(
-                                            token_amount.amount.sign, is_token1
-                                        ) {
-                                            max_sqrt_ratio()
-                                        } else {
-                                            min_sqrt_ratio()
-                                        };
-                                }
+                                let mut deltas: Array<Delta> = ArrayTrait::new();
+                                // we track this to know how much to pay in the case of exact input and how much to pull in the case of exact output
+                                let mut first_swap_amount: Option<TokenAmount> = Option::None;
 
-                                let delta = core
-                                    .swap(
-                                        node.pool_key,
-                                        SwapParameters {
-                                            amount: token_amount.amount,
-                                            is_token1: is_token1,
-                                            sqrt_ratio_limit,
-                                            skip_ahead: node.skip_ahead,
-                                        }
-                                    );
+                                loop {
+                                    match route.pop_front() {
+                                        Option::Some(node) => {
+                                            let is_token1 = token_amount
+                                                .token == node
+                                                .pool_key
+                                                .token1;
 
-                                deltas.append(delta);
+                                            let mut sqrt_ratio_limit = node.sqrt_ratio_limit;
+                                            if (sqrt_ratio_limit.is_zero()) {
+                                                sqrt_ratio_limit =
+                                                    if is_price_increasing(
+                                                        token_amount.amount.sign, is_token1
+                                                    ) {
+                                                        max_sqrt_ratio()
+                                                    } else {
+                                                        min_sqrt_ratio()
+                                                    };
+                                            }
 
-                                if first_swap_amount.is_none() {
-                                    first_swap_amount =
-                                        if is_token1 {
-                                            Option::Some(
-                                                TokenAmount {
-                                                    token: node.pool_key.token1,
-                                                    amount: delta.amount1
-                                                }
-                                            )
-                                        } else {
-                                            Option::Some(
-                                                TokenAmount {
-                                                    token: node.pool_key.token0,
-                                                    amount: delta.amount0
-                                                }
-                                            )
-                                        }
-                                }
+                                            let delta = core
+                                                .swap(
+                                                    node.pool_key,
+                                                    SwapParameters {
+                                                        amount: token_amount.amount,
+                                                        is_token1: is_token1,
+                                                        sqrt_ratio_limit,
+                                                        skip_ahead: node.skip_ahead,
+                                                    }
+                                                );
 
-                                token_amount =
-                                    if (is_token1) {
-                                        TokenAmount {
-                                            amount: -delta.amount0, token: node.pool_key.token0
-                                        }
-                                    } else {
-                                        TokenAmount {
-                                            amount: -delta.amount1, token: node.pool_key.token1
-                                        }
+                                            deltas.append(delta);
+
+                                            if first_swap_amount.is_none() {
+                                                first_swap_amount =
+                                                    if is_token1 {
+                                                        Option::Some(
+                                                            TokenAmount {
+                                                                token: node.pool_key.token1,
+                                                                amount: delta.amount1
+                                                            }
+                                                        )
+                                                    } else {
+                                                        Option::Some(
+                                                            TokenAmount {
+                                                                token: node.pool_key.token0,
+                                                                amount: delta.amount0
+                                                            }
+                                                        )
+                                                    }
+                                            }
+
+                                            token_amount =
+                                                if (is_token1) {
+                                                    TokenAmount {
+                                                        amount: -delta.amount0,
+                                                        token: node.pool_key.token0
+                                                    }
+                                                } else {
+                                                    TokenAmount {
+                                                        amount: -delta.amount1,
+                                                        token: node.pool_key.token1
+                                                    }
+                                                };
+                                        },
+                                        Option::None => { break (); }
                                     };
+                                };
+
+                                let recipient = get_contract_address();
+
+                                outputs.append(deltas);
+
+                                // execute deltas now if it's not a simulation
+                                if (!simulate) {
+                                    let first = first_swap_amount.unwrap();
+                                    handle_delta(
+                                        core, token_amount.token, -token_amount.amount, recipient
+                                    );
+                                    handle_delta(core, first.token, first.amount, recipient);
+                                }
                             },
                             Option::None => { break (); }
                         };
                     };
 
-                    let recipient = get_contract_address();
-
-                    let mut output: Array<felt252> = ArrayTrait::new();
+                    let mut serialized: Array<felt252> = array![];
 
                     if (simulate) {
-                        Serde::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
-                        Serde::serialize(@deltas, ref output);
-                        panic(output);
+                        Serde::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref serialized);
+                        Serde::serialize(@outputs, ref serialized);
+                        panic(serialized);
                     } else {
-                        let first = first_swap_amount.unwrap();
-                        handle_delta(core, token_amount.token, -token_amount.amount, recipient);
-                        handle_delta(core, first.token, first.amount, recipient);
-                        Serde::serialize(@deltas, ref output);
+                        Serde::serialize(@outputs, ref serialized);
                     }
 
-                    output
+                    serialized
                 },
                 CallbackParameters::GetDeltaToSqrtRatio((
                     pool_key, sqrt_ratio
@@ -357,17 +389,20 @@ mod Router {
         fn multihop_swap(
             ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
         ) -> Array<Delta> {
-            call_core_with_callback(
-                self.core.read(), @CallbackParameters::Swap((route, token_amount, false))
-            )
+            let mut result = self.multi_multihop_swap(array![Swap { route, token_amount }]);
+
+            result.pop_front().unwrap()
+        }
+
+        #[inline(always)]
+        fn multi_multihop_swap(ref self: ContractState, swaps: Array<Swap>) -> Array<Array<Delta>> {
+            call_core_with_callback(self.core.read(), @CallbackParameters::Swap((swaps, false)))
         }
 
         // Quote the given token amount against the route in the swap
-        fn quote(
-            ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
-        ) -> Array<Delta> {
+        fn quote(ref self: ContractState, swaps: Array<Swap>) -> Array<Array<Delta>> {
             call_core_with_reverting_callback(
-                self.core.read(), @CallbackParameters::Swap((route, token_amount, true))
+                self.core.read(), @CallbackParameters::Swap((swaps, true))
             )
         }
 
