@@ -81,7 +81,7 @@ mod MockERC20 {
             );
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC20Impl of IERC20<ContractState> {
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
             assert(amount.high.is_zero(), 'AMOUNT_OVERFLOW');
@@ -132,7 +132,7 @@ mod MockERC20 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MockERC20Impl of IMockERC20<ContractState> {
         fn set_balance(ref self: ContractState, address: ContractAddress, amount: u128) {
             self.balances.write(address, amount);

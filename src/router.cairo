@@ -97,7 +97,7 @@ mod Router {
 
     const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -333,19 +333,20 @@ mod Router {
         )
             .unwrap_err();
 
-        if (*output.at(0) != FUNCTION_DID_NOT_ERROR_FLAG) {
+        let mut output_span = output.span();
+        let first_value = output_span.pop_front().expect('No return data');
+
+        if (*first_value != FUNCTION_DID_NOT_ERROR_FLAG) {
             // whole output is an internal panic
             panic(output);
         }
 
-        let mut output_span = output.span();
-        output_span.pop_front();
         let mut result: TOutput = Serde::deserialize(ref output_span)
             .expect('DESERIALIZE_RESULT_FAILED');
         result
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl RouterImpl of IRouter<ContractState> {
         fn swap(ref self: ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
             let mut deltas: Array<Delta> = self.multihop_swap(array![node], token_amount);

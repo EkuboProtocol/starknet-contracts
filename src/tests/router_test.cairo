@@ -1,14 +1,13 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
+use core::cmp::{min, max};
 
 use core::num::traits::{Zero};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
-use ekubo::mock_erc20::{IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode, Depth};
-use ekubo::tests::helper::{
-    deploy_core, deploy_router, deploy_two_mock_tokens, deploy_positions, deploy_mock_token
-};
+use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
@@ -30,9 +29,10 @@ fn recipient() -> ContractAddress {
     )
 )]
 fn test_router_quote_not_initialized_pool() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -55,9 +55,10 @@ fn test_router_quote_not_initialized_pool() {
 
 #[test]
 fn test_router_quote_initialized_pool_no_liquidity() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -84,12 +85,20 @@ fn test_router_quote_initialized_pool_no_liquidity() {
 }
 
 
-fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let positions = deploy_positions(core);
-    let (token0, token1) = deploy_two_mock_tokens();
-    let token2 = deploy_mock_token();
+fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let positions = d.deploy_positions(core);
+    let (tokenA, tokenB) = (d.deploy_two_mock_tokens());
+    let tokenC = d.deploy_mock_token();
+
+    let (token0, token1, token2) = if tokenC.contract_address > tokenB.contract_address {
+        (tokenA, tokenB, tokenC)
+    } else if tokenC.contract_address > tokenA.contract_address {
+        (tokenA, tokenC, tokenB)
+    } else {
+        (tokenC, tokenA, tokenB)
+    };
 
     let pool_key_a = PoolKey {
         token0: token0.contract_address,
@@ -119,14 +128,14 @@ fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
 
     token0.increase_balance(positions.contract_address, 10000);
     token1.increase_balance(positions.contract_address, 10000);
-    let token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
-    let deposited_liquidity_a = positions
+    let _token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
+    let _deposited_liquidity_a = positions
         .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0,);
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
-    let token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
-    let deposited_liquidity_b = positions
+    let _token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
+    let _deposited_liquidity_b = positions
         .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0,);
 
     (router, pool_key_a, pool_key_b)
@@ -135,7 +144,8 @@ fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
 
 #[test]
 fn test_router_quote_initialized_pool_with_liquidity() {
-    let (router, pool_key, _) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key, _) = setup_for_routing(ref d);
 
     let mut result = router
         .quote(
@@ -186,7 +196,8 @@ fn test_router_quote_initialized_pool_with_liquidity() {
 
 #[test]
 fn test_router_quote_to_delta() {
-    let (router, pool_key, _) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key, _) = setup_for_routing(ref d);
 
     let mut delta = router
         .get_delta_to_sqrt_ratio(
@@ -211,7 +222,8 @@ fn test_router_quote_to_delta() {
 
 #[test]
 fn test_router_quote_multihop_routes() {
-    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, pool_key_b) = setup_for_routing(ref d);
 
     let mut result = router
         .quote(
@@ -274,9 +286,10 @@ fn test_router_quote_multihop_routes() {
     )
 )]
 fn test_router_swap_not_initialized_pool() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -297,9 +310,10 @@ fn test_router_swap_not_initialized_pool() {
 
 #[test]
 fn test_router_swap_initialized_pool_no_liquidity_token0_in() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -328,9 +342,10 @@ fn test_router_swap_initialized_pool_no_liquidity_token0_in() {
 
 #[test]
 fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -363,7 +378,8 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
 
 #[test]
 fn test_router_get_market_depth() {
-    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, _) = setup_for_routing(ref d);
 
     assert_eq!( // +/-0%
     router.get_market_depth(pool_key_a, 0), Depth { token0: 0, token1: 0 });
@@ -395,7 +411,8 @@ fn test_router_get_market_depth() {
 
 #[test]
 fn test_router_get_market_depth_v2() {
-    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, _) = setup_for_routing(ref d);
 
     assert_eq!( // +/-0%
     router.get_market_depth_v2(pool_key_a, 0), Depth { token0: 0, token1: 0 });

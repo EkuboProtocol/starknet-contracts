@@ -1,7 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
-use ekubo::math::contract_address::{ContractAddressOrder};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
