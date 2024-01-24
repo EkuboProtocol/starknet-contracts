@@ -6,7 +6,6 @@ use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::core::{Core};
-use ekubo::extensions::oracle::{Oracle};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
 };
@@ -116,22 +115,6 @@ impl DeployerTraitImpl of DeployerTrait {
             IOwnedNFTDispatcher { contract_address: address },
             IERC721Dispatcher { contract_address: address }
         );
-    }
-
-
-    fn deploy_oracle(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@core, ref constructor_args);
-
-        let (address, _) = deploy_syscall(
-            Oracle::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            constructor_args.span(),
-            true
-        )
-            .expect('oracle deploy failed');
-
-        IExtensionDispatcher { contract_address: address }
     }
 
 
