@@ -1,6 +1,6 @@
 use core::integer::{
     u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_safe_div_rem,
-    u128_wide_mul, u256_sqrt, u256_overflow_mul
+    u128_wide_mul, u256_sqrt
 };
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
@@ -24,7 +24,7 @@ mod constants {
     const X128: u256 = 0x100000000000000000000000000000000_u256;
 
     // ~ ln(2**128) * 2**64
-    const EXPONENT_LIMIT: u256 = 1623313478486440542208;
+    const EXPONENT_LIMIT: u128 = 1623313478486440542208;
 }
 
 fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
@@ -41,7 +41,7 @@ fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt
     let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
     let token0_reward_delta: felt252 = if (delta.amount0.mag > 0) {
-        if (!delta.amount0.sign || token1_sale_rate == 0) {
+        if (!delta.amount0.sign || token1_sale_rate.is_zero()) {
             0
         } else {
             (u256 { high: delta.amount0.mag, low: 0 } / token1_sale_rate.into())
@@ -53,7 +53,7 @@ fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt
     };
 
     let token1_reward_delta: felt252 = if (delta.amount1.mag > 0) {
-        if (!delta.amount1.sign || token0_sale_rate == 0) {
+        if (!delta.amount1.sign || token0_sale_rate.is_zero()) {
             0
         } else {
             (u256 { high: delta.amount1.mag, low: 0 } / token0_sale_rate.into())
@@ -88,7 +88,7 @@ fn validate_time(start_time: u64, end_time: u64) {
     );
 
     assert(step >= constants::BITMAP_SPACING.into(), 'INVALID_SPACING');
-    assert(end_time.into() % step == 0, 'INVALID_TIME');
+    assert((end_time.into() % step).is_zero(), 'INVALID_TIME');
 }
 
 fn calculate_next_sqrt_ratio(
@@ -96,34 +96,35 @@ fn calculate_next_sqrt_ratio(
     liquidity: u128,
     token0_sale_rate: u128,
     token1_sale_rate: u128,
-    virtual_order_time_window: u64
+    time_window: u64
 ) -> u256 {
-    let sell_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
-    let sqrt_sell_ratio: u256 = u256_sqrt(sell_ratio).into();
+    let sale_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
+    let sqrt_sale_ratio: u256 = u256_sqrt(sale_ratio).into() * constants::X64_u256;
 
-    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sell_ratio * constants::X64_u256);
+    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio);
 
-    let sqrt_ratio_next = if (c.is_zero()) {
-        sqrt_sell_ratio
+    let sqrt_ratio_next = if (c.is_zero() || liquidity.is_zero()) {
+        // current sale ratio is the price
+        sqrt_sale_ratio
     } else {
-        let sqrt_sell_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
+        let sqrt_sale_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
 
         // calculate e
+        // sqrt_sale_rate * 2 * t
         let (high, low) = u128_wide_mul(
-            (constants::X32_u128 * 0b10 * virtual_order_time_window.into()), sqrt_sell_rate
+            sqrt_sale_rate, (constants::X32_u128 * 0b10 * time_window.into())
         );
 
         let (exponent, _) = u256_safe_div_rem(
             u256 { high: high, low: low }, u256_as_non_zero(liquidity.into())
         );
+        // validate high is 0, integer piece should be < 128
+        assert(exponent.high.is_zero(), 'E_MUL_OVERFLOW');
 
-        if (exponent > constants::EXPONENT_LIMIT) {
+        if (exponent.low > constants::EXPONENT_LIMIT) {
             // sale_rate * t >> liquidity
-            sqrt_sell_ratio
+            sqrt_sale_ratio
         } else {
-            // validate high is 0, integer piece should be < 128
-            assert(exponent.high == 0, 'E_MUL_OVERFLOW');
-
             let e = exp_fractional(exponent.low);
 
             let term1 = e - c;
@@ -133,48 +134,51 @@ fn calculate_next_sqrt_ratio(
                 let (q, _) = u512_safe_div_rem_by_u256(
                     u256_wide_mul(term2, constants::X128), u256_as_non_zero(term1)
                 );
-                u256 { low: q.limb0, high: q.limb1 }
+                u256 { high: q.limb1, low: q.limb0 }
             } else {
                 let (q, _) = u512_safe_div_rem_by_u256(
                     u256_wide_mul(term1, constants::X128), u256_as_non_zero(term2)
                 );
-                u256 { low: q.limb0, high: q.limb1 }
+                u256 { high: q.limb1, low: q.limb0 }
             };
 
             let (q, _) = u512_safe_div_rem_by_u256(
-                u256_wide_mul(sqrt_sell_ratio, scale), u256_as_non_zero(constants::X64_u256)
+                u256_wide_mul(sqrt_sale_ratio, scale), u256_as_non_zero(constants::X128)
             );
 
             assert(q.limb2.is_zero() && q.limb3.is_zero(), 'SCALE_MUL_OVERFLOW');
 
-            u256 { low: q.limb0, high: q.limb1 }
+            u256 { high: q.limb1, low: q.limb0 }
         }
     };
 
     sqrt_ratio_next
 }
 
-// c = (sqrt_sell_ratio - sqrt_ratio) / (sqrt_sell_ratio + sqrt_ratio)
-fn calculate_c(sqrt_ratio: u256, sqrt_sell_ratio: u256) -> (u256, bool) {
-    if (sqrt_ratio == sqrt_sell_ratio) {
-        return (0, false);
-    }
-
-    let (num, sign) = if (sqrt_ratio > sqrt_sell_ratio) {
-        (sqrt_ratio - sqrt_sell_ratio, true)
+// c = (sqrt_sale_ratio - sqrt_ratio) / (sqrt_sale_ratio + sqrt_ratio)
+fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
+    if (sqrt_ratio == sqrt_sale_ratio) {
+        (0, false)
+    } else if (sqrt_ratio.is_zero()) {
+        // early return 1, if current price is zero
+        (constants::X128, false)
     } else {
-        (sqrt_sell_ratio - sqrt_ratio, false)
-    };
+        let (num, sign) = if (sqrt_ratio > sqrt_sale_ratio) {
+            (sqrt_ratio - sqrt_sale_ratio, true)
+        } else {
+            (sqrt_sale_ratio - sqrt_ratio, false)
+        };
 
-    // denominator cannot overflow
-    let (div, _) = u512_safe_div_rem_by_u256(
-        u256_wide_mul(num, constants::X128), u256_as_non_zero(sqrt_sell_ratio + sqrt_ratio)
-    );
+        // denominator cannot overflow
+        let (div, _) = u512_safe_div_rem_by_u256(
+            u256_wide_mul(num, constants::X128), u256_as_non_zero(sqrt_sale_ratio + sqrt_ratio)
+        );
 
-    // value of c is between 0 and 1 scaled by 2**128, only the upper 256 bits are used
-    assert(div.limb2 == 0 && div.limb3 == 0, 'C_DIV_OVERFLOW');
+        // value of c is between 0 and 1 scaled by 2**128, only the upper 256 bits are used
+        assert(div.limb2.is_zero() && div.limb3.is_zero(), 'C_DIV_OVERFLOW');
 
-    (u256 { low: div.limb0, high: div.limb1 }, sign)
+        (u256 { high: div.limb1, low: div.limb0 }, sign)
+    }
 }
 
 fn exp_fractional(x: u128) -> u256 {
@@ -183,7 +187,7 @@ fn exp_fractional(x: u128) -> u256 {
         let (div, _) = u512_safe_div_rem_by_u256(
             u256_wide_mul(half, half), u256_as_non_zero(constants::X128)
         );
-        u256 { low: div.limb0, high: div.limb1 }
+        u256 { high: div.limb1, low: div.limb0 }
     } else {
         internal::exp_fractional(x)
     };
@@ -426,7 +430,7 @@ mod internal {
     }
 
     fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
-        let (res, _) = u256_overflow_mul(x, u256 { low: mul, high: 0 });
-        u256 { low: res.high, high: 0 }
+        let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
+        u256 { high: 0, low: res.high }
     }
 }

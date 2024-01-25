@@ -1,7 +1,7 @@
 use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional
+    constants, exp_fractional, calculate_next_sqrt_ratio
 };
 use ekubo::interfaces::core::{Delta};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
@@ -145,7 +145,9 @@ mod RewardRateTest {
 
 mod TWAMMMathTest {
     use core::debug::PrintTrait;
-    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional};
+    use super::{
+        calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, calculate_next_sqrt_ratio
+    };
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
@@ -160,6 +162,7 @@ mod TWAMMMathTest {
     fn test_zero_c() {
         assert_case_c(sqrt_ratio: 0, sqrt_sell_ratio: 0, expected: (0, false));
         assert_case_c(sqrt_ratio: 1, sqrt_sell_ratio: 1, expected: (0, false));
+        assert_case_c(sqrt_ratio: 0, sqrt_sell_ratio: 1, expected: (constants::X128, false));
     }
 
     #[test]
@@ -393,5 +396,52 @@ mod TWAMMMathTest {
             exp_fractional(88 * constants::X64_u128),
             56202269414179362208214868742863362868341779313762687677660940959816606662721
         );
+    }
+
+    #[test]
+    fn test_calculate_next_sqrt_ratio() {
+        // token0_sale_rate and token1_sale_rate are always non-zero.
+        // liquidity is zero, price is sqrt_sale_ratio
+        let next_sqrt_ratio = calculate_next_sqrt_ratio(
+            sqrt_ratio: 0x0,
+            liquidity: 0x0,
+            token0_sale_rate: constants::X32_u128,
+            token1_sale_rate: constants::X32_u128,
+            time_window: 1
+        );
+        // sqrt_ratio = 1
+        assert_eq!(next_sqrt_ratio, constants::X128);
+
+        // c is zero since sqrt_ratio == sqrt_sale_ratio, price is sqrt_sale_ratio
+        let next_sqrt_ratio = calculate_next_sqrt_ratio(
+            sqrt_ratio: constants::X128,
+            liquidity: constants::X64_u128,
+            token0_sale_rate: constants::X32_u128,
+            token1_sale_rate: constants::X32_u128,
+            time_window: 1
+        );
+        // sqrt_ratio = 1
+        assert_eq!(next_sqrt_ratio, constants::X128);
+
+        let next_sqrt_ratio = calculate_next_sqrt_ratio(
+            sqrt_ratio: constants::X128,
+            liquidity: 10_000 * 1000000000000000000,
+            token0_sale_rate: 5000 * constants::X32_u128,
+            token1_sale_rate: 500 * constants::X32_u128,
+            time_window: 1
+        );
+        // sqrt_ratio ~= .99
+        assert_eq!(next_sqrt_ratio, 340282366920938463332123722385714104074);
+
+        // very low liquidity
+        let next_sqrt_ratio = calculate_next_sqrt_ratio(
+            sqrt_ratio: constants::X128,
+            liquidity: 10,
+            token0_sale_rate: 5000 * constants::X32_u128,
+            token1_sale_rate: 500 * constants::X32_u128,
+            time_window: 1
+        );
+        // sqrt_ratio will be sqrt_sale_ratio
+        assert_eq!(next_sqrt_ratio, 107606732706330320671984263368533868544);
     }
 }

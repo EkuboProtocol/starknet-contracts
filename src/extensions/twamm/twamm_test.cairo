@@ -56,7 +56,6 @@ mod UpgradableTest {
     };
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -753,9 +752,7 @@ mod CancelOrderTests {
         let token_balance = IERC20Dispatcher { contract_address: token0.contract_address }
             .balanceOf(get_contract_address());
 
-        assert(
-            token_balance == amount.into(), 'token0.balance'
-        );
+        assert(token_balance == amount.into(), 'token0.balance');
     }
 }
 
@@ -1483,7 +1480,6 @@ mod PlaceOrderOnBothSides {
     };
 
     #[test]
-    #[available_gas(3000000000)]
     fn test_place_orders_0() {
         // place one order on both sides expiring at the same time.
 
