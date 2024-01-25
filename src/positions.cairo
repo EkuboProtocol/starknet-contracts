@@ -20,11 +20,12 @@ mod Positions {
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::types::bounds::{Bounds};
+    use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
+    use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall
     };
@@ -125,6 +126,7 @@ mod Positions {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
         CollectFees: CollectFeesCallbackData,
+        GetPoolPrice: PoolKey,
     }
 
     #[generate_trait]
@@ -149,7 +151,7 @@ mod Positions {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
 
-            let delta = match consume_callback_data::<LockCallbackData>(core, data) {
+            match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
                     let delta: Delta = if data.liquidity.is_non_zero() {
                         core
@@ -177,7 +179,7 @@ mod Positions {
                         core.pay(data.pool_key.token1);
                     }
 
-                    delta
+                    ArrayTrait::new()
                 },
                 LockCallbackData::Withdraw(data) => {
                     let delta = core
@@ -201,7 +203,9 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    delta
+                    let mut result_data: Array<felt252> = ArrayTrait::new();
+                    Serde::serialize(@delta, ref result_data);
+                    result_data
                 },
                 LockCallbackData::CollectFees(data) => {
                     let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
@@ -214,13 +218,28 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    delta
-                }
-            };
+                    let mut result_data: Array<felt252> = ArrayTrait::new();
+                    Serde::serialize(@delta, ref result_data);
+                    result_data
+                },
+                LockCallbackData::GetPoolPrice(pool_key) => {
+                    core
+                        .update_position(
+                            pool_key,
+                            UpdatePositionParameters {
+                                salt: 0,
+                                bounds: max_bounds(pool_key.tick_spacing),
+                                liquidity_delta: Zero::zero(),
+                            }
+                        );
 
-            let mut result_data: Array<felt252> = ArrayTrait::new();
-            Serde::<Delta>::serialize(@delta, ref result_data);
-            result_data
+                    let pool_price = core.get_pool_price(pool_key);
+
+                    let mut result_data: Array<felt252> = ArrayTrait::new();
+                    Serde::serialize(@pool_price, ref result_data);
+                    result_data
+                }
+            }
         }
     }
 
@@ -339,7 +358,9 @@ mod Positions {
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-            let _delta: Delta = call_core_with_callback(
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
                 core,
                 @LockCallbackData::Deposit(
                     DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
@@ -454,6 +475,12 @@ mod Positions {
             let amount0 = self.clear(IERC20Dispatcher { contract_address: pool_key.token0 });
             let amount1 = self.clear(IERC20Dispatcher { contract_address: pool_key.token1 });
             (id, liquidity, amount0, amount1)
+        }
+
+        fn get_pool_price(ref self: ContractState, pool_key: PoolKey) -> PoolPrice {
+            call_core_with_callback::<
+                LockCallbackData, PoolPrice
+            >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
         }
     }
 }
