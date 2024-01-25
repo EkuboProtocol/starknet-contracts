@@ -8,6 +8,7 @@ mod Positions {
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -203,9 +204,7 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    let mut result_data: Array<felt252> = ArrayTrait::new();
-                    Serde::serialize(@delta, ref result_data);
-                    result_data
+                    serialize(@delta)
                 },
                 LockCallbackData::CollectFees(data) => {
                     let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
@@ -218,9 +217,7 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    let mut result_data: Array<felt252> = ArrayTrait::new();
-                    Serde::serialize(@delta, ref result_data);
-                    result_data
+                    serialize(@delta)
                 },
                 LockCallbackData::GetPoolPrice(pool_key) => {
                     core
@@ -235,9 +232,7 @@ mod Positions {
 
                     let pool_price = core.get_pool_price(pool_key);
 
-                    let mut result_data: Array<felt252> = ArrayTrait::new();
-                    Serde::serialize(@pool_price, ref result_data);
-                    result_data
+                    serialize(@pool_price)
                 }
             }
         }
