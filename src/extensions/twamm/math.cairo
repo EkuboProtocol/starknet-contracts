@@ -112,9 +112,7 @@ fn calculate_next_sqrt_ratio(
 
         // calculate e
         // sqrt_sale_rate * 2 * t
-        let (high, low) = u128_wide_mul(
-            sqrt_sale_rate, (0x200000000 * time_window.into())
-        );
+        let (high, low) = u128_wide_mul(sqrt_sale_rate, (0x200000000 * time_window.into()));
 
         let (exponent, _) = u256_safe_div_rem(
             u256 { high: high, low: low }, u256_as_non_zero(liquidity.into())
