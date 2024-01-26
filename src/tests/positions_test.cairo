@@ -1351,3 +1351,18 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
             collect_fees: true,
         );
 }
+
+#[test]
+fn test_get_pool_price_normal_pool() {
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let price = positions.get_pool_price(setup.pool_key);
+    assert_eq!(price.sqrt_ratio, u256 { high: 1, low: 0 });
+}

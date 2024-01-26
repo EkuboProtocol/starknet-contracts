@@ -5,6 +5,7 @@ use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
+use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
 use ekubo::extensions::oracle::{Oracle};
 use ekubo::interfaces::core::{
@@ -101,14 +102,10 @@ impl DeployerTraitImpl of DeployerTrait {
         symbol: felt252,
         token_uri_base: felt252
     ) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-
-        Serde::serialize(@(owner, name, symbol, token_uri_base), ref constructor_args);
-
         let (address, _) = deploy_syscall(
             OwnedNFT::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@(owner, name, symbol, token_uri_base)).span(),
             true
         )
             .expect('nft deploy failed');
@@ -149,12 +146,10 @@ impl DeployerTraitImpl of DeployerTrait {
     fn deploy_mock_extension(
         ref self: Deployer, core: ICoreDispatcher, call_points: CallPoints
     ) -> IMockExtensionDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@(core, call_points), ref constructor_args);
         let (address, _) = deploy_syscall(
             MockExtension::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@(core, call_points)).span(),
             true
         )
             .expect('mockext deploy failed');
@@ -164,13 +159,10 @@ impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_core(ref self: Deployer) -> ICoreDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@default_owner(), ref constructor_args);
-
         let (address, _) = deploy_syscall(
             Core::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@default_owner()).span(),
             true
         )
             .expect('core deploy failed');
@@ -179,13 +171,10 @@ impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_router(ref self: Deployer, core: ICoreDispatcher) -> IRouterDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@core, ref constructor_args);
-
         let (address, _) = deploy_syscall(
             Router::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@core).span(),
             true
         )
             .expect('router deploy failed');
@@ -195,13 +184,10 @@ impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_locker(ref self: Deployer, core: ICoreDispatcher) -> ICoreLockerDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@core, ref constructor_args);
-
         let (address, _) = deploy_syscall(
             CoreLocker::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@core).span(),
             true
         )
             .expect('locker deploy failed');
@@ -213,16 +199,10 @@ impl DeployerTraitImpl of DeployerTrait {
     fn deploy_positions_custom_uri(
         ref self: Deployer, core: ICoreDispatcher, token_uri_base: felt252
     ) -> IPositionsDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(
-            @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base),
-            ref constructor_args
-        );
-
         let (address, _) = deploy_syscall(
             Positions::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base)).span(),
             true
         )
             .expect('positions deploy failed');
@@ -236,12 +216,10 @@ impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_mock_upgradeable(ref self: Deployer) -> IUpgradeableDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(@default_owner(), ref constructor_args);
         let (address, _) = deploy_syscall(
             MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@default_owner()).span(),
             true
         )
             .expect('upgradeable deploy failed');
