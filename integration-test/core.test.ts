@@ -47,6 +47,7 @@ export async function setupContracts({
   const coreDeploy = await deployer.deploy(
     {
       classHash: coreContractDeclare.class_hash,
+      constructorCalldata: [deployer.address],
     },
     {
       nonce: getAndIncrementNonce(),
@@ -62,6 +63,7 @@ export async function setupContracts({
   );
 
   const positionsConstructorCalldata = [
+    deployer.address,
     coreDeploy.contract_address[0],
     declareNftResponse.class_hash,
     shortString.encodeShortString("https://f.ekubo.org/"),
@@ -131,7 +133,7 @@ export async function deployTokens({
     {
       classHash: classHash,
 
-      constructorCalldata: [deployer.address],
+      constructorCalldata: [deployer.address, (1n << 128n) - 1n],
     },
     { nonce: getAndIncrementNonce() }
   );
@@ -141,7 +143,7 @@ export async function deployTokens({
   } = await deployer.deploy(
     {
       classHash: classHash,
-      constructorCalldata: [deployer.address],
+      constructorCalldata: [deployer.address, (1n << 128n) - 1n],
     },
     { nonce: getAndIncrementNonce() }
   );
