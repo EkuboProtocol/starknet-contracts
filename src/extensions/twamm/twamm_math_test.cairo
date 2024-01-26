@@ -353,17 +353,17 @@ mod TWAMMMathTest {
         assert_eq!(exp_fractional(0xf000000000000000), 868941464934009285206259196893053646191);
         // e^1, error 1
         assert_eq!(exp_fractional(0x10000000000000000), 924983374546220337150911035843336795078);
-        // e^2, error 4
+        // e^2, error 8
         assert_eq!(
-            exp_fractional(2 * constants::X64_u128), 2514365498655717699434277416465328696989
+            exp_fractional(2 * constants::X64_u128), 2514365498655717699434277416465328696985
         );
         // e^3, error -86
         assert_eq!(
             exp_fractional(3 * constants::X64_u128), 6834754045100203352782362684486003079515
         );
-        // e^4, error 61
+        // e^4, error 120
         assert_eq!(
-            exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914120
+            exp_fractional(4 * constants::X64_u128), 18578787722782836492235669422995900914061
         );
         // e^5, error -1150
         assert_eq!(
@@ -377,9 +377,9 @@ mod TWAMMMathTest {
         assert_eq!(
             exp_fractional(7 * constants::X64_u128), 373164926794020389796596697795276277152463
         );
-        // e^8, error 6725
+        // e^8, error 13167
         assert_eq!(
-            exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796521003229
+            exp_fractional(8 * constants::X64_u128), 1014367439522435506293930954162796520996787
         );
         // e^9, error 10252
         assert_eq!(

@@ -170,7 +170,7 @@ fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
 }
 
 fn exp_fractional(x: u128) -> u256 {
-    let res = if (x > 0x20000000000000000) {
+    let res = if (x >= 0x20000000000000000) {
         let half = exp_fractional(x / 2);
         muldiv(half, half, constants::X128, false).expect('EXP_FRACTIONAL_OVERFLOW')
     } else {
@@ -184,11 +184,8 @@ mod internal {
     use core::integer::{u256_overflow_mul};
 
     fn exp_fractional(x: u128) -> u256 {
-        assert(x <= 0x20000000000000000, 'EXP_X_MAGNITUDE');
+        assert(x < 0x20000000000000000, 'EXP_X_MAGNITUDE');
 
-        // base = 1.00000000000
-        // number of iterations = 128
-        // denominator = 1<<128
         let mut ratio = 0x100000000000000000000000000000000_u256;
         if ((x & 0x1) != 0) {
             ratio = u256 { high: 0, low: 0xffffffffffffffff0000000000000000 };
@@ -384,9 +381,6 @@ mod internal {
         }
         if ((x & 0x10000000000000000) != 0) {
             ratio = unsafe_mul_shift(ratio, 0x5e2d58d8b3bcdf1abadec7829054f90e);
-        }
-        if ((x & 0x20000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0x22a555477f03973fb6edd5c25a052ae4);
         }
 
         if (x != 0) {
