@@ -18,7 +18,7 @@ import { getAmountsForLiquidity } from "./liquidity-to-amounts";
 import CoreCompiledContractCASM from "../target/dev/ekubo_Core.compiled_contract_class.json";
 import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compiled_contract_class.json";
 import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
-import SimpleERC20CASM from "../target/dev/ekubo_SimpleERC20.compiled_contract_class.json";
+import MockERC20CASM from "../target/dev/ekubo_MockERC20.compiled_contract_class.json";
 import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
 
 export async function setupContracts({
@@ -30,8 +30,8 @@ export async function setupContracts({
 }) {
   const simpleTokenContractDeclare = await deployer.declare(
     {
-      contract: SimpleERC20 as any,
-      casm: SimpleERC20CASM as any,
+      contract: MockERC20 as any,
+      casm: MockERC20CASM as any,
     },
     { nonce: getAndIncrementNonce() }
   );
@@ -247,8 +247,8 @@ describe("core", () => {
           getAndIncrementNonce,
         });
 
-        token0 = new Contract(SimpleERC20.abi, token0Address, deployer);
-        token1 = new Contract(SimpleERC20.abi, token1Address, deployer);
+        token0 = new Contract(MockERC20.abi, token0Address, deployer);
+        token1 = new Contract(MockERC20.abi, token1Address, deployer);
 
         poolKey = {
           token0: token0Address,
@@ -304,7 +304,13 @@ describe("core", () => {
 
           const [{ PositionUpdated }] = parsed;
 
-          liquiditiesActual.push((PositionUpdated as unknown as { params: { liquidity_delta: { mag: bigint, sign: boolean } } }).params.liquidity_delta.mag);
+          liquiditiesActual.push(
+            (
+              PositionUpdated as unknown as {
+                params: { liquidity_delta: { mag: bigint; sign: boolean } };
+              }
+            ).params.liquidity_delta.mag
+          );
         }
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
