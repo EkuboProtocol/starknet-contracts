@@ -2,6 +2,7 @@ use core::array::{ArrayTrait};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::serde::Serde;
+use ekubo::components::util::{serialize};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::i129::{i129};
@@ -13,10 +14,7 @@ use starknet::{
 fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
     core: ICoreDispatcher, input: @TInput
 ) -> TOutput {
-    let mut input_data: Array<felt252> = ArrayTrait::new();
-    Serde::serialize(input, ref input_data);
-
-    let mut output_span = core.lock(input_data).span();
+    let mut output_span = core.lock(serialize(input)).span();
 
     Serde::deserialize(ref output_span).expect('DESERIALIZE_RESULT_FAILED')
 }
@@ -42,3 +40,4 @@ fn handle_delta(
         }
     }
 }
+
