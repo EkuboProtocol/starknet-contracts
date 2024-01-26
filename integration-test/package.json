@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Integration tests for the core contracts of Ekubo Protocol",
   "scripts": {
-    "devnet": "katana --invoke-max-steps 4294967295 --silent",
+    "devnet": "katana --disable-fee --invoke-max-steps 4294967295 --silent",
     "test": "start-server-and-test devnet \"http-get://0.0.0.0:5050\" \"jest -u\""
   },
   "author": "Moody Salem",
