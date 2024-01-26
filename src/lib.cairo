@@ -10,6 +10,7 @@ mod components {
     mod owned;
     mod shared_locker;
     mod upgradeable;
+    mod util;
 }
 
 mod extensions {

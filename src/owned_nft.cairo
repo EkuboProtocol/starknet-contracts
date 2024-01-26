@@ -25,9 +25,10 @@ mod OwnedNFT {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
-
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+
+    use ekubo::components::util::{serialize};
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
@@ -127,13 +128,12 @@ mod OwnedNFT {
         token_uri_base: felt252,
         salt: felt252
     ) -> super::IOwnedNFTDispatcher {
-        let mut calldata = ArrayTrait::<felt252>::new();
-        Serde::serialize(@(owner, name, symbol, token_uri_base), ref calldata);
+        let calldata = serialize(@(owner, name, symbol, token_uri_base)).span();
 
         let (address, _) = deploy_syscall(
             class_hash: nft_class_hash,
             contract_address_salt: salt,
-            calldata: calldata.span(),
+            calldata: calldata,
             deploy_from_zero: false,
         )
             .unwrap_syscall();
