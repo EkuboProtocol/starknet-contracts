@@ -7,6 +7,7 @@ use core::traits::{Into, TryInto};
 use ekubo::interfaces::core::{Delta};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
+use ekubo::math::muldiv::{muldiv};
 
 mod constants {
     const LOG_SCALE_FACTOR: u8 = 4;
@@ -112,7 +113,7 @@ fn calculate_next_sqrt_ratio(
         // calculate e
         // sqrt_sale_rate * 2 * t
         let (high, low) = u128_wide_mul(
-            sqrt_sale_rate, (constants::X32_u128 * 0b10 * time_window.into())
+            sqrt_sale_rate, (0x200000000 * time_window.into())
         );
 
         let (exponent, _) = u256_safe_div_rem(
@@ -131,24 +132,15 @@ fn calculate_next_sqrt_ratio(
             let term2 = e + c;
 
             let scale: u256 = if (sign) {
-                let (q, _) = u512_safe_div_rem_by_u256(
-                    u256_wide_mul(term2, constants::X128), u256_as_non_zero(term1)
-                );
-                u256 { high: q.limb1, low: q.limb0 }
+                muldiv(term2, constants::X128, term1, false)
+                    .expect('NEXT_SQRT_RATIO_TERM2_OVERFLOW')
             } else {
-                let (q, _) = u512_safe_div_rem_by_u256(
-                    u256_wide_mul(term1, constants::X128), u256_as_non_zero(term2)
-                );
-                u256 { high: q.limb1, low: q.limb0 }
+                muldiv(term1, constants::X128, term2, false)
+                    .expect('NEXT_SQRT_RATIO_TERM1_OVERFLOW')
             };
 
-            let (q, _) = u512_safe_div_rem_by_u256(
-                u256_wide_mul(sqrt_sale_ratio, scale), u256_as_non_zero(constants::X128)
-            );
-
-            assert(q.limb2.is_zero() && q.limb3.is_zero(), 'SCALE_MUL_OVERFLOW');
-
-            u256 { high: q.limb1, low: q.limb0 }
+            muldiv(sqrt_sale_ratio, scale, constants::X128, false)
+                .expect('NEXT_SQRT_RATIO_OVERFLOW')
         }
     };
 
@@ -163,31 +155,24 @@ fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
         // early return 1, if current price is zero
         (constants::X128, false)
     } else {
-        let (num, sign) = if (sqrt_ratio > sqrt_sale_ratio) {
+        let (numerator, sign) = if (sqrt_ratio > sqrt_sale_ratio) {
             (sqrt_ratio - sqrt_sale_ratio, true)
         } else {
             (sqrt_sale_ratio - sqrt_ratio, false)
         };
 
-        // denominator cannot overflow
-        let (div, _) = u512_safe_div_rem_by_u256(
-            u256_wide_mul(num, constants::X128), u256_as_non_zero(sqrt_sale_ratio + sqrt_ratio)
-        );
-
-        // value of c is between 0 and 1 scaled by 2**128, only the upper 256 bits are used
-        assert(div.limb2.is_zero() && div.limb3.is_zero(), 'C_DIV_OVERFLOW');
-
-        (u256 { high: div.limb1, low: div.limb0 }, sign)
+        (
+            muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, false)
+                .expect('C_MULDIV_OVERFLOW'),
+            sign
+        )
     }
 }
 
 fn exp_fractional(x: u128) -> u256 {
-    let res = if (x > 0b10 * constants::X64_u128) {
-        let half = exp_fractional(x / 0b10);
-        let (div, _) = u512_safe_div_rem_by_u256(
-            u256_wide_mul(half, half), u256_as_non_zero(constants::X128)
-        );
-        u256 { high: div.limb1, low: div.limb0 }
+    let res = if (x > 0x20000000000000000) {
+        let half = exp_fractional(x / 2);
+        muldiv(half, half, constants::X128, false).expect('EXP_FRACTIONAL_OVERFLOW')
     } else {
         internal::exp_fractional(x)
     };
@@ -199,6 +184,8 @@ mod internal {
     use core::integer::{u256_overflow_mul};
 
     fn exp_fractional(x: u128) -> u256 {
+        assert(x <= 0x20000000000000000, 'EXP_X_MAGNITUDE');
+
         // base = 1.00000000000
         // number of iterations = 128
         // denominator = 1<<128
@@ -400,21 +387,6 @@ mod internal {
         }
         if ((x & 0x20000000000000000) != 0) {
             ratio = unsafe_mul_shift(ratio, 0x22a555477f03973fb6edd5c25a052ae4);
-        }
-        if ((x & 0x40000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0x4b0556e084f3d1dfa2bc04cb0ab88f5);
-        }
-        if ((x & 0x80000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0x15fc21041027acbbfcd46780fee71f);
-        }
-        if ((x & 0x100000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0x1e355bbaee85cada65f73f32e89);
-        }
-        if ((x & 0x200000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0x3908c9eec2c8d03c53340);
-        }
-        if ((x & 0x400000000000000000) != 0) {
-            ratio = unsafe_mul_shift(ratio, 0xcb4ea3991);
         }
 
         if (x != 0) {
