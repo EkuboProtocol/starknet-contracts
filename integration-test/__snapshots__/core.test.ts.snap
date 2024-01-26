@@ -2,75 +2,49 @@
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token0 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token1 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -88,319 +62,97 @@ exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, 
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 39,
-      "range_check_builtin": 1695,
-    },
-    "n_steps": 22453,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 38,
-      "range_check_builtin": 1643,
-    },
-    "n_steps": 21059,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 40,
-      "range_check_builtin": 1755,
-    },
-    "n_steps": 22640,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1977,
-    },
-    "n_steps": 25304,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 40,
-      "range_check_builtin": 1614,
-    },
-    "n_steps": 21775,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 2038,
-    },
-    "n_steps": 25116,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 79228162514264337593543950336n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 39,
-      "range_check_builtin": 1695,
-    },
-    "n_steps": 22454,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 79228162514264337593543950336n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 38,
-      "range_check_builtin": 1643,
-    },
-    "n_steps": 21060,
-  },
-  "liquidity_after": 100000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": -10000n,
-    "amount1": 10032n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1921,
-    },
-    "n_steps": 23979,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920941866287043816850431081895n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 10032n,
-    "amount1": -10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 81,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1959,
-    },
-    "n_steps": 25823,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920935060639705398047133577709n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -500000000000000000n,
-    "amount1": 1003009027081243732n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 1895,
-    },
-    "n_steps": 24838,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -999999999999999996n,
-    "amount1": 18466747002319258406770079872888746570n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 299,
-      "pedersen_builtin": 115,
-      "range_check_builtin": 11122,
-    },
-    "n_steps": 106278,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1003009027081243732n,
-    "amount1": -500000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2721,
-    },
-    "n_steps": 30406,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 18466747002319258406770079872888746569n,
-    "amount1": -999999999999999994n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 327,
-      "pedersen_builtin": 116,
-      "range_check_builtin": 11990,
-    },
-    "n_steps": 117610,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -418,319 +170,97 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": -9969n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 81,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1889,
-    },
-    "n_steps": 25426,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920935070848176405709111855138n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": -9969n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1864,
-    },
-    "n_steps": 23640,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920941856078572809188248941300n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -499248873309964947n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2154,
-    },
-    "n_steps": 26797,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": -1383293n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -499248873309964947n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2376,
-    },
-    "n_steps": 29461,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": -1383293n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -499248873309964947n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2039,
-    },
-    "n_steps": 25881,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": 1383292n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -499248873309964947n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2463,
-    },
-    "n_steps": 29222,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": 1383292n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 79228162514264337593543950336n,
-    "amount1": -999999999987340232n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 945,
-      "pedersen_builtin": 77,
-      "range_check_builtin": 24979,
-    },
-    "n_steps": 201981,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 4307890968852183321656454888n,
-  "tick_after": -50185212n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": -999999999987340232n,
-    "amount1": 79228162514264337593543950336n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 918,
-      "pedersen_builtin": 76,
-      "range_check_builtin": 24747,
-    },
-    "n_steps": 194390,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 26879066827489470242203952493307087579544590886863n,
-  "tick_after": 50185211n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": -10000n,
-    "amount1": 10032n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1926,
-    },
-    "n_steps": 24299,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920941866287043816850431081895n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1649,
-      "pedersen_builtin": 95,
-      "range_check_builtin": 27113,
-    },
-    "n_steps": 212338,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -500000000000000000n,
-    "amount1": 1003009027081243732n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 1900,
-    },
-    "n_steps": 25158,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -999999999999999996n,
-    "amount1": 18466747002319258406770079872888746570n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 300,
-      "pedersen_builtin": 115,
-      "range_check_builtin": 11127,
-    },
-    "n_steps": 106598,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 38,
-      "range_check_builtin": 2508,
-    },
-    "n_steps": 27141,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 299,
-      "pedersen_builtin": 95,
-      "range_check_builtin": 8423,
-    },
-    "n_steps": 88962,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -748,319 +278,97 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1649,
-      "pedersen_builtin": 95,
-      "range_check_builtin": 27053,
-    },
-    "n_steps": 211802,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": -9969n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1869,
-    },
-    "n_steps": 23960,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920941856078572809188248941300n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 38,
-      "range_check_builtin": 2507,
-    },
-    "n_steps": 27136,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 299,
-      "pedersen_builtin": 95,
-      "range_check_builtin": 8413,
-    },
-    "n_steps": 88876,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -499248873309964947n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2044,
-    },
-    "n_steps": 26201,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": 1383292n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -499248873309964947n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2468,
-    },
-    "n_steps": 29542,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 679543886741114111536359091041241118277n,
-  "tick_after": 1383292n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1649,
-      "pedersen_builtin": 95,
-      "range_check_builtin": 27053,
-    },
-    "n_steps": 211802,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": -999999999987340232n,
-    "amount1": 79228162514264337593543950336n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 919,
-      "pedersen_builtin": 76,
-      "range_check_builtin": 24752,
-    },
-    "n_steps": 194710,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 26879066827489470242203952493307087579544590886863n,
-  "tick_after": 50185211n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1621,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27660,
-    },
-    "n_steps": 208523,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 10032n,
-    "amount1": -10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 56,
-      "range_check_builtin": 2012,
-    },
-    "n_steps": 26973,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920935060639705398047133577709n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1464,
-    },
-    "n_steps": 18746,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 271,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7990,
-    },
-    "n_steps": 79380,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1003009027081243732n,
-    "amount1": -500000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 58,
-      "range_check_builtin": 2933,
-    },
-    "n_steps": 33483,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 18466747002319258406770079872888746567n,
-    "amount1": -999999999999999994n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 329,
-      "pedersen_builtin": 118,
-      "range_check_builtin": 11433,
-    },
-    "n_steps": 115092,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1078,319 +386,97 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": -9969n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 56,
-      "range_check_builtin": 1942,
-    },
-    "n_steps": 26576,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 340282366920935070848176405709111855138n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1621,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27601,
-    },
-    "n_steps": 207992,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -499248873309964947n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 56,
-      "pedersen_builtin": 58,
-      "range_check_builtin": 2365,
-    },
-    "n_steps": 29865,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": -1383293n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -499248873309964947n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 56,
-      "pedersen_builtin": 61,
-      "range_check_builtin": 2557,
-    },
-    "n_steps": 32382,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 170396778628411849505946223050459795422n,
-  "tick_after": -1383293n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1464,
-    },
-    "n_steps": 18746,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 271,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7981,
-    },
-    "n_steps": 79299,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 79228162514264337593543950336n,
-    "amount1": -999999999987340232n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 947,
-      "pedersen_builtin": 89,
-      "range_check_builtin": 25032,
-    },
-    "n_steps": 203131,
-  },
-  "liquidity_after": 1000000000000000000n,
-  "sqrt_ratio_after": 4307890968852183321656454888n,
-  "tick_after": -50185212n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1621,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27601,
-    },
-    "n_steps": 207992,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": -10000n,
-    "amount1": 10001n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1962,
-    },
-    "n_steps": 24440,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431771614280n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 10001n,
-    "amount1": -10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 84,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 2029,
-    },
-    "n_steps": 26719,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431764808632n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -1000000000000000000n,
-    "amount1": 1000000000000000002n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1970,
-    },
-    "n_steps": 24498,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463803656974352706675260n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -1000000000000000000n,
-    "amount1": 1000000000000000002n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1971,
-    },
-    "n_steps": 24494,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463803656974352706675260n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000002n,
-    "amount1": -1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 57,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 2033,
-    },
-    "n_steps": 26114,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463123092240510829747992n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000002n,
-    "amount1": -1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 57,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 2033,
-    },
-    "n_steps": 26123,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463123092240510829747992n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1408,319 +494,97 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": -9999n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 84,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1961,
-    },
-    "n_steps": 26319,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431764808633n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": -9999n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1907,
-    },
-    "n_steps": 24098,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463463374607431771614279n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -999999999999999998n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 57,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1966,
-    },
-    "n_steps": 25723,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463123092240510829748333n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -999999999999999998n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 57,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1966,
-    },
-    "n_steps": 25732,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463123092240510829748333n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -999999999999999998n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1915,
-    },
-    "n_steps": 24156,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463803656974352706674919n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -999999999999999998n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1916,
-    },
-    "n_steps": 24152,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282366920938463803656974352706674919n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 79228162514264337593543950336n,
-    "amount1": -79228156237163099530060194283n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 84,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1971,
-    },
-    "n_steps": 26379,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282339960993932299601503360233022685n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": -79228156237163099530060194283n,
-    "amount1": 79228162514264337593543950336n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 28,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1917,
-    },
-    "n_steps": 24158,
-  },
-  "liquidity_after": 1000000000000000000000000000000000000n,
-  "sqrt_ratio_after": 340282393880885130614014402098783298475n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": -10000n,
-    "amount1": 10032n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1911,
-    },
-    "n_steps": 23919,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374650381441171457n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 10032n,
-    "amount1": -10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 81,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1947,
-    },
-    "n_steps": 25699,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374564482095251456n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -1000000000000000000n,
-    "amount1": 1003009027093903486n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 1887,
-    },
-    "n_steps": 24664,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366925233430759428817540393170906n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -1000000000000000000n,
-    "amount1": 1003009027093903486n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2311,
-    },
-    "n_steps": 28005,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366925233430759428817540393170906n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1003009027093903486n,
-    "amount1": -1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 2011,
-    },
-    "n_steps": 25906,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366916643496167374607431768211456n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1003009027093903486n,
-    "amount1": -1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2233,
-    },
-    "n_steps": 28570,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366916643496167374607431768211456n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1738,161 +602,49 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": -9969n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 81,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 1881,
-    },
-    "n_steps": 25378,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374564610944270337n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": -9969n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 1856,
-    },
-    "n_steps": 23592,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366920938463463374650252592152576n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -996999999987453842n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 1953,
-    },
-    "n_steps": 25636,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366916656381069316492767631040557n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 1000000000000000000n,
-    "amount1": -996999999987453842n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2175,
-    },
-    "n_steps": 28300,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366916656381069316492767631040557n,
-  "tick_after": -1n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -996999999987453842n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 45,
-      "range_check_builtin": 1837,
-    },
-    "n_steps": 24367,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366925220545857486607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -996999999987453842n,
-    "amount1": 1000000000000000000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 48,
-      "range_check_builtin": 2261,
-    },
-    "n_steps": 27708,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 340282366925220545857486607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 79228162514264337593543950336n,
-    "amount1": -39554570869665270195675172000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 44,
-      "range_check_builtin": 2101,
-    },
-    "n_steps": 26653,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 170396778628411849505946223051528149971n,
-  "tick_after": -1383293n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": -39554570869665270195675172000n,
-    "amount1": 79228162514264337593543950336n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 43,
-      "range_check_builtin": 2072,
-    },
-    "n_steps": 25187,
-  },
-  "liquidity_after": 79228162514264337593543950336n,
-  "sqrt_ratio_after": 679543886741114111536359091036980510720n,
-  "tick_after": 1383292n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1904,21 +656,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 53799,
-    },
-    "n_steps": 410074,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1936,60 +674,19 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 594,
-      "pedersen_builtin": 85,
-      "range_check_builtin": 14094,
-    },
-    "n_steps": 124519,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 540,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 15769,
-    },
-    "n_steps": 158972,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 325,
-    },
-    "n_steps": 9511,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2013,21 +710,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 53680,
-    },
-    "n_steps": 409007,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2039,41 +722,13 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 594,
-      "pedersen_builtin": 85,
-      "range_check_builtin": 14074,
-    },
-    "n_steps": 124343,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 540,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 15750,
-    },
-    "n_steps": 158805,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2091,21 +746,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 53680,
-    },
-    "n_steps": 409007,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2117,80 +758,25 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 54116,
-    },
-    "n_steps": 404606,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 329,
-    },
-    "n_steps": 9610,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 567,
-      "pedersen_builtin": 85,
-      "range_check_builtin": 12630,
-    },
-    "n_steps": 114504,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 540,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 15506,
-    },
-    "n_steps": 150917,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2202,137 +788,43 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 329,
-    },
-    "n_steps": 9610,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 329,
-    },
-    "n_steps": 9590,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 328,
-    },
-    "n_steps": 9581,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27887,
-    },
-    "n_steps": 213546,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27887,
-    },
-    "n_steps": 213546,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 330,
-    },
-    "n_steps": 9623,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 53997,
-    },
-    "n_steps": 403535,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2344,257 +836,79 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 330,
-    },
-    "n_steps": 9623,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 567,
-      "pedersen_builtin": 85,
-      "range_check_builtin": 12610,
-    },
-    "n_steps": 114324,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 540,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 15487,
-    },
-    "n_steps": 150746,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 330,
-    },
-    "n_steps": 9623,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 3240,
-      "pedersen_builtin": 142,
-      "range_check_builtin": 53997,
-    },
-    "n_steps": 403535,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27655,
-    },
-    "n_steps": 208203,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27060,
-    },
-    "n_steps": 211181,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1459,
-    },
-    "n_steps": 18426,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 270,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7985,
-    },
-    "n_steps": 79060,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 2296,
-    },
-    "n_steps": 24057,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 297,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 8794,
-    },
-    "n_steps": 89893,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2612,319 +926,97 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27000,
-    },
-    "n_steps": 210645,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27596,
-    },
-    "n_steps": 207672,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 2296,
-    },
-    "n_steps": 24061,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 297,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 8784,
-    },
-    "n_steps": 89807,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1459,
-    },
-    "n_steps": 18426,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 270,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7976,
-    },
-    "n_steps": 78979,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27000,
-    },
-    "n_steps": 210645,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27596,
-    },
-    "n_steps": 207672,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27655,
-    },
-    "n_steps": 208203,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27060,
-    },
-    "n_steps": 211181,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1459,
-    },
-    "n_steps": 18426,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 270,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7985,
-    },
-    "n_steps": 79060,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 2296,
-    },
-    "n_steps": 24057,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 297,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 8794,
-    },
-    "n_steps": 89893,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -2942,235 +1034,97 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27000,
-    },
-    "n_steps": 210645,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27596,
-    },
-    "n_steps": 207672,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 2296,
-    },
-    "n_steps": 24061,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 297,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 8784,
-    },
-    "n_steps": 89807,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 25,
-      "range_check_builtin": 1459,
-    },
-    "n_steps": 18426,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 270,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 7976,
-    },
-    "n_steps": 78979,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1647,
-      "pedersen_builtin": 83,
-      "range_check_builtin": 27000,
-    },
-    "n_steps": 210645,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1620,
-      "pedersen_builtin": 82,
-      "range_check_builtin": 27596,
-    },
-    "n_steps": 207672,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -10000 token0 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -10000 token1 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -3188,207 +1142,97 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1 
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 10000 token0 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 10000 token1 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79228162514264337593543950336 token0 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 79228162514264337593543950336 token1 1`] = `
 {
-  "revert_reason": "End of program was not reached",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 798,
-    },
-    "n_steps": 12925,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 853,
-    },
-    "n_steps": 14427,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 1546,
-    },
-    "n_steps": 17997,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 798,
-    },
-    "n_steps": 12925,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 2291,
-    },
-    "n_steps": 23501,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 848,
-    },
-    "n_steps": 13777,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -3406,319 +1250,97 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 852,
-    },
-    "n_steps": 14422,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 798,
-    },
-    "n_steps": 12925,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 2291,
-    },
-    "n_steps": 23505,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 848,
-    },
-    "n_steps": 13781,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 1546,
-    },
-    "n_steps": 17997,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 798,
-    },
-    "n_steps": 12925,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 54,
-      "pedersen_builtin": 24,
-      "range_check_builtin": 852,
-    },
-    "n_steps": 14422,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 27,
-      "pedersen_builtin": 23,
-      "range_check_builtin": 798,
-    },
-    "n_steps": 12925,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": -10000n,
-    "amount1": 10516n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 83,
-      "pedersen_builtin": 56,
-      "range_check_builtin": 2970,
-    },
-    "n_steps": 33029,
-  },
-  "liquidity_after": 150019n,
-  "sqrt_ratio_after": 358548395291435633147515612429947974483n,
-  "tick_after": 104575n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": 10647n,
-    "amount1": -10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 114,
-      "pedersen_builtin": 59,
-      "range_check_builtin": 2867,
-    },
-    "n_steps": 34064,
-  },
-  "liquidity_after": 100009n,
-  "sqrt_ratio_after": 318197518696337062819639931106676301593n,
-  "tick_after": -134207n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -15232n,
-    "amount1": 16564n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 84,
-      "pedersen_builtin": 61,
-      "range_check_builtin": 2906,
-    },
-    "n_steps": 34303,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -15232n,
-    "amount1": 16564n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 327,
-      "pedersen_builtin": 118,
-      "range_check_builtin": 9432,
-    },
-    "n_steps": 94943,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 13101n,
-    "amount1": -12092n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 142,
-      "pedersen_builtin": 64,
-      "range_check_builtin": 3868,
-    },
-    "n_steps": 42144,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 13101n,
-    "amount1": -12092n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 358,
-      "pedersen_builtin": 121,
-      "range_check_builtin": 9783,
-    },
-    "n_steps": 103965,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token0 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9513,
-  },
-  "liquidity_after": 230021n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "delta": {
-    "amount0": 0n,
-    "amount1": 0n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "pedersen_builtin": 22,
-      "range_check_builtin": 324,
-    },
-    "n_steps": 9508,
-  },
-  "liquidity_after": 230021n,
-  "sqrt_ratio_after": 340282366920938463463374607431768211456n,
-  "tick_after": 0n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -3736,160 +1358,48 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token0 1`] = `
 {
-  "delta": {
-    "amount0": 10000n,
-    "amount1": -9433n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 114,
-      "pedersen_builtin": 59,
-      "range_check_builtin": 2892,
-    },
-    "n_steps": 34284,
-  },
-  "liquidity_after": 100009n,
-  "sqrt_ratio_after": 320125855863226297598523424027276983985n,
-  "tick_after": -122124n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "delta": {
-    "amount0": -9536n,
-    "amount1": 10000n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 56,
-      "pedersen_builtin": 56,
-      "range_check_builtin": 2552,
-    },
-    "n_steps": 30320,
-  },
-  "liquidity_after": 150019n,
-  "sqrt_ratio_after": 357384707370995463786432309339396758729n,
-  "tick_after": 98074n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "delta": {
-    "amount0": 13101n,
-    "amount1": -12092n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 142,
-      "pedersen_builtin": 64,
-      "range_check_builtin": 3927,
-    },
-    "n_steps": 42758,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 170141183460469231731687303715884105728n,
-  "tick_after": -1386296n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": 13101n,
-    "amount1": -12092n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 358,
-      "pedersen_builtin": 121,
-      "range_check_builtin": 9833,
-    },
-    "n_steps": 104498,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "delta": {
-    "amount0": -15232n,
-    "amount1": 16564n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 84,
-      "pedersen_builtin": 61,
-      "range_check_builtin": 2900,
-    },
-    "n_steps": 34413,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 680564733841876926926749214863536422912n,
-  "tick_after": 1386295n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "delta": {
-    "amount0": -15232n,
-    "amount1": 16564n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 327,
-      "pedersen_builtin": 118,
-      "range_check_builtin": 9417,
-    },
-    "n_steps": 94972,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token0 1`] = `
 {
-  "delta": {
-    "amount0": 13101n,
-    "amount1": -12092n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1708,
-      "pedersen_builtin": 121,
-      "range_check_builtin": 28473,
-    },
-    "n_steps": 227424,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 18446748437148339061n,
-  "tick_after": -88722884n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "delta": {
-    "amount0": -15232n,
-    "amount1": 16564n,
-  },
-  "execution_resources": {
-    "builtin_instance_counter": {
-      "bitwise_builtin": 1677,
-      "pedersen_builtin": 118,
-      "range_check_builtin": 29037,
-    },
-    "n_steps": 223665,
-  },
-  "liquidity_after": 0n,
-  "sqrt_ratio_after": 6277100250585753475930931601400621808602321654880405518632n,
-  "tick_after": 88722883n,
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
