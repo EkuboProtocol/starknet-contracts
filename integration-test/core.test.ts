@@ -199,7 +199,7 @@ describe("core", () => {
 
     deployer = new Account(
       provider,
-      "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973",
+      "0x6162896d1d7ab204c7ccac6dd5f8e9e7c25ecd5ae4fcb4ad32e57786bb46e03",
       "0x1800000000300000180000000000030000000000003006001800006600"
     );
 

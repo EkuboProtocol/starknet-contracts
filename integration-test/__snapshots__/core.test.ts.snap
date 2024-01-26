@@ -50,13 +50,13 @@ exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, 
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -158,13 +158,13 @@ exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%,
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -266,13 +266,13 @@ exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -374,13 +374,13 @@ exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -482,13 +482,13 @@ exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, 
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -590,13 +590,13 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -650,7 +650,7 @@ exports[`core 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -10000 token0 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -662,13 +662,13 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token0 skip 5 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -692,19 +692,19 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 0 token1 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -716,7 +716,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10000 token1 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -734,13 +734,13 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 2 limit 2.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token1 skip 5 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -752,7 +752,7 @@ exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79
 
 exports[`core no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% swap 79228162514264337593543950336 token1 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -782,7 +782,7 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -830,7 +830,7 @@ exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 10
 
 exports[`core no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -914,13 +914,13 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swa
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1022,13 +1022,13 @@ exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=0.6%, fee=max swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1130,13 +1130,13 @@ exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 0 
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=1, fee=max swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1238,13 +1238,13 @@ exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core no liquidity, starting at price 1, tick_spacing=max, fee=max swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
@@ -1346,13 +1346,13 @@ exports[`core overlapping positions asymmetric, starting at price 1, tick_spacin
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 1`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
 exports[`core overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% swap 1 token1 limit 1.000 2`] = `
 {
-  "revert_reason": "LIMIT_DIRECTION",
+  "revert_reason": "RunResources has no remaining steps",
 }
 `;
 
