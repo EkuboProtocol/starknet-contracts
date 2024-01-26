@@ -314,4 +314,3 @@ fn test_negative_cases_tick_spacing_ten() {
         tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
     );
 }
-
