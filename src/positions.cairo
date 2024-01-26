@@ -5,35 +5,43 @@ mod Positions {
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
     use core::traits::{Into};
+    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
+    use ekubo::interfaces::upgradeable::{
+        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
+    };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::types::bounds::{Bounds};
+    use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129};
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
-    use ekubo::upgradeable::{Upgradeable as upgradeable_component};
+    use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall,
-        deploy_syscall
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall
     };
 
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+    component!(path: owned_component, storage: owned, event: OwnedEvent);
+    #[abi(embed_v0)]
+    impl Owned = owned_component::OwnedImpl<ContractState>;
+    impl OwnableImpl = owned_component::OwnableImpl<ContractState>;
 
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
     #[abi(embed_v0)]
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::clear::ClearImpl<ContractState>;
+    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
 
     #[storage]
@@ -41,34 +49,15 @@ mod Positions {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
         #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage
+        upgradeable: upgradeable_component::Storage,
+        #[substorage(v0)]
+        owned: owned_component::Storage,
     }
 
-    #[derive(starknet::Event, Drop)]
-    struct Deposit {
-        id: u64,
-        pool_key: PoolKey,
-        bounds: Bounds,
-        liquidity: u128,
-        delta: Delta
-    }
 
     #[derive(starknet::Event, Drop)]
-    struct Withdraw {
+    struct PositionMintedWithReferrer {
         id: u64,
-        pool_key: PoolKey,
-        bounds: Bounds,
-        liquidity: u128,
-        delta: Delta,
-        collect_fees: bool,
-        recipient: ContractAddress
-    }
-
-    #[derive(starknet::Event, Drop)]
-    struct PositionMinted {
-        id: u64,
-        pool_key: PoolKey,
-        bounds: Bounds,
         referrer: ContractAddress,
     }
 
@@ -77,18 +66,19 @@ mod Positions {
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
-        Deposit: Deposit,
-        Withdraw: Withdraw,
-        PositionMinted: PositionMinted,
+        OwnedEvent: owned_component::Event,
+        PositionMintedWithReferrer: PositionMintedWithReferrer,
     }
 
     #[constructor]
     fn constructor(
         ref self: ContractState,
+        owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
         token_uri_base: felt252
     ) {
+        self.initialize_owned(owner);
         self.core.write(core);
 
         self
@@ -96,7 +86,7 @@ mod Positions {
             .write(
                 OwnedNFT::deploy(
                     nft_class_hash: nft_class_hash,
-                    controller: get_contract_address(),
+                    owner: get_contract_address(),
                     name: 'Ekubo Position',
                     symbol: 'EkuPo',
                     token_uri_base: token_uri_base,
@@ -108,7 +98,7 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct DepositCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
     }
@@ -116,12 +106,19 @@ mod Positions {
     #[derive(Serde, Copy, Drop)]
     struct WithdrawCallbackData {
         pool_key: PoolKey,
-        salt: u64,
+        salt: felt252,
         bounds: Bounds,
         liquidity: u128,
-        collect_fees: bool,
         min_token0: u128,
         min_token1: u128,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct CollectFeesCallbackData {
+        pool_key: PoolKey,
+        salt: felt252,
+        bounds: Bounds,
         recipient: ContractAddress,
     }
 
@@ -129,6 +126,8 @@ mod Positions {
     enum LockCallbackData {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
+        CollectFees: CollectFeesCallbackData,
+        GetPoolPrice: PoolKey,
     }
 
     #[generate_trait]
@@ -141,12 +140,19 @@ mod Positions {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
+    impl PositionsHasInterface of IHasInterface<ContractState> {
+        fn get_primary_interface_id(self: @ContractState) -> felt252 {
+            return selector!("ekubo::positions::Positions");
+        }
+    }
+
+    #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
 
-            let delta = match consume_callback_data::<LockCallbackData>(core, data) {
+            match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
                     let delta: Delta = if data.liquidity.is_non_zero() {
                         core
@@ -163,67 +169,32 @@ mod Positions {
                     };
 
                     if delta.amount0.is_non_zero() {
-                        IERC20Dispatcher { contract_address: data.pool_key.token0 }
-                            .transfer(
-                                core.contract_address, u256 { low: delta.amount0.mag, high: 0 }
-                            );
-                        let amount_paid = core.deposit(data.pool_key.token0);
-                        if (amount_paid > delta.amount0.mag) {
-                            // withdraw back to self, and the subsequent clear should get it
-                            core
-                                .withdraw(
-                                    data.pool_key.token0,
-                                    get_contract_address(),
-                                    amount_paid - delta.amount0.mag
-                                );
-                        }
+                        let token = IERC20Dispatcher { contract_address: data.pool_key.token0 };
+                        token.approve(core.contract_address, delta.amount0.mag.into());
+                        core.pay(data.pool_key.token0);
                     }
 
                     if delta.amount1.is_non_zero() {
-                        IERC20Dispatcher { contract_address: data.pool_key.token1 }
-                            .transfer(
-                                core.contract_address, u256 { low: delta.amount1.mag, high: 0 }
-                            );
-
-                        let amount_paid = core.deposit(data.pool_key.token1);
-                        if (amount_paid > delta.amount1.mag) {
-                            // withdraw back to self, and the subsequent clear should get it
-                            core
-                                .withdraw(
-                                    data.pool_key.token1,
-                                    get_contract_address(),
-                                    amount_paid - delta.amount1.mag
-                                );
-                        }
+                        let token = IERC20Dispatcher { contract_address: data.pool_key.token1 };
+                        token.approve(core.contract_address, delta.amount1.mag.into());
+                        core.pay(data.pool_key.token1);
                     }
 
-                    delta
+                    ArrayTrait::new()
                 },
                 LockCallbackData::Withdraw(data) => {
-                    let mut delta: Delta = if data.collect_fees {
-                        core
-                            .collect_fees(
-                                pool_key: data.pool_key, salt: data.salt, bounds: data.bounds
-                            )
-                    } else {
-                        Zero::zero()
-                    };
+                    let delta = core
+                        .update_position(
+                            data.pool_key,
+                            UpdatePositionParameters {
+                                salt: data.salt,
+                                bounds: data.bounds,
+                                liquidity_delta: i129 { mag: data.liquidity, sign: true },
+                            }
+                        );
 
-                    if data.liquidity.is_non_zero() {
-                        let update = core
-                            .update_position(
-                                data.pool_key,
-                                UpdatePositionParameters {
-                                    salt: data.salt,
-                                    bounds: data.bounds,
-                                    liquidity_delta: i129 { mag: data.liquidity, sign: true },
-                                }
-                            );
-                        delta += update;
-
-                        assert(update.amount0.mag >= data.min_token0, 'MIN_TOKEN0');
-                        assert(update.amount1.mag >= data.min_token1, 'MIN_TOKEN1');
-                    }
+                    assert(delta.amount0.mag >= data.min_token0, 'MIN_TOKEN0');
+                    assert(delta.amount1.mag >= data.min_token1, 'MIN_TOKEN1');
 
                     if delta.amount0.is_non_zero() {
                         core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
@@ -233,35 +204,70 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    delta
+                    serialize(@delta)
                 },
-            };
+                LockCallbackData::CollectFees(data) => {
+                    let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
 
-            let mut result_data: Array<felt252> = ArrayTrait::new();
-            Serde::<Delta>::serialize(@delta, ref result_data);
-            result_data
+                    if delta.amount0.is_non_zero() {
+                        core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
+                    }
+
+                    if delta.amount1.is_non_zero() {
+                        core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
+                    }
+
+                    serialize(@delta)
+                },
+                LockCallbackData::GetPoolPrice(pool_key) => {
+                    core
+                        .update_position(
+                            pool_key,
+                            UpdatePositionParameters {
+                                salt: 0,
+                                bounds: max_bounds(pool_key.tick_spacing),
+                                liquidity_delta: Zero::zero(),
+                            }
+                        );
+
+                    let pool_price = core.get_pool_price(pool_key);
+
+                    serialize(@pool_price)
+                }
+            }
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl PositionsImpl of IPositions<ContractState> {
         fn get_nft_address(self: @ContractState) -> ContractAddress {
             self.nft.read().contract_address
         }
 
+        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
+            self.require_owner();
+            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
+                .replace_class_hash(class_hash);
+        }
+
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
-            self.mint_with_referrer(pool_key, bounds, Zero::zero())
+            self.mint_v2(Zero::zero())
         }
 
         #[inline(always)]
         fn mint_with_referrer(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
         ) -> u64 {
+            self.mint_v2(referrer)
+        }
+
+        #[inline(always)]
+        fn mint_v2(ref self: ContractState, referrer: ContractAddress) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
-            // contains the associated pool key and bounds which is never stored,
-            // so it's important for indexing
-            self.emit(PositionMinted { id, pool_key, bounds, referrer });
+            if (referrer.is_non_zero()) {
+                self.emit(PositionMintedWithReferrer { id, referrer })
+            }
 
             id
         }
@@ -332,6 +338,9 @@ mod Positions {
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
             let core = self.core.read();
+
+            // todo: how do we handle before/after update position that changes the price? 
+            // https://github.com/EkuboProtocol/contracts/issues/102
             let price = core.get_pool_price(pool_key);
 
             // compute how much liquidity we can deposit based on token balances
@@ -344,14 +353,14 @@ mod Positions {
             );
             assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
 
-            let delta: Delta = call_core_with_callback(
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
                 core,
                 @LockCallbackData::Deposit(
                     DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
                 )
             );
-
-            self.emit(Deposit { id, pool_key, bounds, liquidity, delta });
 
             liquidity
         }
@@ -366,10 +375,33 @@ mod Positions {
             min_token1: u128,
             collect_fees: bool
         ) -> (u128, u128) {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            let (fees0, fees1) = if collect_fees {
+                self.collect_fees(id, pool_key, bounds)
+            } else {
+                (0, 0)
+            };
 
-            let recipient = get_caller_address();
+            let (principal0, principal1) = if liquidity.is_non_zero() {
+                self.withdraw_v2(id, pool_key, bounds, liquidity, min_token0, min_token1)
+            } else {
+                (0, 0)
+            };
+
+            (principal0 + fees0, principal1 + fees1)
+        }
+
+        fn withdraw_v2(
+            ref self: ContractState,
+            id: u64,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            liquidity: u128,
+            min_token0: u128,
+            min_token1: u128,
+        ) -> (u128, u128) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -379,15 +411,29 @@ mod Positions {
                         pool_key,
                         liquidity,
                         salt: id.into(),
-                        collect_fees,
                         min_token0,
                         min_token1,
-                        recipient,
+                        recipient: caller
                     }
                 )
             );
 
-            self.emit(Withdraw { id, pool_key, bounds, liquidity, delta, collect_fees, recipient });
+            (delta.amount0.mag, delta.amount1.mag)
+        }
+
+        fn collect_fees(
+            ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+        ) -> (u128, u128) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+
+            let delta: Delta = call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::CollectFees(
+                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient: caller }
+                )
+            );
 
             (delta.amount0.mag, delta.amount1.mag)
         }
@@ -412,7 +458,7 @@ mod Positions {
             min_liquidity: u128,
             referrer: ContractAddress
         ) -> (u64, u128) {
-            let id = self.mint_with_referrer(pool_key, bounds, referrer);
+            let id = self.mint_v2(referrer);
             let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
             (id, liquidity)
         }
@@ -424,6 +470,12 @@ mod Positions {
             let amount0 = self.clear(IERC20Dispatcher { contract_address: pool_key.token0 });
             let amount1 = self.clear(IERC20Dispatcher { contract_address: pool_key.token1 });
             (id, liquidity, amount0, amount1)
+        }
+
+        fn get_pool_price(ref self: ContractState, pool_key: PoolKey) -> PoolPrice {
+            call_core_with_callback::<
+                LockCallbackData, PoolPrice
+            >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
         }
     }
 }

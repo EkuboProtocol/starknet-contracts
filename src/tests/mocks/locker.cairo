@@ -15,7 +15,7 @@ enum Action {
     // save that amount of balance to the given address
     SaveBalance: (SavedBalanceKey, u128),
     // loads the balance to the address
-    LoadBalance: (ContractAddress, u64, u128, ContractAddress),
+    LoadBalance: (ContractAddress, felt252, u128, ContractAddress),
     // accumulates some tokens as fees
     AccumulateAsFees: (PoolKey, u128, u128),
     FlashBorrow: (ContractAddress, u128, u128),
@@ -41,13 +41,15 @@ trait ICoreLocker<TStorage> {
 #[starknet::contract]
 mod CoreLocker {
     use core::array::ArrayTrait;
-
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::Serde;
+    use ekubo::components::shared_locker::{
+        call_core_with_callback, consume_callback_data, handle_delta
+    };
+    use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data, handle_delta};
-    use ekubo::tests::mocks::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
@@ -68,7 +70,7 @@ mod CoreLocker {
         self.core.write(core);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -118,7 +120,7 @@ mod CoreLocker {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl CoreLockerLockedImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -311,21 +313,19 @@ mod CoreLocker {
 
                     if (amount_repay.is_non_zero()) {
                         IERC20Dispatcher { contract_address: token }
-                            .transfer(core.contract_address, amount_repay.into());
-                        core.deposit(token);
+                            .approve(core.contract_address, amount_repay.into());
+                        core.pay(token);
                     }
 
                     ActionResult::FlashBorrow(())
                 }
             };
 
-            let mut arr: Array<felt252> = ArrayTrait::new();
-            Serde::<ActionResult>::serialize(@result, ref arr);
-            arr
+            serialize(@result)
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl CoreLockerImpl of ICoreLocker<ContractState> {
         fn call(ref self: ContractState, action: Action) -> ActionResult {
             call_core_with_callback(self.core.read(), @action)

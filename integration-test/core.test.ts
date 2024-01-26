@@ -9,7 +9,7 @@ import {
 import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
-import SimpleERC20 from "../target/dev/ekubo_SimpleERC20.contract_class.json";
+import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
 import Router from "../target/dev/ekubo_Router.contract_class.json";
 import { POOL_CASES } from "./pool-cases";
 import { SWAP_CASES } from "./swap-cases";
@@ -300,11 +300,11 @@ describe("core", () => {
             retryInterval: 0,
           });
 
-          const parsed = positionsContract.parseEvents(receipt);
+          const parsed = core.parseEvents(receipt);
 
-          const [{ PositionMinted }, { Deposit }] = parsed;
+          const [{ PositionUpdated }] = parsed;
 
-          liquiditiesActual.push(Deposit.liquidity as bigint);
+          liquiditiesActual.push((PositionUpdated as unknown as { params: { liquidity_delta: { mag: bigint, sign: boolean } } }).params.liquidity_delta.mag);
         }
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
@@ -335,7 +335,7 @@ describe("core", () => {
             let transaction_hash: string;
             try {
               ({ transaction_hash } = await router.invoke(
-                "raw_swap",
+                "swap",
                 [
                   {
                     pool_key: poolKey,

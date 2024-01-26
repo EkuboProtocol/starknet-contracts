@@ -1,14 +1,13 @@
 use core::array::{Array, ArrayTrait, SpanTrait};
+use core::cmp::{min, max};
 
 use core::num::traits::{Zero};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
-use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, Swap, TokenAmount, RouteNode};
-use ekubo::tests::helper::{
-    deploy_core, deploy_router, deploy_two_mock_tokens, deploy_positions, deploy_mock_token
-};
-use ekubo::tests::mocks::mock_erc20::{IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode, Depth, Swap};
+use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
@@ -30,9 +29,10 @@ fn recipient() -> ContractAddress {
     )
 )]
 fn test_router_quote_not_initialized_pool() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -44,24 +44,27 @@ fn test_router_quote_not_initialized_pool() {
 
     router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    token: token0.contract_address, amount: i129 { mag: 100, sign: false }
-                },
-                route: array![
-                    RouteNode {
-                        pool_key: pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
-                    }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode {
+                            pool_key: pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
+                        }
+                    ],
+                    token_amount: TokenAmount {
+                        token: token0.contract_address, amount: i129 { mag: 100, sign: false }
+                    },
+                }
+            ]
         );
 }
 
 #[test]
 fn test_router_quote_initialized_pool_no_liquidity() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -73,31 +76,43 @@ fn test_router_quote_initialized_pool_no_liquidity() {
 
     core.initialize_pool(pool_key, Zero::zero());
 
-    let result = router
+    let mut result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    token: token0.contract_address, amount: i129 { mag: 100, sign: false }
-                },
-                route: array![
-                    RouteNode {
-                        pool_key: pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
-                    }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode {
+                            pool_key: pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0
+                        }
+                    ],
+                    token_amount: TokenAmount {
+                        token: token0.contract_address, amount: i129 { mag: 100, sign: false }
+                    },
+                }
+            ]
         );
 
-    assert(result.amount.is_zero(), 'no output');
-    assert(result.token == pool_key.token1, 'token');
+    let result = result.pop_front().unwrap();
+
+    assert(result.len() == 1, 'one delta');
+    assert(result.at(0).is_zero(), 'delta is zero');
 }
 
 
-fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let positions = deploy_positions(core);
-    let (token0, token1) = deploy_two_mock_tokens();
-    let token2 = deploy_mock_token();
+fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let positions = d.deploy_positions(core);
+    let (tokenA, tokenB) = (d.deploy_two_mock_tokens());
+    let tokenC = d.deploy_mock_token();
+
+    let (token0, token1, token2) = if tokenC.contract_address > tokenB.contract_address {
+        (tokenA, tokenB, tokenC)
+    } else if tokenC.contract_address > tokenA.contract_address {
+        (tokenA, tokenC, tokenB)
+    } else {
+        (tokenC, tokenA, tokenB)
+    };
 
     let pool_key_a = PoolKey {
         token0: token0.contract_address,
@@ -127,14 +142,14 @@ fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
 
     token0.increase_balance(positions.contract_address, 10000);
     token1.increase_balance(positions.contract_address, 10000);
-    let token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
-    let deposited_liquidity_a = positions
+    let _token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
+    let _deposited_liquidity_a = positions
         .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0,);
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
-    let token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
-    let deposited_liquidity_b = positions
+    let _token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
+    let _deposited_liquidity_b = positions
         .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0,);
 
     (router, pool_key_a, pool_key_b)
@@ -143,67 +158,81 @@ fn setup_for_routing() -> (IRouterDispatcher, PoolKey, PoolKey) {
 
 #[test]
 fn test_router_quote_initialized_pool_with_liquidity() {
-    let (router, pool_key, _) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key, _) = setup_for_routing(ref d);
 
     let mut result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key.token0
-                },
-                route: array![
-                    RouteNode { pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: false }, token: pool_key.token0
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token0 in');
-    assert(result.token == pool_key.token1, 'tokena');
-    result = router
-        .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: true }, token: pool_key.token0
-                },
-                route: array![
-                    RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
-                ],
-            }
-        );
-    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token0 out');
-    assert(result.token == pool_key.token1, 'tokenb');
+
+    assert(result.at(0).at(0).amount1 == @i129 { mag: 0x62, sign: true }, '100 token0 in.amount1');
 
     result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key.token1
-                },
-                route: array![
-                    RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: true }, token: pool_key.token0
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x62, sign: true }, '100 token1 in');
-    assert(result.token == pool_key.token0, 'tokenc');
+    assert(
+        result.at(0).at(0).amount1 == @i129 { mag: 0x66, sign: false }, '100 token0 out.amount1'
+    );
+
     result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: true }, token: pool_key.token1
-                },
-                route: array![
-                    RouteNode { pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: false }, token: pool_key.token1
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x66, sign: false }, '100 token1 out');
-    assert(result.token == pool_key.token0, 'tokend');
+    assert(result.at(0).at(0).amount0 == @i129 { mag: 0x62, sign: true }, '100 token1 in.amount0');
+    assert(result.at(0).at(0).amount1 == @i129 { mag: 100, sign: false }, '100 token1 in.amount1');
+
+    result = router
+        .quote(
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key, sqrt_ratio_limit: min_sqrt_ratio(), skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: true }, token: pool_key.token1
+                    },
+                }
+            ]
+        );
+    assert(
+        result.at(0).at(0).amount0 == @i129 { mag: 0x66, sign: false }, '100 token1 out.amount0'
+    );
 }
 
 
 #[test]
 fn test_router_quote_to_delta() {
-    let (router, pool_key, _) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key, _) = setup_for_routing(ref d);
 
     let mut delta = router
         .get_delta_to_sqrt_ratio(
@@ -228,67 +257,72 @@ fn test_router_quote_to_delta() {
 
 #[test]
 fn test_router_quote_multihop_routes() {
-    let (router, pool_key_a, pool_key_b) = setup_for_routing();
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, pool_key_b) = setup_for_routing(ref d);
 
     let mut result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key_a.token0
-                },
-                route: array![
-                    RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 },
-                    RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 },
+                        RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: false }, token: pool_key_a.token0
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token0 in');
-    assert(result.token == pool_key_b.token1, '100 token0 in other');
+    assert(result.at(0).at(1).amount1 == @i129 { mag: 0x60, sign: true }, '100 token0 in');
 
     result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: true }, token: pool_key_a.token0
-                },
-                route: array![
-                    RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 },
-                    RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 },
+                        RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: true }, token: pool_key_a.token0
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token0 out');
-    assert(result.token == pool_key_b.token1, '100 token0 out other');
+    assert(result.at(0).at(1).amount1 == @i129 { mag: 0x68, sign: false }, '100 token0 out');
 
     result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key_b.token1
-                },
-                route: array![
-                    RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 },
-                    RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 },
+                        RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: false }, token: pool_key_b.token1
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x60, sign: true }, '100 token2 in');
-    assert(result.token == pool_key_a.token0, '100 token2 in other');
+    assert(result.at(0).at(1).amount0 == @i129 { mag: 0x60, sign: true }, '100 token2 in');
 
     result = router
         .quote(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: true }, token: pool_key_b.token1
-                },
-                route: array![
-                    RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 },
-                    RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 }
-                ],
-            }
+            swaps: array![
+                Swap {
+                    route: array![
+                        RouteNode { pool_key: pool_key_b, sqrt_ratio_limit: 0, skip_ahead: 0 },
+                        RouteNode { pool_key: pool_key_a, sqrt_ratio_limit: 0, skip_ahead: 0 }
+                    ],
+                    token_amount: TokenAmount {
+                        amount: i129 { mag: 100, sign: true }, token: pool_key_b.token1
+                    },
+                }
+            ]
         );
-    assert(result.amount == i129 { mag: 0x68, sign: false }, '100 token2 out');
-    assert(result.token == pool_key_a.token0, '100 token2 out other');
+    assert(result.at(0).at(1).amount0 == @i129 { mag: 0x68, sign: false }, '100 token2 out');
 }
 
 
@@ -303,9 +337,10 @@ fn test_router_quote_multihop_routes() {
     )
 )]
 fn test_router_swap_not_initialized_pool() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -316,23 +351,20 @@ fn test_router_swap_not_initialized_pool() {
     };
 
     router
-        .execute(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key.token0,
-                },
-                route: array![RouteNode { pool_key, sqrt_ratio_limit: 0, skip_ahead: 0 }]
+        .multihop_swap(
+            route: array![RouteNode { pool_key, sqrt_ratio_limit: 0, skip_ahead: 0 }],
+            token_amount: TokenAmount {
+                amount: i129 { mag: 100, sign: false }, token: pool_key.token0,
             },
-            calculated_amount_threshold: 0,
-            recipient: recipient(),
         );
 }
 
 #[test]
 fn test_router_swap_initialized_pool_no_liquidity_token0_in() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -345,18 +377,14 @@ fn test_router_swap_initialized_pool_no_liquidity_token0_in() {
     core.initialize_pool(pool_key, Zero::zero());
 
     let token_amount = router
-        .execute(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key.token0,
-                },
-                route: array![RouteNode { pool_key, sqrt_ratio_limit: 0, skip_ahead: 0 }]
+        .multihop_swap(
+            route: array![RouteNode { pool_key, sqrt_ratio_limit: 0, skip_ahead: 0 }],
+            token_amount: TokenAmount {
+                amount: i129 { mag: 100, sign: false }, token: pool_key.token0,
             },
-            calculated_amount_threshold: 0,
-            recipient: recipient(),
         );
 
-    assert(token_amount.amount.is_zero(), 'no output');
+    assert(token_amount.at(0).is_zero(), 'no output');
 
     let pp = core.get_pool_price(pool_key);
     assert(pp.sqrt_ratio == min_sqrt_ratio(), 'traded to end');
@@ -365,9 +393,10 @@ fn test_router_swap_initialized_pool_no_liquidity_token0_in() {
 
 #[test]
 fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
-    let core = deploy_core();
-    let router = deploy_router(core);
-    let (token0, token1) = deploy_two_mock_tokens();
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let router = d.deploy_router(core);
+    let (token0, token1) = d.deploy_two_mock_tokens();
 
     let pool_key = PoolKey {
         token0: token0.contract_address,
@@ -380,20 +409,16 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
     core.initialize_pool(pool_key, Zero::zero());
 
     let delta = router
-        .execute(
-            swap: Swap {
-                token_amount: TokenAmount {
-                    amount: i129 { mag: 100, sign: false }, token: pool_key.token1,
-                },
-                route: array![
-                    RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
-                ]
+        .multihop_swap(
+            route: array![
+                RouteNode { pool_key, sqrt_ratio_limit: max_sqrt_ratio(), skip_ahead: 0 }
+            ],
+            token_amount: TokenAmount {
+                amount: i129 { mag: 100, sign: false }, token: pool_key.token1,
             },
-            calculated_amount_threshold: 0,
-            recipient: recipient(),
         );
 
-    assert(delta.amount.is_zero(), 'no input');
+    assert(delta.at(0).is_zero(), 'no input');
 
     let pp = core.get_pool_price(pool_key);
 
@@ -401,3 +426,73 @@ fn test_router_swap_initialized_pool_no_liquidity_token1_in() {
     assert(pp.tick == max_tick(), 'traded to end');
 }
 
+
+#[test]
+fn test_router_get_market_depth() {
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, _) = setup_for_routing(ref d);
+
+    assert_eq!( // +/-0%
+    router.get_market_depth(pool_key_a, 0), Depth { token0: 0, token1: 0 });
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth(pool_key_a, 17013693014354590797691252010145372),
+        Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.1%
+        router.get_market_depth(pool_key_a, 170098669418969064647561320363379535),
+        Depth { token0: 1672, token1: 1672 }
+    );
+
+    assert_eq!(
+        // +/-2%
+        router.get_market_depth(pool_key_a, 3385977594616997568912048723923598803),
+        Depth { token0: 9999, token1: 9999 }
+    );
+
+    assert_eq!(
+        // +/-max%
+        router.get_market_depth(pool_key_a, 0xffffffffffffffffffffffffffffffff),
+        Depth { token0: 9999, token1: 9999 }
+    );
+}
+
+#[test]
+fn test_router_get_market_depth_v2() {
+    let mut d: Deployer = Default::default();
+    let (router, pool_key_a, _) = setup_for_routing(ref d);
+
+    assert_eq!( // +/-0%
+    router.get_market_depth_v2(pool_key_a, 0), Depth { token0: 0, token1: 0 });
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth_v2(pool_key_a, 1844674407370955), Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.01%
+        router.get_market_depth_v2(pool_key_a, 1844674407370955), Depth { token0: 167, token1: 167 }
+    );
+
+    assert_eq!(
+        // +/-0.1%
+        router.get_market_depth_v2(pool_key_a, 18446744073709551),
+        Depth { token0: 1672, token1: 1672 }
+    );
+
+    assert_eq!(
+        // +/-2%
+        router.get_market_depth_v2(pool_key_a, 368934881474191032),
+        Depth { token0: 9999, token1: 9999 }
+    );
+
+    assert_eq!(
+        // +/-max%
+        router.get_market_depth_v2(pool_key_a, 0xffffffffffffffffffffffffffffffff),
+        Depth { token0: 9999, token1: 9999 }
+    );
+}

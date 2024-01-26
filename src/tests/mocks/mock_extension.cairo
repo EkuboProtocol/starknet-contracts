@@ -25,10 +25,10 @@ mod MockExtension {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints, all_call_points};
     use ekubo::types::delta::{Delta};
@@ -84,7 +84,7 @@ mod MockExtension {
         self.call_points.write(call_points.into());
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
@@ -148,7 +148,7 @@ mod MockExtension {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExtensionLocked of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -188,12 +188,12 @@ mod MockExtension {
         pool_key: PoolKey
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
         fn call_into_pool(self: @ContractState, pool_key: PoolKey) {
-            let unused_output: () = call_core_with_callback(
-                self.core.read(), @CallbackData { pool_key }
-            );
+            call_core_with_callback::<
+                CallbackData, ()
+            >(self.core.read(), @CallbackData { pool_key });
         }
         fn get_num_calls(self: @ContractState) -> u32 {
             self.num_calls.read()

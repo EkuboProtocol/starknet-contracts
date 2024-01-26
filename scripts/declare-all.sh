@@ -2,7 +2,7 @@
 
 # Function to print usage and exit
 print_usage_and_exit() {
-    echo "Usage: $0 --network {goerli-1,mainnet}"
+    echo "Usage: $0 --network {sepolia,goerli-1,mainnet}"
     exit 1
 }
 
@@ -27,7 +27,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Ensure network is valid
-if [ "$NETWORK" != "goerli-1" -a "$NETWORK" != "mainnet" ]; then
+if [ "$NETWORK" != "sepolia" -a "$NETWORK" != "mainnet" -a "$NETWORK" != "goerli-1" ]; then
     echo "Invalid network: $NETWORK"
     print_usage_and_exit
 fi
@@ -46,8 +46,14 @@ echo "Declaring positions"
 POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
 echo "Declaring NFT"
 NFT_CLASS_HASH=$(declare_class_hash OwnedNFT)
+echo "Declaring Router"
+ROUTER_CLASS_HASH=$(declare_class_hash Router)
+echo "Declaring TokenRegistry"
+TOKEN_REGISTRY_CLASS_HASH=$(declare_class_hash TokenRegistry)
 
 echo "Declared core @ $CORE_CLASS_HASH"
 echo "Declared positions @ $POSITIONS_CLASS_HASH"
 echo "Declared nft @ $NFT_CLASS_HASH"
+echo "Declared router @ $ROUTER_CLASS_HASH"
+echo "Declared token registry @ $TOKEN_REGISTRY_CLASS_HASH"
 

@@ -17,7 +17,7 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
 #[test]
 #[should_panic(expected: ('OVERFLOW_MLFT0',))]
 fn test_max_liquidity_for_token0_max_lower_half_range() {
-    let result = max_liquidity_for_token0(
+    max_liquidity_for_token0(
         tick_to_sqrt_ratio(Zero::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
 }
@@ -41,7 +41,7 @@ fn test_max_liquidity_for_token1_max_at_full_range() {
 #[test]
 #[should_panic(expected: ('OVERFLOW_MLFT1',))]
 fn test_max_liquidity_for_token1_max_lower_half_range() {
-    let result = max_liquidity_for_token1(
+    max_liquidity_for_token1(
         min_sqrt_ratio(), tick_to_sqrt_ratio(Zero::zero()), 0xffffffffffffffffffffffffffffffff
     );
 }

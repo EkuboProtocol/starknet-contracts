@@ -19,9 +19,9 @@ trait IERC20Metadata<TStorage> {
 #[starknet::contract]
 mod TokenRegistry {
     use core::num::traits::{Zero};
+    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
-    use ekubo::shared_locker::{call_core_with_callback, consume_callback_data};
     use starknet::{ContractAddress, get_contract_address, get_caller_address};
     use super::{
         IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
@@ -31,7 +31,6 @@ mod TokenRegistry {
     struct Storage {
         core: ICoreDispatcher,
     }
-
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -69,7 +68,7 @@ mod TokenRegistry {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl TokenRegistryImpl of ITokenRegistry<ContractState> {
         fn register_token(ref self: ContractState, token: IERC20Dispatcher) {
             let metadata = IERC20MetadataDispatcher { contract_address: token.contract_address };
@@ -107,7 +106,7 @@ mod TokenRegistry {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
             let core = self.core.read();
@@ -115,19 +114,11 @@ mod TokenRegistry {
                 (ContractAddress, IERC20Dispatcher, u128)
             >(core, data);
 
-            let reserves = core.get_reserves(token.contract_address);
-            let core_balance = token.balanceOf(core.contract_address);
-            let already_paid: u128 = (core_balance - reserves)
-                .try_into()
-                .expect('Core balance exceeds u128');
+            token.approve(core.contract_address, amount.into());
 
-            token.transfer(core.contract_address, amount.into());
+            core.pay(token.contract_address);
 
-            let amount_paid = core.deposit(token.contract_address);
-
-            assert(amount_paid == (already_paid + amount), 'Unexpected deposit behavior');
-
-            core.withdraw(token.contract_address, refund_to, amount_paid);
+            core.withdraw(token.contract_address, refund_to, amount);
 
             Default::default()
         }

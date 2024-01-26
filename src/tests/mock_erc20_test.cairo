@@ -1,8 +1,8 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::simple_erc20::SimpleERC20::{Transfer};
-use ekubo::tests::helper::{deploy_simple_erc20};
+use ekubo::mock_erc20::{MockERC20IERC20ImplTrait, MockERC20::{Transfer}};
+use ekubo::tests::helper::{Deployer, DeployerTrait};
 use starknet::{
     get_contract_address, contract_address_const, testing::{set_contract_address, pop_log}
 };
@@ -10,7 +10,12 @@ use starknet::{
 
 #[test]
 fn test_constructor() {
-    let erc20 = deploy_simple_erc20(contract_address_const::<1234>());
+    let mut d: Deployer = Default::default();
+
+    let erc20 = d
+        .deploy_mock_token_with_balance(
+            contract_address_const::<1234>(), 0xffffffffffffffffffffffffffffffff
+        );
     assert(
         erc20.balanceOf(contract_address_const::<1234>()) == 0xffffffffffffffffffffffffffffffff,
         'balance of this'
@@ -23,7 +28,9 @@ fn test_constructor() {
 
 #[test]
 fn test_transfer() {
-    let erc20 = deploy_simple_erc20(get_contract_address());
+    let mut d: Deployer = Default::default();
+    let erc20 = d
+        .deploy_mock_token_with_balance(get_contract_address(), 0xffffffffffffffffffffffffffffffff);
     pop_log::<Transfer>(erc20.contract_address).expect('CONSTRUCTOR');
 
     let recipient = contract_address_const::<0x1234>();
