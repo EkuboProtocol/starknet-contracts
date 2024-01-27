@@ -1,7 +1,7 @@
-use core::integer::{u128_wide_mul, u128_add_with_carry};
 use core::num::traits::{Zero};
 use core::traits::{Into};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
+use ekubo::math::muldiv::{muldiv};
 
 // Represents a liquidity position
 // Packed together in a single struct because whenever liquidity changes we typically change fees per liquidity as well
@@ -32,10 +32,7 @@ impl PositionZero of Zero<Position> {
 }
 
 pub(crate) fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
-    let (limb1_p0, _) = u128_wide_mul(a.low, b);
-    let (_, limb1_p1) = u128_wide_mul(a.high, b);
-    let (limb1, _) = u128_add_with_carry(limb1_p0, limb1_p1);
-    limb1
+    muldiv(a, b.into(), 0x100000000000000000000000000000000, false).unwrap().low
 }
 
 #[generate_trait]
