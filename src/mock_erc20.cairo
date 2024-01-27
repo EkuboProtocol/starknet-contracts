@@ -2,7 +2,7 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-trait IMockERC20<TStorage> {
+pub trait IMockERC20<TStorage> {
     fn set_balance(ref self: TStorage, address: ContractAddress, amount: u128);
     fn increase_balance(ref self: TStorage, address: ContractAddress, amount: u128);
     fn decrease_balance(ref self: TStorage, address: ContractAddress, amount: u128);
@@ -10,7 +10,7 @@ trait IMockERC20<TStorage> {
 
 
 #[generate_trait]
-impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
+pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
     fn transfer(self: IMockERC20Dispatcher, recipient: ContractAddress, amount: u256) -> bool {
         IERC20Dispatcher { contract_address: self.contract_address }.transfer(recipient, amount)
     }
@@ -34,7 +34,7 @@ impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
 }
 
 #[starknet::contract]
-mod MockERC20 {
+pub mod MockERC20 {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into};
@@ -49,17 +49,17 @@ mod MockERC20 {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct Transfer {
-        from: ContractAddress,
-        to: ContractAddress,
-        amount: u256,
+    pub struct Transfer {
+        pub from: ContractAddress,
+        pub to: ContractAddress,
+        pub amount: u256,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct Approval {
-        owner: ContractAddress,
-        spender: ContractAddress,
-        value: u256
+    pub struct Approval {
+        pub owner: ContractAddress,
+        pub spender: ContractAddress,
+        pub value: u256
     }
 
 

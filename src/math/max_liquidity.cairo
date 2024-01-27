@@ -1,19 +1,13 @@
-use core::integer::{
-    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
-    u128_overflowing_add
-};
+use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256};
 use core::num::traits::{Zero};
-use core::result::{ResultTrait};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::muldiv::{muldiv};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129, i129Trait};
 
 // Returns the max amount of liquidity that can be deposited based on amount of token0
 // This function is the inverse of the amount0_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
-fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
+pub fn max_liquidity_for_token0(
+    sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128
+) -> u128 {
     if (amount.is_zero()) {
         return Zero::zero();
     }
@@ -55,7 +49,7 @@ fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
     }
 
     let (quotient, _) = u512_safe_div_rem_by_u256(
-        result, u256_as_non_zero(sqrt_ratio_upper - sqrt_ratio_lower)
+        result, (sqrt_ratio_upper - sqrt_ratio_lower).try_into().unwrap()
     );
 
     assert((quotient.limb3 == 0) & (quotient.limb2 == 0), 'OVERFLOW_MLFT0');
@@ -66,7 +60,9 @@ fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
 // Returns the max amount of liquidity that can be deposited based on amount of token1
 // This function is the inverse of the amount1_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token1 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
-fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
+pub fn max_liquidity_for_token1(
+    sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128
+) -> u128 {
     if (amount.is_zero()) {
         return Zero::zero();
     }
@@ -76,7 +72,7 @@ fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amou
 }
 
 // Return the max liquidity that can be deposited based on the price bounds and the amounts of token0 and token1
-fn max_liquidity(
+pub fn max_liquidity(
     sqrt_ratio: u256, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount0: u128, amount1: u128
 ) -> u128 {
     assert(sqrt_ratio_lower < sqrt_ratio_upper, 'SQRT_RATIO_ORDER');

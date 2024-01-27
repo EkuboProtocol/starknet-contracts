@@ -1,5 +1,5 @@
 #[starknet::contract]
-mod Positions {
+pub mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
@@ -28,7 +28,8 @@ mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall
+        ContractAddress, get_caller_address, get_contract_address, ClassHash,
+        syscalls::{replace_class_syscall}
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

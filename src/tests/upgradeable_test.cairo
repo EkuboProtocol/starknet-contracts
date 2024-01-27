@@ -3,7 +3,7 @@ use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatc
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use starknet::testing::{set_contract_address, pop_log};
-use starknet::{class_hash_const, ClassHash, contract_address_const};
+use starknet::{class_hash::class_hash_const, ClassHash, contract_address_const};
 
 #[test]
 fn test_replace_class_hash() {

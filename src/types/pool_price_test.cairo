@@ -6,7 +6,8 @@ use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::call_points::{CallPoints, all_call_points};
 use ekubo::types::i129::i129;
 use ekubo::types::pool_price::{PoolPrice};
-use starknet::{storage_base_address_const, Store, StorePacking, SyscallResult, SyscallResultTrait};
+use starknet::storage_access::{storage_base_address_const, Store, StorePacking,};
+use starknet::{SyscallResult, SyscallResultTrait};
 
 #[test]
 fn test_packing_round_trip_many_values() {
