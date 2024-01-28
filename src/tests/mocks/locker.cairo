@@ -123,7 +123,7 @@ mod CoreLocker {
 
     #[abi(embed_v0)]
     impl CoreLockerLockedImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             let result = match consume_callback_data::<Action>(core, data) {
@@ -322,7 +322,7 @@ mod CoreLocker {
                 }
             };
 
-            serialize(@result)
+            serialize(@result).span()
         }
     }
 
