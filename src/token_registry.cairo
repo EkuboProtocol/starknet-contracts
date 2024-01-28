@@ -53,7 +53,7 @@ mod TokenRegistry {
     }
 
     // Computes 10^x
-    pub(crate) fn ten_pow(x: u8) -> u128 {
+    fn ten_pow(x: u8) -> u128 {
         if (x == 0) {
             1_u128
         } else if (x == 1) {

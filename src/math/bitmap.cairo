@@ -9,7 +9,7 @@ use ekubo::types::i129::{i129, i129Trait};
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
 struct Bitmap {
     // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
-    pub(crate) value: felt252
+    value: felt252
 }
 
 impl BitmapZero of Zero<Bitmap> {

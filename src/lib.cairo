@@ -67,49 +67,49 @@ mod math {
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
-    pub(crate) mod core_test;
-    pub(crate) mod extensions_test;
-    pub(crate) mod helper;
-    pub(crate) mod mock_erc20_test;
-    pub(crate) mod owned_nft_test;
-    pub(crate) mod positions_test;
-    pub(crate) mod router_test;
-    pub(crate) mod store_packing_test;
-    pub(crate) mod token_registry_test;
-    pub(crate) mod upgradeable_test;
+mod tests {
+    mod core_test;
+    mod extensions_test;
+    mod helper;
+    mod mock_erc20_test;
+    mod owned_nft_test;
+    mod positions_test;
+    mod router_test;
+    mod store_packing_test;
+    mod token_registry_test;
+    mod upgradeable_test;
 
-    pub(crate) mod mocks {
-        pub(crate) mod locker;
-        pub(crate) mod mock_extension;
-        pub(crate) mod mock_upgradeable;
+    mod mocks {
+        mod locker;
+        mod mock_extension;
+        mod mock_upgradeable;
     }
 }
 
 mod types {
     mod bounds;
     #[cfg(test)]
-    pub(crate) mod bounds_test;
+    mod bounds_test;
     mod call_points;
     #[cfg(test)]
-    pub(crate) mod call_points_test;
+    mod call_points_test;
     mod delta;
     #[cfg(test)]
-    pub(crate) mod delta_test;
+    mod delta_test;
     mod fees_per_liquidity;
     #[cfg(test)]
-    pub(crate) mod fees_per_liquidity_test;
+    mod fees_per_liquidity_test;
     mod i129;
     #[cfg(test)]
-    pub(crate) mod i129_test;
+    mod i129_test;
     mod keys;
     #[cfg(test)]
-    pub(crate) mod keys_test;
+    mod keys_test;
     mod pool_price;
     #[cfg(test)]
-    pub(crate) mod pool_price_test;
+    mod pool_price_test;
     mod position;
     #[cfg(test)]
-    pub(crate) mod position_test;
+    mod position_test;
 }
 

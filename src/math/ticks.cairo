@@ -51,7 +51,7 @@ fn unsafe_mul(x: u128, y: u128) -> u128 {
 }
 
 #[inline(always)]
-pub(crate) fn by_2_127(x: u256) -> u256 {
+fn by_2_127(x: u256) -> u256 {
     let (sum, overflow) = u256_overflowing_add(x, x);
     u256 { low: sum.high, high: if overflow {
         1
@@ -60,7 +60,7 @@ pub(crate) fn by_2_127(x: u256) -> u256 {
     } }
 }
 
-pub(crate) fn log2(x: u256) -> (u128, bool) {
+fn log2(x: u256) -> (u128, bool) {
     // negative result, compute log 2 of reciprocal
     if (x.high == 0) {
         let (mag, sign) = log2(

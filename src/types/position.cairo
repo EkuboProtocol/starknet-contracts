@@ -31,7 +31,7 @@ impl PositionZero of Zero<Position> {
     }
 }
 
-pub(crate) fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
+fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
     muldiv(a, b.into(), 0x100000000000000000000000000000000, false).unwrap().low
 }
 
