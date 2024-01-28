@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "An AMM protocol built in Cairo featuring concentrated liquidity"
 homepage = "https://ekubo.org"
 cairo-version = "2.5.0"
-edition = '2023_11'
+edition = '2023_10'
 
 [dependencies]
 starknet = "=2.5.0"

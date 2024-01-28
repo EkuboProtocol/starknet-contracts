@@ -42,10 +42,10 @@ use starknet::{
     ContractAddress
 };
 
-pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
+const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
 #[derive(Drop, Copy)]
-pub struct Deployer {
+struct Deployer {
     nonce: felt252,
 }
 
@@ -56,22 +56,22 @@ impl DefaultDeployer of core::traits::Default<Deployer> {
 }
 
 
-pub fn default_owner() -> ContractAddress {
+fn default_owner() -> ContractAddress {
     contract_address_const::<12121212121212>()
 }
 
 
 #[derive(Copy, Drop)]
-pub struct SetupPoolResult {
-    pub token0: IMockERC20Dispatcher,
-    pub token1: IMockERC20Dispatcher,
-    pub pool_key: PoolKey,
-    pub core: ICoreDispatcher,
-    pub locker: ICoreLockerDispatcher
+struct SetupPoolResult {
+    token0: IMockERC20Dispatcher,
+    token1: IMockERC20Dispatcher,
+    pool_key: PoolKey,
+    core: ICoreDispatcher,
+    locker: ICoreLockerDispatcher
 }
 
 #[generate_trait]
-pub impl DeployerTraitImpl of DeployerTrait {
+impl DeployerTraitImpl of DeployerTrait {
     fn get_next_nonce(ref self: Deployer) -> felt252 {
         let nonce = self.nonce;
         self.nonce += 1;
@@ -236,9 +236,7 @@ pub impl DeployerTraitImpl of DeployerTrait {
 }
 
 
-pub impl IPositionsDispatcherIntoILockerDispatcher of Into<
-    IPositionsDispatcher, ILockerDispatcher
-> {
+impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILockerDispatcher> {
     fn into(self: IPositionsDispatcher) -> ILockerDispatcher {
         ILockerDispatcher { contract_address: self.contract_address }
     }
@@ -246,7 +244,7 @@ pub impl IPositionsDispatcherIntoILockerDispatcher of Into<
 
 
 #[derive(Drop, Copy)]
-pub struct Balances {
+struct Balances {
     token0_balance_core: u256,
     token1_balance_core: u256,
     token0_balance_recipient: u256,
@@ -278,7 +276,7 @@ fn get_balances(
 }
 
 
-pub fn diff(x: u256, y: u256) -> i129 {
+fn diff(x: u256, y: u256) -> i129 {
     let (lower, upper) = if x < y {
         (x, y)
     } else {
@@ -289,7 +287,7 @@ pub fn diff(x: u256, y: u256) -> i129 {
     i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
 }
 
-pub fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
+fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     assert(
         diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0,
         'token0_balance_core'
@@ -323,7 +321,7 @@ pub fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     }
 }
 
-pub fn update_position_inner(
+fn update_position_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -365,7 +363,7 @@ pub fn update_position_inner(
     }
 }
 
-pub fn flash_borrow_inner(
+fn flash_borrow_inner(
     core: ICoreDispatcher,
     locker: ICoreLockerDispatcher,
     token: ContractAddress,
@@ -378,7 +376,7 @@ pub fn flash_borrow_inner(
     }
 }
 
-pub fn update_position(
+fn update_position(
     setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
 ) -> Delta {
     update_position_inner(
@@ -392,11 +390,11 @@ pub fn update_position(
 }
 
 
-pub fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) {
+fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) {
     accumulate_as_fees_inner(setup.core, setup.pool_key, setup.locker, amount0, amount1)
 }
 
-pub fn accumulate_as_fees_inner(
+fn accumulate_as_fees_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -409,7 +407,7 @@ pub fn accumulate_as_fees_inner(
     }
 }
 
-pub fn swap_inner(
+fn swap_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -455,7 +453,7 @@ pub fn swap_inner(
     }
 }
 
-pub fn swap(
+fn swap(
     setup: SetupPoolResult,
     amount: i129,
     is_token1: bool,

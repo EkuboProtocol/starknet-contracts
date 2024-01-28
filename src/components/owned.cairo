@@ -1,14 +1,14 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-pub trait IOwned<TContractState> {
+trait IOwned<TContractState> {
     // Returns the current owner of the contract
     fn get_owner(self: @TContractState) -> ContractAddress;
     // Transfers the ownership to a new address
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
 }
 
-pub trait Ownable<TContractState> {
+trait Ownable<TContractState> {
     // Initialize the owner of the contract
     fn initialize_owned(ref self: TContractState, owner: ContractAddress);
 
@@ -17,7 +17,7 @@ pub trait Ownable<TContractState> {
 }
 
 #[starknet::component]
-pub mod Owned {
+mod Owned {
     use core::num::traits::{Zero};
     use starknet::{get_caller_address, contract_address_const};
     use super::{ContractAddress, IOwned, Ownable};
@@ -28,19 +28,19 @@ pub mod Owned {
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct OwnershipTransferred {
-        pub old_owner: ContractAddress,
-        pub new_owner: ContractAddress,
+    struct OwnershipTransferred {
+        old_owner: ContractAddress,
+        new_owner: ContractAddress,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    pub enum Event {
+    enum Event {
         OwnershipTransferred: OwnershipTransferred
     }
 
 
-    pub impl OwnableImpl<
+    impl OwnableImpl<
         TContractState, +Drop<TContractState>, +HasComponent<TContractState>
     > of Ownable<TContractState> {
         fn initialize_owned(ref self: TContractState, owner: ContractAddress) {
@@ -58,7 +58,7 @@ pub mod Owned {
     }
 
     #[embeddable_as(OwnedImpl)]
-    pub impl Owned<
+    impl Owned<
         TContractState, +Drop<TContractState>, +HasComponent<TContractState>
     > of IOwned<ComponentState<TContractState>> {
         fn get_owner(self: @ComponentState<TContractState>) -> ContractAddress {

@@ -1,7 +1,7 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-pub trait IERC721<TStorage> {
+trait IERC721<TStorage> {
     fn name(self: @TStorage) -> felt252;
     fn symbol(self: @TStorage) -> felt252;
     fn approve(ref self: TStorage, to: ContractAddress, token_id: u256);

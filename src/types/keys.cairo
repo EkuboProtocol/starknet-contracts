@@ -13,16 +13,16 @@ use starknet::{contract_address_const, ContractAddress};
 // tick_spacing is the minimum spacing between initialized ticks, i.e. ticks that positions may use
 // extension is the address of a contract that implements additional functionality for the pool
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
-pub struct PoolKey {
-    pub token0: ContractAddress,
-    pub token1: ContractAddress,
-    pub fee: u128,
-    pub tick_spacing: u128,
-    pub extension: ContractAddress,
+struct PoolKey {
+    token0: ContractAddress,
+    token1: ContractAddress,
+    fee: u128,
+    tick_spacing: u128,
+    extension: ContractAddress,
 }
 
 #[generate_trait]
-pub impl PoolKeyTraitImpl of PoolKeyTrait {
+impl PoolKeyTraitImpl of PoolKeyTrait {
     #[inline(always)]
     fn check_valid(self: PoolKey) {
         assert(self.token0 < self.token1, 'TOKEN_ORDER');
@@ -39,10 +39,10 @@ pub impl PoolKeyTraitImpl of PoolKeyTrait {
 // owner is the immutable address of the position
 // bounds is the price range where the liquidity of the position is active
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
-pub struct PositionKey {
-    pub salt: felt252,
-    pub owner: ContractAddress,
-    pub bounds: Bounds,
+struct PositionKey {
+    salt: felt252,
+    owner: ContractAddress,
+    bounds: Bounds,
 }
 
 
@@ -50,8 +50,8 @@ pub struct PositionKey {
 // token is the address of the token for which the balance is saved
 // salt is a random number to allow a single address to own separate saved balances
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
-pub struct SavedBalanceKey {
-    pub owner: ContractAddress,
-    pub token: ContractAddress,
-    pub salt: felt252,
+struct SavedBalanceKey {
+    owner: ContractAddress,
+    token: ContractAddress,
+    salt: felt252,
 }

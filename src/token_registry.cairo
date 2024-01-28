@@ -1,14 +1,14 @@
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 
 #[starknet::interface]
-pub trait ITokenRegistry<ContractState> {
+trait ITokenRegistry<ContractState> {
     fn register_token(ref self: ContractState, token: IERC20Dispatcher);
 }
 
 
 // A simplified interface for a fungible token standard. 
 #[starknet::interface]
-pub trait IERC20Metadata<TStorage> {
+trait IERC20Metadata<TStorage> {
     fn name(self: @TStorage) -> felt252;
     fn symbol(self: @TStorage) -> felt252;
     fn decimals(self: @TStorage) -> u8;
@@ -17,7 +17,7 @@ pub trait IERC20Metadata<TStorage> {
 
 
 #[starknet::contract]
-pub mod TokenRegistry {
+mod TokenRegistry {
     use core::num::traits::{Zero};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
@@ -39,12 +39,12 @@ pub mod TokenRegistry {
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct Registration {
-        pub address: ContractAddress,
-        pub name: felt252,
-        pub symbol: felt252,
-        pub decimals: u8,
-        pub total_supply: u128,
+    struct Registration {
+        address: ContractAddress,
+        name: felt252,
+        symbol: felt252,
+        decimals: u8,
+        total_supply: u128,
     }
 
     #[constructor]

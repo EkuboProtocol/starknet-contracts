@@ -2,17 +2,17 @@ use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
-pub struct ExtensionCalled {
-    pub caller: ContractAddress,
-    pub call_point: u32,
-    pub token0: ContractAddress,
-    pub token1: ContractAddress,
-    pub fee: u128,
-    pub tick_spacing: u128,
+struct ExtensionCalled {
+    caller: ContractAddress,
+    call_point: u32,
+    token0: ContractAddress,
+    token1: ContractAddress,
+    fee: u128,
+    tick_spacing: u128,
 }
 
 #[starknet::interface]
-pub trait IMockExtension<TStorage> {
+trait IMockExtension<TStorage> {
     fn get_num_calls(self: @TStorage) -> u32;
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 
@@ -20,7 +20,7 @@ pub trait IMockExtension<TStorage> {
 }
 
 #[starknet::contract]
-pub mod MockExtension {
+mod MockExtension {
     use core::array::{ArrayTrait};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};

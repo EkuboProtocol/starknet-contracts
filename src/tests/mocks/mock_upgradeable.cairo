@@ -1,7 +1,7 @@
 // Mock upgradeable contract. This contract only implements the upgradeable
 // component, and does not have any other functionality.
 #[starknet::contract]
-pub mod MockUpgradeable {
+mod MockUpgradeable {
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use starknet::{ContractAddress};

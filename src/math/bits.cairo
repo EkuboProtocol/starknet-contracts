@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
-pub fn msb(mut x: u128) -> u8 {
+fn msb(mut x: u128) -> u8 {
     assert(x.is_non_zero(), 'MSB_NONZERO');
 
     let mut res: u8 = 0;
@@ -38,7 +38,7 @@ pub fn msb(mut x: u128) -> u8 {
 
 // Return the index of the least set bit
 #[inline(always)]
-pub fn lsb(x: u128) -> u8 {
+fn lsb(x: u128) -> u8 {
     assert(x.is_non_zero(), 'LSB_NONZERO');
 
     msb((~x + 1) & x)

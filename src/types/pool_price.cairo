@@ -7,13 +7,13 @@ use ekubo::types::i129::{i129, i129Trait};
 use starknet::storage_access::{StorageBaseAddress, StorePacking};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
-pub struct PoolPrice {
+struct PoolPrice {
     // the current ratio, up to 192 bits
-    pub sqrt_ratio: u256,
+    sqrt_ratio: u256,
     // the current tick, up to 32 bits
-    pub tick: i129,
+    tick: i129,
     // the places where specified extension should be called, 5 bits
-    pub call_points: CallPoints,
+    call_points: CallPoints,
 }
 
 impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {

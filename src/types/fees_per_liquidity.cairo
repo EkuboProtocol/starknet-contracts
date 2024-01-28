@@ -4,9 +4,9 @@ use core::traits::{TryInto, Into};
 use ekubo::math::muldiv::{div};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store, Debug)]
-pub struct FeesPerLiquidity {
-    pub value0: felt252,
-    pub value1: felt252,
+struct FeesPerLiquidity {
+    value0: felt252,
+    value1: felt252,
 }
 
 impl AddFeesPerLiquidity of Add<FeesPerLiquidity> {
@@ -39,13 +39,13 @@ impl FeesPerLiquidityZero of Zero<FeesPerLiquidity> {
 }
 
 #[inline(always)]
-pub fn to_fees_per_liquidity(amount: u128, liquidity: u128) -> felt252 {
+fn to_fees_per_liquidity(amount: u128, liquidity: u128) -> felt252 {
     assert(liquidity.is_non_zero(), 'ZERO_LIQUIDITY_FEES');
     (u256 { low: 0, high: amount } / liquidity.into()).try_into().expect('FEES_OVERFLOW')
 }
 
 #[inline(always)]
-pub fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> FeesPerLiquidity {
+fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> FeesPerLiquidity {
     FeesPerLiquidity {
         value0: to_fees_per_liquidity(amount0, liquidity),
         value1: to_fees_per_liquidity(amount1, liquidity),
@@ -53,11 +53,11 @@ pub fn fees_per_liquidity_new(amount0: u128, amount1: u128, liquidity: u128) -> 
 }
 
 #[inline(always)]
-pub fn fees_per_liquidity_from_amount0(amount0: u128, liquidity: u128) -> FeesPerLiquidity {
+fn fees_per_liquidity_from_amount0(amount0: u128, liquidity: u128) -> FeesPerLiquidity {
     FeesPerLiquidity { value0: to_fees_per_liquidity(amount0, liquidity), value1: Zero::zero(), }
 }
 
 #[inline(always)]
-pub fn fees_per_liquidity_from_amount1(amount1: u128, liquidity: u128) -> FeesPerLiquidity {
+fn fees_per_liquidity_from_amount1(amount1: u128, liquidity: u128) -> FeesPerLiquidity {
     FeesPerLiquidity { value0: Zero::zero(), value1: to_fees_per_liquidity(amount1, liquidity), }
 }

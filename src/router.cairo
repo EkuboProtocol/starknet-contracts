@@ -4,32 +4,32 @@ use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Serde, Copy, Drop)]
-pub struct RouteNode {
-    pub pool_key: PoolKey,
-    pub sqrt_ratio_limit: u256,
-    pub skip_ahead: u128,
+struct RouteNode {
+    pool_key: PoolKey,
+    sqrt_ratio_limit: u256,
+    skip_ahead: u128,
 }
 
 #[derive(Serde, Copy, Drop)]
-pub struct TokenAmount {
-    pub token: ContractAddress,
-    pub amount: i129,
+struct TokenAmount {
+    token: ContractAddress,
+    amount: i129,
 }
 
 #[derive(Serde, Drop)]
-pub struct Swap {
-    pub route: Array<RouteNode>,
-    pub token_amount: TokenAmount,
+struct Swap {
+    route: Array<RouteNode>,
+    token_amount: TokenAmount,
 }
 
 #[derive(Serde, Copy, Drop, PartialEq, Debug)]
-pub struct Depth {
-    pub token0: u128,
-    pub token1: u128,
+struct Depth {
+    token0: u128,
+    token1: u128,
 }
 
 #[starknet::interface]
-pub trait IRouter<TContractState> {
+trait IRouter<TContractState> {
     // Does a single swap against a single node using tokens held by this contract, and receives the output to this contract
     fn swap(ref self: TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
 
@@ -58,7 +58,7 @@ pub trait IRouter<TContractState> {
 }
 
 #[starknet::contract]
-pub mod Router {
+mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::cmp::{min, max};
     use core::integer::{u256_sqrt};
@@ -102,7 +102,7 @@ pub mod Router {
         GetMarketDepth: (PoolKey, u128),
     }
 
-    pub const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
+    const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {

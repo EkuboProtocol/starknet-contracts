@@ -1,67 +1,67 @@
-pub mod core;
-pub mod mock_erc20;
-pub mod owned_nft;
-pub mod positions;
-pub mod router;
-pub mod token_registry;
+mod core;
+mod mock_erc20;
+mod owned_nft;
+mod positions;
+mod router;
+mod token_registry;
 
-pub mod components {
-    pub mod clear;
-    pub mod owned;
-    pub mod shared_locker;
-    pub mod upgradeable;
-    pub mod util;
+mod components {
+    mod clear;
+    mod owned;
+    mod shared_locker;
+    mod upgradeable;
+    mod util;
 }
 
-pub mod extensions {}
+mod extensions {}
 
-pub mod interfaces {
-    pub mod core;
-    pub mod erc20;
-    pub mod erc721;
-    pub mod positions;
-    pub mod src5;
-    pub mod upgradeable;
+mod interfaces {
+    mod core;
+    mod erc20;
+    mod erc721;
+    mod positions;
+    mod src5;
+    mod upgradeable;
 }
 
-pub mod math {
-    pub mod bitmap;
+mod math {
+    mod bitmap;
     #[cfg(test)]
     mod bitmap_test;
-    pub mod bits;
+    mod bits;
     #[cfg(test)]
     mod bits_test;
-    pub mod delta;
+    mod delta;
     #[cfg(test)]
     mod delta_test;
-    pub mod exp2;
+    mod exp2;
     #[cfg(test)]
     mod exp2_test;
-    pub mod fee;
+    mod fee;
     #[cfg(test)]
     mod fee_test;
-    pub mod liquidity;
+    mod liquidity;
     #[cfg(test)]
     mod liquidity_test;
-    pub mod mask;
+    mod mask;
     #[cfg(test)]
     mod mask_test;
-    pub mod max_liquidity;
+    mod max_liquidity;
     #[cfg(test)]
     mod max_liquidity_test;
-    pub mod muldiv;
+    mod muldiv;
     #[cfg(test)]
     mod muldiv_test;
-    pub mod sqrt_ratio;
+    mod sqrt_ratio;
     #[cfg(test)]
     mod sqrt_ratio_test;
-    pub mod string;
+    mod string;
     #[cfg(test)]
     mod string_test;
-    pub mod swap;
+    mod swap;
     #[cfg(test)]
     mod swap_test;
-    pub mod ticks;
+    mod ticks;
     #[cfg(test)]
     mod ticks_test;
 }
@@ -86,29 +86,29 @@ pub(crate) mod tests {
     }
 }
 
-pub mod types {
-    pub mod bounds;
+mod types {
+    mod bounds;
     #[cfg(test)]
     pub(crate) mod bounds_test;
-    pub mod call_points;
+    mod call_points;
     #[cfg(test)]
     pub(crate) mod call_points_test;
-    pub mod delta;
+    mod delta;
     #[cfg(test)]
     pub(crate) mod delta_test;
-    pub mod fees_per_liquidity;
+    mod fees_per_liquidity;
     #[cfg(test)]
     pub(crate) mod fees_per_liquidity_test;
-    pub mod i129;
+    mod i129;
     #[cfg(test)]
     pub(crate) mod i129_test;
-    pub mod keys;
+    mod keys;
     #[cfg(test)]
     pub(crate) mod keys_test;
-    pub mod pool_price;
+    mod pool_price;
     #[cfg(test)]
     pub(crate) mod pool_price_test;
-    pub mod position;
+    mod position;
     #[cfg(test)]
     pub(crate) mod position_test;
 }

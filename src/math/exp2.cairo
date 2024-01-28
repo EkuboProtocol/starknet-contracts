@@ -1,5 +1,5 @@
 // Returns 2^n
-pub fn exp2(n: u8) -> u128 {
+fn exp2(n: u8) -> u128 {
     match n {
         0 => { 0x1 },
         1 => { 0x2 },

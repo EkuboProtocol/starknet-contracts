@@ -5,10 +5,10 @@ use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
 use ekubo::types::i129::{i129};
 
-pub mod constants {
+mod constants {
     // price may not exceed 2**128 or 2**-128
     // floor(log base 1.000001 of (2**128))
-    pub const MAX_TICK_MAGNITUDE: u128 = 88722883;
+    const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
     // rationale for this value is 2 251-bit tick bitmaps can contain initialized ticks for the entire price range
     // 2 is the minimum number of bitmaps because the 0 tick is always a bitmap boundary. any tick tick_spacing
@@ -17,10 +17,10 @@ pub mod constants {
     // also == ceil(MAX_TICK_MAGNITUDE / 251)
     // note that because the 0 tick is in the first bitmap, we actually do ceil(MAX_TICK_MAGNITUDE / 250) to meet this requirement
     // that the entire tick spacing fits in 2 bitmaps
-    pub const MAX_TICK_SPACING: u128 = 354892;
+    const MAX_TICK_SPACING: u128 = 354892;
 
-    pub const MAX_SQRT_RATIO: u256 = 6277100250585753475930931601400621808602321654880405518632;
-    pub const MIN_SQRT_RATIO: u256 = 18446748437148339061;
+    const MAX_SQRT_RATIO: u256 = 6277100250585753475930931601400621808602321654880405518632;
+    const MIN_SQRT_RATIO: u256 = 18446748437148339061;
 }
 
 
@@ -258,27 +258,27 @@ pub(crate) fn log2(x: u256) -> (u128, bool) {
 }
 
 #[inline(always)]
-pub fn min_tick() -> i129 {
+fn min_tick() -> i129 {
     i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: true }
 }
 
 #[inline(always)]
-pub fn max_tick() -> i129 {
+fn max_tick() -> i129 {
     i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: false }
 }
 
 #[inline(always)]
-pub fn max_sqrt_ratio() -> u256 {
+fn max_sqrt_ratio() -> u256 {
     constants::MAX_SQRT_RATIO
 }
 
 #[inline(always)]
-pub fn min_sqrt_ratio() -> u256 {
+fn min_sqrt_ratio() -> u256 {
     constants::MIN_SQRT_RATIO
 }
 
 // Computes the value sqrt(1.000001)^tick as a binary fixed point 128.128 number
-pub fn tick_to_sqrt_ratio(tick: i129) -> u256 {
+fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     assert(tick.mag <= constants::MAX_TICK_MAGNITUDE, 'TICK_MAGNITUDE');
 
     let mut ratio = 0x100000000000000000000000000000000_u256;
@@ -375,7 +375,7 @@ pub fn tick_to_sqrt_ratio(tick: i129) -> u256 {
 }
 
 // Computes the tick corresponding to the price, i.e. log base sqrt(1.000001) of the ratio aligned with the above function s.t. sqrt_ratio_to_tick(tick_to_sqrt_ratio(tick)) == tick
-pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
+fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
     // max price from max tick, exclusive check because this function should never be called on a price equal to max price
     assert(sqrt_ratio < max_sqrt_ratio(), 'SQRT_RATIO_TOO_HIGH');
     // min price from min tick

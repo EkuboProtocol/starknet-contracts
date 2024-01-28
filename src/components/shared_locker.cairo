@@ -11,7 +11,7 @@ use starknet::{
     SyscallResultTrait
 };
 
-pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
+fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
     core: ICoreDispatcher, input: @TInput
 ) -> TOutput {
     let mut output_span = core.lock(serialize(input)).span();
@@ -19,7 +19,7 @@ pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>
     Serde::deserialize(ref output_span).expect('DESERIALIZE_RESULT_FAILED')
 }
 
-pub fn consume_callback_data<TInput, +Serde<TInput>>(
+fn consume_callback_data<TInput, +Serde<TInput>>(
     core: ICoreDispatcher, callback_data: Array<felt252>
 ) -> TInput {
     assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
@@ -27,7 +27,7 @@ pub fn consume_callback_data<TInput, +Serde<TInput>>(
     Serde::deserialize(ref span).expect('DESERIALIZE_INPUT_FAILED')
 }
 
-pub fn handle_delta(
+fn handle_delta(
     core: ICoreDispatcher, token: ContractAddress, delta: i129, recipient: ContractAddress
 ) {
     if (delta.is_non_zero()) {

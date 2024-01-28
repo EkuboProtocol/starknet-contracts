@@ -7,9 +7,7 @@ use ekubo::math::muldiv::{muldiv};
 // This function is the inverse of the amount0_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
 // The formula is 
-pub fn max_liquidity_for_token0(
-    sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128
-) -> u128 {
+fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount.is_zero()) {
         return Zero::zero();
     }
@@ -28,9 +26,7 @@ pub fn max_liquidity_for_token0(
 // Returns the max amount of liquidity that can be deposited based on amount of token1
 // This function is the inverse of the amount1_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token1 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
-pub fn max_liquidity_for_token1(
-    sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128
-) -> u128 {
+fn max_liquidity_for_token1(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount.is_zero()) {
         return Zero::zero();
     }
@@ -40,7 +36,7 @@ pub fn max_liquidity_for_token1(
 }
 
 // Return the max liquidity that can be deposited based on the price bounds and the amounts of token0 and token1
-pub fn max_liquidity(
+fn max_liquidity(
     sqrt_ratio: u256, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount0: u128, amount1: u128
 ) -> u128 {
     assert(sqrt_ratio_lower < sqrt_ratio_upper, 'SQRT_RATIO_ORDER');

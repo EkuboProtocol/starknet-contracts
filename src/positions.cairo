@@ -1,5 +1,5 @@
 #[starknet::contract]
-pub mod Positions {
+mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};

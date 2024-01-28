@@ -1,7 +1,7 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-pub trait IOwnedNFT<TStorage> {
+trait IOwnedNFT<TStorage> {
     // Create a new token, only callable by the owner
     fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
 
@@ -20,7 +20,7 @@ pub trait IOwnedNFT<TStorage> {
 }
 
 #[starknet::contract]
-pub mod OwnedNFT {
+mod OwnedNFT {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
@@ -74,24 +74,24 @@ pub mod OwnedNFT {
 
 
     #[derive(starknet::Event, Drop)]
-    pub struct Transfer {
-        pub from: ContractAddress,
-        pub to: ContractAddress,
-        pub token_id: u256
+    struct Transfer {
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u256
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct Approval {
-        pub owner: ContractAddress,
-        pub approved: ContractAddress,
-        pub token_id: u256
+    struct Approval {
+        owner: ContractAddress,
+        approved: ContractAddress,
+        token_id: u256
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct ApprovalForAll {
-        pub owner: ContractAddress,
-        pub operator: ContractAddress,
-        pub approved: bool
+    struct ApprovalForAll {
+        owner: ContractAddress,
+        operator: ContractAddress,
+        approved: bool
     }
 
     #[derive(starknet::Event, Drop)]
@@ -120,7 +120,7 @@ pub mod OwnedNFT {
         self.next_token_id.write(1);
     }
 
-    pub fn deploy(
+    fn deploy(
         nft_class_hash: ClassHash,
         owner: ContractAddress,
         name: felt252,
