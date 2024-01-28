@@ -6,7 +6,6 @@ use ekubo::math::muldiv::{muldiv};
 // Returns the max amount of liquidity that can be deposited based on amount of token0
 // This function is the inverse of the amount0_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
-// The formula is 
 pub fn max_liquidity_for_token0(
     sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128
 ) -> u128 {
