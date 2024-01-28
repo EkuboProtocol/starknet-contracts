@@ -40,7 +40,8 @@ mod Core {
     use ekubo::types::position::{Position, PositionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall, storage_base_address_from_felt252
+        get_contract_address, syscalls::{replace_class_syscall},
+        storage_access::{storage_base_address_from_felt252}
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

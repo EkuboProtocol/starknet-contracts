@@ -1,5 +1,4 @@
 use core::array::{Array, ArrayTrait};
-use core::integer::{u64_safe_divmod, u64_as_non_zero};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
@@ -14,14 +13,14 @@ fn to_decimal(mut x: u64) -> felt252 {
 
     let mut code_points: Array<u8> = Default::default();
 
-    let ten = u64_as_non_zero(10);
+    let TEN: NonZero<u64> = 10_u64.try_into().unwrap();
 
     loop {
         if (x == 0) {
             break ();
         }
 
-        let (quotient, remainder) = u64_safe_divmod(x, ten);
+        let (quotient, remainder) = DivRem::div_rem(x, TEN);
         code_points.append(0x30_u8 + remainder.try_into().expect('DIGIT'));
         x = quotient;
     };

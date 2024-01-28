@@ -12,13 +12,18 @@ mod Upgradeable {
     use ekubo::components::owned::{IOwned, Ownable};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use starknet::{
-        ClassHash, ContractAddress, replace_class_syscall, get_contract_address,
-        library_call_syscall
+        ClassHash, ContractAddress, syscalls::{replace_class_syscall, library_call_syscall},
+        get_contract_address,
     };
     use super::{IHasInterface, IHasInterfaceDispatcher, IHasInterfaceDispatcherTrait};
 
     #[storage]
     struct Storage {}
+
+    #[derive(starknet::Event, Drop)]
+    struct ClassHashReplaced {
+        new_class_hash: ClassHash,
+    }
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -26,10 +31,6 @@ mod Upgradeable {
         ClassHashReplaced: ClassHashReplaced
     }
 
-    #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
-    }
 
     #[embeddable_as(UpgradeableImpl)]
     impl Upgradeable<

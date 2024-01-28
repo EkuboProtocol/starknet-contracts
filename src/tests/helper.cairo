@@ -1,6 +1,6 @@
 use core::array::{Array, ArrayTrait};
 
-use core::integer::{u256, u256_from_felt252, BoundedInt};
+use core::integer::{u256, BoundedInt};
 use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
@@ -8,7 +8,8 @@ use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
 use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
+    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
+    SwapParameters, IExtensionDispatcher
 };
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
@@ -23,7 +24,6 @@ use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
-    UpdatePositionParameters, SwapParameters
 };
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
@@ -31,14 +31,15 @@ use ekubo::tests::mocks::mock_extension::{
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 
 use ekubo::types::keys::PoolKey;
-use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_contract_address};
 
 use starknet::{
-    get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
+    get_contract_address, syscalls::{deploy_syscall}, ClassHash, contract_address_const,
+    ContractAddress
 };
 
 const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;

@@ -1,7 +1,8 @@
 use core::array::{ArrayTrait};
 use core::serde::{Serde};
-use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta, IExtension};
+use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, IExtension};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
 use starknet::{ContractAddress};

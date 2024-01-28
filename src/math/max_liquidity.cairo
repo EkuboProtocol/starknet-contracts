@@ -1,66 +1,26 @@
-use core::integer::{
-    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
-    u128_overflowing_add
-};
+use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256};
 use core::num::traits::{Zero};
-use core::result::{ResultTrait};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::muldiv::{muldiv};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129, i129Trait};
 
 // Returns the max amount of liquidity that can be deposited based on amount of token0
 // This function is the inverse of the amount0_delta function
 // In other words, it computes the amount of liquidity corresponding to a given amount of token0 being sold between the prices of sqrt_ratio_lower and sqrt_ratio_upper
+// The formula is 
 fn max_liquidity_for_token0(sqrt_ratio_lower: u256, sqrt_ratio_upper: u256, amount: u128) -> u128 {
     if (amount.is_zero()) {
         return Zero::zero();
     }
+    // 64.128 * 64.128 >> 128 always fits into 256 bits
+    let numerator_1 = muldiv(sqrt_ratio_lower, sqrt_ratio_upper, u256 { high: 1, low: 0 }, false)
+        .expect('OVERFLOW_MLFT0_0');
 
-    let mul1 = u256_wide_mul(
-        u256 { low: amount, high: 0 }, sqrt_ratio_lower
-    ); // amount * sqrt_ratio_lower
-    let mul2 = u256_wide_mul(
-        u256 { low: mul1.limb0, high: mul1.limb1 }, sqrt_ratio_upper
-    ); // ((amount * sqrt_ratio_lower) % 2**256) * sqrt_ratio_upper
-    let mul3 = u256_wide_mul(
-        u256 { low: mul1.limb2, high: mul1.limb3 }, sqrt_ratio_upper
-    ); // ((amount * sqrt_ratio_lower) / 2**256) * sqrt_ratio_upper
+    let result = muldiv(amount.into(), numerator_1, (sqrt_ratio_upper - sqrt_ratio_lower), false)
+        .expect('OVERFLOW_MLFT0_1');
 
-    let mut result = u512 { limb0: mul2.limb0, limb1: mul2.limb1, limb2: 0, limb3: 0 };
-    // Initialize carry as u128
-    let mut carry: u128 = 0;
+    assert(result.high.is_zero(), 'OVERFLOW_MLFT0_2');
 
-    // Add the upper limbs of mul2 and mul3 with carry handling
-    match u128_overflowing_add(mul2.limb2, mul3.limb0) {
-        Result::Ok(x) => result.limb2 = x,
-        Result::Err(x) => {
-            result.limb2 = x;
-            carry += 1;
-        },
-    };
-
-    match u128_overflowing_add(mul2.limb3, mul3.limb1) {
-        Result::Ok(x) => result.limb3 = x,
-        Result::Err(x) => {
-            result.limb3 = x;
-            carry += 1;
-        },
-    };
-
-    // If there's a carry from the last addition, add it to the most significant limb
-    if carry > 0 {
-        result.limb3 = u128_overflowing_add(result.limb3, carry).expect('CARRY_OVERFLOW');
-    }
-
-    let (quotient, _) = u512_safe_div_rem_by_u256(
-        result, u256_as_non_zero(sqrt_ratio_upper - sqrt_ratio_lower)
-    );
-
-    assert((quotient.limb3 == 0) & (quotient.limb2 == 0), 'OVERFLOW_MLFT0');
-    // we throw away limb0 because the quotient stores an x128 number
-    quotient.limb1
+    result.low
 }
 
 // Returns the max amount of liquidity that can be deposited based on amount of token1

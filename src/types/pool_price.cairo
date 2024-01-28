@@ -1,12 +1,10 @@
-use core::integer::{u256_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait, Option};
 use core::traits::{Into, TryInto};
-
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129, i129Trait};
-use starknet::{StorageBaseAddress, StorePacking};
+use starknet::storage_access::{StorageBaseAddress, StorePacking};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 struct PoolPrice {
@@ -53,13 +51,14 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         let packed_first_slot_u256: u256 = value.into();
 
         // quotient, remainder
-        let (tick_call_points, sqrt_ratio, _) = u256_safe_divmod(
+        let (tick_call_points, sqrt_ratio) = DivRem::div_rem(
             packed_first_slot_u256,
-            u256_as_non_zero(0x1000000000000000000000000000000000000000000000000) // 2n ** 192n
+            // 2n ** 192n
+            0x1000000000000000000000000000000000000000000000000_u256.try_into().unwrap()
         );
 
-        let (tick_raw, call_points_raw) = u128_safe_divmod(
-            tick_call_points.low, u128_as_non_zero(0x100)
+        let (tick_raw, call_points_raw) = DivRem::div_rem(
+            tick_call_points.low, 0x100_u128.try_into().unwrap()
         );
 
         let tick = if (tick_raw >= 0x100000000) {

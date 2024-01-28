@@ -1,6 +1,4 @@
-use core::integer::{u128_overflowing_sub};
 use core::num::traits::{Zero};
-use core::result::ResultTrait;
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
 fn msb(mut x: u128) -> u8 {
@@ -43,5 +41,5 @@ fn msb(mut x: u128) -> u8 {
 fn lsb(x: u128) -> u8 {
     assert(x.is_non_zero(), 'LSB_NONZERO');
 
-    msb((u128_overflowing_sub(0, x).unwrap_err()) & x)
+    msb((~x + 1) & x)
 }

@@ -1,4 +1,3 @@
-use core::integer::{downcast, upcast};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into, TryInto};
@@ -119,9 +118,9 @@ impl BitmapTraitImpl of BitmapTrait {
     }
 }
 
-mod internal {
-    const NEGATIVE_OFFSET: u128 = 0x100000000;
-}
+
+const NEGATIVE_OFFSET: u128 = 0x100000000;
+
 
 // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
 // The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
@@ -130,15 +129,15 @@ fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     if (tick.is_negative()) {
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
         (
-            ((tick.mag - 1) / (tick_spacing * 251)) + internal::NEGATIVE_OFFSET,
-            downcast(((tick.mag - 1) / tick_spacing) % 251).unwrap()
+            ((tick.mag - 1) / (tick_spacing * 251)) + NEGATIVE_OFFSET,
+            (((tick.mag - 1) / tick_spacing) % 251).try_into().unwrap()
         )
     } else {
         // todo: this can be done more efficiently by using divmod
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means larger tick
         (
             tick.mag / (tick_spacing * 251),
-            250_u8 - downcast((tick.mag / tick_spacing) % 251).unwrap()
+            250_u8 - ((tick.mag / tick_spacing) % 251).try_into().unwrap()
         )
     }
 }
@@ -146,13 +145,13 @@ fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
 // Compute the tick corresponding to the word and bit index
 fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
     let (word, bit) = word_and_bit_index;
-    if (word >= internal::NEGATIVE_OFFSET) {
+    if (word >= NEGATIVE_OFFSET) {
         i129 {
-            mag: ((word - internal::NEGATIVE_OFFSET) * 251 * tick_spacing)
-                + ((upcast(bit) + 1) * tick_spacing),
+            mag: ((word - NEGATIVE_OFFSET) * 251 * tick_spacing)
+                + ((bit.into() + 1) * tick_spacing),
             sign: true
         }
     } else {
-        i129 { mag: (word * 251 * tick_spacing) + (upcast(250 - bit) * tick_spacing), sign: false }
+        i129 { mag: (word * 251 * tick_spacing) + ((250 - bit).into() * tick_spacing), sign: false }
     }
 }

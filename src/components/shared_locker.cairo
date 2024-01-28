@@ -7,7 +7,7 @@ use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::i129::{i129};
 use starknet::{
-    get_caller_address, get_contract_address, call_contract_syscall, ContractAddress,
+    get_caller_address, get_contract_address, syscalls::{call_contract_syscall}, ContractAddress,
     SyscallResultTrait
 };
 

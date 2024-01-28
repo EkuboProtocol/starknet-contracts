@@ -42,7 +42,7 @@ mod OwnedNFT {
     use ekubo::types::i129::{i129};
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
-        replace_class_syscall, deploy_syscall
+        syscalls::{replace_class_syscall, deploy_syscall}
     };
     use starknet::{SyscallResultTrait};
     use super::{IOwnedNFT, ContractAddress};

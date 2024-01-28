@@ -1,10 +1,12 @@
-fn assert_round_trip<T, U, +starknet::StorePacking<T, U>, +PartialEq<T>, +Drop<T>, +Copy<T>>(
+fn assert_round_trip<
+    T, U, +starknet::storage_access::StorePacking<T, U>, +PartialEq<T>, +Drop<T>, +Copy<T>
+>(
     value: T
 ) {
     assert(
-        starknet::StorePacking::<
+        starknet::storage_access::StorePacking::<
             T, U
-        >::unpack(starknet::StorePacking::<T, U>::pack(value)) == value,
+        >::unpack(starknet::storage_access::StorePacking::<T, U>::pack(value)) == value,
         'roundtrip'
     );
 }
