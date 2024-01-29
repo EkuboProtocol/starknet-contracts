@@ -150,7 +150,7 @@ pub mod Positions {
 
     #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             match consume_callback_data::<LockCallbackData>(core, data) {
@@ -181,7 +181,7 @@ pub mod Positions {
                         core.pay(data.pool_key.token1);
                     }
 
-                    ArrayTrait::new()
+                    ArrayTrait::new().span()
                 },
                 LockCallbackData::Withdraw(data) => {
                     let delta = core
@@ -205,7 +205,7 @@ pub mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    serialize(@delta)
+                    serialize(@delta).span()
                 },
                 LockCallbackData::CollectFees(data) => {
                     let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
@@ -218,7 +218,7 @@ pub mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    serialize(@delta)
+                    serialize(@delta).span()
                 },
                 LockCallbackData::GetPoolPrice(pool_key) => {
                     core
@@ -233,7 +233,7 @@ pub mod Positions {
 
                     let pool_price = core.get_pool_price(pool_key);
 
-                    serialize(@pool_price)
+                    serialize(@pool_price).span()
                 }
             }
         }
@@ -280,14 +280,12 @@ pub mod Positions {
         }
 
         fn get_tokens_info(
-            self: @ContractState, params: Array<GetTokenInfoRequest>
-        ) -> Array<GetTokenInfoResult> {
+            self: @ContractState, mut params: Span<GetTokenInfoRequest>
+        ) -> Span<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
 
-            let mut params_view = params.span();
-
             loop {
-                match params_view.pop_front() {
+                match params.pop_front() {
                     Option::Some(request) => {
                         results
                             .append(
@@ -298,7 +296,7 @@ pub mod Positions {
                 };
             };
 
-            results
+            results.span()
         }
 
         fn get_token_info(

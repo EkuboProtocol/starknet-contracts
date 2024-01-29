@@ -106,7 +106,7 @@ pub mod Router {
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             match consume_callback_data::<CallbackParameters>(core, data) {
@@ -221,7 +221,7 @@ pub mod Router {
                         Serde::serialize(@outputs, ref serialized);
                     }
 
-                    serialized
+                    serialized.span()
                 },
                 CallbackParameters::GetDeltaToSqrtRatio((
                     pool_key, sqrt_ratio
@@ -254,7 +254,7 @@ pub mod Router {
                     panic(output);
 
                     // this isn't actually used, but we have to return it because panic is not recognized as end of execution
-                    ArrayTrait::new()
+                    ArrayTrait::new().span()
                 },
                 CallbackParameters::GetMarketDepth((
                     pool_key, percent_64x64
@@ -344,7 +344,7 @@ pub mod Router {
                     panic(output);
 
                     // this isn't actually used, but we have to return it because panic is not recognized as end of execution
-                    ArrayTrait::new()
+                    ArrayTrait::new().span()
                 },
             }
         }

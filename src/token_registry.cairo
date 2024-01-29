@@ -108,7 +108,7 @@ pub mod TokenRegistry {
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let (refund_to, token, amount) = consume_callback_data::<
                 (ContractAddress, IERC20Dispatcher, u128)
@@ -120,7 +120,7 @@ pub mod TokenRegistry {
 
             core.withdraw(token.contract_address, refund_to, amount);
 
-            Default::default()
+            Default::default().span()
         }
     }
 }

@@ -477,7 +477,7 @@ pub mod Core {
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
-        fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
+        fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {
             let id = self.lock_count.read();
             let caller = get_caller_address();
 
