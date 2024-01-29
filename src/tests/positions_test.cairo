@@ -96,7 +96,8 @@ fn test_locked_cannot_be_called_directly() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
-    ILockerDispatcher { contract_address: positions.contract_address }.locked(1, ArrayTrait::new().span());
+    ILockerDispatcher { contract_address: positions.contract_address }
+        .locked(1, ArrayTrait::new().span());
 }
 
 #[test]
@@ -1122,7 +1123,8 @@ fn test_create_position_in_range_after_swap_no_fees() {
                 GetTokenInfoRequest { id: p1.id, pool_key: setup.pool_key, bounds: p1.bounds },
                 GetTokenInfoRequest { id: p2.id, pool_key: setup.pool_key, bounds: p2.bounds },
                 GetTokenInfoRequest { id: p3.id, pool_key: setup.pool_key, bounds: p3.bounds },
-            ].span()
+            ]
+                .span()
         );
     assert(all_info.pop_front().unwrap() == @p0_info, 'p0_info');
     assert(all_info.pop_front().unwrap() == @p1_info, 'p1_info');
