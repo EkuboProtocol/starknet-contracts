@@ -31,8 +31,8 @@ trait IPositions<TStorage> {
 
     // Returns the principal and fee amount for a set of positions
     fn get_tokens_info(
-        self: @TStorage, params: Array<GetTokenInfoRequest>
-    ) -> Array<GetTokenInfoResult>;
+        self: @TStorage, params: Span<GetTokenInfoRequest>
+    ) -> Span<GetTokenInfoResult>;
 
     // Return the principal and fee amounts owed to a position
     fn get_token_info(

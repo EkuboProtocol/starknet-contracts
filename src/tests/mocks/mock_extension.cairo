@@ -150,7 +150,7 @@ mod MockExtension {
 
     #[abi(embed_v0)]
     impl ExtensionLocked of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let data = consume_callback_data::<CallbackData>(core, data);
 
@@ -179,7 +179,7 @@ mod MockExtension {
 
             assert(delta.is_zero(), 'delta is zero');
 
-            ArrayTrait::new()
+            ArrayTrait::new().span()
         }
     }
 
