@@ -282,6 +282,13 @@ mod Router {
                         min_sqrt_ratio()
                     );
 
+                    let skip_ahead: u128 = ((current_pool_price.tick
+                        - sqrt_ratio_to_tick(price_low))
+                        .mag
+                        / (pool_key.tick_spacing * 127_u128))
+                        .try_into()
+                        .expect('TICK_DIFF_TOO_LARGE');
+
                     let delta_high = if current_pool_price.sqrt_ratio == price_high {
                         Zero::zero()
                     } else {
@@ -294,7 +301,7 @@ mod Router {
                                     },
                                     is_token1: false,
                                     sqrt_ratio_limit: price_high,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             )
                     };
@@ -310,7 +317,7 @@ mod Router {
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: current_pool_price.sqrt_ratio,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             );
                     }
@@ -327,7 +334,7 @@ mod Router {
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: price_low,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             )
                     };
