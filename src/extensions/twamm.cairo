@@ -33,13 +33,13 @@ struct OrderState {
     sale_rate: u128,
     // snapshot of adjusted reward rate for order updates (withdrawal/sale-rate)
     reward_rate: felt252,
-    update_time: u64
+    use_snapshot: bool
 }
 
 impl OrderStateZero of Zero<OrderState> {
     #[inline(always)]
     fn zero() -> OrderState {
-        OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), update_time: Zero::zero() }
+        OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
     }
 
     #[inline(always)]
@@ -399,8 +399,6 @@ mod TWAMM {
 
             let sale_rate = if (start_now) {
                 let sale_rate = calculate_sale_rate(amount, order_key.end_time, current_time);
-                // order starts now, increase global sale rate
-                self.update_global_sale_rate(order_key, sale_rate, true);
                 sale_rate
             } else {
                 validate_time(current_time, order_key.start_time);
@@ -443,16 +441,15 @@ mod TWAMM {
                     order_key,
                     id,
                     self.orders.read((order_key, id)),
+                    // TODO: Decide if delta or new sale rate.
                     i129 { mag: sale_rate, sign: false },
                     order_key.start_time <= current_time
                 );
-        // TODO: Handle funds difference.
+
+            // TODO: Handle funds difference.
         }
 
         fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            // TODO: revert if proceeds have not been withdrawn
-            // don't automatically withdraw proceeds
-
             let caller = get_caller_address();
             self.validate_caller(id, caller);
 
@@ -468,9 +465,9 @@ mod TWAMM {
             // burn the NFT
             self.nft.read().burn(id);
 
-            // if order started, send amount swapped
+            // if order started, assert all proceeds have been withdrawn
             if (order_key.start_time < current_time) {
-                let order_reward_rate = if (order_state.update_time > 0) {
+                let order_reward_rate = if (order_state.use_snapshot) {
                     order_state.reward_rate
                 } else {
                     self.get_reward_rate_at(order_key, order_key.start_time)
@@ -480,9 +477,6 @@ mod TWAMM {
                     self.get_current_reward_rate(order_key) == order_reward_rate,
                     'MUST_WITHDRAW_PROCEEDS'
                 );
-
-                // decrease global rates
-                self.update_global_sale_rate(order_key, order_state.sale_rate, false);
             }
 
             // update sale rate to reflect that the order has been cancelled
@@ -496,6 +490,7 @@ mod TWAMM {
                 );
 
             // calculate amount that was not swapped
+            // TODO: Double check that this yields the correct remaining amount.
             let remaining_amount = (order_state.sale_rate
                 * (order_key.end_time - max(order_key.start_time, current_time)).into())
                 / constants::X32_u128;
@@ -534,7 +529,7 @@ mod TWAMM {
             // order has been fully withdrawn
             assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
 
-            let order_reward_rate = if (order_state.update_time > 0) {
+            let order_reward_rate = if (order_state.use_snapshot) {
                 order_state.reward_rate
             } else {
                 self.get_reward_rate_at(order_key, order_key.start_time)
@@ -563,7 +558,7 @@ mod TWAMM {
                         OrderState {
                             sale_rate: order_state.sale_rate,
                             reward_rate: reward_rate,
-                            update_time: current_time,
+                            use_snapshot: true,
                         }
                     );
 
@@ -850,17 +845,16 @@ mod TWAMM {
             sale_rate_delta: i129,
             start_now: bool
         ) {
-            // TODO: update reward rate to account for orders that already started.
-
-            let (reward_rate, update_time, order_start_time) = if (start_now) {
+            let (reward_rate, use_snapshot, order_start_time) = if (start_now) {
                 (
                     self.get_current_reward_rate(order_key),
-                    get_block_timestamp(),
+                    true,
                     get_block_timestamp()
                 )
             } else {
+                // TODO: update reward rate to account for orders that already started.
                 // (0, 0, max(order_key.start_time, order_state.update_time))
-                (0, 0, order_key.start_time)
+                (0, false, order_key.start_time)
             };
 
             // store order state
@@ -871,16 +865,19 @@ mod TWAMM {
                     OrderState {
                         sale_rate: order_state.sale_rate.add(sale_rate_delta),
                         reward_rate: reward_rate,
-                        update_time: update_time,
+                        use_snapshot: use_snapshot,
                     }
                 );
 
             // TODO: emit order updated event
 
-            // add sale rate delta to start time
-            if (!start_now) {
+            // add sale rate delta 
+            if (start_now) {
+                self.update_global_sale_rate(order_key, sale_rate_delta);
+            } else {
                 self.update_time(order_key, order_start_time, sale_rate_delta, true);
             }
+
             // add sale rate delta at end time
             self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
         }
@@ -959,9 +956,8 @@ mod TWAMM {
             };
         }
 
-        // update the global sale rate, and return the updated value
         fn update_global_sale_rate(
-            ref self: ContractState, order_key: OrderKey, sale_rate: u128, increase: bool
+            ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129
         ) {
             let (token0_sale_rate, token1_sale_rate) = self
                 .sale_rate
@@ -971,18 +967,10 @@ mod TWAMM {
                 .sale_rate
                 .write(
                     order_key.twamm_pool_key,
-                    if (increase) {
-                        if (order_key.is_sell_token1) {
-                            (token0_sale_rate, token1_sale_rate + sale_rate)
-                        } else {
-                            (token0_sale_rate + sale_rate, token1_sale_rate)
-                        }
+                    if (order_key.is_sell_token1) {
+                        (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
                     } else {
-                        if (order_key.is_sell_token1) {
-                            (token0_sale_rate, token1_sale_rate - sale_rate)
-                        } else {
-                            (token0_sale_rate - sale_rate, token1_sale_rate)
-                        }
+                        (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
                     }
                 );
         }
