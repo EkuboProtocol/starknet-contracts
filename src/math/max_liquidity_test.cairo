@@ -11,11 +11,11 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
     let result = max_liquidity_for_token0(
         min_sqrt_ratio(), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff
     );
-    assert(result == 18446748437148339061, 'max at full range');
+    assert_eq!(result, 18446748437148339060);
 }
 
 #[test]
-#[should_panic(expected: ('OVERFLOW_MLFT0',))]
+#[should_panic(expected: ('OVERFLOW_MLFT0_2',))]
 fn test_max_liquidity_for_token0_max_lower_half_range() {
     max_liquidity_for_token0(
         tick_to_sqrt_ratio(Zero::zero()), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff

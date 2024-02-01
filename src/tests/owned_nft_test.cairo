@@ -7,7 +7,7 @@ use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
-use starknet::testing::{ContractAddress, set_contract_address, pop_log};
+use starknet::{ContractAddress, testing::{set_contract_address, pop_log}};
 use starknet::{contract_address_const, ClassHash};
 
 fn switch_to_controller() {

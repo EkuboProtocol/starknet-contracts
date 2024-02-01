@@ -1,14 +1,14 @@
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 
 #[starknet::interface]
-trait ITokenRegistry<ContractState> {
+pub trait ITokenRegistry<ContractState> {
     fn register_token(ref self: ContractState, token: IERC20Dispatcher);
 }
 
 
 // A simplified interface for a fungible token standard. 
 #[starknet::interface]
-trait IERC20Metadata<TStorage> {
+pub trait IERC20Metadata<TStorage> {
     fn name(self: @TStorage) -> felt252;
     fn symbol(self: @TStorage) -> felt252;
     fn decimals(self: @TStorage) -> u8;
@@ -17,7 +17,7 @@ trait IERC20Metadata<TStorage> {
 
 
 #[starknet::contract]
-mod TokenRegistry {
+pub mod TokenRegistry {
     use core::num::traits::{Zero};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
@@ -39,12 +39,12 @@ mod TokenRegistry {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct Registration {
-        address: ContractAddress,
-        name: felt252,
-        symbol: felt252,
-        decimals: u8,
-        total_supply: u128,
+    pub struct Registration {
+        pub address: ContractAddress,
+        pub name: felt252,
+        pub symbol: felt252,
+        pub decimals: u8,
+        pub total_supply: u128,
     }
 
     #[constructor]
@@ -53,7 +53,7 @@ mod TokenRegistry {
     }
 
     // Computes 10^x
-    fn ten_pow(x: u8) -> u128 {
+    pub(crate) fn ten_pow(x: u8) -> u128 {
         if (x == 0) {
             1_u128
         } else if (x == 1) {
@@ -108,7 +108,7 @@ mod TokenRegistry {
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let (refund_to, token, amount) = consume_callback_data::<
                 (ContractAddress, IERC20Dispatcher, u128)
@@ -120,7 +120,7 @@ mod TokenRegistry {
 
             core.withdraw(token.contract_address, refund_to, amount);
 
-            Default::default()
+            Default::default().span()
         }
     }
 }
