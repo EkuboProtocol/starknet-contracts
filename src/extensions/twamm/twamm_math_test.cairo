@@ -1,10 +1,9 @@
-use core::debug::PrintTrait;
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
     constants, exp_fractional, calculate_next_sqrt_ratio
 };
-use ekubo::interfaces::core::{Delta};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 
 
@@ -144,7 +143,6 @@ mod RewardRateTest {
 }
 
 mod TWAMMMathTest {
-    use core::debug::PrintTrait;
     use super::{
         calculate_c, i129, constants, SIXTEEN_POW_SEVEN, exp_fractional, calculate_next_sqrt_ratio
     };

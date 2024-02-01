@@ -1,4 +1,3 @@
-use core::debug::PrintTrait;
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
@@ -15,8 +14,9 @@ use ekubo::extensions::twamm::math::{
 use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
 use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::interfaces::core::{
-    ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher, Delta
+    ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
 };
+use ekubo::interfaces::core::{UpdatePositionParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
@@ -25,17 +25,17 @@ use ekubo::interfaces::positions::{
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::math::max_liquidity::{max_liquidity};
-use ekubo::math::ticks::constants::{MAX_TICK_SPACING, TICKS_IN_ONE_PERCENT};
+use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 use ekubo::math::ticks::{min_tick, max_tick};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::mock_erc20::{IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner
 };
-use ekubo::tests::mocks::locker::{UpdatePositionParameters};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::call_points::{CallPoints};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
@@ -51,6 +51,8 @@ const SIXTEEN_POW_SIX: u64 = 0x1000000;
 const SIXTEEN_POW_SEVEN: u64 = 0x10000000;
 const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
+// floor(log base 1.000001 of 1.01)
+const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
 mod UpgradableTest {
     use ekubo::extensions::twamm::TWAMM;
@@ -263,7 +265,7 @@ mod PoolTests {
 
 mod PlaceOrderTestsValidateTime {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
@@ -460,7 +462,7 @@ mod PlaceOrderTestsValidateTime {
 
 mod PlaceOrderTests {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         TWAMMPoolKey, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
@@ -661,7 +663,7 @@ mod PlaceOrderTests {
 
 mod CancelOrderTests {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher,
         IMockERC20DispatcherTrait, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey,
@@ -802,7 +804,7 @@ mod CancelOrderTests {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
@@ -1044,7 +1046,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
@@ -1335,7 +1337,7 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
@@ -1801,7 +1803,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-        PrintTrait, Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
+         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
         MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
         set_block_timestamp, pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,

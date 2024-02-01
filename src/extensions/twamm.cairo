@@ -1,18 +1,18 @@
-mod math;
+pub mod math;
 #[cfg(test)]
-mod twamm_math_test;
+pub(crate) mod twamm_math_test;
 
 #[cfg(test)]
-mod twamm_test;
-use core::integer::{u256_safe_divmod, u256_as_non_zero};
+pub(crate) mod twamm_test;
+
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PoolKey};
-use starknet::{ContractAddress, ClassHash, StorePacking};
+use starknet::{ContractAddress, ClassHash};
 
 #[derive(Drop, Copy, Serde, Hash)]
-struct TWAMMPoolKey {
+pub struct TWAMMPoolKey {
     token0: ContractAddress,
     token1: ContractAddress,
     // pool fee
@@ -20,7 +20,7 @@ struct TWAMMPoolKey {
 }
 
 #[derive(Drop, Copy, Serde, Hash)]
-struct OrderKey {
+pub struct OrderKey {
     twamm_pool_key: TWAMMPoolKey,
     is_sell_token1: bool,
     start_time: u64,
@@ -29,14 +29,14 @@ struct OrderKey {
 
 // state of a particular order, defined by the key
 #[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
-struct OrderState {
+pub struct OrderState {
     sale_rate: u128,
     // snapshot of adjusted reward rate for order updates (withdrawal/sale-rate)
     reward_rate: felt252,
     use_snapshot: bool
 }
 
-impl OrderStateZero of Zero<OrderState> {
+pub impl OrderStateZero of Zero<OrderState> {
     #[inline(always)]
     fn zero() -> OrderState {
         OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
@@ -54,7 +54,7 @@ impl OrderStateZero of Zero<OrderState> {
 }
 
 #[starknet::interface]
-trait ITWAMM<TContractState> {
+pub trait ITWAMM<TContractState> {
     // Return the NFT contract address that this contract uses to represent limit orders
     fn get_nft_address(self: @TContractState) -> ContractAddress;
 
@@ -97,9 +97,9 @@ trait ITWAMM<TContractState> {
 }
 
 #[starknet::contract]
-mod TWAMM {
+pub mod TWAMM {
     use core::cmp::{max, min};
-    use core::integer::{downcast, upcast, u256_sqrt, u128_sqrt};
+    use core::integer::{u256_sqrt, u128_sqrt};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
@@ -107,8 +107,8 @@ mod TWAMM {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
-        IExtension, SwapParameters, UpdatePositionParameters, Delta, ILocker, ICoreDispatcher,
-        ICoreDispatcherTrait, SavedBalanceKey
+        IExtension, SwapParameters, UpdatePositionParameters, ILocker, ICoreDispatcher,
+        ICoreDispatcherTrait
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{
@@ -125,11 +125,12 @@ mod TWAMM {
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::call_points::{CallPoints};
+    use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
-    use ekubo::types::keys::{PoolKey, PoolKeyTrait};
+    use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
-        get_contract_address, get_caller_address, replace_class_syscall, get_block_timestamp,
-        ClassHash
+        get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
+        get_block_timestamp, ClassHash
     };
     use super::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
@@ -200,34 +201,34 @@ mod TWAMM {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct OrderPlaced {
-        id: u64,
-        order_key: OrderKey,
-        amount: u128,
-        sale_rate: u128
+    pub struct OrderPlaced {
+        pub id: u64,
+        pub order_key: OrderKey,
+        pub amount: u128,
+        pub sale_rate: u128
     }
 
     #[derive(starknet::Event, Drop)]
-    struct OrderCancelled {
-        id: u64,
-        order_key: OrderKey,
+    pub struct OrderCancelled {
+        pub id: u64,
+        pub order_key: OrderKey,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct OrderWithdrawn {
-        id: u64,
-        order_key: OrderKey,
-        amount: u128
+    pub struct OrderWithdrawn {
+        pub id: u64,
+        pub order_key: OrderKey,
+        pub amount: u128
     }
 
     #[derive(starknet::Event, Drop)]
-    struct VirtualOrdersExecuted {
-        last_virtual_order_time: u64,
-        next_virtual_order_time: u64,
-        token0_sale_rate: u128,
-        token1_sale_rate: u128,
-        token0_reward_rate: felt252,
-        token1_reward_rate: felt252
+    pub struct VirtualOrdersExecuted {
+        pub last_virtual_order_time: u64,
+        pub next_virtual_order_time: u64,
+        pub token0_sale_rate: u128,
+        pub token1_sale_rate: u128,
+        pub token0_reward_rate: felt252,
+        pub token1_reward_rate: felt252
     }
 
     #[derive(starknet::Event, Drop)]
@@ -445,8 +446,7 @@ mod TWAMM {
                     i129 { mag: sale_rate, sign: false },
                     order_key.start_time <= current_time
                 );
-
-            // TODO: Handle funds difference.
+        // TODO: Handle funds difference.
         }
 
         fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
@@ -591,7 +591,7 @@ mod TWAMM {
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             let result: LockCallbackResult =
@@ -826,7 +826,7 @@ mod TWAMM {
 
             let mut result_data = ArrayTrait::new();
             Serde::serialize(@result, ref result_data);
-            result_data
+            result_data.span()
         }
     }
 
@@ -846,11 +846,7 @@ mod TWAMM {
             start_now: bool
         ) {
             let (reward_rate, use_snapshot, order_start_time) = if (start_now) {
-                (
-                    self.get_current_reward_rate(order_key),
-                    true,
-                    get_block_timestamp()
-                )
+                (self.get_current_reward_rate(order_key), true, get_block_timestamp())
             } else {
                 // TODO: update reward rate to account for orders that already started.
                 // (0, 0, max(order_key.start_time, order_state.update_time))
@@ -1173,17 +1169,17 @@ mod TWAMM {
         }
     }
 
-    fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
+    pub fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
         (
             (time / (constants::BITMAP_SPACING * 251)).into(),
-            250_u8 - downcast((time / constants::BITMAP_SPACING) % 251).unwrap()
+            250_u8 - ((time / constants::BITMAP_SPACING) % 251).try_into().unwrap()
         )
     }
 
-    fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
+    pub fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
         let (word, bit) = word_and_bit_index;
         ((word * 251 * constants::BITMAP_SPACING.into())
-            + (upcast(250 - bit) * constants::BITMAP_SPACING.into()))
+            + ((250 - bit).into() * constants::BITMAP_SPACING.into()))
             .try_into()
             .unwrap()
     }

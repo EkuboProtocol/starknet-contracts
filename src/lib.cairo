@@ -13,7 +13,9 @@ pub mod components {
     pub mod util;
 }
 
-pub mod extensions {}
+pub mod extensions {
+    pub mod twamm;
+}
 
 pub mod interfaces {
     pub mod core;
