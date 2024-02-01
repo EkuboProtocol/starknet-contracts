@@ -670,7 +670,7 @@ mod CancelOrderTests {
     };
 
     #[test]
-    #[should_panic(expected: ('ORDER_EXPIRED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED'))]
     fn test_place_order_and_cancel_after_end_time() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -696,35 +696,6 @@ mod CancelOrderTests {
 
         ITWAMMDispatcher { contract_address: twamm.contract_address }
             .cancel_order(order_key, token_id);
-    }
-
-    #[test]
-    fn test_place_order_and_withdraw() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let twamm = d.deploy_twamm(core);
-        let (token0, token1) = d.deploy_two_mock_tokens();
-
-        let amount = 100_000_000;
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: token0.contract_address, token1: token1.contract_address, fee: 0,
-        };
-        let order_key = OrderKey {
-            twamm_pool_key: twamm_pool_key,
-            is_sell_token1: false,
-            start_time: 0,
-            end_time: SIXTEEN_POW_THREE
-        };
-
-        token0.increase_balance(twamm.contract_address, amount);
-        let token_id = ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .place_order(order_key, amount);
-
-        set_block_timestamp(order_key.end_time + 1);
-
-        // No swaps were executed 
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .withdraw_from_order(order_key, token_id);
     }
 
     #[test]
@@ -754,13 +725,78 @@ mod CancelOrderTests {
             amount
         );
 
-        ITWAMMDispatcher { contract_address: twamm.contract_address }
-            .cancel_order(order1_key, order1_id);
+        twamm.cancel_order(order1_key, order1_id);
 
         let token_balance = IERC20Dispatcher { contract_address: setup.token0.contract_address }
             .balanceOf(get_contract_address());
 
         assert(token_balance == 0x3635c9adc5de9fffff, 'token0.balance');
+    }
+
+    #[test]
+    #[should_panic(expected: ('MUST_WITHDRAW_PROCEEDS', 'ENTRYPOINT_FAILED'))]
+    fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_id, order1_key, _) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        set_block_timestamp(SIXTEEN_POW_THREE - 1);
+
+        twamm.cancel_order(order1_key, order1_id);
+    }
+
+    #[test]
+    fn test_place_order_and_cancel_during_before_full_order_execution() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_id, order1_key, _) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        set_block_timestamp(SIXTEEN_POW_THREE - 1);
+
+        twamm.withdraw_from_order(order1_key, order1_id);
+        twamm.cancel_order(order1_key, order1_id);
     }
 }
 
@@ -1025,9 +1061,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         // Both order expiries are after the current time
         // l = last virtual order time
         // t = current time
-        // 0 = first order for token0
-        // 1 = second order for token0
-        // l---------------------t----0/1-----------> time
+        // 1 = first order for token0
+        // 2 = second order for token0
+        // l---------------------t----1/2-----------> time
         // place orders and check sale rate nets
 
         let mut d: Deployer = Default::default();
@@ -1094,9 +1130,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         // Both order expiries are after the current time
         // l = last virtual order time
         // t = current time
-        // 0 = first order for token0
-        // 1 = second order for token0
-        // l---------------------t----0/1-----------> time
+        // 1 = first order for token1
+        // 2 = second order for token1
+        // l---------------------t----1/2-----------> time
         // place orders and check sale rate nets
 
         let mut d: Deployer = Default::default();
