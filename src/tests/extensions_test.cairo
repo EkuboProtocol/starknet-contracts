@@ -25,8 +25,7 @@ fn setup(
     let core = d.deploy_core();
     let locker = d.deploy_locker(core);
     let extension = d.deploy_mock_extension(core, call_points);
-    let token0 = d.deploy_mock_token();
-    let token1 = d.deploy_mock_token();
+    let (token0, token1) = d.deploy_two_mock_tokens();
     (
         core,
         extension,

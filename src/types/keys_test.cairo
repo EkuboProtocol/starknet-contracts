@@ -6,7 +6,7 @@ use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
 use starknet::{contract_address_const};
 
-fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
+pub fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
     let a = LegacyHash::hash(0, x);
     let b = LegacyHash::hash(0, y);
     let c = LegacyHash::hash(1, x);

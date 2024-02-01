@@ -9,9 +9,9 @@ use starknet::storage_access::{StorePacking};
 // Note the sign can be true while mag is 0, meaning 1 value is wasted 
 // (i.e. sign == true && mag == 0 is redundant with sign == false && mag == 0)
 #[derive(Copy, Drop, Serde, Debug)]
-struct i129 {
-    mag: u128,
-    sign: bool,
+pub struct i129 {
+    pub mag: u128,
+    pub sign: bool,
 }
 
 impl HashI129<S, +HashStateTrait<S>, +Drop<S>> of Hash<i129, S> {
@@ -27,7 +27,7 @@ impl HashI129<S, +HashStateTrait<S>, +Drop<S>> of Hash<i129, S> {
 }
 
 #[generate_trait]
-impl i129TraitImpl of i129Trait {
+pub impl i129TraitImpl of i129Trait {
     fn is_negative(self: i129) -> bool {
         self.sign & (self.mag.is_non_zero())
     }
@@ -73,7 +73,7 @@ impl i129TryIntoU128 of TryInto<i129, u128> {
 }
 
 #[generate_trait]
-impl AddDeltaImpl of AddDeltaTrait {
+pub impl AddDeltaImpl of AddDeltaTrait {
     fn add(self: u128, delta: i129) -> u128 {
         (self.into() + delta).try_into().expect('ADD_DELTA')
     }

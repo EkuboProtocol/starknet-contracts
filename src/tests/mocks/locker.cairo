@@ -8,7 +8,7 @@ use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
 use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde)]
-enum Action {
+pub enum Action {
     AssertLockerId: u32,
     Relock: (u32, u32), // expected id, number of relocks
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
@@ -23,7 +23,7 @@ enum Action {
 }
 
 #[derive(Copy, Drop, Serde)]
-enum ActionResult {
+pub enum ActionResult {
     AssertLockerId,
     Relock,
     UpdatePosition: Delta,
@@ -35,12 +35,12 @@ enum ActionResult {
 }
 
 #[starknet::interface]
-trait ICoreLocker<TStorage> {
+pub trait ICoreLocker<TStorage> {
     fn call(ref self: TStorage, action: Action) -> ActionResult;
 }
 
 #[starknet::contract]
-mod CoreLocker {
+pub mod CoreLocker {
     use core::array::ArrayTrait;
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};

@@ -6,11 +6,11 @@ use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 // Represents a liquidity position
 // Packed together in a single struct because whenever liquidity changes we typically change fees per liquidity as well
 #[derive(Copy, Drop, Serde, starknet::Store)]
-struct Position {
+pub struct Position {
     // the amount of liquidity owned by the position
-    liquidity: u128,
+    pub liquidity: u128,
     // the fee per liquidity inside the tick range of the position, the last time it was computed
-    fees_per_liquidity_inside_last: FeesPerLiquidity,
+    pub fees_per_liquidity_inside_last: FeesPerLiquidity,
 }
 
 // we only check liquidity is non-zero because fees per liquidity inside is irrelevant if liquidity is 0
@@ -31,12 +31,12 @@ impl PositionZero of Zero<Position> {
     }
 }
 
-fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
+pub(crate) fn multiply_and_get_limb1(a: u256, b: u128) -> u128 {
     muldiv(a, b.into(), 0x100000000000000000000000000000000, false).unwrap().low
 }
 
 #[generate_trait]
-impl PositionTraitImpl of PositionTrait {
+pub impl PositionTraitImpl of PositionTrait {
     fn fees(self: Position, fees_per_liquidity_inside_current: FeesPerLiquidity) -> (u128, u128) {
         let diff = fees_per_liquidity_inside_current - self.fees_per_liquidity_inside_last;
 

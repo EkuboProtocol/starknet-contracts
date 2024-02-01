@@ -1,4 +1,4 @@
-fn assert_round_trip<
+pub fn assert_round_trip<
     T, U, +starknet::storage_access::StorePacking<T, U>, +PartialEq<T>, +Drop<T>, +Copy<T>
 >(
     value: T

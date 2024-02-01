@@ -7,9 +7,9 @@ use ekubo::math::mask::{mask};
 use ekubo::types::i129::{i129, i129Trait};
 
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
-struct Bitmap {
+pub struct Bitmap {
     // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
-    value: felt252
+    pub(crate) value: felt252
 }
 
 impl BitmapZero of Zero<Bitmap> {
@@ -28,7 +28,7 @@ impl BitmapZero of Zero<Bitmap> {
 }
 
 #[generate_trait]
-impl BitmapTraitImpl of BitmapTrait {
+pub impl BitmapTraitImpl of BitmapTrait {
     // Returns the index of the most significant bit of less or equal significance as the index bit
     fn next_set_bit(self: Bitmap, index: u8) -> Option<u8> {
         if (self.is_zero()) {
@@ -124,7 +124,7 @@ const NEGATIVE_OFFSET: u128 = 0x100000000;
 
 // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
 // The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
-fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
+pub fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     // we don't care about the relative placement of words, only the placement of bits within a word
     if (tick.is_negative()) {
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
@@ -143,7 +143,7 @@ fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
 }
 
 // Compute the tick corresponding to the word and bit index
-fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
+pub fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
     let (word, bit) = word_and_bit_index;
     if (word >= NEGATIVE_OFFSET) {
         i129 {

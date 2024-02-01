@@ -5,7 +5,7 @@ use core::traits::{TryInto, Into};
 use ekubo::math::exp2::{exp2};
 
 // Convert a u64 number to a decimal string in a felt252
-fn to_decimal(mut x: u64) -> felt252 {
+pub fn to_decimal(mut x: u64) -> felt252 {
     // special case is that 0 is still printed
     if (x.is_zero()) {
         return '0';

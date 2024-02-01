@@ -1,11 +1,11 @@
 // Any contract that is upgradeable must implement this
 #[starknet::interface]
-trait IHasInterface<TContractState> {
+pub trait IHasInterface<TContractState> {
     fn get_primary_interface_id(self: @TContractState) -> felt252;
 }
 
 #[starknet::component]
-mod Upgradeable {
+pub mod Upgradeable {
     use core::array::SpanTrait;
     use core::num::traits::{Zero};
     use core::result::ResultTrait;
@@ -21,19 +21,19 @@ mod Upgradeable {
     struct Storage {}
 
     #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
+    pub struct ClassHashReplaced {
+        pub new_class_hash: ClassHash,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         ClassHashReplaced: ClassHashReplaced
     }
 
 
     #[embeddable_as(UpgradeableImpl)]
-    impl Upgradeable<
+    pub impl Upgradeable<
         TContractState,
         +HasComponent<TContractState>,
         +IHasInterface<TContractState>,
