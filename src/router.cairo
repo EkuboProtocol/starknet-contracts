@@ -55,6 +55,11 @@ pub trait IRouter<TContractState> {
 
     // Same return value as above, but the percent is expressed simply as a 64.64 number, e.g. 1% is FLOOR(0.01 * 2**64)
     fn get_market_depth_v2(self: @TContractState, pool_key: PoolKey, percent_64x64: u128) -> Depth;
+
+    // Same as above, but starting from the given price
+    fn get_market_depth_at_sqrt_ratio(
+        self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128
+    ) -> Depth;
 }
 
 #[starknet::contract]
@@ -99,7 +104,7 @@ pub mod Router {
     enum CallbackParameters {
         Swap: (Array<Swap>, bool),
         GetDeltaToSqrtRatio: (PoolKey, u256),
-        GetMarketDepth: (PoolKey, u128),
+        GetMarketDepth: (PoolKey, u256, u128),
     }
 
     pub const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
@@ -257,7 +262,7 @@ pub mod Router {
                     ArrayTrait::new().span()
                 },
                 CallbackParameters::GetMarketDepth((
-                    pool_key, percent_64x64
+                    pool_key, sqrt_ratio, percent_64x64
                 )) => {
                     // takes the 64x64 percent, shifts it left 64 and sqrts it to get a 32.64. we add 1 so the sqrt always makes it smaller
                     let sqrt_percent: u256 = u256_sqrt(
@@ -270,7 +275,31 @@ pub mod Router {
                     let denom = 0x10000000000000000_u256;
                     let num = denom + sqrt_percent;
 
-                    let current_pool_price = core.get_pool_price(pool_key);
+                    let mut current_pool_price = core.get_pool_price(pool_key);
+
+                    // swap to the specified starting price
+                    if current_pool_price.sqrt_ratio != sqrt_ratio {
+                        let tick_start = sqrt_ratio_to_tick(sqrt_ratio);
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 {
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                    },
+                                    is_token1: sqrt_ratio < current_pool_price.sqrt_ratio,
+                                    sqrt_ratio_limit: sqrt_ratio,
+                                    skip_ahead: ((current_pool_price.tick - tick_start).mag
+                                        / (pool_key.tick_spacing * 127_u128))
+                                        .try_into()
+                                        .expect('TICK_DIFF_TOO_LARGE'),
+                                }
+                            );
+
+                        current_pool_price.sqrt_ratio = sqrt_ratio;
+                        current_pool_price.tick = tick_start;
+                    }
+
                     let price_high = min(
                         muldiv(current_pool_price.sqrt_ratio, num, denom, false)
                             .unwrap_or(max_sqrt_ratio()),
@@ -440,8 +469,19 @@ pub mod Router {
         fn get_market_depth_v2(
             self: @ContractState, pool_key: PoolKey, percent_64x64: u128
         ) -> Depth {
+            self
+                .get_market_depth_at_sqrt_ratio(
+                    pool_key, self.core.read().get_pool_price(pool_key).sqrt_ratio, percent_64x64
+                )
+        }
+
+        #[inline(always)]
+        fn get_market_depth_at_sqrt_ratio(
+            self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128
+        ) -> Depth {
             call_core_with_reverting_callback(
-                self.core.read(), @CallbackParameters::GetMarketDepth((pool_key, percent_64x64))
+                self.core.read(),
+                @CallbackParameters::GetMarketDepth((pool_key, sqrt_ratio, percent_64x64))
             )
         }
     }
