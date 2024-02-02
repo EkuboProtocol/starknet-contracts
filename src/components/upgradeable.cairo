@@ -1,38 +1,39 @@
 // Any contract that is upgradeable must implement this
 #[starknet::interface]
-trait IHasInterface<TContractState> {
+pub trait IHasInterface<TContractState> {
     fn get_primary_interface_id(self: @TContractState) -> felt252;
 }
 
 #[starknet::component]
-mod Upgradeable {
+pub mod Upgradeable {
     use core::array::SpanTrait;
     use core::num::traits::{Zero};
     use core::result::ResultTrait;
     use ekubo::components::owned::{IOwned, Ownable};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
     use starknet::{
-        ClassHash, ContractAddress, replace_class_syscall, get_contract_address,
-        library_call_syscall
+        ClassHash, ContractAddress, syscalls::{replace_class_syscall, library_call_syscall},
+        get_contract_address,
     };
     use super::{IHasInterface, IHasInterfaceDispatcher, IHasInterfaceDispatcherTrait};
 
     #[storage]
     struct Storage {}
 
+    #[derive(starknet::Event, Drop)]
+    pub struct ClassHashReplaced {
+        pub new_class_hash: ClassHash,
+    }
+
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         ClassHashReplaced: ClassHashReplaced
     }
 
-    #[derive(starknet::Event, Drop)]
-    struct ClassHashReplaced {
-        new_class_hash: ClassHash,
-    }
 
     #[embeddable_as(UpgradeableImpl)]
-    impl Upgradeable<
+    pub impl Upgradeable<
         TContractState,
         +HasComponent<TContractState>,
         +IHasInterface<TContractState>,

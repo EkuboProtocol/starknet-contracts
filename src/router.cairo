@@ -4,32 +4,32 @@ use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Serde, Copy, Drop)]
-struct RouteNode {
-    pool_key: PoolKey,
-    sqrt_ratio_limit: u256,
-    skip_ahead: u128,
+pub struct RouteNode {
+    pub pool_key: PoolKey,
+    pub sqrt_ratio_limit: u256,
+    pub skip_ahead: u128,
 }
 
 #[derive(Serde, Copy, Drop)]
-struct TokenAmount {
-    token: ContractAddress,
-    amount: i129,
+pub struct TokenAmount {
+    pub token: ContractAddress,
+    pub amount: i129,
 }
 
 #[derive(Serde, Drop)]
-struct Swap {
-    route: Array<RouteNode>,
-    token_amount: TokenAmount,
+pub struct Swap {
+    pub route: Array<RouteNode>,
+    pub token_amount: TokenAmount,
 }
 
 #[derive(Serde, Copy, Drop, PartialEq, Debug)]
-struct Depth {
-    token0: u128,
-    token1: u128,
+pub struct Depth {
+    pub token0: u128,
+    pub token1: u128,
 }
 
 #[starknet::interface]
-trait IRouter<TContractState> {
+pub trait IRouter<TContractState> {
     // Does a single swap against a single node using tokens held by this contract, and receives the output to this contract
     fn swap(ref self: TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
 
@@ -58,7 +58,7 @@ trait IRouter<TContractState> {
 }
 
 #[starknet::contract]
-mod Router {
+pub mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::cmp::{min, max};
     use core::integer::{u256_sqrt};
@@ -102,11 +102,11 @@ mod Router {
         GetMarketDepth: (PoolKey, u128),
     }
 
-    const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
+    pub const FUNCTION_DID_NOT_ERROR_FLAG: felt252 = selector!("function_did_not_error");
 
     #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             match consume_callback_data::<CallbackParameters>(core, data) {
@@ -221,7 +221,7 @@ mod Router {
                         Serde::serialize(@outputs, ref serialized);
                     }
 
-                    serialized
+                    serialized.span()
                 },
                 CallbackParameters::GetDeltaToSqrtRatio((
                     pool_key, sqrt_ratio
@@ -254,7 +254,7 @@ mod Router {
                     panic(output);
 
                     // this isn't actually used, but we have to return it because panic is not recognized as end of execution
-                    ArrayTrait::new()
+                    ArrayTrait::new().span()
                 },
                 CallbackParameters::GetMarketDepth((
                     pool_key, percent_64x64
@@ -282,6 +282,13 @@ mod Router {
                         min_sqrt_ratio()
                     );
 
+                    let skip_ahead: u128 = ((current_pool_price.tick
+                        - sqrt_ratio_to_tick(price_low))
+                        .mag
+                        / (pool_key.tick_spacing * 127_u128))
+                        .try_into()
+                        .expect('TICK_DIFF_TOO_LARGE');
+
                     let delta_high = if current_pool_price.sqrt_ratio == price_high {
                         Zero::zero()
                     } else {
@@ -294,7 +301,7 @@ mod Router {
                                     },
                                     is_token1: false,
                                     sqrt_ratio_limit: price_high,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             )
                     };
@@ -310,7 +317,7 @@ mod Router {
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: current_pool_price.sqrt_ratio,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             );
                     }
@@ -327,7 +334,7 @@ mod Router {
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: price_low,
-                                    skip_ahead: 0,
+                                    skip_ahead,
                                 }
                             )
                     };
@@ -344,7 +351,7 @@ mod Router {
                     panic(output);
 
                     // this isn't actually used, but we have to return it because panic is not recognized as end of execution
-                    ArrayTrait::new()
+                    ArrayTrait::new().span()
                 },
             }
         }

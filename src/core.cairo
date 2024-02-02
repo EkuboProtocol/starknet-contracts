@@ -1,5 +1,5 @@
 #[starknet::contract]
-mod Core {
+pub mod Core {
     use core::array::{ArrayTrait, SpanTrait};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
@@ -40,7 +40,8 @@ mod Core {
     use ekubo::types::position::{Position, PositionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall, storage_base_address_from_felt252
+        get_contract_address, syscalls::{replace_class_syscall},
+        storage_access::{storage_base_address_from_felt252}
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -83,70 +84,70 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct ProtocolFeesWithdrawn {
-        recipient: ContractAddress,
-        token: ContractAddress,
-        amount: u128,
+    pub struct ProtocolFeesWithdrawn {
+        pub recipient: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct ProtocolFeesPaid {
-        pool_key: PoolKey,
-        position_key: PositionKey,
-        delta: Delta,
+    pub struct ProtocolFeesPaid {
+        pub pool_key: PoolKey,
+        pub position_key: PositionKey,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PoolInitialized {
-        pool_key: PoolKey,
-        initial_tick: i129,
-        sqrt_ratio: u256,
-        call_points: u8,
+    pub struct PoolInitialized {
+        pub pool_key: PoolKey,
+        pub initial_tick: i129,
+        pub sqrt_ratio: u256,
+        pub call_points: u8,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PositionUpdated {
-        locker: ContractAddress,
-        pool_key: PoolKey,
-        params: UpdatePositionParameters,
-        delta: Delta,
+    pub struct PositionUpdated {
+        pub locker: ContractAddress,
+        pub pool_key: PoolKey,
+        pub params: UpdatePositionParameters,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PositionFeesCollected {
-        pool_key: PoolKey,
-        position_key: PositionKey,
-        delta: Delta,
+    pub struct PositionFeesCollected {
+        pub pool_key: PoolKey,
+        pub position_key: PositionKey,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct Swapped {
-        locker: ContractAddress,
-        pool_key: PoolKey,
-        params: SwapParameters,
-        delta: Delta,
-        sqrt_ratio_after: u256,
-        tick_after: i129,
-        liquidity_after: u128,
+    pub struct Swapped {
+        pub locker: ContractAddress,
+        pub pool_key: PoolKey,
+        pub params: SwapParameters,
+        pub delta: Delta,
+        pub sqrt_ratio_after: u256,
+        pub tick_after: i129,
+        pub liquidity_after: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesAccumulated {
-        pool_key: PoolKey,
-        amount0: u128,
-        amount1: u128,
+    pub struct FeesAccumulated {
+        pub pool_key: PoolKey,
+        pub amount0: u128,
+        pub amount1: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct SavedBalance {
-        key: SavedBalanceKey,
-        amount: u128,
+    pub struct SavedBalance {
+        pub key: SavedBalanceKey,
+        pub amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct LoadedBalance {
-        key: SavedBalanceKey,
-        amount: u128,
+    pub struct LoadedBalance {
+        pub key: SavedBalanceKey,
+        pub amount: u128,
     }
 
 
@@ -476,7 +477,7 @@ mod Core {
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
-        fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
+        fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {
             let id = self.lock_count.read();
             let caller = get_caller_address();
 

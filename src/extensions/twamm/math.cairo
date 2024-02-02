@@ -1,34 +1,32 @@
-use core::integer::{
-    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_safe_div_rem,
-    u128_wide_mul, u256_sqrt
-};
+use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u128_wide_mul, u256_sqrt};
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
-use ekubo::interfaces::core::{Delta};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
-use ekubo::math::muldiv::{muldiv};
+use ekubo::math::muldiv::{div, muldiv};
+use ekubo::types::delta::{Delta};
+use ekubo::types::i129::{i129, i129Trait};
 
-mod constants {
-    const LOG_SCALE_FACTOR: u8 = 4;
-    const BITMAP_SPACING: u64 = 16;
+pub mod constants {
+    pub const LOG_SCALE_FACTOR: u8 = 4;
+    pub const BITMAP_SPACING: u64 = 16;
 
     // 2**32
-    const X32_u128: u128 = 0x100000000_u128;
-    const X32_u256: u256 = 0x100000000_u256;
+    pub const X32_u128: u128 = 0x100000000_u128;
+    pub const X32_u256: u256 = 0x100000000_u256;
 
     // 2**64
-    const X64_u128: u128 = 0x10000000000000000_u128;
-    const X64_u256: u256 = 0x10000000000000000_u256;
+    pub const X64_u128: u128 = 0x10000000000000000_u128;
+    pub const X64_u256: u256 = 0x10000000000000000_u256;
 
     // 2**128
-    const X128: u256 = 0x100000000000000000000000000000000_u256;
+    pub const X128: u256 = 0x100000000000000000000000000000000_u256;
 
     // ~ ln(2**128) * 2**64
-    const EXPONENT_LIMIT: u128 = 1623313478486440542208;
+    pub const EXPONENT_LIMIT: u128 = 1623313478486440542208;
 }
 
-fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
+pub fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
     let sale_rate: u128 = ((amount.into() * constants::X32_u256) / (end_time - start_time).into())
         .try_into()
         .expect('SALE_RATE_OVERFLOW');
@@ -38,7 +36,16 @@ fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128 {
     sale_rate
 }
 
-fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
+// if order started, start_time is now
+// next amount given the current sale rate, and a sale rate delta
+pub fn calculate_amount_from_sale_rate(sale_rate: u128, end_time: u64, start_time: u64) -> u128 {
+    muldiv(sale_rate.into(), (end_time - start_time).into(), constants::X32_u256, false)
+        .unwrap()
+        .try_into()
+        .expect('ORDER_AMOUNT_DELTA_OVERFLOW')
+}
+
+pub fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
     let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
     let token0_reward_delta: felt252 = if (delta.amount0.mag > 0) {
@@ -68,14 +75,19 @@ fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt
     (token0_reward_delta, token1_reward_delta)
 }
 
-fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
+pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     // this should never overflow since total_sale_rate <= sale_rate 
-    ((reward_rate.into() * sale_rate.into()) / constants::X128)
+    muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
+        .unwrap()
         .try_into()
         .expect('REWARD_AMOUNT_OVERFLOW')
 }
 
-fn validate_time(start_time: u64, end_time: u64) {
+pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
+    (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().expect('REWARD_RATE_OVERFLOW')
+}
+
+pub fn validate_time(start_time: u64, end_time: u64) {
     assert(end_time > start_time, 'INVALID_END_TIME');
 
     // calculate the closest timestamp at which an order can expire
@@ -92,7 +104,7 @@ fn validate_time(start_time: u64, end_time: u64) {
     assert((end_time.into() % step).is_zero(), 'INVALID_TIME');
 }
 
-fn calculate_next_sqrt_ratio(
+pub fn calculate_next_sqrt_ratio(
     sqrt_ratio: u256,
     liquidity: u128,
     token0_sale_rate: u128,
@@ -114,8 +126,9 @@ fn calculate_next_sqrt_ratio(
         // sqrt_sale_rate * 2 * t
         let (high, low) = u128_wide_mul(sqrt_sale_rate, (0x200000000 * time_window.into()));
 
-        let (exponent, _) = u256_safe_div_rem(
-            u256 { high: high, low: low }, u256_as_non_zero(liquidity.into())
+        let l: u256 = liquidity.into();
+        let exponent = div(
+            u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), false
         );
         // validate high is 0, integer piece should be < 128
         assert(exponent.high.is_zero(), 'E_MUL_OVERFLOW');
@@ -146,7 +159,7 @@ fn calculate_next_sqrt_ratio(
 }
 
 // c = (sqrt_sale_ratio - sqrt_ratio) / (sqrt_sale_ratio + sqrt_ratio)
-fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
+pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
     if (sqrt_ratio == sqrt_sale_ratio) {
         (0, false)
     } else if (sqrt_ratio.is_zero()) {
@@ -167,7 +180,7 @@ fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
     }
 }
 
-fn exp_fractional(x: u128) -> u256 {
+pub fn exp_fractional(x: u128) -> u256 {
     let res = if (x >= 0x20000000000000000) {
         let half = exp_fractional(x / 2);
         muldiv(half, half, constants::X128, false).expect('EXP_FRACTIONAL_OVERFLOW')
@@ -181,7 +194,7 @@ fn exp_fractional(x: u128) -> u256 {
 mod internal {
     use core::integer::{u256_overflow_mul};
 
-    fn exp_fractional(x: u128) -> u256 {
+    pub fn exp_fractional(x: u128) -> u256 {
         assert(x < 0x20000000000000000, 'EXP_X_MAGNITUDE');
 
         let mut ratio = 0x100000000000000000000000000000000_u256;

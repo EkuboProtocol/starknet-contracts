@@ -11,15 +11,15 @@ use ekubo::types::i129::{i129};
 // sqrt_ratio_next is the next ratio, limited to the given sqrt_ratio_limit
 // fee_amount is the amount of fee collected, always in terms of the specified amount
 #[derive(Copy, Drop, PartialEq)]
-struct SwapResult {
-    consumed_amount: i129,
-    calculated_amount: u128,
-    sqrt_ratio_next: u256,
-    fee_amount: u128
+pub struct SwapResult {
+    pub consumed_amount: i129,
+    pub calculated_amount: u128,
+    pub sqrt_ratio_next: u256,
+    pub fee_amount: u128
 }
 
 #[inline(always)]
-fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
+pub fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
     // sqrt_ratio is expressed in token1/token0, thus:
     // negative token0 = true ^ false = true = increasing
     // negative token1 = true ^ true = false = decreasing
@@ -29,7 +29,7 @@ fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
 }
 
 #[inline(always)]
-fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
+pub fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
     SwapResult {
         consumed_amount: Zero::zero(),
         calculated_amount: Zero::zero(),
@@ -40,7 +40,7 @@ fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
 
 
 // Compute the result of swapping some amount in/out of either token0/token1 against the liquidity
-fn swap_result(
+pub fn swap_result(
     sqrt_ratio: u256,
     liquidity: u128,
     sqrt_ratio_limit: u256,

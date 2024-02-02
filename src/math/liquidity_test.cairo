@@ -5,6 +5,8 @@ use ekubo::math::ticks::{
 };
 use ekubo::types::i129::{i129};
 
+const TICKS_IN_ONE_PERCENT: u128 = 9950;
+
 #[test]
 fn test_liquidity_delta_to_amount_delta_full_range_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
@@ -75,12 +77,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_mid_price() {
     let delta = liquidity_delta_to_amount_delta(
         sqrt_ratio: 0x100000000000000000000000000000000_u256,
         liquidity_delta: i129 { mag: 10000, sign: false },
-        sqrt_ratio_lower: tick_to_sqrt_ratio(
-            i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: true }
-        ),
-        sqrt_ratio_upper: tick_to_sqrt_ratio(
-            i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: false }
-        )
+        sqrt_ratio_lower: tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: true }),
+        sqrt_ratio_upper: tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: false })
     );
 
     assert(delta.amount0 == i129 { mag: 3920, sign: false }, 'amount0');
@@ -92,8 +90,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_low() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 79228162514264337593543950336, high: 0 },
         i129 { mag: 10000, sign: false },
-        tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: true }),
-        tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: false })
+        tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: true }),
+        tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: false })
     );
     assert(delta.amount0 == i129 { mag: 10366, sign: false }, 'amount0');
     assert(delta.amount1.is_zero(), 'amount1');
@@ -104,8 +102,8 @@ fn test_liquidity_delta_to_amount_delta_concentrated_out_of_range_high() {
     let delta = liquidity_delta_to_amount_delta(
         u256 { low: 0, high: 4294967296 },
         i129 { mag: 10000, sign: false },
-        tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: true }),
-        tick_to_sqrt_ratio(i129 { mag: constants::TICKS_IN_ONE_PERCENT * 100, sign: false })
+        tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: true }),
+        tick_to_sqrt_ratio(i129 { mag: TICKS_IN_ONE_PERCENT * 100, sign: false })
     );
     assert(delta.amount0.is_zero(), 'amount0');
     assert(delta.amount1 == i129 { mag: 10366, sign: false }, 'amount1');
