@@ -1,6 +1,7 @@
+use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_next_sqrt_ratio
+    constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::types::delta::{Delta};
@@ -19,8 +20,9 @@ const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
 mod SaleRateTest {
     use super::{
-        calculate_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT
+        calculate_sale_rate, calculate_amount_from_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
+        SIXTEEN_POW_EIGHT, constants, i129, Zero
     };
 
 
@@ -87,6 +89,14 @@ mod SaleRateTest {
             start_time: 0,
             expected: 0xfffffffffffffffffffffffffffffff
         );
+    }
+
+
+    #[test]
+    fn test_calculate_amount_from_sale_rate() {
+        assert_eq!(calculate_amount_from_sale_rate(0, 100, 0), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 100, 0), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 100, 0), 200);
     }
 }
 

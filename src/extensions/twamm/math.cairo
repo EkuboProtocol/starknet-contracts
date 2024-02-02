@@ -5,6 +5,7 @@ use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::muldiv::{div, muldiv};
 use ekubo::types::delta::{Delta};
+use ekubo::types::i129::{i129, i129Trait};
 
 pub mod constants {
     pub const LOG_SCALE_FACTOR: u8 = 4;
@@ -33,6 +34,15 @@ pub fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128
     assert(sale_rate > 0, 'SALE_RATE_ZERO');
 
     sale_rate
+}
+
+// if order started, start_time is now
+// next amount given the current sale rate, and a sale rate delta
+pub fn calculate_amount_from_sale_rate(sale_rate: u128, end_time: u64, start_time: u64) -> u128 {
+    muldiv(sale_rate.into(), (end_time - start_time).into(), constants::X32_u256, false)
+        .unwrap()
+        .try_into()
+        .expect('ORDER_AMOUNT_DELTA_OVERFLOW')
 }
 
 pub fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
@@ -67,9 +77,14 @@ pub fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (
 
 pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     // this should never overflow since total_sale_rate <= sale_rate 
-    ((reward_rate.into() * sale_rate.into()) / constants::X128)
+    muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
+        .unwrap()
         .try_into()
         .expect('REWARD_AMOUNT_OVERFLOW')
+}
+
+pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
+    (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().expect('REWARD_RATE_OVERFLOW')
 }
 
 pub fn validate_time(start_time: u64, end_time: u64) {

@@ -8,7 +8,7 @@ use ekubo::extensions::twamm::TWAMM::{
 };
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_next_sqrt_ratio
+    constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate
 };
 
 use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
@@ -265,11 +265,11 @@ mod PoolTests {
 
 mod PlaceOrderTestsValidateTime {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, TWAMMPoolKey, Zero
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, SIXTEEN_POW_ZERO,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE,
+        SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, TWAMMPoolKey, Zero
     };
 
     #[test]
@@ -462,11 +462,11 @@ mod PlaceOrderTestsValidateTime {
 
 mod PlaceOrderTests {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        TWAMMPoolKey, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
-        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, Zero
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, TWAMMPoolKey,
+        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, Zero
     };
 
     #[test]
@@ -663,12 +663,11 @@ mod PlaceOrderTests {
 
 mod CancelOrderTests {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher,
-        IMockERC20DispatcherTrait, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey,
-        IERC20Dispatcher, IERC20DispatcherTrait, place_order, set_up_twamm_with_default_liquidity,
-        i129
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher, IERC20DispatcherTrait,
+        place_order, set_up_twamm_with_default_liquidity, i129
     };
 
     #[test]
@@ -769,7 +768,7 @@ mod CancelOrderTests {
     }
 
     #[test]
-    fn test_place_order_and_cancel_during_before_full_order_execution() {
+    fn test_place_order_and_cancel_before_full_order_execution() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let fee = 0;
@@ -804,9 +803,9 @@ mod CancelOrderTests {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
         Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
@@ -1046,9 +1045,9 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
-         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
         Bounds, tick_to_sqrt_ratio, i129, i129Trait, AddDeltaTrait, TICKS_IN_ONE_PERCENT,
         IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
@@ -1335,11 +1334,632 @@ mod PlaceOrdersCheckDeltaAndNet {
     }
 }
 
+mod PlaceOrdersAndUpdateSaleRate {
+    use super::{
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, i129Trait, AddDeltaTrait, TICKS_IN_ONE_PERCENT,
+        IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
+        SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
+        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced,
+        VirtualOrdersExecuted, OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity,
+        place_order_with_default_start_time, place_order, calculate_sale_rate, OrderWithdrawn,
+        Swapped, LoadedBalance, SavedBalance, PoolInitialized, PositionUpdated,
+        calculate_amount_from_sale_rate
+    };
+
+    #[test]
+    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED'))]
+    fn test_update_at_order_expiry() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let duration = 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = timestamp + duration;
+
+        let (order1_id, order1_key, order1_state) = place_order_with_default_start_time(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order1_end_time, amount
+        );
+
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        set_block_timestamp(order1_end_time);
+
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: false }
+            );
+    }
+
+    #[test]
+    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED'))]
+    fn test_update_after_order_expiry() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let duration = 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = timestamp + duration;
+
+        let (order1_id, order1_key, order1_state) = place_order_with_default_start_time(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order1_end_time, amount
+        );
+
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        set_block_timestamp(order1_end_time + 1);
+
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: false }
+            );
+    }
+
+    #[test]
+    #[should_panic(expected: ('INVALID_SALE_RATE_DELTA', 'ENTRYPOINT_FAILED'))]
+    fn test_update_invalid_sale_rate() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let duration = 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = timestamp + duration;
+
+        let (order1_id, order1_key, order1_state) = place_order_with_default_start_time(
+            twamm, setup.token0, setup.token1, twamm_pool_key, false, order1_end_time, amount
+        );
+
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate * 2, sign: true }
+            );
+    }
+
+    #[test]
+    fn test_decrease_order_sale_rate_before_order_starts_token0() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+        let expected_sale_rate = calculate_sale_rate(amount, order1_end_time, order1_start_time);
+
+        let (order1_id, order1_key, order1_state) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // start sale rate net
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+
+        // start sale rate delta
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate, sign: true });
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        // decrease sale rate
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: true }
+            );
+
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        assert_eq!(event.key.owner, twamm.contract_address);
+        assert_eq!(event.key.token, setup.token0.contract_address);
+        assert_eq!(event.key.salt, 0);
+        assert_eq!(event.amount, amount / 2);
+
+        // order sale rate
+        let order1_state = twamm.get_order_state(order1_key, order1_id);
+        assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
+
+        // start sale rate net
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_sale_rate / 2);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+
+        // start sale rate delta
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: false });
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
+    }
+
+    #[test]
+    fn test_decrease_order_sale_rate_before_order_starts_token1() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+        let expected_sale_rate = calculate_sale_rate(amount, order1_end_time, order1_start_time);
+
+        let (order1_id, order1_key, order1_state) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // start sale rate net
+        let (_, token1_start_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (_, token1_end_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_net, expected_sale_rate);
+
+        // start sale rate delta
+        let (_, token1_start_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+        // end sale rate delta
+        let (_, token1_end_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_delta, i129 { mag: expected_sale_rate, sign: true });
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        // decrease sale rate
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: true }
+            );
+
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        assert_eq!(event.key.owner, twamm.contract_address);
+        assert_eq!(event.key.token, setup.token1.contract_address);
+        assert_eq!(event.key.salt, 0);
+        assert_eq!(event.amount, amount / 2);
+
+        // order sale rate
+        let order1_state = twamm.get_order_state(order1_key, order1_id);
+        assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
+
+        // start sale rate net
+        let (_, token1_start_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_net, expected_sale_rate / 2);
+        // end sale rate net
+        let (_, token1_end_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_net, expected_sale_rate / 2);
+
+        // start sale rate delta
+        let (_, token1_start_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: false });
+        // end sale rate delta
+        let (_, token1_end_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
+    }
+
+    #[test]
+    fn test_increase_order_sale_rate_before_order_starts_token0() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+        let expected_sale_rate = calculate_sale_rate(amount, order1_end_time, order1_start_time);
+
+        let (order1_id, order1_key, order1_state) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // start sale rate net
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+
+        // start sale rate delta
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate, sign: true });
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        let sale_rate_delta = i129 { mag: order1_state.sale_rate / 2, sign: false };
+
+        // transfer funds to twamm
+        let sale_rate_delta_amount = calculate_amount_from_sale_rate(
+            sale_rate_delta.mag, order1_end_time, order1_start_time,
+        );
+        setup.token0.increase_balance(twamm.contract_address, sale_rate_delta_amount.into());
+        // increase sale rate
+        twamm.update_order(order1_key, order1_id, sale_rate_delta);
+
+        let expected_updated_sale_rate = expected_sale_rate + expected_sale_rate / 2;
+
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        assert_eq!(event.key.owner, twamm.contract_address);
+        assert_eq!(event.key.token, setup.token0.contract_address);
+        assert_eq!(event.key.salt, 0);
+        assert_eq!(event.amount, amount / 2);
+
+        // order sale rate
+        let order1_state = twamm.get_order_state(order1_key, order1_id);
+        assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
+
+        // start sale rate net
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_updated_sale_rate);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_updated_sale_rate);
+
+        // start sale rate delta
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(
+            token0_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false }
+        );
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(
+            token0_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true }
+        );
+    }
+
+    #[test]
+    fn test_increase_order_sale_rate_before_order_starts_token1() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+        let expected_sale_rate = calculate_sale_rate(amount, order1_end_time, order1_start_time);
+
+        let (order1_id, order1_key, order1_state) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // start sale rate net
+        let (_, token1_start_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (_, token1_end_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_net, expected_sale_rate);
+
+        // start sale rate delta
+        let (_, token1_start_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+        // end sale rate delta
+        let (_, token1_end_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_delta, i129 { mag: expected_sale_rate, sign: true });
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        let sale_rate_delta = i129 { mag: order1_state.sale_rate / 2, sign: false };
+
+        // transfer funds to twamm
+        let sale_rate_delta_amount = calculate_amount_from_sale_rate(
+            sale_rate_delta.mag, order1_end_time, order1_start_time,
+        );
+        setup.token1.increase_balance(twamm.contract_address, sale_rate_delta_amount.into());
+        // increase sale rate
+        twamm.update_order(order1_key, order1_id, sale_rate_delta);
+
+        let expected_updated_sale_rate = expected_sale_rate + expected_sale_rate / 2;
+
+        let event: SavedBalance = pop_log(core.contract_address).unwrap();
+        assert_eq!(event.key.owner, twamm.contract_address);
+        assert_eq!(event.key.token, setup.token1.contract_address);
+        assert_eq!(event.key.salt, 0);
+        assert_eq!(event.amount, amount / 2);
+
+        // order sale rate
+        let order1_state = twamm.get_order_state(order1_key, order1_id);
+        assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
+
+        // start sale rate net
+        let (_, token1_start_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token1_start_sale_rate_net, expected_updated_sale_rate);
+        // end sale rate net
+        let (_, token1_end_sale_rate_net) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token1_end_sale_rate_net, expected_updated_sale_rate);
+
+        // start sale rate delta
+        let (_, token1_start_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(
+            token1_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false }
+        );
+        // end sale rate delta
+        let (_, token1_end_sale_rate_delta) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(
+            token1_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true }
+        );
+    }
+
+    #[test]
+    fn test_decrease_order_sale_rate_after_order_starts_token0() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup) = set_up_twamm_with_default_liquidity(ref d, core, fee, initial_tick);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+        let expected_sale_rate = calculate_sale_rate(amount, order1_end_time, order1_start_time);
+
+        let (order1_id, order1_key, order1_state) = place_order(
+            twamm,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderPlaced = pop_log(twamm.contract_address).unwrap();
+
+        // start sale rate net
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+
+        // start sale rate delta
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate, sign: true });
+
+        // set time halfway through order execution
+        set_block_timestamp(order1_start_time + (order1_end_time - order1_start_time) / 2);
+
+        // decrease sale rate
+        twamm
+            .update_order(
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 3, sign: true }
+            );
+    // // decrease sale rate
+    // twamm
+    //     .update_order(
+    //         order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: true }
+    //     );
+    // let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+    // assert_eq!(event.key.owner, twamm.contract_address);
+    // assert_eq!(event.key.token, setup.token0.contract_address);
+    // assert_eq!(event.key.salt, 0);
+    // assert_eq!(event.amount, amount / 2);
+
+    // // order sale rate
+    // let order1_state = twamm.get_order_state(order1_key, order1_id);
+    // assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
+
+    // // start sale rate net
+    // let (token0_start_sale_rate_net, _) = twamm
+    //     .get_sale_rate_net(twamm_pool_key, order1_start_time);
+    // assert_eq!(token0_start_sale_rate_net, expected_sale_rate / 2);
+    // // end sale rate net
+    // let (token0_end_sale_rate_net, _) = twamm
+    //     .get_sale_rate_net(twamm_pool_key, order1_end_time);
+    // assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+
+    // // start sale rate delta
+    // let (token0_start_sale_rate_delta, _) = twamm
+    //     .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+    // assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: false });
+    // // end sale rate delta
+    // let (token0_end_sale_rate_delta, _) = twamm
+    //     .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+    // assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
+    }
+}
+
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
         Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
@@ -1803,11 +2423,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey,
-        MAX_TICK_SPACING, ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp,
-        set_block_timestamp, pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
+        set_contract_address, max_bounds, update_position, max_liquidity, Bounds,
+        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderPlaced, VirtualOrdersExecuted,
