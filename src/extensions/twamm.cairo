@@ -118,6 +118,7 @@ pub mod TWAMM {
     use ekubo::math::bits::{msb};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::exp2::{exp2};
+    use ekubo::math::fee::{compute_fee};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
@@ -130,7 +131,7 @@ pub mod TWAMM {
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
         get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
-        get_block_timestamp, ClassHash
+        get_block_timestamp, ClassHash, contract_address_const
     };
     use super::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
@@ -159,15 +160,15 @@ pub mod TWAMM {
         // current rate at which tokens are sold
         sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
         // sale rate net
-        sale_rate_net: LegacyMap<(TWAMMPoolKey, u64), (u128, u128)>,
+        time_sale_rate_net: LegacyMap<(TWAMMPoolKey, u64), (u128, u128)>,
         // sale rate deltas
-        sale_rate_delta: LegacyMap<(TWAMMPoolKey, u64), (i129, i129)>,
+        time_sale_rate_delta: LegacyMap<(TWAMMPoolKey, u64), (i129, i129)>,
         // used to find next timestamp at which sale rate changes
-        sale_rate_time_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
+        time_sale_rate_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
         // current reward rates
         reward_rate: LegacyMap<TWAMMPoolKey, (felt252, felt252)>,
         // reward rates 
-        reward_rate_at_time: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
+        time_reward_rate: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
         // last timestamp at which virtual order was executed
         last_virtual_order_time: LegacyMap<TWAMMPoolKey, u64>,
         #[substorage(v0)]
@@ -265,6 +266,7 @@ pub mod TWAMM {
 
     #[derive(Serde, Copy, Drop)]
     struct WithdrawBalanceCallbackData {
+        order_key: OrderKey,
         token: ContractAddress,
         recipient: ContractAddress,
         amount: u128
@@ -380,13 +382,13 @@ pub mod TWAMM {
         fn get_sale_rate_net(
             self: @ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
         ) -> (u128, u128) {
-            self.sale_rate_net.read((twamm_pool_key, time))
+            self.time_sale_rate_net.read((twamm_pool_key, time))
         }
 
         fn get_sale_rate_delta(
             self: @ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
         ) -> (i129, i129) {
-            self.sale_rate_delta.read((twamm_pool_key, time))
+            self.time_sale_rate_delta.read((twamm_pool_key, time))
         }
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
@@ -468,6 +470,7 @@ pub mod TWAMM {
             if (sale_rate_delta.sign) {
                 self
                     .withdraw(
+                        order_key,
                         if (order_key.is_sell_token1) {
                             order_key.twamm_pool_key.token1
                         } else {
@@ -538,6 +541,7 @@ pub mod TWAMM {
             if (remaining_amount.is_non_zero()) {
                 self
                     .withdraw(
+                        order_key,
                         if (order_key.is_sell_token1) {
                             order_key.twamm_pool_key.token1
                         } else {
@@ -586,27 +590,28 @@ pub mod TWAMM {
                 calculate_reward_amount(total_reward_rate, order_state.sale_rate)
             } else {
                 // update order state to reflect that the order has been partially executed
-                let reward_rate = self.get_current_reward_rate(order_key);
-
                 self
                     .orders
                     .write(
                         (order_key, id),
                         OrderState {
                             sale_rate: order_state.sale_rate,
-                            reward_rate: reward_rate,
+                            reward_rate: self.get_current_reward_rate(order_key),
                             use_snapshot: true,
                         }
                     );
 
-                let total_reward_rate = reward_rate - order_reward_rate;
-                calculate_reward_amount(total_reward_rate, order_state.sale_rate)
+                calculate_reward_amount(
+                    self.get_current_reward_rate(order_key) - order_reward_rate,
+                    order_state.sale_rate
+                )
             };
 
             // transfer purchased amount 
             if (purchased_amount.is_non_zero()) {
                 self
                     .withdraw(
+                        order_key,
                         if (order_key.is_sell_token1) {
                             order_key.twamm_pool_key.token0
                         } else {
@@ -660,7 +665,7 @@ pub mod TWAMM {
                         loop {
                             let mut delta = Zero::zero();
 
-                            // find next time with sale rate delta
+                            // find next time with a sale rate delta
                             let next_initialized_time = self_snap
                                 .next_initialized_time(
                                     twamm_pool_key, last_virtual_order_time, current_time
@@ -778,7 +783,7 @@ pub mod TWAMM {
                             }
 
                             let (token0_sale_rate_net, token1_sale_rate_net) = self
-                                .sale_rate_net
+                                .time_sale_rate_net
                                 .read((twamm_pool_key, next_virtual_order_time));
 
                             // update ending sale rates 
@@ -855,7 +860,35 @@ pub mod TWAMM {
                 LockCallbackData::WithdrawBalanceCallbackData(data) => {
                     core.load(data.token, 0, data.amount);
 
-                    core.withdraw(data.token, data.recipient, data.amount);
+                    let order_key = data.order_key;
+                    let pool_key = to_pool_key(order_key);
+
+                    // withdrawing the same token as sell token accrues a fee to LP 
+                    let charge_fee = pool_key.fee > 0
+                        && !(order_key.is_sell_token1 ^ (pool_key.token1 == data.token));
+
+                    let fee_amount = if (charge_fee) {
+                        let fee_amount = compute_fee(data.amount, pool_key.fee);
+
+                        if (core.get_pool_liquidity(pool_key).is_non_zero()) {
+                            let (amount0, amount1) = if (order_key.is_sell_token1) {
+                                (0, fee_amount)
+                            } else {
+                                (fee_amount, 0)
+                            };
+                            core.accumulate_as_fees(pool_key, amount0, amount1);
+                        } else {
+                            // dump token
+                            IERC20Dispatcher { contract_address: data.token }
+                                .transfer(contract_address_const::<0>(), fee_amount.into());
+                        }
+
+                        fee_amount
+                    } else {
+                        0
+                    };
+
+                    core.withdraw(data.token, data.recipient, data.amount - fee_amount);
 
                     LockCallbackResult::Empty
                 }
@@ -885,20 +918,22 @@ pub mod TWAMM {
             let sale_rate_next = order_state.sale_rate.add(sale_rate_delta);
 
             let (reward_rate, use_snapshot, order_start_time) = if (order_started) {
-                let current_order_reward_rate = self.get_current_reward_rate(order_key)
-                    - order_state.reward_rate;
+                let current_reward_rate = self.get_current_reward_rate(order_key);
+
+                let current_order_reward_rate = current_reward_rate - order_state.reward_rate;
 
                 let adjusted_reward_rate = if (current_order_reward_rate == 0) {
                     order_state.reward_rate
                 } else {
                     let token_reward_amount = calculate_reward_amount(
-                        current_order_reward_rate, order_state.sale_rate
+                        current_reward_rate, order_state.sale_rate
                     );
 
                     let adjusted_reward_rate = calculate_reward_rate(
                         token_reward_amount, sale_rate_next
                     );
-                    adjusted_reward_rate
+
+                    current_order_reward_rate - adjusted_reward_rate
                 };
 
                 (adjusted_reward_rate, true, get_block_timestamp())
@@ -939,7 +974,7 @@ pub mod TWAMM {
         ) {
             // update sale rate delta
             let (token0_sale_rate_delta, token1_sale_rate_delta) = self
-                .sale_rate_delta
+                .time_sale_rate_delta
                 .read((order_key.twamm_pool_key, time));
 
             if (order_key.is_sell_token1) {
@@ -949,7 +984,7 @@ pub mod TWAMM {
                     token1_sale_rate_delta - sale_rate_delta
                 };
                 self
-                    .sale_rate_delta
+                    .time_sale_rate_delta
                     .write(
                         (order_key.twamm_pool_key, time),
                         (token0_sale_rate_delta, next_sale_rate_delta)
@@ -961,7 +996,7 @@ pub mod TWAMM {
                     token0_sale_rate_delta - sale_rate_delta
                 };
                 self
-                    .sale_rate_delta
+                    .time_sale_rate_delta
                     .write(
                         (order_key.twamm_pool_key, time),
                         (next_sale_rate_delta, token1_sale_rate_delta)
@@ -970,7 +1005,7 @@ pub mod TWAMM {
 
             // update sale rate net
             let (token0_sale_rate_net, token1_sale_rate_net) = self
-                .sale_rate_net
+                .time_sale_rate_net
                 .read((order_key.twamm_pool_key, time));
 
             let (current_sale_rate_net, next_sale_rate_net, other_token_sale_rate_net) =
@@ -978,7 +1013,7 @@ pub mod TWAMM {
                 .is_sell_token1) {
                 let next_sale_rate_net = token1_sale_rate_net.add(sale_rate_delta);
                 self
-                    .sale_rate_net
+                    .time_sale_rate_net
                     .write(
                         (order_key.twamm_pool_key, time), (token0_sale_rate_net, next_sale_rate_net)
                     );
@@ -986,7 +1021,7 @@ pub mod TWAMM {
             } else {
                 let next_sale_rate_net = token0_sale_rate_net.add(sale_rate_delta);
                 self
-                    .sale_rate_net
+                    .time_sale_rate_net
                     .write(
                         (order_key.twamm_pool_key, time), (next_sale_rate_net, token1_sale_rate_net)
                     );
@@ -1036,7 +1071,7 @@ pub mod TWAMM {
 
         fn get_reward_rate_at(self: @ContractState, order_key: OrderKey, time: u64) -> felt252 {
             let (token0_reward_rate, token1_reward_rate) = self
-                .reward_rate_at_time
+                .time_reward_rate
                 .read((order_key.twamm_pool_key, time));
 
             if (order_key.is_sell_token1) {
@@ -1071,7 +1106,7 @@ pub mod TWAMM {
             let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(twamm_pool_key);
 
             self
-                .reward_rate_at_time
+                .time_reward_rate
                 .write((twamm_pool_key, time), (token0_reward_rate, token1_reward_rate));
 
             reward_rate
@@ -1086,7 +1121,7 @@ pub mod TWAMM {
             let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
             let (token0_sale_rate_delta, token1_sale_rate_delta) = self
-                .sale_rate_delta
+                .time_sale_rate_delta
                 .read((twamm_pool_key, time));
 
             if (token0_sale_rate_delta.mag > 0 || token1_sale_rate_delta.mag > 0) {
@@ -1107,7 +1142,7 @@ pub mod TWAMM {
                     .read(twamm_pool_key);
 
                 self
-                    .reward_rate_at_time
+                    .time_reward_rate
                     .write((twamm_pool_key, time), (token0_reward_rate, token1_reward_rate));
             }
         }
@@ -1118,11 +1153,11 @@ pub mod TWAMM {
         ) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.time_sale_rate_bitmaps.read((twamm_pool_key, word_index));
 
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
             self
-                .sale_rate_time_bitmaps
+                .time_sale_rate_bitmaps
                 .write((twamm_pool_key, word_index), bitmap.unset_bit(bit_index));
         }
 
@@ -1132,10 +1167,10 @@ pub mod TWAMM {
         ) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.time_sale_rate_bitmaps.read((twamm_pool_key, word_index));
 
             self
-                .sale_rate_time_bitmaps
+                .time_sale_rate_bitmaps
                 .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
         }
 
@@ -1147,7 +1182,7 @@ pub mod TWAMM {
                 from + constants::BITMAP_SPACING
             );
 
-            let bitmap: Bitmap = self.sale_rate_time_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap: Bitmap = self.time_sale_rate_bitmaps.read((twamm_pool_key, word_index));
 
             match bitmap.next_set_bit(bit_index) {
                 Option::Some(next_bit) => { word_and_bit_index_to_time((word_index, next_bit)) },
@@ -1176,8 +1211,10 @@ pub mod TWAMM {
             }
         }
 
+        // withdrawal fee is paid to LPs
         fn withdraw(
             ref self: ContractState,
+            order_key: OrderKey,
             token: ContractAddress,
             recipient: ContractAddress,
             amount: u128
@@ -1187,7 +1224,7 @@ pub mod TWAMM {
             >(
                 self.core.read(),
                 @LockCallbackData::WithdrawBalanceCallbackData(
-                    WithdrawBalanceCallbackData { token, recipient, amount }
+                    WithdrawBalanceCallbackData { order_key, token, recipient, amount }
                 )
             ) {
                 LockCallbackResult::Empty => {},

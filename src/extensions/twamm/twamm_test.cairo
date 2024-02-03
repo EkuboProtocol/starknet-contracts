@@ -1915,43 +1915,73 @@ mod PlaceOrdersAndUpdateSaleRate {
         // set time halfway through order execution
         set_block_timestamp(order1_start_time + (order1_end_time - order1_start_time) / 2);
 
-        // decrease sale rate
+        // decrease sale rate by half
         twamm
             .update_order(
-                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 3, sign: true }
+                order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: true }
             );
-    // // decrease sale rate
-    // twamm
-    //     .update_order(
-    //         order1_key, order1_id, i129 { mag: order1_state.sale_rate / 2, sign: true }
-    //     );
-    // let event: LoadedBalance = pop_log(core.contract_address).unwrap();
-    // assert_eq!(event.key.owner, twamm.contract_address);
-    // assert_eq!(event.key.token, setup.token0.contract_address);
-    // assert_eq!(event.key.salt, 0);
-    // assert_eq!(event.amount, amount / 2);
+        // virtual orders are executed
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
 
-    // // order sale rate
-    // let order1_state = twamm.get_order_state(order1_key, order1_id);
-    // assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
+        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_start_time);
+        assert_eq!(
+            virtual_orders_executed_event.next_virtual_order_time,
+            order1_start_time + (order1_end_time - order1_start_time) / 2
+        );
 
-    // // start sale rate net
-    // let (token0_start_sale_rate_net, _) = twamm
-    //     .get_sale_rate_net(twamm_pool_key, order1_start_time);
-    // assert_eq!(token0_start_sale_rate_net, expected_sale_rate / 2);
-    // // end sale rate net
-    // let (token0_end_sale_rate_net, _) = twamm
-    //     .get_sale_rate_net(twamm_pool_key, order1_end_time);
-    // assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
-    // // start sale rate delta
-    // let (token0_start_sale_rate_delta, _) = twamm
-    //     .get_sale_rate_delta(twamm_pool_key, order1_start_time);
-    // assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: false });
-    // // end sale rate delta
-    // let (token0_end_sale_rate_delta, _) = twamm
-    //     .get_sale_rate_delta(twamm_pool_key, order1_end_time);
-    // assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
+        // price 2:1
+        // time window    = 256 sec
+        // sale rate      = 10,000 / 256 ~= 39.0625 per sec
+        // sold amount   ~= 128 * 39.0625 ~= 5,000 tokens
+        // bought amount ~= 9,9989.94829713355494903 tokens
+        assert_eq!(swapped_event.delta.amount0.sign, false);
+        assert_eq!(swapped_event.delta.amount0.mag, 5000000000000000000000);
+        assert_eq!(swapped_event.delta.amount1.sign, true);
+        assert_eq!(swapped_event.delta.amount1.mag, 9998994829713355494903);
+
+        let event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        assert_eq!(event.key.owner, twamm.contract_address);
+        assert_eq!(event.key.token, setup.token0.contract_address);
+        assert_eq!(event.key.salt, 0);
+        // half the order has been executed, half of the remaining is removed
+        assert_eq!(event.amount, amount / 4);
+
+        // order sale rate
+        let order1_state = twamm.get_order_state(order1_key, order1_id);
+        assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
+
+        // start sale rate net, if start_time is in the past, do not update
+        let (token0_start_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        // end sale rate net
+        let (token0_end_sale_rate_net, _) = twamm
+            .get_sale_rate_net(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+
+        // start sale rate delta, if start_time is in the past, do not update
+        let (token0_start_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_start_time);
+        assert_eq!(token0_start_sale_rate_delta, i129 { mag: expected_sale_rate, sign: false });
+
+        // end sale rate delta
+        let (token0_end_sale_rate_delta, _) = twamm
+            .get_sale_rate_delta(twamm_pool_key, order1_end_time);
+        assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
+
+        // withdraw proceeds (same transaction)
+        twamm.withdraw_from_order(order1_key, order1_id);
+        let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = updated reward_rate * updated sale_rate
+        //         = 511.948535281 * 19.53125
+        //        ~= 9,998.994829713355494901 tokens
+        assert_eq!(event.amount, 9998994829713355494901);
     }
 }
 
@@ -2040,6 +2070,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // Withdraw proceeds
         twamm.withdraw_from_order(order1_key, token_id1);
+
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderWithdrawn = pop_log(twamm.contract_address).unwrap();
 
