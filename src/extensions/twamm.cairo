@@ -589,6 +589,7 @@ pub mod TWAMM {
                     - order_reward_rate;
                 calculate_reward_amount(total_reward_rate, order_state.sale_rate)
             } else {
+                let current_reward_rate = self.get_current_reward_rate(order_key);
                 // update order state to reflect that the order has been partially executed
                 self
                     .orders
@@ -596,13 +597,13 @@ pub mod TWAMM {
                         (order_key, id),
                         OrderState {
                             sale_rate: order_state.sale_rate,
-                            reward_rate: self.get_current_reward_rate(order_key),
+                            reward_rate: current_reward_rate,
                             use_snapshot: true,
                         }
                     );
 
                 calculate_reward_amount(
-                    self.get_current_reward_rate(order_key) - order_reward_rate,
+                    current_reward_rate - order_reward_rate,
                     order_state.sale_rate
                 )
             };
@@ -878,9 +879,7 @@ pub mod TWAMM {
                             };
                             core.accumulate_as_fees(pool_key, amount0, amount1);
                         } else {
-                            // dump token
-                            IERC20Dispatcher { contract_address: data.token }
-                                .transfer(contract_address_const::<0>(), fee_amount.into());
+                            // TODO: sell token
                         }
 
                         fee_amount
