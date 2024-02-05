@@ -356,7 +356,7 @@ describe("core", () => {
                   },
                 ],
                 {
-                  maxFee: 1_000_000_000_000_000n,
+                  maxFee: 0n,
                   nonce: getAndIncrementNonce(),
                 }
               ));

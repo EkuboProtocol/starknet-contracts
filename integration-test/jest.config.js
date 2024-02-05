@@ -5,4 +5,5 @@ module.exports = {
   testMatch: ["**/*.test.ts"],
   testTimeout: 300_000_000,
   bail: true,
+  maxWorkers: 1,
 };
