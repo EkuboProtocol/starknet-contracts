@@ -1,10 +1,9 @@
-use core::integer::{u128_wide_mul, u256_safe_divmod, u256_as_non_zero};
+use core::integer::{u128_wide_mul};
 use core::num::traits::{Zero};
-use ekubo::types::i129::i129;
 
 // Returns the fee to charge based on the amount, which is the fee (a 0.128 number) times the amount, rounded up
 #[inline(always)]
-fn compute_fee(amount: u128, fee: u128) -> u128 {
+pub fn compute_fee(amount: u128, fee: u128) -> u128 {
     let (high, low) = u128_wide_mul(amount, fee);
     if (low == 0) {
         high
@@ -14,10 +13,10 @@ fn compute_fee(amount: u128, fee: u128) -> u128 {
 }
 
 // Returns the amount before the fee is applied, which is the amount minus the fee, rounded up
-fn amount_before_fee(after_fee: u128, fee: u128) -> u128 {
-    let (quotient, remainder, _) = u256_safe_divmod(
+pub fn amount_before_fee(after_fee: u128, fee: u128) -> u128 {
+    let (quotient, remainder) = DivRem::div_rem(
         u256 { high: after_fee, low: 0 },
-        u256_as_non_zero(0x100000000000000000000000000000000_u256 - u256 { high: 0, low: fee })
+        (0x100000000000000000000000000000000_u256 - fee.into()).try_into().unwrap()
     );
 
     assert(quotient.high.is_zero(), 'AMOUNT_BEFORE_FEE_OVERFLOW');
@@ -30,7 +29,7 @@ fn amount_before_fee(after_fee: u128, fee: u128) -> u128 {
 }
 
 #[inline(always)]
-fn accumulate_fee_amount(a: u128, b: u128) -> u128 {
+pub fn accumulate_fee_amount(a: u128, b: u128) -> u128 {
     if (a > (0xffffffffffffffffffffffffffffffff_u128 - b)) {
         return 0xffffffffffffffffffffffffffffffff_u128;
     }

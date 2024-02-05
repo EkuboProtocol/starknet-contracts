@@ -1,14 +1,11 @@
-use core::integer::{
-    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_as_non_zero, u256_overflowing_add,
-    u256_safe_divmod
-};
+use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add};
 use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
 #[inline(always)]
-fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
-    let (quotient, remainder, _) = u256_safe_divmod(x, z);
+pub fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
+    let (quotient, remainder) = DivRem::div_rem(x, z);
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {
@@ -20,7 +17,7 @@ fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
 
 // Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
 #[inline(always)]
-fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
+pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     if (z.is_zero()) {
         return Option::None(());
     }
@@ -30,11 +27,15 @@ fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     // we didn't overflow the 256 bit container, so just div
     if ((numerator.limb3 == 0) & (numerator.limb2 == 0)) {
         return Option::Some(
-            div(u256 { low: numerator.limb0, high: numerator.limb1 }, u256_as_non_zero(z), round_up)
+            div(
+                u256 { low: numerator.limb0, high: numerator.limb1 },
+                z.try_into().unwrap(),
+                round_up
+            )
         );
     }
 
-    let (quotient, remainder) = u512_safe_div_rem_by_u256(numerator, u256_as_non_zero(z));
+    let (quotient, remainder) = u512_safe_div_rem_by_u256(numerator, z.try_into().unwrap());
 
     if (quotient.limb3.is_non_zero() | quotient.limb2.is_non_zero()) {
         Option::None(())
