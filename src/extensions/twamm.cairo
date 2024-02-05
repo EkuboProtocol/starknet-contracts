@@ -393,7 +393,7 @@ pub mod TWAMM {
 
         fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
             // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(to_pool_key(order_key));
+            self.internal_execute_virtual_orders(order_key.into());
 
             let current_time = get_block_timestamp();
 
@@ -440,7 +440,7 @@ pub mod TWAMM {
             self.validate_caller(id, caller);
 
             // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(to_pool_key(order_key));
+            self.internal_execute_virtual_orders(order_key.into());
 
             let current_time = get_block_timestamp();
             assert(order_key.end_time > current_time, 'ORDER_ENDED');
@@ -497,7 +497,7 @@ pub mod TWAMM {
             self.validate_caller(id, caller);
 
             // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(to_pool_key(order_key));
+            self.internal_execute_virtual_orders(order_key.into());
 
             let order_state = self.orders.read((order_key, id));
             let current_time = get_block_timestamp();
@@ -505,8 +505,8 @@ pub mod TWAMM {
             // validate that the order has not expired
             assert(order_key.end_time > current_time, 'ORDER_ENDED');
 
-            // burn the NFT
-            self.nft.read().burn(id);
+            // update order state to reflect that the order has been cancelled
+            self.orders.write((order_key, id), Zero::zero());
 
             // if order started, assert all proceeds have been withdrawn
             if (order_key.start_time < current_time) {
@@ -564,7 +564,7 @@ pub mod TWAMM {
             assert(order_key.start_time == 0 || order_key.start_time < current_time, 'NOT_STARTED');
 
             // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(to_pool_key(order_key));
+            self.internal_execute_virtual_orders(order_key.into());
 
             let order_state = self.orders.read((order_key, id));
 
@@ -578,9 +578,6 @@ pub mod TWAMM {
             };
 
             let purchased_amount = if current_time >= order_key.end_time {
-                // burn the NFT
-                self.nft.read().burn(id);
-
                 // update order state to reflect that the order has been fully executed
                 self.orders.write((order_key, id), Zero::zero());
 
@@ -603,8 +600,7 @@ pub mod TWAMM {
                     );
 
                 calculate_reward_amount(
-                    current_reward_rate - order_reward_rate,
-                    order_state.sale_rate
+                    current_reward_rate - order_reward_rate, order_state.sale_rate
                 )
             };
 
@@ -682,14 +678,14 @@ pub mod TWAMM {
                                 let price = core.get_pool_price(data.pool_key);
 
                                 if price.sqrt_ratio != 0 {
-                                    let virtual_order_time_window = next_virtual_order_time
+                                    let time_elapsed = next_virtual_order_time
                                         - last_virtual_order_time;
 
                                     let token0_amount = (token0_sale_rate
-                                        * virtual_order_time_window.into())
+                                        * time_elapsed.into())
                                         / constants::X32_u128;
                                     let token1_amount = (token1_sale_rate
-                                        * virtual_order_time_window.into())
+                                        * time_elapsed.into())
                                         / constants::X32_u128;
 
                                     if (token0_amount != 0 && token1_amount != 0) {
@@ -698,7 +694,7 @@ pub mod TWAMM {
                                             core.get_pool_liquidity(data.pool_key),
                                             token0_sale_rate,
                                             token1_sale_rate,
-                                            virtual_order_time_window
+                                            time_elapsed
                                         );
 
                                         let is_token1 = price.sqrt_ratio < sqrt_ratio_limit;
@@ -862,7 +858,7 @@ pub mod TWAMM {
                     core.load(data.token, 0, data.amount);
 
                     let order_key = data.order_key;
-                    let pool_key = to_pool_key(order_key);
+                    let pool_key: PoolKey = order_key.into();
 
                     // withdrawing the same token as sell token accrues a fee to LP 
                     let charge_fee = pool_key.fee > 0
@@ -878,8 +874,7 @@ pub mod TWAMM {
                                 (fee_amount, 0)
                             };
                             core.accumulate_as_fees(pool_key, amount0, amount1);
-                        } else {
-                            // TODO: sell token
+                        } else {// TODO: sell token
                         }
 
                         fee_amount
@@ -1246,16 +1241,6 @@ pub mod TWAMM {
         }
     }
 
-    fn to_pool_key(order_key: OrderKey) -> PoolKey {
-        PoolKey {
-            token0: order_key.twamm_pool_key.token0,
-            token1: order_key.twamm_pool_key.token1,
-            fee: order_key.twamm_pool_key.fee,
-            tick_spacing: MAX_TICK_SPACING,
-            extension: get_contract_address()
-        }
-    }
-
     pub fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
         (
             (time / (constants::BITMAP_SPACING * 251)).into(),
@@ -1269,5 +1254,17 @@ pub mod TWAMM {
             + ((250 - bit).into() * constants::BITMAP_SPACING.into()))
             .try_into()
             .unwrap()
+    }
+
+    impl OrderKeyIntoPoolKey of Into<OrderKey, PoolKey> {
+        fn into(self: OrderKey) -> PoolKey {
+            PoolKey {
+                token0: self.twamm_pool_key.token0,
+                token1: self.twamm_pool_key.token1,
+                fee: self.twamm_pool_key.fee,
+                tick_spacing: MAX_TICK_SPACING,
+                extension: get_contract_address()
+            }
+        }
     }
 }

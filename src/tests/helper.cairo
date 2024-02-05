@@ -213,15 +213,10 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let mut constructor_args: Array<felt252> = ArrayTrait::new();
-        Serde::serialize(
-            @(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, 'twamm://'), ref constructor_args
-        );
-
         let (address, _) = deploy_syscall(
             TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            constructor_args.span(),
+            serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, 'twamm://')).span(),
             true
         )
             .expect('twamm deploy failed');
