@@ -27,9 +27,7 @@ function amount1Delta({
   sqrtRatioUpper: bigint;
 }) {
   const numerator = liquidity * (sqrtRatioUpper - sqrtRatioLower);
-  const result =
-    (numerator % (1n << 128n) !== 0n ? 1n : 0n) + numerator / (1n << 128n);
-  return result;
+  return (numerator % (1n << 128n) !== 0n ? 1n : 0n) + numerator / (1n << 128n);
 }
 
 function tickToSqrtRatio(tick: bigint) {

@@ -1,187 +1,34 @@
-import {
-  Account,
-  BlockTag,
-  Contract,
-  num,
-  RpcProvider,
-  shortString,
-} from "starknet";
+import { Account, BlockTag, Contract } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
 import Router from "../target/dev/ekubo_Router.contract_class.json";
-import { POOL_CASES } from "./pool-cases";
-import { SWAP_CASES } from "./swap-cases";
+import { POOL_CASES } from "./cases/pool-cases";
+import { SWAP_CASES } from "./cases/swap-cases";
 import Decimal from "decimal.js-light";
-import { getAmountsForLiquidity } from "./liquidity-to-amounts";
-import CoreCompiledContractCASM from "../target/dev/ekubo_Core.compiled_contract_class.json";
-import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compiled_contract_class.json";
-import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
-import MockERC20CASM from "../target/dev/ekubo_MockERC20.compiled_contract_class.json";
-import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
+import { getAmountsForLiquidity } from "./utils/liquidity-to-amounts";
+import { setupContracts } from "./utils/setupContracts";
+import { deployTokens } from "./utils/deployTokens";
+import { fromI129, toI129 } from "./utils/serialize";
+import { ACCOUNTS, provider } from "./utils/provider";
+import { computeFee } from "./utils/computeFee";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-
-async function setupContracts({ deployer }: { deployer: Account }) {
-  const simpleTokenContractDeclare = await deployer.declareIfNot({
-    contract: MockERC20 as any,
-    casm: MockERC20CASM as any,
-  });
-
-  const coreContractDeclare = await deployer.declareIfNot({
-    contract: CoreCompiledContract as any,
-    casm: CoreCompiledContractCASM as any,
-  });
-
-  const coreDeploy = await deployer.deploy({
-    classHash: coreContractDeclare.class_hash,
-    constructorCalldata: [deployer.address],
-  });
-
-  const declareNftResponse = await deployer.declareIfNot({
-    contract: OwnedNFTContract as any,
-    casm: OwnedNFTContractCASM as any,
-  });
-
-  const positionsConstructorCalldata = [
-    deployer.address,
-    coreDeploy.contract_address[0],
-    declareNftResponse.class_hash,
-    shortString.encodeShortString("https://f.ekubo.org/"),
-  ];
-
-  const positionsDeclare = await deployer.declareIfNot({
-    contract: PositionsCompiledContract as any,
-    casm: PositionsCompiledContractCASM as any,
-  });
-
-  const positionsDeploy = await deployer.deploy({
-    classHash: positionsDeclare.class_hash,
-    constructorCalldata: positionsConstructorCalldata,
-  });
-
-  const positions = new Contract(
-    PositionsCompiledContract.abi,
-    positionsDeploy.contract_address[0],
-    deployer
-  );
-
-  const routerDeclare = await deployer.declareIfNot({
-    contract: Router as any,
-    casm: RouterCASM as any,
-  });
-
-  const routerDeploy = await deployer.deploy({
-    classHash: routerDeclare.class_hash,
-    constructorCalldata: [coreDeploy.contract_address[0]],
-  });
-
-  const nftAddress = (await positions.call("get_nft_address")) as bigint;
-
-  return {
-    core: coreDeploy.contract_address[0],
-    positions: positionsDeploy.contract_address[0],
-    router: routerDeploy.contract_address[0],
-    nft: num.toHexString(nftAddress),
-    tokenClassHash: simpleTokenContractDeclare.class_hash,
-  };
-}
-
-export async function deployTokens({
-  classHash,
-  deployer,
-}: {
-  deployer: Account;
-  classHash: string;
-}): Promise<[token0: string, token1: string]> {
-  const {
-    contract_address: [tokenAddressA],
-  } = await deployer.deploy({
-    classHash: classHash,
-
-    constructorCalldata: [deployer.address, (1n << 128n) - 1n],
-  });
-
-  const {
-    contract_address: [tokenAddressB],
-  } = await deployer.deploy({
-    classHash: classHash,
-    constructorCalldata: [deployer.address, (1n << 128n) - 1n],
-  });
-
-  const [token0, token1] =
-    BigInt(tokenAddressA) < BigInt(tokenAddressB)
-      ? [tokenAddressA, tokenAddressB]
-      : [tokenAddressB, tokenAddressA];
-
-  return [token0, token1];
-}
-
-function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
-  return {
-    mag: x < 0n ? x * -1n : x,
-    sign: x < 0n ? "0x1" : "0x0",
-  };
-}
-
-function fromI129(x: { mag: bigint; sign: boolean }): bigint {
-  return x.sign ? x.mag * -1n : x.mag;
-}
 
 Decimal.set({ precision: 80 });
 
-function computeFee(x: bigint, fee: bigint): bigint {
-  const p = x * fee;
-  return p / 2n ** 128n + (p % 2n ** 128n !== 0n ? 1n : 0n);
-}
-
 describe("core", () => {
-  let provider: RpcProvider;
-  let deployer: Account;
-
-  let core: Contract;
-  let positionsContract: Contract;
-  let nft: Contract;
-  let router: Contract;
-
-  let tokenClassHash: string;
+  let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    provider = new RpcProvider({
-      nodeUrl: "http://127.0.0.1:5050",
-    });
-
-    deployer = new Account(
-      provider,
-      "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
-      "0x71d7bb07b9a64f6f78ac4c816aff4da9"
-    );
-
-    const setup = await setupContracts({ deployer });
-
-    core = new Contract(CoreCompiledContract.abi, setup.core, deployer);
-    positionsContract = new Contract(
-      PositionsCompiledContract.abi,
-      setup.positions,
-      deployer
-    );
-    nft = new Contract(OwnedNFTContract.abi, setup.nft, deployer);
-    router = new Contract(Router.abi, setup.router, deployer);
-
-    tokenClassHash = setup.tokenClassHash;
+    setup = await setupContracts({ deployer: ACCOUNTS[0] });
   }, 300_000);
 
-  const anyPoolCasesOnly = POOL_CASES.some((p) => p.only);
-
-  for (const {
-    only: poolCaseOnly,
-    name: poolCaseName,
-    pool,
-    positions: positions,
-  } of POOL_CASES) {
-    (poolCaseOnly ? describe.only : describe)(poolCaseName, () => {
+  for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
+    describe(poolCaseName, () => {
       let token0: Contract;
       let token1: Contract;
+      let account: Account;
 
       let poolKey: {
         token0: string;
@@ -193,14 +40,16 @@ describe("core", () => {
 
       // set up the pool according to the pool case
       beforeEach(async () => {
+        account = ACCOUNTS[0];
+
         const liquiditiesActual: { token_id: bigint; liquidity: bigint }[] = [];
         const [token0Address, token1Address] = await deployTokens({
-          deployer,
-          classHash: tokenClassHash,
+          deployer: account,
+          classHash: setup.tokenClassHash,
         });
 
-        token0 = new Contract(MockERC20.abi, token0Address, deployer);
-        token1 = new Contract(MockERC20.abi, token1Address, deployer);
+        token0 = new Contract(MockERC20.abi, token0Address, account);
+        token1 = new Contract(MockERC20.abi, token1Address, account);
 
         poolKey = {
           token0: token0Address,
@@ -209,6 +58,18 @@ describe("core", () => {
           tick_spacing: pool.tickSpacing,
           extension: "0x0",
         };
+
+        const core = new Contract(
+          CoreCompiledContract.abi,
+          setup.core,
+          account
+        );
+        const positionsContract = new Contract(
+          PositionsCompiledContract.abi,
+          setup.positions,
+          account
+        );
+        const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
 
         await core.invoke("initialize_pool", [
           poolKey,
@@ -223,8 +84,8 @@ describe("core", () => {
             liquidity,
             bounds,
           });
-          await token0.invoke("transfer", [positionsContract.address, amount0]);
-          await token1.invoke("transfer", [positionsContract.address, amount1]);
+          await token0.invoke("transfer", [setup.positions, amount0]);
+          await token1.invoke("transfer", [setup.positions, amount1]);
 
           const { transaction_hash } = await positionsContract.invoke(
             "mint_and_deposit",
@@ -257,12 +118,12 @@ describe("core", () => {
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
         await token0.invoke("transfer", [
-          router.address,
-          await token0.call("balanceOf", [deployer.address]),
+          setup.router,
+          await token0.call("balanceOf", [account.address]),
         ]);
         await token1.invoke("transfer", [
-          router.address,
-          await token1.call("balanceOf", [deployer.address]),
+          setup.router,
+          await token1.call("balanceOf", [account.address]),
         ]);
 
         return async () => {
@@ -322,8 +183,8 @@ describe("core", () => {
           expect(protocolFee1).toEqual(cumulativeProtocolFee1);
 
           const [balance0, balance1] = await Promise.all([
-            token0.call("balanceOf", [core.address]),
-            token1.call("balanceOf", [core.address]),
+            token0.call("balanceOf", [setup.core]),
+            token1.call("balanceOf", [setup.core]),
           ]);
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
@@ -334,89 +195,94 @@ describe("core", () => {
           expect(balance0).toBeLessThanOrEqual(cumulativeProtocolFee0 + 200n);
           expect(balance1).toBeLessThanOrEqual(cumulativeProtocolFee1 + 200n);
         };
-      });
+      }, 300_000);
 
       for (const swapCase of SWAP_CASES) {
-        (swapCase.only && (!anyPoolCasesOnly || poolCaseOnly) ? it.only : it)(
-          `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
-            swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
-          }${
-            swapCase.sqrtRatioLimit
-              ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
-                  .div(new Decimal(2).pow(128))
-                  .toFixed(3)}`
-              : ""
-          }`,
-          async () => {
-            let transaction_hash: string;
-            try {
-              ({ transaction_hash } = await router.invoke(
-                "swap",
-                [
-                  {
-                    pool_key: poolKey,
-                    sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
-                    skip_ahead: swapCase.skipAhead ?? 0,
-                  },
-                  {
-                    amount: toI129(swapCase.amount),
-                    token: swapCase.isToken1 ? token1.address : token0.address,
-                  },
-                ],
+        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
+          swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+        }${
+          swapCase.sqrtRatioLimit
+            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+                .div(new Decimal(2).pow(128))
+                .toFixed(3)}`
+            : ""
+        }`, async () => {
+          const core = new Contract(
+            CoreCompiledContract.abi,
+            setup.core,
+            account
+          );
+          const router = new Contract(Router.abi, setup.router, account);
+
+          let transaction_hash: string;
+          try {
+            ({ transaction_hash } = await router.invoke(
+              "swap",
+              [
                 {
-                  maxFee: 1_000_000_000_000_000_000n,
-                }
-              ));
-            } catch (error) {
-              transaction_hash = error.transaction_hash;
-              if (!transaction_hash) throw error;
+                  pool_key: poolKey,
+                  sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
+                  skip_ahead: swapCase.skipAhead ?? 0,
+                },
+                {
+                  amount: toI129(swapCase.amount),
+                  token: swapCase.isToken1 ? token1.address : token0.address,
+                },
+              ],
+              {
+                maxFee: 1_000_000_000_000_000_000n,
+              }
+            ));
+          } catch (error) {
+            transaction_hash = error.transaction_hash;
+            if (!transaction_hash) throw error;
+          }
+
+          const swap_receipt = await provider.waitForTransaction(
+            transaction_hash,
+            { retryInterval: 0 }
+          );
+
+          switch (swap_receipt.execution_status) {
+            case "REVERTED": {
+              const revertReason = swap_receipt.revert_reason;
+
+              const hexErrorMessage = /Failure reason: 0x([a-fA-F0-9]+)/g.exec(
+                revertReason
+              )?.[1];
+
+              expect({
+                revert_reason: hexErrorMessage
+                  ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
+                  : /(RunResources has no remaining steps)/g.exec(
+                      revertReason
+                    )?.[1] ?? revertReason,
+              }).toMatchSnapshot();
+              break;
             }
-
-            const swap_receipt = await provider.waitForTransaction(
-              transaction_hash,
-              { retryInterval: 0 }
-            );
-
-            switch (swap_receipt.execution_status) {
-              case "REVERTED": {
-                const revertReason = swap_receipt.revert_reason;
-
-                const hexErrorMessage =
-                  /Failure reason: 0x([a-fA-F0-9]+)/g.exec(revertReason)?.[1];
-
-                expect({
-                  revert_reason: hexErrorMessage
-                    ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
-                    : /(RunResources has no remaining steps)/g.exec(
-                        revertReason
-                      )?.[1] ?? revertReason,
-                }).toMatchSnapshot();
-                break;
+            case "SUCCEEDED": {
+              const execution_resources = swap_receipt.execution_resources;
+              if ("n_memory_holes" in execution_resources) {
+                delete execution_resources["n_memory_holes"];
               }
-              case "SUCCEEDED": {
-                const execution_resources = swap_receipt.execution_resources;
-                if ("n_memory_holes" in execution_resources) {
-                  delete execution_resources["n_memory_holes"];
-                }
 
-                const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                  core.parseEvents(swap_receipt)[0].Swapped;
+              const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
+                core.parseEvents(swap_receipt)[0].Swapped;
 
-                expect({
-                  execution_resources,
-                  delta: {
-                    amount0: fromI129((delta as any).amount0),
-                    amount1: fromI129((delta as any).amount1),
-                  },
-                  liquidity_after,
-                  sqrt_ratio_after,
-                  tick_after: fromI129(tick_after as any),
-                }).toMatchSnapshot();
-                break;
-              }
+              expect({
+                execution_resources,
+                delta: {
+                  amount0: fromI129((delta as any).amount0),
+                  amount1: fromI129((delta as any).amount1),
+                },
+                liquidity_after,
+                sqrt_ratio_after,
+                tick_after: fromI129(tick_after as any),
+              }).toMatchSnapshot();
+              break;
             }
           }
-        );
+        }, 300_000);
       }
     });
   }
