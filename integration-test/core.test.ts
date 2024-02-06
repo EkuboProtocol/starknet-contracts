@@ -262,8 +262,8 @@ describe("core", () => {
             }
             case "SUCCEEDED": {
               const execution_resources = swap_receipt.execution_resources;
-              if ("n_memory_holes" in execution_resources) {
-                delete execution_resources["n_memory_holes"];
+              if ("memory_holes" in execution_resources) {
+                delete execution_resources["memory_holes"];
               }
 
               const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
