@@ -1,4 +1,4 @@
-use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
+use ekubo::math::fee::{compute_fee, amount_before_fee, accumulate_fee_amount};
 use ekubo::types::i129::i129;
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
@@ -13,6 +13,13 @@ fn test_compute_fee() {
     assert(compute_fee(1000, FIFTY_PERCENT_FEE / 30) == 17, '1.666...% fee');
     assert(compute_fee(2000, FIFTY_PERCENT_FEE / 30) == 34, '1.666...% fee on 2x amt');
     assert(compute_fee(3000, FIFTY_PERCENT_FEE / 30) == 50, '1.666...% fee on 3x amt');
+}
+
+#[test]
+fn test_amount_before_fee() {
+    assert_eq!(amount_before_fee(1000, FIFTY_PERCENT_FEE / 2), 1334); // 25% fee
+    assert_eq!(amount_before_fee(1000, FIFTY_PERCENT_FEE), 2000);
+    assert_eq!(amount_before_fee(1000, (FIFTY_PERCENT_FEE / 2) * 3), 4000); // 75% fee
 }
 
 #[test]
