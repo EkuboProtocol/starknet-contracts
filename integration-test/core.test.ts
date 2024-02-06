@@ -20,47 +20,28 @@ import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compile
 import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import MockERC20CASM from "../target/dev/ekubo_MockERC20.compiled_contract_class.json";
 import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
+import { describe, it, beforeAll, beforeEach, afterEach, expect } from "vitest";
 
-export async function setupContracts({
-  getAndIncrementNonce,
-  deployer,
-}: {
-  deployer: Account;
-  getAndIncrementNonce: () => Nonce;
-}) {
-  const simpleTokenContractDeclare = await deployer.declare(
-    {
-      contract: MockERC20 as any,
-      casm: MockERC20CASM as any,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+async function setupContracts({ deployer }: { deployer: Account }) {
+  const simpleTokenContractDeclare = await deployer.declareIfNot({
+    contract: MockERC20 as any,
+    casm: MockERC20CASM as any,
+  });
 
-  const coreContractDeclare = await deployer.declare(
-    {
-      contract: CoreCompiledContract as any,
-      casm: CoreCompiledContractCASM as any,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const coreContractDeclare = await deployer.declareIfNot({
+    contract: CoreCompiledContract as any,
+    casm: CoreCompiledContractCASM as any,
+  });
 
-  const coreDeploy = await deployer.deploy(
-    {
-      classHash: coreContractDeclare.class_hash,
-      constructorCalldata: [deployer.address],
-    },
-    {
-      nonce: getAndIncrementNonce(),
-    }
-  );
+  const coreDeploy = await deployer.deploy({
+    classHash: coreContractDeclare.class_hash,
+    constructorCalldata: [deployer.address],
+  });
 
-  const declareNftResponse = await deployer.declare(
-    {
-      contract: OwnedNFTContract as any,
-      casm: OwnedNFTContractCASM as any,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const declareNftResponse = await deployer.declareIfNot({
+    contract: OwnedNFTContract as any,
+    casm: OwnedNFTContractCASM as any,
+  });
 
   const positionsConstructorCalldata = [
     deployer.address,
@@ -69,21 +50,15 @@ export async function setupContracts({
     shortString.encodeShortString("https://f.ekubo.org/"),
   ];
 
-  const positionsDeclare = await deployer.declare(
-    {
-      contract: PositionsCompiledContract as any,
-      casm: PositionsCompiledContractCASM as any,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const positionsDeclare = await deployer.declareIfNot({
+    contract: PositionsCompiledContract as any,
+    casm: PositionsCompiledContractCASM as any,
+  });
 
-  const positionsDeploy = await deployer.deploy(
-    {
-      classHash: positionsDeclare.class_hash,
-      constructorCalldata: positionsConstructorCalldata,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const positionsDeploy = await deployer.deploy({
+    classHash: positionsDeclare.class_hash,
+    constructorCalldata: positionsConstructorCalldata,
+  });
 
   const positions = new Contract(
     PositionsCompiledContract.abi,
@@ -91,21 +66,15 @@ export async function setupContracts({
     deployer
   );
 
-  const routerDeclare = await deployer.declare(
-    {
-      contract: Router as any,
-      casm: RouterCASM as any,
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const routerDeclare = await deployer.declareIfNot({
+    contract: Router as any,
+    casm: RouterCASM as any,
+  });
 
-  const routerDeploy = await deployer.deploy(
-    {
-      classHash: routerDeclare.class_hash,
-      constructorCalldata: [coreDeploy.contract_address[0]],
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  const routerDeploy = await deployer.deploy({
+    classHash: routerDeclare.class_hash,
+    constructorCalldata: [coreDeploy.contract_address[0]],
+  });
 
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
@@ -177,13 +146,6 @@ function computeFee(x: bigint, fee: bigint): bigint {
 describe("core", () => {
   let provider: RpcProvider;
   let deployer: Account;
-  let nonce: Nonce;
-
-  const getAndIncrementNonce = (): Nonce => {
-    let result: Nonce = nonce;
-    nonce = num.toHexString(BigInt(nonce) + 1n);
-    return result;
-  };
 
   let core: Contract;
   let positionsContract: Contract;
@@ -192,6 +154,8 @@ describe("core", () => {
 
   let tokenClassHash: string;
 
+  let getAndIncrementNonce: () => Nonce;
+
   beforeAll(async () => {
     provider = new RpcProvider({
       nodeUrl: "http://127.0.0.1:5050",
@@ -199,13 +163,11 @@ describe("core", () => {
 
     deployer = new Account(
       provider,
-      "0x6162896d1d7ab204c7ccac6dd5f8e9e7c25ecd5ae4fcb4ad32e57786bb46e03",
-      "0x1800000000300000180000000000030000000000003006001800006600"
+      "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
+      "0x71d7bb07b9a64f6f78ac4c816aff4da9"
     );
 
-    nonce = await deployer.getNonce("pending");
-
-    const setup = await setupContracts({ deployer, getAndIncrementNonce });
+    const setup = await setupContracts({ deployer });
 
     core = new Contract(CoreCompiledContract.abi, setup.core, deployer);
     positionsContract = new Contract(
@@ -217,7 +179,14 @@ describe("core", () => {
     router = new Contract(Router.abi, setup.router, deployer);
 
     tokenClassHash = setup.tokenClassHash;
-  });
+
+    let nonce = await deployer.getNonce("pending");
+    getAndIncrementNonce = function getAndIncrementNonce() {
+      let next = nonce;
+      nonce = num.toHexString(BigInt(next) + 1n);
+      return next;
+    };
+  }, 300_000);
 
   const anyPoolCasesOnly = POOL_CASES.some((p) => p.only);
 
@@ -268,7 +237,9 @@ describe("core", () => {
             // starting tick
             toI129(pool.startingTick),
           ],
-          { nonce: getAndIncrementNonce() }
+          {
+            nonce: getAndIncrementNonce(),
+          }
         );
 
         for (const { liquidity, bounds } of positions) {
@@ -280,12 +251,16 @@ describe("core", () => {
           await token0.invoke(
             "transfer",
             [positionsContract.address, amount0],
-            { nonce: getAndIncrementNonce() }
+            {
+              nonce: getAndIncrementNonce(),
+            }
           );
           await token1.invoke(
             "transfer",
             [positionsContract.address, amount1],
-            { nonce: getAndIncrementNonce() }
+            {
+              nonce: getAndIncrementNonce(),
+            }
           );
 
           const { transaction_hash } = await positionsContract.invoke(
@@ -295,7 +270,9 @@ describe("core", () => {
               { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
               liquidity,
             ],
-            { nonce: getAndIncrementNonce() }
+            {
+              nonce: getAndIncrementNonce(),
+            }
           );
 
           const receipt = await provider.waitForTransaction(transaction_hash, {
@@ -319,17 +296,23 @@ describe("core", () => {
         await token0.invoke(
           "transfer",
           [router.address, await token0.call("balanceOf", [deployer.address])],
-          { nonce: getAndIncrementNonce() }
+          {
+            nonce: getAndIncrementNonce(),
+          }
         );
         await token1.invoke(
           "transfer",
           [router.address, await token1.call("balanceOf", [deployer.address])],
-          { nonce: getAndIncrementNonce() }
+          {
+            nonce: getAndIncrementNonce(),
+          }
         );
       });
 
       for (const swapCase of SWAP_CASES) {
-        (swapCase.only && (!anyPoolCasesOnly || poolCaseOnly) ? it.only : it)(
+        (swapCase.only && (!anyPoolCasesOnly || poolCaseOnly)
+          ? it.only
+          : it.concurrent)(
           `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
             swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
           }${
@@ -356,7 +339,7 @@ describe("core", () => {
                   },
                 ],
                 {
-                  maxFee: 0n,
+                  maxFee: 1_000_000_000_000_000_000n,
                   nonce: getAndIncrementNonce(),
                 }
               ));
