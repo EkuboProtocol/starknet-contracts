@@ -98,6 +98,63 @@ mod SaleRateTest {
         assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 100, 0), 100);
         assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 100, 0), 200);
     }
+
+    #[test]
+    fn test_place_order_sale_rate() {
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_ONE,
+            expected_sale_rate: 0x5f5e1000000000 // 6,250,000 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_TWO,
+            expected_sale_rate: 0x5f5e100000000 // ~ 390,625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_THREE,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e10000000 // ~ 24,414.0625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_FOUR,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e1000000 // ~ 1,525.87890625 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_FIVE,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e100000 // ~ 95.3674316406 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_SIX,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e10000 // ~ 5.9604644775 * 2**32
+        );
+        run_place_order_and_validate_sale_rate(
+            amount: 100_000_000,
+            start_time: 0,
+            end_time: SIXTEEN_POW_SEVEN,
+            // scaled by 2**32
+            expected_sale_rate: 0x5f5e1000 // ~ 0.3725290298 * 2**32
+        );
+    }
+
+    fn run_place_order_and_validate_sale_rate(
+        amount: u128, start_time: u64, end_time: u64, expected_sale_rate: u128
+    ) {
+        assert_eq!(calculate_sale_rate(amount, end_time, start_time), expected_sale_rate);
+    }
 }
 
 mod RewardRateTest {

@@ -1,3 +1,4 @@
+use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
@@ -28,6 +29,12 @@ pub trait IPositions<TStorage> {
 
     // Upgrades the classhash of the nft
     fn upgrade_nft(ref self: TStorage, class_hash: ClassHash);
+
+    // Set the contract address of the twamm
+    fn set_twamm(ref self: TStorage, twamm_address: ContractAddress);
+
+    // Returns the twamm contract address
+    fn get_twamm_address(self: @TStorage) -> ContractAddress;
 
     // Returns the principal and fee amount for a set of positions
     fn get_tokens_info(
@@ -114,4 +121,20 @@ pub trait IPositions<TStorage> {
     // Returns the price of a pool after making an empty update to a fake position, which is useful for adding liquidity to extensions
     // with unknown before/after behavior.
     fn get_pool_price(ref self: TStorage, pool_key: PoolKey) -> PoolPrice;
+
+    // Mint a twamm position and set sale rate.
+    fn mint_and_update_sale_rate(
+        ref self: TStorage,
+        twamm_pool_key: TWAMMPoolKey,
+        is_sell_token1: bool,
+        start_time: u64,
+        end_time: u64,
+        amount: u128
+    ) -> (u64, u128);
+
+    // Update an existing twamm position
+    fn update_sale_rate(ref self: TStorage, order_key: OrderKey, sale_rate_delta: i129);
+
+    // Withdraws proceeds from a twamm position
+    fn withdraw_proceeds(ref self: TStorage, order_key: OrderKey);
 }

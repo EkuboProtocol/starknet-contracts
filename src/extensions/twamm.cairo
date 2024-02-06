@@ -13,18 +13,20 @@ use starknet::{ContractAddress, ClassHash};
 
 #[derive(Drop, Copy, Serde, Hash)]
 pub struct TWAMMPoolKey {
-    token0: ContractAddress,
-    token1: ContractAddress,
+    pub token0: ContractAddress,
+    pub token1: ContractAddress,
     // pool fee
-    fee: u128,
+    pub fee: u128,
 }
 
 #[derive(Drop, Copy, Serde, Hash)]
 pub struct OrderKey {
-    twamm_pool_key: TWAMMPoolKey,
-    is_sell_token1: bool,
-    start_time: u64,
-    end_time: u64
+    pub owner: ContractAddress,
+    pub salt: felt252,
+    pub twamm_pool_key: TWAMMPoolKey,
+    pub is_sell_token1: bool,
+    pub start_time: u64,
+    pub end_time: u64
 }
 
 // state of a particular order, defined by the key
@@ -55,14 +57,8 @@ pub impl OrderStateZero of Zero<OrderState> {
 
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
-    // Return the NFT contract address that this contract uses to represent limit orders
-    fn get_nft_address(self: @TContractState) -> ContractAddress;
-
-    // Upgrade the NFT contract to a new version
-    fn upgrade_nft(ref self: TContractState, class_hash: ClassHash);
-
     // Return the stored order state
-    fn get_order_state(self: @TContractState, order_key: OrderKey, id: u64) -> OrderState;
+    fn get_order_state(self: @TContractState, order_key: OrderKey) -> OrderState;
 
     // Returns the current sale rate 
     fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128);
@@ -80,17 +76,13 @@ pub trait ITWAMM<TContractState> {
         self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
     ) -> (u128, u128);
 
-    // Creates a new twamm order
-    fn place_order(ref self: TContractState, order_key: OrderKey, amount: u128) -> u64;
-
     // Update an existing twamm order
-    fn update_order(ref self: TContractState, order_key: OrderKey, id: u64, sale_rate_delta: i129);
-
-    // Cancels a twamm order
-    fn cancel_order(ref self: TContractState, order_key: OrderKey, id: u64);
+    fn update_order(ref self: TContractState, order_key: OrderKey, sale_rate_delta: i129);
 
     // Withdraws proceeds from a twamm order
-    fn withdraw_from_order(ref self: TContractState, order_key: OrderKey, id: u64);
+    fn withdraw_from_order(
+        ref self: TContractState, order_key: OrderKey, recipient: ContractAddress
+    );
 
     // Execute virtual orders
     fn execute_virtual_orders(ref self: TContractState, pool_key: PoolKey);
@@ -99,7 +91,6 @@ pub trait ITWAMM<TContractState> {
 #[starknet::contract]
 pub mod TWAMM {
     use core::cmp::{max, min};
-    use core::integer::{u256_sqrt, u128_sqrt};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
@@ -115,23 +106,18 @@ pub mod TWAMM {
         IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
     };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
-    use ekubo::math::bits::{msb};
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::exp2::{exp2};
     use ekubo::math::fee::{compute_fee};
-    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-    use ekubo::math::ticks::{min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::types::bounds::{Bounds, max_bounds};
+    use ekubo::types::bounds::{max_bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
         get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
-        get_block_timestamp, ClassHash, contract_address_const
+        get_block_timestamp, ClassHash
     };
     use super::math::{
         constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
@@ -155,8 +141,7 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        nft: IOwnedNFTDispatcher,
-        orders: LegacyMap<(OrderKey, u64), OrderState>,
+        orders: LegacyMap<OrderKey, OrderState>,
         // current rate at which tokens are sold
         sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
         // sale rate net
@@ -181,44 +166,20 @@ pub mod TWAMM {
     fn constructor(
         ref self: ContractState,
         owner: ContractAddress,
-        core: ICoreDispatcher,
-        nft_class_hash: ClassHash,
-        token_uri_base: felt252
+        core: ICoreDispatcher
     ) {
         self.initialize_owned(owner);
         self.core.write(core);
-
-        self
-            .nft
-            .write(
-                OwnedNFT::deploy(
-                    nft_class_hash: nft_class_hash,
-                    owner: get_contract_address(),
-                    name: 'Ekubo TWAMM',
-                    symbol: 'eTWAMM',
-                    token_uri_base: token_uri_base,
-                    salt: 0
-                )
-            );
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct OrderPlaced {
-        pub id: u64,
+    pub struct OrderUpdated {
         pub order_key: OrderKey,
-        pub amount: u128,
-        pub sale_rate: u128
+        pub sale_rate_delta: i129
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct OrderCancelled {
-        pub id: u64,
-        pub order_key: OrderKey,
-    }
-
-    #[derive(starknet::Event, Drop)]
-    pub struct OrderWithdrawn {
-        pub id: u64,
+    pub struct OrderProceedsWithdrawn {
         pub order_key: OrderKey,
         pub amount: u128
     }
@@ -239,9 +200,8 @@ pub mod TWAMM {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
         OwnedEvent: owned_component::Event,
-        OrderPlaced: OrderPlaced,
-        OrderCancelled: OrderCancelled,
-        OrderWithdrawn: OrderWithdrawn,
+        OrderUpdated: OrderUpdated,
+        OrderProceedsWithdrawn: OrderProceedsWithdrawn,
         VirtualOrdersExecuted: VirtualOrdersExecuted,
     }
 
@@ -269,7 +229,8 @@ pub mod TWAMM {
         order_key: OrderKey,
         token: ContractAddress,
         recipient: ContractAddress,
-        amount: u128
+        amount: u128,
+        fee: u128
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -355,18 +316,8 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
-        fn get_nft_address(self: @ContractState) -> ContractAddress {
-            self.nft.read().contract_address
-        }
-
-        fn upgrade_nft(ref self: ContractState, class_hash: ClassHash) {
-            self.require_owner();
-            IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
-                .replace_class_hash(class_hash);
-        }
-
-        fn get_order_state(self: @ContractState, order_key: OrderKey, id: u64) -> OrderState {
-            self.orders.read((order_key, id))
+        fn get_order_state(self: @ContractState, order_key: OrderKey) -> OrderState {
+            self.orders.read(order_key)
         }
 
         fn get_sale_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128) {
@@ -391,53 +342,8 @@ pub mod TWAMM {
             self.time_sale_rate_delta.read((twamm_pool_key, time))
         }
 
-        fn place_order(ref self: ContractState, order_key: OrderKey, amount: u128) -> u64 {
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(order_key.into());
-
-            let current_time = get_block_timestamp();
-
-            validate_time(current_time, order_key.end_time);
-
-            let order_started = order_key.start_time <= current_time;
-
-            let sale_rate = if (order_started) {
-                let sale_rate = calculate_sale_rate(amount, order_key.end_time, current_time);
-                sale_rate
-            } else {
-                validate_time(current_time, order_key.start_time);
-                calculate_sale_rate(amount, order_key.end_time, order_key.start_time)
-            };
-
-            // mint TWAMM NFT
-            let id = self.nft.read().mint(get_caller_address());
-
-            self.emit(OrderPlaced { id, order_key, amount, sale_rate });
-
-            self
-                .update_order_sale_rate(
-                    order_key, id, Zero::zero(), i129 { mag: sale_rate, sign: false }, order_started
-                );
-
-            // deposit token amount to core contract
-            self
-                .deposit(
-                    if (order_key.is_sell_token1) {
-                        order_key.twamm_pool_key.token1
-                    } else {
-                        order_key.twamm_pool_key.token0
-                    },
-                    amount
-                );
-
-            id
-        }
-
-        fn update_order(
-            ref self: ContractState, order_key: OrderKey, id: u64, sale_rate_delta: i129
-        ) {
-            let caller = get_caller_address();
-            self.validate_caller(id, caller);
+        fn update_order(ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129) {
+            assert(order_key.owner == get_caller_address(), 'UNAUTHORIZED');
 
             // execute virtual orders up to current time
             self.internal_execute_virtual_orders(order_key.into());
@@ -445,9 +351,19 @@ pub mod TWAMM {
             let current_time = get_block_timestamp();
             assert(order_key.end_time > current_time, 'ORDER_ENDED');
 
+            let order_state = self.orders.read(order_key);
+
             let order_started = order_key.start_time <= current_time;
 
-            let order_state = self.orders.read((order_key, id));
+            if (order_state.is_zero()) {
+                // order is being created, validate end time
+                validate_time(current_time, order_key.end_time);
+
+                if (!order_started) {
+                    // order is starting in the future, validate start time
+                    validate_time(current_time, order_key.start_time);
+                }
+            }
 
             // assert sale rate will not be negative
             assert(
@@ -455,16 +371,10 @@ pub mod TWAMM {
                 'INVALID_SALE_RATE_DELTA'
             );
 
-            self.update_order_sale_rate(order_key, id, order_state, sale_rate_delta, order_started);
+            self.update_order_sale_rate(order_key, order_state, sale_rate_delta, order_started);
 
             let amount_delta = calculate_amount_from_sale_rate(
-                sale_rate_delta.mag,
-                order_key.end_time,
-                if (order_started) {
-                    current_time
-                } else {
-                    order_key.start_time
-                }
+                sale_rate_delta.mag, order_key.end_time, max(order_key.start_time, current_time)
             );
 
             if (sale_rate_delta.sign) {
@@ -476,8 +386,9 @@ pub mod TWAMM {
                         } else {
                             order_key.twamm_pool_key.token0
                         },
-                        caller,
-                        amount_delta
+                        get_caller_address(),
+                        amount_delta,
+                        compute_fee(amount_delta, order_key.twamm_pool_key.fee)
                     );
             } else {
                 self
@@ -492,72 +403,10 @@ pub mod TWAMM {
             }
         }
 
-        fn cancel_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            let caller = get_caller_address();
-            self.validate_caller(id, caller);
-
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(order_key.into());
-
-            let order_state = self.orders.read((order_key, id));
-            let current_time = get_block_timestamp();
-
-            // validate that the order has not expired
-            assert(order_key.end_time > current_time, 'ORDER_ENDED');
-
-            // update order state to reflect that the order has been cancelled
-            self.orders.write((order_key, id), Zero::zero());
-
-            // if order started, assert all proceeds have been withdrawn
-            if (order_key.start_time < current_time) {
-                let order_reward_rate = if (order_state.use_snapshot) {
-                    order_state.reward_rate
-                } else {
-                    self.get_reward_rate_at(order_key, order_key.start_time)
-                };
-
-                assert(
-                    self.get_current_reward_rate(order_key) == order_reward_rate,
-                    'MUST_WITHDRAW_PROCEEDS'
-                );
-            }
-
-            // update sale rate to reflect that the order has been cancelled
-            self
-                .update_order_sale_rate(
-                    order_key,
-                    id,
-                    order_state,
-                    i129 { mag: order_state.sale_rate, sign: true },
-                    order_key.start_time <= current_time
-                );
-
-            // calculate amount that was not swapped
-            let remaining_amount = (order_state.sale_rate
-                * (order_key.end_time - max(order_key.start_time, current_time)).into())
-                / constants::X32_u128;
-
-            // transfer remaining amount
-            if (remaining_amount.is_non_zero()) {
-                self
-                    .withdraw(
-                        order_key,
-                        if (order_key.is_sell_token1) {
-                            order_key.twamm_pool_key.token1
-                        } else {
-                            order_key.twamm_pool_key.token0
-                        },
-                        caller,
-                        remaining_amount
-                    );
-            }
-
-            self.emit(OrderCancelled { id, order_key });
-        }
-
-        fn withdraw_from_order(ref self: ContractState, order_key: OrderKey, id: u64) {
-            let caller = get_caller_address();
-            self.validate_caller(id, caller);
+        fn withdraw_from_order(
+            ref self: ContractState, order_key: OrderKey, recipient: ContractAddress
+        ) {
+            assert(order_key.owner == get_caller_address(), 'UNAUTHORIZED');
 
             let current_time = get_block_timestamp();
 
@@ -566,7 +415,7 @@ pub mod TWAMM {
             // execute virtual orders up to current time
             self.internal_execute_virtual_orders(order_key.into());
 
-            let order_state = self.orders.read((order_key, id));
+            let order_state = self.orders.read(order_key);
 
             // order has been fully withdrawn
             assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
@@ -577,9 +426,9 @@ pub mod TWAMM {
                 self.get_reward_rate_at(order_key, order_key.start_time)
             };
 
-            let purchased_amount = if current_time >= order_key.end_time {
+            let purchased_amount = if (current_time >= order_key.end_time) {
                 // update order state to reflect that the order has been fully executed
-                self.orders.write((order_key, id), Zero::zero());
+                self.orders.write(order_key, Zero::zero());
 
                 // reward rate at expiration/full-execution time
                 let total_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
@@ -591,7 +440,7 @@ pub mod TWAMM {
                 self
                     .orders
                     .write(
-                        (order_key, id),
+                        order_key,
                         OrderState {
                             sale_rate: order_state.sale_rate,
                             reward_rate: current_reward_rate,
@@ -614,12 +463,13 @@ pub mod TWAMM {
                         } else {
                             order_key.twamm_pool_key.token1
                         },
-                        caller,
-                        purchased_amount
+                        recipient,
+                        purchased_amount,
+                        0
                     );
             }
 
-            self.emit(OrderWithdrawn { id, order_key, amount: purchased_amount });
+            self.emit(OrderProceedsWithdrawn { order_key, amount: purchased_amount });
         }
 
         fn execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
@@ -681,11 +531,9 @@ pub mod TWAMM {
                                     let time_elapsed = next_virtual_order_time
                                         - last_virtual_order_time;
 
-                                    let token0_amount = (token0_sale_rate
-                                        * time_elapsed.into())
+                                    let token0_amount = (token0_sale_rate * time_elapsed.into())
                                         / constants::X32_u128;
-                                    let token1_amount = (token1_sale_rate
-                                        * time_elapsed.into())
+                                    let token1_amount = (token1_sale_rate * time_elapsed.into())
                                         / constants::X32_u128;
 
                                     if (token0_amount != 0 && token1_amount != 0) {
@@ -860,29 +708,20 @@ pub mod TWAMM {
                     let order_key = data.order_key;
                     let pool_key: PoolKey = order_key.into();
 
-                    // withdrawing the same token as sell token accrues a fee to LP 
-                    let charge_fee = pool_key.fee > 0
-                        && !(order_key.is_sell_token1 ^ (pool_key.token1 == data.token));
-
-                    let fee_amount = if (charge_fee) {
-                        let fee_amount = compute_fee(data.amount, pool_key.fee);
-
+                    if (data.fee > 0) {
                         if (core.get_pool_liquidity(pool_key).is_non_zero()) {
                             let (amount0, amount1) = if (order_key.is_sell_token1) {
-                                (0, fee_amount)
+                                (0, data.fee)
                             } else {
-                                (fee_amount, 0)
+                                (data.fee, 0)
                             };
                             core.accumulate_as_fees(pool_key, amount0, amount1);
-                        } else {// TODO: sell token
+                        } else { // TODO: sell token
                         }
-
-                        fee_amount
+                        core.withdraw(data.token, data.recipient, data.amount - data.fee);
                     } else {
-                        0
-                    };
-
-                    core.withdraw(data.token, data.recipient, data.amount - fee_amount);
+                        core.withdraw(data.token, data.recipient, data.amount);
+                    }
 
                     LockCallbackResult::Empty
                 }
@@ -896,22 +735,38 @@ pub mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn validate_caller(self: @ContractState, id: u64, caller: ContractAddress) {
-            assert(self.nft.read().is_account_authorized(id, caller), 'UNAUTHORIZED');
-        }
-
         // assume order has not ended
         fn update_order_sale_rate(
             ref self: ContractState,
             order_key: OrderKey,
-            id: u64,
             order_state: OrderState,
             sale_rate_delta: i129,
             order_started: bool
         ) {
+            let current_time = get_block_timestamp();
+            assert(order_key.end_time > current_time, 'ORDER_ENDED');
+
+            // underflow error if delta is negative and larger than the current sale rate
             let sale_rate_next = order_state.sale_rate.add(sale_rate_delta);
 
-            let (reward_rate, use_snapshot, order_start_time) = if (order_started) {
+            let (reward_rate, use_snapshot, order_start_time) = if (sale_rate_next.is_zero()) {
+                // Cancel order
+                let order_reward_rate = if (order_state.use_snapshot) {
+                    order_state.reward_rate
+                } else {
+                    self.get_reward_rate_at(order_key, order_key.start_time)
+                };
+
+                // all proceeds withdrawn or order has not started
+                assert(
+                    self.get_current_reward_rate(order_key) == order_reward_rate
+                        || order_key.start_time > current_time,
+                    'MUST_WITHDRAW_PROCEEDS'
+                );
+
+                // zero out the state
+                (0, false, order_key.start_time)
+            } else if (order_started) {
                 let current_reward_rate = self.get_current_reward_rate(order_key);
 
                 let current_order_reward_rate = current_reward_rate - order_state.reward_rate;
@@ -930,7 +785,7 @@ pub mod TWAMM {
                     current_order_reward_rate - adjusted_reward_rate
                 };
 
-                (adjusted_reward_rate, true, get_block_timestamp())
+                (adjusted_reward_rate, true, current_time)
             } else {
                 (0, false, order_key.start_time)
             };
@@ -939,13 +794,15 @@ pub mod TWAMM {
             self
                 .orders
                 .write(
-                    (order_key, id),
+                    order_key,
                     OrderState {
                         sale_rate: sale_rate_next,
                         reward_rate: reward_rate,
                         use_snapshot: use_snapshot,
                     }
                 );
+
+            self.emit(OrderUpdated { order_key, sale_rate_delta: sale_rate_delta });
 
             // add sale rate delta 
             if (order_started) {
@@ -1205,20 +1062,20 @@ pub mod TWAMM {
             }
         }
 
-        // withdrawal fee is paid to LPs
         fn withdraw(
             ref self: ContractState,
             order_key: OrderKey,
             token: ContractAddress,
             recipient: ContractAddress,
-            amount: u128
+            amount: u128,
+            fee: u128
         ) {
             match call_core_with_callback::<
                 LockCallbackData, LockCallbackResult
             >(
                 self.core.read(),
                 @LockCallbackData::WithdrawBalanceCallbackData(
-                    WithdrawBalanceCallbackData { order_key, token, recipient, amount }
+                    WithdrawBalanceCallbackData { order_key, token, recipient, amount, fee }
                 )
             ) {
                 LockCallbackResult::Empty => {},

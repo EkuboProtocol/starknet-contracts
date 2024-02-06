@@ -9,6 +9,10 @@ pub mod Positions {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::extensions::twamm::math::{
+        calculate_sale_rate, validate_time, calculate_amount_from_sale_rate
+    };
+    use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -28,7 +32,7 @@ pub mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash,
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
         syscalls::{replace_class_syscall}
     };
 
@@ -49,6 +53,7 @@ pub mod Positions {
     struct Storage {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
+        twamm: ITWAMMDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -249,6 +254,15 @@ pub mod Positions {
             self.require_owner();
             IUpgradeableDispatcher { contract_address: self.nft.read().contract_address }
                 .replace_class_hash(class_hash);
+        }
+
+        fn set_twamm(ref self: ContractState, twamm_address: ContractAddress) {
+            self.require_owner();
+            self.twamm.write(ITWAMMDispatcher { contract_address: twamm_address });
+        }
+
+        fn get_twamm_address(self: @ContractState) -> ContractAddress {
+            self.twamm.read().contract_address
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
@@ -475,6 +489,98 @@ pub mod Positions {
             call_core_with_callback::<
                 LockCallbackData, PoolPrice
             >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+        }
+
+        // Mint a twamm position and set sale rate.
+        fn mint_and_update_sale_rate(
+            ref self: ContractState,
+            twamm_pool_key: TWAMMPoolKey,
+            is_sell_token1: bool,
+            start_time: u64,
+            end_time: u64,
+            amount: u128
+        ) -> (u64, u128) {
+            let id = self.mint_v2(Zero::zero());
+
+            let current_time = get_block_timestamp();
+
+            let sale_rate = if (start_time <= current_time) {
+                calculate_sale_rate(amount, end_time, current_time)
+            } else {
+                calculate_sale_rate(amount, end_time, start_time)
+            };
+
+            let token = if (is_sell_token1) {
+                twamm_pool_key.token1
+            } else {
+                twamm_pool_key.token0
+            };
+
+            let twamm = self.twamm.read();
+
+            // transfer funds to twamm
+            IERC20Dispatcher { contract_address: token }
+                .transfer(twamm.contract_address, amount.into());
+
+            twamm
+                .update_order(
+                    OrderKey {
+                        owner: get_contract_address(),
+                        twamm_pool_key,
+                        salt: id.into(),
+                        is_sell_token1,
+                        start_time,
+                        end_time,
+                    },
+                    i129 { mag: sale_rate, sign: false }
+                );
+
+            (id, sale_rate)
+        }
+
+        // Update an existing twamm position
+        fn update_sale_rate(ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(
+                nft.is_account_authorized(order_key.salt.try_into().expect('INVALID_ID'), caller),
+                'UNAUTHORIZED'
+            );
+
+            let twamm = self.twamm.read();
+
+            // if increasing sale rate, transfer additional funds to twamm
+            if (!sale_rate_delta.sign) {
+                let token = if (order_key.is_sell_token1) {
+                    order_key.twamm_pool_key.token1
+                } else {
+                    order_key.twamm_pool_key.token0
+                };
+
+                let amount = calculate_amount_from_sale_rate(
+                    sale_rate_delta.mag, order_key.end_time, order_key.start_time,
+                );
+
+                // transfer funds to twamm
+                IERC20Dispatcher { contract_address: token }
+                    .transfer(twamm.contract_address, amount.into());
+            }
+
+            twamm.update_order(order_key, sale_rate_delta);
+        }
+
+        // Withdraws proceeds from a twamm position
+        fn withdraw_proceeds(ref self: ContractState, order_key: OrderKey) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(
+                nft.is_account_authorized(order_key.salt.try_into().expect('INVALID_ID'), caller),
+                'UNAUTHORIZED'
+            );
+
+            let twamm = self.twamm.read();
+
+            twamm.withdraw_from_order(order_key, caller);
         }
     }
 }

@@ -216,7 +216,7 @@ pub impl DeployerTraitImpl of DeployerTrait {
         let (address, _) = deploy_syscall(
             TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, 'twamm://')).span(),
+            serialize(@(default_owner(), core)).span(),
             true
         )
             .expect('twamm deploy failed');
