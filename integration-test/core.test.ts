@@ -1,7 +1,7 @@
 import {
   Account,
+  BlockTag,
   Contract,
-  Nonce,
   num,
   RpcProvider,
   shortString,
@@ -20,7 +20,7 @@ import PositionsCompiledContractCASM from "../target/dev/ekubo_Positions.compile
 import OwnedNFTContractCASM from "../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import MockERC20CASM from "../target/dev/ekubo_MockERC20.compiled_contract_class.json";
 import RouterCASM from "../target/dev/ekubo_Router.compiled_contract_class.json";
-import { describe, it, beforeAll, beforeEach, afterEach, expect } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 async function setupContracts({ deployer }: { deployer: Account }) {
   const simpleTokenContractDeclare = await deployer.declareIfNot({
@@ -90,32 +90,24 @@ async function setupContracts({ deployer }: { deployer: Account }) {
 export async function deployTokens({
   classHash,
   deployer,
-  getAndIncrementNonce,
 }: {
   deployer: Account;
   classHash: string;
-  getAndIncrementNonce: () => Nonce;
 }): Promise<[token0: string, token1: string]> {
   const {
     contract_address: [tokenAddressA],
-  } = await deployer.deploy(
-    {
-      classHash: classHash,
+  } = await deployer.deploy({
+    classHash: classHash,
 
-      constructorCalldata: [deployer.address, (1n << 128n) - 1n],
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+    constructorCalldata: [deployer.address, (1n << 128n) - 1n],
+  });
 
   const {
     contract_address: [tokenAddressB],
-  } = await deployer.deploy(
-    {
-      classHash: classHash,
-      constructorCalldata: [deployer.address, (1n << 128n) - 1n],
-    },
-    { nonce: getAndIncrementNonce() }
-  );
+  } = await deployer.deploy({
+    classHash: classHash,
+    constructorCalldata: [deployer.address, (1n << 128n) - 1n],
+  });
 
   const [token0, token1] =
     BigInt(tokenAddressA) < BigInt(tokenAddressB)
@@ -154,8 +146,6 @@ describe("core", () => {
 
   let tokenClassHash: string;
 
-  let getAndIncrementNonce: () => Nonce;
-
   beforeAll(async () => {
     provider = new RpcProvider({
       nodeUrl: "http://127.0.0.1:5050",
@@ -179,13 +169,6 @@ describe("core", () => {
     router = new Contract(Router.abi, setup.router, deployer);
 
     tokenClassHash = setup.tokenClassHash;
-
-    let nonce = await deployer.getNonce("pending");
-    getAndIncrementNonce = function getAndIncrementNonce() {
-      let next = nonce;
-      nonce = num.toHexString(BigInt(next) + 1n);
-      return next;
-    };
   }, 300_000);
 
   const anyPoolCasesOnly = POOL_CASES.some((p) => p.only);
@@ -208,14 +191,12 @@ describe("core", () => {
         extension: string;
       };
 
-      const liquiditiesActual: bigint[] = [];
-
       // set up the pool according to the pool case
       beforeEach(async () => {
+        const liquiditiesActual: { token_id: bigint; liquidity: bigint }[] = [];
         const [token0Address, token1Address] = await deployTokens({
           deployer,
           classHash: tokenClassHash,
-          getAndIncrementNonce,
         });
 
         token0 = new Contract(MockERC20.abi, token0Address, deployer);
@@ -229,18 +210,12 @@ describe("core", () => {
           extension: "0x0",
         };
 
-        await core.invoke(
-          "initialize_pool",
-          [
-            poolKey,
+        await core.invoke("initialize_pool", [
+          poolKey,
 
-            // starting tick
-            toI129(pool.startingTick),
-          ],
-          {
-            nonce: getAndIncrementNonce(),
-          }
-        );
+          // starting tick
+          toI129(pool.startingTick),
+        ]);
 
         for (const { liquidity, bounds } of positions) {
           const { amount0, amount1 } = getAmountsForLiquidity({
@@ -248,20 +223,8 @@ describe("core", () => {
             liquidity,
             bounds,
           });
-          await token0.invoke(
-            "transfer",
-            [positionsContract.address, amount0],
-            {
-              nonce: getAndIncrementNonce(),
-            }
-          );
-          await token1.invoke(
-            "transfer",
-            [positionsContract.address, amount1],
-            {
-              nonce: getAndIncrementNonce(),
-            }
-          );
+          await token0.invoke("transfer", [positionsContract.address, amount0]);
+          await token1.invoke("transfer", [positionsContract.address, amount1]);
 
           const { transaction_hash } = await positionsContract.invoke(
             "mint_and_deposit",
@@ -269,50 +232,112 @@ describe("core", () => {
               poolKey,
               { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
               liquidity,
-            ],
-            {
-              nonce: getAndIncrementNonce(),
-            }
+            ]
           );
 
           const receipt = await provider.waitForTransaction(transaction_hash, {
             retryInterval: 0,
           });
 
+          const [{ Transfer }] = nft.parseEvents(receipt);
+
           const parsed = core.parseEvents(receipt);
 
           const [{ PositionUpdated }] = parsed;
 
-          liquiditiesActual.push(
-            (
+          liquiditiesActual.push({
+            token_id: (Transfer as unknown as { token_id: bigint }).token_id,
+            liquidity: (
               PositionUpdated as unknown as {
                 params: { liquidity_delta: { mag: bigint; sign: boolean } };
               }
-            ).params.liquidity_delta.mag
-          );
+            ).params.liquidity_delta.mag,
+          });
         }
 
         // transfer remaining balances to swapper, so it can swap whatever is needed
-        await token0.invoke(
-          "transfer",
-          [router.address, await token0.call("balanceOf", [deployer.address])],
-          {
-            nonce: getAndIncrementNonce(),
+        await token0.invoke("transfer", [
+          router.address,
+          await token0.call("balanceOf", [deployer.address]),
+        ]);
+        await token1.invoke("transfer", [
+          router.address,
+          await token1.call("balanceOf", [deployer.address]),
+        ]);
+
+        return async () => {
+          let cumulativeProtocolFee0 = 0n;
+          let cumulativeProtocolFee1 = 0n;
+
+          const withdrawalTransactionHashes: string[] = [];
+          for (let i = 0; i < positions.length; i++) {
+            const { bounds } = positions[i];
+
+            const boundsArgument = {
+              lower: toI129(bounds.lower),
+              upper: toI129(bounds.upper),
+            };
+
+            const { liquidity: expectedLiquidity, token_id } =
+              liquiditiesActual[i];
+
+            const { liquidity, amount0, amount1 } =
+              (await positionsContract.call(
+                "get_token_info",
+                [token_id, poolKey, boundsArgument],
+                { blockIdentifier: BlockTag.pending }
+              )) as unknown as {
+                liquidity: bigint;
+                amount0: bigint;
+                amount1: bigint;
+                fees0: bigint;
+                fees1: bigint;
+              };
+
+            expect(liquidity).toEqual(expectedLiquidity);
+
+            cumulativeProtocolFee0 += computeFee(amount0, poolKey.fee);
+            cumulativeProtocolFee1 += computeFee(amount1, poolKey.fee);
+
+            const { transaction_hash } = await positionsContract.invoke(
+              "withdraw",
+              [token_id, poolKey, boundsArgument, liquidity, 0, 0, true]
+            );
+            withdrawalTransactionHashes.push(transaction_hash);
           }
-        );
-        await token1.invoke(
-          "transfer",
-          [router.address, await token1.call("balanceOf", [deployer.address])],
-          {
-            nonce: getAndIncrementNonce(),
-          }
-        );
+
+          // wait for all the withdrawals to be mined
+          await Promise.all(
+            withdrawalTransactionHashes.map((hash) =>
+              provider.waitForTransaction(hash, { retryInterval: 0 })
+            )
+          );
+
+          const [protocolFee0, protocolFee1] = await Promise.all([
+            core.call("get_protocol_fees_collected", [token0.address]),
+            core.call("get_protocol_fees_collected", [token1.address]),
+          ]);
+
+          expect(protocolFee0).toEqual(cumulativeProtocolFee0);
+          expect(protocolFee1).toEqual(cumulativeProtocolFee1);
+
+          const [balance0, balance1] = await Promise.all([
+            token0.call("balanceOf", [core.address]),
+            token1.call("balanceOf", [core.address]),
+          ]);
+
+          // assuming up to 1 wei of rounding error per swap / withdrawal
+          expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
+          expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
+
+          // extra is just to account for rounding error for position mints and withdraws as well as swaps (each iteration causes rounding error)
+          expect(balance0).toBeLessThanOrEqual(cumulativeProtocolFee0 + 200n);
+          expect(balance1).toBeLessThanOrEqual(cumulativeProtocolFee1 + 200n);
+        };
       });
 
       for (const swapCase of SWAP_CASES) {
-        (swapCase.only && (!anyPoolCasesOnly || poolCaseOnly)
-          ? it.only
-          : it.concurrent)(
+        (swapCase.only && (!anyPoolCasesOnly || poolCaseOnly) ? it.only : it)(
           `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
             swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
           }${
@@ -340,7 +365,6 @@ describe("core", () => {
                 ],
                 {
                   maxFee: 1_000_000_000_000_000_000n,
-                  nonce: getAndIncrementNonce(),
                 }
               ));
             } catch (error) {
@@ -394,73 +418,6 @@ describe("core", () => {
           }
         );
       }
-
-      afterEach(async () => {
-        let cumulativeProtocolFee0 = 0n;
-        let cumulativeProtocolFee1 = 0n;
-
-        const withdrawalTransactionHashes: string[] = [];
-        for (let i = 0; i < positions.length; i++) {
-          const { bounds } = positions[i];
-
-          const boundsArgument = {
-            lower: toI129(bounds.lower),
-            upper: toI129(bounds.upper),
-          };
-
-          const { liquidity, amount0, amount1 } = (await positionsContract.call(
-            "get_token_info",
-            [i + 1, poolKey, boundsArgument],
-            { blockIdentifier: "pending" }
-          )) as unknown as {
-            liquidity: bigint;
-            amount0: bigint;
-            amount1: bigint;
-            fees0: bigint;
-            fees1: bigint;
-          };
-
-          expect(liquidity).toEqual(liquiditiesActual[i]);
-
-          cumulativeProtocolFee0 += computeFee(amount0, poolKey.fee);
-          cumulativeProtocolFee1 += computeFee(amount1, poolKey.fee);
-
-          const { transaction_hash } = await positionsContract.invoke(
-            "withdraw",
-            [i + 1, poolKey, boundsArgument, liquiditiesActual[i], 0, 0, true],
-            { nonce: getAndIncrementNonce() }
-          );
-          withdrawalTransactionHashes.push(transaction_hash);
-        }
-
-        // wait for all the withdrawals to be mined
-        await Promise.all(
-          withdrawalTransactionHashes.map((hash) =>
-            provider.waitForTransaction(hash, { retryInterval: 0 })
-          )
-        );
-
-        const [protocolFee0, protocolFee1] = await Promise.all([
-          core.call("get_protocol_fees_collected", [token0.address]),
-          core.call("get_protocol_fees_collected", [token1.address]),
-        ]);
-
-        expect(protocolFee0).toEqual(cumulativeProtocolFee0);
-        expect(protocolFee1).toEqual(cumulativeProtocolFee1);
-
-        const [balance0, balance1] = await Promise.all([
-          token0.call("balanceOf", [core.address]),
-          token1.call("balanceOf", [core.address]),
-        ]);
-
-        // assuming up to 1 wei of rounding error per swap / withdrawal
-        expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
-        expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
-
-        // 100 is just to account for rounding error for position mints and withdraws as well as swaps (each iteration causes rounding error)
-        expect(balance0).toBeLessThanOrEqual(cumulativeProtocolFee0 + 200n);
-        expect(balance1).toBeLessThanOrEqual(cumulativeProtocolFee1 + 200n);
-      });
     });
   }
 });

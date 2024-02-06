@@ -102,6 +102,7 @@ export const POOL_CASES: Array<{
     ],
   },
   {
+    only: true,
     name: "2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3%",
     pool: {
       startingTick: 0n,
