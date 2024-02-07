@@ -10,10 +10,10 @@ import Decimal from "decimal.js-light";
 import { getAmountsForLiquidity } from "./utils/liquidity-to-amounts";
 import { setupContracts } from "./utils/setupContracts";
 import { deployTokens } from "./utils/deployTokens";
-import { fromI129, toI129 } from "./utils/serialize";
-import { ACCOUNTS, provider } from "./utils/provider";
+import { fromI129, i129, toI129 } from "./utils/serialize";
+import { accountPool, provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 Decimal.set({ precision: 80 });
 
@@ -21,13 +21,19 @@ describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    setup = await setupContracts({ deployer: ACCOUNTS[0] });
+    const deployer = await accountPool.get();
+    setup = await setupContracts({ deployer });
+    accountPool.release(deployer);
   }, 300_000);
 
   for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
     describe(poolCaseName, () => {
       let token0: Contract;
       let token1: Contract;
+      let core: Contract;
+      let positionsContract: Contract;
+      let nft: Contract;
+      let router: Contract;
       let account: Account;
 
       let poolKey: {
@@ -40,9 +46,15 @@ describe("core", () => {
 
       // set up the pool according to the pool case
       beforeEach(async () => {
-        account = ACCOUNTS[0];
-
-        const liquiditiesActual: { token_id: bigint; liquidity: bigint }[] = [];
+        account = await accountPool.get();
+        core = new Contract(CoreCompiledContract.abi, setup.core, account);
+        positionsContract = new Contract(
+          PositionsCompiledContract.abi,
+          setup.positions,
+          account
+        );
+        router = new Contract(Router.abi, setup.router, account);
+        nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
         const [token0Address, token1Address] = await deployTokens({
           deployer: account,
           classHash: setup.tokenClassHash,
@@ -59,17 +71,7 @@ describe("core", () => {
           extension: "0x0",
         };
 
-        const core = new Contract(
-          CoreCompiledContract.abi,
-          setup.core,
-          account
-        );
-        const positionsContract = new Contract(
-          PositionsCompiledContract.abi,
-          setup.positions,
-          account
-        );
-        const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
+        const liquiditiesActual: { token_id: bigint; liquidity: bigint }[] = [];
 
         await core.invoke("initialize_pool", [
           poolKey,
@@ -207,13 +209,6 @@ describe("core", () => {
                 .toFixed(3)}`
             : ""
         }`, async () => {
-          const core = new Contract(
-            CoreCompiledContract.abi,
-            setup.core,
-            account
-          );
-          const router = new Contract(Router.abi, setup.router, account);
-
           let transaction_hash: string;
           try {
             ({ transaction_hash } = await router.invoke(
@@ -269,21 +264,30 @@ describe("core", () => {
               const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
                 core.parseEvents(swap_receipt)[0].Swapped;
 
+              const { amount0, amount1 } = delta as unknown as {
+                amount0: i129;
+                amount1: i129;
+              };
+
               expect({
                 execution_resources,
                 delta: {
-                  amount0: fromI129((delta as any).amount0),
-                  amount1: fromI129((delta as any).amount1),
+                  amount0: fromI129(amount0),
+                  amount1: fromI129(amount1),
                 },
                 liquidity_after,
                 sqrt_ratio_after,
-                tick_after: fromI129(tick_after as any),
+                tick_after: fromI129(tick_after as unknown as i129),
               }).toMatchSnapshot();
               break;
             }
           }
         }, 300_000);
       }
+
+      afterEach(() => {
+        accountPool.release(account);
+      });
     });
   }
 });

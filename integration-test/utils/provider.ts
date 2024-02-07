@@ -4,7 +4,7 @@ export const provider: RpcProvider = new RpcProvider({
   nodeUrl: "http://127.0.0.1:5050",
 });
 
-export const ACCOUNTS = [
+const ACCOUNTS = [
   {
     address: 0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691n,
     privateKey: 0x71d7bb07b9a64f6f78ac4c816aff4da9n,
@@ -54,3 +54,32 @@ export const ACCOUNTS = [
       num.toHexString(a.privateKey)
     )
 );
+
+class AccountPool {
+  private inUse: { [index: number]: true } = {};
+  private queue: ((account: Account) => void)[] = [];
+
+  public get(): Promise<Account> {
+    const next = ACCOUNTS.findIndex((_, ix) => !this.inUse[ix]);
+
+    if (next !== -1) {
+      this.inUse[next] = true;
+      return Promise.resolve(ACCOUNTS[next]);
+    }
+
+    return new Promise((resolve) => {
+      this.queue.push(resolve);
+    });
+  }
+
+  public release(account: Account): void {
+    if (this.queue.length) {
+      const next = this.queue.shift();
+      next(account);
+    } else {
+      delete this.inUse[ACCOUNTS.findIndex((a) => a === account)];
+    }
+  }
+}
+
+export const accountPool = new AccountPool();
