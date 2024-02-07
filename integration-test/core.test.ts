@@ -156,11 +156,11 @@ describe("core", () => {
             token0.call("balanceOf", [account.address]),
             token1.call("balanceOf", [account.address]),
           ]);
-          // transfer remaining balances to swapper, so it can swap whatever is needed
+          // transfer remaining balances to router
           await account.execute(
             [
-              token0.populate("transfer", [setup.positions, remaining0]),
-              token1.populate("transfer", [setup.positions, remaining1]),
+              token0.populate("transfer", [setup.router, remaining0]),
+              token1.populate("transfer", [setup.router, remaining1]),
             ],
             [],
             getTxSettings()
