@@ -1,4 +1,4 @@
-import { BlockTag, Contract } from "starknet";
+import { BlockTag, Call, Contract } from "starknet";
 import CoreContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
@@ -6,7 +6,6 @@ import MockERC20Contract from "../target/dev/ekubo_MockERC20.contract_class.json
 import RouterContract from "../target/dev/ekubo_Router.contract_class.json";
 import { POOL_CASES } from "./cases/poolCases";
 import { SWAP_CASES } from "./cases/swapCases";
-import Decimal from "decimal.js-light";
 import { getAmountsForLiquidity } from "./utils/liquidityMath";
 import { setupContracts } from "./utils/setupContracts";
 import { deployTokens } from "./utils/deployTokens";
@@ -15,8 +14,7 @@ import { createAccount, provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
 import { beforeAll, describe, it } from "vitest";
 import { getNextTransactionSettingsFunction } from "./utils/getNextTransactionSettingsFunction";
-
-Decimal.set({ precision: 80 });
+import { formatPrice } from "./utils/formatPrice";
 
 describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
@@ -42,14 +40,13 @@ describe("core", () => {
           swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
         }${
           swapCase.sqrtRatioLimit
-            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
-                .div(new Decimal(2).pow(128))
-                .toFixed(3)}`
+            ? ` limit ${formatPrice(swapCase.sqrtRatioLimit)}`
             : ""
         }`, async ({ expect }) => {
           const account = await createAccount();
           const getTxSettings = await getNextTransactionSettingsFunction(
-            account
+            account,
+            "0x1"
           );
 
           const core = new Contract(CoreContract.abi, setup.core, account);
@@ -241,7 +238,7 @@ describe("core", () => {
           let cumulativeProtocolFee0 = 0n;
           let cumulativeProtocolFee1 = 0n;
 
-          const withdrawalTransactionHashes: string[] = [];
+          const withdrawalCalls: Call[] = [];
           for (let i = 0; i < positions.length; i++) {
             const { bounds } = positions[i];
 
@@ -271,20 +268,21 @@ describe("core", () => {
             cumulativeProtocolFee0 += computeFee(amount0, poolKey.fee);
             cumulativeProtocolFee1 += computeFee(amount1, poolKey.fee);
 
-            const { transaction_hash } = await positionsContract.invoke(
-              "withdraw",
-              [token_id, poolKey, boundsArgument, liquidity, 0, 0, true],
-              getTxSettings()
+            withdrawalCalls.push(
+              positionsContract.populate("withdraw", [
+                token_id,
+                poolKey,
+                boundsArgument,
+                liquidity,
+                0,
+                0,
+                true,
+              ])
             );
-            withdrawalTransactionHashes.push(transaction_hash);
           }
 
           // wait for all the withdrawals to be mined
-          await Promise.all(
-            withdrawalTransactionHashes.map((hash) =>
-              provider.waitForTransaction(hash, { retryInterval: 0 })
-            )
-          );
+          await account.execute(withdrawalCalls, [], getTxSettings());
 
           const [protocolFee0, protocolFee1, balance0, balance1] =
             await Promise.all([
