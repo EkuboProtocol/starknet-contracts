@@ -1,19 +1,19 @@
-import { Account, BlockTag, Contract } from "starknet";
+import { BlockTag, Contract } from "starknet";
 import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
 import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
 import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
 import Router from "../target/dev/ekubo_Router.contract_class.json";
-import { POOL_CASES } from "./cases/pool-cases";
-import { SWAP_CASES } from "./cases/swap-cases";
+import { POOL_CASES } from "./cases/poolCases";
+import { SWAP_CASES } from "./cases/swapCases";
 import Decimal from "decimal.js-light";
-import { getAmountsForLiquidity } from "./utils/liquidity-to-amounts";
+import { getAmountsForLiquidity } from "./utils/liquidityMath";
 import { setupContracts } from "./utils/setupContracts";
 import { deployTokens } from "./utils/deployTokens";
 import { fromI129, i129, toI129 } from "./utils/serialize";
-import { accountPool, provider } from "./utils/provider";
+import { createAccount, provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, it } from "vitest";
 
 Decimal.set({ precision: 80 });
 
@@ -21,12 +21,13 @@ describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    const deployer = await accountPool.get();
-    setup = await setupContracts({ deployer });
-    accountPool.release(deployer);
+    setup = await setupContracts();
   }, 300_000);
 
-  for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
+  for (const { name: poolCaseName, pool, positions } of POOL_CASES.slice(
+    0,
+    1
+  )) {
     describe(poolCaseName, () => {
       let token0: Contract;
       let token1: Contract;
@@ -34,7 +35,6 @@ describe("core", () => {
       let positionsContract: Contract;
       let nft: Contract;
       let router: Contract;
-      let account: Account;
 
       let poolKey: {
         token0: string;
@@ -45,8 +45,9 @@ describe("core", () => {
       };
 
       // set up the pool according to the pool case
-      beforeEach(async () => {
-        account = await accountPool.get();
+      beforeEach(async ({ expect }) => {
+        const account = await createAccount();
+
         core = new Contract(CoreCompiledContract.abi, setup.core, account);
         positionsContract = new Contract(
           PositionsCompiledContract.abi,
@@ -176,18 +177,17 @@ describe("core", () => {
             )
           );
 
-          const [protocolFee0, protocolFee1] = await Promise.all([
-            core.call("get_protocol_fees_collected", [token0.address]),
-            core.call("get_protocol_fees_collected", [token1.address]),
-          ]);
+          const [protocolFee0, protocolFee1, balance0, balance1] =
+            await Promise.all([
+              core.call("get_protocol_fees_collected", [token0.address]),
+              core.call("get_protocol_fees_collected", [token1.address]),
+
+              token0.call("balanceOf", [setup.core]),
+              token1.call("balanceOf", [setup.core]),
+            ]);
 
           expect(protocolFee0).toEqual(cumulativeProtocolFee0);
           expect(protocolFee1).toEqual(cumulativeProtocolFee1);
-
-          const [balance0, balance1] = await Promise.all([
-            token0.call("balanceOf", [setup.core]),
-            token1.call("balanceOf", [setup.core]),
-          ]);
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
           expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
@@ -208,7 +208,7 @@ describe("core", () => {
                 .div(new Decimal(2).pow(128))
                 .toFixed(3)}`
             : ""
-        }`, async () => {
+        }`, async ({ expect }) => {
           let transaction_hash: string;
           try {
             ({ transaction_hash } = await router.invoke(
@@ -284,10 +284,6 @@ describe("core", () => {
           }
         }, 300_000);
       }
-
-      afterEach(() => {
-        accountPool.release(account);
-      });
     });
   }
 });

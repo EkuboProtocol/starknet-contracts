@@ -1,4 +1,4 @@
-import { getAmountsForLiquidity } from "./liquidity-to-amounts";
+import { getAmountsForLiquidity } from "./liquidityMath";
 import { describe, it, expect } from "vitest";
 
 describe(getAmountsForLiquidity, () => {

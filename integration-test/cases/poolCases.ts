@@ -8,7 +8,6 @@ function nearest(tick: bigint, spacing: bigint): bigint {
 }
 
 export const POOL_CASES: Array<{
-  only?: true;
   name: string;
   pool: {
     startingTick: bigint;
