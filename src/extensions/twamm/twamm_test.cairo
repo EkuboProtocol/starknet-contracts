@@ -1901,6 +1901,74 @@ mod PlaceOrdersAndUpdateSaleRate {
         // pays 1% fee of 5000
         assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
     }
+
+    #[test]
+    fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token1() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = FEE_ONE_PERCENT;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm_with_default_liquidity(
+            ref d, core, fee, initial_tick
+        );
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        let token_balance_before = IERC20Dispatcher {
+            contract_address: setup.token1.contract_address
+        }
+            .balanceOf(owner);
+
+        // decrease sale rate
+        set_contract_address(owner);
+        positions
+            .update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate / 2, sign: true });
+        IClearDispatcher { contract_address: twamm.contract_address }
+            .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
+
+        let token_balance_after = IERC20Dispatcher {
+            contract_address: setup.token1.contract_address
+        }
+            .balanceOf(owner);
+
+        // pays 1% fee of 5000
+        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+    }
 }
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
