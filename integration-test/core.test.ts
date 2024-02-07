@@ -13,7 +13,7 @@ import { deployTokens } from "./utils/deployTokens";
 import { fromI129, i129, toI129 } from "./utils/serialize";
 import { createAccount, provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
-import { beforeAll, beforeEach, describe, it } from "vitest";
+import { beforeAll, describe, it } from "vitest";
 
 Decimal.set({ precision: 80 });
 
