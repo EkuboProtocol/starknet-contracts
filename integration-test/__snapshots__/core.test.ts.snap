@@ -1,5 +1,62 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": -10000n,
+    "amount1": 10001n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 28,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 59,
+    "range_check_builtin_applications": 2246,
+    "steps": 44025,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431771614280n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": 10001n,
+    "amount1": -10000n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 84,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 2314,
+    "steps": 55159,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431764808632n,
+  "tick_after": -1n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 2 limit 2.000 1`] = `
+{
+  "delta": {
+    "amount0": -1000000000000000000n,
+    "amount1": 1000000000000000002n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 28,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 59,
+    "range_check_builtin_applications": 2254,
+    "steps": 44042,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463803656974352706675260n,
+  "tick_after": 0n,
+}
+`;
+
 exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
@@ -16,6 +73,44 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
   "tick_after": 0n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 1000000000000000002n,
+    "amount1": -1000000000000000000n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 57,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 2318,
+    "steps": 49138,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463123092240510829747992n,
+  "tick_after": -1n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 5 1`] = `
+{
+  "delta": {
+    "amount0": 1000000000000000002n,
+    "amount1": -1000000000000000000n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 57,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 2318,
+    "steps": 49141,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463123092240510829747992n,
+  "tick_after": -1n,
 }
 `;
 
@@ -58,6 +153,69 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1.000 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1.000 2`] = `
+{
+  "revert_reason": "LIMIT_DIRECTION",
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token0 1`] = `
+{
+  "delta": {
+    "amount0": 10000n,
+    "amount1": -9999n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 84,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 2246,
+    "steps": 55092,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431764808633n,
+  "tick_after": -1n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token1 1`] = `
+{
+  "delta": {
+    "amount0": -9999n,
+    "amount1": 10000n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 28,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 59,
+    "range_check_builtin_applications": 2191,
+    "steps": 43956,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463463374607431771614279n,
+  "tick_after": 0n,
+}
+`;
+
+exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token0 skip 2 limit 0.500 1`] = `
+{
+  "delta": {
+    "amount0": 1000000000000000000n,
+    "amount1": -999999999999999998n,
+  },
+  "execution_resources": {
+    "bitwise_builtin_applications": 57,
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 2251,
+    "steps": 49074,
+  },
+  "liquidity_after": 1000000000000000000000000000000000000n,
+  "sqrt_ratio_after": 340282366920938463123092240510829748333n,
+  "tick_after": -1n,
 }
 `;
 
