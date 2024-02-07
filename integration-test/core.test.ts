@@ -1,170 +1,247 @@
-import { Account, Contract, TransactionStatus } from "starknet";
-import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
-import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
+import { BlockTag, Contract } from "starknet";
+import CoreContract from "../target/dev/ekubo_Core.contract_class.json";
+import PositionsContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
-import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
-import Router from "../target/dev/ekubo_Router.contract_class.json";
-import { POOL_CASES } from "./pool-cases";
-import { SWAP_CASES } from "./swap-cases";
-import { DevnetProvider } from "./devnet";
-import { MAX_SQRT_RATIO, MIN_SQRT_RATIO } from "./constants";
-import ADDRESSES from "./addresses.json";
+import MockERC20Contract from "../target/dev/ekubo_MockERC20.contract_class.json";
+import RouterContract from "../target/dev/ekubo_Router.contract_class.json";
+import { POOL_CASES } from "./cases/poolCases";
+import { SWAP_CASES } from "./cases/swapCases";
 import Decimal from "decimal.js-light";
-import { getAccounts } from "./accounts";
-import { getAmountsForLiquidity } from "./liquidity-to-amounts";
-
-function toI129(x: bigint): { mag: bigint; sign: "0x1" | "0x0" } {
-  return {
-    mag: x < 0n ? x * -1n : x,
-    sign: x < 0n ? "0x1" : "0x0",
-  };
-}
-
-function fromI129(x: { mag: bigint; sign: boolean }): bigint {
-  return x.sign ? x.mag * -1n : x.mag;
-}
+import { getAmountsForLiquidity } from "./utils/liquidityMath";
+import { setupContracts } from "./utils/setupContracts";
+import { deployTokens } from "./utils/deployTokens";
+import { fromI129, i129, toI129 } from "./utils/serialize";
+import { createAccount, provider } from "./utils/provider";
+import { computeFee } from "./utils/computeFee";
+import { beforeAll, describe, it } from "vitest";
+import { getNextTransactionSettingsFunction } from "./utils/getNextTransactionSettingsFunction";
 
 Decimal.set({ precision: 80 });
 
-function computeFee(x: bigint, fee: bigint): bigint {
-  const p = x * fee;
-  return p / 2n ** 128n + (p % 2n ** 128n !== 0n ? 1n : 0n);
-}
 describe("core", () => {
-  let provider: DevnetProvider;
-  let accounts: Account[];
-
-  let core: Contract;
-  let positionsContract: Contract;
-  let nft: Contract;
-  let token0: Contract;
-  let token1: Contract;
-  let router: Contract;
+  let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    provider = new DevnetProvider();
-    accounts = getAccounts(provider);
+    setup = await setupContracts({
+      core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
+      positions:
+        "0x2b761d7b40a774028b7f2f095b0164c5589efdb3307bf77ca15183be76a6ea8",
+      router:
+        "0x2f70c9815461400d3651931a1f88a85e1097e6e96c24c17eb93ba213c035a9e",
+      nft: "0x4a234c6c0599299e96f51d0212b4716b93369c24b7c3c75474b68fca41e0d83",
+      tokenClassHash:
+        "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
+    });
+    console.log(setup);
+  }, 300_000);
 
-    await provider.loadDump();
-    token0 = new Contract(MockERC20.abi, ADDRESSES.token0, accounts[0]);
-    token1 = new Contract(MockERC20.abi, ADDRESSES.token1, accounts[0]);
+  for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
+    describe.concurrent(poolCaseName, () => {
+      for (const swapCase of SWAP_CASES) {
+        it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
+          swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
+        }${
+          swapCase.sqrtRatioLimit
+            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
+                .div(new Decimal(2).pow(128))
+                .toFixed(3)}`
+            : ""
+        }`, async ({ expect }) => {
+          const account = await createAccount();
+          const getTxSettings = await getNextTransactionSettingsFunction(
+            account
+          );
 
-    core = new Contract(CoreCompiledContract.abi, ADDRESSES.core, accounts[0]);
+          const core = new Contract(CoreContract.abi, setup.core, account);
+          const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
+          const positionsContract = new Contract(
+            PositionsContract.abi,
+            setup.positions,
+            account
+          );
+          const router = new Contract(
+            RouterContract.abi,
+            setup.router,
+            account
+          );
 
-    positionsContract = new Contract(
-      PositionsCompiledContract.abi,
-      ADDRESSES.positions,
-      accounts[0]
-    );
-
-    nft = new Contract(
-      OwnedNFTContract.abi,
-      ADDRESSES.nft,
-      accounts[0]
-    );
-
-    router = new Contract(Router.abi, ADDRESSES.router, accounts[0]);
-  });
-
-  for (const {
-    only: poolCaseOnly,
-    name: poolCaseName,
-    pool,
-    positions: positions,
-  } of POOL_CASES) {
-    (poolCaseOnly ? describe.only : describe)(poolCaseName, () => {
-      let poolKey: {
-        token0: string;
-        token1: string;
-        fee: bigint;
-        tick_spacing: bigint;
-        extension: string;
-      };
-
-      const liquiditiesActual: bigint[] = [];
-
-      let setupSuccess = false;
-
-      // set up the pool according to the pool case
-      beforeAll(async () => {
-        await provider.loadDump();
-
-        poolKey = {
-          token0: token0.address,
-          token1: token1.address,
-          fee: pool.fee,
-          tick_spacing: pool.tickSpacing,
-          extension: "0x0",
-        };
-
-        await core.invoke("initialize_pool", [
-          poolKey,
-
-          // starting tick
-          toI129(pool.startingTick),
-        ]);
-
-        for (const { liquidity, bounds } of positions) {
-          const { amount0, amount1 } = getAmountsForLiquidity({
-            tick: pool.startingTick,
-            liquidity,
-            bounds,
+          const [token0Address, token1Address] = await deployTokens({
+            deployer: account,
+            classHash: setup.tokenClassHash,
+            getTxSettings,
           });
-          await token0.invoke("transfer", [
-            positionsContract.address,
-            amount0,
-          ]);
-          await token1.invoke("transfer", [
-            positionsContract.address,
-            amount1,
-          ]);
 
-          const { transaction_hash } = await positionsContract.invoke(
-            "mint_and_deposit",
-            [
-              poolKey,
-              { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
+          const token0 = new Contract(
+            MockERC20Contract.abi,
+            token0Address,
+            account
+          );
+          const token1 = new Contract(
+            MockERC20Contract.abi,
+            token1Address,
+            account
+          );
+
+          const poolKey = {
+            token0: token0Address,
+            token1: token1Address,
+            fee: pool.fee,
+            tick_spacing: pool.tickSpacing,
+            extension: "0x0",
+          };
+
+          const txHashes: string[] = [];
+          for (const { liquidity, bounds } of positions) {
+            const { amount0, amount1 } = getAmountsForLiquidity({
+              tick: pool.startingTick,
               liquidity,
-            ]
+              bounds,
+            });
+            const { transaction_hash } = await account.execute(
+              [
+                core.populate("maybe_initialize_pool", [
+                  poolKey,
+
+                  // starting tick
+                  toI129(pool.startingTick),
+                ]),
+                token0.populate("transfer", [setup.positions, amount0]),
+                token1.populate("transfer", [setup.positions, amount1]),
+                positionsContract.populate("mint_and_deposit_and_clear_both", [
+                  poolKey,
+                  {
+                    lower: toI129(bounds.lower),
+                    upper: toI129(bounds.upper),
+                  },
+                  liquidity,
+                ]),
+              ],
+              [],
+              getTxSettings()
+            );
+
+            txHashes.push(transaction_hash);
+          }
+
+          const mintReceipts = await Promise.all(
+            txHashes.map((txHash) =>
+              provider.waitForTransaction(txHash, {
+                retryInterval: 0,
+              })
+            )
           );
 
-          const receipt = await provider.getTransactionReceipt(
-            transaction_hash
+          const positionsMinted: { token_id: bigint; liquidity: bigint }[] =
+            mintReceipts.map((receipt) => {
+              const { Transfer } = nft
+                .parseEvents(receipt)
+                .find(({ Transfer }) => Transfer);
+
+              const { PositionUpdated } = core
+                .parseEvents(receipt)
+                .find(({ PositionUpdated }) => PositionUpdated);
+
+              return {
+                token_id: (Transfer as unknown as { token_id: bigint })
+                  .token_id,
+                liquidity: (
+                  PositionUpdated as unknown as {
+                    params: { liquidity_delta: { mag: bigint; sign: boolean } };
+                  }
+                ).params.liquidity_delta.mag,
+              };
+            });
+
+          const [remaining0, remaining1] = await Promise.all([
+            token0.call("balanceOf", [account.address]),
+            token1.call("balanceOf", [account.address]),
+          ]);
+          // transfer remaining balances to swapper, so it can swap whatever is needed
+          await account.execute(
+            [
+              token0.populate("transfer", [setup.positions, remaining0]),
+              token1.populate("transfer", [setup.positions, remaining1]),
+            ],
+            [],
+            getTxSettings()
           );
 
-          const parsed = core.parseEvents(receipt);
+          let transaction_hash: string;
+          try {
+            ({ transaction_hash } = await router.invoke(
+              "swap",
+              [
+                {
+                  pool_key: poolKey,
+                  sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
+                  skip_ahead: swapCase.skipAhead ?? 0,
+                },
+                {
+                  amount: toI129(swapCase.amount),
+                  token: swapCase.isToken1 ? token1.address : token0.address,
+                },
+              ],
+              getTxSettings()
+            ));
+          } catch (error) {
+            transaction_hash = error.transaction_hash;
+            if (!transaction_hash) throw error;
+          }
 
-          const [{ PositionUpdated }] = parsed;
+          const swap_receipt = await provider.waitForTransaction(
+            transaction_hash,
+            { retryInterval: 0 }
+          );
 
-          liquiditiesActual.push((PositionUpdated as unknown as { params: { liquidity_delta: { mag: bigint, sign: boolean } } }).params.liquidity_delta.mag);
-        }
+          switch (swap_receipt.execution_status) {
+            case "REVERTED": {
+              const revertReason = swap_receipt.revert_reason;
 
-        // transfer remaining balances to swapper, so it can swap whatever is needed
-        await token0.invoke("transfer", [
-          router.address,
-          await token0.call("balanceOf", [accounts[0].address]),
-        ]);
-        await token1.invoke("transfer", [
-          router.address,
-          await token1.call("balanceOf", [accounts[0].address]),
-        ]);
+              const hexErrorMessage = /Failure reason: 0x([a-fA-F0-9]+)/g.exec(
+                revertReason
+              )?.[1];
 
-        await provider.dumpState("dump-pool.bin");
+              expect({
+                revert_reason: hexErrorMessage
+                  ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
+                  : /(RunResources has no remaining steps)/g.exec(
+                      revertReason
+                    )?.[1] ?? revertReason,
+              }).toMatchSnapshot();
+              break;
+            }
+            case "SUCCEEDED": {
+              const execution_resources = swap_receipt.execution_resources;
+              if ("memory_holes" in execution_resources) {
+                delete execution_resources["memory_holes"];
+              }
 
-        setupSuccess = true;
-      });
+              const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
+                core.parseEvents(swap_receipt)[0].Swapped;
 
-      beforeEach(async () => {
-        if (setupSuccess) {
-          await provider.loadDump("dump-pool.bin");
-        }
-      });
+              const { amount0, amount1 } = delta as unknown as {
+                amount0: i129;
+                amount1: i129;
+              };
 
-      afterEach(async () => {
-        if (setupSuccess) {
+              expect({
+                execution_resources,
+                delta: {
+                  amount0: fromI129(amount0),
+                  amount1: fromI129(amount1),
+                },
+                liquidity_after,
+                sqrt_ratio_after,
+                tick_after: fromI129(tick_after as unknown as i129),
+              }).toMatchSnapshot();
+              break;
+            }
+          }
+
           let cumulativeProtocolFee0 = 0n;
           let cumulativeProtocolFee1 = 0n;
 
+          const withdrawalTransactionHashes: string[] = [];
           for (let i = 0; i < positions.length; i++) {
             const { bounds } = positions[i];
 
@@ -173,12 +250,15 @@ describe("core", () => {
               upper: toI129(bounds.upper),
             };
 
+            const { liquidity: expectedLiquidity, token_id } =
+              positionsMinted[i];
+
             const { liquidity, amount0, amount1 } =
-              (await positionsContract.call("get_token_info", [
-                i + 1,
-                poolKey,
-                boundsArgument,
-              ])) as unknown as {
+              (await positionsContract.call(
+                "get_token_info",
+                [token_id, poolKey, boundsArgument],
+                { blockIdentifier: BlockTag.pending }
+              )) as unknown as {
                 liquidity: bigint;
                 amount0: bigint;
                 amount1: bigint;
@@ -186,127 +266,46 @@ describe("core", () => {
                 fees1: bigint;
               };
 
-            expect(liquidity).toEqual(liquiditiesActual[i]);
+            expect(liquidity).toEqual(expectedLiquidity);
 
             cumulativeProtocolFee0 += computeFee(amount0, poolKey.fee);
             cumulativeProtocolFee1 += computeFee(amount1, poolKey.fee);
 
-            await positionsContract.invoke("withdraw", [
-              i + 1,
-              poolKey,
-              boundsArgument,
-              liquiditiesActual[i],
-              0,
-              0,
-              true,
-            ]);
+            const { transaction_hash } = await positionsContract.invoke(
+              "withdraw",
+              [token_id, poolKey, boundsArgument, liquidity, 0, 0, true],
+              getTxSettings()
+            );
+            withdrawalTransactionHashes.push(transaction_hash);
           }
 
-          const [protocolFee0, protocolFee1] = await Promise.all([
-            core.call("get_protocol_fees_collected", [token0.address]),
-            core.call("get_protocol_fees_collected", [token1.address]),
-          ]);
+          // wait for all the withdrawals to be mined
+          await Promise.all(
+            withdrawalTransactionHashes.map((hash) =>
+              provider.waitForTransaction(hash, { retryInterval: 0 })
+            )
+          );
+
+          const [protocolFee0, protocolFee1, balance0, balance1] =
+            await Promise.all([
+              core.call("get_protocol_fees_collected", [token0.address]),
+              core.call("get_protocol_fees_collected", [token1.address]),
+
+              token0.call("balanceOf", [setup.core]),
+              token1.call("balanceOf", [setup.core]),
+            ]);
 
           expect(protocolFee0).toEqual(cumulativeProtocolFee0);
           expect(protocolFee1).toEqual(cumulativeProtocolFee1);
-
-          const [balance0, balance1] = await Promise.all([
-            token0.call("balanceOf", [core.address]),
-            token1.call("balanceOf", [core.address]),
-          ]);
 
           // assuming up to 1 wei of rounding error per swap / withdrawal
           expect(balance0).toBeGreaterThanOrEqual(cumulativeProtocolFee0);
           expect(balance1).toBeGreaterThanOrEqual(cumulativeProtocolFee1);
 
-          // 100 is just to account for rounding error for position mints and withdraws as well as swaps (each iteration causes rounding error)
+          // extra is just to account for rounding error for position mints and withdraws as well as swaps (each iteration causes rounding error)
           expect(balance0).toBeLessThanOrEqual(cumulativeProtocolFee0 + 200n);
           expect(balance1).toBeLessThanOrEqual(cumulativeProtocolFee1 + 200n);
-        }
-      });
-
-      for (const swapCase of SWAP_CASES) {
-        (swapCase.only ? it.only : it)(
-          `swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${swapCase.skipAhead ? ` skip ${swapCase.skipAhead}` : ""
-          }${swapCase.sqrtRatioLimit
-            ? ` limit ${new Decimal(swapCase.sqrtRatioLimit.toString())
-              .div(new Decimal(2).pow(128))
-              .toFixed(3)}`
-            : ""
-          }`,
-          async () => {
-            let transaction_hash: string;
-            try {
-              ({ transaction_hash } = await router.invoke(
-                "swap",
-                [
-                  {
-                    pool_key: poolKey,
-                    sqrt_ratio_limit: swapCase.sqrtRatioLimit ?? 0,
-                    skip_ahead: swapCase.skipAhead ?? 0,
-                  },
-                  {
-                    amount: toI129(swapCase.amount),
-                    token: swapCase.isToken1 ? token1.address : token0.address
-                  },
-                ],
-                {
-                  maxFee: 1_000_000_000_000_000n,
-                }
-              ));
-            } catch (error) {
-              transaction_hash = error.transaction_hash;
-              if (!transaction_hash) throw error;
-            }
-
-            const swap_receipt = await provider.getTransactionReceipt(
-              transaction_hash
-            );
-
-            switch (swap_receipt.status) {
-              case TransactionStatus.REVERTED: {
-                const revertReason = (swap_receipt as any)
-                  .revert_reason as string;
-
-                const hexErrorMessage =
-                  /Execution was reverted; failure reason: \[0x([a-fA-F0-9]+)]\./g.exec(
-                    revertReason
-                  )?.[1];
-
-                expect({
-                  revert_reason: hexErrorMessage
-                    ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
-                    : /(End of program was not reached)/g.exec(
-                      revertReason
-                    )?.[1] ?? "could not parse error",
-                }).toMatchSnapshot();
-                break;
-              }
-              case TransactionStatus.ACCEPTED_ON_L2: {
-                const execution_resources = (swap_receipt as any)
-                  .execution_resources;
-                if (execution_resources) {
-                  delete execution_resources["n_memory_holes"];
-                }
-
-                const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                  core.parseEvents(swap_receipt)[0].Swapped;
-
-                expect({
-                  execution_resources,
-                  delta: {
-                    amount0: fromI129((delta as any).amount0),
-                    amount1: fromI129((delta as any).amount1),
-                  },
-                  liquidity_after,
-                  sqrt_ratio_after,
-                  tick_after: fromI129(tick_after as any),
-                }).toMatchSnapshot();
-                break;
-              }
-            }
-          }
-        );
+        }, 300_000);
       }
     });
   }

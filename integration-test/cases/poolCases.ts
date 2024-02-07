@@ -1,4 +1,4 @@
-import { MAX_TICK, MIN_TICK } from "./constants";
+import { MAX_TICK, MIN_TICK } from "../utils/constants";
 
 const THIRTY_BIPS_FEE = (2n ** 128n * 30n) / 10000n;
 const SIXTY_BIPS_TICK_SPACING = 5982n;
@@ -8,7 +8,6 @@ function nearest(tick: bigint, spacing: bigint): bigint {
 }
 
 export const POOL_CASES: Array<{
-  only?: true;
   name: string;
   pool: {
     startingTick: bigint;

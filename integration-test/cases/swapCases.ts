@@ -1,5 +1,4 @@
 export const SWAP_CASES: Array<{
-  only?: true;
   amount: bigint;
   isToken1: boolean;
   sqrtRatioLimit?: bigint;
