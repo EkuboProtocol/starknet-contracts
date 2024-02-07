@@ -31,20 +31,23 @@ export async function createAccount(): Promise<Account> {
     headers: {
       "content-type": "application/json",
     },
-    body: `{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"WEI"}`,
+    body: `{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"WEI","lite":true}`,
   });
 
   if (!response.ok) {
     throw new Error(`Failed to mint: ${await response.text()}`);
   }
 
-  const { transaction_hash, contract_address } = await account.deployAccount({
-    classHash: PREDECLARED_OZ_ACCOUNT_CLASS_HASH,
-    constructorCalldata,
-    addressSalt: starkKeyPub,
-  });
+  const { transaction_hash, contract_address } = await account.deployAccount(
+    {
+      classHash: PREDECLARED_OZ_ACCOUNT_CLASS_HASH,
+      constructorCalldata,
+      addressSalt: starkKeyPub,
+    },
+    { maxFee: 1_000_000_000_000_000_000n, nonce: 1n }
+  );
 
-  await provider.waitForTransaction(transaction_hash);
+  await provider.waitForTransaction(transaction_hash, { retryInterval: 0 });
 
   return account;
 }

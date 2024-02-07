@@ -1,4 +1,4 @@
-import { Contract, num, shortString } from "starknet";
+import { Account, Contract, num, shortString } from "starknet";
 import MockERC20 from "../../target/dev/ekubo_MockERC20.contract_class.json";
 import MockERC20CASM from "../../target/dev/ekubo_MockERC20.compiled_contract_class.json";
 import CoreCompiledContract from "../../target/dev/ekubo_Core.contract_class.json";
@@ -9,10 +9,34 @@ import PositionsCompiledContract from "../../target/dev/ekubo_Positions.contract
 import PositionsCompiledContractCASM from "../../target/dev/ekubo_Positions.compiled_contract_class.json";
 import Router from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterCASM from "../../target/dev/ekubo_Router.compiled_contract_class.json";
-import { createAccount } from "./provider";
+import { provider } from "./provider";
 
-export async function setupContracts() {
-  const deployer = await createAccount();
+export async function setupContracts(expected?: {
+  core: string;
+  positions: string;
+  router: string;
+  nft: string;
+  tokenClassHash: string;
+}) {
+  if (expected) {
+    try {
+      const [ch0, ch1, ch2, ch3, c] = await Promise.all([
+        provider.getClassHashAt(expected.core),
+        provider.getClassHashAt(expected.positions),
+        provider.getClassHashAt(expected.router),
+        provider.getClassHashAt(expected.nft),
+        provider.getClass(expected.tokenClassHash),
+      ]);
+      if (ch0 && ch1 && ch2 && ch3 && c) return expected;
+    } catch (error) {}
+  }
+
+  // starknet-devnet-rs with seed 0
+  const deployer = new Account(
+    provider,
+    "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
+    "0x71d7bb07b9a64f6f78ac4c816aff4da9"
+  );
 
   const simpleTokenContractDeclare = await deployer.declareIfNot({
     contract: MockERC20 as any,

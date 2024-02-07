@@ -1,9 +1,9 @@
 import { BlockTag, Contract } from "starknet";
-import CoreCompiledContract from "../target/dev/ekubo_Core.contract_class.json";
-import PositionsCompiledContract from "../target/dev/ekubo_Positions.contract_class.json";
+import CoreContract from "../target/dev/ekubo_Core.contract_class.json";
+import PositionsContract from "../target/dev/ekubo_Positions.contract_class.json";
 import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
-import MockERC20 from "../target/dev/ekubo_MockERC20.contract_class.json";
-import Router from "../target/dev/ekubo_Router.contract_class.json";
+import MockERC20Contract from "../target/dev/ekubo_MockERC20.contract_class.json";
+import RouterContract from "../target/dev/ekubo_Router.contract_class.json";
 import { POOL_CASES } from "./cases/poolCases";
 import { SWAP_CASES } from "./cases/swapCases";
 import Decimal from "decimal.js-light";
@@ -14,6 +14,7 @@ import { fromI129, i129, toI129 } from "./utils/serialize";
 import { createAccount, provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
 import { beforeAll, describe, it } from "vitest";
+import { getNextTransactionSettingsFunction } from "./utils/getNextTransactionSettingsFunction";
 
 Decimal.set({ precision: 80 });
 
@@ -21,7 +22,17 @@ describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    setup = await setupContracts();
+    setup = await setupContracts({
+      core: "0x5d11a68b71afcf0f01a7c3c9688a46011e0a668d2191e273383e33bc2d7b521",
+      positions:
+        "0x6b569aa23e0b7d3737c9463fca2bd6522689138c42e83cf08e8868030153c3c",
+      router:
+        "0x5c8bba3b0f8107a11bd1aee18465b377599611f1187cd9ea1e0e09ced8d5419",
+      nft: "0x40ee106a24b2ea28205ee854686762f18875a0f70e962e581d5e94c7694851",
+      tokenClassHash:
+        "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
+    });
+    console.log(setup);
   }, 300_000);
 
   for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
@@ -37,26 +48,39 @@ describe("core", () => {
             : ""
         }`, async ({ expect }) => {
           const account = await createAccount();
-
-          const core = new Contract(
-            CoreCompiledContract.abi,
-            setup.core,
+          const getTxSettings = await getNextTransactionSettingsFunction(
             account
           );
+
+          const core = new Contract(CoreContract.abi, setup.core, account);
+          const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
           const positionsContract = new Contract(
-            PositionsCompiledContract.abi,
+            PositionsContract.abi,
             setup.positions,
             account
           );
-          const router = new Contract(Router.abi, setup.router, account);
-          const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
+          const router = new Contract(
+            RouterContract.abi,
+            setup.router,
+            account
+          );
+
           const [token0Address, token1Address] = await deployTokens({
             deployer: account,
             classHash: setup.tokenClassHash,
+            getTxSettings,
           });
 
-          const token0 = new Contract(MockERC20.abi, token0Address, account);
-          const token1 = new Contract(MockERC20.abi, token1Address, account);
+          const token0 = new Contract(
+            MockERC20Contract.abi,
+            token0Address,
+            account
+          );
+          const token1 = new Contract(
+            MockERC20Contract.abi,
+            token1Address,
+            account
+          );
 
           const poolKey = {
             token0: token0Address,
@@ -66,15 +90,7 @@ describe("core", () => {
             extension: "0x0",
           };
 
-          const liquiditiesActual: { token_id: bigint; liquidity: bigint }[] =
-            [];
-
-          await core.invoke("initialize_pool", [
-            poolKey,
-
-            // starting tick
-            toI129(pool.startingTick),
-          ]);
+          const positionsMinted: { token_id: bigint; liquidity: bigint }[] = [];
 
           for (const { liquidity, bounds } of positions) {
             const { amount0, amount1 } = getAmountsForLiquidity({
@@ -82,16 +98,27 @@ describe("core", () => {
               liquidity,
               bounds,
             });
-            await token0.invoke("transfer", [setup.positions, amount0]);
-            await token1.invoke("transfer", [setup.positions, amount1]);
-
-            const { transaction_hash } = await positionsContract.invoke(
-              "mint_and_deposit",
+            const { transaction_hash } = await account.execute(
               [
-                poolKey,
-                { lower: toI129(bounds.lower), upper: toI129(bounds.upper) },
-                liquidity,
-              ]
+                core.populate("maybe_initialize_pool", [
+                  poolKey,
+
+                  // starting tick
+                  toI129(pool.startingTick),
+                ]),
+                token0.populate("transfer", [setup.positions, amount0]),
+                token1.populate("transfer", [setup.positions, amount1]),
+                positionsContract.populate("mint_and_deposit_and_clear_both", [
+                  poolKey,
+                  {
+                    lower: toI129(bounds.lower),
+                    upper: toI129(bounds.upper),
+                  },
+                  liquidity,
+                ]),
+              ],
+              [],
+              getTxSettings()
             );
 
             const receipt = await provider.waitForTransaction(
@@ -101,13 +128,15 @@ describe("core", () => {
               }
             );
 
-            const [{ Transfer }] = nft.parseEvents(receipt);
+            const { Transfer } = nft
+              .parseEvents(receipt)
+              .find(({ Transfer }) => Transfer);
 
-            const parsed = core.parseEvents(receipt);
+            const { PositionUpdated } = core
+              .parseEvents(receipt)
+              .find(({ PositionUpdated }) => PositionUpdated);
 
-            const [{ PositionUpdated }] = parsed;
-
-            liquiditiesActual.push({
+            positionsMinted.push({
               token_id: (Transfer as unknown as { token_id: bigint }).token_id,
               liquidity: (
                 PositionUpdated as unknown as {
@@ -117,15 +146,19 @@ describe("core", () => {
             });
           }
 
+          const [remaining0, remaining1] = await Promise.all([
+            token0.call("balanceOf", [account.address]),
+            token1.call("balanceOf", [account.address]),
+          ]);
           // transfer remaining balances to swapper, so it can swap whatever is needed
-          await token0.invoke("transfer", [
-            setup.router,
-            await token0.call("balanceOf", [account.address]),
-          ]);
-          await token1.invoke("transfer", [
-            setup.router,
-            await token1.call("balanceOf", [account.address]),
-          ]);
+          await account.execute(
+            [
+              token0.populate("transfer", [setup.positions, remaining0]),
+              token1.populate("transfer", [setup.positions, remaining1]),
+            ],
+            [],
+            getTxSettings()
+          );
 
           let transaction_hash: string;
           try {
@@ -142,9 +175,7 @@ describe("core", () => {
                   token: swapCase.isToken1 ? token1.address : token0.address,
                 },
               ],
-              {
-                maxFee: 1_000_000_000_000_000_000n,
-              }
+              getTxSettings()
             ));
           } catch (error) {
             transaction_hash = error.transaction_hash;
@@ -214,7 +245,7 @@ describe("core", () => {
             };
 
             const { liquidity: expectedLiquidity, token_id } =
-              liquiditiesActual[i];
+              positionsMinted[i];
 
             const { liquidity, amount0, amount1 } =
               (await positionsContract.call(
