@@ -24,10 +24,7 @@ describe("core", () => {
     setup = await setupContracts();
   }, 300_000);
 
-  for (const { name: poolCaseName, pool, positions } of POOL_CASES.slice(
-    0,
-    1
-  )) {
+  for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
     describe.concurrent(poolCaseName, () => {
       for (const swapCase of SWAP_CASES) {
         it(`swap ${swapCase.amount} ${swapCase.isToken1 ? "token1" : "token0"}${
