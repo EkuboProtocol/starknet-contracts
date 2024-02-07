@@ -23,12 +23,12 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x5d11a68b71afcf0f01a7c3c9688a46011e0a668d2191e273383e33bc2d7b521",
+      core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x6b569aa23e0b7d3737c9463fca2bd6522689138c42e83cf08e8868030153c3c",
+        "0x2b761d7b40a774028b7f2f095b0164c5589efdb3307bf77ca15183be76a6ea8",
       router:
-        "0x5c8bba3b0f8107a11bd1aee18465b377599611f1187cd9ea1e0e09ced8d5419",
-      nft: "0x40ee106a24b2ea28205ee854686762f18875a0f70e962e581d5e94c7694851",
+        "0x2f70c9815461400d3651931a1f88a85e1097e6e96c24c17eb93ba213c035a9e",
+      nft: "0x4a234c6c0599299e96f51d0212b4716b93369c24b7c3c75474b68fca41e0d83",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -90,8 +90,7 @@ describe("core", () => {
             extension: "0x0",
           };
 
-          const positionsMinted: { token_id: bigint; liquidity: bigint }[] = [];
-
+          const txHashes: string[] = [];
           for (const { liquidity, bounds } of positions) {
             const { amount0, amount1 } = getAmountsForLiquidity({
               tick: pool.startingTick,
@@ -121,30 +120,37 @@ describe("core", () => {
               getTxSettings()
             );
 
-            const receipt = await provider.waitForTransaction(
-              transaction_hash,
-              {
-                retryInterval: 0,
-              }
-            );
-
-            const { Transfer } = nft
-              .parseEvents(receipt)
-              .find(({ Transfer }) => Transfer);
-
-            const { PositionUpdated } = core
-              .parseEvents(receipt)
-              .find(({ PositionUpdated }) => PositionUpdated);
-
-            positionsMinted.push({
-              token_id: (Transfer as unknown as { token_id: bigint }).token_id,
-              liquidity: (
-                PositionUpdated as unknown as {
-                  params: { liquidity_delta: { mag: bigint; sign: boolean } };
-                }
-              ).params.liquidity_delta.mag,
-            });
+            txHashes.push(transaction_hash);
           }
+
+          const mintReceipts = await Promise.all(
+            txHashes.map((txHash) =>
+              provider.waitForTransaction(txHash, {
+                retryInterval: 0,
+              })
+            )
+          );
+
+          const positionsMinted: { token_id: bigint; liquidity: bigint }[] =
+            mintReceipts.map((receipt) => {
+              const { Transfer } = nft
+                .parseEvents(receipt)
+                .find(({ Transfer }) => Transfer);
+
+              const { PositionUpdated } = core
+                .parseEvents(receipt)
+                .find(({ PositionUpdated }) => PositionUpdated);
+
+              return {
+                token_id: (Transfer as unknown as { token_id: bigint })
+                  .token_id,
+                liquidity: (
+                  PositionUpdated as unknown as {
+                    params: { liquidity_delta: { mag: bigint; sign: boolean } };
+                  }
+                ).params.liquidity_delta.mag,
+              };
+            });
 
           const [remaining0, remaining1] = await Promise.all([
             token0.call("balanceOf", [account.address]),
@@ -267,7 +273,8 @@ describe("core", () => {
 
             const { transaction_hash } = await positionsContract.invoke(
               "withdraw",
-              [token_id, poolKey, boundsArgument, liquidity, 0, 0, true]
+              [token_id, poolKey, boundsArgument, liquidity, 0, 0, true],
+              getTxSettings()
             );
             withdrawalTransactionHashes.push(transaction_hash);
           }

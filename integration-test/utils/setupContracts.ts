@@ -62,6 +62,7 @@ export async function setupContracts(expected?: {
   const coreDeploy = await deployer.deploy({
     classHash: coreContractDeclare.class_hash,
     constructorCalldata: [deployer.address],
+    salt: "0x0",
   });
 
   const positionsConstructorCalldata = [
@@ -74,6 +75,7 @@ export async function setupContracts(expected?: {
   const positionsDeploy = await deployer.deploy({
     classHash: positionsDeclare.class_hash,
     constructorCalldata: positionsConstructorCalldata,
+    salt: "0x1",
   });
 
   const positions = new Contract(
@@ -85,6 +87,7 @@ export async function setupContracts(expected?: {
   const routerDeploy = await deployer.deploy({
     classHash: routerDeclare.class_hash,
     constructorCalldata: [coreDeploy.contract_address[0]],
+    salt: "0x2",
   });
 
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
