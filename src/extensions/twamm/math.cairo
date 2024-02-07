@@ -40,7 +40,9 @@ pub fn calculate_sale_rate(amount: u128, end_time: u64, start_time: u64) -> u128
 // if order started, start_time is now
 // next amount given the current sale rate, and a sale rate delta
 pub fn calculate_amount_from_sale_rate(sale_rate: u128, end_time: u64, start_time: u64) -> u128 {
-    sale_rate * (end_time - start_time).into() / constants::X32_u128
+    (sale_rate.into() * (end_time - start_time).into() / constants::X32_u256)
+        .try_into()
+        .expect('ORDER_AMOUNT_DELTA_OVERFLOW')
 }
 
 pub fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
@@ -110,7 +112,11 @@ pub fn calculate_next_sqrt_ratio(
     time_elapsed: u64
 ) -> u256 {
     let sale_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
-    let sqrt_sale_ratio: u256 = u256_sqrt(sale_ratio).into() * constants::X64_u256;
+    let sqrt_sale_ratio: u256 = if (sale_ratio.high.is_zero()) {
+        u256_sqrt(u256 { high: sale_ratio.low, low: 0 }).into()
+    } else {
+        u256_sqrt(sale_ratio).into() * constants::X64_u256
+    };
 
     let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio);
 

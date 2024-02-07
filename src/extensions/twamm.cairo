@@ -21,7 +21,6 @@ pub struct TWAMMPoolKey {
 
 #[derive(Drop, Copy, Serde, Hash)]
 pub struct OrderKey {
-    pub owner: ContractAddress,
     pub salt: felt252,
     pub twamm_pool_key: TWAMMPoolKey,
     pub is_sell_token1: bool,
@@ -58,7 +57,9 @@ pub impl OrderStateZero of Zero<OrderState> {
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
     // Return the stored order state
-    fn get_order_state(self: @TContractState, order_key: OrderKey) -> OrderState;
+    fn get_order_state(
+        self: @TContractState, owner: ContractAddress, order_key: OrderKey
+    ) -> OrderState;
 
     // Returns the current sale rate 
     fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128);
@@ -80,9 +81,7 @@ pub trait ITWAMM<TContractState> {
     fn update_order(ref self: TContractState, order_key: OrderKey, sale_rate_delta: i129);
 
     // Withdraws proceeds from a twamm order
-    fn withdraw_from_order(
-        ref self: TContractState, order_key: OrderKey, recipient: ContractAddress
-    );
+    fn withdraw_from_order(ref self: TContractState, order_key: OrderKey);
 
     // Execute virtual orders
     fn execute_virtual_orders(ref self: TContractState, pool_key: PoolKey);
@@ -141,7 +140,7 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        orders: LegacyMap<OrderKey, OrderState>,
+        orders: LegacyMap<(ContractAddress, OrderKey), OrderState>,
         // current rate at which tokens are sold
         sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
         // sale rate net
@@ -163,11 +162,7 @@ pub mod TWAMM {
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        owner: ContractAddress,
-        core: ICoreDispatcher
-    ) {
+    fn constructor(ref self: ContractState, owner: ContractAddress, core: ICoreDispatcher) {
         self.initialize_owned(owner);
         self.core.write(core);
     }
@@ -206,38 +201,28 @@ pub mod TWAMM {
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct WithdrawUnexecutedOrderBalance {
-        pool_key: PoolKey,
-        tick: i129,
-        liquidity: u128,
-        recipient: ContractAddress,
-    }
-
-    #[derive(Serde, Copy, Drop)]
     struct ExecuteVirtualSwapsCallbackData {
         pool_key: PoolKey
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct DepositBalanceCallbackData {
-        token: ContractAddress,
-        amount: u128
+    struct UpdateSaleRateCallbackData {
+        owner: ContractAddress,
+        order_key: OrderKey,
+        sale_rate_delta: i129
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct WithdrawBalanceCallbackData {
-        order_key: OrderKey,
-        token: ContractAddress,
-        recipient: ContractAddress,
-        amount: u128,
-        fee: u128
+    struct WithdrawProceedsCallbackData {
+        owner: ContractAddress,
+        order_key: OrderKey
     }
 
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         ExecuteVirtualSwapsCallbackData: ExecuteVirtualSwapsCallbackData,
-        DepositBalanceCallbackData: DepositBalanceCallbackData,
-        WithdrawBalanceCallbackData: WithdrawBalanceCallbackData
+        UpdateSaleRateCallbackData: UpdateSaleRateCallbackData,
+        WithdrawProceedsCallbackData: WithdrawProceedsCallbackData
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -248,7 +233,7 @@ pub mod TWAMM {
     #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::extensions::twamm::twamm::TWAMM");
+            return selector!("ekubo::extensions::twamm::TWAMM");
         }
     }
 
@@ -280,7 +265,16 @@ pub mod TWAMM {
             pool_key: PoolKey,
             params: SwapParameters
         ) {
-            self.internal_execute_virtual_orders(pool_key);
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
+                    ExecuteVirtualSwapsCallbackData { pool_key: pool_key }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
+            }
         }
 
         fn after_swap(
@@ -300,7 +294,16 @@ pub mod TWAMM {
             params: UpdatePositionParameters
         ) {
             assert(params.bounds == max_bounds(pool_key.tick_spacing), 'BOUNDS');
-            self.internal_execute_virtual_orders(pool_key);
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
+                    ExecuteVirtualSwapsCallbackData { pool_key: pool_key }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
+            }
         }
 
         fn after_update_position(
@@ -316,8 +319,10 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
-        fn get_order_state(self: @ContractState, order_key: OrderKey) -> OrderState {
-            self.orders.read(order_key)
+        fn get_order_state(
+            self: @ContractState, owner: ContractAddress, order_key: OrderKey
+        ) -> OrderState {
+            self.orders.read((owner, order_key))
         }
 
         fn get_sale_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128) {
@@ -343,138 +348,44 @@ pub mod TWAMM {
         }
 
         fn update_order(ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129) {
-            assert(order_key.owner == get_caller_address(), 'UNAUTHORIZED');
-
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(order_key.into());
-
-            let current_time = get_block_timestamp();
-            assert(order_key.end_time > current_time, 'ORDER_ENDED');
-
-            let order_state = self.orders.read(order_key);
-
-            let order_started = order_key.start_time <= current_time;
-
-            if (order_state.is_zero()) {
-                // order is being created, validate end time
-                validate_time(current_time, order_key.end_time);
-
-                if (!order_started) {
-                    // order is starting in the future, validate start time
-                    validate_time(current_time, order_key.start_time);
-                }
-            }
-
-            // assert sale rate will not be negative
-            assert(
-                !sale_rate_delta.sign || sale_rate_delta.mag <= order_state.sale_rate,
-                'INVALID_SALE_RATE_DELTA'
-            );
-
-            self.update_order_sale_rate(order_key, order_state, sale_rate_delta, order_started);
-
-            let amount_delta = calculate_amount_from_sale_rate(
-                sale_rate_delta.mag, order_key.end_time, max(order_key.start_time, current_time)
-            );
-
-            if (sale_rate_delta.sign) {
-                self
-                    .withdraw(
-                        order_key,
-                        if (order_key.is_sell_token1) {
-                            order_key.twamm_pool_key.token1
-                        } else {
-                            order_key.twamm_pool_key.token0
-                        },
-                        get_caller_address(),
-                        amount_delta,
-                        compute_fee(amount_delta, order_key.twamm_pool_key.fee)
-                    );
-            } else {
-                self
-                    .deposit(
-                        if (order_key.is_sell_token1) {
-                            order_key.twamm_pool_key.token1
-                        } else {
-                            order_key.twamm_pool_key.token0
-                        },
-                        amount_delta
-                    );
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::UpdateSaleRateCallbackData(
+                    UpdateSaleRateCallbackData {
+                        owner: get_caller_address(), order_key, sale_rate_delta
+                    }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
             }
         }
 
-        fn withdraw_from_order(
-            ref self: ContractState, order_key: OrderKey, recipient: ContractAddress
-        ) {
-            assert(order_key.owner == get_caller_address(), 'UNAUTHORIZED');
-
-            let current_time = get_block_timestamp();
-
-            assert(order_key.start_time == 0 || order_key.start_time < current_time, 'NOT_STARTED');
-
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(order_key.into());
-
-            let order_state = self.orders.read(order_key);
-
-            // order has been fully withdrawn
-            assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
-
-            let order_reward_rate = if (order_state.use_snapshot) {
-                order_state.reward_rate
-            } else {
-                self.get_reward_rate_at(order_key, order_key.start_time)
-            };
-
-            let purchased_amount = if (current_time >= order_key.end_time) {
-                // update order state to reflect that the order has been fully executed
-                self.orders.write(order_key, Zero::zero());
-
-                // reward rate at expiration/full-execution time
-                let total_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
-                    - order_reward_rate;
-                calculate_reward_amount(total_reward_rate, order_state.sale_rate)
-            } else {
-                let current_reward_rate = self.get_current_reward_rate(order_key);
-                // update order state to reflect that the order has been partially executed
-                self
-                    .orders
-                    .write(
-                        order_key,
-                        OrderState {
-                            sale_rate: order_state.sale_rate,
-                            reward_rate: current_reward_rate,
-                            use_snapshot: true,
-                        }
-                    );
-
-                calculate_reward_amount(
-                    current_reward_rate - order_reward_rate, order_state.sale_rate
+        fn withdraw_from_order(ref self: ContractState, order_key: OrderKey) {
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::WithdrawProceedsCallbackData(
+                    WithdrawProceedsCallbackData { owner: get_caller_address(), order_key }
                 )
-            };
-
-            // transfer purchased amount 
-            if (purchased_amount.is_non_zero()) {
-                self
-                    .withdraw(
-                        order_key,
-                        if (order_key.is_sell_token1) {
-                            order_key.twamm_pool_key.token0
-                        } else {
-                            order_key.twamm_pool_key.token1
-                        },
-                        recipient,
-                        purchased_amount,
-                        0
-                    );
+            ) {
+                LockCallbackResult::Empty => {},
             }
-
-            self.emit(OrderProceedsWithdrawn { order_key, amount: purchased_amount });
         }
 
         fn execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
-            // execute virtual orders up to current time
-            self.internal_execute_virtual_orders(pool_key);
+            match call_core_with_callback::<
+                LockCallbackData, LockCallbackResult
+            >(
+                self.core.read(),
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
+                    ExecuteVirtualSwapsCallbackData { pool_key: pool_key }
+                )
+            ) {
+                LockCallbackResult::Empty => {},
+            }
         }
     }
 
@@ -486,243 +397,160 @@ pub mod TWAMM {
             let result: LockCallbackResult =
                 match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::ExecuteVirtualSwapsCallbackData(data) => {
-                    let twamm_pool_key = TWAMMPoolKey {
-                        token0: data.pool_key.token0,
-                        token1: data.pool_key.token1,
-                        fee: data.pool_key.fee
-                    };
+                    self.internal_execute_virtual_orders(core, data.pool_key);
+                    LockCallbackResult::Empty
+                },
+                LockCallbackData::UpdateSaleRateCallbackData(data) => {
+                    let owner = data.owner;
+                    let order_key = data.order_key;
+                    let sale_rate_delta = data.sale_rate_delta;
 
-                    // since virtual orders are executed at the same time for both tokens,
-                    // last_virtual_order_time is the same for both tokens.
-                    let mut last_virtual_order_time = self
-                        .last_virtual_order_time
-                        .read(twamm_pool_key);
+                    self.internal_execute_virtual_orders(core, order_key.into());
 
                     let current_time = get_block_timestamp();
+                    assert(order_key.end_time > current_time, 'ORDER_ENDED');
 
-                    let self_snap = @self;
+                    let order_state = self.orders.read((owner, order_key));
 
-                    if (last_virtual_order_time == 0) {
-                        // we haven't executed any virtual orders yet, and no orders have been placed
-                        self.last_virtual_order_time.write(twamm_pool_key, current_time);
-                    } else if (last_virtual_order_time != current_time) {
-                        let mut total_delta = Zero::<Delta>::zero();
-                        let mut token_reward_rate = (0, 0);
+                    let order_started = order_key.start_time <= current_time;
 
-                        loop {
-                            let mut delta = Zero::zero();
+                    if (order_state.is_zero()) {
+                        // order is being created, validate end time
+                        validate_time(current_time, order_key.end_time);
 
-                            // find next time with a sale rate delta
-                            let next_initialized_time = self_snap
-                                .next_initialized_time(
-                                    twamm_pool_key, last_virtual_order_time, current_time
-                                );
-
-                            let next_virtual_order_time = min(current_time, next_initialized_time);
-
-                            let (token0_sale_rate, token1_sale_rate) = self
-                                .sale_rate
-                                .read(twamm_pool_key);
-
-                            if (token0_sale_rate > 0 || token1_sale_rate > 0) {
-                                let price = core.get_pool_price(data.pool_key);
-
-                                if price.sqrt_ratio != 0 {
-                                    let time_elapsed = next_virtual_order_time
-                                        - last_virtual_order_time;
-
-                                    let token0_amount = (token0_sale_rate * time_elapsed.into())
-                                        / constants::X32_u128;
-                                    let token1_amount = (token1_sale_rate * time_elapsed.into())
-                                        / constants::X32_u128;
-
-                                    if (token0_amount != 0 && token1_amount != 0) {
-                                        let sqrt_ratio_limit = calculate_next_sqrt_ratio(
-                                            price.sqrt_ratio,
-                                            core.get_pool_liquidity(data.pool_key),
-                                            token0_sale_rate,
-                                            token1_sale_rate,
-                                            time_elapsed
-                                        );
-
-                                        let is_token1 = price.sqrt_ratio < sqrt_ratio_limit;
-
-                                        // swap up/down to sqrt_ratio_limit
-                                        delta = core
-                                            .swap(
-                                                data.pool_key,
-                                                SwapParameters {
-                                                    amount: i129 {
-                                                        mag: 0xffffffffffffffffffffffffffffffff,
-                                                        sign: false
-                                                    },
-                                                    is_token1: is_token1,
-                                                    sqrt_ratio_limit,
-                                                    skip_ahead: 0
-                                                }
-                                            );
-
-                                        // update reward rate
-                                        token_reward_rate = self
-                                            .update_reward_rate(
-                                                twamm_pool_key,
-                                                (token0_sale_rate, token1_sale_rate),
-                                                delta
-                                                    + Delta {
-                                                        amount0: i129 {
-                                                            mag: token0_amount, sign: true
-                                                        },
-                                                        amount1: i129 {
-                                                            mag: token1_amount, sign: true
-                                                        }
-                                                    },
-                                                next_virtual_order_time
-                                            );
-                                    } else {
-                                        let (amount, is_token1, sqrt_ratio_limit) =
-                                            if token0_amount > 0 {
-                                            (token0_amount, false, min_sqrt_ratio())
-                                        } else {
-                                            (token1_amount, true, max_sqrt_ratio())
-                                        };
-
-                                        delta = core
-                                            .swap(
-                                                data.pool_key,
-                                                SwapParameters {
-                                                    amount: i129 { mag: amount, sign: false },
-                                                    is_token1,
-                                                    sqrt_ratio_limit,
-                                                    skip_ahead: 0
-                                                }
-                                            );
-
-                                        // update reward rate
-                                        token_reward_rate = self
-                                            .update_reward_rate(
-                                                twamm_pool_key,
-                                                (token0_sale_rate, token1_sale_rate),
-                                                delta,
-                                                next_virtual_order_time
-                                            );
-                                    }
-
-                                    // accumulate deltas
-                                    total_delta += delta;
-
-                                    let (token0_reward_rate, token1_reward_rate) =
-                                        token_reward_rate;
-
-                                    self
-                                        .emit(
-                                            VirtualOrdersExecuted {
-                                                last_virtual_order_time,
-                                                next_virtual_order_time,
-                                                token0_sale_rate: token0_sale_rate,
-                                                token1_sale_rate: token1_sale_rate,
-                                                token0_reward_rate: token0_reward_rate,
-                                                token1_reward_rate: token1_reward_rate
-                                            }
-                                        );
-                                }
-                            }
-
-                            let (token0_sale_rate_net, token1_sale_rate_net) = self
-                                .time_sale_rate_net
-                                .read((twamm_pool_key, next_virtual_order_time));
-
-                            // update ending sale rates 
-                            if (token0_sale_rate_net != 0 || token1_sale_rate_net != 0) {
-                                self
-                                    .update_token_sale_rate_and_rewards(
-                                        twamm_pool_key,
-                                        (token0_sale_rate, token1_sale_rate),
-                                        next_virtual_order_time
-                                    );
-                            } else {}
-
-                            // update last_virtual_order_time to next_virtual_order_time
-                            last_virtual_order_time = next_virtual_order_time;
-
-                            // virtual orders were executed up to current time
-                            if next_virtual_order_time == current_time {
-                                break;
-                            }
-                        };
-
-                        self.last_virtual_order_time.write(twamm_pool_key, last_virtual_order_time);
-
-                        // zero out deltas
-                        if (total_delta.amount0.mag > 0) {
-                            if (total_delta.amount0.sign) {
-                                core
-                                    .save(
-                                        SavedBalanceKey {
-                                            owner: get_contract_address(),
-                                            token: twamm_pool_key.token0,
-                                            salt: 0
-                                        },
-                                        total_delta.amount0.mag
-                                    );
-                            } else {
-                                core.load(twamm_pool_key.token0, 0, total_delta.amount0.mag);
-                            }
-                        }
-                        if (total_delta.amount1.mag > 0) {
-                            if (total_delta.amount1.sign) {
-                                core
-                                    .save(
-                                        SavedBalanceKey {
-                                            owner: get_contract_address(),
-                                            token: twamm_pool_key.token1,
-                                            salt: 0
-                                        },
-                                        total_delta.amount1.mag
-                                    );
-                            } else {
-                                core.load(twamm_pool_key.token1, 0, total_delta.amount1.mag);
-                            }
+                        if (!order_started) {
+                            // order is starting in the future, validate start time
+                            validate_time(current_time, order_key.start_time);
                         }
                     }
 
-                    LockCallbackResult::Empty
-                },
-                LockCallbackData::DepositBalanceCallbackData(data) => {
-                    IERC20Dispatcher { contract_address: data.token }
-                        .approve(core.contract_address, data.amount.into());
-                    core.pay(data.token);
+                    // assert sale rate will not be negative
+                    assert(
+                        !sale_rate_delta.sign || sale_rate_delta.mag <= order_state.sale_rate,
+                        'INVALID_SALE_RATE_DELTA'
+                    );
 
-                    core
-                        .save(
-                            SavedBalanceKey {
-                                owner: get_contract_address(), token: data.token, salt: 0
-                            },
-                            data.amount
+                    self
+                        .update_order_sale_rate(
+                            owner, order_key, order_state, sale_rate_delta, order_started
                         );
 
-                    LockCallbackResult::Empty
-                },
-                LockCallbackData::WithdrawBalanceCallbackData(data) => {
-                    core.load(data.token, 0, data.amount);
+                    let amount_delta = calculate_amount_from_sale_rate(
+                        sale_rate_delta.mag,
+                        order_key.end_time,
+                        max(order_key.start_time, current_time)
+                    );
 
-                    let order_key = data.order_key;
-                    let pool_key: PoolKey = order_key.into();
-
-                    if (data.fee > 0) {
-                        if (core.get_pool_liquidity(pool_key).is_non_zero()) {
-                            let (amount0, amount1) = if (order_key.is_sell_token1) {
-                                (0, data.fee)
-                            } else {
-                                (data.fee, 0)
-                            };
-                            core.accumulate_as_fees(pool_key, amount0, amount1);
-                        } else { // TODO: sell token
-                        }
-                        core.withdraw(data.token, data.recipient, data.amount - data.fee);
+                    let token = if (order_key.is_sell_token1) {
+                        order_key.twamm_pool_key.token1
                     } else {
-                        core.withdraw(data.token, data.recipient, data.amount);
+                        order_key.twamm_pool_key.token0
+                    };
+
+                    if (sale_rate_delta.sign) {
+                        // if decreasing sale rate, pay fee and withdraw funds
+
+                        core.load(token, 0, amount_delta);
+
+                        let pool_key: PoolKey = order_key.into();
+
+                        if (pool_key.fee > 0 && core.get_pool_liquidity(pool_key).is_non_zero()) {
+                            let fee_amount = compute_fee(amount_delta, pool_key.fee);
+
+                            let (amount0, amount1) = if (order_key.is_sell_token1) {
+                                (0, fee_amount)
+                            } else {
+                                (fee_amount, 0)
+                            };
+
+                            // pay fee
+                            core.accumulate_as_fees(pool_key, amount0, amount1);
+                            core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
+                        } else {
+                            core.withdraw(token, get_contract_address(), amount_delta);
+                        }
+                    } else {
+                        // if increasing sale rate, deposit additional funds
+                        IERC20Dispatcher { contract_address: token }
+                            .approve(core.contract_address, amount_delta.into());
+
+                        core.pay(token);
+
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(), token: token, salt: 0
+                                },
+                                amount_delta
+                            );
                     }
 
+                    LockCallbackResult::Empty
+                },
+                LockCallbackData::WithdrawProceedsCallbackData(data) => {
+                    let owner = data.owner;
+                    let order_key = data.order_key;
+                    let current_time = get_block_timestamp();
+
+                    assert(
+                        order_key.start_time == 0 || order_key.start_time < current_time,
+                        'NOT_STARTED'
+                    );
+
+                    self.internal_execute_virtual_orders(core, data.order_key.into());
+
+                    let order_state = self.orders.read((owner, order_key));
+
+                    // order has been fully withdrawn
+                    assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
+
+                    let order_reward_rate = if (order_state.use_snapshot) {
+                        order_state.reward_rate
+                    } else {
+                        self.get_reward_rate_at(order_key, order_key.start_time)
+                    };
+
+                    let purchased_amount = if (current_time >= order_key.end_time) {
+                        // update order state to reflect that the order has been fully executed
+                        self.orders.write((owner, order_key), Zero::zero());
+
+                        // reward rate at expiration/full-execution time
+                        let total_reward_rate = self
+                            .get_reward_rate_at(order_key, order_key.end_time)
+                            - order_reward_rate;
+                        calculate_reward_amount(total_reward_rate, order_state.sale_rate)
+                    } else {
+                        let current_reward_rate = self.get_current_reward_rate(order_key);
+                        // update order state to reflect that the order has been partially executed
+                        self
+                            .orders
+                            .write(
+                                (owner, order_key),
+                                OrderState {
+                                    sale_rate: order_state.sale_rate,
+                                    reward_rate: current_reward_rate,
+                                    use_snapshot: true,
+                                }
+                            );
+
+                        calculate_reward_amount(
+                            current_reward_rate - order_reward_rate, order_state.sale_rate
+                        )
+                    };
+
+                    // transfer purchased amount 
+                    if (purchased_amount.is_non_zero()) {
+                        let token = if (order_key.is_sell_token1) {
+                            order_key.twamm_pool_key.token0
+                        } else {
+                            order_key.twamm_pool_key.token1
+                        };
+
+                        core.load(token, 0, purchased_amount);
+                        core.withdraw(token, get_contract_address(), purchased_amount);
+                    }
+
+                    self.emit(OrderProceedsWithdrawn { order_key, amount: purchased_amount });
                     LockCallbackResult::Empty
                 }
             };
@@ -735,9 +563,9 @@ pub mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        // assume order has not ended
         fn update_order_sale_rate(
             ref self: ContractState,
+            owner: ContractAddress,
             order_key: OrderKey,
             order_state: OrderState,
             sale_rate_delta: i129,
@@ -794,7 +622,7 @@ pub mod TWAMM {
             self
                 .orders
                 .write(
-                    order_key,
+                    (owner, order_key),
                     OrderState {
                         sale_rate: sale_rate_next,
                         reward_rate: reward_rate,
@@ -1049,51 +877,209 @@ pub mod TWAMM {
             }
         }
 
-        fn deposit(ref self: ContractState, token: ContractAddress, amount: u128) {
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(
-                self.core.read(),
-                @LockCallbackData::DepositBalanceCallbackData(
-                    DepositBalanceCallbackData { token: token, amount: amount }
-                )
-            ) {
-                LockCallbackResult::Empty => {},
-            }
-        }
-
-        fn withdraw(
-            ref self: ContractState,
-            order_key: OrderKey,
-            token: ContractAddress,
-            recipient: ContractAddress,
-            amount: u128,
-            fee: u128
+        fn deposit(
+            ref self: ContractState, core: ICoreDispatcher, token: ContractAddress, amount: u128
         ) {
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(
-                self.core.read(),
-                @LockCallbackData::WithdrawBalanceCallbackData(
-                    WithdrawBalanceCallbackData { order_key, token, recipient, amount, fee }
-                )
-            ) {
-                LockCallbackResult::Empty => {},
-            }
+            IERC20Dispatcher { contract_address: token }
+                .approve(core.contract_address, amount.into());
+
+            core.pay(token);
+
+            core
+                .save(
+                    SavedBalanceKey { owner: get_contract_address(), token: token, salt: 0 }, amount
+                );
         }
 
-        fn internal_execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
+        // execute virtual orders up to current time
+        fn internal_execute_virtual_orders(
+            ref self: ContractState, core: ICoreDispatcher, pool_key: PoolKey
+        ) {
             pool_key.check_valid();
 
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(
-                self.core.read(),
-                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    ExecuteVirtualSwapsCallbackData { pool_key: pool_key }
-                )
-            ) {
-                LockCallbackResult::Empty => {},
+            let twamm_pool_key = TWAMMPoolKey {
+                token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee
+            };
+
+            // since virtual orders are executed at the same time for both tokens,
+            // last_virtual_order_time is the same for both tokens.
+            let mut last_virtual_order_time = self.last_virtual_order_time.read(twamm_pool_key);
+
+            let current_time = get_block_timestamp();
+
+            let self_snap = @self;
+
+            if (last_virtual_order_time == 0) {
+                // we haven't executed any virtual orders yet, and no orders have been placed
+                self.last_virtual_order_time.write(twamm_pool_key, current_time);
+            } else if (last_virtual_order_time != current_time) {
+                let mut total_delta = Zero::<Delta>::zero();
+                let mut token_reward_rate = (0, 0);
+
+                loop {
+                    let mut delta = Zero::zero();
+
+                    // find next time with a sale rate delta
+                    let next_initialized_time = self_snap
+                        .next_initialized_time(
+                            twamm_pool_key, last_virtual_order_time, current_time
+                        );
+
+                    let next_virtual_order_time = min(current_time, next_initialized_time);
+
+                    let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(twamm_pool_key);
+
+                    if (token0_sale_rate > 0 || token1_sale_rate > 0) {
+                        let price = core.get_pool_price(pool_key);
+
+                        if price.sqrt_ratio != 0 {
+                            let time_elapsed = next_virtual_order_time - last_virtual_order_time;
+
+                            let token0_amount = (token0_sale_rate * time_elapsed.into())
+                                / constants::X32_u128;
+                            let token1_amount = (token1_sale_rate * time_elapsed.into())
+                                / constants::X32_u128;
+
+                            if (token0_amount != 0 && token1_amount != 0) {
+                                let sqrt_ratio_limit = calculate_next_sqrt_ratio(
+                                    price.sqrt_ratio,
+                                    core.get_pool_liquidity(pool_key),
+                                    token0_sale_rate,
+                                    token1_sale_rate,
+                                    time_elapsed
+                                );
+
+                                let is_token1 = price.sqrt_ratio < sqrt_ratio_limit;
+
+                                // swap up/down to sqrt_ratio_limit
+                                delta = core
+                                    .swap(
+                                        pool_key,
+                                        SwapParameters {
+                                            amount: i129 {
+                                                mag: 0xffffffffffffffffffffffffffffffff, sign: false
+                                            },
+                                            is_token1: is_token1,
+                                            sqrt_ratio_limit,
+                                            skip_ahead: 0
+                                        }
+                                    );
+
+                                // update reward rate
+                                token_reward_rate = self
+                                    .update_reward_rate(
+                                        twamm_pool_key,
+                                        (token0_sale_rate, token1_sale_rate),
+                                        delta
+                                            + Delta {
+                                                amount0: i129 { mag: token0_amount, sign: true },
+                                                amount1: i129 { mag: token1_amount, sign: true }
+                                            },
+                                        next_virtual_order_time
+                                    );
+                            } else {
+                                let (amount, is_token1, sqrt_ratio_limit) = if token0_amount > 0 {
+                                    (token0_amount, false, min_sqrt_ratio())
+                                } else {
+                                    (token1_amount, true, max_sqrt_ratio())
+                                };
+
+                                delta = core
+                                    .swap(
+                                        pool_key,
+                                        SwapParameters {
+                                            amount: i129 { mag: amount, sign: false },
+                                            is_token1,
+                                            sqrt_ratio_limit,
+                                            skip_ahead: 0
+                                        }
+                                    );
+
+                                // update reward rate
+                                token_reward_rate = self
+                                    .update_reward_rate(
+                                        twamm_pool_key,
+                                        (token0_sale_rate, token1_sale_rate),
+                                        delta,
+                                        next_virtual_order_time
+                                    );
+                            }
+
+                            // accumulate deltas
+                            total_delta += delta;
+
+                            let (token0_reward_rate, token1_reward_rate) = token_reward_rate;
+
+                            self
+                                .emit(
+                                    VirtualOrdersExecuted {
+                                        last_virtual_order_time,
+                                        next_virtual_order_time,
+                                        token0_sale_rate: token0_sale_rate,
+                                        token1_sale_rate: token1_sale_rate,
+                                        token0_reward_rate: token0_reward_rate,
+                                        token1_reward_rate: token1_reward_rate
+                                    }
+                                );
+                        }
+                    }
+
+                    let (token0_sale_rate_net, token1_sale_rate_net) = self
+                        .time_sale_rate_net
+                        .read((twamm_pool_key, next_virtual_order_time));
+
+                    // update ending sale rates 
+                    if (token0_sale_rate_net != 0 || token1_sale_rate_net != 0) {
+                        self
+                            .update_token_sale_rate_and_rewards(
+                                twamm_pool_key,
+                                (token0_sale_rate, token1_sale_rate),
+                                next_virtual_order_time
+                            );
+                    }
+
+                    // update last_virtual_order_time to next_virtual_order_time
+                    last_virtual_order_time = next_virtual_order_time;
+
+                    // virtual orders were executed up to current time
+                    if next_virtual_order_time == current_time {
+                        break;
+                    }
+                };
+
+                self.last_virtual_order_time.write(twamm_pool_key, last_virtual_order_time);
+
+                // zero out deltas
+                if (total_delta.amount0.mag > 0) {
+                    if (total_delta.amount0.sign) {
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(),
+                                    token: twamm_pool_key.token0,
+                                    salt: 0
+                                },
+                                total_delta.amount0.mag
+                            );
+                    } else {
+                        core.load(twamm_pool_key.token0, 0, total_delta.amount0.mag);
+                    }
+                }
+                if (total_delta.amount1.mag > 0) {
+                    if (total_delta.amount1.sign) {
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(),
+                                    token: twamm_pool_key.token1,
+                                    salt: 0
+                                },
+                                total_delta.amount1.mag
+                            );
+                    } else {
+                        core.load(twamm_pool_key.token1, 0, total_delta.amount1.mag);
+                    }
+                }
             }
         }
     }

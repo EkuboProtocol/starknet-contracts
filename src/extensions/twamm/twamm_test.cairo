@@ -1,6 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
+use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
 use ekubo::extensions::twamm::TWAMM::{
     OrderUpdated, VirtualOrdersExecuted, OrderProceedsWithdrawn, time_to_word_and_bit_index,
@@ -30,7 +31,7 @@ use ekubo::math::ticks::{min_tick, max_tick};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::mock_erc20::{IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
-    Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner
+    Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner, FEE_ONE_PERCENT
 };
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
@@ -272,11 +273,20 @@ mod CancelOrderTests {
         pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
         SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher, IERC20DispatcherTrait,
         place_order, set_up_twamm_with_default_liquidity, i129, contract_address_const,
-        set_contract_address, IPositionsDispatcher, IPositionsDispatcherTrait
+        set_contract_address, IPositionsDispatcher, IPositionsDispatcherTrait, IClearDispatcher,
+        IClearDispatcherTrait
     };
 
     #[test]
-    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'ORDER_ENDED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_place_order_and_cancel_after_end_time() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -319,7 +329,7 @@ mod CancelOrderTests {
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (_, setup, positions) = set_up_twamm_with_default_liquidity(
+        let (twamm, setup, positions) = set_up_twamm_with_default_liquidity(
             ref d, core, fee, initial_tick
         );
 
@@ -347,21 +357,31 @@ mod CancelOrderTests {
         let token_balance_before = IERC20Dispatcher {
             contract_address: setup.token0.contract_address
         }
-            .balanceOf(order1_key.owner);
+            .balanceOf(owner);
 
         set_contract_address(owner);
         positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
+        IClearDispatcher { contract_address: twamm.contract_address }
+            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
 
         let token_balance_after = IERC20Dispatcher {
             contract_address: setup.token0.contract_address
         }
-            .balanceOf(order1_key.owner);
+            .balanceOf(owner);
 
-        assert_eq!(token_balance_after - token_balance_before, 999999999999999999999);
+        assert_eq!(token_balance_after - token_balance_before, 1000000000000000000000);
     }
 
     #[test]
-    #[should_panic(expected: ('MUST_WITHDRAW_PROCEEDS', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'MUST_WITHDRAW_PROCEEDS',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -757,8 +777,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
         SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
         VirtualOrdersExecuted, OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity,
-        place_order, calculate_sale_rate,
-        place_order_with_default_start_time_and_owner
+        place_order, calculate_sale_rate, place_order_with_default_start_time_and_owner
     };
 
     #[test]
@@ -1096,12 +1115,21 @@ mod PlaceOrdersAndUpdateSaleRate {
         SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
         VirtualOrdersExecuted, OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity,
         place_order_with_default_start_time_and_owner, place_order, calculate_sale_rate,
-        OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized, PositionUpdated,
-        calculate_amount_from_sale_rate
+        OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
+        PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT, IERC20Dispatcher,
+        IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait
     };
 
     #[test]
-    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'ORDER_ENDED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_update_at_order_expiry() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -1145,7 +1173,15 @@ mod PlaceOrdersAndUpdateSaleRate {
     }
 
     #[test]
-    #[should_panic(expected: ('ORDER_ENDED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'ORDER_ENDED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_update_after_order_expiry() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -1189,7 +1225,15 @@ mod PlaceOrdersAndUpdateSaleRate {
     }
 
     #[test]
-    #[should_panic(expected: ('INVALID_SALE_RATE_DELTA', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: (
+            'INVALID_SALE_RATE_DELTA',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
     fn test_update_invalid_sale_rate() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -1308,7 +1352,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.amount, amount / 2);
 
         // order sale rate
-        let order1_state = twamm.get_order_state(order1_key);
+        let order1_state = twamm.get_order_state(positions.contract_address, order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1408,7 +1452,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.amount, amount / 2);
 
         // order sale rate
-        let order1_state = twamm.get_order_state(order1_key);
+        let order1_state = twamm.get_order_state(positions.contract_address, order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1516,7 +1560,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.amount, amount / 2);
 
         // order sale rate
-        let order1_state = twamm.get_order_state(order1_key);
+        let order1_state = twamm.get_order_state(positions.contract_address, order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1628,7 +1672,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.amount, amount / 2);
 
         // order sale rate
-        let order1_state = twamm.get_order_state(order1_key);
+        let order1_state = twamm.get_order_state(positions.contract_address, order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1758,7 +1802,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.amount, amount / 4);
 
         // order sale rate
-        let order1_state = twamm.get_order_state(order1_key);
+        let order1_state = twamm.get_order_state(positions.contract_address, order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net, if start_time is in the past, do not update
@@ -1789,6 +1833,74 @@ mod PlaceOrdersAndUpdateSaleRate {
         //        ~= 9,998.994829713355494901 tokens
         assert_eq!(event.amount, 9998994829713355494901);
     }
+
+    #[test]
+    fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token0() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = FEE_ONE_PERCENT;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm_with_default_liquidity(
+            ref d, core, fee, initial_tick
+        );
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
+
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        // set time to just before order start
+        set_block_timestamp(order1_start_time - 1);
+
+        let token_balance_before = IERC20Dispatcher {
+            contract_address: setup.token0.contract_address
+        }
+            .balanceOf(owner);
+
+        // decrease sale rate
+        set_contract_address(owner);
+        positions
+            .update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate / 2, sign: true });
+        IClearDispatcher { contract_address: twamm.contract_address }
+            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+
+        let token_balance_after = IERC20Dispatcher {
+            contract_address: setup.token0.contract_address
+        }
+            .balanceOf(owner);
+
+        // pays 1% fee of 5000
+        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+    }
 }
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
@@ -1802,8 +1914,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
         OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity,
-        place_order_with_default_start_time_and_owner, OrderProceedsWithdrawn, Swapped, LoadedBalance,
-        SavedBalance, PoolInitialized, PositionUpdated
+        place_order_with_default_start_time_and_owner, OrderProceedsWithdrawn, Swapped,
+        LoadedBalance, SavedBalance, PoolInitialized, PositionUpdated
     };
 
     #[test]
@@ -2319,8 +2431,9 @@ mod PlaceOrderOnBothSides {
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
         OrderState, TWAMMPoolKey, set_up_twamm_with_default_liquidity, set_up_twamm_with_liquidity,
-        place_order_with_default_start_time, OrderProceedsWithdrawn, PoolInitialized, PositionUpdated,
-        SavedBalance, Swapped, LoadedBalance, place_order_with_default_start_time_and_owner
+        place_order_with_default_start_time, OrderProceedsWithdrawn, PoolInitialized,
+        PositionUpdated, SavedBalance, Swapped, LoadedBalance,
+        place_order_with_default_start_time_and_owner
     };
 
     #[test]
@@ -3151,15 +3264,14 @@ fn place_order(
     };
 
     let order_key = OrderKey {
-        owner: positions.contract_address,
-        salt: id.into(),
-        twamm_pool_key,
-        is_sell_token1: is_sell_token1,
-        start_time,
-        end_time
+        salt: id.into(), twamm_pool_key, is_sell_token1: is_sell_token1, start_time, end_time
     };
 
     // return token id, order key, and order state
-    (order_key, ITWAMMDispatcher { contract_address: twamm }.get_order_state(order_key))
+    (
+        order_key,
+        ITWAMMDispatcher { contract_address: twamm }
+            .get_order_state(positions.contract_address, order_key)
+    )
 }
 

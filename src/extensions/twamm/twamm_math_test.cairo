@@ -496,7 +496,7 @@ mod TWAMMMathTest {
             time_elapsed: 1
         );
         // sqrt_ratio ~= .99
-        assert_eq!(next_sqrt_ratio, 340282366920938463332123722385714104074);
+        assert_eq!(next_sqrt_ratio, 340282366920938463332123722385714104100);
 
         // very low liquidity
         let next_sqrt_ratio = calculate_next_sqrt_ratio(
@@ -507,6 +507,6 @@ mod TWAMMMathTest {
             time_elapsed: 1
         );
         // sqrt_ratio will be sqrt_sale_ratio
-        assert_eq!(next_sqrt_ratio, 107606732706330320671984263368533868544);
+        assert_eq!(next_sqrt_ratio, 107606732706330320687810575726449262521);
     }
 }

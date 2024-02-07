@@ -1,6 +1,7 @@
 #[starknet::contract]
 pub mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::cmp::{max};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
@@ -502,35 +503,26 @@ pub mod Positions {
         ) -> (u64, u128) {
             let id = self.mint_v2(Zero::zero());
 
-            let current_time = get_block_timestamp();
-
-            let sale_rate = if (start_time <= current_time) {
-                calculate_sale_rate(amount, end_time, current_time)
-            } else {
-                calculate_sale_rate(amount, end_time, start_time)
-            };
-
-            let token = if (is_sell_token1) {
-                twamm_pool_key.token1
-            } else {
-                twamm_pool_key.token0
-            };
-
             let twamm = self.twamm.read();
 
             // transfer funds to twamm
-            IERC20Dispatcher { contract_address: token }
+            IERC20Dispatcher {
+                contract_address: if (is_sell_token1) {
+                    twamm_pool_key.token1
+                } else {
+                    twamm_pool_key.token0
+                }
+            }
                 .transfer(twamm.contract_address, amount.into());
+
+            let sale_rate = calculate_sale_rate(
+                amount, end_time, max(start_time, get_block_timestamp())
+            );
 
             twamm
                 .update_order(
                     OrderKey {
-                        owner: get_contract_address(),
-                        twamm_pool_key,
-                        salt: id.into(),
-                        is_sell_token1,
-                        start_time,
-                        end_time,
+                        twamm_pool_key, salt: id.into(), is_sell_token1, start_time, end_time,
                     },
                     i129 { mag: sale_rate, sign: false }
                 );
@@ -549,20 +541,21 @@ pub mod Positions {
 
             let twamm = self.twamm.read();
 
+            // if decreasing sale rate, funds must be cleared from this contract
             // if increasing sale rate, transfer additional funds to twamm
             if (!sale_rate_delta.sign) {
-                let token = if (order_key.is_sell_token1) {
-                    order_key.twamm_pool_key.token1
-                } else {
-                    order_key.twamm_pool_key.token0
-                };
-
                 let amount = calculate_amount_from_sale_rate(
                     sale_rate_delta.mag, order_key.end_time, order_key.start_time,
                 );
 
                 // transfer funds to twamm
-                IERC20Dispatcher { contract_address: token }
+                IERC20Dispatcher {
+                    contract_address: if (order_key.is_sell_token1) {
+                        order_key.twamm_pool_key.token1
+                    } else {
+                        order_key.twamm_pool_key.token0
+                    }
+                }
                     .transfer(twamm.contract_address, amount.into());
             }
 
@@ -580,7 +573,7 @@ pub mod Positions {
 
             let twamm = self.twamm.read();
 
-            twamm.withdraw_from_order(order_key, caller);
+            twamm.withdraw_from_order(order_key);
         }
     }
 }
