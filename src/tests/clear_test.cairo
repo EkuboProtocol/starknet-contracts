@@ -1,11 +1,11 @@
+use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::mock_erc20::MockERC20IERC20ImplTrait;
 use ekubo::tests::helper::{Deployer, DeployerTrait};
 use starknet::{
     contract_address_const, syscalls::{deploy_syscall}, ContractAddress,
     testing::{set_contract_address}
 };
-use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 #[starknet::contract]
 mod TestContract {
