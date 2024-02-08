@@ -67,15 +67,20 @@ pub trait ITWAMM<TContractState> {
     // Return the current reward rate
     fn get_reward_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (felt252, felt252);
 
+    // Return the sale rate net for a specific time
+    fn get_sale_rate_net(
+        self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
+    ) -> (u128, u128);
+
     // Return the sale rate delta for a specific time
     fn get_sale_rate_delta(
         self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
     ) -> (i129, i129);
 
-    // Return the sale rate net for a specific time
-    fn get_sale_rate_net(
-        self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
-    ) -> (u128, u128);
+    // Return the next virtual order time
+    fn get_next_virtual_order_time(
+        self: @TContractState, twamm_pool_key: TWAMMPoolKey, max_time: u64
+    ) -> (u64, u64);
 
     // Update an existing twamm order
     fn update_order(ref self: TContractState, order_key: OrderKey, sale_rate_delta: i129);
@@ -169,12 +174,14 @@ pub mod TWAMM {
 
     #[derive(starknet::Event, Drop)]
     pub struct OrderUpdated {
+        pub owner: ContractAddress,
         pub order_key: OrderKey,
         pub sale_rate_delta: i129
     }
 
     #[derive(starknet::Event, Drop)]
     pub struct OrderProceedsWithdrawn {
+        pub owner: ContractAddress,
         pub order_key: OrderKey,
         pub amount: u128
     }
@@ -345,6 +352,19 @@ pub mod TWAMM {
             self: @ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
         ) -> (i129, i129) {
             self.time_sale_rate_delta.read((twamm_pool_key, time))
+        }
+
+        fn get_next_virtual_order_time(
+            self: @ContractState, twamm_pool_key: TWAMMPoolKey, max_time: u64
+        ) -> (u64, u64) {
+            let last_virtual_order_time = self.last_virtual_order_time.read(twamm_pool_key);
+
+            assert(max_time > last_virtual_order_time, 'INVALID_MAX_TIME');
+
+            (
+                last_virtual_order_time,
+                self.next_initialized_time(twamm_pool_key, last_virtual_order_time, max_time)
+            )
         }
 
         fn update_order(ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129) {
@@ -550,7 +570,10 @@ pub mod TWAMM {
                         core.withdraw(token, get_contract_address(), purchased_amount);
                     }
 
-                    self.emit(OrderProceedsWithdrawn { order_key, amount: purchased_amount });
+                    self
+                        .emit(
+                            OrderProceedsWithdrawn { owner, order_key, amount: purchased_amount }
+                        );
                     LockCallbackResult::Empty
                 }
             };
@@ -630,7 +653,7 @@ pub mod TWAMM {
                     }
                 );
 
-            self.emit(OrderUpdated { order_key, sale_rate_delta: sale_rate_delta });
+            self.emit(OrderUpdated { owner, order_key, sale_rate_delta: sale_rate_delta });
 
             // add sale rate delta 
             if (order_started) {
@@ -897,9 +920,7 @@ pub mod TWAMM {
         ) {
             pool_key.check_valid();
 
-            let twamm_pool_key = TWAMMPoolKey {
-                token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee
-            };
+            let twamm_pool_key: TWAMMPoolKey = pool_key.into();
 
             // since virtual orders are executed at the same time for both tokens,
             // last_virtual_order_time is the same for both tokens.
@@ -1097,6 +1118,12 @@ pub mod TWAMM {
             + ((250 - bit).into() * constants::BITMAP_SPACING.into()))
             .try_into()
             .unwrap()
+    }
+
+    impl PoolKeyIntoTWAMMPoolKey of Into<PoolKey, TWAMMPoolKey> {
+        fn into(self: PoolKey) -> TWAMMPoolKey {
+            TWAMMPoolKey { token0: self.token0, token1: self.token1, fee: self.fee }
+        }
     }
 
     impl OrderKeyIntoPoolKey of Into<OrderKey, PoolKey> {

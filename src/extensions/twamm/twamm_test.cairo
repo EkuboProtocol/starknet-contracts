@@ -266,552 +266,6 @@ mod PoolTests {
     }
 }
 
-mod CancelOrderTests {
-    use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher, IERC20DispatcherTrait,
-        place_order, i129, contract_address_const, set_contract_address, IPositionsDispatcher,
-        IPositionsDispatcherTrait, IClearDispatcher, IClearDispatcherTrait, set_up_twamm
-    };
-
-    #[test]
-    #[should_panic(
-        expected: (
-            'ORDER_ENDED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
-    )]
-    fn test_place_order_and_cancel_after_end_time() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (_, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_TWO;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 1_000 * 1000000000000000000;
-        let (order1_key, order1_state) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            SIXTEEN_POW_TWO,
-            SIXTEEN_POW_THREE,
-            amount
-        );
-
-        set_block_timestamp(order1_key.end_time + 1);
-
-        set_contract_address(owner);
-        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
-    }
-
-    #[test]
-    fn test_place_order_and_cancel_before_order_execution() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_TWO;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 1_000 * 1000000000000000000;
-        let (order1_key, order1_state) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            SIXTEEN_POW_TWO,
-            SIXTEEN_POW_THREE,
-            amount
-        );
-
-        let token_balance_before = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
-        }
-            .balanceOf(owner);
-
-        set_contract_address(owner);
-        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
-        IClearDispatcher { contract_address: twamm.contract_address }
-            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
-
-        let token_balance_after = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
-        }
-            .balanceOf(owner);
-
-        assert_eq!(token_balance_after - token_balance_before, 1000000000000000000000);
-    }
-
-    #[test]
-    #[should_panic(
-        expected: (
-            'MUST_WITHDRAW_PROCEEDS',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
-    )]
-    fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (_, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_TWO;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 1_000 * 1000000000000000000;
-        let (order1_key, order1_state) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            SIXTEEN_POW_TWO,
-            SIXTEEN_POW_THREE,
-            amount
-        );
-
-        set_block_timestamp(SIXTEEN_POW_THREE - 1);
-
-        set_contract_address(owner);
-        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
-    }
-
-    #[test]
-    fn test_place_order_and_cancel_before_full_order_execution() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (_, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_TWO;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 1_000 * 1000000000000000000;
-        let (order1_key, order1_state) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            SIXTEEN_POW_TWO,
-            SIXTEEN_POW_THREE,
-            amount
-        );
-
-        set_block_timestamp(SIXTEEN_POW_THREE - 1);
-
-        set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key);
-        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
-    }
-}
-
-mod PlaceOrderAndCheckExecutionTimesAndRates {
-    use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderState, TWAMMPoolKey, set_up_twamm, place_order
-    };
-
-    #[test]
-    fn test_place_orders_0() {
-        // Both order expiries are after the current time
-        // l = last virtual order time
-        // t = current time
-        // 0 = order for token0
-        // 1 = order for token1
-        // l---------------------t----0--1----------> time
-        // trade from l->t
-
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_ONE;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
-        let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
-        place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            0,
-            order1_end_time,
-            amount
-        );
-
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        let order2_timestamp = timestamp + SIXTEEN_POW_ONE;
-        set_block_timestamp(order2_timestamp);
-        let order2_end_time = order2_timestamp + SIXTEEN_POW_THREE - 2 * SIXTEEN_POW_ONE;
-        place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            true,
-            0,
-            order2_end_time,
-            amount
-        );
-
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order2_timestamp);
-    }
-
-    #[test]
-    fn test_place_orders_1() {
-        // Order 0 expiries before current time
-        // Order 1 expiries after current time
-        // l = last virtual order time
-        // t = current time
-        // 1 = order for token0
-        // 2 = order for token1
-        // l---------------0-----t-------1----------> time
-        // execute from l->0 and from 0->t
-
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_ONE;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
-        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
-        let (_, order1) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            0,
-            order1_end_time,
-            amount
-        );
-
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        let order2_timestamp = order1_end_time + SIXTEEN_POW_ONE;
-        set_block_timestamp(order2_timestamp);
-        let order2_end_time = order2_timestamp + SIXTEEN_POW_THREE - 3 * SIXTEEN_POW_ONE;
-        place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            true,
-            0,
-            order2_end_time,
-            amount
-        );
-
-        // first order execution
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
-        assert_eq!(event.token0_sale_rate, order1.sale_rate);
-        assert_eq!(event.token1_sale_rate, 0);
-    // second order execution
-    // no event is emitted since both sale rates are 0
-    }
-
-    #[test]
-    fn test_place_orders_2() {
-        // Order 0 expiries before current time
-        // Order 1 expiries before current time
-        // l = last virtual order time
-        // t = current time
-        // 1 = order for token0
-        // 2 = order for token1
-        // l---------------0--1--t------------------> time
-        // execute from l->0, 0->1, 1->t
-
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = 1_000_000;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-
-        let owner = contract_address_const::<42>();
-        let amount = 100_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
-        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
-        let (_, order1) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            0,
-            order1_end_time,
-            amount
-        );
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        let order2_end_time = timestamp + SIXTEEN_POW_ONE * 2;
-        let (_, order2) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            true,
-            0,
-            order2_end_time,
-            amount
-        );
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        // after order2 expires
-        let order_execution_timestamp = order2_end_time + SIXTEEN_POW_ONE;
-        set_block_timestamp(order_execution_timestamp);
-
-        // manually trigger virtual order execution
-        twamm.execute_virtual_orders(setup.pool_key);
-
-        // first order execution
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
-        assert_eq!(event.token0_sale_rate, order1.sale_rate);
-        assert_eq!(event.token1_sale_rate, order2.sale_rate);
-
-        // second order execution
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
-
-        assert_eq!(event.token0_sale_rate, 0);
-        assert_eq!(event.token1_sale_rate, order2.sale_rate);
-    // third order execution
-    // no event is emitted since both sale rates are 0
-    }
-
-    #[test]
-    fn test_place_orders_3() {
-        // Order 0 expiries before current time
-        // Order 1 expiries before current time
-        // l = last virtual order time
-        // t = current time
-        // 1 = order for token0
-        // 2 = order for token1
-        // l---------------0--1--t------------------> time
-        // execute from l->0, 0->1, 1->t
-
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = 1_000_000;
-        set_block_timestamp(timestamp);
-
-        let twamm_pool_key = TWAMMPoolKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
-        };
-        let owner = contract_address_const::<42>();
-        let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
-        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
-        let (_, order1) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            false,
-            0,
-            order1_end_time,
-            amount
-        );
-
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        let order2_end_time = timestamp
-            + SIXTEEN_POW_THREE
-            - 0x240; // ensure end time is valid and in a diff word
-        let (_, order2) = place_order(
-            positions,
-            owner,
-            setup.token0,
-            setup.token1,
-            twamm_pool_key,
-            true,
-            0,
-            order2_end_time,
-            amount
-        );
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
-        // after order2 expires
-        let order_execution_timestamp = order2_end_time + SIXTEEN_POW_THREE;
-        set_block_timestamp(order_execution_timestamp);
-
-        // manually trigger virtual order execution
-        twamm.execute_virtual_orders(setup.pool_key);
-
-        // first order execution
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
-        assert_eq!(event.token0_sale_rate, order1.sale_rate);
-        assert_eq!(event.token1_sale_rate, order2.sale_rate);
-
-        // second order execution
-        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
-
-        assert_eq!(event.token0_sale_rate, 0);
-        assert_eq!(event.token1_sale_rate, order2.sale_rate);
-    // third order execution
-    // no event is emitted since both sale rates are 0
-    }
-}
-
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
@@ -1170,6 +624,552 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let (_, token1_sale_rate_net) = twamm.get_sale_rate_net(twamm_pool_key, order1_end_time);
         assert_eq!(token1_sale_rate_net, 0);
+    }
+}
+
+mod PlaceOrderAndCheckExecutionTimesAndRates {
+    use super::{
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
+        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
+        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
+        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
+        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
+        OrderState, TWAMMPoolKey, set_up_twamm, place_order
+    };
+
+    #[test]
+    fn test_place_orders_0() {
+        // Both order expiries are after the current time
+        // l = last virtual order time
+        // t = current time
+        // 0 = order for token0
+        // 1 = order for token1
+        // l---------------------t----0--1----------> time
+        // trade from l->t
+
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 10_000 * 1000000000000000000;
+        let order1_timestamp = timestamp;
+        let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+        place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            0,
+            order1_end_time,
+            amount
+        );
+
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let order2_timestamp = timestamp + SIXTEEN_POW_ONE;
+        set_block_timestamp(order2_timestamp);
+        let order2_end_time = order2_timestamp + SIXTEEN_POW_THREE - 2 * SIXTEEN_POW_ONE;
+        place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            0,
+            order2_end_time,
+            amount
+        );
+
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert_eq!(event.last_virtual_order_time, order1_timestamp);
+        assert_eq!(event.next_virtual_order_time, order2_timestamp);
+    }
+
+    #[test]
+    fn test_place_orders_1() {
+        // Order 0 expiries before current time
+        // Order 1 expiries after current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0
+        // 2 = order for token1
+        // l---------------0-----t-------1----------> time
+        // execute from l->0 and from 0->t
+
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 10_000 * 1000000000000000000;
+        let order1_timestamp = timestamp;
+        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
+        let (_, order1) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            0,
+            order1_end_time,
+            amount
+        );
+
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let order2_timestamp = order1_end_time + SIXTEEN_POW_ONE;
+        set_block_timestamp(order2_timestamp);
+        let order2_end_time = order2_timestamp + SIXTEEN_POW_THREE - 3 * SIXTEEN_POW_ONE;
+        place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            0,
+            order2_end_time,
+            amount
+        );
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert_eq!(event.last_virtual_order_time, order1_timestamp);
+        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.token0_sale_rate, order1.sale_rate);
+        assert_eq!(event.token1_sale_rate, 0);
+    // second order execution
+    // no event is emitted since both sale rates are 0
+    }
+
+    #[test]
+    fn test_place_orders_2() {
+        // Order 0 expiries before current time
+        // Order 1 expiries before current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0
+        // 2 = order for token1
+        // l---------------0--1--t------------------> time
+        // execute from l->0, 0->1, 1->t
+
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = 1_000_000;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 100_000 * 1000000000000000000;
+        let order1_timestamp = timestamp;
+        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
+        let (_, order1) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            0,
+            order1_end_time,
+            amount
+        );
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let order2_end_time = timestamp + SIXTEEN_POW_ONE * 2;
+        let (_, order2) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            0,
+            order2_end_time,
+            amount
+        );
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        // after order2 expires
+        let order_execution_timestamp = order2_end_time + SIXTEEN_POW_ONE;
+        set_block_timestamp(order_execution_timestamp);
+
+        // manually trigger virtual order execution
+        twamm.execute_virtual_orders(setup.pool_key);
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert_eq!(event.last_virtual_order_time, order1_timestamp);
+        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.token0_sale_rate, order1.sale_rate);
+        assert_eq!(event.token1_sale_rate, order2.sale_rate);
+
+        // second order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert_eq!(event.last_virtual_order_time, order1_end_time);
+        assert_eq!(event.next_virtual_order_time, order2_end_time);
+
+        assert_eq!(event.token0_sale_rate, 0);
+        assert_eq!(event.token1_sale_rate, order2.sale_rate);
+    // third order execution
+    // no event is emitted since both sale rates are 0
+    }
+
+    #[test]
+    fn test_place_orders_3() {
+        // Order 0 expiries before current time
+        // Order 1 expiries before current time
+        // l = last virtual order time
+        // t = current time
+        // 1 = order for token0
+        // 2 = order for token1
+        // l---------------0--1--t------------------> time
+        // execute from l->0, 0->1, 1->t
+
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = 1_000_000;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+        let owner = contract_address_const::<42>();
+        let amount = 10_000 * 1000000000000000000;
+        let order1_timestamp = timestamp;
+        let order1_end_time = timestamp + SIXTEEN_POW_ONE;
+        let (_, order1) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            0,
+            order1_end_time,
+            amount
+        );
+
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let order2_end_time = timestamp
+            + SIXTEEN_POW_THREE
+            - 0x240; // ensure end time is valid and in a diff word
+        let (_, order2) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            true,
+            0,
+            order2_end_time,
+            amount
+        );
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        // after order2 expires
+        let order_execution_timestamp = order2_end_time + SIXTEEN_POW_THREE;
+        set_block_timestamp(order_execution_timestamp);
+
+        // manually trigger virtual order execution
+        twamm.execute_virtual_orders(setup.pool_key);
+
+        // first order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
+        assert_eq!(event.last_virtual_order_time, order1_timestamp);
+        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.token0_sale_rate, order1.sale_rate);
+        assert_eq!(event.token1_sale_rate, order2.sale_rate);
+
+        // second order execution
+        let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+        assert_eq!(event.last_virtual_order_time, order1_end_time);
+        assert_eq!(event.next_virtual_order_time, order2_end_time);
+
+        assert_eq!(event.token0_sale_rate, 0);
+        assert_eq!(event.token1_sale_rate, order2.sale_rate);
+    // third order execution
+    // no event is emitted since both sale rates are 0
+    }
+}
+
+mod CancelOrderTests {
+    use super::{
+        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
+        pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, TWAMMPoolKey, IERC20Dispatcher, IERC20DispatcherTrait,
+        place_order, i129, contract_address_const, set_contract_address, IPositionsDispatcher,
+        IPositionsDispatcherTrait, IClearDispatcher, IClearDispatcherTrait, set_up_twamm
+    };
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'ORDER_ENDED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_place_order_and_cancel_after_end_time() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (_, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        set_block_timestamp(order1_key.end_time + 1);
+
+        set_contract_address(owner);
+        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
+    }
+
+    #[test]
+    fn test_place_order_and_cancel_before_order_execution() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        let token_balance_before = IERC20Dispatcher {
+            contract_address: setup.token0.contract_address
+        }
+            .balanceOf(owner);
+
+        set_contract_address(owner);
+        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
+        IClearDispatcher { contract_address: twamm.contract_address }
+            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+
+        let token_balance_after = IERC20Dispatcher {
+            contract_address: setup.token0.contract_address
+        }
+            .balanceOf(owner);
+
+        assert_eq!(token_balance_after - token_balance_before, 1000000000000000000000);
+    }
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'MUST_WITHDRAW_PROCEEDS',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (_, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        set_block_timestamp(SIXTEEN_POW_THREE - 1);
+
+        set_contract_address(owner);
+        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
+    }
+
+    #[test]
+    fn test_place_order_and_cancel_before_full_order_execution() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (_, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let twamm_pool_key = TWAMMPoolKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        let owner = contract_address_const::<42>();
+        let amount = 1_000 * 1000000000000000000;
+        let (order1_key, order1_state) = place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            twamm_pool_key,
+            false,
+            SIXTEEN_POW_TWO,
+            SIXTEEN_POW_THREE,
+            amount
+        );
+
+        set_block_timestamp(SIXTEEN_POW_THREE - 1);
+
+        set_contract_address(owner);
+        positions.withdraw_proceeds(order1_key);
+        positions.update_sale_rate(order1_key, i129 { mag: order1_state.sale_rate, sign: true });
     }
 }
 
@@ -3413,7 +3413,6 @@ mod PlaceOrderOnBothSides {
     }
 }
 
-
 fn set_up_twamm(
     ref d: Deployer,
     core: ICoreDispatcher,
@@ -3479,8 +3478,6 @@ fn place_order(
     end_time: u64,
     amount: u128
 ) -> (OrderKey, OrderState) {
-    let current_contract_address = get_contract_address();
-
     // place order
     let twamm = positions.get_twamm_address();
 
@@ -3489,6 +3486,8 @@ fn place_order(
     } else {
         token0.increase_balance(positions.contract_address, amount);
     }
+
+    let current_contract_address = get_contract_address();
 
     let id = if (owner != current_contract_address) {
         set_contract_address(owner);
