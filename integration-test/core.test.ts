@@ -23,10 +23,10 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x2b761d7b40a774028b7f2f095b0164c5589efdb3307bf77ca15183be76a6ea8",
+        "0x35649a29af85a8213979a6db9f69ed32b1c64b28be026dec28cb284ad4dd6eb",
       router:
-        "0x2f70c9815461400d3651931a1f88a85e1097e6e96c24c17eb93ba213c035a9e",
-      nft: "0x4a234c6c0599299e96f51d0212b4716b93369c24b7c3c75474b68fca41e0d83",
+        "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
+      nft: "0x4211e15a2007d5e2ee46cb5999652fc2f2f9cc9af8a4ad2487ffc7cae18f393",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });

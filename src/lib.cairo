@@ -68,6 +68,7 @@ pub mod math {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    pub(crate) mod clear_test;
     pub(crate) mod core_test;
     pub(crate) mod extensions_test;
     pub(crate) mod helper;

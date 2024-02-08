@@ -31,8 +31,10 @@ pub impl ClearImpl<TContractState> of IClear<TContractState> {
         self: @TContractState, token: IERC20Dispatcher, minimum: u256, recipient: ContractAddress
     ) -> u256 {
         let balance = token.balanceOf(get_contract_address());
-        if (balance.is_non_zero()) {
+        if minimum.is_non_zero() {
             assert(balance >= minimum, 'CLEAR_AT_LEAST_MINIMUM');
+        }
+        if balance.is_non_zero() {
             token.transfer(recipient, balance);
         }
         balance
