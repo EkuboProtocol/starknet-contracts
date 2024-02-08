@@ -29,12 +29,39 @@ pub struct OrderKey {
 }
 
 // state of a particular order, defined by the key
-#[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
+#[derive(Drop, Copy, Serde, PartialEq)]
 pub struct OrderState {
     sale_rate: u128,
     // snapshot of adjusted reward rate for order updates (withdrawal/sale-rate)
     reward_rate: felt252,
     use_snapshot: bool
+}
+
+impl OrderStateStorePacking of starknet::storage_access::StorePacking<
+    OrderState, (felt252, felt252)
+> {
+    fn pack(value: OrderState) -> (felt252, felt252) {
+        (
+            u256 { low: value.sale_rate, high: if value.use_snapshot {
+                1
+            } else {
+                0
+            } }
+                .try_into()
+                .unwrap(),
+            value.reward_rate
+        )
+    }
+    fn unpack(value: (felt252, felt252)) -> OrderState {
+        let (sale_rate_use_snapshot, reward_rate) = value;
+        let sale_rate_use_snapshot_u256: u256 = sale_rate_use_snapshot.into();
+
+        OrderState {
+            sale_rate: sale_rate_use_snapshot_u256.low,
+            reward_rate,
+            use_snapshot: sale_rate_use_snapshot_u256.high.is_non_zero(),
+        }
+    }
 }
 
 pub impl OrderStateZero of Zero<OrderState> {
