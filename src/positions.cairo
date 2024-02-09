@@ -493,87 +493,74 @@ pub mod Positions {
         }
 
         // Mint a twamm position and set sale rate.
-        fn mint_and_update_sale_rate(
+        fn mint_and_increase_amount(
             ref self: ContractState,
             twamm_pool_key: TWAMMPoolKey,
             is_sell_token1: bool,
             start_time: u64,
             end_time: u64,
             amount: u128
-        ) -> (u64, u128) {
+        ) -> (u64, OrderKey) {
             let id = self.mint_v2(Zero::zero());
+            let order_key = OrderKey { twamm_pool_key, is_sell_token1, start_time, end_time };
+            self.increase_amount(order_key, id, amount);
+            (id, order_key)
+        }
+
+        fn increase_amount(ref self: ContractState, order_key: OrderKey, id: u64, amount: u128) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
 
             let twamm = self.twamm.read();
 
-            // transfer funds to twamm
+            // if increasing sale rate, transfer additional funds to twamm
             IERC20Dispatcher {
-                contract_address: if (is_sell_token1) {
-                    twamm_pool_key.token1
+                contract_address: if (order_key.is_sell_token1) {
+                    order_key.twamm_pool_key.token1
                 } else {
-                    twamm_pool_key.token0
+                    order_key.twamm_pool_key.token0
                 }
             }
                 .transfer(twamm.contract_address, amount.into());
 
-            let sale_rate = calculate_sale_rate(
-                amount, end_time, max(start_time, get_block_timestamp())
-            );
-
             twamm
                 .update_order(
-                    OrderKey {
-                        twamm_pool_key, salt: id.into(), is_sell_token1, start_time, end_time,
-                    },
-                    i129 { mag: sale_rate, sign: false }
+                    order_key,
+                    id.into(),
+                    i129 {
+                        mag: calculate_sale_rate(
+                            amount,
+                            max(order_key.start_time, get_block_timestamp()),
+                            order_key.end_time,
+                        ),
+                        sign: false
+                    }
                 );
-
-            (id, sale_rate)
         }
 
-        // Update an existing twamm position
-        fn update_sale_rate(ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129) {
+        fn decrease_sale_rate(
+            ref self: ContractState, order_key: OrderKey, id: u64, sale_rate_delta: u128
+        ) {
             let nft = self.nft.read();
             let caller = get_caller_address();
-            assert(
-                nft.is_account_authorized(order_key.salt.try_into().expect('INVALID_ID'), caller),
-                'UNAUTHORIZED'
-            );
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
 
-            let twamm = self.twamm.read();
-
-            // if decreasing sale rate, funds must be cleared from this contract
-            // if increasing sale rate, transfer additional funds to twamm
-            if (!sale_rate_delta.sign) {
-                let amount = calculate_amount_from_sale_rate(
-                    sale_rate_delta.mag, order_key.end_time, order_key.start_time,
-                );
-
-                // transfer funds to twamm
-                IERC20Dispatcher {
-                    contract_address: if (order_key.is_sell_token1) {
-                        order_key.twamm_pool_key.token1
-                    } else {
-                        order_key.twamm_pool_key.token0
-                    }
-                }
-                    .transfer(twamm.contract_address, amount.into());
-            }
-
-            twamm.update_order(order_key, sale_rate_delta);
+            self
+                .twamm
+                .read()
+                .update_order(order_key, id.into(), i129 { mag: sale_rate_delta, sign: true });
         }
 
         // Withdraws proceeds from a twamm position
-        fn withdraw_proceeds(ref self: ContractState, order_key: OrderKey) {
+        fn withdraw_proceeds(ref self: ContractState, order_key: OrderKey, id: u64) {
             let nft = self.nft.read();
             let caller = get_caller_address();
-            assert(
-                nft.is_account_authorized(order_key.salt.try_into().expect('INVALID_ID'), caller),
-                'UNAUTHORIZED'
-            );
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
 
             let twamm = self.twamm.read();
 
-            twamm.withdraw_from_order(order_key);
+            twamm.collect_proceeds(order_key, id.into());
         }
     }
 }

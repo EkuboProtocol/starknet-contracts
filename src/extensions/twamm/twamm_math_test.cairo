@@ -1,7 +1,8 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate
+    constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
+    validate_time
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::types::delta::{Delta};
@@ -18,6 +19,7 @@ const SIXTEEN_POW_SIX: u64 = 0x1000000;
 const SIXTEEN_POW_SEVEN: u64 = 0x10000000;
 const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
+
 mod SaleRateTest {
     use super::{
         calculate_sale_rate, calculate_amount_from_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
@@ -26,9 +28,9 @@ mod SaleRateTest {
     };
 
 
-    fn assert_case_sale_rate(amount: u128, end_time: u64, start_time: u64, expected: u128) {
+    fn assert_case_sale_rate(amount: u128, start_time: u64, end_time: u64, expected: u128) {
         let sale_rate = calculate_sale_rate(
-            amount: amount, end_time: end_time, start_time: start_time
+            amount: amount, start_time: start_time, end_time: end_time
         );
         assert_eq!(sale_rate, expected);
     }
@@ -36,25 +38,25 @@ mod SaleRateTest {
     #[test]
     fn test_sale_rates_smallest_amount() {
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_ONE, start_time: 0, expected: 0x10000000
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_ONE, expected: 0x10000000,
         );
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_TWO, start_time: 0, expected: 0x1000000
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_TWO, expected: 0x1000000,
         );
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_THREE, start_time: 0, expected: 0x100000
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_THREE, expected: 0x100000,
         );
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_FOUR, start_time: 0, expected: 0x10000
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_FOUR, expected: 0x10000,
         );
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_FIVE, start_time: 0, expected: 0x1000
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_FIVE, expected: 0x1000,
         );
-        assert_case_sale_rate(amount: 1, end_time: SIXTEEN_POW_SIX, start_time: 0, expected: 0x100);
+        assert_case_sale_rate(amount: 1, start_time: 0, end_time: SIXTEEN_POW_SIX, expected: 0x100);
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_SEVEN, start_time: 0, expected: 0x10
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_SEVEN, expected: 0x10,
         );
-        assert_case_sale_rate(amount: 1, end_time: SIXTEEN_POW_EIGHT, start_time: 0, expected: 0x1);
+        assert_case_sale_rate(amount: 1, start_time: 0, end_time: SIXTEEN_POW_EIGHT, expected: 0x1);
     }
 
     #[test]
@@ -62,7 +64,7 @@ mod SaleRateTest {
     fn test_sale_rates_smallest_amount_underflow() {
         // sale window above 2**32 seconds (136.2 years) underflows to 0 sale rate.
         assert_case_sale_rate(
-            amount: 1, end_time: SIXTEEN_POW_EIGHT + 1, start_time: 0, expected: 0x0
+            amount: 1, start_time: 0, end_time: SIXTEEN_POW_EIGHT + 1, expected: 0x0
         );
     }
 
@@ -73,8 +75,8 @@ mod SaleRateTest {
             // 2**128 - 1
             amount: 0xffffffffffffffffffffffffffffffff,
             // 2**32 - 1
-            end_time: 0xffffffff,
             start_time: 0,
+            end_time: 0xffffffff,
             expected: 0
         );
     }
@@ -84,9 +86,9 @@ mod SaleRateTest {
         assert_case_sale_rate(
             // 2**128 - 1
             amount: 0xffffffffffffffffffffffffffffffff,
+            start_time: 0,
             // 2**32
             end_time: 0x1000000000,
-            start_time: 0,
             expected: 0xfffffffffffffffffffffffffffffff
         );
     }
@@ -94,9 +96,9 @@ mod SaleRateTest {
 
     #[test]
     fn test_calculate_amount_from_sale_rate() {
-        assert_eq!(calculate_amount_from_sale_rate(0, 100, 0), 0);
-        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 100, 0), 100);
-        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 100, 0), 200);
+        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100), 200);
     }
 
     #[test]
@@ -141,19 +143,12 @@ mod SaleRateTest {
             // scaled by 2**32
             expected_sale_rate: 0x5f5e10000 // ~ 5.9604644775 * 2**32
         );
-        run_place_order_and_validate_sale_rate(
-            amount: 100_000_000,
-            start_time: 0,
-            end_time: SIXTEEN_POW_SEVEN,
-            // scaled by 2**32
-            expected_sale_rate: 0x5f5e1000 // ~ 0.3725290298 * 2**32
-        );
     }
 
     fn run_place_order_and_validate_sale_rate(
         amount: u128, start_time: u64, end_time: u64, expected_sale_rate: u128
     ) {
-        assert_eq!(calculate_sale_rate(amount, end_time, start_time), expected_sale_rate);
+        assert_eq!(calculate_sale_rate(amount, start_time, end_time), expected_sale_rate);
     }
 }
 
@@ -509,4 +504,11 @@ mod TWAMMMathTest {
         // sqrt_ratio will be sqrt_sale_ratio
         assert_eq!(next_sqrt_ratio, 107606732706330320687810575726449262521);
     }
+}
+
+#[test]
+#[should_panic(expected: ('INVALID_END_TIME',))]
+fn validate_sale_rate_too_far_in_the_future() {
+    validate_time(0, SIXTEEN_POW_SIX + 1);
+    assert_eq!(true, true);
 }
