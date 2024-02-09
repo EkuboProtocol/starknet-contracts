@@ -13,7 +13,7 @@ pub mod Positions {
     use ekubo::extensions::twamm::math::{
         calculate_sale_rate, validate_time, calculate_amount_from_sale_rate
     };
-    use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
+    use ekubo::extensions::twamm::{OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -494,20 +494,15 @@ pub mod Positions {
 
         // Mint a twamm position and set sale rate.
         fn mint_and_increase_amount(
-            ref self: ContractState,
-            twamm_pool_key: TWAMMPoolKey,
-            is_sell_token1: bool,
-            start_time: u64,
-            end_time: u64,
-            amount: u128
-        ) -> (u64, OrderKey) {
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> (u64, u128) {
             let id = self.mint_v2(Zero::zero());
-            let order_key = OrderKey { twamm_pool_key, is_sell_token1, start_time, end_time };
-            self.increase_amount(order_key, id, amount);
-            (id, order_key)
+            (id, self.increase_amount(id, order_key, amount))
         }
 
-        fn increase_amount(ref self: ContractState, order_key: OrderKey, id: u64, amount: u128) {
+        fn increase_amount(
+            ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
+        ) -> u128 {
             let nft = self.nft.read();
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
@@ -515,32 +510,19 @@ pub mod Positions {
             let twamm = self.twamm.read();
 
             // if increasing sale rate, transfer additional funds to twamm
-            IERC20Dispatcher {
-                contract_address: if (order_key.is_sell_token1) {
-                    order_key.twamm_pool_key.token1
-                } else {
-                    order_key.twamm_pool_key.token0
-                }
-            }
+            IERC20Dispatcher { contract_address: order_key.sell_token }
                 .transfer(twamm.contract_address, amount.into());
 
-            twamm
-                .update_order(
-                    order_key,
-                    id.into(),
-                    i129 {
-                        mag: calculate_sale_rate(
-                            amount,
-                            max(order_key.start_time, get_block_timestamp()),
-                            order_key.end_time,
-                        ),
-                        sign: false
-                    }
-                );
+            let sale_rate = calculate_sale_rate(
+                amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
+            );
+            twamm.update_order(order_key, id.into(), i129 { mag: sale_rate, sign: false });
+
+            sale_rate
         }
 
         fn decrease_sale_rate(
-            ref self: ContractState, order_key: OrderKey, id: u64, sale_rate_delta: u128
+            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
         ) {
             let nft = self.nft.read();
             let caller = get_caller_address();

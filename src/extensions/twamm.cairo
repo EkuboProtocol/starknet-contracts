@@ -12,16 +12,10 @@ use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress, ClassHash};
 
 #[derive(Drop, Copy, Serde, Hash)]
-pub struct TWAMMPoolKey {
-    pub token0: ContractAddress,
-    pub token1: ContractAddress,
-    pub fee: u128,
-}
-
-#[derive(Drop, Copy, Serde, Hash)]
 pub struct OrderKey {
-    pub twamm_pool_key: TWAMMPoolKey,
-    pub is_sell_token1: bool,
+    pub sell_token: ContractAddress,
+    pub buy_token: ContractAddress,
+    pub fee: u128,
     pub start_time: u64,
     pub end_time: u64
 }
@@ -85,24 +79,20 @@ pub trait ITWAMM<TContractState> {
     ) -> OrderState;
 
     // Returns the current sale rate 
-    fn get_sale_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128);
+    fn get_sale_rate(self: @TContractState, pool_key: PoolKey) -> (u128, u128);
 
     // Return the current reward rate
-    fn get_reward_rate(self: @TContractState, twamm_pool_key: TWAMMPoolKey) -> (felt252, felt252);
+    fn get_reward_rate(self: @TContractState, pool_key: PoolKey) -> (felt252, felt252);
 
     // Return the sale rate net for a specific time
-    fn get_sale_rate_net(
-        self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
-    ) -> (u128, u128);
+    fn get_sale_rate_net(self: @TContractState, pool_key: PoolKey, time: u64) -> (u128, u128);
 
     // Return the sale rate delta for a specific time
-    fn get_sale_rate_delta(
-        self: @TContractState, twamm_pool_key: TWAMMPoolKey, time: u64
-    ) -> (i129, i129);
+    fn get_sale_rate_delta(self: @TContractState, pool_key: PoolKey, time: u64) -> (i129, i129);
 
     // Return the next virtual order time
     fn get_next_virtual_order_time(
-        self: @TContractState, twamm_pool_key: TWAMMPoolKey, max_time: u64
+        self: @TContractState, pool_key: PoolKey, max_time: u64
     ) -> (u64, u64);
 
     // Update an existing twamm order
@@ -154,7 +144,7 @@ pub mod TWAMM {
         validate_time, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
         calculate_reward_rate
     };
-    use super::{ITWAMM, ContractAddress, OrderKey, OrderState, TWAMMPoolKey};
+    use super::{ITWAMM, ContractAddress, OrderKey, OrderState};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
@@ -172,13 +162,19 @@ pub mod TWAMM {
     struct Storage {
         core: ICoreDispatcher,
         orders: LegacyMap<(ContractAddress, OrderKey, felt252), OrderState>,
-        sale_rate: LegacyMap<TWAMMPoolKey, (u128, u128)>,
-        time_sale_rate_net: LegacyMap<(TWAMMPoolKey, u64), (u128, u128)>,
-        time_sale_rate_delta: LegacyMap<(TWAMMPoolKey, u64), (i129, i129)>,
-        time_sale_rate_bitmaps: LegacyMap<(TWAMMPoolKey, u128), Bitmap>,
-        reward_rate: LegacyMap<TWAMMPoolKey, (felt252, felt252)>,
-        time_reward_rate: LegacyMap<(TWAMMPoolKey, u64), (felt252, felt252)>,
-        last_virtual_order_time: LegacyMap<TWAMMPoolKey, u64>,
+        sale_rate: LegacyMap<(ContractAddress, ContractAddress, u128), (u128, u128)>,
+        time_sale_rate_net: LegacyMap<
+            ((ContractAddress, ContractAddress, u128), u64), (u128, u128)
+        >,
+        time_sale_rate_delta: LegacyMap<
+            ((ContractAddress, ContractAddress, u128), u64), (i129, i129)
+        >,
+        time_sale_rate_bitmaps: LegacyMap<((ContractAddress, ContractAddress, u128), u128), Bitmap>,
+        reward_rate: LegacyMap<(ContractAddress, ContractAddress, u128), (felt252, felt252)>,
+        time_reward_rate: LegacyMap<
+            ((ContractAddress, ContractAddress, u128), u64), (felt252, felt252)
+        >,
+        last_virtual_order_time: LegacyMap<(ContractAddress, ContractAddress, u128), u64>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -355,38 +351,32 @@ pub mod TWAMM {
             self.orders.read((owner, order_key, id))
         }
 
-        fn get_sale_rate(self: @ContractState, twamm_pool_key: TWAMMPoolKey) -> (u128, u128) {
-            self.sale_rate.read(twamm_pool_key)
+        fn get_sale_rate(self: @ContractState, pool_key: PoolKey) -> (u128, u128) {
+            self.sale_rate.read(pool_key.try_into().expect('INVALID_POOL'))
         }
 
-        fn get_reward_rate(
-            self: @ContractState, twamm_pool_key: TWAMMPoolKey
-        ) -> (felt252, felt252) {
-            self.reward_rate.read(twamm_pool_key)
+        fn get_reward_rate(self: @ContractState, pool_key: PoolKey) -> (felt252, felt252) {
+            self.reward_rate.read(pool_key.try_into().expect('INVALID_POOL'))
         }
 
-        fn get_sale_rate_net(
-            self: @ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
-        ) -> (u128, u128) {
-            self.time_sale_rate_net.read((twamm_pool_key, time))
+        fn get_sale_rate_net(self: @ContractState, pool_key: PoolKey, time: u64) -> (u128, u128) {
+            self.time_sale_rate_net.read((pool_key.try_into().expect('INVALID_POOL'), time))
         }
 
-        fn get_sale_rate_delta(
-            self: @ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
-        ) -> (i129, i129) {
-            self.time_sale_rate_delta.read((twamm_pool_key, time))
+        fn get_sale_rate_delta(self: @ContractState, pool_key: PoolKey, time: u64) -> (i129, i129) {
+            self.time_sale_rate_delta.read((pool_key.try_into().expect('INVALID_POOL'), time))
         }
 
         fn get_next_virtual_order_time(
-            self: @ContractState, twamm_pool_key: TWAMMPoolKey, max_time: u64
+            self: @ContractState, pool_key: PoolKey, max_time: u64
         ) -> (u64, u64) {
-            let last_virtual_order_time = self.last_virtual_order_time.read(twamm_pool_key);
+            let last_virtual_order_time = self.last_virtual_order_time.read(pool_key.try_into().expect('INVALID_POOL'));
 
             assert(max_time > last_virtual_order_time, 'INVALID_MAX_TIME');
 
             (
                 last_virtual_order_time,
-                self.next_initialized_time(twamm_pool_key, last_virtual_order_time, max_time)
+                self.next_initialized_time(pool_key.try_into().expect('INVALID_POOL'), last_virtual_order_time, max_time)
             )
         }
 
@@ -487,11 +477,7 @@ pub mod TWAMM {
                         order_key.end_time,
                     );
 
-                    let token = if (order_key.is_sell_token1) {
-                        order_key.twamm_pool_key.token1
-                    } else {
-                        order_key.twamm_pool_key.token0
-                    };
+                    let token = order_key.sell_token;
 
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
@@ -503,7 +489,9 @@ pub mod TWAMM {
                         if (pool_key.fee > 0 && core.get_pool_liquidity(pool_key).is_non_zero()) {
                             let fee_amount = compute_fee(amount_delta, pool_key.fee);
 
-                            let (amount0, amount1) = if (order_key.is_sell_token1) {
+                            let (amount0, amount1) = if (order_key
+                                .sell_token > order_key
+                                .buy_token) {
                                 (0, fee_amount)
                             } else {
                                 (fee_amount, 0)
@@ -585,11 +573,7 @@ pub mod TWAMM {
                     };
 
                     if (purchased_amount.is_non_zero()) {
-                        let token = if (order_key.is_sell_token1) {
-                            order_key.twamm_pool_key.token0
-                        } else {
-                            order_key.twamm_pool_key.token1
-                        };
+                        let token = order_key.buy_token;
 
                         core.load(token, 0, purchased_amount);
                         core.withdraw(token, get_contract_address(), purchased_amount);
@@ -698,9 +682,9 @@ pub mod TWAMM {
         ) {
             let (token0_sale_rate_delta, token1_sale_rate_delta) = self
                 .time_sale_rate_delta
-                .read((order_key.twamm_pool_key, time));
+                .read((order_key.into(), time));
 
-            if (order_key.is_sell_token1) {
+            if (order_key.sell_token > order_key.buy_token) {
                 let next_sale_rate_delta = if (is_start_time) {
                     token1_sale_rate_delta + sale_rate_delta
                 } else {
@@ -709,8 +693,7 @@ pub mod TWAMM {
                 self
                     .time_sale_rate_delta
                     .write(
-                        (order_key.twamm_pool_key, time),
-                        (token0_sale_rate_delta, next_sale_rate_delta)
+                        (order_key.into(), time), (token0_sale_rate_delta, next_sale_rate_delta)
                     );
             } else {
                 let next_sale_rate_delta = if (is_start_time) {
@@ -721,41 +704,37 @@ pub mod TWAMM {
                 self
                     .time_sale_rate_delta
                     .write(
-                        (order_key.twamm_pool_key, time),
-                        (next_sale_rate_delta, token1_sale_rate_delta)
+                        (order_key.into(), time), (next_sale_rate_delta, token1_sale_rate_delta)
                     );
             }
 
             let (token0_sale_rate_net, token1_sale_rate_net) = self
                 .time_sale_rate_net
-                .read((order_key.twamm_pool_key, time));
+                .read((order_key.into(), time));
 
             let (current_sale_rate_net, next_sale_rate_net, other_token_sale_rate_net) =
                 if (order_key
-                .is_sell_token1) {
+                .sell_token > order_key
+                .buy_token) {
                 let next_sale_rate_net = token1_sale_rate_net.add(sale_rate_delta);
                 self
                     .time_sale_rate_net
-                    .write(
-                        (order_key.twamm_pool_key, time), (token0_sale_rate_net, next_sale_rate_net)
-                    );
+                    .write((order_key.into(), time), (token0_sale_rate_net, next_sale_rate_net));
                 (token1_sale_rate_net, next_sale_rate_net, token0_sale_rate_net)
             } else {
                 let next_sale_rate_net = token0_sale_rate_net.add(sale_rate_delta);
                 self
                     .time_sale_rate_net
-                    .write(
-                        (order_key.twamm_pool_key, time), (next_sale_rate_net, token1_sale_rate_net)
-                    );
+                    .write((order_key.into(), time), (next_sale_rate_net, token1_sale_rate_net));
                 (token0_sale_rate_net, next_sale_rate_net, token1_sale_rate_net)
             };
 
             if ((next_sale_rate_net == 0) != (current_sale_rate_net == 0)
                 && other_token_sale_rate_net == 0) {
                 if (next_sale_rate_net == 0) {
-                    self.remove_initialized_time(order_key.twamm_pool_key, time);
+                    self.remove_initialized_time(order_key.into(), time);
                 } else {
-                    self.insert_initialized_time(order_key.twamm_pool_key, time);
+                    self.insert_initialized_time(order_key.into(), time);
                 }
             };
         }
@@ -763,15 +742,13 @@ pub mod TWAMM {
         fn update_global_sale_rate(
             ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129
         ) {
-            let (token0_sale_rate, token1_sale_rate) = self
-                .sale_rate
-                .read(order_key.twamm_pool_key);
+            let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(order_key.into());
 
             self
                 .sale_rate
                 .write(
-                    order_key.twamm_pool_key,
-                    if (order_key.is_sell_token1) {
+                    order_key.into(),
+                    if (order_key.sell_token > order_key.buy_token) {
                         (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
                     } else {
                         (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
@@ -780,11 +757,9 @@ pub mod TWAMM {
         }
 
         fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
-            let (token0_reward_rate, token1_reward_rate) = self
-                .reward_rate
-                .read(order_key.twamm_pool_key);
+            let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(order_key.into());
 
-            if (order_key.is_sell_token1) {
+            if (order_key.sell_token > order_key.buy_token) {
                 token0_reward_rate
             } else {
                 token1_reward_rate
@@ -794,9 +769,9 @@ pub mod TWAMM {
         fn get_reward_rate_at(self: @ContractState, order_key: OrderKey, time: u64) -> felt252 {
             let (token0_reward_rate, token1_reward_rate) = self
                 .time_reward_rate
-                .read((order_key.twamm_pool_key, time));
+                .read((order_key.into(), time));
 
-            if (order_key.is_sell_token1) {
+            if (order_key.sell_token > order_key.buy_token) {
                 token0_reward_rate
             } else {
                 token1_reward_rate
@@ -805,7 +780,7 @@ pub mod TWAMM {
 
         fn update_reward_rate(
             ref self: ContractState,
-            twamm_pool_key: TWAMMPoolKey,
+            storage_key: (ContractAddress, ContractAddress, u128),
             sale_rates: (u128, u128),
             delta: Delta,
             time: u64
@@ -816,27 +791,27 @@ pub mod TWAMM {
 
             let (current_token0_reward_rate, current_token1_reward_rate) = self
                 .reward_rate
-                .read(twamm_pool_key);
+                .read(storage_key);
 
             let reward_rate = (
                 current_token0_reward_rate + token0_reward_delta,
                 current_token1_reward_rate + token1_reward_delta
             );
 
-            self.reward_rate.write(twamm_pool_key, reward_rate);
+            self.reward_rate.write(storage_key, reward_rate);
 
             let (token0_reward_rate, token1_reward_rate) = reward_rate;
 
             self
                 .time_reward_rate
-                .write((twamm_pool_key, time), (token0_reward_rate, token1_reward_rate));
+                .write((storage_key, time), (token0_reward_rate, token1_reward_rate));
 
             reward_rate
         }
 
         fn update_token_sale_rate_and_rewards(
             ref self: ContractState,
-            twamm_pool_key: TWAMMPoolKey,
+            storage_key: (ContractAddress, ContractAddress, u128),
             sale_rates: (u128, u128),
             time: u64
         ) {
@@ -844,13 +819,13 @@ pub mod TWAMM {
 
             let (token0_sale_rate_delta, token1_sale_rate_delta) = self
                 .time_sale_rate_delta
-                .read((twamm_pool_key, time));
+                .read((storage_key, time));
 
             if (token0_sale_rate_delta.mag > 0 || token1_sale_rate_delta.mag > 0) {
                 self
                     .sale_rate
                     .write(
-                        twamm_pool_key,
+                        storage_key,
                         (
                             (i129 { mag: token0_sale_rate, sign: false } + token0_sale_rate_delta)
                                 .mag,
@@ -859,59 +834,57 @@ pub mod TWAMM {
                         )
                     );
 
-                let (token0_reward_rate, token1_reward_rate) = self
-                    .reward_rate
-                    .read(twamm_pool_key);
+                let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(storage_key);
 
                 self
                     .time_reward_rate
-                    .write((twamm_pool_key, time), (token0_reward_rate, token1_reward_rate));
+                    .write((storage_key, time), (token0_reward_rate, token1_reward_rate));
             }
         }
 
         fn remove_initialized_time(
-            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
+            ref self: ContractState,
+            storage_key: (ContractAddress, ContractAddress, u128),
+            time: u64
         ) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.time_sale_rate_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.time_sale_rate_bitmaps.read((storage_key, word_index));
 
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
             self
                 .time_sale_rate_bitmaps
-                .write((twamm_pool_key, word_index), bitmap.unset_bit(bit_index));
+                .write((storage_key, word_index), bitmap.unset_bit(bit_index));
         }
 
         fn insert_initialized_time(
-            ref self: ContractState, twamm_pool_key: TWAMMPoolKey, time: u64
+            ref self: ContractState,
+            storage_key: (ContractAddress, ContractAddress, u128),
+            time: u64
         ) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.time_sale_rate_bitmaps.read((twamm_pool_key, word_index));
+            let bitmap = self.time_sale_rate_bitmaps.read((storage_key, word_index));
 
-            self
-                .time_sale_rate_bitmaps
-                .write((twamm_pool_key, word_index), bitmap.set_bit(bit_index));
+            self.time_sale_rate_bitmaps.write((storage_key, word_index), bitmap.set_bit(bit_index));
         }
 
         fn next_initialized_time(
-            self: @ContractState, twamm_pool_key: TWAMMPoolKey, from: u64, max_time: u64
+            self: @ContractState,
+            storage_key: (ContractAddress, ContractAddress, u128),
+            from: u64,
+            max_time: u64
         ) -> u64 {
             self
                 .prefix_next_initialized_time(
-                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), twamm_pool_key),
-                    twamm_pool_key,
+                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key),
                     from,
                     max_time
                 )
         }
 
         fn prefix_next_initialized_time(
-            self: @ContractState,
-            prefix: felt252,
-            twamm_pool_key: TWAMMPoolKey,
-            from: u64,
-            max_time: u64
+            self: @ContractState, prefix: felt252, from: u64, max_time: u64
         ) -> u64 {
             let (word_index, bit_index) = time_to_word_and_bit_index(
                 from + constants::BITMAP_SPACING
@@ -930,12 +903,11 @@ pub mod TWAMM {
                     if (next > max_time) {
                         max_time
                     } else {
-                        self.prefix_next_initialized_time(prefix, twamm_pool_key, next, max_time)
+                        self.prefix_next_initialized_time(prefix, next, max_time)
                     }
                 },
             }
         }
-
 
         fn deposit(
             ref self: ContractState, core: ICoreDispatcher, token: ContractAddress, amount: u128
@@ -956,11 +928,9 @@ pub mod TWAMM {
         ) {
             pool_key.check_valid();
 
-            let twamm_pool_key: TWAMMPoolKey = pool_key.into();
-
             // since virtual orders are executed at the same time for both tokens,
             // last_virtual_order_time is the same for both tokens.
-            let mut last_virtual_order_time = self.last_virtual_order_time.read(twamm_pool_key);
+            let mut last_virtual_order_time = self.last_virtual_order_time.read(pool_key.try_into().expect('INVALID_POOL'));
 
             let current_time = get_block_timestamp();
 
@@ -968,7 +938,7 @@ pub mod TWAMM {
 
             if (last_virtual_order_time == 0) {
                 // we haven't executed any virtual orders yet, and no orders have been placed
-                self.last_virtual_order_time.write(twamm_pool_key, current_time);
+                self.last_virtual_order_time.write(pool_key.try_into().expect('INVALID_POOL'), current_time);
             } else if (last_virtual_order_time != current_time) {
                 let mut total_delta = Zero::<Delta>::zero();
                 let mut token_reward_rate = (0, 0);
@@ -979,12 +949,12 @@ pub mod TWAMM {
                     // find next time with a sale rate delta
                     let next_initialized_time = self_snap
                         .next_initialized_time(
-                            twamm_pool_key, last_virtual_order_time, current_time
+                            pool_key.try_into().expect('INVALID_POOL'), last_virtual_order_time, current_time
                         );
 
                     let next_virtual_order_time = min(current_time, next_initialized_time);
 
-                    let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(twamm_pool_key);
+                    let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(pool_key.try_into().expect('INVALID_POOL'));
 
                     if (token0_sale_rate > 0 || token1_sale_rate > 0) {
                         let price = core.get_pool_price(pool_key);
@@ -1025,7 +995,7 @@ pub mod TWAMM {
                                 // update reward rate
                                 token_reward_rate = self
                                     .update_reward_rate(
-                                        twamm_pool_key,
+                                        pool_key.try_into().expect('INVALID_POOL'),
                                         (token0_sale_rate, token1_sale_rate),
                                         delta
                                             + Delta {
@@ -1055,7 +1025,7 @@ pub mod TWAMM {
                                 // update reward rate
                                 token_reward_rate = self
                                     .update_reward_rate(
-                                        twamm_pool_key,
+                                        pool_key.try_into().expect('INVALID_POOL'),
                                         (token0_sale_rate, token1_sale_rate),
                                         delta,
                                         next_virtual_order_time
@@ -1083,13 +1053,13 @@ pub mod TWAMM {
 
                     let (token0_sale_rate_net, token1_sale_rate_net) = self
                         .time_sale_rate_net
-                        .read((twamm_pool_key, next_virtual_order_time));
+                        .read((pool_key.try_into().expect('INVALID_POOL'), next_virtual_order_time));
 
                     // update ending sale rates 
                     if (token0_sale_rate_net != 0 || token1_sale_rate_net != 0) {
                         self
                             .update_token_sale_rate_and_rewards(
-                                twamm_pool_key,
+                                pool_key.try_into().expect('INVALID_POOL'),
                                 (token0_sale_rate, token1_sale_rate),
                                 next_virtual_order_time
                             );
@@ -1104,7 +1074,7 @@ pub mod TWAMM {
                     }
                 };
 
-                self.last_virtual_order_time.write(twamm_pool_key, last_virtual_order_time);
+                self.last_virtual_order_time.write(pool_key.try_into().expect('INVALID_POOL'), last_virtual_order_time);
 
                 // zero out deltas
                 if (total_delta.amount0.mag > 0) {
@@ -1112,14 +1082,12 @@ pub mod TWAMM {
                         core
                             .save(
                                 SavedBalanceKey {
-                                    owner: get_contract_address(),
-                                    token: twamm_pool_key.token0,
-                                    salt: 0
+                                    owner: get_contract_address(), token: pool_key.token0, salt: 0
                                 },
                                 total_delta.amount0.mag
                             );
                     } else {
-                        core.load(twamm_pool_key.token0, 0, total_delta.amount0.mag);
+                        core.load(pool_key.token0, 0, total_delta.amount0.mag);
                     }
                 }
                 if (total_delta.amount1.mag > 0) {
@@ -1127,14 +1095,12 @@ pub mod TWAMM {
                         core
                             .save(
                                 SavedBalanceKey {
-                                    owner: get_contract_address(),
-                                    token: twamm_pool_key.token1,
-                                    salt: 0
+                                    owner: get_contract_address(), token: pool_key.token1, salt: 0
                                 },
                                 total_delta.amount1.mag
                             );
                     } else {
-                        core.load(twamm_pool_key.token1, 0, total_delta.amount1.mag);
+                        core.load(pool_key.token1, 0, total_delta.amount1.mag);
                     }
                 }
             }
@@ -1156,18 +1122,39 @@ pub mod TWAMM {
             .unwrap()
     }
 
-    impl PoolKeyIntoTWAMMPoolKey of Into<PoolKey, TWAMMPoolKey> {
-        fn into(self: PoolKey) -> TWAMMPoolKey {
-            TWAMMPoolKey { token0: self.token0, token1: self.token1, fee: self.fee }
+    impl PoolKeyIntoStorageKey of TryInto<PoolKey, (ContractAddress, ContractAddress, u128)> {
+        #[inline(always)]
+        fn try_into(mut self: PoolKey) -> Option<(ContractAddress, ContractAddress, u128)> {
+            // TODO: verify this errors as expected
+            assert(self.tick_spacing == MAX_TICK_SPACING, 'INVALID_POOL');
+            Option::Some((self.token0, self.token1, self.fee))
+        }
+    }
+
+    impl OrderKeyIntoStorageKey of Into<OrderKey, (ContractAddress, ContractAddress, u128)> {
+        fn into(self: OrderKey) -> (ContractAddress, ContractAddress, u128) {
+            let (token0, token1) = if (self.sell_token > self.buy_token) {
+                (self.buy_token, self.sell_token)
+            } else {
+                (self.sell_token, self.buy_token)
+            };
+
+            (token0, token1, self.fee)
         }
     }
 
     impl OrderKeyIntoPoolKey of Into<OrderKey, PoolKey> {
         fn into(self: OrderKey) -> PoolKey {
+            let (token0, token1) = if (self.sell_token > self.buy_token) {
+                (self.buy_token, self.sell_token)
+            } else {
+                (self.sell_token, self.buy_token)
+            };
+
             PoolKey {
-                token0: self.twamm_pool_key.token0,
-                token1: self.twamm_pool_key.token1,
-                fee: self.twamm_pool_key.fee,
+                token0,
+                token1,
+                fee: self.fee,
                 tick_spacing: MAX_TICK_SPACING,
                 extension: get_contract_address()
             }
