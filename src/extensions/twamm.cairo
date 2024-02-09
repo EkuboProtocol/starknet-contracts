@@ -26,7 +26,7 @@ pub struct OrderKey {
     pub end_time: u64
 }
 
-#[derive(Drop, Copy, Serde, PartialEq, starknet::Store)]
+#[derive(Drop, Copy, Serde, PartialEq)]
 pub struct OrderState {
     sale_rate: u128,
     reward_rate: felt252,
