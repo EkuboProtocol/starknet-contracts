@@ -1,42 +1,42 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token0 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token0 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token1 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token1 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "AMOUNT_BEFORE_FEE_OVERFLOW",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token0 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -54,7 +54,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token1 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -72,19 +72,19 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token0 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -103,7 +103,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token1 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -122,7 +122,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -141,7 +141,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -160,7 +160,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -179,7 +179,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -198,7 +198,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 79228162514264337593543950336n,
@@ -217,7 +217,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -236,7 +236,7 @@ exports[`core > 1e9 full range liquidity, starting at price 1, tick_spacing=0.6%
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": -10000n,
@@ -255,7 +255,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 10032n,
@@ -274,7 +274,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -500000000000000000n,
@@ -293,7 +293,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": -999999999999999996n,
@@ -312,7 +312,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1003009027081243732n,
@@ -331,7 +331,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 18466747002319258406770079872888746569n,
@@ -350,7 +350,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -368,7 +368,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -386,19 +386,19 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -417,7 +417,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": -9969n,
@@ -436,7 +436,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -455,7 +455,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -474,7 +474,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -499248873309964947n,
@@ -493,7 +493,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": -499248873309964947n,
@@ -512,7 +512,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 79228162514264337593543950336n,
@@ -531,7 +531,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": -999999999987340232n,
@@ -550,7 +550,7 @@ exports[`core > 1e18 full range liquidity, starting at price 1, tick_spacing=0.6
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": -10000n,
@@ -569,7 +569,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -588,7 +588,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -500000000000000000n,
@@ -607,7 +607,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": -999999999999999996n,
@@ -626,7 +626,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -645,7 +645,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -664,7 +664,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -682,7 +682,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -700,19 +700,19 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -731,7 +731,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": -9969n,
@@ -750,7 +750,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -769,7 +769,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -788,7 +788,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -499248873309964947n,
@@ -807,7 +807,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": -499248873309964947n,
@@ -826,7 +826,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -845,7 +845,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity above price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": -999999999987340232n,
@@ -864,7 +864,7 @@ exports[`core > 1e18 liquidity above price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -883,7 +883,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 10032n,
@@ -902,7 +902,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -921,7 +921,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -940,7 +940,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1003009027081243732n,
@@ -959,7 +959,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 18466747002319258406770079872888746567n,
@@ -978,7 +978,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -996,7 +996,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1014,19 +1014,19 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -1045,7 +1045,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1064,7 +1064,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1083,7 +1083,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1102,7 +1102,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1121,7 +1121,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1140,7 +1140,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 79228162514264337593543950336n,
@@ -1159,7 +1159,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 1e18 liquidity below price, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1178,7 +1178,7 @@ exports[`core > 1e18 liquidity below price, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token0 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": -10000n,
@@ -1197,7 +1197,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token1 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 10001n,
@@ -1216,7 +1216,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -1000000000000000000n,
@@ -1235,7 +1235,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": -1000000000000000000n,
@@ -1254,7 +1254,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000002n,
@@ -1273,7 +1273,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000002n,
@@ -1292,7 +1292,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 0 token0 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1310,7 +1310,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 0 token1 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1328,19 +1328,19 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token0 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -1359,7 +1359,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token1 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": -9999n,
@@ -1378,7 +1378,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1397,7 +1397,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1416,7 +1416,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -999999999999999998n,
@@ -1435,7 +1435,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": -999999999999999998n,
@@ -1454,7 +1454,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 79228162514264337593543950336n,
@@ -1473,7 +1473,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, tick_spacing=max, fee=0 > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": -79228156237163099530060194283n,
@@ -1492,7 +1492,7 @@ exports[`core > 1e32 full range liquidity, starting at price 1, tick_spacing=max
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": -10000n,
@@ -1511,7 +1511,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 10032n,
@@ -1530,7 +1530,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -1000000000000000000n,
@@ -1549,7 +1549,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": -1000000000000000000n,
@@ -1568,7 +1568,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1003009027093903486n,
@@ -1587,7 +1587,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1003009027093903486n,
@@ -1606,7 +1606,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1624,7 +1624,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -1642,19 +1642,19 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -1673,7 +1673,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": -9969n,
@@ -1692,7 +1692,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1711,7 +1711,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 1000000000000000000n,
@@ -1730,7 +1730,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -996999999987453842n,
@@ -1749,7 +1749,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": -996999999987453842n,
@@ -1768,7 +1768,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 79228162514264337593543950336n,
@@ -1787,7 +1787,7 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > 2**96 full range liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": -39554570869665270195675172000n,
@@ -1806,655 +1806,655 @@ exports[`core > 2**96 full range liquidity, starting at price 1, tick_spacing=0.
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 10000 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 10000 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 10000 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 10000 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 79228162514264337593543950336 token0 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 79228162514264337593543950336 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token0 1`] = `
 {
   "delta": {
     "amount0": -10000n,
@@ -2473,7 +2473,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -10000 token1 1`] = `
 {
   "delta": {
     "amount0": 10647n,
@@ -2492,7 +2492,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -15232n,
@@ -2511,7 +2511,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": -15232n,
@@ -2530,7 +2530,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 13101n,
@@ -2549,7 +2549,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": 13101n,
@@ -2568,7 +2568,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -2586,7 +2586,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "delta": {
     "amount0": 0n,
@@ -2604,19 +2604,19 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 2`] = `
 {
   "revert_reason": "LIMIT_DIRECTION",
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token0 1`] = `
 {
   "delta": {
     "amount0": 10000n,
@@ -2635,7 +2635,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 10000 token1 1`] = `
 {
   "delta": {
     "amount0": -9536n,
@@ -2654,7 +2654,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 2 limit 0.25 1`] = `
 {
   "delta": {
     "amount0": 13101n,
@@ -2673,7 +2673,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token0 skip 5 1`] = `
 {
   "delta": {
     "amount0": 13101n,
@@ -2692,7 +2692,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 2 limit 4 1`] = `
 {
   "delta": {
     "amount0": -15232n,
@@ -2711,7 +2711,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 1000000000000000000 token1 skip 5 1`] = `
 {
   "delta": {
     "amount0": -15232n,
@@ -2730,7 +2730,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token0 1`] = `
 {
   "delta": {
     "amount0": 13101n,
@@ -2749,7 +2749,7 @@ exports[`core > overlapping positions asymmetric, starting at price 1, tick_spac
 }
 `;
 
-exports[`core > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
+exports[`core > regular pool > overlapping positions asymmetric, starting at price 1, tick_spacing=0.6%, fee=0.3% > swap 79228162514264337593543950336 token1 1`] = `
 {
   "delta": {
     "amount0": -15232n,

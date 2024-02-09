@@ -7,6 +7,8 @@ import OwnedNFTContract from "../../target/dev/ekubo_OwnedNFT.contract_class.jso
 import OwnedNFTContractCASM from "../../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import PositionsCompiledContract from "../../target/dev/ekubo_Positions.contract_class.json";
 import PositionsCompiledContractCASM from "../../target/dev/ekubo_Positions.compiled_contract_class.json";
+import TWAMMCompiledContract from "../../target/dev/ekubo_TWAMM.contract_class.json";
+import TWAMMCompiledContractCASM from "../../target/dev/ekubo_TWAMM.compiled_contract_class.json";
 import Router from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterCASM from "../../target/dev/ekubo_Router.compiled_contract_class.json";
 import { provider } from "./provider";
@@ -16,18 +18,20 @@ export async function setupContracts(expected?: {
   positions: string;
   router: string;
   nft: string;
+  twamm: string;
   tokenClassHash: string;
 }) {
   if (expected) {
     try {
-      const [ch0, ch1, ch2, ch3, c] = await Promise.all([
+      const [ch0, ch1, ch2, ch3, ch4, c] = await Promise.all([
         provider.getClassHashAt(expected.core),
         provider.getClassHashAt(expected.positions),
         provider.getClassHashAt(expected.router),
         provider.getClassHashAt(expected.nft),
+        provider.getClassHashAt(expected.twamm),
         provider.getClass(expected.tokenClassHash),
       ]);
-      if (ch0 && ch1 && ch2 && ch3 && c) return expected;
+      if (ch0 && ch1 && ch2 && ch3 && ch4 && c) return expected;
     } catch (error) {}
   }
 
@@ -58,8 +62,14 @@ export async function setupContracts(expected?: {
     contract: Router as any,
     casm: RouterCASM as any,
   });
+  const twammDeclare = await deployer.declareIfNot({
+    contract: TWAMMCompiledContract as any,
+    casm: TWAMMCompiledContractCASM as any,
+  });
 
-  const coreDeploy = await deployer.deploy({
+  const {
+    contract_address: [coreAddress],
+  } = await deployer.deploy({
     classHash: coreContractDeclare.class_hash,
     constructorCalldata: [deployer.address],
     salt: "0x0",
@@ -67,36 +77,47 @@ export async function setupContracts(expected?: {
 
   const positionsConstructorCalldata = [
     deployer.address,
-    coreDeploy.contract_address[0],
+    coreAddress,
     declareNftResponse.class_hash,
     shortString.encodeShortString("https://f.ekubo.org/"),
   ];
 
-  const positionsDeploy = await deployer.deploy({
-    classHash: positionsDeclare.class_hash,
-    constructorCalldata: positionsConstructorCalldata,
-    salt: "0x1",
-  });
+  const {
+    contract_address: [positionsAddress, routerAddress, twammAddress],
+  } = await deployer.deploy([
+    {
+      classHash: positionsDeclare.class_hash,
+      constructorCalldata: positionsConstructorCalldata,
+      salt: "0x1",
+    },
+    {
+      classHash: routerDeclare.class_hash,
+      constructorCalldata: [coreAddress],
+      salt: "0x2",
+    },
+    {
+      classHash: twammDeclare.class_hash,
+      constructorCalldata: [deployer.address, coreAddress],
+      salt: "0x3",
+    },
+  ]);
 
   const positions = new Contract(
     PositionsCompiledContract.abi,
-    positionsDeploy.contract_address[0],
+    positionsAddress,
     deployer
   );
 
-  const routerDeploy = await deployer.deploy({
-    classHash: routerDeclare.class_hash,
-    constructorCalldata: [coreDeploy.contract_address[0]],
-    salt: "0x2",
-  });
+  await positions.invoke("set_twamm", [twammAddress]);
 
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
   return {
-    core: coreDeploy.contract_address[0],
-    positions: positionsDeploy.contract_address[0],
-    router: routerDeploy.contract_address[0],
+    core: coreAddress,
+    positions: positionsAddress,
+    router: routerAddress,
     nft: num.toHexString(nftAddress),
+    twamm: twammAddress,
     tokenClassHash: simpleTokenContractDeclare.class_hash,
   };
 }
