@@ -1,20 +1,12 @@
-import { BlockTag, Call, Contract } from "starknet";
-import CoreContract from "../target/dev/ekubo_Core.contract_class.json";
-import PositionsContract from "../target/dev/ekubo_Positions.contract_class.json";
-import TWAMMCompiledContract from "../target/dev/ekubo_TWAMM.contract_class.json";
-import OwnedNFTContract from "../target/dev/ekubo_OwnedNFT.contract_class.json";
-import MockERC20Contract from "../target/dev/ekubo_MockERC20.contract_class.json";
-import RouterContract from "../target/dev/ekubo_Router.contract_class.json";
+import { BlockTag, Call } from "starknet";
 import { POOL_CASES } from "./cases/poolCases";
 import { SWAP_CASES } from "./cases/swapCases";
 import { getAmountsForLiquidity } from "./utils/liquidityMath";
-import { setupContracts } from "./utils/setupContracts";
-import { deployTokens } from "./utils/deployTokens";
+import { prepareContracts, setupContracts } from "./utils/setupContracts";
 import { fromI129, i129, toI129 } from "./utils/serialize";
-import { createAccount, provider } from "./utils/provider";
+import { provider } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
 import { beforeAll, describe, it } from "vitest";
-import { getNextTransactionSettingsFunction } from "./utils/getNextTransactionSettingsFunction";
 import { formatPrice } from "./utils/formatPrice";
 import { TWAMM_POOL_CASES, TWAMM_SWAP_CASES } from "./cases/twammCases";
 import { MAX_BOUNDS_TWAMM, MAX_TICK_SPACING } from "./utils/constants";
@@ -38,45 +30,6 @@ describe("core", () => {
     console.log(setup);
   }, 300_000);
 
-  async function prepareContracts() {
-    const account = await createAccount();
-    const getTxSettings = await getNextTransactionSettingsFunction(
-      account,
-      "0x1"
-    );
-
-    const core = new Contract(CoreContract.abi, setup.core, account);
-    const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
-    const positionsContract = new Contract(
-      PositionsContract.abi,
-      setup.positions,
-      account
-    );
-    const router = new Contract(RouterContract.abi, setup.router, account);
-    const twamm = new Contract(TWAMMCompiledContract.abi, setup.twamm, account);
-
-    const [token0Address, token1Address] = await deployTokens({
-      deployer: account,
-      classHash: setup.tokenClassHash,
-      getTxSettings,
-    });
-
-    const token0 = new Contract(MockERC20Contract.abi, token0Address, account);
-    const token1 = new Contract(MockERC20Contract.abi, token1Address, account);
-
-    return {
-      account,
-      core,
-      twamm,
-      nft,
-      positionsContract,
-      router,
-      token0,
-      token1,
-      getTxSettings,
-    };
-  }
-
   describe("regular pool", () => {
     for (const { name: poolCaseName, pool, positions } of POOL_CASES) {
       describe.concurrent(poolCaseName, () => {
@@ -97,7 +50,7 @@ describe("core", () => {
               positionsContract,
               core,
               getTxSettings,
-            } = await prepareContracts();
+            } = await prepareContracts(setup);
 
             const poolKey = {
               token0: token0.address,
@@ -340,7 +293,7 @@ describe("core", () => {
       pool,
       positions_liquidities,
     } of TWAMM_POOL_CASES) {
-      describe.concurrent(twammCaseName, () => {
+      describe(twammCaseName, () => {
         for (const { name } of TWAMM_SWAP_CASES) {
           it(
             name,
@@ -353,7 +306,7 @@ describe("core", () => {
                 token1,
                 twamm,
                 getTxSettings,
-              } = await prepareContracts();
+              } = await prepareContracts(setup);
 
               const poolKey = {
                 token0: token0.address,

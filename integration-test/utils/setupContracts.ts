@@ -11,7 +11,13 @@ import TWAMMCompiledContract from "../../target/dev/ekubo_TWAMM.contract_class.j
 import TWAMMCompiledContractCASM from "../../target/dev/ekubo_TWAMM.compiled_contract_class.json";
 import Router from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterCASM from "../../target/dev/ekubo_Router.compiled_contract_class.json";
-import { provider } from "./provider";
+import { createAccount, provider } from "./provider";
+import { getNextTransactionSettingsFunction } from "./getNextTransactionSettingsFunction";
+import CoreContract from "../../target/dev/ekubo_Core.contract_class.json";
+import PositionsContract from "../../target/dev/ekubo_Positions.contract_class.json";
+import RouterContract from "../../target/dev/ekubo_Router.contract_class.json";
+import { deployTokens } from "./deployTokens";
+import MockERC20Contract from "../../target/dev/ekubo_MockERC20.contract_class.json";
 
 export async function setupContracts(expected?: {
   core: string;
@@ -119,5 +125,46 @@ export async function setupContracts(expected?: {
     nft: num.toHexString(nftAddress),
     twamm: twammAddress,
     tokenClassHash: simpleTokenContractDeclare.class_hash,
+  };
+}
+
+export async function prepareContracts(
+  setup: Awaited<ReturnType<typeof setupContracts>>
+) {
+  const account = await createAccount();
+  const getTxSettings = await getNextTransactionSettingsFunction(
+    account,
+    "0x1"
+  );
+
+  const core = new Contract(CoreContract.abi, setup.core, account);
+  const nft = new Contract(OwnedNFTContract.abi, setup.nft, account);
+  const positionsContract = new Contract(
+    PositionsContract.abi,
+    setup.positions,
+    account
+  );
+  const router = new Contract(RouterContract.abi, setup.router, account);
+  const twamm = new Contract(TWAMMCompiledContract.abi, setup.twamm, account);
+
+  const [token0Address, token1Address] = await deployTokens({
+    deployer: account,
+    classHash: setup.tokenClassHash,
+    getTxSettings,
+  });
+
+  const token0 = new Contract(MockERC20Contract.abi, token0Address, account);
+  const token1 = new Contract(MockERC20Contract.abi, token1Address, account);
+
+  return {
+    account,
+    core,
+    twamm,
+    nft,
+    positionsContract,
+    router,
+    token0,
+    token1,
+    getTxSettings,
   };
 }
