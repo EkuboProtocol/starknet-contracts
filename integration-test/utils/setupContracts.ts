@@ -1,23 +1,23 @@
 import { Account, Contract, num, shortString } from "starknet";
 import MockERC20 from "../../target/dev/ekubo_MockERC20.contract_class.json";
+import MockERC20Contract from "../../target/dev/ekubo_MockERC20.contract_class.json";
 import MockERC20CASM from "../../target/dev/ekubo_MockERC20.compiled_contract_class.json";
 import CoreCompiledContract from "../../target/dev/ekubo_Core.contract_class.json";
+import CoreContract from "../../target/dev/ekubo_Core.contract_class.json";
 import CoreCompiledContractCASM from "../../target/dev/ekubo_Core.compiled_contract_class.json";
 import OwnedNFTContract from "../../target/dev/ekubo_OwnedNFT.contract_class.json";
 import OwnedNFTContractCASM from "../../target/dev/ekubo_OwnedNFT.compiled_contract_class.json";
 import PositionsCompiledContract from "../../target/dev/ekubo_Positions.contract_class.json";
+import PositionsContract from "../../target/dev/ekubo_Positions.contract_class.json";
 import PositionsCompiledContractCASM from "../../target/dev/ekubo_Positions.compiled_contract_class.json";
 import TWAMMCompiledContract from "../../target/dev/ekubo_TWAMM.contract_class.json";
 import TWAMMCompiledContractCASM from "../../target/dev/ekubo_TWAMM.compiled_contract_class.json";
 import Router from "../../target/dev/ekubo_Router.contract_class.json";
+import RouterContract from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterCASM from "../../target/dev/ekubo_Router.compiled_contract_class.json";
 import { createAccount, provider } from "./provider";
 import { getNextTransactionSettingsFunction } from "./getNextTransactionSettingsFunction";
-import CoreContract from "../../target/dev/ekubo_Core.contract_class.json";
-import PositionsContract from "../../target/dev/ekubo_Positions.contract_class.json";
-import RouterContract from "../../target/dev/ekubo_Router.contract_class.json";
 import { deployTokens } from "./deployTokens";
-import MockERC20Contract from "../../target/dev/ekubo_MockERC20.contract_class.json";
 
 export async function setupContracts(expected?: {
   core: string;
