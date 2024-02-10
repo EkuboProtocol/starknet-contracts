@@ -361,8 +361,8 @@ describe("core", () => {
                 )
               );
 
-              await setDevnetTime(0);
-              const startingTime = 0; // (await provider.getBlock("pending")).timestamp;
+              const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
+              await setDevnetTime(startingTime);
 
               if (orders.length > 0) {
                 const [balance0, balance1] = await Promise.all([
@@ -403,11 +403,17 @@ describe("core", () => {
                   { retryInterval: 0 }
                 );
 
-                const twammEvents = twamm.parseEvents(orderPlacementReceipt);
+                const orderUpdatedEvents = twamm
+                  .parseEvents(orderPlacementReceipt)
+                  .map(({ OrderUpdated }) => OrderUpdated)
+                  .filter((x) => !!x);
+
+                console.log(orderUpdatedEvents);
               }
 
               for (const snapshotTime of snapshot_times) {
                 await setDevnetTime(startingTime + snapshotTime);
+
                 const { transaction_hash } = await account.execute(
                   [
                     twamm.populate("execute_virtual_orders", [
@@ -426,6 +432,17 @@ describe("core", () => {
                   await account.waitForTransaction(transaction_hash, {
                     retryInterval: 0,
                   });
+
+                console.log(
+                  "timestamp",
+                  (
+                    await provider.getBlock(
+                      executeVirtualOrdersReceipt.block_number
+                    )
+                  ).timestamp
+                );
+
+                console.log(executeVirtualOrdersReceipt);
 
                 const twammEvents = twamm.parseEvents(
                   executeVirtualOrdersReceipt

@@ -82,7 +82,7 @@ pub struct StateKey {
 pub trait ITWAMM<TContractState> {
     // Return the stored order state
     fn get_order_state(
-        self: @TContractState, owner: ContractAddress, order_key: OrderKey, id: felt252
+        self: @TContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
     ) -> OrderState;
 
     // Returns the current sale rate 
@@ -104,11 +104,11 @@ pub trait ITWAMM<TContractState> {
 
     // Update an existing twamm order
     fn update_order(
-        ref self: TContractState, order_key: OrderKey, id: felt252, sale_rate_delta: i129
+        ref self: TContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
     );
 
     // Collect proceeds from a twamm order
-    fn collect_proceeds(ref self: TContractState, order_key: OrderKey, id: felt252);
+    fn collect_proceeds(ref self: TContractState, salt: felt252, order_key: OrderKey);
 
     // Execute virtual orders
     fn execute_virtual_orders(ref self: TContractState, key: StateKey);
@@ -173,7 +173,7 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        orders: LegacyMap<(ContractAddress, OrderKey, felt252), OrderState>,
+        orders: LegacyMap<(ContractAddress, felt252, OrderKey), OrderState>,
         sale_rate: LegacyMap<StorageKey, (u128, u128)>,
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
         time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
@@ -196,16 +196,16 @@ pub mod TWAMM {
     #[derive(starknet::Event, Drop)]
     pub struct OrderUpdated {
         pub owner: ContractAddress,
+        pub salt: felt252,
         pub order_key: OrderKey,
-        pub id: felt252,
         pub sale_rate_delta: i129
     }
 
     #[derive(starknet::Event, Drop)]
     pub struct OrderProceedsWithdrawn {
         pub owner: ContractAddress,
+        pub salt: felt252,
         pub order_key: OrderKey,
-        pub id: felt252,
         pub amount: u128
     }
 
@@ -233,16 +233,16 @@ pub mod TWAMM {
     #[derive(Serde, Copy, Drop)]
     struct UpdateSaleRateCallbackData {
         owner: ContractAddress,
+        salt: felt252,
         order_key: OrderKey,
-        id: felt252,
         sale_rate_delta: i129
     }
 
     #[derive(Serde, Copy, Drop)]
     struct WithdrawProceedsCallbackData {
         owner: ContractAddress,
+        salt: felt252,
         order_key: OrderKey,
-        id: felt252,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -335,9 +335,9 @@ pub mod TWAMM {
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
         fn get_order_state(
-            self: @ContractState, owner: ContractAddress, order_key: OrderKey, id: felt252
+            self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderState {
-            self.orders.read((owner, order_key, id))
+            self.orders.read((owner, salt, order_key))
         }
 
         fn get_sale_rate(self: @ContractState, key: StateKey) -> (u128, u128) {
@@ -370,7 +370,7 @@ pub mod TWAMM {
         }
 
         fn update_order(
-            ref self: ContractState, order_key: OrderKey, id: felt252, sale_rate_delta: i129
+            ref self: ContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
         ) {
             match call_core_with_callback::<
                 LockCallbackData, LockCallbackResult
@@ -378,7 +378,7 @@ pub mod TWAMM {
                 self.core.read(),
                 @LockCallbackData::UpdateSaleRateCallbackData(
                     UpdateSaleRateCallbackData {
-                        owner: get_caller_address(), order_key, id, sale_rate_delta
+                        owner: get_caller_address(), salt, order_key, sale_rate_delta
                     }
                 )
             ) {
@@ -386,13 +386,13 @@ pub mod TWAMM {
             }
         }
 
-        fn collect_proceeds(ref self: ContractState, order_key: OrderKey, id: felt252) {
+        fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
             match call_core_with_callback::<
                 LockCallbackData, LockCallbackResult
             >(
                 self.core.read(),
                 @LockCallbackData::WithdrawProceedsCallbackData(
-                    WithdrawProceedsCallbackData { owner: get_caller_address(), order_key, id }
+                    WithdrawProceedsCallbackData { owner: get_caller_address(), salt, order_key }
                 )
             ) {
                 LockCallbackResult::Empty => {},
@@ -425,7 +425,7 @@ pub mod TWAMM {
                 LockCallbackData::UpdateSaleRateCallbackData(data) => {
                     let owner = data.owner;
                     let order_key = data.order_key;
-                    let id = data.id;
+                    let salt = data.salt;
                     let sale_rate_delta = data.sale_rate_delta;
 
                     self.internal_execute_virtual_orders(core, order_key.into());
@@ -433,7 +433,7 @@ pub mod TWAMM {
                     let current_time = get_block_timestamp();
                     assert(order_key.end_time > current_time, 'ORDER_ENDED');
 
-                    let order_state = self.orders.read((owner, order_key, id));
+                    let order_state = self.orders.read((owner, salt, order_key));
 
                     let order_started = order_key.start_time <= current_time;
 
@@ -455,7 +455,7 @@ pub mod TWAMM {
 
                     self
                         .update_order_sale_rate(
-                            owner, order_key, id, order_state, sale_rate_delta, order_started
+                            owner, order_key, salt, order_state, sale_rate_delta, order_started
                         );
 
                     let amount_delta = calculate_amount_from_sale_rate(
@@ -510,7 +510,7 @@ pub mod TWAMM {
                 LockCallbackData::WithdrawProceedsCallbackData(data) => {
                     let owner = data.owner;
                     let order_key = data.order_key;
-                    let id = data.id;
+                    let salt = data.salt;
                     let current_time = get_block_timestamp();
 
                     assert(
@@ -520,7 +520,7 @@ pub mod TWAMM {
 
                     self.internal_execute_virtual_orders(core, data.order_key.into());
 
-                    let order_state = self.orders.read((owner, order_key, id));
+                    let order_state = self.orders.read((owner, salt, order_key));
 
                     // order has been cancelled
                     assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
@@ -533,7 +533,7 @@ pub mod TWAMM {
 
                     let purchased_amount = if (current_time >= order_key.end_time) {
                         // update order state to reflect that the order has been fully executed
-                        self.orders.write((owner, order_key, id), Zero::zero());
+                        self.orders.write((owner, salt, order_key), Zero::zero());
 
                         // reward rate at expiration/full-execution time
                         let total_reward_rate = self
@@ -546,7 +546,7 @@ pub mod TWAMM {
                         self
                             .orders
                             .write(
-                                (owner, order_key, id),
+                                (owner, salt, order_key),
                                 OrderState {
                                     sale_rate: order_state.sale_rate,
                                     reward_rate: current_reward_rate,
@@ -569,7 +569,7 @@ pub mod TWAMM {
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner, order_key, id, amount: purchased_amount
+                                owner, salt, order_key, amount: purchased_amount
                             }
                         );
                     LockCallbackResult::Empty
@@ -588,7 +588,7 @@ pub mod TWAMM {
             ref self: ContractState,
             owner: ContractAddress,
             order_key: OrderKey,
-            id: felt252,
+            salt: felt252,
             order_state: OrderState,
             sale_rate_delta: i129,
             order_started: bool
@@ -641,7 +641,7 @@ pub mod TWAMM {
             self
                 .orders
                 .write(
-                    (owner, order_key, id),
+                    (owner, salt, order_key),
                     OrderState {
                         sale_rate: sale_rate_next,
                         reward_rate: reward_rate,
@@ -649,7 +649,7 @@ pub mod TWAMM {
                     }
                 );
 
-            self.emit(OrderUpdated { owner, order_key, id, sale_rate_delta: sale_rate_delta });
+            self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta: sale_rate_delta });
 
             if (order_started) {
                 self.update_global_sale_rate(order_key, sale_rate_delta);

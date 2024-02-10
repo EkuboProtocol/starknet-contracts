@@ -1244,7 +1244,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_key, order1_id.into());
+            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1340,7 +1340,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_key, order1_id.into());
+            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1445,7 +1445,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_key, order1_id.into());
+            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1554,7 +1554,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_key, order1_id.into());
+            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1680,7 +1680,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_key, order1_id.into());
+            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net, if start_time is in the past, do not update
@@ -3164,7 +3164,7 @@ fn place_order(
         id,
         order_key,
         ITWAMMDispatcher { contract_address: twamm }
-            .get_order_state(positions.contract_address, order_key, id.into())
+            .get_order_state(positions.contract_address, id.into(), order_key)
     )
 }
 

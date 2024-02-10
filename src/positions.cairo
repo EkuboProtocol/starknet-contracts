@@ -516,7 +516,7 @@ pub mod Positions {
             let sale_rate = calculate_sale_rate(
                 amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
             );
-            twamm.update_order(order_key, id.into(), i129 { mag: sale_rate, sign: false });
+            twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });
 
             sale_rate
         }
@@ -531,7 +531,7 @@ pub mod Positions {
             self
                 .twamm
                 .read()
-                .update_order(order_key, id.into(), i129 { mag: sale_rate_delta, sign: true });
+                .update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
         }
 
         // Withdraws proceeds from a twamm position
@@ -542,7 +542,7 @@ pub mod Positions {
 
             let twamm = self.twamm.read();
 
-            twamm.collect_proceeds(order_key, id.into());
+            twamm.collect_proceeds(id.into(), order_key);
         }
     }
 }
