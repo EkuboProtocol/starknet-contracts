@@ -1,3 +1,4 @@
+use core::cmp::{max};
 use core::integer::{u256_overflow_mul};
 use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u128_wide_mul, u256_sqrt};
 use core::num::traits::{Zero};
@@ -88,21 +89,22 @@ pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
     (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().expect('REWARD_RATE_OVERFLOW')
 }
 
-pub fn validate_time(start_time: u64, end_time: u64) {
-    assert(end_time - start_time <= constants::MAX_ORDER_DURATION, 'INVALID_END_TIME');
+// Timestamps specified in order keys must be a multiple of a base that depends on how close they are to now
+pub(crate) fn validate_time(now: u64, time: u64) {
+    // = 16**(max(1, floor(log_16(time-now))))
+    let step = if time <= now {
+        constants::BITMAP_SPACING.into()
+    } else {
+        max(
+            exp2(
+                constants::LOG_SCALE_FACTOR
+                    * (msb((time - now).into()) / constants::LOG_SCALE_FACTOR)
+            ),
+            constants::BITMAP_SPACING.into()
+        )
+    };
 
-    // calculate the closest timestamp at which an order can expire
-    // based on the step of the interval that the order expires in using
-    // an approximation of
-    // = 16**(floor(log_16(end_time-start_time)))
-    // = 2**(4 * (floor(log_2(end_time-start_time)) / 4))
-    let step = exp2(
-        constants::LOG_SCALE_FACTOR
-            * (msb((end_time - start_time).into()) / constants::LOG_SCALE_FACTOR)
-    );
-
-    assert(step >= constants::BITMAP_SPACING.into(), 'INVALID_SPACING');
-    assert((end_time.into() % step).is_zero(), 'INVALID_TIME');
+    assert((time.into() % step).is_zero(), 'INVALID_TIME');
 }
 
 pub fn calculate_next_sqrt_ratio(

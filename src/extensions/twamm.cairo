@@ -80,6 +80,8 @@ pub struct StateKey {
 
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
+    fn get_last_virtual_order_time(self: @TContractState, key: StateKey) -> u64;
+
     // Return the stored order state
     fn get_order_state(
         self: @TContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
@@ -252,11 +254,6 @@ pub mod TWAMM {
         WithdrawProceedsCallbackData: WithdrawProceedsCallbackData
     }
 
-    #[derive(Serde, Copy, Drop)]
-    enum LockCallbackResult {
-        Empty: (),
-    }
-
     #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
@@ -334,6 +331,10 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
+        fn get_last_virtual_order_time(self: @ContractState, key: StateKey) -> u64 {
+            self.last_virtual_order_time.read(key.into())
+        }
+
         fn get_order_state(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderState {
@@ -372,42 +373,32 @@ pub mod TWAMM {
         fn update_order(
             ref self: ContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
         ) {
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(
+            call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::UpdateSaleRateCallbackData(
                     UpdateSaleRateCallbackData {
                         owner: get_caller_address(), salt, order_key, sale_rate_delta
                     }
                 )
-            ) {
-                LockCallbackResult::Empty => {},
-            }
+            )
         }
 
         fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(
+            call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::WithdrawProceedsCallbackData(
                     WithdrawProceedsCallbackData { owner: get_caller_address(), salt, order_key }
                 )
-            ) {
-                LockCallbackResult::Empty => {},
-            }
+            )
         }
 
         #[inline(always)]
         fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
-            match call_core_with_callback::<
-                LockCallbackData, LockCallbackResult
-            >(self.core.read(), @LockCallbackData::ExecuteVirtualSwapsCallbackData({
-                key
-            })) {
-                LockCallbackResult::Empty => {},
-            }
+            call_core_with_callback(
+                self.core.read(), @LockCallbackData::ExecuteVirtualSwapsCallbackData({
+                    key
+                })
+            )
         }
     }
 
@@ -416,11 +407,9 @@ pub mod TWAMM {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
-            let result: LockCallbackResult =
-                match consume_callback_data::<LockCallbackData>(core, data) {
+            match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::ExecuteVirtualSwapsCallbackData(key) => {
                     self.internal_execute_virtual_orders(core, key);
-                    LockCallbackResult::Empty
                 },
                 LockCallbackData::UpdateSaleRateCallbackData(data) => {
                     let owner = data.owner;
@@ -437,15 +426,8 @@ pub mod TWAMM {
 
                     let order_started = order_key.start_time <= current_time;
 
-                    if (order_state.is_zero()) {
-                        // validate end time if order is being created 
-                        validate_time(current_time, order_key.end_time);
-
-                        if (!order_started) {
-                            // validate start time if order is starting in the future 
-                            validate_time(current_time, order_key.start_time);
-                        }
-                    }
+                    validate_time(current_time, order_key.end_time);
+                    validate_time(current_time, order_key.start_time);
 
                     // assert sale rate will not be negative
                     assert(
@@ -504,8 +486,6 @@ pub mod TWAMM {
                                 amount_delta
                             );
                     }
-
-                    LockCallbackResult::Empty
                 },
                 LockCallbackData::WithdrawProceedsCallbackData(data) => {
                     let owner = data.owner;
@@ -572,13 +552,10 @@ pub mod TWAMM {
                                 owner, salt, order_key, amount: purchased_amount
                             }
                         );
-                    LockCallbackResult::Empty
                 }
-            };
+            }
 
-            let mut result_data = ArrayTrait::new();
-            Serde::serialize(@result, ref result_data);
-            result_data.span()
+            array![].span()
         }
     }
 
@@ -863,20 +840,6 @@ pub mod TWAMM {
                     }
                 },
             }
-        }
-
-        fn deposit(
-            ref self: ContractState, core: ICoreDispatcher, token: ContractAddress, amount: u128
-        ) {
-            IERC20Dispatcher { contract_address: token }
-                .approve(core.contract_address, amount.into());
-
-            core.pay(token);
-
-            core
-                .save(
-                    SavedBalanceKey { owner: get_contract_address(), token: token, salt: 0 }, amount
-                );
         }
 
         fn internal_execute_virtual_orders(

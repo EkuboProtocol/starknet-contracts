@@ -18,12 +18,12 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x11d0b4ccfaadd8d817909be9dd7a0ee40a04c6a1a0aaeb0b6c199e1e0011b30",
+        "0x22c38145f143fc7bb979c6cac6d76bfb719bbb1e4bba9764ebafd0a7890367",
       router:
         "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
-      nft: "0x3b3caf33631251cb60863d28b7dd36c2a5922396b90d2da77cb2ec855077fd5",
+      nft: "0x512e23b626c051d76fb95b72696fbed63c821e499d90aa523ac523a1246a2c8",
       twamm:
-        "0x5d03a26cb527275e9ee635a668c65e25a363ca4b7aee64e1d54db4c29560bf3",
+        "0x78bd51ff6ac4d7b0cd598435b49e29a89912f8d9e40c9abc5af0dba1fe133e9",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -316,6 +316,12 @@ describe("core", () => {
                 extension: twamm.address,
               };
 
+              const stateKey = {
+                token0: poolKey.token0,
+                token1: poolKey.token1,
+                fee: poolKey.fee,
+              };
+
               const txHashes: string[] = [];
               for (const liquidity of positions_liquidities) {
                 const bounds = MAX_BOUNDS_TWAMM;
@@ -362,7 +368,12 @@ describe("core", () => {
               );
 
               const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
-              await setDevnetTime(startingTime);
+              await setDevnetTime(startingTime - 8);
+
+              console.log(
+                "time",
+                (await provider.getBlock("pending")).timestamp
+              );
 
               if (orders.length > 0) {
                 const [balance0, balance1] = await Promise.all([
@@ -378,6 +389,7 @@ describe("core", () => {
                       const [buy_token, sell_token] = order.is_token1
                         ? [poolKey.token0, poolKey.token1]
                         : [poolKey.token1, poolKey.token0];
+
                       return positionsContract.populate(
                         "mint_and_increase_amount",
                         [
@@ -403,13 +415,23 @@ describe("core", () => {
                   { retryInterval: 0 }
                 );
 
+                expect(
+                  orderPlacementReceipt.execution_status,
+                  "order placement succeeded"
+                ).toEqual("SUCCEEDED");
+
                 const orderUpdatedEvents = twamm
                   .parseEvents(orderPlacementReceipt)
                   .map(({ OrderUpdated }) => OrderUpdated)
                   .filter((x) => !!x);
 
-                console.log(orderUpdatedEvents);
+                console.log("order updated events", orderUpdatedEvents);
               }
+
+              console.log(
+                "#get_last_virtual_order_time",
+                await twamm.get_last_virtual_order_time(stateKey)
+              );
 
               for (const snapshotTime of snapshot_times) {
                 await setDevnetTime(startingTime + snapshotTime);
@@ -433,16 +455,12 @@ describe("core", () => {
                     retryInterval: 0,
                   });
 
-                console.log(
-                  "timestamp",
-                  (
-                    await provider.getBlock(
-                      executeVirtualOrdersReceipt.block_number
-                    )
-                  ).timestamp
-                );
-
                 console.log(executeVirtualOrdersReceipt);
+
+                console.log(
+                  "#get_last_virtual_order_time",
+                  await twamm.get_last_virtual_order_time(stateKey)
+                );
 
                 const twammEvents = twamm.parseEvents(
                   executeVirtualOrdersReceipt
