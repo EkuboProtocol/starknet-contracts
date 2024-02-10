@@ -5,6 +5,20 @@ export const provider: RpcProvider = new RpcProvider({
   nodeUrl: DEVNET_URL,
 });
 
+export async function setDevnetTime(time: number) {
+  const response = await fetch(`${DEVNET_URL}/set_time`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: `{"time":${time}}`,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to set time: ${await response.text()}`);
+  }
+}
+
 const PREDECLARED_OZ_ACCOUNT_CLASS_HASH =
   "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f";
 

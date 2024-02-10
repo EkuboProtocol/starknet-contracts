@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Integration tests for the core contracts of Ekubo Protocol",
   "scripts": {
-    "test": "vitest -u"
+    "test": "vitest"
   },
   "author": "Moody Salem",
   "devDependencies": {

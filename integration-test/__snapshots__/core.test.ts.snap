@@ -2767,3 +2767,227 @@ exports[`core > regular pool > overlapping positions asymmetric, starting at pri
   "tick_after": 88722883n,
 }
 `;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > no swap, time passes 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > no swap, time passes 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no swap, time passes 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no swap, time passes 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no swap, time passes 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no swap, time passes 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 1`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 2`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period 3`] = `
+{
+  "coreEvents": [],
+  "twammEvents": [],
+}
+`;
