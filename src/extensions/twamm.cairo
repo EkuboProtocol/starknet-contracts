@@ -1124,9 +1124,9 @@ pub mod TWAMM {
     impl StateKeyIntoStorageKey of Into<StateKey, StorageKey> {
         fn into(self: StateKey) -> StorageKey {
             StorageKey {
-                value: LegacyHash::hash(
-                    selector!("ekubo::extensions::twamm::StateKey"),
-                    (self.token0, self.token1, self.fee)
+                value: core::pedersen::pedersen(
+                    core::pedersen::pedersen(self.token0.into(), self.token1.into()),
+                    self.fee.into()
                 )
             }
         }
