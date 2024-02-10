@@ -92,7 +92,7 @@ pub trait ITWAMM<TContractState> {
     fn get_reward_rate(self: @TContractState, key: StateKey) -> (felt252, felt252);
 
     // Return the sale rate net for a specific time
-    fn get_sale_rate_net(self: @TContractState, key: StateKey, time: u64) -> (u128, u128);
+    fn get_sale_rate_net(self: @TContractState, key: StateKey, time: u64) -> u128;
 
     // Return the sale rate delta for a specific time
     fn get_sale_rate_delta(self: @TContractState, key: StateKey, time: u64) -> (i129, i129);
@@ -175,8 +175,8 @@ pub mod TWAMM {
         core: ICoreDispatcher,
         orders: LegacyMap<(ContractAddress, OrderKey, felt252), OrderState>,
         sale_rate: LegacyMap<StorageKey, (u128, u128)>,
-        time_sale_rate_net: LegacyMap<(StorageKey, u64), (u128, u128)>,
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
+        time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
         time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
         reward_rate: LegacyMap<StorageKey, (felt252, felt252)>,
         time_reward_rate: LegacyMap<(StorageKey, u64), (felt252, felt252)>,
@@ -348,7 +348,7 @@ pub mod TWAMM {
             self.reward_rate.read(key.into())
         }
 
-        fn get_sale_rate_net(self: @ContractState, key: StateKey, time: u64) -> (u128, u128) {
+        fn get_sale_rate_net(self: @ContractState, key: StateKey, time: u64) -> u128 {
             self.time_sale_rate_net.read((key.into(), time))
         }
 
@@ -693,34 +693,14 @@ pub mod TWAMM {
                     .write((storage_key, time), (next_sale_rate_delta, token1_sale_rate_delta));
             }
 
-            let (token0_sale_rate_net, token1_sale_rate_net) = self
-                .time_sale_rate_net
-                .read((storage_key, time));
+            let sale_rate_net = self.time_sale_rate_net.read((storage_key, time));
+            let next_sale_rate_net = sale_rate_net.add(sale_rate_delta);
+            self.time_sale_rate_net.write((storage_key, time), next_sale_rate_net);
 
-            let (current_sale_rate_net, next_sale_rate_net, other_token_sale_rate_net) =
-                if (order_key
-                .sell_token > order_key
-                .buy_token) {
-                let next_sale_rate_net = token1_sale_rate_net.add(sale_rate_delta);
-                self
-                    .time_sale_rate_net
-                    .write((storage_key, time), (token0_sale_rate_net, next_sale_rate_net));
-                (token1_sale_rate_net, next_sale_rate_net, token0_sale_rate_net)
-            } else {
-                let next_sale_rate_net = token0_sale_rate_net.add(sale_rate_delta);
-                self
-                    .time_sale_rate_net
-                    .write((storage_key, time), (next_sale_rate_net, token1_sale_rate_net));
-                (token0_sale_rate_net, next_sale_rate_net, token1_sale_rate_net)
-            };
-
-            if ((next_sale_rate_net == 0) != (current_sale_rate_net == 0)
-                && other_token_sale_rate_net == 0) {
-                if (next_sale_rate_net == 0) {
-                    self.remove_initialized_time(storage_key, time);
-                } else {
-                    self.insert_initialized_time(storage_key, time);
-                }
+            if sale_rate_net.is_zero() & next_sale_rate_net.is_non_zero() {
+                self.insert_initialized_time(storage_key, time);
+            } else if sale_rate_net.is_non_zero() & next_sale_rate_net.is_zero() {
+                self.remove_initialized_time(storage_key, time);
             };
         }
 
@@ -1026,12 +1006,13 @@ pub mod TWAMM {
                         }
                     }
 
-                    let (token0_sale_rate_net, token1_sale_rate_net) = self
+                    let sale_rate_net_at_time = self
                         .time_sale_rate_net
                         .read((storage_key, next_virtual_order_time));
 
                     // update ending sale rates 
-                    if (token0_sale_rate_net != 0 || token1_sale_rate_net != 0) {
+                    // todo: this is already known from reading the bitmap, and the storage read of sale_rate_net should be removed
+                    if (sale_rate_net_at_time.is_non_zero()) {
                         self
                             .update_token_sale_rate_and_rewards(
                                 storage_key,
@@ -1082,14 +1063,14 @@ pub mod TWAMM {
         }
     }
 
-    pub fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
+    pub(crate) fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
         (
             (time / (constants::BITMAP_SPACING * 251)).into(),
             250_u8 - ((time / constants::BITMAP_SPACING) % 251).try_into().unwrap()
         )
     }
 
-    pub fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
+    pub(crate) fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
         let (word, bit) = word_and_bit_index;
         ((word * 251 * constants::BITMAP_SPACING.into())
             + ((250 - bit).into() * constants::BITMAP_SPACING.into()))

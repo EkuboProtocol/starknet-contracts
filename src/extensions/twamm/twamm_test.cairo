@@ -323,9 +323,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         let order2_start_time = order1_end_time; // start time is order1 end time
         let order2_end_time = order1_end_time + 2 * SIXTEEN_POW_TWO;
@@ -342,9 +341,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, expected_sale_rate_net * 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
 
         set_block_timestamp(order2_end_time + 1);
         twamm.execute_virtual_orders(setup.pool_key.into());
@@ -396,9 +394,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         let order2_start_time = order1_end_time; // start time is order1 end time
         let order2_end_time = order1_end_time + 2 * SIXTEEN_POW_TWO;
@@ -415,9 +412,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, expected_sale_rate_net * 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
 
         set_block_timestamp(order2_end_time + 1);
         twamm.execute_virtual_orders(setup.pool_key.into());
@@ -472,9 +468,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         let order2_start_time = order1_end_time; // start time is order1 end time
         let order2_end_time = order1_end_time + 2 * SIXTEEN_POW_TWO;
@@ -491,24 +486,21 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, expected_sale_rate_net * 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
 
         // cancel both orders
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         positions.decrease_sale_rate(order2_id, order2_key, order2_state.sale_rate,);
 
-        let (token0_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_sale_rate_net, 0);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, 0);
     }
 
     #[test]
@@ -550,9 +542,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         let order2_start_time = order1_end_time; // start time is order1 end time
         let order2_end_time = order1_end_time + 2 * SIXTEEN_POW_TWO;
@@ -569,24 +560,21 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, expected_sale_rate_net * 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
 
         // cancel both orders
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, expected_sale_rate_net);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate_net);
 
         positions.decrease_sale_rate(order2_id, order2_key, order2_state.sale_rate);
 
-        let (_, token1_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_sale_rate_net, 0);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, 0);
     }
 }
 
@@ -1226,13 +1214,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // start sale rate net
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
 
         // start sale rate delta
         let (token0_start_sale_rate_delta, _) = twamm
@@ -1262,13 +1248,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_sale_rate / 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate / 2);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate / 2);
 
         // start sale rate delta
         let (token0_start_sale_rate_delta, _) = twamm
@@ -1326,13 +1310,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // start sale rate net
-        let (_, token1_start_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token1_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (_, token1_end_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_end_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
 
         // start sale rate delta
         let (_, token1_start_sale_rate_delta) = twamm
@@ -1362,13 +1344,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
-        let (_, token1_start_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token1_start_sale_rate_net, expected_sale_rate / 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate / 2);
         // end sale rate net
-        let (_, token1_end_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_end_sale_rate_net, expected_sale_rate / 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate / 2);
 
         // start sale rate delta
         let (_, token1_start_sale_rate_delta) = twamm
@@ -1426,13 +1406,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // start sale rate net
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
 
         // start sale rate delta
         let (token0_start_sale_rate_delta, _) = twamm
@@ -1471,13 +1449,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_updated_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_updated_sale_rate);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_updated_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_updated_sale_rate);
 
         // start sale rate delta
         let (token0_start_sale_rate_delta, _) = twamm
@@ -1539,13 +1515,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // start sale rate net
-        let (_, token1_start_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token1_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (_, token1_end_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_end_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
 
         // start sale rate delta
         let (_, token1_start_sale_rate_delta) = twamm
@@ -1584,13 +1558,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
-        let (_, token1_start_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token1_start_sale_rate_net, expected_updated_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_updated_sale_rate);
         // end sale rate net
-        let (_, token1_end_sale_rate_net) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token1_end_sale_rate_net, expected_updated_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_updated_sale_rate);
 
         // start sale rate delta
         let (_, token1_start_sale_rate_delta) = twamm
@@ -1652,13 +1624,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // start sale rate net
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
 
         // start sale rate delta
         let (token0_start_sale_rate_delta, _) = twamm
@@ -1714,13 +1684,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net, if start_time is in the past, do not update
-        let (token0_start_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_start_time);
-        assert_eq!(token0_start_sale_rate_net, expected_sale_rate);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_start_time);
+        assert_eq!(sale_rate_net, expected_sale_rate);
         // end sale rate net
-        let (token0_end_sale_rate_net, _) = twamm
-            .get_sale_rate_net(setup.pool_key.into(), order1_end_time);
-        assert_eq!(token0_end_sale_rate_net, expected_sale_rate / 2);
+        let sale_rate_net = twamm.get_sale_rate_net(setup.pool_key.into(), order1_end_time);
+        assert_eq!(sale_rate_net, expected_sale_rate / 2);
 
         // start sale rate delta, if start_time is in the past, do not update
         let (token0_start_sale_rate_delta, _) = twamm
