@@ -1,4 +1,4 @@
-use ekubo::extensions::twamm::{OrderKey, TWAMMPoolKey};
+use ekubo::extensions::twamm::{OrderKey};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
@@ -124,19 +124,14 @@ pub trait IPositions<TStorage> {
 
     // Mint a twamm position and increase sold amount.
     fn mint_and_increase_amount(
-        ref self: TStorage,
-        twamm_pool_key: TWAMMPoolKey,
-        is_sell_token1: bool,
-        start_time: u64,
-        end_time: u64,
-        amount: u128
-    ) -> (u64, OrderKey);
+        ref self: TStorage, order_key: OrderKey, amount: u128
+    ) -> (u64, u128);
 
     // Increase sold amount on a twamm position.
-    fn increase_amount(ref self: TStorage, order_key: OrderKey, id: u64, amount: u128);
+    fn increase_amount(ref self: TStorage, id: u64, order_key: OrderKey, amount: u128) -> u128;
 
     // Decrease sold amount on a twamm position.
-    fn decrease_sale_rate(ref self: TStorage, order_key: OrderKey, id: u64, sale_rate_delta: u128);
+    fn decrease_sale_rate(ref self: TStorage, id: u64, order_key: OrderKey, sale_rate_delta: u128);
 
     // Withdraws proceeds from a twamm position.
     fn withdraw_proceeds(ref self: TStorage, order_key: OrderKey, id: u64);
