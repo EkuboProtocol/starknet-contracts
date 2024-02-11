@@ -23,7 +23,7 @@ describe("core", () => {
         "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
       nft: "0x512e23b626c051d76fb95b72696fbed63c821e499d90aa523ac523a1246a2c8",
       twamm:
-        "0x78bd51ff6ac4d7b0cd598435b49e29a89912f8d9e40c9abc5af0dba1fe133e9",
+        "0x21f8dd4b36dcebc745314682c174b3197e40d310e47b8c4637c42a9d30f9acc",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -322,6 +322,14 @@ describe("core", () => {
                 fee: poolKey.fee,
               };
 
+              const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
+              await setDevnetTime(startingTime - 8);
+
+              console.log(
+                "time",
+                (await provider.getBlock("pending")).timestamp
+              );
+
               const txHashes: string[] = [];
               for (const liquidity of positions_liquidities) {
                 const bounds = MAX_BOUNDS_TWAMM;
@@ -359,7 +367,7 @@ describe("core", () => {
                 txHashes.push(transaction_hash);
               }
 
-              await Promise.all(
+              const mintReceipts = await Promise.all(
                 txHashes.map((txHash) =>
                   provider.waitForTransaction(txHash, {
                     retryInterval: 0,
@@ -367,13 +375,12 @@ describe("core", () => {
                 )
               );
 
-              const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
-              await setDevnetTime(startingTime - 8);
-
-              console.log(
-                "time",
-                (await provider.getBlock("pending")).timestamp
-              );
+              expect(
+                mintReceipts.every(
+                  (receipt) => receipt.execution_status === "SUCCEEDED"
+                ),
+                "mints did not succeed"
+              ).toEqual(true);
 
               if (orders.length > 0) {
                 const [balance0, balance1] = await Promise.all([
@@ -429,8 +436,14 @@ describe("core", () => {
               }
 
               console.log(
+                "core#get_pool_price",
+                await core.get_pool_price(poolKey),
                 "#get_last_virtual_order_time",
-                await twamm.get_last_virtual_order_time(stateKey)
+                await twamm.get_last_virtual_order_time(stateKey),
+                "#get_sale_rate",
+                await twamm.get_sale_rate(stateKey),
+                "#get_reward_rate",
+                await twamm.get_reward_rate(stateKey)
               );
 
               for (const snapshotTime of snapshot_times) {
@@ -458,8 +471,14 @@ describe("core", () => {
                 console.log(executeVirtualOrdersReceipt);
 
                 console.log(
+                  "core#get_pool_price",
+                  await core.get_pool_price(poolKey),
                   "#get_last_virtual_order_time",
-                  await twamm.get_last_virtual_order_time(stateKey)
+                  await twamm.get_last_virtual_order_time(stateKey),
+                  "#get_sale_rate",
+                  await twamm.get_sale_rate(stateKey),
+                  "#get_reward_rate",
+                  await twamm.get_reward_rate(stateKey)
                 );
 
                 const twammEvents = twamm.parseEvents(
@@ -468,7 +487,9 @@ describe("core", () => {
                 const coreEvents = core.parseEvents(
                   executeVirtualOrdersReceipt
                 );
-                expect({ twammEvents, coreEvents }).toMatchSnapshot();
+                expect({ twammEvents, coreEvents }).toMatchSnapshot(
+                  `after ${snapshotTime} seconds`
+                );
               }
             },
             300_000
