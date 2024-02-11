@@ -2768,334 +2768,361 @@ exports[`core > regular pool > overlapping positions asymmetric, starting at pri
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes > after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes > execute_virtual_orders after 0 seconds 1`] = `
 {
-  "coreEvents": [],
-  "twammEvents": [],
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes > after 1 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no swap, time passes > execute_virtual_orders after 1 seconds 1`] = `
 {
-  "coreEvents": [],
-  "twammEvents": [],
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute_virtual_orders after 0 seconds 1`] = `
 {
-  "coreEvents": [],
-  "twammEvents": [],
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute_virtual_orders after 8 seconds 1`] = `
 {
-  "coreEvents": [
-    {
-      "Swapped": {
-        "delta": {
-          "amount0": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "amount1": {
-            "mag": 888591800356506238n,
-            "sign": true,
-          },
-        },
-        "liquidity_after": 1000000000000000000n,
-        "locker": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-        "params": {
-          "amount": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "is_token1": false,
-          "skip_ahead": 0n,
-          "sqrt_ratio_limit": 18446748437148339061n,
-        },
-        "pool_key": {
-          "extension": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "fee": 1020847100762815390390123822295304634n,
-          "tick_spacing": 354892n,
-          "token0": 2465016660739055035727316823286672482585753068239529797722312975145564222379n,
-          "token1": 3212374146597836305013091468284190421839867256915153443022758909604890242292n,
-        },
-        "sqrt_ratio_after": 37910245869088509744137099758441200029n,
-        "tick_after": {
-          "mag": 4389111n,
-          "sign": true,
-        },
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 633825300114114700748351602688n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 633825300114114700748351602688n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
       },
     },
-    {
-      "LoadedBalance": {
-        "amount": 8000000000000000000n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 2465016660739055035727316823286672482585753068239529797722312975145564222379n,
-        },
-      },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
     },
-    {
-      "SavedBalance": {
-        "amount": 888591800356506238n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 3212374146597836305013091468284190421839867256915153443022758909604890242292n,
-        },
-      },
-    },
-  ],
-  "twammEvents": [
-    {
-      "VirtualOrdersExecuted": {
-        "last_virtual_order_time": 16n,
-        "next_virtual_order_time": 24n,
-        "token0_reward_rate": 0n,
-        "token0_sale_rate": 4294967296000000000000000000n,
-        "token1_reward_rate": 70401495567488007579667887541n,
-        "token1_sale_rate": 0n,
-      },
-    },
-  ],
+  },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "coreEvents": [
-    {
-      "Swapped": {
-        "delta": {
-          "amount0": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "amount1": {
-            "mag": 52418109978557470n,
-            "sign": true,
-          },
-        },
-        "liquidity_after": 1000000000000000000n,
-        "locker": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-        "params": {
-          "amount": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "is_token1": false,
-          "skip_ahead": 0n,
-          "sqrt_ratio_limit": 18446748437148339061n,
-        },
-        "pool_key": {
-          "extension": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "fee": 1020847100762815390390123822295304634n,
-          "tick_spacing": 354892n,
-          "token0": 2465016660739055035727316823286672482585753068239529797722312975145564222379n,
-          "token1": 3212374146597836305013091468284190421839867256915153443022758909604890242292n,
-        },
-        "sqrt_ratio_after": 20073287336062910776512971612071208249n,
-        "tick_after": {
-          "mag": 5660775n,
-          "sign": true,
-        },
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1267650600228229401496703205376n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
       },
     },
-    {
-      "LoadedBalance": {
-        "amount": 8000000000000000000n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 2465016660739055035727316823286672482585753068239529797722312975145564222379n,
-        },
-      },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
     },
-    {
-      "SavedBalance": {
-        "amount": 52418109978557470n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 3212374146597836305013091468284190421839867256915153443022758909604890242292n,
-        },
-      },
-    },
-  ],
-  "twammEvents": [
-    {
-      "VirtualOrdersExecuted": {
-        "last_virtual_order_time": 24n,
-        "next_virtual_order_time": 32n,
-        "token0_reward_rate": 0n,
-        "token0_sale_rate": 4294967296000000000000000000n,
-        "token1_reward_rate": 74554486103559739945166421132n,
-        "token1_sale_rate": 0n,
-      },
-    },
-  ],
+  },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute_virtual_orders after 0 seconds 1`] = `
 {
-  "coreEvents": [],
-  "twammEvents": [],
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute_virtual_orders after 8 seconds 1`] = `
 {
-  "coreEvents": [
-    {
-      "Swapped": {
-        "delta": {
-          "amount0": {
-            "mag": 888591800356506238n,
-            "sign": true,
-          },
-          "amount1": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-        },
-        "liquidity_after": 1000000000000000000n,
-        "locker": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-        "params": {
-          "amount": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "is_token1": true,
-          "skip_ahead": 0n,
-          "sqrt_ratio_limit": 6277100250585753475930931601400621808602321654880405518632n,
-        },
-        "pool_key": {
-          "extension": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "fee": 1020847100762815390390123822295304634n,
-          "tick_spacing": 354892n,
-          "token0": 2665315082123127373016212709272899540893460520761464243567004511495215324282n,
-          "token1": 3282387596778427677431737880156823720077956968963296931268454832924664337195n,
-        },
-        "sqrt_ratio_after": 3054374525482343648047250476307551466029n,
-        "tick_after": {
-          "mag": 4389110n,
-          "sign": false,
-        },
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 70401495567488007579667887541n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 888591800356506238n,
+        "sign": true,
       },
     },
-    {
-      "SavedBalance": {
-        "amount": 888591800356506238n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 2665315082123127373016212709272899540893460520761464243567004511495215324282n,
-        },
-      },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 37910245869088509744137099758441200029n,
+    "tick_after": {
+      "mag": 4389111n,
+      "sign": true,
     },
-    {
-      "LoadedBalance": {
-        "amount": 8000000000000000000n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 3282387596778427677431737880156823720077956968963296931268454832924664337195n,
-        },
-      },
-    },
-  ],
-  "twammEvents": [
-    {
-      "VirtualOrdersExecuted": {
-        "last_virtual_order_time": 16n,
-        "next_virtual_order_time": 24n,
-        "token0_reward_rate": 70401495567488007579667887541n,
-        "token0_sale_rate": 0n,
-        "token1_reward_rate": 0n,
-        "token1_sale_rate": 4294967296000000000000000000n,
-      },
-    },
-  ],
+  },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "coreEvents": [
-    {
-      "Swapped": {
-        "delta": {
-          "amount0": {
-            "mag": 52418109978557470n,
-            "sign": true,
-          },
-          "amount1": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-        },
-        "liquidity_after": 1000000000000000000n,
-        "locker": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-        "params": {
-          "amount": {
-            "mag": 8000000000000000000n,
-            "sign": false,
-          },
-          "is_token1": true,
-          "skip_ahead": 0n,
-          "sqrt_ratio_limit": 6277100250585753475930931601400621808602321654880405518632n,
-        },
-        "pool_key": {
-          "extension": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "fee": 1020847100762815390390123822295304634n,
-          "tick_spacing": 354892n,
-          "token0": 2665315082123127373016212709272899540893460520761464243567004511495215324282n,
-          "token1": 3282387596778427677431737880156823720077956968963296931268454832924664337195n,
-        },
-        "sqrt_ratio_after": 5768466684043748832631126345183334720602n,
-        "tick_after": {
-          "mag": 5660774n,
-          "sign": false,
-        },
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 74554486103559739945166421132n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52418109978557470n,
+        "sign": true,
       },
     },
-    {
-      "SavedBalance": {
-        "amount": 52418109978557470n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 2665315082123127373016212709272899540893460520761464243567004511495215324282n,
-        },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 20073287336062910776512971612071208249n,
+    "tick_after": {
+      "mag": 5660775n,
+      "sign": true,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute_virtual_orders after 0 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 70401495567488007579667887541n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 888591800356506238n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
       },
     },
-    {
-      "LoadedBalance": {
-        "amount": 8000000000000000000n,
-        "key": {
-          "owner": 960376836814326016436647380757579371321615449115633714239424777290978925260n,
-          "salt": 0n,
-          "token": 3282387596778427677431737880156823720077956968963296931268454832924664337195n,
-        },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 3054374525482343648047250476307551466029n,
+    "tick_after": {
+      "mag": 4389110n,
+      "sign": false,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 74554486103559739945166421132n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
       },
     },
-  ],
-  "twammEvents": [
-    {
-      "VirtualOrdersExecuted": {
-        "last_virtual_order_time": 24n,
-        "next_virtual_order_time": 32n,
-        "token0_reward_rate": 74554486103559739945166421132n,
-        "token0_sale_rate": 0n,
-        "token1_reward_rate": 0n,
-        "token1_sale_rate": 4294967296000000000000000000n,
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 5768466684043748832631126345183334720602n,
+    "tick_after": {
+      "mag": 5660774n,
+      "sign": false,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute_virtual_orders after 0 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 1201819285886159894338616573889n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 340117806977659840570613126360n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 415454001790191429n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 292890257506913715n,
+        "sign": true,
       },
     },
-  ],
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+    "tick_after": {
+      "mag": 693140n,
+      "sign": true,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 2469468944830418366460729743296n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 657030691650729505906818310779n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 5940337003019n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+    "tick_after": {
+      "mag": 693148n,
+      "sign": true,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute_virtual_orders after 0 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 340117806977659840570613126360n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 1201819285886159894338616573889n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 292890257506913715n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 415454001790191429n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 481229922983652781873155309265806522941n,
+    "tick_after": {
+      "mag": 693139n,
+      "sign": false,
+    },
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 657030691650729505906818310779n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 2469468944830418366460729743296n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 5940337003019n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 481231938311412669592028616206935880801n,
+    "tick_after": {
+      "mag": 693147n,
+      "sign": false,
+    },
+  },
 }
 `;

@@ -79,4 +79,52 @@ export const TWAMM_SWAP_CASES: Array<{
     ],
     snapshotTimes: [0, 8, 16],
   },
+  {
+    name: "selling 1e18 of both tokens per second for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 16n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+    snapshotTimes: [0, 8, 16],
+  },
+  {
+    name: "selling twice as much token1 as token0 for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 8n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+    snapshotTimes: [0, 8, 16],
+  },
+  {
+    name: "selling twice as much token0 as token1 for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 16n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 8n * 10n ** 18n,
+      },
+    ],
+    snapshotTimes: [0, 8, 16],
+  },
 ];

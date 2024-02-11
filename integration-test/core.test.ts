@@ -450,14 +450,26 @@ describe("core", () => {
                     retryInterval: 0,
                   });
 
-                const twammEvents = twamm.parseEvents(
-                  executeVirtualOrdersReceipt
-                );
-                const coreEvents = core.parseEvents(
-                  executeVirtualOrdersReceipt
-                );
-                expect({ twammEvents, coreEvents }).toMatchSnapshot(
-                  `after ${snapshotTime} seconds`
+                const VirtualOrdersExecuted = twamm
+                  .parseEvents(executeVirtualOrdersReceipt)
+                  .find(
+                    ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
+                  )?.VirtualOrdersExecuted;
+                const Swapped = core
+                  .parseEvents(executeVirtualOrdersReceipt)
+                  .find(({ Swapped }) => Swapped)?.Swapped;
+
+                const executedSwap = Swapped
+                  ? {
+                      delta: Swapped.delta,
+                      liquidity_after: Swapped.liquidity_after,
+                      sqrt_ratio_after: Swapped.sqrt_ratio_after,
+                      tick_after: Swapped.tick_after,
+                    }
+                  : null;
+
+                expect({ VirtualOrdersExecuted, executedSwap }).toMatchSnapshot(
+                  `execute_virtual_orders after ${snapshotTime} seconds`
                 );
               }
             },
