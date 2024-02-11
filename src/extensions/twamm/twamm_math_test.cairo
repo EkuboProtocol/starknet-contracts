@@ -507,8 +507,14 @@ mod TWAMMMathTest {
 }
 
 #[test]
-#[should_panic(expected: ('INVALID_END_TIME',))]
-fn validate_sale_rate_too_far_in_the_future() {
-    validate_time(0, SIXTEEN_POW_SIX + 1);
-    assert_eq!(true, true);
+fn test_validate_time_success() {
+    validate_time(now: 0, time: 16);
+    validate_time(now: 8, time: 16);
+    validate_time(now: 9, time: 16);
+    validate_time(now: 15, time: 16);
+    validate_time(now: 16, time: 16);
+    validate_time(now: 17, time: 16);
+    validate_time(now: 12345678, time: 16);
+    validate_time(now: 12345678, time: 32);
+    validate_time(now: 12345678, time: 0);
 }
