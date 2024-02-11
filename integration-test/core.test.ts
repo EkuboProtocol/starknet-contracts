@@ -294,7 +294,7 @@ describe("core", () => {
       positions_liquidities,
     } of TWAMM_POOL_CASES) {
       describe(twammCaseName, () => {
-        for (const { name, orders, snapshot_times } of TWAMM_SWAP_CASES) {
+        for (const { name, orders, snapshotTimes } of TWAMM_SWAP_CASES) {
           it(
             name,
             async ({ expect }) => {
@@ -324,11 +324,6 @@ describe("core", () => {
 
               const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
               await setDevnetTime(startingTime - 8);
-
-              console.log(
-                "time",
-                (await provider.getBlock("pending")).timestamp
-              );
 
               const txHashes: string[] = [];
               for (const liquidity of positions_liquidities) {
@@ -393,7 +388,7 @@ describe("core", () => {
                     token0.populate("transfer", [setup.positions, balance0]),
                     token1.populate("transfer", [setup.positions, balance1]),
                     ...orders.map((order) => {
-                      const [buy_token, sell_token] = order.is_token1
+                      const [buy_token, sell_token] = order.isToken1
                         ? [poolKey.token0, poolKey.token1]
                         : [poolKey.token1, poolKey.token0];
 
@@ -405,8 +400,8 @@ describe("core", () => {
                             buy_token,
                             fee: poolKey.fee,
                             start_time:
-                              startingTime + order.relative_times.start,
-                            end_time: startingTime + order.relative_times.end,
+                              startingTime + order.relativeTimes.start,
+                            end_time: startingTime + order.relativeTimes.end,
                           },
                           order.amount,
                         ]
@@ -427,26 +422,13 @@ describe("core", () => {
                   "order placement succeeded"
                 ).toEqual("SUCCEEDED");
 
-                const orderUpdatedEvents = twamm
-                  .parseEvents(orderPlacementReceipt)
-                  .map(({ OrderUpdated }) => OrderUpdated)
-                  .filter((x) => !!x);
-
-                console.log("order updated events", orderUpdatedEvents);
+                // const orderUpdatedEvents = twamm
+                //   .parseEvents(orderPlacementReceipt)
+                //   .map(({ OrderUpdated }) => OrderUpdated)
+                //   .filter((x) => !!x);
               }
 
-              console.log(
-                "core#get_pool_price",
-                await core.get_pool_price(poolKey),
-                "#get_last_virtual_order_time",
-                await twamm.get_last_virtual_order_time(stateKey),
-                "#get_sale_rate",
-                await twamm.get_sale_rate(stateKey),
-                "#get_reward_rate",
-                await twamm.get_reward_rate(stateKey)
-              );
-
-              for (const snapshotTime of snapshot_times) {
+              for (const snapshotTime of snapshotTimes) {
                 await setDevnetTime(startingTime + snapshotTime);
 
                 const { transaction_hash } = await account.execute(
@@ -467,19 +449,6 @@ describe("core", () => {
                   await account.waitForTransaction(transaction_hash, {
                     retryInterval: 0,
                   });
-
-                console.log(executeVirtualOrdersReceipt);
-
-                console.log(
-                  "core#get_pool_price",
-                  await core.get_pool_price(poolKey),
-                  "#get_last_virtual_order_time",
-                  await twamm.get_last_virtual_order_time(stateKey),
-                  "#get_sale_rate",
-                  await twamm.get_sale_rate(stateKey),
-                  "#get_reward_rate",
-                  await twamm.get_reward_rate(stateKey)
-                );
 
                 const twammEvents = twamm.parseEvents(
                   executeVirtualOrdersReceipt

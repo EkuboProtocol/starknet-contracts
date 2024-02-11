@@ -46,37 +46,37 @@ export const TWAMM_POOL_CASES: Array<{
 export const TWAMM_SWAP_CASES: Array<{
   name: string;
   orders: {
-    relative_times: { start: number; end: number };
-    is_token1: boolean;
+    relativeTimes: { start: number; end: number };
+    isToken1: boolean;
     amount: bigint;
   }[];
-  snapshot_times: number[];
+  snapshotTimes: number[];
 }> = [
+  {
+    name: "no swap, time passes",
+    orders: [],
+    snapshotTimes: [0, 1],
+  },
   {
     name: "selling 1e18 token0 per second for one period",
     orders: [
       {
-        relative_times: { start: 0, end: 16 },
-        is_token1: false,
-        amount: 10n ** 18n,
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 16n * 10n ** 18n,
       },
     ],
-    snapshot_times: [0, 8, 16],
+    snapshotTimes: [0, 8, 16],
   },
-  // {
-  //   name: "no swap, time passes",
-  //   orders: [],
-  //   snapshot_times: [0, 1],
-  // },
-  // {
-  //   name: "selling 1e18 token1 per second for one period",
-  //   orders: [
-  //     {
-  //       relative_times: { start: 0, end: 16 },
-  //       is_token1: true,
-  //       amount: 10n ** 18n,
-  //     },
-  //   ],
-  //   snapshot_times: [0, 8, 16],
-  // },
+  {
+    name: "selling 1e18 token1 per second for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+    snapshotTimes: [0, 8, 16],
+  },
 ];
