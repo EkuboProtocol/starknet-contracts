@@ -9,22 +9,6 @@ export const TWAMM_POOL_CASES: Array<{
   };
   positions_liquidities: bigint[];
 }> = [
-  // {
-  //   name: "0 liquidity, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [],
-  // },
-  // {
-  //   name: "1e18 liquidity, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [10n ** 18n],
-  // },
   {
     name: "1e18 liquidity, starting price of 1, 0.3% fee",
     pool: {
@@ -33,17 +17,33 @@ export const TWAMM_POOL_CASES: Array<{
     },
     positions_liquidities: [10n ** 18n],
   },
-  // {
-  //   name: "1e36 liquidity across 2 positions, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [5n * 10n ** 35n, 5n * 10n ** 35n],
-  // },
+  {
+    name: "1e36 liquidity across 2 positions, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [5n * 10n ** 35n, 5n * 10n ** 35n],
+  },
+  {
+    name: "0 liquidity, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [],
+  },
+  {
+    name: "1e18 liquidity, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [10n ** 18n],
+  },
 ];
 
-export const TWAMM_SWAP_CASES: Array<{
+export const TWAMM_ORDER_CASES: Array<{
   name: string;
   orders: {
     relativeTimes: { start: number; end: number };

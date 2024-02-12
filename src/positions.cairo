@@ -533,7 +533,7 @@ pub mod Positions {
         }
 
         // Withdraws proceeds from a twamm position
-        fn withdraw_proceeds(ref self: ContractState, order_key: OrderKey, id: u64) {
+        fn withdraw_proceeds(ref self: ContractState, id: u64, order_key: OrderKey) {
             let nft = self.nft.read();
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');

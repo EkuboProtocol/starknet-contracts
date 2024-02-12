@@ -8,7 +8,7 @@ import { provider, setDevnetTime } from "./utils/provider";
 import { computeFee } from "./utils/computeFee";
 import { beforeAll, describe, it } from "vitest";
 import { formatPrice } from "./utils/formatPrice";
-import { TWAMM_POOL_CASES, TWAMM_SWAP_CASES } from "./cases/twammCases";
+import { TWAMM_ORDER_CASES, TWAMM_POOL_CASES } from "./cases/twammCases";
 import { MAX_BOUNDS_TWAMM, MAX_TICK_SPACING } from "./utils/constants";
 
 describe("core", () => {
@@ -18,12 +18,12 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x22c38145f143fc7bb979c6cac6d76bfb719bbb1e4bba9764ebafd0a7890367",
+        "0x7d0bd449b8772e2025abaeae907b2ce2bacfe98f1b6c89691d0618a2560a5cb",
       router:
         "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
-      nft: "0x512e23b626c051d76fb95b72696fbed63c821e499d90aa523ac523a1246a2c8",
+      nft: "0x41627755d715eef14e813b91f84b7b5aeb3183ee2ea6613b228f1c2a1e02f96",
       twamm:
-        "0x21f8dd4b36dcebc745314682c174b3197e40d310e47b8c4637c42a9d30f9acc",
+        "0x3ed77f2d7150f9dd0e0706e40c09bde089aa5fab2a266c8c247bdbd27d51de6",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -294,7 +294,7 @@ describe("core", () => {
       positions_liquidities,
     } of TWAMM_POOL_CASES) {
       describe(twammCaseName, () => {
-        for (const { name, orders, snapshotTimes } of TWAMM_SWAP_CASES) {
+        for (const { name, orders, snapshotTimes } of TWAMM_ORDER_CASES) {
           it(
             name,
             async ({ expect }) => {
@@ -306,6 +306,7 @@ describe("core", () => {
                 token1,
                 twamm,
                 getTxSettings,
+                nft,
               } = await prepareContracts(setup);
 
               const poolKey = {
@@ -322,7 +323,7 @@ describe("core", () => {
                 fee: poolKey.fee,
               };
 
-              const startingTime = 16; // (await provider.getBlock("pending")).timestamp;
+              const startingTime = 16;
               await setDevnetTime(startingTime - 8);
 
               const txHashes: string[] = [];
@@ -377,6 +378,35 @@ describe("core", () => {
                 "mints did not succeed"
               ).toEqual(true);
 
+              const mintedPositionTokens = mintReceipts.map((receipt) => ({
+                liquidity: fromI129(
+                  (
+                    core
+                      .parseEvents(receipt)
+                      .find(({ PositionUpdated }) => PositionUpdated)
+                      ?.PositionUpdated as unknown as {
+                      params: {
+                        liquidity_delta: { mag: bigint; sign: boolean };
+                      };
+                    }
+                  ).params.liquidity_delta
+                ),
+                token_id: (
+                  nft.parseEvents(receipt).find(({ Transfer }) => Transfer)
+                    ?.Transfer as {
+                    from: bigint;
+                    to: bigint;
+                    token_id: bigint;
+                  }
+                )?.token_id,
+              }));
+
+              let mintedOrders: {
+                token_id: bigint;
+                order_key: {};
+                sale_rate: bigint;
+              }[] = [];
+
               if (orders.length > 0) {
                 const [balance0, balance1] = await Promise.all([
                   token0.balanceOf(account.address),
@@ -422,10 +452,15 @@ describe("core", () => {
                   "order placement succeeded"
                 ).toEqual("SUCCEEDED");
 
-                // const orderUpdatedEvents = twamm
-                //   .parseEvents(orderPlacementReceipt)
-                //   .map(({ OrderUpdated }) => OrderUpdated)
-                //   .filter((x) => !!x);
+                mintedOrders = twamm
+                  .parseEvents(orderPlacementReceipt)
+                  .map(({ OrderUpdated }) => OrderUpdated)
+                  .filter((x) => !!x)
+                  .map(({ salt, order_key, sale_rate_delta }: any) => ({
+                    token_id: salt,
+                    order_key,
+                    sale_rate: fromI129(sale_rate_delta),
+                  }));
               }
 
               for (const snapshotTime of snapshotTimes) {
@@ -459,6 +494,12 @@ describe("core", () => {
                   .parseEvents(executeVirtualOrdersReceipt)
                   .find(({ Swapped }) => Swapped)?.Swapped;
 
+                const executionResources =
+                  executeVirtualOrdersReceipt.execution_resources;
+                if ("memory_holes" in executionResources) {
+                  delete executionResources["memory_holes"];
+                }
+
                 const executedSwap = Swapped
                   ? {
                       delta: Swapped.delta,
@@ -468,9 +509,66 @@ describe("core", () => {
                     }
                   : null;
 
-                expect({ VirtualOrdersExecuted, executedSwap }).toMatchSnapshot(
+                expect({
+                  VirtualOrdersExecuted,
+                  executedSwap,
+                  executionResources,
+                }).toMatchSnapshot(
                   `execute_virtual_orders after ${snapshotTime} seconds`
                 );
+              }
+
+              if (mintedPositionTokens.length > 0) {
+                const { transaction_hash: withdrawalTransactionHash } =
+                  await account.execute(
+                    mintedPositionTokens.map(({ token_id, liquidity }) =>
+                      positionsContract.populate("withdraw", [
+                        token_id,
+                        poolKey,
+                        {
+                          lower: toI129(MAX_BOUNDS_TWAMM.lower),
+                          upper: toI129(MAX_BOUNDS_TWAMM.upper),
+                        },
+                        liquidity,
+                        0,
+                        0,
+                        // collect_fees =
+                        true,
+                      ])
+                    ),
+                    [],
+                    getTxSettings()
+                  );
+
+                const {
+                  execution_status: positionWithdrawalTransactionStatus,
+                } = await account.waitForTransaction(withdrawalTransactionHash);
+                expect(positionWithdrawalTransactionStatus).toEqual(
+                  "SUCCEEDED"
+                );
+              }
+
+              if (mintedOrders.length > 0) {
+                const { transaction_hash: withdrawProceedsTransactionHash } =
+                  await account.execute(
+                    mintedOrders.map(({ token_id, order_key, sale_rate }) =>
+                      positionsContract.populate("withdraw_proceeds", [
+                        token_id,
+                        order_key,
+                      ])
+                    ),
+                    [],
+                    getTxSettings()
+                  );
+
+                const withdrawProceedsReceipt =
+                  await account.waitForTransaction(
+                    withdrawProceedsTransactionHash
+                  );
+                expect(
+                  withdrawProceedsReceipt.execution_status,
+                  "withdraw proceeds success"
+                ).toEqual("SUCCEEDED");
               }
             },
             300_000

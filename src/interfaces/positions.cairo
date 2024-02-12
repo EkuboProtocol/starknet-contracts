@@ -134,5 +134,5 @@ pub trait IPositions<TStorage> {
     fn decrease_sale_rate(ref self: TStorage, id: u64, order_key: OrderKey, sale_rate_delta: u128);
 
     // Withdraws proceeds from a twamm position.
-    fn withdraw_proceeds(ref self: TStorage, order_key: OrderKey, id: u64);
+    fn withdraw_proceeds(ref self: TStorage, id: u64, order_key: OrderKey);
 }

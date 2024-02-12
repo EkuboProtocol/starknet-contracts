@@ -1082,7 +1082,7 @@ mod CancelOrderTests {
         set_block_timestamp(SIXTEEN_POW_THREE - 1);
 
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
     }
 }
@@ -1769,7 +1769,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
 
         // withdraw proceeds (same transaction)
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // amount  = updated reward_rate * updated sale_rate
@@ -2003,7 +2003,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // Withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
 
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
@@ -2047,7 +2047,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
@@ -2161,7 +2161,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
@@ -2245,7 +2245,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // Withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2286,7 +2286,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
@@ -2399,7 +2399,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
@@ -2519,7 +2519,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfefcb3ad7bad041447ab720a895);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2529,7 +2529,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 0x21e12dddabe1d857b76);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2580,7 +2580,7 @@ mod PlaceOrderOnBothSides {
         );
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2590,7 +2590,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9998495022657373310747);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2739,7 +2739,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order1
         set_contract_address(owner0);
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2750,7 +2750,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order2
         set_contract_address(owner1);
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2761,7 +2761,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order3
         set_contract_address(owner0);
-        positions.withdraw_proceeds(order3_key, order3_id);
+        positions.withdraw_proceeds(order3_id, order3_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2772,7 +2772,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order4
         set_contract_address(owner1);
-        positions.withdraw_proceeds(order4_key, order4_id);
+        positions.withdraw_proceeds(order4_id, order4_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2876,7 +2876,7 @@ mod PlaceOrderOnBothSides {
         );
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2886,7 +2886,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 33481569373828693521176460);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2936,7 +2936,7 @@ mod PlaceOrderOnBothSides {
         );
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2946,7 +2946,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 16935997977911462045022651);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3118,7 +3118,7 @@ mod PlaceOrderOnBothSides {
         );
 
         // // Withdraw proceeds for order1
-        positions.withdraw_proceeds(order1_key, order1_id);
+        positions.withdraw_proceeds(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3128,7 +3128,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 5005623406881568362072);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds(order2_key, order2_id);
+        positions.withdraw_proceeds(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
