@@ -90,21 +90,20 @@ pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
 }
 
 // Timestamps specified in order keys must be a multiple of a base that depends on how close they are to now
-pub(crate) fn validate_time(now: u64, time: u64) {
+#[inline(always)]
+pub(crate) fn is_time_valid(now: u64, time: u64) -> bool {
     // = 16**(max(1, floor(log_16(time-now))))
-    let step = if time <= now {
+    let step = if time <= (now + constants::BITMAP_SPACING) {
         constants::BITMAP_SPACING.into()
     } else {
-        max(
-            exp2(
-                constants::LOG_SCALE_FACTOR
-                    * (msb((time - now).into()) / constants::LOG_SCALE_FACTOR)
-            ),
-            constants::BITMAP_SPACING.into()
-        )
+        exp2(constants::LOG_SCALE_FACTOR * (msb((time - now).into()) / constants::LOG_SCALE_FACTOR))
     };
 
-    assert((time.into() % step).is_zero(), 'INVALID_TIME');
+    (time.into() % step).is_zero()
+}
+
+pub(crate) fn validate_time(now: u64, time: u64) {
+    assert(is_time_valid(now, time), 'INVALID_TIME');
 }
 
 pub fn calculate_next_sqrt_ratio(
