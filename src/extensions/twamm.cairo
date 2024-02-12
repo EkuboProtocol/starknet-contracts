@@ -99,10 +99,10 @@ pub trait ITWAMM<TContractState> {
     // Return the sale rate delta for a specific time
     fn get_sale_rate_delta(self: @TContractState, key: StateKey, time: u64) -> (i129, i129);
 
-    // Return the next virtual order time
-    fn get_next_virtual_order_time(
-        self: @TContractState, key: StateKey, max_time: u64
-    ) -> (u64, u64);
+    // Return the next initialized time
+    fn next_initialized_time(
+        self: @TContractState, key: StateKey, from: u64, max_time: u64
+    ) -> (u64, bool);
 
     // Update an existing twamm order
     fn update_order(
@@ -357,17 +357,17 @@ pub mod TWAMM {
             self.time_sale_rate_delta.read((key.into(), time))
         }
 
-        fn get_next_virtual_order_time(
-            self: @ContractState, key: StateKey, max_time: u64
-        ) -> (u64, u64) {
-            let last_virtual_order_time = self.last_virtual_order_time.read(key.into());
+        fn next_initialized_time(
+            self: @ContractState, key: StateKey, from: u64, max_time: u64
+        ) -> (u64, bool) {
+            let storage_key: StorageKey = key.into();
 
-            assert(max_time > last_virtual_order_time, 'INVALID_MAX_TIME');
-
-            (
-                last_virtual_order_time,
-                self.next_initialized_time(key.into(), last_virtual_order_time, max_time)
-            )
+            self
+                .prefix_next_initialized_time(
+                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key.value),
+                    from,
+                    max_time
+                )
         }
 
         fn update_order(
@@ -619,14 +619,10 @@ pub mod TWAMM {
                 .orders
                 .write(
                     (owner, salt, order_key),
-                    OrderState {
-                        sale_rate: sale_rate_next,
-                        reward_rate: reward_rate,
-                        use_snapshot: use_snapshot,
-                    }
+                    OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot, }
                 );
 
-            self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta: sale_rate_delta });
+            self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
 
             if (order_started) {
                 self.update_global_sale_rate(order_key, sale_rate_delta);
@@ -757,7 +753,11 @@ pub mod TWAMM {
         }
 
         fn update_token_sale_rate_and_rewards(
-            ref self: ContractState, storage_key: StorageKey, sale_rates: (u128, u128), time: u64
+            ref self: ContractState,
+            storage_key: StorageKey,
+            sale_rates: (u128, u128),
+            reward_rates: (felt252, felt252),
+            time: u64
         ) {
             let (token0_sale_rate, token1_sale_rate) = sale_rates;
 
@@ -778,7 +778,7 @@ pub mod TWAMM {
                         )
                     );
 
-                let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(storage_key);
+                let (token0_reward_rate, token1_reward_rate) = reward_rates;
 
                 self
                     .time_reward_rate
@@ -805,20 +805,9 @@ pub mod TWAMM {
             self.time_sale_rate_bitmaps.write((storage_key, word_index), bitmap.set_bit(bit_index));
         }
 
-        fn next_initialized_time(
-            self: @ContractState, storage_key: StorageKey, from: u64, max_time: u64
-        ) -> u64 {
-            self
-                .prefix_next_initialized_time(
-                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key),
-                    from,
-                    max_time
-                )
-        }
-
         fn prefix_next_initialized_time(
             self: @ContractState, prefix: felt252, from: u64, max_time: u64
-        ) -> u64 {
+        ) -> (u64, bool) {
             let (word_index, bit_index) = time_to_word_and_bit_index(
                 from + constants::BITMAP_SPACING
             );
@@ -829,12 +818,14 @@ pub mod TWAMM {
                 .expect('BITMAP_READ_FAILED');
 
             match bitmap.next_set_bit(bit_index) {
-                Option::Some(next_bit) => { word_and_bit_index_to_time((word_index, next_bit)) },
+                Option::Some(next_bit) => {
+                    (word_and_bit_index_to_time((word_index, next_bit)), false)
+                },
                 Option::None => {
                     let next = word_and_bit_index_to_time((word_index, 0));
 
                     if (next > max_time) {
-                        max_time
+                        (max_time, true)
                     } else {
                         self.prefix_next_initialized_time(prefix, next, max_time)
                     }
@@ -856,28 +847,43 @@ pub mod TWAMM {
 
             let self_snap = @self;
 
-            if (last_virtual_order_time == 0) {
-                // we haven't executed any virtual orders yet, and no orders have been placed
-                self.last_virtual_order_time.write(storage_key, current_time);
-            } else if (last_virtual_order_time != current_time) {
+            if (last_virtual_order_time != current_time) {
+                let time_bitmap_storage_prefix = LegacyHash::hash(
+                    selector!("time_sale_rate_bitmaps"), storage_key.value
+                );
+                let mut next_sqrt_ratio = 0;
                 let mut total_delta = Zero::<Delta>::zero();
-                let mut token_reward_rate = (0, 0);
 
                 loop {
                     let mut delta = Zero::zero();
 
-                    // find next time with a sale rate delta
-                    let next_initialized_time = self_snap
-                        .next_initialized_time(storage_key, last_virtual_order_time, current_time);
+                    // we must trade up to the earliest initialzed time because sale rate changes
+                    let (next_initialized_time, is_max_time) = self_snap
+                        .prefix_next_initialized_time(
+                            time_bitmap_storage_prefix, last_virtual_order_time, current_time
+                        );
 
-                    let next_virtual_order_time = min(current_time, next_initialized_time);
+                    let (next_virtual_order_time, update_rates) =
+                        if (next_initialized_time <= current_time) {
+                        // must update rates if next_initialized_time is equal to current time
+                        // and is also initialized that is prefix_next_initialized_time did not return max_time
+                        (next_initialized_time, !is_max_time)
+                    } else {
+                        (current_time, false)
+                    };
 
                     let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(storage_key);
 
-                    if (token0_sale_rate > 0 || token1_sale_rate > 0) {
-                        let price = core.get_pool_price(pool_key);
+                    let (token0_reward_rate, token1_reward_rate) = if (token0_sale_rate > 0
+                        || token1_sale_rate > 0) {
+                        let mut sqrt_ratio = if (next_sqrt_ratio == 0) {
+                            let price = core.get_pool_price(pool_key);
+                            price.sqrt_ratio
+                        } else {
+                            next_sqrt_ratio
+                        };
 
-                        if price.sqrt_ratio != 0 {
+                        if sqrt_ratio != 0 {
                             let time_elapsed = next_virtual_order_time - last_virtual_order_time;
 
                             let token0_amount = (token0_sale_rate * time_elapsed.into())
@@ -885,18 +891,16 @@ pub mod TWAMM {
                             let token1_amount = (token1_sale_rate * time_elapsed.into())
                                 / constants::X32_u128;
 
-                            if (token0_amount != 0 && token1_amount != 0) {
-                                let sqrt_ratio_limit = calculate_next_sqrt_ratio(
-                                    price.sqrt_ratio,
-                                    core.get_pool_liquidity(pool_key),
-                                    token0_sale_rate,
-                                    token1_sale_rate,
-                                    time_elapsed
-                                );
+                            let twamm_delta = if (token0_amount != 0 && token1_amount != 0) {
+                                next_sqrt_ratio =
+                                    calculate_next_sqrt_ratio(
+                                        sqrt_ratio,
+                                        core.get_pool_liquidity(pool_key),
+                                        token0_sale_rate,
+                                        token1_sale_rate,
+                                        time_elapsed
+                                    );
 
-                                let is_token1 = price.sqrt_ratio < sqrt_ratio_limit;
-
-                                // swap up/down to sqrt_ratio_limit
                                 delta = core
                                     .swap(
                                         pool_key,
@@ -904,24 +908,19 @@ pub mod TWAMM {
                                             amount: i129 {
                                                 mag: 0xffffffffffffffffffffffffffffffff, sign: false
                                             },
-                                            is_token1: is_token1,
-                                            sqrt_ratio_limit,
+                                            is_token1: sqrt_ratio < next_sqrt_ratio,
+                                            sqrt_ratio_limit: next_sqrt_ratio,
                                             skip_ahead: 0
                                         }
                                     );
 
-                                // update reward rate
-                                token_reward_rate = self
-                                    .update_reward_rate(
-                                        storage_key,
-                                        (token0_sale_rate, token1_sale_rate),
-                                        delta
-                                            + Delta {
-                                                amount0: i129 { mag: token0_amount, sign: true },
-                                                amount1: i129 { mag: token1_amount, sign: true }
-                                            },
-                                        next_virtual_order_time
-                                    );
+                                // both sides are swapping, twamm delta is the amounts swapped to reach
+                                // target price minus amounts in the twamm
+                                delta
+                                    - Delta {
+                                        amount0: i129 { mag: token0_amount, sign: false },
+                                        amount1: i129 { mag: token1_amount, sign: false }
+                                    }
                             } else {
                                 let (amount, is_token1, sqrt_ratio_limit) = if token0_amount > 0 {
                                     (token0_amount, false, min_sqrt_ratio())
@@ -940,20 +939,23 @@ pub mod TWAMM {
                                         }
                                     );
 
-                                // update reward rate
-                                token_reward_rate = self
-                                    .update_reward_rate(
-                                        storage_key,
-                                        (token0_sale_rate, token1_sale_rate),
-                                        delta,
-                                        next_virtual_order_time
-                                    );
-                            }
+                                // must fetch price from core after a single sided swap
+                                next_sqrt_ratio = 0;
 
-                            // accumulate deltas
+                                // only one side is swapping, twamm delta is the same as amounts swapped
+                                delta
+                            };
+
+                            let (token0_reward_rate, token1_reward_rate) = self
+                                .update_reward_rate(
+                                    storage_key,
+                                    (token0_sale_rate, token1_sale_rate),
+                                    twamm_delta,
+                                    next_virtual_order_time
+                                );
+
+                            // must accumulate swap deltas to zero out at the end
                             total_delta += delta;
-
-                            let (token0_reward_rate, token1_reward_rate) = token_reward_rate;
 
                             self
                                 .emit(
@@ -966,20 +968,23 @@ pub mod TWAMM {
                                         token1_reward_rate: token1_reward_rate
                                     }
                                 );
+
+                            (token0_reward_rate, token1_reward_rate)
+                        } else {
+                            // no tokens swapped, no rewards change
+                            (0, 0)
                         }
-                    }
+                    } else {
+                        // no tokens swapped, no rewards change
+                        (0, 0)
+                    };
 
-                    let sale_rate_net_at_time = self
-                        .time_sale_rate_net
-                        .read((storage_key, next_virtual_order_time));
-
-                    // update ending sale rates 
-                    // todo: this is already known from reading the bitmap, and the storage read of sale_rate_net should be removed
-                    if (sale_rate_net_at_time.is_non_zero()) {
+                    if (update_rates) {
                         self
                             .update_token_sale_rate_and_rewards(
                                 storage_key,
                                 (token0_sale_rate, token1_sale_rate),
+                                (token0_reward_rate, token1_reward_rate),
                                 next_virtual_order_time
                             );
                     }
@@ -993,35 +998,36 @@ pub mod TWAMM {
                     }
                 };
 
-                self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
-
-                // zero out deltas
                 if (total_delta.amount0.mag > 0) {
-                    if (total_delta.amount0.sign) {
-                        core
-                            .save(
-                                SavedBalanceKey {
-                                    owner: get_contract_address(), token: pool_key.token0, salt: 0
-                                },
-                                total_delta.amount0.mag
-                            );
-                    } else {
-                        core.load(pool_key.token0, 0, total_delta.amount0.mag);
-                    }
+                    self
+                        .handle_delta_with_saved_balances(
+                            core, get_contract_address(), pool_key.token0, total_delta.amount0, 0
+                        );
                 }
+
                 if (total_delta.amount1.mag > 0) {
-                    if (total_delta.amount1.sign) {
-                        core
-                            .save(
-                                SavedBalanceKey {
-                                    owner: get_contract_address(), token: pool_key.token1, salt: 0
-                                },
-                                total_delta.amount1.mag
-                            );
-                    } else {
-                        core.load(pool_key.token1, 0, total_delta.amount1.mag);
-                    }
+                    self
+                        .handle_delta_with_saved_balances(
+                            core, get_contract_address(), pool_key.token1, total_delta.amount1, 0
+                        );
                 }
+
+                self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
+            }
+        }
+
+        fn handle_delta_with_saved_balances(
+            ref self: ContractState,
+            core: ICoreDispatcher,
+            owner: ContractAddress,
+            token: ContractAddress,
+            delta: i129,
+            salt: felt252
+        ) {
+            if (delta.sign) {
+                core.save(SavedBalanceKey { owner, token, salt }, delta.mag);
+            } else {
+                core.load(token, salt, delta.mag);
             }
         }
     }

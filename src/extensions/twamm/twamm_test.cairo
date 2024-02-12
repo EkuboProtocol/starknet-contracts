@@ -96,7 +96,12 @@ mod UpgradableTest {
 }
 
 mod BitmapTest {
-    use super::{time_to_word_and_bit_index, word_and_bit_index_to_time, Bitmap, BitmapTrait};
+    use super::{
+        time_to_word_and_bit_index, word_and_bit_index_to_time, Bitmap, BitmapTrait, Deployer,
+        DeployerTrait, set_up_twamm, i129, contract_address_const, calculate_sale_rate,
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order, set_block_timestamp, StateKey,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, get_block_timestamp
+    };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
         let (word, bit) = time_to_word_and_bit_index(time);
@@ -114,6 +119,69 @@ mod BitmapTest {
         assert_case_time(4000, location: (0, 0));
         assert_case_time(4016, location: (1, 250));
         assert_case_time(8016, location: (1, 0));
+    }
+
+    #[test]
+    fn test_next_initialized_time() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false };
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+
+        let timestamp = SIXTEEN_POW_TWO;
+        set_block_timestamp(timestamp);
+
+        let owner = contract_address_const::<42>();
+        let amount = 10_000 * 1000000000000000000;
+        let order1_start_time = 2 * SIXTEEN_POW_TWO;
+        let order1_end_time = SIXTEEN_POW_THREE;
+
+        let state_key: StateKey = StateKey {
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+        };
+
+        place_order(
+            positions,
+            owner,
+            setup.token0,
+            setup.token1,
+            fee,
+            order1_start_time,
+            order1_end_time,
+            amount
+        );
+
+        assert_eq!(
+            twamm.next_initialized_time(state_key, 0, timestamp), (order1_start_time, false)
+        );
+
+        assert_eq!(
+            twamm.next_initialized_time(state_key, timestamp, order1_end_time),
+            (order1_start_time, false)
+        );
+
+        assert_eq!(
+            twamm.next_initialized_time(state_key, timestamp, order1_start_time),
+            (order1_start_time, false)
+        );
+
+        assert_eq!(
+            twamm.next_initialized_time(state_key, order1_start_time, order1_start_time + 16),
+            (order1_start_time + 16, true)
+        );
+
+        assert_eq!(
+            twamm.next_initialized_time(state_key, order1_start_time, order1_end_time),
+            (order1_end_time, false)
+        );
     }
 }
 
