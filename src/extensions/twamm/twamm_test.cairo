@@ -1202,7 +1202,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     #[test]
     #[should_panic(
         expected: (
-            'INVALID_SALE_RATE_DELTA',
+            'ADD_DELTA',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',

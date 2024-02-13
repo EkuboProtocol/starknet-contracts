@@ -516,6 +516,7 @@ pub mod Positions {
             let sale_rate = calculate_sale_rate(
                 amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
             );
+
             twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });
 
             sale_rate

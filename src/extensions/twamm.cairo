@@ -429,28 +429,77 @@ pub mod TWAMM {
                     validate_time(current_time, order_key.end_time);
                     validate_time(current_time, order_key.start_time);
 
-                    // assert sale rate will not be negative
-                    assert(
-                        !sale_rate_delta.sign || sale_rate_delta.mag <= order_state.sale_rate,
-                        'INVALID_SALE_RATE_DELTA'
-                    );
+                    let sale_rate_next = order_state.sale_rate.add(sale_rate_delta);
+
+                    let (reward_rate, use_snapshot, order_start_time) = if (sale_rate_next
+                        .is_zero()) {
+                        let order_reward_rate = if (order_state.use_snapshot) {
+                            order_state.reward_rate
+                        } else {
+                            self.get_reward_rate_at(order_key, order_key.start_time)
+                        };
+
+                        // all proceeds must be withdrawn before order is cancelled
+                        assert(
+                            self.get_current_reward_rate(order_key) == order_reward_rate
+                                || order_key.start_time > current_time,
+                            'MUST_WITHDRAW_PROCEEDS'
+                        );
+
+                        // zero out the state
+                        (0, false, order_key.start_time)
+                    } else if (order_started) {
+                        let current_reward_rate = self.get_current_reward_rate(order_key);
+
+                        let current_order_reward_rate = current_reward_rate
+                            - order_state.reward_rate;
+
+                        let adjusted_reward_rate = if (current_order_reward_rate.is_zero()) {
+                            order_state.reward_rate
+                        } else {
+                            let token_reward_amount = calculate_reward_amount(
+                                current_reward_rate, order_state.sale_rate
+                            );
+
+                            let adjusted_reward_rate = calculate_reward_rate(
+                                token_reward_amount, sale_rate_next
+                            );
+
+                            current_order_reward_rate - adjusted_reward_rate
+                        };
+
+                        (adjusted_reward_rate, true, current_time)
+                    } else {
+                        (0, false, order_key.start_time)
+                    };
 
                     self
-                        .update_order_sale_rate(
-                            owner, order_key, salt, order_state, sale_rate_delta, order_started
+                        .orders
+                        .write(
+                            (owner, salt, order_key),
+                            OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot, }
                         );
+
+                    self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
+
+                    if (order_started) {
+                        self.update_global_sale_rate(order_key, sale_rate_delta);
+                    } else {
+                        self.update_time(order_key, order_start_time, sale_rate_delta, true);
+                    }
+
+                    self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
 
                     let amount_delta = calculate_amount_from_sale_rate(
                         sale_rate_delta.mag,
                         max(order_key.start_time, current_time),
-                        order_key.end_time,
+                        order_key.end_time
                     );
 
                     let token = order_key.sell_token;
 
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
-
                         core.load(token, 0, amount_delta);
 
                         let key: StateKey = order_key.into();
@@ -561,78 +610,6 @@ pub mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        fn update_order_sale_rate(
-            ref self: ContractState,
-            owner: ContractAddress,
-            order_key: OrderKey,
-            salt: felt252,
-            order_state: OrderState,
-            sale_rate_delta: i129,
-            order_started: bool
-        ) {
-            let current_time = get_block_timestamp();
-            assert(order_key.end_time > current_time, 'ORDER_ENDED');
-
-            let sale_rate_next = order_state.sale_rate.add(sale_rate_delta);
-
-            let (reward_rate, use_snapshot, order_start_time) = if (sale_rate_next.is_zero()) {
-                let order_reward_rate = if (order_state.use_snapshot) {
-                    order_state.reward_rate
-                } else {
-                    self.get_reward_rate_at(order_key, order_key.start_time)
-                };
-
-                // all proceeds must be withdrawn before order is cancelled
-                assert(
-                    self.get_current_reward_rate(order_key) == order_reward_rate
-                        || order_key.start_time > current_time,
-                    'MUST_WITHDRAW_PROCEEDS'
-                );
-
-                // zero out the state
-                (0, false, order_key.start_time)
-            } else if (order_started) {
-                let current_reward_rate = self.get_current_reward_rate(order_key);
-
-                let current_order_reward_rate = current_reward_rate - order_state.reward_rate;
-
-                let adjusted_reward_rate = if (current_order_reward_rate.is_zero()) {
-                    order_state.reward_rate
-                } else {
-                    let token_reward_amount = calculate_reward_amount(
-                        current_reward_rate, order_state.sale_rate
-                    );
-
-                    let adjusted_reward_rate = calculate_reward_rate(
-                        token_reward_amount, sale_rate_next
-                    );
-
-                    current_order_reward_rate - adjusted_reward_rate
-                };
-
-                (adjusted_reward_rate, true, current_time)
-            } else {
-                (0, false, order_key.start_time)
-            };
-
-            self
-                .orders
-                .write(
-                    (owner, salt, order_key),
-                    OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot, }
-                );
-
-            self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
-
-            if (order_started) {
-                self.update_global_sale_rate(order_key, sale_rate_delta);
-            } else {
-                self.update_time(order_key, order_start_time, sale_rate_delta, true);
-            }
-
-            self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
-        }
-
         fn update_time(
             ref self: ContractState,
             order_key: OrderKey,
