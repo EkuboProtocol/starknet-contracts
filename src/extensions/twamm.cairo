@@ -781,21 +781,14 @@ pub mod TWAMM {
                     selector!("time_sale_rate_bitmaps"), storage_key.value
                 );
                 let mut next_sqrt_ratio: Option<u256> = Option::None;
+
                 let mut total_delta = Zero::<Delta>::zero();
 
-                let (start_token0_sale_rate, start_token1_sale_rate) = self
-                    .sale_rate
-                    .read(storage_key);
-                let (mut token0_sale_rate, mut token1_sale_rate) = (
-                    start_token0_sale_rate, start_token1_sale_rate
-                );
+                let (mut token0_sale_rate, mut token1_sale_rate) = self.sale_rate.read(storage_key);
 
-                let (start_token0_reward_rate, start_token1_reward_rate) = self
+                let (mut token0_reward_rate, mut token1_reward_rate) = self
                     .reward_rate
                     .read(storage_key);
-                let (mut token0_reward_rate, mut token1_reward_rate) = (
-                    start_token0_reward_rate, start_token1_reward_rate
-                );
 
                 loop {
                     let mut delta = Zero::zero();
@@ -944,17 +937,9 @@ pub mod TWAMM {
 
                 self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
 
-                if (start_token0_sale_rate != token0_sale_rate
-                    || start_token1_sale_rate != token1_sale_rate) {
-                    self.sale_rate.write(storage_key, (token0_sale_rate, token1_sale_rate));
-                }
+                self.sale_rate.write(storage_key, (token0_sale_rate, token1_sale_rate));
 
-                if (start_token0_reward_rate != token0_reward_rate
-                    || start_token1_reward_rate != token1_reward_rate) {
-                    self
-                        .reward_rate
-                        .write(storage_key, (token0_reward_rate, token1_reward_rate));
-                }
+                self.reward_rate.write(storage_key, (token0_reward_rate, token1_reward_rate));
 
                 self
                     .handle_delta_with_saved_balances(
