@@ -160,27 +160,33 @@ mod BitmapTest {
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, 0, timestamp), (order1_start_time, false)
+            twamm.next_initialized_time(state_key, from: 0, max_time: timestamp), (timestamp, false)
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, timestamp, order1_end_time),
-            (order1_start_time, false)
+            twamm.next_initialized_time(state_key, from: timestamp, max_time: order1_end_time),
+            (order1_start_time, true)
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, timestamp, order1_start_time),
-            (order1_start_time, false)
+            twamm.next_initialized_time(state_key, from: timestamp, max_time: order1_start_time),
+            (order1_start_time, true)
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, order1_start_time, order1_start_time + 16),
-            (order1_start_time + 16, true)
+            twamm
+                .next_initialized_time(
+                    state_key, from: order1_start_time, max_time: order1_start_time + 16
+                ),
+            (order1_start_time + 16, false)
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, order1_start_time, order1_end_time),
-            (order1_end_time, false)
+            twamm
+                .next_initialized_time(
+                    state_key, from: order1_start_time, max_time: order1_end_time
+                ),
+            (order1_end_time, true)
         );
     }
 }

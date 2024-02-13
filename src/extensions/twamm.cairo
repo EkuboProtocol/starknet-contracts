@@ -494,7 +494,7 @@ pub mod TWAMM {
                     let current_time = get_block_timestamp();
 
                     assert(
-                        order_key.start_time == 0 || order_key.start_time < current_time,
+                        order_key.start_time.is_zero() || order_key.start_time < current_time,
                         'NOT_STARTED'
                     );
 
@@ -596,7 +596,7 @@ pub mod TWAMM {
 
                 let current_order_reward_rate = current_reward_rate - order_state.reward_rate;
 
-                let adjusted_reward_rate = if (current_order_reward_rate == 0) {
+                let adjusted_reward_rate = if (current_order_reward_rate.is_zero()) {
                     order_state.reward_rate
                 } else {
                     let token_reward_amount = calculate_reward_amount(
@@ -819,13 +819,18 @@ pub mod TWAMM {
 
             match bitmap.next_set_bit(bit_index) {
                 Option::Some(next_bit) => {
-                    (word_and_bit_index_to_time((word_index, next_bit)), false)
+                    let next_time = word_and_bit_index_to_time((word_index, next_bit));
+                    if next_time > max_time {
+                        (max_time, false)
+                    } else {
+                        (next_time, true)
+                    }
                 },
                 Option::None => {
                     let next = word_and_bit_index_to_time((word_index, 0));
 
                     if (next > max_time) {
-                        (max_time, true)
+                        (max_time, false)
                     } else {
                         self.prefix_next_initialized_time(prefix, next, max_time)
                     }
@@ -851,6 +856,7 @@ pub mod TWAMM {
                 let time_bitmap_storage_prefix = LegacyHash::hash(
                     selector!("time_sale_rate_bitmaps"), storage_key.value
                 );
+                // todo: don't use 0 to mean not initialized, instead use Option<u256>
                 let mut next_sqrt_ratio = 0;
                 let mut total_delta = Zero::<Delta>::zero();
 
@@ -858,32 +864,23 @@ pub mod TWAMM {
                     let mut delta = Zero::zero();
 
                     // we must trade up to the earliest initialzed time because sale rate changes
-                    let (next_initialized_time, is_max_time) = self_snap
+                    let (next_virtual_order_time, is_initialized) = self_snap
                         .prefix_next_initialized_time(
                             time_bitmap_storage_prefix, last_virtual_order_time, current_time
                         );
-
-                    let (next_virtual_order_time, update_rates) =
-                        if (next_initialized_time <= current_time) {
-                        // must update rates if next_initialized_time is equal to current time
-                        // and is also initialized that is prefix_next_initialized_time did not return max_time
-                        (next_initialized_time, !is_max_time)
-                    } else {
-                        (current_time, false)
-                    };
 
                     let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(storage_key);
 
                     let (token0_reward_rate, token1_reward_rate) = if (token0_sale_rate > 0
                         || token1_sale_rate > 0) {
-                        let mut sqrt_ratio = if (next_sqrt_ratio == 0) {
+                        let mut sqrt_ratio = if (next_sqrt_ratio.is_zero()) {
                             let price = core.get_pool_price(pool_key);
                             price.sqrt_ratio
                         } else {
                             next_sqrt_ratio
                         };
 
-                        if sqrt_ratio != 0 {
+                        if sqrt_ratio.is_non_zero() {
                             let time_elapsed = next_virtual_order_time - last_virtual_order_time;
 
                             let token0_amount = (token0_sale_rate * time_elapsed.into())
@@ -891,7 +888,8 @@ pub mod TWAMM {
                             let token1_amount = (token1_sale_rate * time_elapsed.into())
                                 / constants::X32_u128;
 
-                            let twamm_delta = if (token0_amount != 0 && token1_amount != 0) {
+                            let twamm_delta = if (token0_amount.is_non_zero()
+                                && token1_amount.is_non_zero()) {
                                 next_sqrt_ratio =
                                     calculate_next_sqrt_ratio(
                                         sqrt_ratio,
@@ -979,7 +977,7 @@ pub mod TWAMM {
                         (0, 0)
                     };
 
-                    if (update_rates) {
+                    if (is_initialized) {
                         self
                             .update_token_sale_rate_and_rewards(
                                 storage_key,
@@ -998,21 +996,17 @@ pub mod TWAMM {
                     }
                 };
 
-                if (total_delta.amount0.mag > 0) {
-                    self
-                        .handle_delta_with_saved_balances(
-                            core, get_contract_address(), pool_key.token0, total_delta.amount0, 0
-                        );
-                }
-
-                if (total_delta.amount1.mag > 0) {
-                    self
-                        .handle_delta_with_saved_balances(
-                            core, get_contract_address(), pool_key.token1, total_delta.amount1, 0
-                        );
-                }
-
                 self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
+
+                self
+                    .handle_delta_with_saved_balances(
+                        core, get_contract_address(), pool_key.token0, total_delta.amount0
+                    );
+
+                self
+                    .handle_delta_with_saved_balances(
+                        core, get_contract_address(), pool_key.token1, total_delta.amount1
+                    );
             }
         }
 
@@ -1021,13 +1015,14 @@ pub mod TWAMM {
             core: ICoreDispatcher,
             owner: ContractAddress,
             token: ContractAddress,
-            delta: i129,
-            salt: felt252
+            delta: i129
         ) {
-            if (delta.sign) {
-                core.save(SavedBalanceKey { owner, token, salt }, delta.mag);
-            } else {
-                core.load(token, salt, delta.mag);
+            if delta.is_non_zero() {
+                if (delta.sign) {
+                    core.save(key: SavedBalanceKey { owner, token, salt: 0 }, amount: delta.mag);
+                } else {
+                    core.load(token: token, salt: 0, amount: delta.mag);
+                }
             }
         }
     }
