@@ -770,7 +770,7 @@ pub mod TWAMM {
                             time_bitmap_storage_prefix, last_virtual_order_time, current_time
                         );
 
-                    if (token0_sale_rate > 0 || token1_sale_rate > 0) {
+                    if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
                         let mut sqrt_ratio = if (next_sqrt_ratio.is_none()) {
                             let price = core.get_pool_price(pool_key);
                             price.sqrt_ratio
@@ -822,7 +822,8 @@ pub mod TWAMM {
                                         amount1: i129 { mag: token1_amount, sign: false }
                                     }
                             } else {
-                                let (amount, is_token1, sqrt_ratio_limit) = if token0_amount > 0 {
+                                let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
+                                    .is_non_zero() {
                                     (token0_amount, false, min_sqrt_ratio())
                                 } else {
                                     (token1_amount, true, max_sqrt_ratio())
@@ -846,14 +847,14 @@ pub mod TWAMM {
                                 delta
                             };
 
-                            if (twamm_delta.amount0.mag > 0 && twamm_delta.amount0.sign) {
+                            if (twamm_delta.amount0.mag.is_non_zero() && twamm_delta.amount0.sign) {
                                 token0_reward_rate +=
                                     calculate_reward_rate(
                                         twamm_delta.amount0.mag, token1_sale_rate
                                     );
                             }
 
-                            if (twamm_delta.amount1.mag > 0 && twamm_delta.amount1.sign) {
+                            if (twamm_delta.amount1.mag.is_non_zero() && twamm_delta.amount1.sign) {
                                 token1_reward_rate +=
                                     calculate_reward_rate(
                                         twamm_delta.amount1.mag, token0_sale_rate
@@ -889,14 +890,14 @@ pub mod TWAMM {
                         )
                             .expect('FAILED_TO_READ_SALE_RATE_DELTA');
 
-                        if (token0_sale_rate_delta.mag > 0) {
+                        if (token0_sale_rate_delta.mag.is_non_zero()) {
                             token0_sale_rate =
                                 (i129 { mag: token0_sale_rate, sign: false }
                                     + token0_sale_rate_delta)
                                 .mag;
                         }
 
-                        if (token1_sale_rate_delta.mag > 0) {
+                        if (token1_sale_rate_delta.mag.is_non_zero()) {
                             token1_sale_rate =
                                 (i129 { mag: token1_sale_rate, sign: false }
                                     + token1_sale_rate_delta)
