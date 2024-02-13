@@ -780,7 +780,6 @@ pub mod TWAMM {
                 let time_bitmap_storage_prefix = LegacyHash::hash(
                     selector!("time_sale_rate_bitmaps"), storage_key.value
                 );
-                // todo: don't use 0 to mean not initialized, instead use Option<u256>
                 let mut next_sqrt_ratio: Option<u256> = Option::None;
                 let mut total_delta = Zero::<Delta>::zero();
 
