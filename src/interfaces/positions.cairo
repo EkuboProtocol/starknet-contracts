@@ -114,4 +114,11 @@ pub trait IPositions<TStorage> {
     // Returns the price of a pool after making an empty update to a fake position, which is useful for adding liquidity to extensions
     // with unknown before/after behavior.
     fn get_pool_price(ref self: TStorage, pool_key: PoolKey) -> PoolPrice;
+
+    // Lock the liquidity in the given token ID, i.e. calls to withdraw the liquidity after the liquidity is locked will fail
+    // WARNING: This operation cannot be un-done.
+    fn lock_liquidity(ref self: TStorage, id: u64);
+
+    // Returns whether the liquidity is indeed locked
+    fn is_liquidity_locked(ref self: TStorage, id: u64) -> bool;
 }

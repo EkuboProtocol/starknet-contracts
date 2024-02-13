@@ -49,6 +49,7 @@ pub mod Positions {
     struct Storage {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
+        liquidity_locked: LegacyMap<u64, bool>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -63,12 +64,18 @@ pub mod Positions {
     }
 
     #[derive(starknet::Event, Drop)]
+    pub(crate) struct LiquidityLocked {
+        pub(crate) id: u64,
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
         OwnedEvent: owned_component::Event,
         PositionMintedWithReferrer: PositionMintedWithReferrer,
+        LiquidityLocked: LiquidityLocked,
     }
 
     #[constructor]
@@ -401,6 +408,7 @@ pub mod Positions {
             let nft = self.nft.read();
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            assert(!self.liquidity_locked.read(id), 'LIQUIDITY_LOCKED');
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -475,6 +483,22 @@ pub mod Positions {
             call_core_with_callback::<
                 LockCallbackData, PoolPrice
             >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+        }
+
+        fn lock_liquidity(ref self: ContractState, id: u64) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+
+            assert(!self.is_liquidity_locked(id), 'ALREADY_LOCKED');
+
+            self.liquidity_locked.write(id, true);
+            self.emit(LiquidityLocked { id });
+        }
+
+        #[inline(always)]
+        fn is_liquidity_locked(ref self: ContractState, id: u64) -> bool {
+            self.liquidity_locked.read(id)
         }
     }
 }

@@ -1264,7 +1264,7 @@ fn test_withdraw_not_collected_fees_token0() {
 
 #[test]
 fn test_withdraw_partial_leave_fees() {
-    let caller = contract_address_const::<1>();
+    let caller = contract_address_const::<12345678>();
     set_contract_address(caller);
     let mut d: Deployer = Default::default();
     let setup = d
@@ -1311,6 +1311,63 @@ fn test_withdraw_partial_leave_fees() {
     assert(info.amount1 == 0, 'amount1');
     assert(info.fees0 == 100, 'fees0'); // 1% of 10k
     assert(info.fees1 == 0, 'fees1');
+}
+
+#[test]
+#[test]
+#[should_panic(expected: ('LIQUIDITY_LOCKED', 'ENTRYPOINT_FAILED',))]
+fn test_liquidity_locked_cannot_be_withdrawn() {
+    let caller = contract_address_const::<12345678>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            // 30 bips
+            fee: 1020847100762815390390123822295304634,
+            tick_spacing: 5982,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+
+    pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(positions.contract_address)
+        .unwrap();
+
+    let ONE_E18 = 1000000000000000000;
+    let p0 = create_position(setup, positions, max_bounds(5982), ONE_E18, ONE_E18);
+
+    positions.lock_liquidity(p0.id);
+    assert(positions.is_liquidity_locked(p0.id), 'liquidity is locked');
+
+    let log = pop_log::<ekubo::positions::Positions::LiquidityLocked>(positions.contract_address)
+        .unwrap();
+    assert_eq!(log.id, p0.id);
+
+    assert(p0.liquidity == ONE_E18, 'liquidity');
+
+    setup.token1.increase_balance(setup.locker.contract_address, ONE_E18 * 2);
+    swap(
+        setup: setup,
+        amount: i129 { mag: ONE_E18, sign: true },
+        is_token1: false,
+        sqrt_ratio_limit: u256 { high: 2, low: 0 },
+        recipient: Zero::zero(),
+        skip_ahead: 0
+    );
+
+    // collecting fees should work
+    positions.collect_fees(p0.id, setup.pool_key, p0.bounds);
+
+    // withdrawing fails
+    positions
+        .withdraw_v2(
+            id: p0.id,
+            pool_key: setup.pool_key,
+            bounds: p0.bounds,
+            liquidity: p0.liquidity,
+            min_token0: 0,
+            min_token1: 0,
+        );
 }
 
 #[test]
