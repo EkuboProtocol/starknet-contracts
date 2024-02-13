@@ -20,57 +20,6 @@ pub struct OrderKey {
     pub end_time: u64
 }
 
-#[derive(Drop, Copy, Serde, PartialEq)]
-pub struct OrderState {
-    sale_rate: u128,
-    reward_rate: felt252,
-    use_snapshot: bool
-}
-
-impl OrderStateStorePacking of starknet::storage_access::StorePacking<
-    OrderState, (felt252, felt252)
-> {
-    fn pack(value: OrderState) -> (felt252, felt252) {
-        (
-            u256 { low: value.sale_rate, high: if value.use_snapshot {
-                1
-            } else {
-                0
-            } }
-                .try_into()
-                .unwrap(),
-            value.reward_rate
-        )
-    }
-    fn unpack(value: (felt252, felt252)) -> OrderState {
-        let (sale_rate_use_snapshot, reward_rate) = value;
-        let sale_rate_use_snapshot_u256: u256 = sale_rate_use_snapshot.into();
-
-        OrderState {
-            sale_rate: sale_rate_use_snapshot_u256.low,
-            reward_rate,
-            use_snapshot: sale_rate_use_snapshot_u256.high.is_non_zero(),
-        }
-    }
-}
-
-pub impl OrderStateZero of Zero<OrderState> {
-    #[inline(always)]
-    fn zero() -> OrderState {
-        OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
-    }
-
-    #[inline(always)]
-    fn is_zero(self: @OrderState) -> bool {
-        self.sale_rate.is_zero()
-    }
-
-    #[inline(always)]
-    fn is_non_zero(self: @OrderState) -> bool {
-        !self.sale_rate.is_zero()
-    }
-}
-
 #[derive(Serde, Drop, Copy)]
 pub struct StateKey {
     pub token0: ContractAddress,
@@ -78,16 +27,23 @@ pub struct StateKey {
     pub fee: u128,
 }
 
+#[derive(Serde, Drop, Copy)]
+pub struct OrderInfo {
+    pub sale_rate: u128,
+    pub remaining_sell_amount: u128,
+    pub purchased_amount: u128,
+}
+
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
     fn get_last_virtual_order_time(self: @TContractState, key: StateKey) -> u64;
 
-    // Return the stored order state
-    fn get_order_state(
+    // Return the current state of the given order
+    fn get_order_info(
         self: @TContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
-    ) -> OrderState;
+    ) -> OrderInfo;
 
-    // Returns the current sale rate 
+    // Returns the current sale rates for the given pool
     fn get_sale_rate(self: @TContractState, key: StateKey) -> (u128, u128);
 
     // Return the current reward rate
@@ -153,7 +109,59 @@ pub mod TWAMM {
         validate_time, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
         calculate_reward_rate
     };
-    use super::{ITWAMM, StateKey, ContractAddress, OrderKey, OrderState};
+    use super::{ITWAMM, StateKey, ContractAddress, OrderKey, OrderInfo};
+
+    #[derive(Drop, Copy, Serde)]
+    struct OrderState {
+        sale_rate: u128,
+        reward_rate: felt252,
+        use_snapshot: bool
+    }
+
+    impl OrderStateStorePacking of starknet::storage_access::StorePacking<
+        OrderState, (felt252, felt252)
+    > {
+        fn pack(value: OrderState) -> (felt252, felt252) {
+            (
+                u256 { low: value.sale_rate, high: if value.use_snapshot {
+                    1
+                } else {
+                    0
+                } }
+                    .try_into()
+                    .unwrap(),
+                value.reward_rate
+            )
+        }
+        fn unpack(value: (felt252, felt252)) -> OrderState {
+            let (sale_rate_use_snapshot, reward_rate) = value;
+            let sale_rate_use_snapshot_u256: u256 = sale_rate_use_snapshot.into();
+
+            OrderState {
+                sale_rate: sale_rate_use_snapshot_u256.low,
+                reward_rate,
+                use_snapshot: sale_rate_use_snapshot_u256.high.is_non_zero(),
+            }
+        }
+    }
+
+    pub impl OrderStateZero of Zero<OrderState> {
+        #[inline(always)]
+        fn zero() -> OrderState {
+            OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
+        }
+
+        #[inline(always)]
+        fn is_zero(self: @OrderState) -> bool {
+            self.sale_rate.is_zero()
+        }
+
+        #[inline(always)]
+        fn is_non_zero(self: @OrderState) -> bool {
+            !self.sale_rate.is_zero()
+        }
+    }
+
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
@@ -335,10 +343,43 @@ pub mod TWAMM {
             self.last_virtual_order_time.read(key.into())
         }
 
-        fn get_order_state(
+        fn get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
-        ) -> OrderState {
-            self.orders.read((owner, salt, order_key))
+        ) -> OrderInfo {
+            let current_time = get_block_timestamp();
+            let order_state = self.orders.read((owner, salt, order_key));
+
+            let order_reward_rate = if (order_state.use_snapshot) {
+                order_state.reward_rate
+            } else {
+                self.get_reward_rate_at(order_key, order_key.start_time)
+            };
+
+            let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
+                (
+                    calculate_amount_from_sale_rate(
+                        order_state.sale_rate, order_key.start_time, order_key.end_time,
+                    ),
+                    0
+                )
+            } else if (current_time < order_key.end_time) {
+                let current_reward_rate = self.get_current_reward_rate(order_key);
+
+                (
+                    calculate_amount_from_sale_rate(
+                        order_state.sale_rate, current_time, order_key.end_time,
+                    ),
+                    calculate_reward_amount(
+                        current_reward_rate - order_reward_rate, order_state.sale_rate
+                    )
+                )
+            } else {
+                let interval_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
+                    - order_reward_rate;
+                (0, calculate_reward_amount(interval_reward_rate, order_state.sale_rate))
+            };
+
+            OrderInfo { sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount }
         }
 
         fn get_sale_rate(self: @ContractState, key: StateKey) -> (u128, u128) {
@@ -417,77 +458,48 @@ pub mod TWAMM {
                     let salt = data.salt;
                     let sale_rate_delta = data.sale_rate_delta;
 
+                    let current_time = get_block_timestamp();
+                    // there is no reason to adjust the sale rate of an order that has already ended
+                    assert(current_time < order_key.end_time, 'ORDER_ENDED');
+
                     self.internal_execute_virtual_orders(core, order_key.into());
 
-                    let current_time = get_block_timestamp();
-                    assert(order_key.end_time > current_time, 'ORDER_ENDED');
+                    let order_info = self.get_order_info(owner, salt, order_key);
 
-                    let order_state = self.orders.read((owner, salt, order_key));
+                    validate_time(now: current_time, time: order_key.end_time);
+                    validate_time(now: current_time, time: order_key.start_time);
 
-                    let order_started = order_key.start_time <= current_time;
+                    let sale_rate_next = order_info.sale_rate.add(sale_rate_delta);
 
-                    validate_time(current_time, order_key.end_time);
-                    validate_time(current_time, order_key.start_time);
-
-                    let sale_rate_next = order_state.sale_rate.add(sale_rate_delta);
-
-                    let (reward_rate, use_snapshot, order_start_time) = if (sale_rate_next
-                        .is_zero()) {
-                        let order_reward_rate = if (order_state.use_snapshot) {
-                            order_state.reward_rate
-                        } else {
-                            self.get_reward_rate_at(order_key, order_key.start_time)
-                        };
-
+                    let (reward_rate, use_snapshot) = if (sale_rate_next.is_zero()) {
                         // all proceeds must be withdrawn before order is cancelled
-                        assert(
-                            self.get_current_reward_rate(order_key) == order_reward_rate
-                                || order_key.start_time > current_time,
-                            'MUST_WITHDRAW_PROCEEDS'
-                        );
+                        assert(order_info.purchased_amount.is_zero(), 'MUST_WITHDRAW_PROCEEDS');
 
                         // zero out the state
-                        (0, false, order_key.start_time)
-                    } else if (order_started) {
-                        let current_reward_rate = self.get_current_reward_rate(order_key);
-
-                        let current_order_reward_rate = current_reward_rate
-                            - order_state.reward_rate;
-
-                        let adjusted_reward_rate = if (current_order_reward_rate.is_zero()) {
-                            order_state.reward_rate
-                        } else {
-                            let token_reward_amount = calculate_reward_amount(
-                                current_reward_rate, order_state.sale_rate
-                            );
-
-                            let adjusted_reward_rate = calculate_reward_rate(
-                                token_reward_amount, sale_rate_next
-                            );
-
-                            current_order_reward_rate - adjusted_reward_rate
-                        };
-
-                        (adjusted_reward_rate, true, current_time)
+                        (0, false)
                     } else {
-                        (0, false, order_key.start_time)
+                        let adjusted_reward_rate = self.get_current_reward_rate(order_key)
+                            - calculate_reward_rate(order_info.purchased_amount, sale_rate_next);
+
+                        (adjusted_reward_rate, true)
                     };
 
                     self
                         .orders
                         .write(
                             (owner, salt, order_key),
-                            OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot, }
+                            OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot }
                         );
 
                     self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
 
-                    if (order_started) {
+                    if (order_key.start_time <= current_time) {
                         self.update_global_sale_rate(order_key, sale_rate_delta);
                     } else {
-                        self.update_time(order_key, order_start_time, sale_rate_delta, true);
+                        self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
                     }
 
+                    // always update end time because this point is only reached if the order is active or hasn't started
                     self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
 
                     let amount_delta = calculate_amount_from_sale_rate(
@@ -500,7 +512,7 @@ pub mod TWAMM {
 
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
-                        core.load(token, 0, amount_delta);
+                        core.load(token: token, salt: 0, amount: amount_delta);
 
                         let key: StateKey = order_key.into();
 
@@ -540,65 +552,34 @@ pub mod TWAMM {
                     let owner = data.owner;
                     let order_key = data.order_key;
                     let salt = data.salt;
-                    let current_time = get_block_timestamp();
-
-                    assert(
-                        order_key.start_time.is_zero() || order_key.start_time < current_time,
-                        'NOT_STARTED'
-                    );
 
                     self.internal_execute_virtual_orders(core, data.order_key.into());
 
-                    let order_state = self.orders.read((owner, salt, order_key));
+                    let order_info = self.get_order_info(owner, salt, order_key);
 
-                    // order has been cancelled
-                    assert(order_state.sale_rate > 0, 'ZERO_SALE_RATE');
+                    // snapshot the reward rate so we know the proceeds of the order have been withdrawn at this current time
+                    self
+                        .orders
+                        .write(
+                            (owner, salt, order_key),
+                            OrderState {
+                                sale_rate: order_info.sale_rate,
+                                reward_rate: self.get_current_reward_rate(order_key),
+                                use_snapshot: true,
+                            }
+                        );
 
-                    let order_reward_rate = if (order_state.use_snapshot) {
-                        order_state.reward_rate
-                    } else {
-                        self.get_reward_rate_at(order_key, order_key.start_time)
-                    };
-
-                    let purchased_amount = if (current_time >= order_key.end_time) {
-                        // update order state to reflect that the order has been fully executed
-                        self.orders.write((owner, salt, order_key), Zero::zero());
-
-                        // reward rate at expiration/full-execution time
-                        let total_reward_rate = self
-                            .get_reward_rate_at(order_key, order_key.end_time)
-                            - order_reward_rate;
-                        calculate_reward_amount(total_reward_rate, order_state.sale_rate)
-                    } else {
-                        let current_reward_rate = self.get_current_reward_rate(order_key);
-                        // update order state to reflect that the order has been partially executed
-                        self
-                            .orders
-                            .write(
-                                (owner, salt, order_key),
-                                OrderState {
-                                    sale_rate: order_state.sale_rate,
-                                    reward_rate: current_reward_rate,
-                                    use_snapshot: true,
-                                }
-                            );
-
-                        calculate_reward_amount(
-                            current_reward_rate - order_reward_rate, order_state.sale_rate
-                        )
-                    };
-
-                    if (purchased_amount.is_non_zero()) {
+                    if (order_info.purchased_amount.is_non_zero()) {
                         let token = order_key.buy_token;
 
-                        core.load(token, 0, purchased_amount);
-                        core.withdraw(token, get_contract_address(), purchased_amount);
+                        core.load(token, 0, order_info.purchased_amount);
+                        core.withdraw(token, get_contract_address(), order_info.purchased_amount);
                     }
 
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner, salt, order_key, amount: purchased_amount
+                                owner, salt, order_key, amount: order_info.purchased_amount
                             }
                         );
                 }

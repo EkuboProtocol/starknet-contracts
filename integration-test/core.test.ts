@@ -23,7 +23,7 @@ describe("core", () => {
         "0x7f4c886efb4660165c90d6563861eb7da465c5d2e4393c8c87b174bc81d729e",
       nft: "0x3d2d3e1b1ab5ae551041d982dcabef3d89d58cc36e17a27a5474de8297e0e1",
       twamm:
-        "0x43b9d1a6577f06f3244d213c64e035f97fd211837fbb8086ad7066eb9a2e283",
+        "0x6737f523b657c40b4da873fc7380bf90babaed4cd98d9d0bb199d351f690d78",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });

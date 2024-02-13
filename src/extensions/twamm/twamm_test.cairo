@@ -12,7 +12,7 @@ use ekubo::extensions::twamm::math::{
     constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate
 };
 
-use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderState};
+use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo};
 use ekubo::extensions::twamm::{OrderKey, StateKey};
 use ekubo::interfaces::core::{
     ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
@@ -357,8 +357,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
         SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
         SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
-        VirtualOrdersExecuted, OrderState, set_up_twamm, place_order, calculate_sale_rate,
-        PoolKeyIntoStateKey
+        VirtualOrdersExecuted, set_up_twamm, place_order, calculate_sale_rate, PoolKeyIntoStateKey
     };
 
     #[test]
@@ -662,7 +661,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderState, set_up_twamm, place_order, PoolKeyIntoStateKey
+        OrderInfo, set_up_twamm, place_order, PoolKeyIntoStateKey
     };
 
     #[test]
@@ -1103,7 +1102,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
         SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
         SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
-        VirtualOrdersExecuted, OrderState, set_up_twamm, place_order, calculate_sale_rate,
+        VirtualOrdersExecuted, OrderInfo, set_up_twamm, place_order, calculate_sale_rate,
         OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
         PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT, IERC20Dispatcher,
         IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait, PoolKeyIntoStateKey
@@ -1318,7 +1317,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1414,7 +1413,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net
@@ -1519,7 +1518,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1628,7 +1627,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_updated_sale_rate);
 
         // start sale rate net
@@ -1754,7 +1753,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // order sale rate
         let order1_state = twamm
-            .get_order_state(positions.contract_address, order1_id.into(), order1_key);
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
         assert_eq!(order1_state.sale_rate, expected_sale_rate / 2);
 
         // start sale rate net, if start_time is in the past, do not update
@@ -1929,7 +1928,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderState, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
+        OrderInfo, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
         PositionUpdated, place_order, set_up_twamm, PoolKeyIntoStateKey
     };
 
@@ -2425,7 +2424,7 @@ mod PlaceOrderOnBothSides {
         IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderState, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
+        OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
         PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey
     };
 
@@ -3208,7 +3207,7 @@ fn place_order(
     start_time: u64,
     end_time: u64,
     amount: u128
-) -> (u64, OrderKey, OrderState) {
+) -> (u64, OrderKey, OrderInfo) {
     // place order
     let twamm = positions.get_twamm_address();
 
@@ -3238,7 +3237,7 @@ fn place_order(
         id,
         order_key,
         ITWAMMDispatcher { contract_address: twamm }
-            .get_order_state(positions.contract_address, id.into(), order_key)
+            .get_order_info(positions.contract_address, id.into(), order_key)
     )
 }
 
