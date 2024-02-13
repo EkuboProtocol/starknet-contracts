@@ -123,16 +123,16 @@ pub trait IPositions<TStorage> {
     fn get_pool_price(ref self: TStorage, pool_key: PoolKey) -> PoolPrice;
 
     // Mint a twamm position and increase sold amount.
-    fn mint_and_increase_amount(
+    fn mint_and_increase_sell_amount(
         ref self: TStorage, order_key: OrderKey, amount: u128
     ) -> (u64, u128);
 
     // Increase sold amount on a twamm position.
-    fn increase_amount(ref self: TStorage, id: u64, order_key: OrderKey, amount: u128) -> u128;
+    fn increase_sell_amount(ref self: TStorage, id: u64, order_key: OrderKey, amount: u128) -> u128;
 
     // Decrease sold amount on a twamm position.
     fn decrease_sale_rate(ref self: TStorage, id: u64, order_key: OrderKey, sale_rate_delta: u128);
 
     // Withdraws proceeds from a twamm position.
-    fn withdraw_proceeds(ref self: TStorage, id: u64, order_key: OrderKey);
+    fn withdraw_proceeds_from_sale(ref self: TStorage, id: u64, order_key: OrderKey);
 }

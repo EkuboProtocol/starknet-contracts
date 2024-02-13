@@ -90,6 +90,9 @@ pub mod Router {
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
+
     #[storage]
     struct Storage {
         core: ICoreDispatcher,

@@ -18,12 +18,12 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x7d0bd449b8772e2025abaeae907b2ce2bacfe98f1b6c89691d0618a2560a5cb",
+        "0x70eb01de70156b91855cc7dc74f8e49572618ba8215d715ead1dd82c997262f",
       router:
-        "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
-      nft: "0x41627755d715eef14e813b91f84b7b5aeb3183ee2ea6613b228f1c2a1e02f96",
+        "0x7f4c886efb4660165c90d6563861eb7da465c5d2e4393c8c87b174bc81d729e",
+      nft: "0x3d2d3e1b1ab5ae551041d982dcabef3d89d58cc36e17a27a5474de8297e0e1",
       twamm:
-        "0x3ed77f2d7150f9dd0e0706e40c09bde089aa5fab2a266c8c247bdbd27d51de6",
+        "0x43b9d1a6577f06f3244d213c64e035f97fd211837fbb8086ad7066eb9a2e283",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -423,7 +423,7 @@ describe("core", () => {
                         : [poolKey.token1, poolKey.token0];
 
                       return positionsContract.populate(
-                        "mint_and_increase_amount",
+                        "mint_and_increase_sell_amount",
                         [
                           {
                             sell_token,
@@ -552,10 +552,10 @@ describe("core", () => {
                 const { transaction_hash: withdrawProceedsTransactionHash } =
                   await account.execute(
                     mintedOrders.map(({ token_id, order_key, sale_rate }) =>
-                      positionsContract.populate("withdraw_proceeds", [
-                        token_id,
-                        order_key,
-                      ])
+                      positionsContract.populate(
+                        "withdraw_proceeds_from_sale",
+                        [token_id, order_key]
+                      )
                     ),
                     [],
                     getTxSettings()

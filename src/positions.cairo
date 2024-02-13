@@ -47,6 +47,8 @@ pub mod Positions {
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -491,14 +493,14 @@ pub mod Positions {
         }
 
         // Mint a twamm position and set sale rate.
-        fn mint_and_increase_amount(
+        fn mint_and_increase_sell_amount(
             ref self: ContractState, order_key: OrderKey, amount: u128
         ) -> (u64, u128) {
             let id = self.mint_v2(Zero::zero());
-            (id, self.increase_amount(id, order_key, amount))
+            (id, self.increase_sell_amount(id, order_key, amount))
         }
 
-        fn increase_amount(
+        fn increase_sell_amount(
             ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
         ) -> u128 {
             let nft = self.nft.read();
@@ -533,7 +535,7 @@ pub mod Positions {
         }
 
         // Withdraws proceeds from a twamm position
-        fn withdraw_proceeds(ref self: ContractState, id: u64, order_key: OrderKey) {
+        fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
             let nft = self.nft.read();
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
