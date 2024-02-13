@@ -497,18 +497,26 @@ pub mod TWAMM {
                     if (order_key.start_time <= current_time) {
                         // order already started, update the current sale rate
                         let storage_key: StorageKey = key.into();
-                        let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(storage_key);
 
-                        self
-                            .sale_rate
-                            .write(
-                                storage_key,
-                                if (order_key.sell_token > order_key.buy_token) {
-                                    (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
-                                } else {
-                                    (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
-                                }
-                            );
+                        let sale_rate_storage_address = storage_base_address_from_felt252(
+                            LegacyHash::hash(selector!("sale_rate"), storage_key)
+                        );
+
+                        let (token0_sale_rate, token1_sale_rate): (u128, u128) = Store::read(
+                            0, sale_rate_storage_address
+                        )
+                            .expect('FAILED_TO_READ_SALE_RATE');
+
+                        Store::write(
+                            0,
+                            sale_rate_storage_address,
+                            if (order_key.sell_token > order_key.buy_token) {
+                                (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
+                            } else {
+                                (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
+                            }
+                        )
+                            .expect('FAILED_TO_WRITE_SALE_RATE');
                     } else {
                         // order starts in the future, update start time
                         self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
@@ -613,9 +621,17 @@ pub mod TWAMM {
         ) {
             let key: StateKey = order_key.into();
             let storage_key: StorageKey = key.into();
-            let (token0_sale_rate_delta, token1_sale_rate_delta) = self
-                .time_sale_rate_delta
-                .read((storage_key, time));
+
+            let time_sale_rate_delta_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(
+                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key), time
+                )
+            );
+
+            let (token0_sale_rate_delta, token1_sale_rate_delta): (i129, i129) = Store::read(
+                0, time_sale_rate_delta_storage_address
+            )
+                .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
 
             if (order_key.sell_token > order_key.buy_token) {
                 let next_sale_rate_delta = if (is_start_time) {
@@ -623,23 +639,41 @@ pub mod TWAMM {
                 } else {
                     token1_sale_rate_delta - sale_rate_delta
                 };
-                self
-                    .time_sale_rate_delta
-                    .write((storage_key, time), (token0_sale_rate_delta, next_sale_rate_delta));
+
+                Store::write(
+                    0,
+                    time_sale_rate_delta_storage_address,
+                    (token0_sale_rate_delta, next_sale_rate_delta)
+                )
+                    .expect('FAILED_WRITE_TSALE_RATE_DELTA');
             } else {
                 let next_sale_rate_delta = if (is_start_time) {
                     token0_sale_rate_delta + sale_rate_delta
                 } else {
                     token0_sale_rate_delta - sale_rate_delta
                 };
-                self
-                    .time_sale_rate_delta
-                    .write((storage_key, time), (next_sale_rate_delta, token1_sale_rate_delta));
+
+                Store::write(
+                    0,
+                    time_sale_rate_delta_storage_address,
+                    (next_sale_rate_delta, token1_sale_rate_delta)
+                )
+                    .expect('FAILED_WRITE_TSALE_RATE_DELTA');
             }
 
-            let sale_rate_net = self.time_sale_rate_net.read((storage_key, time));
+            let sale_rate_net_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(
+                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key), time
+                )
+            );
+
+            let sale_rate_net: u128 = Store::read(0, sale_rate_net_storage_address)
+                .expect('FAILED_TO_SALE_RATE_NET');
+
             let next_sale_rate_net = sale_rate_net.add(sale_rate_delta);
-            self.time_sale_rate_net.write((storage_key, time), next_sale_rate_net);
+
+            Store::write(0, sale_rate_net_storage_address, next_sale_rate_net)
+                .expect('FAILED_TO_WRITE_SALE_RATE_NET');
 
             if sale_rate_net.is_zero() & next_sale_rate_net.is_non_zero() {
                 self.insert_initialized_time(storage_key, time);
@@ -730,21 +764,15 @@ pub mod TWAMM {
         ) {
             let pool_key: PoolKey = key.into();
             let storage_key: StorageKey = key.into();
-
-            // since virtual orders are executed at the same time for both tokens,
-            // last_virtual_order_time is the same for both tokens.
-            let mut last_virtual_order_time = self.last_virtual_order_time.read(key.into());
-
             let current_time = get_block_timestamp();
-
             let self_snap = @self;
 
-            if (last_virtual_order_time != current_time) {
-                let time_bitmap_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_bitmaps"), storage_key.value
-                );
-                let mut next_sqrt_ratio: Option<u256> = Option::None;
+            // all virtual orders are executed at the same time 
+            // last_virtual_order_time is the same for both tokens
+            let mut last_virtual_order_time = self.last_virtual_order_time.read(key.into());
 
+            if (last_virtual_order_time != current_time) {
+                let mut next_sqrt_ratio: Option<u256> = Option::None;
                 let mut total_delta = Zero::<Delta>::zero();
 
                 let sale_rate_storage_address = storage_base_address_from_felt252(
@@ -765,6 +793,10 @@ pub mod TWAMM {
                     0, reward_rate_storage_address
                 )
                     .expect('FAILED_TO_READ_REWARD_RATE');
+
+                let time_bitmap_storage_prefix = LegacyHash::hash(
+                    selector!("time_sale_rate_bitmaps"), storage_key.value
+                );
 
                 let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
                     selector!("time_sale_rate_delta"), storage_key
@@ -860,6 +892,9 @@ pub mod TWAMM {
                                 delta
                             };
 
+                            // must accumulate swap deltas to zero out at the end
+                            total_delta += delta;
+
                             if (twamm_delta.amount0.mag.is_non_zero() && twamm_delta.amount0.sign) {
                                 token0_reward_rate +=
                                     calculate_reward_rate(
@@ -873,9 +908,6 @@ pub mod TWAMM {
                                         twamm_delta.amount1.mag, token0_sale_rate
                                     );
                             }
-
-                            // must accumulate swap deltas to zero out at the end
-                            total_delta += delta;
 
                             self
                                 .emit(
@@ -904,17 +936,11 @@ pub mod TWAMM {
                             .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
 
                         if (token0_sale_rate_delta.mag.is_non_zero()) {
-                            token0_sale_rate =
-                                (i129 { mag: token0_sale_rate, sign: false }
-                                    + token0_sale_rate_delta)
-                                .mag;
+                            token0_sale_rate = token0_sale_rate.add(token0_sale_rate_delta);
                         }
 
                         if (token1_sale_rate_delta.mag.is_non_zero()) {
-                            token1_sale_rate =
-                                (i129 { mag: token1_sale_rate, sign: false }
-                                    + token1_sale_rate_delta)
-                                .mag;
+                            token1_sale_rate = token1_sale_rate.add(token1_sale_rate_delta);
                         }
 
                         Store::write(
