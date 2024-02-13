@@ -747,11 +747,24 @@ pub mod TWAMM {
 
                 let mut total_delta = Zero::<Delta>::zero();
 
-                let (mut token0_sale_rate, mut token1_sale_rate) = self.sale_rate.read(storage_key);
+                let sale_rate_storage_address = storage_base_address_from_felt252(
+                    LegacyHash::hash(selector!("sale_rate"), storage_key)
+                );
 
-                let (mut token0_reward_rate, mut token1_reward_rate) = self
-                    .reward_rate
-                    .read(storage_key);
+                let (mut token0_sale_rate, mut token1_sale_rate): (u128, u128) = Store::read(
+                    0, sale_rate_storage_address
+                )
+                    .expect('FAILED_TO_READ_SALE_RATE');
+
+                let reward_rate_storage_address = storage_base_address_from_felt252(
+                    LegacyHash::hash(selector!("reward_rate"), storage_key)
+                );
+
+                let (mut token0_reward_rate, mut token1_reward_rate): (felt252, felt252) =
+                    Store::read(
+                    0, reward_rate_storage_address
+                )
+                    .expect('FAILED_TO_READ_REWARD_RATE');
 
                 let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
                     selector!("time_sale_rate_delta"), storage_key
@@ -888,7 +901,7 @@ pub mod TWAMM {
                                 )
                             )
                         )
-                            .expect('FAILED_TO_READ_SALE_RATE_DELTA');
+                            .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
 
                         if (token0_sale_rate_delta.mag.is_non_zero()) {
                             token0_sale_rate =
@@ -913,7 +926,7 @@ pub mod TWAMM {
                             ),
                             (token0_reward_rate, token1_reward_rate)
                         )
-                            .expect('FAILED_TO_WRITE_REWARD_RATE');
+                            .expect('FAILED_TO_WRITE_TREWARD_RATE');
                     }
 
                     last_virtual_order_time = next_virtual_order_time;
@@ -926,9 +939,13 @@ pub mod TWAMM {
 
                 self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
 
-                self.sale_rate.write(storage_key, (token0_sale_rate, token1_sale_rate));
+                Store::write(0, sale_rate_storage_address, (token0_sale_rate, token1_sale_rate))
+                    .expect('FAILED_TO_WRITE_SALE_RATE');
 
-                self.reward_rate.write(storage_key, (token0_reward_rate, token1_reward_rate));
+                Store::write(
+                    0, reward_rate_storage_address, (token0_reward_rate, token1_reward_rate)
+                )
+                    .expect('FAILED_TO_WRITE_REWARD_RATE');
 
                 self
                     .handle_delta_with_saved_balances(

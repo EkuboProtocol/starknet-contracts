@@ -34,7 +34,7 @@ pub fn calculate_sale_rate(amount: u128, start_time: u64, end_time: u64) -> u128
         .try_into()
         .expect('SALE_RATE_OVERFLOW');
 
-    assert(sale_rate > 0, 'SALE_RATE_ZERO');
+    assert(sale_rate.is_non_zero(), 'SALE_RATE_ZERO');
 
     sale_rate
 }
