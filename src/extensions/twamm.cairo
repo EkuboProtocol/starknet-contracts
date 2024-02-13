@@ -105,9 +105,8 @@ pub mod TWAMM {
         get_block_timestamp, ClassHash, storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
-        constants, calculate_sale_rate, calculate_reward_amount,
-        validate_time, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
-        calculate_reward_rate
+        constants, calculate_sale_rate, calculate_reward_amount, validate_time,
+        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
     };
     use super::{ITWAMM, StateKey, ContractAddress, OrderKey, OrderInfo};
 
@@ -754,6 +753,14 @@ pub mod TWAMM {
                     .reward_rate
                     .read(storage_key);
 
+                let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
+                    selector!("time_sale_rate_delta"), storage_key
+                );
+
+                let time_reward_rate_storage_prefix = LegacyHash::hash(
+                    selector!("time_reward_rate"), storage_key
+                );
+
                 loop {
                     let mut delta = Zero::zero();
 
@@ -840,17 +847,17 @@ pub mod TWAMM {
                             };
 
                             if (twamm_delta.amount0.mag > 0 && twamm_delta.amount0.sign) {
-                                token0_reward_rate += calculate_reward_rate(
-                                    twamm_delta.amount0.mag,
-                                    token1_sale_rate
-                                );
+                                token0_reward_rate +=
+                                    calculate_reward_rate(
+                                        twamm_delta.amount0.mag, token1_sale_rate
+                                    );
                             }
 
                             if (twamm_delta.amount1.mag > 0 && twamm_delta.amount1.sign) {
-                                token1_reward_rate += calculate_reward_rate(
-                                    twamm_delta.amount1.mag,
-                                    token0_sale_rate
-                                );
+                                token1_reward_rate +=
+                                    calculate_reward_rate(
+                                        twamm_delta.amount1.mag, token0_sale_rate
+                                    );
                             }
 
                             // must accumulate swap deltas to zero out at the end
@@ -871,9 +878,16 @@ pub mod TWAMM {
                     }
 
                     if (is_initialized) {
-                        let (token0_sale_rate_delta, token1_sale_rate_delta) = self
-                            .time_sale_rate_delta
-                            .read((storage_key, next_virtual_order_time));
+                        let (token0_sale_rate_delta, token1_sale_rate_delta): (i129, i129) =
+                            Store::read(
+                            0,
+                            storage_base_address_from_felt252(
+                                LegacyHash::hash(
+                                    time_sale_rate_delta_storage_prefix, next_virtual_order_time
+                                )
+                            )
+                        )
+                            .expect('FAILED_TO_READ_SALE_RATE_DELTA');
 
                         if (token0_sale_rate_delta.mag > 0) {
                             token0_sale_rate =
@@ -889,12 +903,16 @@ pub mod TWAMM {
                                 .mag;
                         }
 
-                        self
-                            .time_reward_rate
-                            .write(
-                                (storage_key, next_virtual_order_time),
-                                (token0_reward_rate, token1_reward_rate)
-                            );
+                        Store::write(
+                            0,
+                            storage_base_address_from_felt252(
+                                LegacyHash::hash(
+                                    time_reward_rate_storage_prefix, next_virtual_order_time
+                                )
+                            ),
+                            (token0_reward_rate, token1_reward_rate)
+                        )
+                            .expect('FAILED_TO_WRITE_REWARD_RATE');
                     }
 
                     last_virtual_order_time = next_virtual_order_time;

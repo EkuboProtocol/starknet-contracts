@@ -1,8 +1,7 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_amount, calculate_c,
-    constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
-    is_time_valid, validate_time
+    calculate_sale_rate, calculate_reward_amount, calculate_c, constants, exp_fractional,
+    calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, is_time_valid, validate_time
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::types::delta::{Delta};
@@ -153,9 +152,7 @@ mod SaleRateTest {
 }
 
 mod RewardRateTest {
-    use super::{
-        Delta, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129,
-    };
+    use super::{Delta, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129,};
 
     #[test]
     fn test_largest_reward_amount_no_overflow() {
