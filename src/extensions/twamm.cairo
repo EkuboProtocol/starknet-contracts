@@ -105,7 +105,7 @@ pub mod TWAMM {
         get_block_timestamp, ClassHash, storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
-        constants, calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount,
+        constants, calculate_sale_rate, calculate_reward_amount,
         validate_time, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
         calculate_reward_rate
     };
@@ -493,9 +493,25 @@ pub mod TWAMM {
 
                     self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
 
+                    let key: StateKey = order_key.into();
+
                     if (order_key.start_time <= current_time) {
-                        self.update_global_sale_rate(order_key, sale_rate_delta);
+                        // order already started, update the current sale rate
+                        let storage_key: StorageKey = key.into();
+                        let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(storage_key);
+
+                        self
+                            .sale_rate
+                            .write(
+                                storage_key,
+                                if (order_key.sell_token > order_key.buy_token) {
+                                    (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
+                                } else {
+                                    (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
+                                }
+                            );
                     } else {
+                        // order starts in the future, update start time
                         self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
                     }
 
@@ -513,8 +529,6 @@ pub mod TWAMM {
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
                         core.load(token: token, salt: 0, amount: amount_delta);
-
-                        let key: StateKey = order_key.into();
 
                         if (core.get_pool_liquidity(key.into()).is_non_zero()) {
                             let fee_amount = compute_fee(amount_delta, key.fee);
@@ -635,25 +649,6 @@ pub mod TWAMM {
             };
         }
 
-        fn update_global_sale_rate(
-            ref self: ContractState, order_key: OrderKey, sale_rate_delta: i129
-        ) {
-            let key: StateKey = order_key.into();
-            let storage_key: StorageKey = key.into();
-            let (token0_sale_rate, token1_sale_rate) = self.sale_rate.read(storage_key);
-
-            self
-                .sale_rate
-                .write(
-                    storage_key,
-                    if (order_key.sell_token > order_key.buy_token) {
-                        (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
-                    } else {
-                        (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
-                    }
-                );
-        }
-
         fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
             let key: StateKey = order_key.into();
             let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(key.into());
@@ -677,37 +672,6 @@ pub mod TWAMM {
             } else {
                 token1_reward_rate
             }
-        }
-
-        fn update_reward_rate(
-            ref self: ContractState,
-            storage_key: StorageKey,
-            sale_rates: (u128, u128),
-            delta: Delta,
-            time: u64
-        ) -> (felt252, felt252) {
-            let (token0_reward_delta, token1_reward_delta) = calculate_reward_rate_deltas(
-                sale_rates, delta
-            );
-
-            let (current_token0_reward_rate, current_token1_reward_rate) = self
-                .reward_rate
-                .read(storage_key);
-
-            let reward_rate = (
-                current_token0_reward_rate + token0_reward_delta,
-                current_token1_reward_rate + token1_reward_delta
-            );
-
-            self.reward_rate.write(storage_key, reward_rate);
-
-            let (token0_reward_rate, token1_reward_rate) = reward_rate;
-
-            self
-                .time_reward_rate
-                .write((storage_key, time), (token0_reward_rate, token1_reward_rate));
-
-            reward_rate
         }
 
         fn remove_initialized_time(ref self: ContractState, storage_key: StorageKey, time: u64) {
@@ -875,13 +839,19 @@ pub mod TWAMM {
                                 delta
                             };
 
-                            let (token0_reward_delta, token1_reward_delta) =
-                                calculate_reward_rate_deltas(
-                                (token0_sale_rate, token1_sale_rate), twamm_delta
-                            );
+                            if (twamm_delta.amount0.mag > 0 && twamm_delta.amount0.sign) {
+                                token0_reward_rate += calculate_reward_rate(
+                                    twamm_delta.amount0.mag,
+                                    token1_sale_rate
+                                );
+                            }
 
-                            token0_reward_rate += token0_reward_delta;
-                            token1_reward_rate += token1_reward_delta;
+                            if (twamm_delta.amount1.mag > 0 && twamm_delta.amount1.sign) {
+                                token1_reward_rate += calculate_reward_rate(
+                                    twamm_delta.amount1.mag,
+                                    token0_sale_rate
+                                );
+                            }
 
                             // must accumulate swap deltas to zero out at the end
                             total_delta += delta;

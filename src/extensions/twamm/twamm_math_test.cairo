@@ -1,6 +1,6 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
+    calculate_sale_rate, calculate_reward_amount, calculate_c,
     constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
     is_time_valid, validate_time
 };
@@ -154,40 +154,8 @@ mod SaleRateTest {
 
 mod RewardRateTest {
     use super::{
-        Delta, calculate_reward_rate_deltas, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129,
+        Delta, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129,
     };
-
-
-    fn assert_case_reward_rate(
-        sale_rates: (u128, u128), delta: Delta, expected: (felt252, felt252)
-    ) {
-        let (reward_rate_0_delta, reward_rate_1_delta) = calculate_reward_rate_deltas(
-            sale_rates: sale_rates, delta: delta
-        );
-
-        let (expected_0, expected_1) = expected;
-
-        assert_eq!(reward_rate_0_delta, expected_0);
-        assert_eq!(reward_rate_1_delta, expected_1);
-    }
-
-    #[test]
-    fn test_reward_rates_largest_amount() {
-        // 2**128 - 1
-        let amount = 0xffffffffffffffffffffffffffffffff;
-        // (2**128 - 1) * (2**160 / 2**32) = 2**256 - 2**128
-        let expected_reward_rate = 0xffffffffffffffffffffffffffffffff000000000000000000000000;
-
-        assert_case_reward_rate(
-            // smallest possible sale rate
-            sale_rates: (SIXTEEN_POW_EIGHT.into(), SIXTEEN_POW_EIGHT.into()),
-            delta: Delta {
-                amount0: i129 { mag: amount, sign: true },
-                amount1: i129 { mag: amount, sign: true },
-            },
-            expected: (expected_reward_rate, expected_reward_rate)
-        );
-    }
 
     #[test]
     fn test_largest_reward_amount_no_overflow() {

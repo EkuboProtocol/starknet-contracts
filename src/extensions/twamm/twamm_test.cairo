@@ -8,7 +8,7 @@ use ekubo::extensions::twamm::TWAMM::{
     word_and_bit_index_to_time
 };
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_rate_deltas, calculate_reward_amount, calculate_c,
+    calculate_sale_rate, calculate_reward_amount, calculate_c,
     constants, exp_fractional, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate
 };
 

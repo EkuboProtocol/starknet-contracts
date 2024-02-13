@@ -47,36 +47,6 @@ pub fn calculate_amount_from_sale_rate(sale_rate: u128, start_time: u64, end_tim
         .expect('ORDER_AMOUNT_DELTA_OVERFLOW')
 }
 
-pub fn calculate_reward_rate_deltas(sale_rates: (u128, u128), delta: Delta) -> (felt252, felt252) {
-    let (token0_sale_rate, token1_sale_rate) = sale_rates;
-
-    let token0_reward_delta: felt252 = if (delta.amount0.mag > 0) {
-        if (!delta.amount0.sign || token1_sale_rate.is_zero()) {
-            0
-        } else {
-            (u256 { high: delta.amount0.mag, low: 0 } / token1_sale_rate.into())
-                .try_into()
-                .expect('REWARD_DELTA_OVERFLOW')
-        }
-    } else {
-        0
-    };
-
-    let token1_reward_delta: felt252 = if (delta.amount1.mag > 0) {
-        if (!delta.amount1.sign || token0_sale_rate.is_zero()) {
-            0
-        } else {
-            (u256 { high: delta.amount1.mag, low: 0 } / token0_sale_rate.into())
-                .try_into()
-                .expect('REWARD_DELTA_OVERFLOW')
-        }
-    } else {
-        0
-    };
-
-    (token0_reward_delta, token1_reward_delta)
-}
-
 pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     // this should never overflow since total_sale_rate <= sale_rate 
     muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
