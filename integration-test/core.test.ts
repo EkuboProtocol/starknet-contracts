@@ -18,12 +18,11 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
       positions:
-        "0x70eb01de70156b91855cc7dc74f8e49572618ba8215d715ead1dd82c997262f",
+        "0x7ca91d58b017b23afe35bf6495b35bcf3a5565325d2eb448f776bde36415a80",
       router:
         "0x7f4c886efb4660165c90d6563861eb7da465c5d2e4393c8c87b174bc81d729e",
-      nft: "0x3d2d3e1b1ab5ae551041d982dcabef3d89d58cc36e17a27a5474de8297e0e1",
-      twamm:
-        "0x20de4774d4f5d4e492cfdcf8da914799f8fa2b8da2eb10ea8344f9290b02b84",
+      nft: "0x6a2fb8b66e56809871019556114a3b1e36ebf895b6065a1b91b683bb72c526a",
+      twamm: "0x1809ea935fe4d466caf99776314dfabea23eed5eeefdd874922e69d74a9a70",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });
@@ -317,14 +316,18 @@ describe("core", () => {
                 extension: twamm.address,
               };
 
-              const stateKey = {
-                token0: poolKey.token0,
-                token1: poolKey.token1,
-                fee: poolKey.fee,
-              };
-
               const startingTime = 16;
               await setDevnetTime(startingTime - 8);
+
+              const initializePoolCall = core.populate(
+                "maybe_initialize_pool",
+                [
+                  poolKey,
+
+                  // starting tick
+                  toI129(pool.startingTick),
+                ]
+              );
 
               const txHashes: string[] = [];
               for (const liquidity of positions_liquidities) {
@@ -336,12 +339,7 @@ describe("core", () => {
                 });
                 const { transaction_hash } = await account.execute(
                   [
-                    core.populate("maybe_initialize_pool", [
-                      poolKey,
-
-                      // starting tick
-                      toI129(pool.startingTick),
-                    ]),
+                    initializePoolCall,
                     token0.populate("transfer", [setup.positions, amount0]),
                     token1.populate("transfer", [setup.positions, amount1]),
                     positionsContract.populate(
@@ -415,6 +413,7 @@ describe("core", () => {
 
                 const { transaction_hash } = await account.execute(
                   [
+                    initializePoolCall,
                     token0.populate("transfer", [setup.positions, balance0]),
                     token1.populate("transfer", [setup.positions, balance1]),
                     ...orders.map((order) => {

@@ -772,7 +772,10 @@ pub mod TWAMM {
             let mut last_virtual_order_time = self.last_virtual_order_time.read(key.into());
 
             if (last_virtual_order_time != current_time) {
-                let mut next_sqrt_ratio: Option<u256> = Option::None;
+                let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
+                assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
+
+                let mut next_sqrt_ratio = Option::Some(starting_sqrt_ratio);
                 let mut total_delta = Zero::<Delta>::zero();
 
                 let sale_rate_storage_address = storage_base_address_from_felt252(
@@ -816,11 +819,12 @@ pub mod TWAMM {
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let mut sqrt_ratio = if (next_sqrt_ratio.is_none()) {
-                            let price = core.get_pool_price(pool_key);
-                            price.sqrt_ratio
-                        } else {
-                            next_sqrt_ratio.unwrap()
+                        let mut sqrt_ratio = match next_sqrt_ratio {
+                            Option::Some(sqrt_ratio) => { sqrt_ratio },
+                            Option::None => {
+                                let price = core.get_pool_price(pool_key);
+                                price.sqrt_ratio
+                            }
                         };
 
                         if sqrt_ratio.is_non_zero() {
@@ -834,9 +838,7 @@ pub mod TWAMM {
                             let twamm_delta = if (token0_amount.is_non_zero()
                                 && token1_amount.is_non_zero()) {
                                 next_sqrt_ratio =
-                                    Option::<
-                                        u256
-                                    >::Some(
+                                    Option::Some(
                                         calculate_next_sqrt_ratio(
                                             sqrt_ratio,
                                             core.get_pool_liquidity(pool_key),
