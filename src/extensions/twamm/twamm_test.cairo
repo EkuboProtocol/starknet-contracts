@@ -390,7 +390,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time,);
+        let expected_sale_rate_net = calculate_sale_rate(amount - 1, timestamp, order1_end_time,);
 
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
 
@@ -461,7 +461,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(amount - 1, timestamp, order1_end_time);
 
         place_order(positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount);
 
@@ -533,7 +533,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(amount - 1, timestamp, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
@@ -607,7 +607,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(amount - 1, timestamp, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount
@@ -1004,7 +1004,7 @@ mod CancelOrderTests {
         }
             .balanceOf(owner);
 
-        assert_eq!(token_balance_after - token_balance_before, 1000000000000000000000);
+        assert_eq!(token_balance_after - token_balance_before, 999999999999999999999);
     }
 
     #[test]
@@ -1270,7 +1270,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(amount - 1, order1_start_time, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1313,7 +1313,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token0.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, amount / 2);
+        assert_eq!(event.amount, (amount / 2) - 1);
 
         // order sale rate
         let order1_state = twamm
@@ -1366,7 +1366,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(amount - 1, order1_start_time, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1409,7 +1409,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token1.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, amount / 2);
+        assert_eq!(event.amount, (amount / 2) - 1);
 
         // order sale rate
         let order1_state = twamm
@@ -1462,7 +1462,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(amount - 1, order1_start_time, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1501,23 +1501,23 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time, false
+            sale_rate_delta.mag, order1_start_time, order1_end_time, true
         );
 
         setup
             .token0
-            .increase_balance(positions.contract_address, sale_rate_delta_amount.into() + 1);
+            .increase_balance(positions.contract_address, sale_rate_delta_amount.into());
         // increase sale rate
         set_contract_address(owner);
         positions.increase_sell_amount(order1_id, order1_key, sale_rate_delta_amount);
 
-        let expected_updated_sale_rate = expected_sale_rate + expected_sale_rate / 2;
+        let expected_updated_sale_rate = 251658239999999999999966445568;
 
         let event: SavedBalance = pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token0.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, (amount / 2) + 1);
+        assert_eq!(event.amount, amount / 2);
 
         // order sale rate
         let order1_state = twamm
@@ -1574,7 +1574,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(amount - 1, order1_start_time, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1613,7 +1613,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time, false
+            sale_rate_delta.mag, order1_start_time, order1_end_time, true
         );
         setup
             .token1
@@ -1622,13 +1622,13 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_contract_address(owner);
         positions.increase_sell_amount(order1_id, order1_key, sale_rate_delta_amount);
 
-        let expected_updated_sale_rate = expected_sale_rate + expected_sale_rate / 2;
+        let expected_updated_sale_rate = 251658239999999999999966445568;
 
         let event: SavedBalance = pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token1.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, (amount / 2) + 1);
+        assert_eq!(event.amount, amount / 2);
 
         // order sale rate
         let order1_state = twamm
@@ -1685,7 +1685,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(amount - 1, order1_start_time, order1_end_time);
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1745,16 +1745,16 @@ mod PlaceOrdersAndUpdateSaleRate {
         // sold amount   ~= 128 * 39.0625 ~= 5,000 tokens
         // bought amount ~= 9,9989.94829713355494903 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
-        assert_eq!(swapped_event.delta.amount0.mag, 5000000000000000000000);
+        assert_eq!(swapped_event.delta.amount0.mag, 4999999999999999999999);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 9998994829713355494903);
+        assert_eq!(swapped_event.delta.amount1.mag, 9998994829713355494901);
 
         let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token0.contract_address);
         assert_eq!(event.key.salt, 0);
         // half the order has been executed, half of the remaining is removed
-        assert_eq!(event.amount, amount / 4);
+        assert_eq!(event.amount, 2499999999999999999999);
 
         // order sale rate
         let order1_state = twamm
@@ -1785,7 +1785,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         // amount  = updated reward_rate * updated sale_rate
         //         = 511.948535281 * 19.53125
         //        ~= 9,998.994829713355494901 tokens
-        assert_eq!(event.amount, 9998994829713355494901);
+        assert_eq!(event.amount, 9998994829713355494899);
     }
 
     #[test]
@@ -1852,7 +1852,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             .balanceOf(owner);
 
         // pays 1% fee of 5000
-        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+        assert_eq!(token_balance_after - token_balance_before, 4949999999999999999999);
     }
 
     #[test]
@@ -1919,7 +1919,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             .balanceOf(owner);
 
         // pays 1% fee of 5000
-        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+        assert_eq!(token_balance_after - token_balance_before, 4949999999999999999999);
     }
 }
 
@@ -2009,7 +2009,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // reward rate  = 9,998.994829713355494901 / 2.4509803922
         //               ~= 4,079.5898895263671875 (then scaled by 2**96)
-        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfef970310b8b749c2bcbffcbb3e);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 323218410837909986930338113575796);
 
         // Withdraw proceeds
         set_contract_address(owner);
@@ -2052,7 +2052,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         assert_eq!(
-            virtual_orders_executed_event.token1_reward_rate, 0x1fde5d30d9b7d4955dc39bced5bf
+            virtual_orders_executed_event.token1_reward_rate, 646372190953865791882792118548427
         );
 
         // withdraw proceeds
@@ -2137,7 +2137,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // reward rate  = 9998.994829713355494901 / 2.4509803922
         //               ~= 4079.5898895263671875 (then scaled by 2**96)
-        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfef970310b8b749c2bcbffcbb3e);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 323218410837909986930338113575796);
 
         set_block_timestamp(order1_end_time + 1);
         twamm.execute_virtual_orders(setup.pool_key.into());
@@ -2166,7 +2166,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         //               ~= 4,079.5898895263671875 + 4,078.774136054 
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         assert_eq!(
-            virtual_orders_executed_event.token1_reward_rate, 0x1fde5d30d9b7d4955dc39bced5bf
+            virtual_orders_executed_event.token1_reward_rate, 646372190953865791882792118548427
         );
 
         // withdraw proceeds
@@ -2251,7 +2251,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**96)
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x3fbf3151104fc924f597b256ca6);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 80808727927236375648110858059805);
 
         // Withdraw proceeds
         set_contract_address(owner);
@@ -2292,7 +2292,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // reward rate  = prev_rewards_rate + (2,499.626361381044024809 / 2.4509803922)
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2**96)
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x7f7cc0e75c4383db7609db75268);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 161609375789686506283141433107728);
 
         // withdraw proceeds
         set_contract_address(owner);
@@ -2376,7 +2376,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // reward rate  = 2,499.876324017182129212 / 2.4509803922
         //               ~= 1,019.9495391845703125 (then scaled by 2**96)
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x3fbf3151104fc924f597b256ca6);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 80808727927236375648110858059805);
 
         set_block_timestamp(order1_end_time + 1);
         twamm.execute_virtual_orders(setup.pool_key.into());
@@ -2404,7 +2404,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         //               ~= 1,019.9495391845703125 + 1,019.8475554255
         //               ~= 2,039.797088623046875 (then scaled by 2*96)
         assert_eq!(
-            virtual_orders_executed_event.token0_reward_rate, 0x7f7cc0e75c4383db7609db75268,
+            virtual_orders_executed_event.token0_reward_rate, 161609375789686506283141433107728,
         );
 
         // withdraw proceeds
@@ -2519,14 +2519,14 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.873684315946883792
         // token1 bought amount ~= 4999.494771123186662264
-        // token0 reward rate = (5,000 + 4999.494771123186662264) / 2.4509803922 = 4,079.7938665465
-        // token1 reward rate = (5,000 - 2499.873684315946883792) / 2.4509803922 = 1,020.05153678114
+        // token0 reward rate = (5,000 - 2499.873684315946883792) / 2.4509803922 = 1,020.05153678114
+        // token1 reward rate = (5,000 + 4999.494771123186662264) / 2.4509803922 = 4,079.7938665465
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499873684315946883792);
         assert_eq!(swapped_event.delta.amount1.sign, true);
         assert_eq!(swapped_event.delta.amount1.mag, 4999494771123186662264);
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x3fc0d318402a5d8eb069cd5df58);
-        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfefcb3ad7bad041447ab720a895);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 80816808930443682735111342294900);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 323234571489130398306952282206603);
 
         // Withdraw proceeds for order1
         positions.withdraw_proceeds_from_sale(order1_id, order1_key);
@@ -2573,8 +2573,8 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.623696949194922069
         // token1 bought amount ~= 4998.495022657373310749
-        // token0 reward rate = (5,000 + 4998.495022657373310749) / 2.4509803922 = 4,079.3859691724
-        // token1 reward rate = (5,000 - 2499.623696949194922069) / 2.4509803922 = 1,020.1535316268
+        // token0 reward rate = (5,000 - 2499.623696949194922069) / 2.4509803922 = 1,020.1535316268
+        // token1 reward rate = (5,000 + 4998.495022657373310749) / 2.4509803922 = 4,079.3859691724
 
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499623696949194922069);
@@ -2582,11 +2582,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount1.mag, 4998495022657373310749);
         assert_eq!(
             virtual_orders_executed_event.token0_reward_rate,
-            0x3fc0d318402a5d8eb069cd5df58 + 0x3fc274dd99102874f458134e9db
+            161641698725092936739531740179969
         );
         assert_eq!(
             virtual_orders_executed_event.token1_reward_rate,
-            0xfefcb3ad7bad041447ab720a895 + 0xfef62cee16122f3c6c6e3a4ded6
+            646436826018820275177389548751239
         );
 
         // Withdraw proceeds for order1
@@ -2699,14 +2699,14 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.873684315946883792
         // token1 bought amount ~= 4999.494771123186662264
-        // token0 reward rate = (4,999.999999884 + 4999.494771123186662264) / 2.4509803921 ~= 4,079.7938666656
-        // token1 reward rate = (4,999.999999884 - 2499.873684315946883792) / 2.4509803921 ~= 1,020.05153677543
+        // token0 reward rate = (4,999.999999884 - 2499.873684315946883792) / 2.4509803921 ~= 1,020.05153677543
+        // token1 reward rate = (4,999.999999884 + 4999.494771123186662264) / 2.4509803921 ~= 4,079.7938666656
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499873684315946883792);
         assert_eq!(swapped_event.delta.amount1.sign, true);
         assert_eq!(swapped_event.delta.amount1.mag, 4999494771123186662264);
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x3fc0d318402a5d8eb069cd5fd56);
-        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfefcb3ad7bad041447ab7212087);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 80816808930443682735087098892682);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 323234571489130398306952280602226);
 
         set_block_timestamp(order_end_time + 1);
         twamm.execute_virtual_orders(setup.pool_key.into());
@@ -2731,8 +2731,8 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.623696949194922069
         // token1 bought amount ~= 4998.495022657373310749
-        // token0 reward rate = (4,999.999999884 + 4998.495022657373310749) / 2.4509803921 ~= 4,079.3859692915
-        // token1 reward rate = (4,999.999999884 - 2499.623696949194922069) / 2.4509803921 ~= 1,020.1535316211
+        // token0 reward rate = (4,999.999999884 - 2499.623696949194922069) / 2.4509803921 ~= 1,020.1535316211
+        // token1 reward rate = (4,999.999999884 + 4998.495022657373310749) / 2.4509803921 ~= 4,079.3859692915
 
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499623696949194922069);
@@ -2740,11 +2740,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount1.mag, 4998495022657373310749);
         assert_eq!(
             virtual_orders_executed_event.token0_reward_rate,
-            0x3fc0d318402a5d8eb069cd5fd56 + 0x3fc274dd99102874f45813507d9
+            161641698725092936739483254183621
         );
         assert_eq!(
             virtual_orders_executed_event.token1_reward_rate,
-            0xfefcb3ad7bad041447ab7212087 + 0xfef62cee16122f3c6c6e3a556c4
+            646436826018820275177389542310786
         );
 
         // Withdraw proceeds for order1
@@ -2756,7 +2756,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = (4,079.7938666656 + 4,079.3859692915) * 1.225490196
         //        ~= 9,998.9948963663 tokens
-        assert_eq!(event.amount, 9998994896890279986505);
+        assert_eq!(event.amount, 9998994896890279986504);
 
         // Withdraw proceeds for order2
         set_contract_address(owner1);
@@ -2767,7 +2767,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = (4,079.7938666656 + 4,079.3859692915) * 1.225490196
         //        ~= 9,998.9948963663 tokens
-        assert_eq!(event.amount, 9998994896890279986505);
+        assert_eq!(event.amount, 9998994896890279986504);
 
         // Withdraw proceeds for order3
         set_contract_address(owner0);
@@ -2778,7 +2778,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = (1,020.05153677543 + 1,020.1535316211) * 1.225490196
         //        ~= 2,500.2513091495 tokens
-        assert_eq!(event.amount, 2500251309367429097068);
+        assert_eq!(event.amount, 2500251309367429097067);
 
         // Withdraw proceeds for order4
         set_contract_address(owner1);
@@ -2789,7 +2789,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = (1,020.05153677543 + 1,020.1535316211) * 1.225490196
         //        ~= 2,500.2513091495 tokens
-        assert_eq!(event.amount, 2500251309367429097068);
+        assert_eq!(event.amount, 2500251309367429097067);
     }
 
     #[test]
@@ -2877,12 +2877,12 @@ mod PlaceOrderOnBothSides {
         // token0 reward rate = (0.5 - 0.492129291394822418) / 245.09803921569 = 0.00003211249111
         // token1 reward rate = (500,000 + 32,981,569.373828693521176462) / 0.0002450980392 = 136,604,803,053.9637769619
         assert_eq!(swapped_event.delta.amount0.sign, false);
-        assert_eq!(swapped_event.delta.amount0.mag, 492129291394822418);
+        assert_eq!(swapped_event.delta.amount0.mag, 492129291394822417);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 32981569373828693521176462);
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x21ac2195f0fdd994baf61);
+        assert_eq!(swapped_event.delta.amount1.mag, 32981569373828693497943771);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 2544213664331587271006779);
         assert_eq!(
-            virtual_orders_executed_event.token1_reward_rate, 0x1fce47dfe5389803ddd431d5f1667b413e,
+            virtual_orders_executed_event.token1_reward_rate, 10822947535895846778880116017600936704881,
         );
 
         // Withdraw proceeds for order1
@@ -2893,7 +2893,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = 136,604,803,053.9637769619 * 0.0002450980392
         //        ~= 33,481,569.3738286935 tokens
-        assert_eq!(event.amount, 33481569373828693521176460);
+        assert_eq!(event.amount, 33481569373828693497943769);
 
         // Withdraw proceeds for order2
         positions.withdraw_proceeds_from_sale(order2_id, order2_key);
@@ -2903,7 +2903,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = 0.00003211249111 * 245.09803921569
         //        ~= 0.007870708605 tokens
-        assert_eq!(event.amount, 7870708605177580);
+        assert_eq!(event.amount, 7870708605177581);
 
         // withdraw the remaining proceeds after order expires
 
@@ -2935,14 +2935,14 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 484846500277456573);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 16435997977911462045022653);
+        assert_eq!(swapped_event.delta.amount1.mag, 16435997977911462042053761);
         assert_eq!(
             virtual_orders_executed_event.token0_reward_rate,
-            0x21ac2195f0fdd994baf61 + 0x40d45d884786c18677398
+            7442596134135910096145880
         );
         assert_eq!(
             virtual_orders_executed_event.token1_reward_rate,
-            0x1fce47dfe5389803ddd431d5f1667b413e + 0x10169d1bc5e0f6c0a106154f4bfa93eba0
+            16297524176447550577472063371159204098769
         );
 
         // Withdraw proceeds for order1
@@ -2953,7 +2953,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = 69,098,871,754.301092936 * 0.0002450980392
         //        ~= 16,935,997.977911462 tokens
-        assert_eq!(event.amount, 16935997977911462045022651);
+        assert_eq!(event.amount, 16935997977911462042053759);
 
         // Withdraw proceeds for order2
         positions.withdraw_proceeds_from_sale(order2_id, order2_key);
@@ -3047,14 +3047,14 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 bought amount ~= 5663.417543754833543103
         // token1 spent amount  ~= 2833.312055778486901416
-        // token0 reward rate = (5,334.72803346 - 2833.312055778486901416) / 2.4509803922 = 1,020.5777188761
-        // token1 reward rate = (5663.417543754833543103 + 5,000.000000088) / 2.6150627615 = 4,077.6908687753
+        // token0 reward rate = (5663.417543754833543103 + 5,000.000000088) / 2.6150627615 = 4,077.6908687753
+        // token1 reward rate = (5,334.72803346 - 2833.312055778486901416) / 2.4509803922 = 1,020.5777188761
         assert_eq!(swapped_event.delta.amount0.sign, true);
         assert_eq!(swapped_event.delta.amount0.mag, 5663417543754833543103);
         assert_eq!(swapped_event.delta.amount1.sign, false);
         assert_eq!(swapped_event.delta.amount1.mag, 2833312055778486901416);
-        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0xfedb0dcc5f11e1de241494a3cc0);
-        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0x3fc93e562c2b1883b621228f5a6);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 323067954830818608905874590980971);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 80858497371389430032132967988811);
 
         // Two swaps are executed since order2 expires before order1
         set_block_timestamp(order_end_time + 1);
@@ -3087,11 +3087,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount1.mag, 2475436682518369242249);
         assert_eq!(
             virtual_orders_executed_event.token0_reward_rate,
-            0xfedb0dcc5f11e1de241494a3cc0 + 0xdea32d49659bff590dfff190dd7
+            605294400959403569743056843920441
         );
         assert_eq!(
             virtual_orders_executed_event.token1_reward_rate,
-            0x3fc93e562c2b1883b621228f5a6 + 0x37d73ea6e3578f4cc8e5ad2f6ce
+            151645120681845434376963255059502
         );
 
         // check second swap 
@@ -3118,13 +3118,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount1.mag, 314372145178424505739);
         assert_eq!(
             virtual_orders_executed_event.token0_reward_rate,
-            0xfedb0dcc5f11e1de241494a3cc0 + 0xdea32d49659bff590dfff190dd7
+            605294400959403569743056843920441
         );
         assert_eq!(
             virtual_orders_executed_event.token1_reward_rate,
-            0x3fc93e562c2b1883b621228f5a6
-                + 0x37d73ea6e3578f4cc8e5ad2f6ce
-                + 0x80438ab4b06581e84114b622a2
+            161807228664372314783513630641153
         );
 
         // // Withdraw proceeds for order1
@@ -3135,7 +3133,7 @@ mod PlaceOrderOnBothSides {
         // amount  = reward_rate * sale_rate
         //         = (1,020.5777188761 + 893.4527958553 + 128.2638352305) * 2.4509803922
         //        ~= 5,005.6234068575 tokens
-        assert_eq!(event.amount, 5005623406881568362072);
+        assert_eq!(event.amount, 5005623406881568362071);
 
         // Withdraw proceeds for order2
         positions.withdraw_proceeds_from_sale(order2_id, order2_key);
@@ -3291,7 +3289,7 @@ fn place_order(
     // place order
     let twamm = positions.get_twamm_address();
 
-    sell_token.increase_balance(positions.contract_address, amount + 1);
+    sell_token.increase_balance(positions.contract_address, amount);
 
     let current_contract_address = get_contract_address();
 
