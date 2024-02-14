@@ -827,55 +827,55 @@ pub mod TWAMM {
                             }
                         };
 
-                        if sqrt_ratio.is_non_zero() {
-                            let time_elapsed = next_virtual_order_time - last_virtual_order_time;
+                        let time_elapsed = next_virtual_order_time - last_virtual_order_time;
 
-                            let token0_amount = (token0_sale_rate * time_elapsed.into())
-                                / constants::X32_u128;
-                            let token1_amount = (token1_sale_rate * time_elapsed.into())
-                                / constants::X32_u128;
+                        let token0_amount = (token0_sale_rate * time_elapsed.into())
+                            / constants::X32_u128;
+                        let token1_amount = (token1_sale_rate * time_elapsed.into())
+                            / constants::X32_u128;
 
-                            let twamm_delta = if (token0_amount.is_non_zero()
-                                && token1_amount.is_non_zero()) {
-                                next_sqrt_ratio =
-                                    Option::Some(
-                                        calculate_next_sqrt_ratio(
-                                            sqrt_ratio,
-                                            core.get_pool_liquidity(pool_key),
-                                            token0_sale_rate,
-                                            token1_sale_rate,
-                                            time_elapsed
-                                        )
-                                    );
+                        let twamm_delta = if (token0_amount.is_non_zero()
+                            && token1_amount.is_non_zero()) {
+                            next_sqrt_ratio =
+                                Option::Some(
+                                    calculate_next_sqrt_ratio(
+                                        sqrt_ratio,
+                                        core.get_pool_liquidity(pool_key),
+                                        token0_sale_rate,
+                                        token1_sale_rate,
+                                        time_elapsed
+                                    )
+                                );
 
-                                delta = core
-                                    .swap(
-                                        pool_key,
-                                        SwapParameters {
-                                            amount: i129 {
-                                                mag: 0xffffffffffffffffffffffffffffffff, sign: false
-                                            },
-                                            is_token1: sqrt_ratio < next_sqrt_ratio.unwrap(),
-                                            sqrt_ratio_limit: next_sqrt_ratio.unwrap(),
-                                            skip_ahead: 0
-                                        }
-                                    );
-
-                                // both sides are swapping, twamm delta is the amounts swapped to reach
-                                // target price minus amounts in the twamm
-                                delta
-                                    - Delta {
-                                        amount0: i129 { mag: token0_amount, sign: false },
-                                        amount1: i129 { mag: token1_amount, sign: false }
+                            delta = core
+                                .swap(
+                                    pool_key,
+                                    SwapParameters {
+                                        amount: i129 {
+                                            mag: 0xffffffffffffffffffffffffffffffff, sign: false
+                                        },
+                                        is_token1: sqrt_ratio < next_sqrt_ratio.unwrap(),
+                                        sqrt_ratio_limit: next_sqrt_ratio.unwrap(),
+                                        skip_ahead: 0
                                     }
-                            } else {
-                                let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
-                                    .is_non_zero() {
-                                    (token0_amount, false, min_sqrt_ratio())
-                                } else {
-                                    (token1_amount, true, max_sqrt_ratio())
-                                };
+                                );
 
+                            // both sides are swapping, twamm delta is the amounts swapped to reach
+                            // target price minus amounts in the twamm
+                            delta
+                                - Delta {
+                                    amount0: i129 { mag: token0_amount, sign: false },
+                                    amount1: i129 { mag: token1_amount, sign: false }
+                                }
+                        } else {
+                            let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
+                                .is_non_zero() {
+                                (token0_amount, false, min_sqrt_ratio())
+                            } else {
+                                (token1_amount, true, max_sqrt_ratio())
+                            };
+
+                            if sqrt_ratio_limit != sqrt_ratio {
                                 delta = core
                                     .swap(
                                         pool_key,
@@ -886,43 +886,39 @@ pub mod TWAMM {
                                             skip_ahead: 0
                                         }
                                     );
-
-                                // must fetch price from core after a single sided swap
-                                next_sqrt_ratio = Option::None;
-
-                                // only one side is swapping, twamm delta is the same as amounts swapped
-                                delta
-                            };
-
-                            // must accumulate swap deltas to zero out at the end
-                            total_delta += delta;
-
-                            if (twamm_delta.amount0.mag.is_non_zero() && twamm_delta.amount0.sign) {
-                                token0_reward_rate +=
-                                    calculate_reward_rate(
-                                        twamm_delta.amount0.mag, token1_sale_rate
-                                    );
                             }
 
-                            if (twamm_delta.amount1.mag.is_non_zero() && twamm_delta.amount1.sign) {
-                                token1_reward_rate +=
-                                    calculate_reward_rate(
-                                        twamm_delta.amount1.mag, token0_sale_rate
-                                    );
-                            }
+                            // must fetch price from core after a single sided swap
+                            next_sqrt_ratio = Option::None;
 
-                            self
-                                .emit(
-                                    VirtualOrdersExecuted {
-                                        last_virtual_order_time,
-                                        next_virtual_order_time,
-                                        token0_sale_rate: token0_sale_rate,
-                                        token1_sale_rate: token1_sale_rate,
-                                        token0_reward_rate: token0_reward_rate,
-                                        token1_reward_rate: token1_reward_rate
-                                    }
-                                );
+                            // only one side is swapping, twamm delta is the same as amounts swapped
+                            delta
+                        };
+
+                        // must accumulate swap deltas to zero out at the end
+                        total_delta += delta;
+
+                        if (twamm_delta.amount0.is_non_zero() && twamm_delta.amount0.sign) {
+                            token0_reward_rate +=
+                                calculate_reward_rate(twamm_delta.amount0.mag, token1_sale_rate);
                         }
+
+                        if (twamm_delta.amount1.is_non_zero() && twamm_delta.amount1.sign) {
+                            token1_reward_rate +=
+                                calculate_reward_rate(twamm_delta.amount1.mag, token0_sale_rate);
+                        }
+
+                        self
+                            .emit(
+                                VirtualOrdersExecuted {
+                                    last_virtual_order_time,
+                                    next_virtual_order_time,
+                                    token0_sale_rate: token0_sale_rate,
+                                    token1_sale_rate: token1_sale_rate,
+                                    token0_reward_rate: token0_reward_rate,
+                                    token1_reward_rate: token1_reward_rate
+                                }
+                            );
                     }
 
                     if (is_initialized) {
