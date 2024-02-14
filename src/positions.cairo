@@ -511,7 +511,7 @@ pub mod Positions {
 
             // if increasing sale rate, transfer additional funds to twamm
             IERC20Dispatcher { contract_address: order_key.sell_token }
-                .transfer(twamm.contract_address, amount.into());
+                .transfer(twamm.contract_address, amount.into() + 1);
 
             let sale_rate = calculate_sale_rate(
                 amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,

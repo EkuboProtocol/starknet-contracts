@@ -1,7 +1,8 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, exp_fractional,
-    calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, is_time_valid, validate_time
+    calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, is_time_valid, validate_time,
+    calculate_reward_rate
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::types::delta::{Delta};
@@ -95,9 +96,12 @@ mod SaleRateTest {
 
     #[test]
     fn test_calculate_amount_from_sale_rate() {
-        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100), 0);
-        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100), 100);
-        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100), 200);
+        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, false), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, false), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, false), 200);
+        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, true), 1);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, true), 101);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, true), 201);
     }
 
     #[test]
@@ -520,4 +524,19 @@ fn test_is_time_valid_future_times_near_second_boundary() {
     assert_eq!(is_time_valid(now: 256, time: 3840), true);
     assert_eq!(is_time_valid(now: 256, time: 4352), false);
     assert_eq!(is_time_valid(now: 257, time: 4352), true);
+}
+
+#[test]
+fn test_calculate_reward_rate() {
+    let amount = 1;
+    let sale_rate = calculate_sale_rate(amount, 0, constants::MAX_DURATION);
+    // 2**128
+    assert_eq!(340282366920938463463374607431768211456, calculate_reward_rate(amount, sale_rate));
+
+    // largest amount that can be sold in one second
+    // 2**96 - 1
+    let amount = 0xffffffffffffffffffffffff;
+    let sale_rate = calculate_sale_rate(amount, 0, 1);
+    // 2**128
+    assert_eq!(79228162514264337593543950336, calculate_reward_rate(amount, sale_rate));
 }

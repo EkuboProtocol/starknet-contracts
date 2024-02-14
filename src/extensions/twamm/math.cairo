@@ -11,10 +11,10 @@ use ekubo::types::i129::{i129, i129Trait};
 
 pub mod constants {
     pub const LOG_SCALE_FACTOR: u8 = 4;
-    pub const MAX_ORDER_DURATION: u64 = 0x1000000; // 16**6 seconds ~= 6.4 months
     pub const BITMAP_SPACING: u64 = 16;
 
     // 2**32
+    pub const MAX_DURATION: u64 = 0x100000000_u64;
     pub const X32_u128: u128 = 0x100000000_u128;
     pub const X32_u256: u256 = 0x100000000_u256;
 
@@ -39,12 +39,18 @@ pub fn calculate_sale_rate(amount: u128, start_time: u64, end_time: u64) -> u128
     sale_rate
 }
 
-// if order started, start_time is now
-// next amount given the current sale rate, and a sale rate delta
-pub fn calculate_amount_from_sale_rate(sale_rate: u128, start_time: u64, end_time: u64) -> u128 {
-    (sale_rate.into() * (end_time - start_time).into() / constants::X32_u256)
+pub fn calculate_amount_from_sale_rate(
+    sale_rate: u128, start_time: u64, end_time: u64, round_up: bool
+) -> u128 {
+    let amount = (sale_rate.into() * (end_time - start_time).into() / constants::X32_u256)
         .try_into()
-        .expect('ORDER_AMOUNT_DELTA_OVERFLOW')
+        .expect('ORDER_AMOUNT_DELTA_OVERFLOW');
+
+    if (round_up) {
+        amount + 1_u128
+    } else {
+        amount
+    }
 }
 
 pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {

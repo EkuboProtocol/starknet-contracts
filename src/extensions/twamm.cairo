@@ -368,7 +368,7 @@ pub mod TWAMM {
             let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
                 (
                     calculate_amount_from_sale_rate(
-                        order_state.sale_rate, order_key.start_time, order_key.end_time,
+                        order_state.sale_rate, order_key.start_time, order_key.end_time, false
                     ),
                     0
                 )
@@ -377,7 +377,7 @@ pub mod TWAMM {
 
                 (
                     calculate_amount_from_sale_rate(
-                        order_state.sale_rate, current_time, order_key.end_time,
+                        order_state.sale_rate, current_time, order_key.end_time, false
                     ),
                     calculate_reward_amount(
                         current_reward_rate - order_reward_rate, order_state.sale_rate
@@ -472,6 +472,11 @@ pub mod TWAMM {
                     // there is no reason to adjust the sale rate of an order that has already ended
                     assert(current_time < order_key.end_time, 'ORDER_ENDED');
 
+                    assert(
+                        order_key.end_time - order_key.start_time < constants::MAX_DURATION,
+                        'ORDER_DURATION_TOO_LONG'
+                    );
+
                     self.internal_execute_virtual_orders(core, order_key.into());
 
                     let order_info = self.get_order_info(owner, salt, order_key);
@@ -539,7 +544,8 @@ pub mod TWAMM {
                     let amount_delta = calculate_amount_from_sale_rate(
                         sale_rate_delta.mag,
                         max(order_key.start_time, current_time),
-                        order_key.end_time
+                        order_key.end_time,
+                        !sale_rate_delta.sign
                     );
 
                     let token = order_key.sell_token;

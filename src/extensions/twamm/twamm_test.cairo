@@ -1501,9 +1501,12 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time
+            sale_rate_delta.mag, order1_start_time, order1_end_time, false
         );
-        setup.token0.increase_balance(positions.contract_address, sale_rate_delta_amount.into());
+
+        setup
+            .token0
+            .increase_balance(positions.contract_address, sale_rate_delta_amount.into() + 1);
         // increase sale rate
         set_contract_address(owner);
         positions.increase_sell_amount(order1_id, order1_key, sale_rate_delta_amount);
@@ -1514,7 +1517,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token0.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, amount / 2);
+        assert_eq!(event.amount, (amount / 2) + 1);
 
         // order sale rate
         let order1_state = twamm
@@ -1610,9 +1613,11 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time
+            sale_rate_delta.mag, order1_start_time, order1_end_time, false
         );
-        setup.token1.increase_balance(positions.contract_address, sale_rate_delta_amount.into());
+        setup
+            .token1
+            .increase_balance(positions.contract_address, sale_rate_delta_amount.into() + 1);
         // increase sale rate
         set_contract_address(owner);
         positions.increase_sell_amount(order1_id, order1_key, sale_rate_delta_amount);
@@ -1623,7 +1628,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token1.contract_address);
         assert_eq!(event.key.salt, 0);
-        assert_eq!(event.amount, amount / 2);
+        assert_eq!(event.amount, (amount / 2) + 1);
 
         // order sale rate
         let order1_state = twamm
@@ -3144,6 +3149,81 @@ mod PlaceOrderOnBothSides {
     }
 }
 
+mod PlaceOrderDurationTooLong {
+    use super::{
+        Deployer, DeployerTrait, i129, set_up_twamm, pop_log, PoolInitialized, PositionUpdated,
+        SIXTEEN_POW_ONE, set_block_timestamp, place_order, get_contract_address, constants,
+        OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait
+    };
+
+    #[test]
+    #[should_panic(expected: ('SALE_RATE_ZERO', 'ENTRYPOINT_FAILED'))]
+    fn test_order_duration_too_long_positions() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
+        let amount0 = 10_000_000 * 1000000000000000000;
+        let amount1 = 10_000_000 * 1000000000000000000;
+        let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        place_order(
+            positions,
+            get_contract_address(),
+            setup.token0,
+            setup.token1,
+            fee,
+            timestamp,
+            constants::MAX_DURATION + timestamp + 1, // 2**32
+            1
+        );
+    }
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'ORDER_DURATION_TOO_LONG', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_order_duration_too_long_twamm() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
+        let amount0 = 10_000_000 * 1000000000000000000;
+        let amount1 = 10_000_000 * 1000000000000000000;
+        let (twamm, setup, _) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_key = OrderKey {
+            sell_token: setup.token0.contract_address,
+            buy_token: setup.token1.contract_address,
+            fee,
+            start_time: timestamp,
+            end_time: constants::MAX_DURATION + timestamp + 1 // 2**32 + 1
+        };
+
+        twamm.update_order(0, order_key, i129 { mag: 1, sign: false });
+    }
+}
+
 fn set_up_twamm(
     ref d: Deployer,
     core: ICoreDispatcher,
@@ -3211,7 +3291,7 @@ fn place_order(
     // place order
     let twamm = positions.get_twamm_address();
 
-    sell_token.increase_balance(positions.contract_address, amount);
+    sell_token.increase_balance(positions.contract_address, amount + 1);
 
     let current_contract_address = get_contract_address();
 
