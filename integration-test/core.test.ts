@@ -22,8 +22,7 @@ describe("core", () => {
       router:
         "0x7f4c886efb4660165c90d6563861eb7da465c5d2e4393c8c87b174bc81d729e",
       nft: "0x6a2fb8b66e56809871019556114a3b1e36ebf895b6065a1b91b683bb72c526a",
-      twamm:
-        "0x5118b7b661645dceb501d6c7d791fb2eb437880ec93b92f2a2f31abdad5a97c",
+      twamm: "0xca292d31198d7cf858dcc13af524325fc349534e84cc3af81227498f02554a",
       tokenClassHash:
         "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
     });

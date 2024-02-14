@@ -275,6 +275,14 @@ pub mod TWAMM {
         ) -> CallPoints {
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
 
+            self
+                .last_virtual_order_time
+                .write(
+                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
+                        .into(),
+                    get_block_timestamp()
+                );
+
             CallPoints {
                 after_initialize_pool: false,
                 before_swap: true,
