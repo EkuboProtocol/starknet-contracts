@@ -19,10 +19,15 @@ pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>
     Serde::deserialize(ref output_span).expect('DESERIALIZE_RESULT_FAILED')
 }
 
+#[inline(always)]
+pub fn check_caller_is_core(core: ICoreDispatcher) {
+    assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
+}
+
 pub fn consume_callback_data<TInput, +Serde<TInput>>(
     core: ICoreDispatcher, mut callback_data: Span<felt252>
 ) -> TInput {
-    assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
+    check_caller_is_core(core);
     Serde::deserialize(ref callback_data).expect('DESERIALIZE_INPUT_FAILED')
 }
 

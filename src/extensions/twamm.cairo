@@ -80,7 +80,9 @@ pub mod TWAMM {
     use core::option::{OptionTrait};
     use core::traits::{TryInto, Into};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::shared_locker::{
+        call_core_with_callback, consume_callback_data, check_caller_is_core
+    };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, ILocker, ICoreDispatcher,
@@ -273,6 +275,7 @@ pub mod TWAMM {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) -> CallPoints {
+            check_caller_is_core(self.core.read());
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
 
             self
