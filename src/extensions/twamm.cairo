@@ -107,8 +107,8 @@ pub mod TWAMM {
         get_block_timestamp, ClassHash, storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
-        constants, calculate_sale_rate, calculate_reward_amount, validate_time,
-        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
+        constants, calculate_reward_amount, validate_time, calculate_next_sqrt_ratio,
+        calculate_amount_from_sale_rate, calculate_reward_rate
     };
     use super::{ITWAMM, StateKey, ContractAddress, OrderKey, OrderInfo};
 
@@ -846,10 +846,18 @@ pub mod TWAMM {
 
                         let time_elapsed = next_virtual_order_time - last_virtual_order_time;
 
-                        let token0_amount = (token0_sale_rate * time_elapsed.into())
-                            / constants::X32_u128;
-                        let token1_amount = (token1_sale_rate * time_elapsed.into())
-                            / constants::X32_u128;
+                        // oveflow is nearly impossible since even with max sale_rate
+                        // time elapse would need to be larger than 2**32
+                        let token0_amount: u128 = (token0_sale_rate.into()
+                            * time_elapsed.into()
+                            / constants::X32_u256)
+                            .try_into()
+                            .expect('TOKEN0_AMOUNT_OVERFLOW');
+                        let token1_amount: u128 = (token1_sale_rate.into()
+                            * time_elapsed.into()
+                            / constants::X32_u256)
+                            .try_into()
+                            .expect('TOKEN0_AMOUNT_OVERFLOW');
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
