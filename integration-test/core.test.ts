@@ -14,14 +14,14 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x7bebe73b57806307db657aa0bc94a482c8489b9dd5abca1048c9f39828e6907",
+      core: "0xb0f2a24808ef0e71517f2e5ec40c19e7340ad427bd2a2a452cdce9f4177666",
       positions:
-        "0x35649a29af85a8213979a6db9f69ed32b1c64b28be026dec28cb284ad4dd6eb",
+        "0x6d8690ea9f20bf16314a456ba58c82c8e279327ae1aa31c13b68f94ead12fa4",
       router:
-        "0x28078e4b34563d7259c79b86378568b30660e30b1e9def79b845a32eed7ea7e",
-      nft: "0x4211e15a2007d5e2ee46cb5999652fc2f2f9cc9af8a4ad2487ffc7cae18f393",
+        "0x63cb747459a181b3f9808bb8febae4b05cb67e0f95c60714d63412bbccdfe42",
+      nft: "0x60ddc69e8caaf9a845137b68abb4ee544e6c4fd19a6888f971aa535edd04c87",
       tokenClassHash:
-        "0x645bbd4bf9fb2bd4ad4dd44a0a97fa36cce3f848ab715ddb82a093337c1e42e",
+        "0x1065ec6dd47efab112d4212197e7864a02851cb1a62d9839a15f8bbcd09ebc1",
     });
     console.log(setup);
   }, 300_000);
