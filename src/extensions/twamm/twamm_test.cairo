@@ -1105,7 +1105,8 @@ mod PlaceOrdersAndUpdateSaleRate {
         VirtualOrdersExecuted, OrderInfo, set_up_twamm, place_order, calculate_sale_rate,
         OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
         PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT, IERC20Dispatcher,
-        IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait, PoolKeyIntoStateKey, constants
+        IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait, PoolKeyIntoStateKey,
+        constants
     };
 
     #[test]
