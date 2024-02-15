@@ -99,9 +99,14 @@ mod SaleRateTest {
         assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, false), 0);
         assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, false), 100);
         assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, false), 200);
-        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, true), 1);
-        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, true), 101);
-        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, true), 201);
+
+        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, true), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, true), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, true), 200);
+
+        // 0.5 sale rate
+        assert_eq!(calculate_amount_from_sale_rate(2147483648, 0, 3, false), 1);
+        assert_eq!(calculate_amount_from_sale_rate(2147483648, 0, 3, true), 2);
     }
 
     #[test]

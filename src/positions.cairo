@@ -514,7 +514,7 @@ pub mod Positions {
                 .transfer(twamm.contract_address, amount.into());
 
             let sale_rate = calculate_sale_rate(
-                amount - 1, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
+                amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
             );
 
             twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });

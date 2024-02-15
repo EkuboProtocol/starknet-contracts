@@ -42,14 +42,16 @@ pub fn calculate_sale_rate(amount: u128, start_time: u64, end_time: u64) -> u128
 pub fn calculate_amount_from_sale_rate(
     sale_rate: u128, start_time: u64, end_time: u64, round_up: bool
 ) -> u128 {
-    let amount = (sale_rate.into() * (end_time - start_time).into() / constants::X32_u256)
-        .try_into()
-        .expect('ORDER_AMOUNT_DELTA_OVERFLOW');
+    let (quotient, remainder): (u256, u256) = DivRem::div_rem(
+        sale_rate.into() * (end_time - start_time).into(), constants::X32_u256.try_into().unwrap()
+    );
 
-    if (round_up) {
-        amount + 1_u128
-    } else {
+    let amount: u128 = quotient.try_into().expect('ORDER_AMOUNT_DELTA_OVERFLOW');
+
+    if (!round_up || remainder.is_zero()) {
         amount
+    } else {
+        amount + 1_u128
     }
 }
 
