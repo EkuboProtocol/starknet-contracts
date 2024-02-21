@@ -493,10 +493,13 @@ pub mod TWAMM {
                         // zero out the state
                         (0, false)
                     } else {
-                        let adjusted_reward_rate = self.get_current_reward_rate(order_key)
-                            - calculate_reward_rate(order_info.purchased_amount, sale_rate_next);
-
-                        (adjusted_reward_rate, true)
+                        (
+                            self.get_current_reward_rate(order_key)
+                                - calculate_reward_rate(
+                                    order_info.purchased_amount, sale_rate_next
+                                ),
+                            true
+                        )
                     };
 
                     self
@@ -515,7 +518,7 @@ pub mod TWAMM {
                         let storage_key: StorageKey = key.into();
 
                         let sale_rate_storage_address = storage_base_address_from_felt252(
-                            LegacyHash::hash(selector!("sale_rate"), storage_key)
+                            LegacyHash::hash(selector!("sale_rate"), storage_key.value)
                         );
 
                         let (token0_sale_rate, token1_sale_rate): (u128, u128) = Store::read(
@@ -541,6 +544,7 @@ pub mod TWAMM {
                     // always update end time because this point is only reached if the order is active or hasn't started
                     self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
 
+                    // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
                     let amount_delta = calculate_amount_from_sale_rate(
                         sale_rate_delta.mag,
                         max(order_key.start_time, current_time),
@@ -552,9 +556,12 @@ pub mod TWAMM {
 
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
+
+                        let pool_key: PoolKey = key.into();
+
                         core.load(token: token, salt: 0, amount: amount_delta);
 
-                        if (core.get_pool_liquidity(key.into()).is_non_zero()) {
+                        if (core.get_pool_liquidity(pool_key).is_non_zero()) {
                             let fee_amount = compute_fee(amount_delta, key.fee);
 
                             let (amount0, amount1) = if (order_key
@@ -565,7 +572,7 @@ pub mod TWAMM {
                                 (fee_amount, 0)
                             };
 
-                            core.accumulate_as_fees(key.into(), amount0, amount1);
+                            core.accumulate_as_fees(pool_key, amount0, amount1);
                             core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
                         } else {
                             core.withdraw(token, get_contract_address(), amount_delta);
@@ -641,7 +648,7 @@ pub mod TWAMM {
 
             let time_sale_rate_delta_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key), time
+                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key.value), time
                 )
             );
 
@@ -680,7 +687,7 @@ pub mod TWAMM {
 
             let sale_rate_net_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key), time
+                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key.value), time
                 )
             );
 
@@ -796,7 +803,7 @@ pub mod TWAMM {
                 let mut total_delta = Zero::<Delta>::zero();
 
                 let sale_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("sale_rate"), storage_key)
+                    LegacyHash::hash(selector!("sale_rate"), storage_key.value)
                 );
 
                 let (mut token0_sale_rate, mut token1_sale_rate): (u128, u128) = Store::read(
@@ -805,7 +812,7 @@ pub mod TWAMM {
                     .expect('FAILED_TO_READ_SALE_RATE');
 
                 let reward_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("reward_rate"), storage_key)
+                    LegacyHash::hash(selector!("reward_rate"), storage_key.value)
                 );
 
                 let (mut token0_reward_rate, mut token1_reward_rate): (felt252, felt252) =
@@ -819,11 +826,11 @@ pub mod TWAMM {
                 );
 
                 let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_delta"), storage_key
+                    selector!("time_sale_rate_delta"), storage_key.value
                 );
 
                 let time_reward_rate_storage_prefix = LegacyHash::hash(
-                    selector!("time_reward_rate"), storage_key
+                    selector!("time_reward_rate"), storage_key.value
                 );
 
                 loop {
