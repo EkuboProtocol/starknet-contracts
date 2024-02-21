@@ -60,7 +60,8 @@ pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
 }
 
 pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
-    (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().expect('REWARD_RATE_OVERFLOW')
+    // avoid locking pools by defaulting to 0 on overflow
+    (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().unwrap_or_default()
 }
 
 // Timestamps specified in order keys must be a multiple of a base that depends on how close they are to now
@@ -110,10 +111,8 @@ pub fn calculate_next_sqrt_ratio(
         let exponent = div(
             u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), false
         );
-        // validate high is 0, integer piece should be < 128
-        assert(exponent.high.is_zero(), 'E_MUL_OVERFLOW');
 
-        if (exponent.low > constants::EXPONENT_LIMIT) {
+        if (exponent.low > constants::EXPONENT_LIMIT || exponent.high.is_non_zero()) {
             // sale_rate * t >> liquidity
             sqrt_sale_ratio
         } else {

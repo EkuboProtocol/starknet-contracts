@@ -1101,12 +1101,12 @@ mod PlaceOrdersAndUpdateSaleRate {
         Bounds, tick_to_sqrt_ratio, i129, i129Trait, AddDeltaTrait, TICKS_IN_ONE_PERCENT,
         IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
         SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
-        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
-        VirtualOrdersExecuted, OrderInfo, set_up_twamm, place_order, calculate_sale_rate,
-        OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
-        PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT, IERC20Dispatcher,
-        IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait, PoolKeyIntoStateKey,
-        constants
+        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT,
+        OrderUpdated, VirtualOrdersExecuted, OrderInfo, set_up_twamm, place_order,
+        calculate_sale_rate, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance,
+        PoolInitialized, PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT,
+        IERC20Dispatcher, IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
+        PoolKeyIntoStateKey, constants, max_tick
     };
 
     #[test]

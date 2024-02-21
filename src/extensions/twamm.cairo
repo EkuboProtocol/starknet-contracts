@@ -74,7 +74,7 @@ pub trait ITWAMM<TContractState> {
 
 #[starknet::contract]
 pub mod TWAMM {
-    use core::cmp::{max, min};
+    use core::cmp::{max};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};

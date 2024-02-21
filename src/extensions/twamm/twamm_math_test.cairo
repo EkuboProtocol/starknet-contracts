@@ -533,15 +533,12 @@ fn test_is_time_valid_future_times_near_second_boundary() {
 
 #[test]
 fn test_calculate_reward_rate() {
-    let amount = 1;
-    let sale_rate = calculate_sale_rate(amount, 0, constants::MAX_DURATION);
-    // 2**128
-    assert_eq!(340282366920938463463374607431768211456, calculate_reward_rate(amount, sale_rate));
+    // largest reward possible
+    assert_eq!(
+        3618502788666131106986593281521497120404053196834988299249819043765042544640,
+        calculate_reward_rate(0xffffffffffffffffffffffffffffffff, 32)
+    );
 
-    // largest amount that can be sold in one second
-    // 2**96 - 1
-    let amount = 0xffffffffffffffffffffffff;
-    let sale_rate = calculate_sale_rate(amount, 0, 1);
-    // 2**128
-    assert_eq!(79228162514264337593543950336, calculate_reward_rate(amount, sale_rate));
+    // overflow returns 0
+    assert_eq!(0, calculate_reward_rate(0xffffffffffffffffffffffffffffffff, 31));
 }
