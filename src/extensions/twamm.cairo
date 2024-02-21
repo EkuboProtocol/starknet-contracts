@@ -415,7 +415,7 @@ pub mod TWAMM {
 
             self
                 .prefix_next_initialized_time(
-                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key.value),
+                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key),
                     from,
                     max_time
                 )
@@ -518,7 +518,7 @@ pub mod TWAMM {
                         let storage_key: StorageKey = key.into();
 
                         let sale_rate_storage_address = storage_base_address_from_felt252(
-                            LegacyHash::hash(selector!("sale_rate"), storage_key.value)
+                            LegacyHash::hash(selector!("sale_rate"), storage_key)
                         );
 
                         let (token0_sale_rate, token1_sale_rate): (u128, u128) = Store::read(
@@ -648,7 +648,7 @@ pub mod TWAMM {
 
             let time_sale_rate_delta_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key.value), time
+                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key), time
                 )
             );
 
@@ -687,7 +687,7 @@ pub mod TWAMM {
 
             let sale_rate_net_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key.value), time
+                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key), time
                 )
             );
 
@@ -803,7 +803,7 @@ pub mod TWAMM {
                 let mut total_delta = Zero::<Delta>::zero();
 
                 let sale_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("sale_rate"), storage_key.value)
+                    LegacyHash::hash(selector!("sale_rate"), storage_key)
                 );
 
                 let (mut token0_sale_rate, mut token1_sale_rate): (u128, u128) = Store::read(
@@ -812,7 +812,7 @@ pub mod TWAMM {
                     .expect('FAILED_TO_READ_SALE_RATE');
 
                 let reward_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("reward_rate"), storage_key.value)
+                    LegacyHash::hash(selector!("reward_rate"), storage_key)
                 );
 
                 let (mut token0_reward_rate, mut token1_reward_rate): (felt252, felt252) =
@@ -822,15 +822,15 @@ pub mod TWAMM {
                     .expect('FAILED_TO_READ_REWARD_RATE');
 
                 let time_bitmap_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_bitmaps"), storage_key.value
+                    selector!("time_sale_rate_bitmaps"), storage_key
                 );
 
                 let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_delta"), storage_key.value
+                    selector!("time_sale_rate_delta"), storage_key
                 );
 
                 let time_reward_rate_storage_prefix = LegacyHash::hash(
-                    selector!("time_reward_rate"), storage_key.value
+                    selector!("time_reward_rate"), storage_key
                 );
 
                 loop {
