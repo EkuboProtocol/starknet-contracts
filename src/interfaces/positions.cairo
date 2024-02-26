@@ -127,6 +127,9 @@ pub trait IPositions<TStorage> {
         ref self: TStorage, order_key: OrderKey, amount: u128
     ) -> (u64, u128);
 
+    // Increase the sell amount of the last minted NFT
+    fn increase_sell_amount_last(ref self: TStorage, order_key: OrderKey, amount: u128) -> u128;
+
     // Increase sold amount on a twamm position.
     fn increase_sell_amount(ref self: TStorage, id: u64, order_key: OrderKey, amount: u128) -> u128;
 

@@ -500,6 +500,12 @@ pub mod Positions {
             (id, self.increase_sell_amount(id, order_key, amount))
         }
 
+        fn increase_sell_amount_last(
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> u128 {
+            self.increase_sell_amount(self.nft.read().get_next_token_id() - 1, order_key, amount)
+        }
+
         fn increase_sell_amount(
             ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
         ) -> u128 {
