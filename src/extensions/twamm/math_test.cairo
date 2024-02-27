@@ -57,7 +57,9 @@ mod SaleRateTest {
             0x10
         );
         assert_eq!(
-            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_EIGHT - 1)),
+            calculate_sale_rate(
+                amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_EIGHT - 1)
+            ),
             0x1
         );
     }
