@@ -1,4 +1,4 @@
-use ekubo::extensions::twamm::{OrderKey};
+use ekubo::extensions::interfaces::twamm::{OrderKey};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};

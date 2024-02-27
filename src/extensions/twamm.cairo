@@ -5,85 +5,21 @@ pub(crate) mod twamm_math_test;
 #[cfg(test)]
 pub(crate) mod twamm_test;
 
-use core::num::traits::{Zero};
-use core::traits::{Into, TryInto};
-use ekubo::types::i129::{i129, i129Trait};
-use ekubo::types::keys::{PoolKey};
-use starknet::{ContractAddress, ClassHash};
-
-#[derive(Drop, Copy, Serde, Hash)]
-pub struct OrderKey {
-    pub sell_token: ContractAddress,
-    pub buy_token: ContractAddress,
-    pub fee: u128,
-    pub start_time: u64,
-    pub end_time: u64
-}
-
-#[derive(Serde, Drop, Copy)]
-pub struct StateKey {
-    pub token0: ContractAddress,
-    pub token1: ContractAddress,
-    pub fee: u128,
-}
-
-#[derive(Serde, Drop, Copy)]
-pub struct OrderInfo {
-    pub sale_rate: u128,
-    pub remaining_sell_amount: u128,
-    pub purchased_amount: u128,
-}
-
-#[starknet::interface]
-pub trait ITWAMM<TContractState> {
-    fn get_last_virtual_order_time(self: @TContractState, key: StateKey) -> u64;
-
-    // Return the current state of the given order
-    fn get_order_info(
-        self: @TContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
-    ) -> OrderInfo;
-
-    // Returns the current sale rates for the given pool
-    fn get_sale_rate(self: @TContractState, key: StateKey) -> (u128, u128);
-
-    // Return the current reward rate
-    fn get_reward_rate(self: @TContractState, key: StateKey) -> (felt252, felt252);
-
-    // Return the sale rate net for a specific time
-    fn get_sale_rate_net(self: @TContractState, key: StateKey, time: u64) -> u128;
-
-    // Return the sale rate delta for a specific time
-    fn get_sale_rate_delta(self: @TContractState, key: StateKey, time: u64) -> (i129, i129);
-
-    // Return the next initialized time
-    fn next_initialized_time(
-        self: @TContractState, key: StateKey, from: u64, max_time: u64
-    ) -> (u64, bool);
-
-    // Update an existing twamm order
-    fn update_order(
-        ref self: TContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
-    );
-
-    // Collect proceeds from a twamm order
-    fn collect_proceeds(ref self: TContractState, salt: felt252, order_key: OrderKey);
-
-    // Execute virtual orders
-    fn execute_virtual_orders(ref self: TContractState, key: StateKey);
-}
-
 #[starknet::contract]
 pub mod TWAMM {
     use core::cmp::{max};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
-    use core::traits::{TryInto, Into};
+    use core::traits::{Into, TryInto};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{
         call_core_with_callback, consume_callback_data, check_caller_is_core
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::extensions::interfaces::twamm::{
+        ITWAMM, StateKey, OrderKey, OrderInfo
+    };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
@@ -103,14 +39,13 @@ pub mod TWAMM {
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
-        Store, get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
+        ContractAddress, Store, get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
         get_block_timestamp, ClassHash, storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
         constants, calculate_reward_amount, validate_time, calculate_next_sqrt_ratio,
         calculate_amount_from_sale_rate, calculate_reward_rate
     };
-    use super::{ITWAMM, StateKey, ContractAddress, OrderKey, OrderInfo};
 
     #[derive(Drop, Copy, Serde)]
     struct OrderState {

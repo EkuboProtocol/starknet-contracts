@@ -3,6 +3,10 @@ use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
+
+use ekubo::extensions::interfaces::twamm::{
+    ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo, OrderKey, StateKey
+};
 use ekubo::extensions::twamm::TWAMM::{
     OrderUpdated, VirtualOrdersExecuted, OrderProceedsWithdrawn, time_to_word_and_bit_index,
     word_and_bit_index_to_time
@@ -11,9 +15,6 @@ use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
     calculate_amount_from_sale_rate
 };
-
-use ekubo::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo};
-use ekubo::extensions::twamm::{OrderKey, StateKey};
 use ekubo::interfaces::core::{
     ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
 };
