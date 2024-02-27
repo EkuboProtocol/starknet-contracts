@@ -642,12 +642,15 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let price = self.pool_price.read(pool_key);
+            let mut price = self.pool_price.read(pool_key);
 
             if (price.call_points.before_update_position) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
                         .before_update_position(locker, pool_key, params);
+                    // the extension could have performed actions on the pool, changing its state
+                    // thus, we must re-read it from storage
+                    price = self.pool_price.read(pool_key);
                 }
             }
 
@@ -805,7 +808,7 @@ pub mod Core {
                 LegacyHash::hash(selector!("pool_price"), pool_key)
             );
 
-            let price: PoolPrice = Store::read(0, pool_price_storage_address)
+            let mut price: PoolPrice = Store::read(0, pool_price_storage_address)
                 .expect('FAILED_READ_POOL_PRICE');
 
             // pool must be initialized
@@ -815,6 +818,10 @@ pub mod Core {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
                         .before_swap(locker, pool_key, params);
+                    // the extension could have performed actions on the pool, changing the price
+                    // thus, we must re-read it from storage
+                    price = Store::read(0, pool_price_storage_address)
+                        .expect('FAILED_READ_POOL_PRICE');
                 }
             }
 
