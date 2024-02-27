@@ -101,7 +101,9 @@ fn test_locked_cannot_be_called_directly() {
 }
 
 #[test]
-#[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
+#[should_panic(
+    expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED')
+)]
 fn test_deposit_fails_min_liquidity() {
     let mut d: Deployer = Default::default();
     let setup = d
