@@ -101,7 +101,7 @@ pub mod Positions {
         pool_key: PoolKey,
         salt: felt252,
         bounds: Bounds,
-        liquidity: u128,
+        min_liquidity: u128,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -155,14 +155,41 @@ pub mod Positions {
 
             match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
-                    let delta: Delta = if data.liquidity.is_non_zero() {
+                    // pools with extensions could update the price, perform a zero liquidity
+                    // update and get the most up to date price
+                    if (data.pool_key.extension.is_non_zero()) {
+                        core
+                            .update_position(
+                                data.pool_key,
+                                UpdatePositionParameters {
+                                    salt: 0,
+                                    bounds: max_bounds(data.pool_key.tick_spacing),
+                                    liquidity_delta: Zero::zero(),
+                                }
+                            );
+                    }
+
+                    let price = core.get_pool_price(data.pool_key);
+
+                    // compute how much liquidity we can deposit based on token balances
+                    let liquidity: u128 = max_liquidity(
+                        price.sqrt_ratio,
+                        tick_to_sqrt_ratio(data.bounds.lower),
+                        tick_to_sqrt_ratio(data.bounds.upper),
+                        self.balance_of_token(data.pool_key.token0),
+                        self.balance_of_token(data.pool_key.token1)
+                    );
+
+                    assert(liquidity >= data.min_liquidity, 'MIN_LIQUIDITY');
+
+                    let delta: Delta = if liquidity.is_non_zero() {
                         core
                             .update_position(
                                 data.pool_key,
                                 UpdatePositionParameters {
                                     salt: data.salt,
                                     bounds: data.bounds,
-                                    liquidity_delta: i129 { mag: data.liquidity, sign: false },
+                                    liquidity_delta: i129 { mag: liquidity, sign: false },
                                 }
                             )
                     } else {
@@ -181,7 +208,7 @@ pub mod Positions {
                         core.pay(data.pool_key.token1);
                     }
 
-                    ArrayTrait::new().span()
+                    serialize(@liquidity).span()
                 },
                 LockCallbackData::Withdraw(data) => {
                     let delta = core
@@ -336,28 +363,12 @@ pub mod Positions {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
 
-            let core = self.core.read();
-
-            // todo: how do we handle before/after update position that changes the price? 
-            // https://github.com/EkuboProtocol/contracts/issues/102
-            let price = core.get_pool_price(pool_key);
-
-            // compute how much liquidity we can deposit based on token balances
-            let liquidity: u128 = max_liquidity(
-                price.sqrt_ratio,
-                tick_to_sqrt_ratio(bounds.lower),
-                tick_to_sqrt_ratio(bounds.upper),
-                self.balance_of_token(pool_key.token0),
-                self.balance_of_token(pool_key.token1)
-            );
-            assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
-
-            call_core_with_callback::<
-                LockCallbackData, ()
-            >(
-                core,
+            let liquidity: u128 = call_core_with_callback(
+                self.core.read(),
                 @LockCallbackData::Deposit(
-                    DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
+                    DepositCallbackData {
+                        pool_key, salt: id.into(), bounds, min_liquidity: min_liquidity
+                    }
                 )
             );
 
