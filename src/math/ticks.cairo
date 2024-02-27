@@ -27,7 +27,7 @@ pub mod constants {
 // Each step in the approximation performs a multiplication and a shift
 // We assume the mul is safe in this function
 #[inline(always)]
-fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
+pub(crate) fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
     let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
     return u256 { low: res.high, high: 0 };
 }
