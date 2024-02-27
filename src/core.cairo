@@ -586,15 +586,15 @@ pub mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             pool_key.check_valid();
 
-            let price = self.pool_price.read(pool_key);
-            assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
-
             let call_points = if (pool_key.extension.is_non_zero()) {
                 IExtensionDispatcher { contract_address: pool_key.extension }
                     .before_initialize_pool(get_caller_address(), pool_key, initial_tick)
             } else {
                 Default::<CallPoints>::default()
             };
+
+            let price = self.pool_price.read(pool_key);
+            assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
             let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
 
