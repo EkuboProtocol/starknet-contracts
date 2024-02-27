@@ -800,7 +800,7 @@ pub mod TWAMM {
                 assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
 
                 let mut next_sqrt_ratio = Option::Some(starting_sqrt_ratio);
-                let mut total_delta = Zero::<Delta>::zero();
+                let mut total_delta = Zero::zero();
 
                 let sale_rate_storage_address = storage_base_address_from_felt252(
                     LegacyHash::hash(selector!("sale_rate"), storage_key)
@@ -892,8 +892,8 @@ pub mod TWAMM {
                                     }
                                 );
 
-                            // both sides are swapping, twamm delta is the amounts swapped to reach
-                            // target price minus amounts in the twamm
+                            // both sides are swapping, twamm delta is the swap amounts needed to reach
+                            // the target price minus amounts in the twamm
                             delta
                                 - Delta {
                                     amount0: i129 { mag: token0_amount, sign: false },
@@ -965,11 +965,11 @@ pub mod TWAMM {
                         )
                             .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
 
-                        if (token0_sale_rate_delta.mag.is_non_zero()) {
+                        if (token0_sale_rate_delta.is_non_zero()) {
                             token0_sale_rate = token0_sale_rate.add(token0_sale_rate_delta);
                         }
 
-                        if (token1_sale_rate_delta.mag.is_non_zero()) {
+                        if (token1_sale_rate_delta.is_non_zero()) {
                             token1_sale_rate = token1_sale_rate.add(token1_sale_rate_delta);
                         }
 
