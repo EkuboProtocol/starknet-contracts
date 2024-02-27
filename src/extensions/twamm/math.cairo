@@ -1,22 +1,22 @@
 mod exp;
+#[cfg(test)]
+mod exp_test;
+
+pub mod time;
+
+#[cfg(test)]
+mod time_test;
 
 use core::cmp::{max};
 use core::integer::{u256_overflow_mul};
 use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u128_wide_mul, u256_sqrt};
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
-use ekubo::math::bits::{msb};
-use ekubo::math::exp2::{exp2};
 use ekubo::math::muldiv::{div, muldiv};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129, i129Trait};
 
 pub mod constants {
-    pub const LOG_SCALE_FACTOR: u8 = 4;
-    pub const BITMAP_SPACING: u64 = 16;
-
-    // 2**32
-    pub const MAX_DURATION: u64 = 0x100000000_u64;
     pub const X32_u128: u128 = 0x100000000_u128;
     pub const X32_u256: u256 = 0x100000000_u256;
 
@@ -31,24 +31,22 @@ pub mod constants {
     pub const EXPONENT_LIMIT: u128 = 1623313478486440542208;
 }
 
-pub fn calculate_sale_rate(amount: u128, start_time: u64, end_time: u64) -> u128 {
-    let sale_rate: u128 = ((amount.into() * constants::X32_u256) / (end_time - start_time).into())
+// Computes the sale rate as a fixed point 96.32 number for a given amount, which is the just the amount divided by the duration in seconds
+// The maximum sale rate for a given 18 decimal token that can be expressed in a 96.32 is approximately ~79,228,162,514 tokens
+// https://www.wolframalpha.com/input?i=%282**128+-+1%29+%2F+2**32+%2F+10**18
+
+#[inline(always)]
+pub fn calculate_sale_rate(amount: u128, duration: u32) -> u128 {
+    ((amount.into() * constants::X32_u256) / duration.into())
         .try_into()
-        .expect('SALE_RATE_OVERFLOW');
-
-    assert(sale_rate.is_non_zero(), 'SALE_RATE_ZERO');
-
-    sale_rate
+        .expect('SALE_RATE_OVERFLOW')
 }
 
-pub fn calculate_amount_from_sale_rate(
-    sale_rate: u128, start_time: u64, end_time: u64, round_up: bool
-) -> u128 {
-    div(
-        sale_rate.into() * (end_time - start_time).into(),
-        constants::X32_u256.try_into().unwrap(),
-        round_up
-    )
+// Computes the amount for the given sale rate over the given start and end time, which is just the amount times the duration
+// Will never revert because we limit the duration of any order to 2**32
+#[inline(always)]
+pub fn calculate_amount_from_sale_rate(sale_rate: u128, duration: u32, round_up: bool) -> u128 {
+    div(sale_rate.into() * duration.into(), constants::X32_u256.try_into().unwrap(), round_up)
         .try_into()
         .unwrap()
 }
@@ -58,7 +56,7 @@ pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
         .unwrap()
         .try_into()
-        .expect('REWARD_AMOUNT_OVERFLOW')
+        .unwrap()
 }
 
 pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
@@ -66,29 +64,12 @@ pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
     (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().unwrap_or_default()
 }
 
-// Timestamps specified in order keys must be a multiple of a base that depends on how close they are to now
-#[inline(always)]
-pub(crate) fn is_time_valid(now: u64, time: u64) -> bool {
-    // = 16**(max(1, floor(log_16(time-now))))
-    let step = if time <= (now + constants::BITMAP_SPACING) {
-        constants::BITMAP_SPACING.into()
-    } else {
-        exp2(constants::LOG_SCALE_FACTOR * (msb((time - now).into()) / constants::LOG_SCALE_FACTOR))
-    };
-
-    (time.into() % step).is_zero()
-}
-
-pub(crate) fn validate_time(now: u64, time: u64) {
-    assert(is_time_valid(now, time), 'INVALID_TIME');
-}
-
 pub fn calculate_next_sqrt_ratio(
     sqrt_ratio: u256,
     liquidity: u128,
     token0_sale_rate: u128,
     token1_sale_rate: u128,
-    time_elapsed: u64
+    time_elapsed: u32
 ) -> u256 {
     let sale_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
     let sqrt_sale_ratio: u256 = if (sale_ratio.high.is_zero()) {

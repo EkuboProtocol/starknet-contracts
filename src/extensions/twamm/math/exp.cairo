@@ -4,7 +4,7 @@ use ekubo::math::ticks::{unsafe_mul_shift};
 // Computes e^x where x is a fixed point 64.64 number and the result is a fixed point 128.128 number
 pub fn exp(x: u128) -> u256 {
     if (x >= 0x20000000000000000) {
-        let half = exp_inner(x / 2);
+        let half = exp(x / 2);
         muldiv(half, half, u256 { high: 1, low: 0 }, false).expect('EXP_FRACTIONAL_OVERFLOW')
     } else {
         exp_inner(x)

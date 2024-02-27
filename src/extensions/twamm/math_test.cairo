@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
-    calculate_amount_from_sale_rate, is_time_valid, validate_time, calculate_reward_rate
+    calculate_amount_from_sale_rate, calculate_reward_rate, time::{to_duration}
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::types::delta::{Delta};
@@ -23,89 +23,64 @@ mod SaleRateTest {
     use super::{
         calculate_sale_rate, calculate_amount_from_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
         SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
-        SIXTEEN_POW_EIGHT, constants, i129, Zero
+        SIXTEEN_POW_EIGHT, constants, i129, Zero, to_duration
     };
-
-
-    fn assert_case_sale_rate(amount: u128, start_time: u64, end_time: u64, expected: u128) {
-        let sale_rate = calculate_sale_rate(
-            amount: amount, start_time: start_time, end_time: end_time
-        );
-        assert_eq!(sale_rate, expected);
-    }
 
     #[test]
     fn test_sale_rates_smallest_amount() {
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_ONE, expected: 0x10000000,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_ONE)),
+            0x10000000
         );
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_TWO, expected: 0x1000000,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_TWO)),
+            0x1000000
         );
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_THREE, expected: 0x100000,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_THREE)),
+            0x100000
         );
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_FOUR, expected: 0x10000,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_FOUR)),
+            0x10000
         );
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_FIVE, expected: 0x1000,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_FIVE)),
+            0x1000
         );
-        assert_case_sale_rate(amount: 1, start_time: 0, end_time: SIXTEEN_POW_SIX, expected: 0x100);
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_SEVEN, expected: 0x10,
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_SIX)),
+            0x100
         );
-        assert_case_sale_rate(amount: 1, start_time: 0, end_time: SIXTEEN_POW_EIGHT, expected: 0x1);
-    }
-
-    #[test]
-    #[should_panic(expected: ('SALE_RATE_ZERO',))]
-    fn test_sale_rates_smallest_amount_underflow() {
-        // sale window above 2**32 seconds (136.2 years) underflows to 0 sale rate.
-        assert_case_sale_rate(
-            amount: 1, start_time: 0, end_time: SIXTEEN_POW_EIGHT + 1, expected: 0x0
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_SEVEN)),
+            0x10
+        );
+        assert_eq!(
+            calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_EIGHT - 1)),
+            0x1
         );
     }
 
     #[test]
     #[should_panic(expected: ('SALE_RATE_OVERFLOW',))]
     fn test_sale_rates_overflow() {
-        assert_case_sale_rate(
-            // 2**128 - 1
-            amount: 0xffffffffffffffffffffffffffffffff,
-            // 2**32 - 1
-            start_time: 0,
-            end_time: 0xffffffff,
-            expected: 0
-        );
+        calculate_sale_rate(amount: 0xffffffffffffffffffffffffffffffff, duration: 0xffffffff);
     }
-
-    #[test]
-    fn test_sale_rates_largest_amount() {
-        assert_case_sale_rate(
-            // 2**128 - 1
-            amount: 0xffffffffffffffffffffffffffffffff,
-            start_time: 0,
-            // 2**32
-            end_time: 0x1000000000,
-            expected: 0xfffffffffffffffffffffffffffffff
-        );
-    }
-
 
     #[test]
     fn test_calculate_amount_from_sale_rate() {
-        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, false), 0);
-        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, false), 100);
-        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, false), 200);
+        assert_eq!(calculate_amount_from_sale_rate(0, 100, false), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 100, false), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 100, false), 200);
 
-        assert_eq!(calculate_amount_from_sale_rate(0, 0, 100, true), 0);
-        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 0, 100, true), 100);
-        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 0, 100, true), 200);
+        assert_eq!(calculate_amount_from_sale_rate(0, 100, true), 0);
+        assert_eq!(calculate_amount_from_sale_rate(1 * constants::X32_u128, 100, true), 100);
+        assert_eq!(calculate_amount_from_sale_rate(2 * constants::X32_u128, 100, true), 200);
 
         // 0.5 sale rate
-        assert_eq!(calculate_amount_from_sale_rate(2147483648, 0, 3, false), 1);
-        assert_eq!(calculate_amount_from_sale_rate(2147483648, 0, 3, true), 2);
+        assert_eq!(calculate_amount_from_sale_rate(2147483648, 3, false), 1);
+        assert_eq!(calculate_amount_from_sale_rate(2147483648, 3, true), 2);
     }
 
     #[test]
@@ -155,7 +130,10 @@ mod SaleRateTest {
     fn run_place_order_and_validate_sale_rate(
         amount: u128, start_time: u64, end_time: u64, expected_sale_rate: u128
     ) {
-        assert_eq!(calculate_sale_rate(amount, start_time, end_time), expected_sale_rate);
+        assert_eq!(
+            calculate_sale_rate(amount, duration: to_duration(start: start_time, end: end_time)),
+            expected_sale_rate
+        );
     }
 }
 
@@ -364,57 +342,6 @@ mod TWAMMMathTest {
         // sqrt_ratio will be sqrt_sale_ratio
         assert_eq!(next_sqrt_ratio, 107606732706330320687810575726449262521);
     }
-}
-
-#[test]
-fn test_is_time_valid_past_or_close_time() {
-    assert_eq!(is_time_valid(now: 0, time: 16), true);
-    assert_eq!(is_time_valid(now: 8, time: 16), true);
-    assert_eq!(is_time_valid(now: 9, time: 16), true);
-    assert_eq!(is_time_valid(now: 15, time: 16), true);
-    assert_eq!(is_time_valid(now: 16, time: 16), true);
-    assert_eq!(is_time_valid(now: 17, time: 16), true);
-    assert_eq!(is_time_valid(now: 12345678, time: 16), true);
-    assert_eq!(is_time_valid(now: 12345678, time: 32), true);
-    assert_eq!(is_time_valid(now: 12345678, time: 0), true);
-}
-
-#[test]
-fn test_is_time_valid_future_times_near() {
-    assert_eq!(is_time_valid(now: 0, time: 16), true);
-    assert_eq!(is_time_valid(now: 8, time: 16), true);
-    assert_eq!(is_time_valid(now: 9, time: 16), true);
-    assert_eq!(is_time_valid(now: 0, time: 32), true);
-    assert_eq!(is_time_valid(now: 31, time: 32), true);
-
-    assert_eq!(is_time_valid(now: 0, time: 256), true);
-    assert_eq!(is_time_valid(now: 0, time: 240), true);
-    assert_eq!(is_time_valid(now: 0, time: 272), false);
-    assert_eq!(is_time_valid(now: 16, time: 256), true);
-    assert_eq!(is_time_valid(now: 16, time: 240), true);
-    assert_eq!(is_time_valid(now: 16, time: 272), false);
-
-    assert_eq!(is_time_valid(now: 0, time: 512), true);
-    assert_eq!(is_time_valid(now: 0, time: 496), false);
-    assert_eq!(is_time_valid(now: 0, time: 528), false);
-    assert_eq!(is_time_valid(now: 16, time: 512), true);
-    assert_eq!(is_time_valid(now: 16, time: 496), false);
-    assert_eq!(is_time_valid(now: 16, time: 528), false);
-}
-
-#[test]
-fn test_is_time_valid_future_times_near_second_boundary() {
-    assert_eq!(is_time_valid(now: 0, time: 4096), true);
-    assert_eq!(is_time_valid(now: 0, time: 3840), true);
-    assert_eq!(is_time_valid(now: 0, time: 4352), false);
-    assert_eq!(is_time_valid(now: 16, time: 4096), true);
-    assert_eq!(is_time_valid(now: 16, time: 3840), true);
-    assert_eq!(is_time_valid(now: 16, time: 4352), false);
-
-    assert_eq!(is_time_valid(now: 256, time: 4096), true);
-    assert_eq!(is_time_valid(now: 256, time: 3840), true);
-    assert_eq!(is_time_valid(now: 256, time: 4352), false);
-    assert_eq!(is_time_valid(now: 257, time: 4352), true);
 }
 
 #[test]

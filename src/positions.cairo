@@ -11,7 +11,7 @@ pub mod Positions {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
-    use ekubo::extensions::twamm::math::{calculate_sale_rate};
+    use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -520,7 +520,10 @@ pub mod Positions {
                 .transfer(twamm.contract_address, amount.into());
 
             let sale_rate = calculate_sale_rate(
-                amount, max(order_key.start_time, get_block_timestamp()), order_key.end_time,
+                amount: amount,
+                duration: to_duration(
+                    max(order_key.start_time, get_block_timestamp()), order_key.end_time
+                ),
             );
 
             twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });

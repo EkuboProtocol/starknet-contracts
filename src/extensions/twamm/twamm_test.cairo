@@ -13,7 +13,7 @@ use ekubo::extensions::twamm::TWAMM::{
 };
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
-    calculate_amount_from_sale_rate
+    calculate_amount_from_sale_rate, time::{to_duration}
 };
 use ekubo::interfaces::core::{
     ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
@@ -358,7 +358,8 @@ mod PlaceOrdersCheckDeltaAndNet {
         IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
         SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
         SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
-        VirtualOrdersExecuted, set_up_twamm, place_order, calculate_sale_rate, PoolKeyIntoStateKey
+        VirtualOrdersExecuted, set_up_twamm, place_order, calculate_sale_rate, PoolKeyIntoStateKey,
+        to_duration
     };
 
     #[test]
@@ -391,7 +392,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time,);
+        let expected_sale_rate_net = calculate_sale_rate(
+            amount: amount, duration: to_duration(start: timestamp, end: order1_end_time)
+        );
 
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
 
@@ -462,7 +465,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(
+            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+        );
 
         place_order(positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount);
 
@@ -534,7 +539,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(
+            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
@@ -608,7 +615,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
-        let expected_sale_rate_net = calculate_sale_rate(amount, timestamp, order1_end_time);
+        let expected_sale_rate_net = calculate_sale_rate(
+            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount
@@ -1107,7 +1116,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         calculate_sale_rate, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance,
         PoolInitialized, PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT,
         IERC20Dispatcher, IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
-        PoolKeyIntoStateKey, constants, max_tick
+        PoolKeyIntoStateKey, constants, max_tick, to_duration
     };
 
     #[test]
@@ -1272,7 +1281,9 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1368,7 +1379,9 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1464,7 +1477,9 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1503,7 +1518,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time, false
+            sale_rate_delta.mag,
+            duration: to_duration(start: order1_start_time, end: order1_end_time),
+            round_up: false
         );
 
         setup
@@ -1576,7 +1593,9 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1615,7 +1634,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // transfer funds to twamm
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
-            sale_rate_delta.mag, order1_start_time, order1_end_time, false
+            sale_rate_delta.mag,
+            duration: to_duration(start: order1_start_time, end: order1_end_time),
+            round_up: false
         );
         setup
             .token1
@@ -1687,7 +1708,9 @@ mod PlaceOrdersAndUpdateSaleRate {
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
-        let expected_sale_rate = calculate_sale_rate(amount, order1_start_time, order1_end_time);
+        let expected_sale_rate = calculate_sale_rate(
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+        );
 
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -3159,7 +3182,7 @@ mod PlaceOrderDurationTooLong {
     };
 
     #[test]
-    #[should_panic(expected: ('SALE_RATE_ZERO', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('DURATION_EXCEEDS_MAX_U32', 'ENTRYPOINT_FAILED'))]
     fn test_order_duration_too_long_positions() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -3185,7 +3208,7 @@ mod PlaceOrderDurationTooLong {
             setup.token1,
             fee,
             timestamp,
-            constants::MAX_DURATION + timestamp + 1, // 2**32
+            0x100000000 + timestamp,
             1
         );
     }
@@ -3193,7 +3216,10 @@ mod PlaceOrderDurationTooLong {
     #[test]
     #[should_panic(
         expected: (
-            'ORDER_DURATION_TOO_LONG', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
+            'DURATION_EXCEEDS_MAX_U32',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
         )
     )]
     fn test_order_duration_too_long_twamm() {
@@ -3219,7 +3245,7 @@ mod PlaceOrderDurationTooLong {
             buy_token: setup.token1.contract_address,
             fee,
             start_time: timestamp,
-            end_time: constants::MAX_DURATION + timestamp + 1 // 2**32 + 1
+            end_time: 0x100000000 + timestamp // 2**32
         };
 
         twamm.update_order(0, order_key, i129 { mag: 1, sign: false });

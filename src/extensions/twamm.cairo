@@ -1,6 +1,6 @@
 pub mod math;
 #[cfg(test)]
-pub(crate) mod twamm_math_test;
+pub(crate) mod math_test;
 
 #[cfg(test)]
 pub(crate) mod twamm_test;
@@ -17,9 +17,7 @@ pub mod TWAMM {
         call_core_with_callback, consume_callback_data, check_caller_is_core
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
-    use ekubo::extensions::interfaces::twamm::{
-        ITWAMM, StateKey, OrderKey, OrderInfo
-    };
+    use ekubo::extensions::interfaces::twamm::{ITWAMM, StateKey, OrderKey, OrderInfo};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
@@ -39,12 +37,13 @@ pub mod TWAMM {
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
-        ContractAddress, Store, get_contract_address, get_caller_address, syscalls::{replace_class_syscall},
-        get_block_timestamp, ClassHash, storage_access::{storage_base_address_from_felt252}
+        ContractAddress, Store, get_contract_address, get_caller_address,
+        syscalls::{replace_class_syscall}, get_block_timestamp, ClassHash,
+        storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
-        constants, calculate_reward_amount, validate_time, calculate_next_sqrt_ratio,
-        calculate_amount_from_sale_rate, calculate_reward_rate
+        constants, calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
+        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
     };
 
     #[derive(Drop, Copy, Serde)]
@@ -303,7 +302,9 @@ pub mod TWAMM {
             let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
                 (
                     calculate_amount_from_sale_rate(
-                        order_state.sale_rate, order_key.start_time, order_key.end_time, false
+                        sale_rate: order_state.sale_rate,
+                        duration: to_duration(start: order_key.start_time, end: order_key.end_time),
+                        round_up: false
                     ),
                     0
                 )
@@ -312,7 +313,9 @@ pub mod TWAMM {
 
                 (
                     calculate_amount_from_sale_rate(
-                        order_state.sale_rate, current_time, order_key.end_time, false
+                        sale_rate: order_state.sale_rate,
+                        duration: to_duration(start: current_time, end: order_key.end_time),
+                        round_up: false
                     ),
                     calculate_reward_amount(
                         current_reward_rate - order_reward_rate, order_state.sale_rate
@@ -407,10 +410,10 @@ pub mod TWAMM {
                     // there is no reason to adjust the sale rate of an order that has already ended
                     assert(current_time < order_key.end_time, 'ORDER_ENDED');
 
-                    assert(
-                        order_key.end_time - order_key.start_time < constants::MAX_DURATION,
-                        'ORDER_DURATION_TOO_LONG'
-                    );
+                    // assert(
+                    //     order_key.end_time - order_key.start_time < constants::MAX_DURATION,
+                    //     'ORDER_DURATION_TOO_LONG'
+                    // );
 
                     self.internal_execute_virtual_orders(core, order_key.into());
 
@@ -481,10 +484,11 @@ pub mod TWAMM {
 
                     // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
                     let amount_delta = calculate_amount_from_sale_rate(
-                        sale_rate_delta.mag,
-                        max(order_key.start_time, current_time),
-                        order_key.end_time,
-                        !sale_rate_delta.sign
+                        sale_rate: sale_rate_delta.mag,
+                        duration: to_duration(
+                            start: max(order_key.start_time, current_time), end: order_key.end_time
+                        ),
+                        round_up: !sale_rate_delta.sign
                     );
 
                     let token = order_key.sell_token;
@@ -688,9 +692,7 @@ pub mod TWAMM {
         fn prefix_next_initialized_time(
             self: @ContractState, prefix: felt252, from: u64, max_time: u64
         ) -> (u64, bool) {
-            let (word_index, bit_index) = time_to_word_and_bit_index(
-                from + constants::BITMAP_SPACING
-            );
+            let (word_index, bit_index) = time_to_word_and_bit_index(from + TIME_SPACING_SIZE);
 
             let bitmap: Bitmap = Store::read(
                 0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
@@ -786,20 +788,18 @@ pub mod TWAMM {
                             }
                         };
 
-                        let time_elapsed = next_virtual_order_time - last_virtual_order_time;
+                        let time_elapsed = to_duration(
+                            start: last_virtual_order_time, end: next_virtual_order_time
+                        );
 
                         // oveflow is nearly impossible since even with max sale_rate
                         // time elapse would need to be larger than 2**32
-                        let token0_amount: u128 = (token0_sale_rate.into()
-                            * time_elapsed.into()
-                            / constants::X32_u256)
-                            .try_into()
-                            .expect('TOKEN0_AMOUNT_OVERFLOW');
-                        let token1_amount: u128 = (token1_sale_rate.into()
-                            * time_elapsed.into()
-                            / constants::X32_u256)
-                            .try_into()
-                            .expect('TOKEN0_AMOUNT_OVERFLOW');
+                        let token0_amount: u128 = calculate_amount_from_sale_rate(
+                            sale_rate: token0_sale_rate, duration: time_elapsed, round_up: false
+                        );
+                        let token1_amount: u128 = calculate_amount_from_sale_rate(
+                            sale_rate: token1_sale_rate, duration: time_elapsed, round_up: false
+                        );
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
@@ -969,15 +969,14 @@ pub mod TWAMM {
 
     pub(crate) fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
         (
-            (time / (constants::BITMAP_SPACING * 251)).into(),
-            250_u8 - ((time / constants::BITMAP_SPACING) % 251).try_into().unwrap()
+            (time / (TIME_SPACING_SIZE * 251)).into(),
+            250_u8 - ((time / TIME_SPACING_SIZE) % 251).try_into().unwrap()
         )
     }
 
     pub(crate) fn word_and_bit_index_to_time(word_and_bit_index: (u128, u8)) -> u64 {
         let (word, bit) = word_and_bit_index;
-        ((word * 251 * constants::BITMAP_SPACING.into())
-            + ((250 - bit).into() * constants::BITMAP_SPACING.into()))
+        ((word * 251 * TIME_SPACING_SIZE.into()) + ((250 - bit).into() * TIME_SPACING_SIZE.into()))
             .try_into()
             .unwrap()
     }
