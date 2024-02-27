@@ -823,8 +823,6 @@ pub mod Core {
                     price = Store::read(0, pool_price_storage_address)
                         .expect('FAILED_READ_POOL_PRICE');
                 }
-
-                price = Store::read(0, pool_price_storage_address).expect('FAILED_READ_POOL_PRICE');
             }
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
