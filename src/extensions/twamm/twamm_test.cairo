@@ -26,6 +26,7 @@ use ekubo::interfaces::positions::{
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
+use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
@@ -1276,6 +1277,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -1374,6 +1376,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -1471,6 +1474,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1588,6 +1592,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -1702,6 +1707,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1990,6 +1996,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -2118,6 +2125,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -2231,6 +2239,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2357,6 +2366,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -2461,7 +2471,7 @@ mod PlaceOrderOnBothSides {
         OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
         PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
         ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0
+        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta
     };
 
     #[test]
@@ -2485,6 +2495,7 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2664,6 +2675,7 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let owner0 = get_contract_address();
@@ -2846,6 +2858,7 @@ mod PlaceOrderOnBothSides {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -3016,6 +3029,7 @@ mod PlaceOrderOnBothSides {
             ref d, core, fee, initial_tick, amount0, amount1
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3201,6 +3215,7 @@ mod PlaceOrderOnBothSides {
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -3325,6 +3340,154 @@ mod PlaceOrderOnBothSides {
         //        ~= 2,500.1263156841 tokens
         assert_eq!(event.amount, 2500126315684053116206);
     }
+
+    #[test]
+    fn test_place_orders_and_update_position() {
+        // place one order on both sides expiring at the same time.
+
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+            core.contract_address
+        )
+            .unwrap();
+        let fee = 0;
+        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+        let (twamm, setup, positions) = set_up_twamm(
+            ref d,
+            core,
+            fee,
+            initial_tick,
+            amount0: 100_000_000 * 1000000000000000000,
+            amount1: 100_000_000 * 1000000000000000000
+        );
+        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let timestamp = SIXTEEN_POW_ONE;
+        set_block_timestamp(timestamp);
+
+        let order_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
+
+        let amount = 10_000 * 1000000000000000000;
+        let (order1_id, order1_key, _) = place_order(
+            positions,
+            get_contract_address(),
+            setup.token0,
+            setup.token1,
+            fee,
+            0,
+            order_end_time,
+            amount
+        );
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let (order2_id, order2_key, _) = place_order(
+            positions,
+            get_contract_address(),
+            setup.token1,
+            setup.token0,
+            fee,
+            0,
+            order_end_time,
+            amount
+        );
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
+
+        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(setup.pool_key.into());
+
+        // no trades have been executed
+        assert_eq!(token0_reward_rate, 0x0);
+        assert_eq!(token1_reward_rate, 0x0);
+
+        // halfway through the order duration
+        let execution_timestamp = timestamp + 2040;
+        set_block_timestamp(execution_timestamp);
+
+        let bounds = max_bounds(MAX_TICK_SPACING);
+
+        // update position and trigger twamm swaps
+        let amount_delta = 1 * 1000000000000000000;
+        setup.token0.increase_balance(positions.contract_address, amount_delta);
+        setup.token1.increase_balance(positions.contract_address, amount_delta);
+        positions.deposit(1, setup.pool_key, bounds, 0);
+
+        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+            .unwrap();
+
+        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
+        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+        // price 2:1 (sqrt_ratio ~= 1.414213)
+        // time window           = 2,040 sec
+        // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
+        // token0 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // token1 sale-rate      = 10,000 / 4,080 ~= 5,019.6078432256 per sec
+        // token1 sold-amount   ~= 2,040 * 2.4509803922 = 5,000.000000088 tokens
+        // Using twamm math to calculate the next price based on sell-rates:
+        // next price 1.999798971:1 (sqrt_ratio ~= 1.414142)
+        // trade token1 for token0 up to the next price
+        // token0 spent amount ~= 2499.873684315946883792
+        // token1 bought amount ~= 4999.494771123186662264
+        // token0 reward rate = (5,000 + 4999.494771123186662264) / 2.4509803922 = 4,079.7938665465
+        // token1 reward rate = (5,000 - 2499.873684315946883792) / 2.4509803922 = 1,020.05153678114
+        assert_eq!(swapped_event.delta.amount0.sign, false);
+        assert_eq!(swapped_event.delta.amount0.mag, 2499873684315946883792);
+        assert_eq!(swapped_event.delta.amount1.sign, true);
+        assert_eq!(swapped_event.delta.amount1.mag, 4999494771123186662264);
+        assert_eq!(virtual_orders_executed_event.token0_reward_rate, 0x3fc0d318402a5d8eb069cd5df58);
+        assert_eq!(virtual_orders_executed_event.token1_reward_rate, 0xfefcb3ad7bad041447ab720a895);
+
+        // zero position update
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        let event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+        // calculate the amount deltas based on liquidity delta and price set by twamm
+        let sqrt_ratio_after = swapped_event.sqrt_ratio_after;
+
+        let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
+        let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
+        let liquidity: u128 = max_liquidity(
+            sqrt_ratio_after, sqrt_ratio_lower, sqrt_ratio_upper, amount_delta, amount_delta
+        );
+        let expected_delta = liquidity_delta_to_amount_delta(
+            sqrt_ratio_after,
+            i129 { mag: liquidity, sign: false },
+            sqrt_ratio_lower,
+            sqrt_ratio_upper
+        );
+
+        assert_eq!(event.delta.amount0.mag, expected_delta.amount0.mag);
+        assert_eq!(event.delta.amount1.mag, expected_delta.amount1.mag);
+
+        // Withdraw proceeds for order1
+        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 4,079.7938665465 * 2.4509803922
+        //        ~= 9,999.4947711233 tokens
+        assert_eq!(event.amount, 0x21e12dddabe1d857b76);
+
+        // Withdraw proceeds for order2
+        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
+        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
+
+        // amount  = reward_rate * sale_rate
+        //         = 1,020.05153678114 * 2.4509803922
+        //        ~= 2,500.1263156841 tokens
+        assert_eq!(event.amount, 2500126315684053116206);
+    }
 }
 
 mod PlaceOrderDurationTooLong {
@@ -3349,6 +3512,7 @@ mod PlaceOrderDurationTooLong {
         let amount1 = 10_000_000 * 1000000000000000000;
         let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3388,6 +3552,7 @@ mod PlaceOrderDurationTooLong {
         let amount1 = 10_000_000 * 1000000000000000000;
         let (twamm, setup, _) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
