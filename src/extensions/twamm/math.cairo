@@ -52,7 +52,6 @@ pub fn calculate_amount_from_sale_rate(sale_rate: u128, duration: u32, round_up:
 }
 
 pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
-    // this should never overflow since total_sale_rate <= sale_rate 
     muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
         .unwrap()
         .try_into()
