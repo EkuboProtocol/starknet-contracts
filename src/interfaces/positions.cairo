@@ -123,7 +123,7 @@ pub trait IPositions<TStorage> {
 
     // Returns the price of a pool after making an empty update to a fake position, which is useful for adding liquidity to extensions
     // with unknown before/after behavior.
-    fn get_pool_price(ref self: TStorage, pool_key: PoolKey) -> PoolPrice;
+    fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;
 
     // Mint a twamm position and increase sold amount.
     fn mint_and_increase_sell_amount(

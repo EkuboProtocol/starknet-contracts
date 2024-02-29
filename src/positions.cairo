@@ -504,7 +504,7 @@ pub mod Positions {
             (id, liquidity, amount0, amount1)
         }
 
-        fn get_pool_price(ref self: ContractState, pool_key: PoolKey) -> PoolPrice {
+        fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
             call_core_with_callback::<
                 LockCallbackData, PoolPrice
             >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
