@@ -1370,3 +1370,42 @@ fn test_get_pool_price_normal_pool() {
     let price = positions.get_pool_price(setup.pool_key);
     assert_eq!(price.sqrt_ratio, u256 { high: 1, low: 0 });
 }
+
+#[test]
+#[should_panic(expected: ('LIQUIDITY_IS_NON_ZERO', 'ENTRYPOINT_FAILED'))]
+fn test_check_liquidity_is_zero() {
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }
+    };
+    let p0 = create_position(
+        setup: setup, positions: positions, bounds: bounds, amount0: 1000, amount1: 1000
+    );
+    positions.check_liquidity_is_zero(id: p0.id, pool_key: setup.pool_key, bounds: bounds);
+}
+
+#[test]
+fn test_check_liquidity_is_zero_succeeds() {
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }
+    };
+    let id = positions.mint_v2(Zero::zero());
+    positions.check_liquidity_is_zero(id: id, pool_key: setup.pool_key, bounds: bounds);
+}

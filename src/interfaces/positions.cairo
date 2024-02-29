@@ -57,6 +57,9 @@ pub trait IPositions<TStorage> {
     // Same as above but includes a referrer in the emitted event
     fn mint_v2(ref self: TStorage, referrer: ContractAddress) -> u64;
 
+    // Checks that liquidity is zero for the given token ID and pool_key/bounds. Helps prevent burns of NFTs that have non-zero liquidity.
+    fn check_liquidity_is_zero(self: @TStorage, id: u64, pool_key: PoolKey, bounds: Bounds);
+
     // Delete the NFT. All liquidity controlled by the NFT (not withdrawn) is irrevocably locked.
     // Must be called by an operator, approved address or the owner.
     fn unsafe_burn(ref self: TStorage, id: u64);

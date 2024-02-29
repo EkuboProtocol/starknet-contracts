@@ -315,6 +315,13 @@ pub mod Positions {
             id
         }
 
+        fn check_liquidity_is_zero(
+            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+        ) {
+            let info = self.get_token_info(id, pool_key, bounds);
+            assert(info.liquidity.is_zero(), 'LIQUIDITY_IS_NON_ZERO');
+        }
+
         fn unsafe_burn(ref self: ContractState, id: u64) {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
