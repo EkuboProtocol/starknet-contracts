@@ -3195,7 +3195,8 @@ mod PlaceOrderOnBothSides {
 
     #[test]
     fn test_place_orders_and_swap() {
-        // place one order on both sides expiring at the same time.
+        // place two orders, and trigger twamm swaps with a swap
+        // ensure correct price is used for swapping after twamm swaps 
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -3343,7 +3344,8 @@ mod PlaceOrderOnBothSides {
 
     #[test]
     fn test_place_orders_and_update_position() {
-        // place one order on both sides expiring at the same time.
+        // place two orders, and trigger twamm swaps with a positions update
+        // ensure correct price is used for updating the position after twamm swaps 
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
