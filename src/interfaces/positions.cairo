@@ -40,14 +40,16 @@ pub trait IPositions<TStorage> {
     ) -> GetTokenInfoResult;
 
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
+    // This function is deprecated. The pool_key and bounds arguments are not used. Instead, use mint_v2.
     fn mint(ref self: TStorage, pool_key: PoolKey, bounds: Bounds) -> u64;
 
     // Same as above but includes a referrer in the emitted event
+    // This function is deprecated. The pool_key and bounds arguments are not used. Instead, use mint_v2.
     fn mint_with_referrer(
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
     ) -> u64;
 
-    // Same as above but includes a referrer in the emitted event
+    // Mint an NFT that can be used for creating liquidity positions.
     fn mint_v2(ref self: TStorage, referrer: ContractAddress) -> u64;
 
     // Checks that liquidity is zero for the given token ID and pool_key/bounds. Helps prevent burns of NFTs that have non-zero liquidity.
