@@ -175,26 +175,14 @@ pub mod TWAMM {
         VirtualOrdersExecuted: VirtualOrdersExecuted,
     }
 
-    #[derive(Serde, Copy, Drop)]
-    struct UpdateSaleRateCallbackData {
-        owner: ContractAddress,
-        salt: felt252,
-        order_key: OrderKey,
-        sale_rate_delta: i129
-    }
-
-    #[derive(Serde, Copy, Drop)]
-    struct WithdrawProceedsCallbackData {
-        owner: ContractAddress,
-        salt: felt252,
-        order_key: OrderKey,
-    }
 
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         ExecuteVirtualSwapsCallbackData: StateKey,
-        UpdateSaleRateCallbackData: UpdateSaleRateCallbackData,
-        WithdrawProceedsCallbackData: WithdrawProceedsCallbackData
+        // owner, salt, order_key, sale_rate_delta
+        UpdateSaleRateCallbackData: (ContractAddress, felt252, OrderKey, i129),
+        // owner, salt, order_key
+        CollectProceedsCallbackData: (ContractAddress, felt252, OrderKey)
     }
 
     #[abi(embed_v0)]
@@ -365,9 +353,7 @@ pub mod TWAMM {
             call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::UpdateSaleRateCallbackData(
-                    UpdateSaleRateCallbackData {
-                        owner: get_caller_address(), salt, order_key, sale_rate_delta
-                    }
+                    (get_caller_address(), salt, order_key, sale_rate_delta)
                 )
             )
         }
@@ -375,8 +361,8 @@ pub mod TWAMM {
         fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
             call_core_with_callback(
                 self.core.read(),
-                @LockCallbackData::WithdrawProceedsCallbackData(
-                    WithdrawProceedsCallbackData { owner: get_caller_address(), salt, order_key }
+                @LockCallbackData::CollectProceedsCallbackData(
+                    (get_caller_address(), salt, order_key)
                 )
             )
         }
@@ -400,20 +386,12 @@ pub mod TWAMM {
                 LockCallbackData::ExecuteVirtualSwapsCallbackData(key) => {
                     self.internal_execute_virtual_orders(core, key);
                 },
-                LockCallbackData::UpdateSaleRateCallbackData(data) => {
-                    let owner = data.owner;
-                    let order_key = data.order_key;
-                    let salt = data.salt;
-                    let sale_rate_delta = data.sale_rate_delta;
-
+                LockCallbackData::UpdateSaleRateCallbackData((
+                    owner, salt, order_key, sale_rate_delta
+                )) => {
                     let current_time = get_block_timestamp();
                     // there is no reason to adjust the sale rate of an order that has already ended
                     assert(current_time < order_key.end_time, 'ORDER_ENDED');
-
-                    // assert(
-                    //     order_key.end_time - order_key.start_time < constants::MAX_DURATION,
-                    //     'ORDER_DURATION_TOO_LONG'
-                    // );
 
                     self.internal_execute_virtual_orders(core, order_key.into());
 
@@ -532,12 +510,10 @@ pub mod TWAMM {
                             );
                     }
                 },
-                LockCallbackData::WithdrawProceedsCallbackData(data) => {
-                    let owner = data.owner;
-                    let order_key = data.order_key;
-                    let salt = data.salt;
-
-                    self.internal_execute_virtual_orders(core, data.order_key.into());
+                LockCallbackData::CollectProceedsCallbackData((
+                    owner, salt, order_key
+                )) => {
+                    self.internal_execute_virtual_orders(core, order_key.into());
 
                     let order_info = self.get_order_info(owner, salt, order_key);
 
