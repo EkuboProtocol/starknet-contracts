@@ -50,12 +50,10 @@ export const TWAMM_ORDER_CASES: Array<{
     isToken1: boolean;
     amount: bigint;
   }[];
-  snapshotTimes: number[];
 }> = [
   {
-    name: "no swap, time passes",
+    name: "no orders",
     orders: [],
-    snapshotTimes: [0, 1],
   },
   {
     name: "selling 1e18 token0 per second for one period",
@@ -66,7 +64,6 @@ export const TWAMM_ORDER_CASES: Array<{
         amount: 16n * 10n ** 18n,
       },
     ],
-    snapshotTimes: [0, 8, 16],
   },
   {
     name: "selling 1e18 token1 per second for one period",
@@ -77,7 +74,6 @@ export const TWAMM_ORDER_CASES: Array<{
         amount: 16n * 10n ** 18n,
       },
     ],
-    snapshotTimes: [0, 8, 16],
   },
   {
     name: "selling 1e18 of both tokens per second for one period",
@@ -93,7 +89,6 @@ export const TWAMM_ORDER_CASES: Array<{
         amount: 16n * 10n ** 18n,
       },
     ],
-    snapshotTimes: [0, 8, 16],
   },
   {
     name: "selling twice as much token1 as token0 for one period",
@@ -109,7 +104,6 @@ export const TWAMM_ORDER_CASES: Array<{
         amount: 16n * 10n ** 18n,
       },
     ],
-    snapshotTimes: [0, 8, 16],
   },
   {
     name: "selling twice as much token0 as token1 for one period",
@@ -125,6 +119,21 @@ export const TWAMM_ORDER_CASES: Array<{
         amount: 8n * 10n ** 18n,
       },
     ],
-    snapshotTimes: [0, 8, 16],
+  },
+];
+
+export const TWAMM_ACTION_SETS: {
+  name: string;
+  actions: ({ after: number } & {
+    type: "execute_virtual_orders";
+  })[];
+}[] = [
+  {
+    name: "execute at 0, 8 and 16 seconds",
+    actions: [
+      { after: 0, type: "execute_virtual_orders" },
+      { after: 8, type: "execute_virtual_orders" },
+      { after: 16, type: "execute_virtual_orders" },
+    ],
   },
 ];
