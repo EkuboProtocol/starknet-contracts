@@ -37,12 +37,11 @@ pub mod TWAMM {
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
-        ContractAddress, Store, get_contract_address, get_caller_address,
-        syscalls::{replace_class_syscall}, get_block_timestamp, ClassHash,
-        storage_access::{storage_base_address_from_felt252}
+        ContractAddress, Store, get_contract_address, get_caller_address, get_block_timestamp,
+        ClassHash, storage_access::{storage_base_address_from_felt252}
     };
     use super::math::{
-        constants, calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
+        calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
         calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
     };
 
@@ -174,7 +173,6 @@ pub mod TWAMM {
         OrderProceedsWithdrawn: OrderProceedsWithdrawn,
         VirtualOrdersExecuted: VirtualOrdersExecuted,
     }
-
 
     #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
@@ -768,8 +766,6 @@ pub mod TWAMM {
                             start: last_virtual_order_time, end: next_virtual_order_time
                         );
 
-                        // oveflow is nearly impossible since even with max sale_rate
-                        // time elapse would need to be larger than 2**32
                         let token0_amount: u128 = calculate_amount_from_sale_rate(
                             sale_rate: token0_sale_rate, duration: time_elapsed, round_up: false
                         );

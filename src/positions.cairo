@@ -32,7 +32,6 @@ pub mod Positions {
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
-        syscalls::{replace_class_syscall}
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

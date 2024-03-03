@@ -27,6 +27,7 @@ pub struct OrderInfo {
 
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
+    // Return the latest time orders executed for a given pool
     fn get_last_virtual_order_time(self: @TContractState, key: StateKey) -> u64;
 
     // Return the current state of the given order
