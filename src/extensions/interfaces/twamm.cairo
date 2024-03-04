@@ -25,18 +25,24 @@ pub struct OrderInfo {
     pub purchased_amount: u128,
 }
 
+#[derive(Drop, Copy, Serde)]
+pub struct SaleRateState {
+    pub token0_sale_rate: u128,
+    pub token1_sale_rate: u128,
+    pub last_virtual_order_time: u64
+}
+
 #[starknet::interface]
 pub trait ITWAMM<TContractState> {
-    // Return the latest time orders executed for a given pool
-    fn get_last_virtual_order_time(self: @TContractState, key: StateKey) -> u64;
-
     // Return the current state of the given order
     fn get_order_info(
         self: @TContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
     ) -> OrderInfo;
 
-    // Returns the current sale rates for the given pool
-    fn get_sale_rate(self: @TContractState, key: StateKey) -> (u128, u128);
+    // Returns the current sale rates and the latest time orders executed for the given pool
+    fn get_sale_rate_and_last_virtual_order_time(
+        self: @TContractState, key: StateKey
+    ) -> SaleRateState;
 
     // Return the current reward rate
     fn get_reward_rate(self: @TContractState, key: StateKey) -> (felt252, felt252);
