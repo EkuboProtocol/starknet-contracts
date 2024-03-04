@@ -10,6 +10,8 @@ import OwnedNFTContractCASM from "../../target/dev/ekubo_OwnedNFT.compiled_contr
 import PositionsCompiledContract from "../../target/dev/ekubo_Positions.contract_class.json";
 import PositionsContract from "../../target/dev/ekubo_Positions.contract_class.json";
 import PositionsCompiledContractCASM from "../../target/dev/ekubo_Positions.compiled_contract_class.json";
+import TWAMMCompiledContract from "../../target/dev/ekubo_TWAMM.contract_class.json";
+import TWAMMCompiledContractCASM from "../../target/dev/ekubo_TWAMM.compiled_contract_class.json";
 import Router from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterContract from "../../target/dev/ekubo_Router.contract_class.json";
 import RouterCASM from "../../target/dev/ekubo_Router.compiled_contract_class.json";
@@ -22,18 +24,20 @@ export async function setupContracts(expected?: {
   positions: string;
   router: string;
   nft: string;
+  twamm: string;
   tokenClassHash: string;
 }) {
   if (expected) {
     try {
-      const [ch0, ch1, ch2, ch3, c] = await Promise.all([
+      const [ch0, ch1, ch2, ch3, ch4, c] = await Promise.all([
         provider.getClassHashAt(expected.core),
         provider.getClassHashAt(expected.positions),
         provider.getClassHashAt(expected.router),
         provider.getClassHashAt(expected.nft),
+        provider.getClassHashAt(expected.twamm),
         provider.getClass(expected.tokenClassHash),
       ]);
-      if (ch0 && ch1 && ch2 && ch3 && c) return expected;
+      if (ch0 && ch1 && ch2 && ch3 && ch4 && c) return expected;
     } catch (error) {}
   }
 
@@ -64,6 +68,10 @@ export async function setupContracts(expected?: {
     contract: Router as any,
     casm: RouterCASM as any,
   });
+  const twammDeclare = await deployer.declareIfNot({
+    contract: TWAMMCompiledContract as any,
+    casm: TWAMMCompiledContractCASM as any,
+  });
 
   const {
     contract_address: [coreAddress],
@@ -81,7 +89,7 @@ export async function setupContracts(expected?: {
   ];
 
   const {
-    contract_address: [positionsAddress, routerAddress],
+    contract_address: [positionsAddress, routerAddress, twammAddress],
   } = await deployer.deploy([
     {
       classHash: positionsDeclare.class_hash,
@@ -93,6 +101,11 @@ export async function setupContracts(expected?: {
       constructorCalldata: [coreAddress],
       salt: "0x2",
     },
+    {
+      classHash: twammDeclare.class_hash,
+      constructorCalldata: [deployer.address, coreAddress],
+      salt: "0x3",
+    },
   ]);
 
   const positions = new Contract(
@@ -101,6 +114,8 @@ export async function setupContracts(expected?: {
     deployer
   );
 
+  await positions.invoke("set_twamm", [twammAddress]);
+
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
   return {
@@ -108,6 +123,7 @@ export async function setupContracts(expected?: {
     positions: positionsAddress,
     router: routerAddress,
     nft: num.toHexString(nftAddress),
+    twamm: twammAddress,
     tokenClassHash: simpleTokenContractDeclare.class_hash,
   };
 }
@@ -129,6 +145,7 @@ export async function prepareContracts(
     account
   );
   const router = new Contract(RouterContract.abi, setup.router, account);
+  const twamm = new Contract(TWAMMCompiledContract.abi, setup.twamm, account);
 
   const [token0Address, token1Address] = await deployTokens({
     deployer: account,
@@ -142,6 +159,7 @@ export async function prepareContracts(
   return {
     account,
     core,
+    twamm,
     nft,
     positionsContract,
     router,

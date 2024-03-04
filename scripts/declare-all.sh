@@ -40,20 +40,23 @@ declare_class_hash() {
     starkli declare --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --casm-file  "target/dev/ekubo_${class_name}.compiled_contract_class.json" "target/dev/ekubo_${class_name}.contract_class.json"
 }
 
-echo "Declaring core"
+echo "Declaring Core"
 CORE_CLASS_HASH=$(declare_class_hash Core)
-echo "Declaring positions"
+echo "Declaring Positions"
 POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
 echo "Declaring NFT"
 NFT_CLASS_HASH=$(declare_class_hash OwnedNFT)
-echo "Declaring Router"
-ROUTER_CLASS_HASH=$(declare_class_hash Router)
-echo "Declaring TokenRegistry"
-TOKEN_REGISTRY_CLASS_HASH=$(declare_class_hash TokenRegistry)
+echo "Declaring TWAMM"
+TWAMM_CLASS_HASH=$(declare_class_hash TWAMM)
+# echo "Declaring Router"
+# ROUTER_CLASS_HASH=$(declare_class_hash Router)
+# echo "Declaring TokenRegistry"
+# TOKEN_REGISTRY_CLASS_HASH=$(declare_class_hash TokenRegistry)
 
-echo "Declared core @ $CORE_CLASS_HASH"
-echo "Declared positions @ $POSITIONS_CLASS_HASH"
-echo "Declared nft @ $NFT_CLASS_HASH"
-echo "Declared router @ $ROUTER_CLASS_HASH"
-echo "Declared token registry @ $TOKEN_REGISTRY_CLASS_HASH"
+echo "Declared Core @ $CORE_CLASS_HASH"
+echo "Declared Positions @ $POSITIONS_CLASS_HASH"
+echo "Declared NFT @ $NFT_CLASS_HASH"
+echo "Declared TWAMM @ $TWAMM_CLASS_HASH"
+# echo "Declared router @ $ROUTER_CLASS_HASH"
+# echo "Declared token registry @ $TOKEN_REGISTRY_CLASS_HASH"
 

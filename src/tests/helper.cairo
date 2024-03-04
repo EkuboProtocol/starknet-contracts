@@ -7,6 +7,7 @@ use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
+use ekubo::extensions::twamm::{TWAMM};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
     SwapParameters, IExtensionDispatcher
@@ -210,6 +211,20 @@ pub impl DeployerTraitImpl of DeployerTrait {
         return IUpgradeableDispatcher { contract_address: address };
     }
 
+
+    fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
+        let (address, _) = deploy_syscall(
+            TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            serialize(@(default_owner(), core)).span(),
+            true
+        )
+            .expect('twamm deploy failed');
+
+        IExtensionDispatcher { contract_address: address }
+    }
+
+
     fn setup_pool(
         ref self: Deployer,
         fee: u128,
@@ -218,6 +233,30 @@ pub impl DeployerTraitImpl of DeployerTrait {
         extension: ContractAddress
     ) -> SetupPoolResult {
         let core = self.deploy_core();
+        let locker = self.deploy_locker(core);
+        let (token0, token1) = self.deploy_two_mock_tokens();
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee,
+            tick_spacing,
+            extension
+        };
+
+        core.initialize_pool(pool_key, initial_tick);
+
+        SetupPoolResult { token0, token1, pool_key, core, locker }
+    }
+
+    fn setup_pool_with_core(
+        ref self: Deployer,
+        core: ICoreDispatcher,
+        fee: u128,
+        tick_spacing: u128,
+        initial_tick: i129,
+        extension: ContractAddress
+    ) -> SetupPoolResult {
         let locker = self.deploy_locker(core);
         let (token0, token1) = self.deploy_two_mock_tokens();
 

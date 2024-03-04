@@ -2,6 +2,10 @@ export const MAX_TICK = 88722883n;
 export const MIN_TICK = -88722883n;
 
 export const MAX_TICK_SPACING = 354892n;
+export const MAX_BOUNDS_TWAMM = {
+  lower: (MIN_TICK / MAX_TICK_SPACING) * MAX_TICK_SPACING,
+  upper: (MAX_TICK / MAX_TICK_SPACING) * MAX_TICK_SPACING,
+};
 
 export const MIN_SQRT_RATIO = 18446748437148339061n;
 export const MAX_SQRT_RATIO =

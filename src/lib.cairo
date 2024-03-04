@@ -7,13 +7,19 @@ pub mod token_registry;
 
 pub mod components {
     pub mod clear;
+    pub mod expires;
     pub mod owned;
     pub mod shared_locker;
     pub mod upgradeable;
     pub mod util;
 }
 
-pub mod extensions {}
+pub mod extensions {
+    pub mod twamm;
+    pub mod interfaces {
+        pub mod twamm;
+    }
+}
 
 pub mod interfaces {
     pub mod core;

@@ -1,6 +1,7 @@
 #[starknet::contract]
 pub mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::cmp::{max};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
@@ -9,6 +10,8 @@ pub mod Positions {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::extensions::interfaces::twamm::{OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
+    use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
     };
@@ -28,8 +31,7 @@ pub mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash,
-        syscalls::{replace_class_syscall}
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -44,11 +46,14 @@ pub mod Positions {
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
+        twamm: ITWAMMDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -278,6 +283,15 @@ pub mod Positions {
                 .replace_class_hash(class_hash);
         }
 
+        fn set_twamm(ref self: ContractState, twamm_address: ContractAddress) {
+            self.require_owner();
+            self.twamm.write(ITWAMMDispatcher { contract_address: twamm_address });
+        }
+
+        fn get_twamm_address(self: @ContractState) -> ContractAddress {
+            self.twamm.read().contract_address
+        }
+
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
             self.mint_v2(Zero::zero())
         }
@@ -493,6 +507,69 @@ pub mod Positions {
             call_core_with_callback::<
                 LockCallbackData, PoolPrice
             >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+        }
+
+        // Mint a twamm position and set sale rate.
+        fn mint_and_increase_sell_amount(
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> (u64, u128) {
+            let id = self.mint_v2(Zero::zero());
+            (id, self.increase_sell_amount(id, order_key, amount))
+        }
+
+        fn increase_sell_amount_last(
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> u128 {
+            self.increase_sell_amount(self.nft.read().get_next_token_id() - 1, order_key, amount)
+        }
+
+        fn increase_sell_amount(
+            ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
+        ) -> u128 {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+
+            let twamm = self.twamm.read();
+
+            // if increasing sale rate, transfer additional funds to twamm
+            IERC20Dispatcher { contract_address: order_key.sell_token }
+                .transfer(twamm.contract_address, amount.into());
+
+            let sale_rate = calculate_sale_rate(
+                amount: amount,
+                duration: to_duration(
+                    max(order_key.start_time, get_block_timestamp()), order_key.end_time
+                ),
+            );
+
+            twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });
+
+            sale_rate
+        }
+
+        fn decrease_sale_rate(
+            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
+        ) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+
+            self
+                .twamm
+                .read()
+                .update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+        }
+
+        // Withdraws proceeds from a twamm position
+        fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+
+            let twamm = self.twamm.read();
+
+            twamm.collect_proceeds(id.into(), order_key);
         }
     }
 }
