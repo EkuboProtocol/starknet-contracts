@@ -118,13 +118,12 @@ pub mod TWAMM {
     struct Storage {
         core: ICoreDispatcher,
         orders: LegacyMap<(ContractAddress, felt252, OrderKey), OrderState>,
-        sale_rate: LegacyMap<StorageKey, (u128, u128)>,
+        sale_rate_and_last_virtual_order_time: LegacyMap<StorageKey, (u128, u128, u64)>,
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
         time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
         time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
         reward_rate: LegacyMap<StorageKey, (felt252, felt252)>,
         time_reward_rate: LegacyMap<(StorageKey, u64), (felt252, felt252)>,
-        last_virtual_order_time: LegacyMap<StorageKey, u64>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -199,11 +198,11 @@ pub mod TWAMM {
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
 
             self
-                .last_virtual_order_time
+                .sale_rate_and_last_virtual_order_time
                 .write(
                     StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
                         .into(),
-                    get_block_timestamp()
+                    (0, 0, get_block_timestamp())
                 );
 
             CallPoints {
@@ -269,10 +268,6 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
-        fn get_last_virtual_order_time(self: @ContractState, key: StateKey) -> u64 {
-            self.last_virtual_order_time.read(key.into())
-        }
-
         fn get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderInfo {
@@ -316,8 +311,10 @@ pub mod TWAMM {
             OrderInfo { sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount }
         }
 
-        fn get_sale_rate(self: @ContractState, key: StateKey) -> (u128, u128) {
-            self.sale_rate.read(key.into())
+        fn get_sale_rate_and_last_virtual_order_time(
+            self: @ContractState, key: StateKey
+        ) -> (u128, u128, u64) {
+            self.sale_rate_and_last_virtual_order_time.read(key.into())
         }
 
         fn get_reward_rate(self: @ContractState, key: StateKey) -> (felt252, felt252) {
@@ -432,10 +429,13 @@ pub mod TWAMM {
                         let storage_key: StorageKey = key.into();
 
                         let sale_rate_storage_address = storage_base_address_from_felt252(
-                            LegacyHash::hash(selector!("sale_rate"), storage_key)
+                            LegacyHash::hash(selector!("sale_rate_and_last_virtual_order_time"), storage_key)
                         );
 
-                        let (token0_sale_rate, token1_sale_rate): (u128, u128) = Store::read(
+                        let (
+                            token0_sale_rate, token1_sale_rate, last_virtual_order_time
+                        ): (u128, u128, u64) =
+                            Store::read(
                             0, sale_rate_storage_address
                         )
                             .expect('FAILED_TO_READ_SALE_RATE');
@@ -444,9 +444,17 @@ pub mod TWAMM {
                             0,
                             sale_rate_storage_address,
                             if (order_key.sell_token > order_key.buy_token) {
-                                (token0_sale_rate, token1_sale_rate.add(sale_rate_delta))
+                                (
+                                    token0_sale_rate,
+                                    token1_sale_rate.add(sale_rate_delta),
+                                    last_virtual_order_time
+                                )
                             } else {
-                                (token0_sale_rate.add(sale_rate_delta), token1_sale_rate)
+                                (
+                                    token0_sale_rate.add(sale_rate_delta),
+                                    token1_sale_rate,
+                                    last_virtual_order_time
+                                )
                             }
                         )
                             .expect('FAILED_TO_WRITE_SALE_RATE');
@@ -702,9 +710,19 @@ pub mod TWAMM {
             let current_time = get_block_timestamp();
             let self_snap = @self;
 
+            let sale_rate_storage_address = storage_base_address_from_felt252(
+                LegacyHash::hash(selector!("sale_rate_and_last_virtual_order_time"), storage_key)
+            );
+
             // all virtual orders are executed at the same time 
             // last_virtual_order_time is the same for both tokens
-            let mut last_virtual_order_time = self.last_virtual_order_time.read(key.into());
+            let (
+                mut token0_sale_rate, mut token1_sale_rate, mut last_virtual_order_time
+            ): (u128, u128, u64) =
+                Store::read(
+                0, sale_rate_storage_address
+            )
+                .expect('FAILED_TO_READ_SALE_RATE');
 
             if (last_virtual_order_time != current_time) {
                 let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
@@ -712,15 +730,6 @@ pub mod TWAMM {
 
                 let mut next_sqrt_ratio = Option::Some(starting_sqrt_ratio);
                 let mut total_delta = Zero::zero();
-
-                let sale_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("sale_rate"), storage_key)
-                );
-
-                let (mut token0_sale_rate, mut token1_sale_rate): (u128, u128) = Store::read(
-                    0, sale_rate_storage_address
-                )
-                    .expect('FAILED_TO_READ_SALE_RATE');
 
                 let reward_rate_storage_address = storage_base_address_from_felt252(
                     LegacyHash::hash(selector!("reward_rate"), storage_key)
@@ -900,9 +909,11 @@ pub mod TWAMM {
                     }
                 };
 
-                self.last_virtual_order_time.write(storage_key, last_virtual_order_time);
-
-                Store::write(0, sale_rate_storage_address, (token0_sale_rate, token1_sale_rate))
+                Store::write(
+                    0,
+                    sale_rate_storage_address,
+                    (token0_sale_rate, token1_sale_rate, last_virtual_order_time)
+                )
                     .expect('FAILED_TO_WRITE_SALE_RATE');
 
                 Store::write(
