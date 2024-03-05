@@ -124,12 +124,21 @@ export const TWAMM_ORDER_CASES: Array<{
 
 export const TWAMM_ACTION_SETS: {
   name: string;
-  actions: ({ after: number } & {
-    type: "execute_virtual_orders" | "swap";
-  } & {action_args?: {amount: bigint;
-  isToken1: boolean;
-  sqrtRatioLimit?: bigint;
-  skipAhead?: bigint;}})[];
+  actions: (
+    { 
+      after: number
+    } & ({
+      type: "execute_virtual_orders"
+    } | {
+      type: "swap",
+      action_args: {
+        amount: bigint;
+        isToken1: boolean;
+        sqrtRatioLimit?: bigint;
+        skipAhead?: bigint;
+      }
+    })
+  )[];
 }[] = [
   {
     name: "execute at 0, 8 and 16 seconds",
