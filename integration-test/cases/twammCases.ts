@@ -130,13 +130,11 @@ export const TWAMM_ACTION_SETS: {
     } & ({
       type: "execute_virtual_orders"
     } | {
-      type: "swap",
-      action_args: {
-        amount: bigint;
-        isToken1: boolean;
-        sqrtRatioLimit?: bigint;
-        skipAhead?: bigint;
-      }
+      type: "swap";
+      amount: bigint;
+      isToken1: boolean;
+      sqrtRatioLimit?: bigint;
+      skipAhead?: bigint;
     })
   )[];
 }[] = [
@@ -151,25 +149,25 @@ export const TWAMM_ACTION_SETS: {
   {
     name: "swap 0 tokens at 0, 8 and 16 seconds",
     actions: [
-      { after: 0, type: "swap", action_args: {amount: 0n, isToken1: false}},
-      { after: 8, type: "swap", action_args: {amount: 0n, isToken1: false} },
-      { after: 16, type: "swap", action_args: {amount: 0n, isToken1: false}},
+      { after: 0, type: "swap", amount: 0n, isToken1: false },
+      { after: 8, type: "swap", amount: 0n, isToken1: false },
+      { after: 16, type: "swap", amount: 0n, isToken1: false },
     ],
   },
   {
     name: "swap 1e18 token0 tokens at 0, 8 and 16 seconds",
     actions: [
-      { after: 0, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false}},
-      { after: 8, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false} },
-      { after: 16, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false}},
+      { after: 0, type: "swap", amount: 10n ** 18n, isToken1: false },
+      { after: 8, type: "swap", amount: 10n ** 18n, isToken1: false },
+      { after: 16, type: "swap", amount: 10n ** 18n, isToken1: false },
     ],
   },
   {
     name: "swap 1e18 token1 tokens at 0, 8 and 16 seconds",
     actions: [
-      { after: 0, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true}},
-      { after: 8, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true} },
-      { after: 16, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true}},
+      { after: 0, type: "swap", amount: 10n ** 18n, isToken1: true },
+      { after: 8, type: "swap", amount: 10n ** 18n, isToken1: true },
+      { after: 16, type: "swap", amount: 10n ** 18n, isToken1: true },
     ],
   },
 ];

@@ -477,7 +477,9 @@ describe("core", () => {
                       }));
                   }
 
-                  for (const {after, type, action_args} of actions) {
+                  for (const action of actions) {
+                    const { after, type } = action;
+
                     await setDevnetTime(startingTime + after);
 
                     switch (type) {
@@ -539,21 +541,21 @@ describe("core", () => {
                           break;
                         }
 
-                        let swap_token = action_args.isToken1 ? token1 : token0;
+                        let swap_token = action.isToken1 ? token1 : token0;
 
                         const { transaction_hash } = await account.execute(
                           [
-                            swap_token.populate("transfer", [setup.router, action_args.amount]),
+                            swap_token.populate("transfer", [setup.router, action.amount]),
                             router.populate(
                               "swap",
                               [
                                 {
                                   pool_key: poolKey,
-                                  sqrt_ratio_limit: action_args.sqrtRatioLimit ?? 0,
-                                  skip_ahead: action_args.skipAhead ?? 0,
+                                  sqrt_ratio_limit: action.sqrtRatioLimit ?? 0,
+                                  skip_ahead: action.skipAhead ?? 0,
                                 },
                                 {
-                                  amount: toI129(action_args.amount),
+                                  amount: toI129(action.amount),
                                   token: swap_token.address
                                 },
                               ],
