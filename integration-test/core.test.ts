@@ -456,11 +456,6 @@ describe("core", () => {
                       getTxSettings()
                     );
 
-                    const [token0Balance0, token1Balance1] = await Promise.all([
-                      token0.balanceOf(account.address),
-                      token1.balanceOf(account.address),
-                    ]);
-
                     const orderPlacementReceipt =
                       await account.waitForTransaction(transaction_hash, {
                         retryInterval: 0,
