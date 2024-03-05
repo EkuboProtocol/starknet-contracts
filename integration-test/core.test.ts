@@ -424,11 +424,11 @@ describe("core", () => {
                         initializePoolCall,
                         token0.populate("transfer", [
                           setup.positions,
-                          balance0,
+                          balance0 / 2n,
                         ]),
                         token1.populate("transfer", [
                           setup.positions,
-                          balance1,
+                          balance1 / 2n,
                         ]),
                         ...orders.map((order) => {
                           const [buy_token, sell_token] = order.isToken1
@@ -455,6 +455,11 @@ describe("core", () => {
                       [],
                       getTxSettings()
                     );
+
+                    const [token0Balance0, token1Balance1] = await Promise.all([
+                      token0.balanceOf(account.address),
+                      token1.balanceOf(account.address),
+                    ]);
 
                     const orderPlacementReceipt =
                       await account.waitForTransaction(transaction_hash, {
@@ -535,6 +540,10 @@ describe("core", () => {
                         break;
                       }
                       case "swap": {
+                        if (positions_liquidities.length == 0) {
+                          break;
+                        }
+
                         let swap_token = action_args.isToken1 ? token1 : token0;
 
                         const { transaction_hash } = await account.execute(
@@ -659,12 +668,10 @@ describe("core", () => {
                         withdrawProceedsTransactionHash
                       );
 
-                    console.log({withdrawProceedsReceipt});
-
-                    // expect(
-                    //   withdrawProceedsReceipt.execution_status,
-                    //   "withdraw proceeds success"
-                    // ).toEqual("SUCCEEDED");
+                    expect(
+                      withdrawProceedsReceipt.execution_status,
+                      "withdraw proceeds success"
+                    ).toEqual("SUCCEEDED");
                   }
                 },
                 300_000

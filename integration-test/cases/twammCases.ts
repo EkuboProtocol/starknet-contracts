@@ -17,30 +17,30 @@ export const TWAMM_POOL_CASES: Array<{
     },
     positions_liquidities: [10n ** 18n],
   },
-  // {
-  //   name: "1e36 liquidity across 2 positions, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [5n * 10n ** 35n, 5n * 10n ** 35n],
-  // },
-  // {
-  //   name: "0 liquidity, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [],
-  // },
-  // {
-  //   name: "1e18 liquidity, starting price of 1, 1% fee",
-  //   pool: {
-  //     startingTick: 0n,
-  //     fee: ONE_PERCENT_FEE,
-  //   },
-  //   positions_liquidities: [10n ** 18n],
-  // },
+  {
+    name: "1e36 liquidity across 2 positions, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [5n * 10n ** 35n, 5n * 10n ** 35n],
+  },
+  {
+    name: "0 liquidity, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [],
+  },
+  {
+    name: "1e18 liquidity, starting price of 1, 1% fee",
+    pool: {
+      startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [10n ** 18n],
+  },
 ];
 
 export const TWAMM_ORDER_CASES: Array<{
@@ -65,61 +65,61 @@ export const TWAMM_ORDER_CASES: Array<{
       },
     ],
   },
-  // {
-  //   name: "selling 1e18 token1 per second for one period",
-  //   orders: [
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: true,
-  //       amount: 16n * 10n ** 18n,
-  //     },
-  //   ],
-  // },
-  // {
-  //   name: "selling 1e18 of both tokens per second for one period",
-  //   orders: [
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: false,
-  //       amount: 16n * 10n ** 18n,
-  //     },
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: true,
-  //       amount: 16n * 10n ** 18n,
-  //     },
-  //   ],
-  // },
-  // {
-  //   name: "selling twice as much token1 as token0 for one period",
-  //   orders: [
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: false,
-  //       amount: 8n * 10n ** 18n,
-  //     },
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: true,
-  //       amount: 16n * 10n ** 18n,
-  //     },
-  //   ],
-  // },
-  // {
-  //   name: "selling twice as much token0 as token1 for one period",
-  //   orders: [
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: false,
-  //       amount: 16n * 10n ** 18n,
-  //     },
-  //     {
-  //       relativeTimes: { start: 0, end: 16 },
-  //       isToken1: true,
-  //       amount: 8n * 10n ** 18n,
-  //     },
-  //   ],
-  // },
+  {
+    name: "selling 1e18 token1 per second for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+  },
+  {
+    name: "selling 1e18 of both tokens per second for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 16n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+  },
+  {
+    name: "selling twice as much token1 as token0 for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 8n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 16n * 10n ** 18n,
+      },
+    ],
+  },
+  {
+    name: "selling twice as much token0 as token1 for one period",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 16n * 10n ** 18n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 8n * 10n ** 18n,
+      },
+    ],
+  },
 ];
 
 export const TWAMM_ACTION_SETS: {
@@ -140,11 +140,27 @@ export const TWAMM_ACTION_SETS: {
     ],
   },
   {
-    name: "swap at 0, 8 and 16 seconds",
+    name: "swap 0 tokens at 0, 8 and 16 seconds",
     actions: [
       { after: 0, type: "swap", action_args: {amount: 0n, isToken1: false}},
       { after: 8, type: "swap", action_args: {amount: 0n, isToken1: false} },
       { after: 16, type: "swap", action_args: {amount: 0n, isToken1: false}},
+    ],
+  },
+  {
+    name: "swap 1e18 token0 tokens at 0, 8 and 16 seconds",
+    actions: [
+      { after: 0, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false}},
+      { after: 8, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false} },
+      { after: 16, type: "swap", action_args: {amount: 10n ** 18n, isToken1: false}},
+    ],
+  },
+  {
+    name: "swap 1e18 token1 tokens at 0, 8 and 16 seconds",
+    actions: [
+      { after: 0, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true}},
+      { after: 8, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true} },
+      { after: 16, type: "swap", action_args: {amount: 10n ** 18n, isToken1: true}},
     ],
   },
 ];
