@@ -436,16 +436,14 @@ mod PlaceOrdersCheckDeltaAndNet {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.virtual_order_time, order1_end_time);
 
         let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
+        assert_eq!(event.virtual_order_time, order2_end_time);
     }
 
     #[test]
@@ -517,16 +515,14 @@ mod PlaceOrdersCheckDeltaAndNet {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.virtual_order_time, order1_end_time);
 
         let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
+        assert_eq!(event.virtual_order_time, order2_end_time);
     }
 
     #[test]
@@ -727,7 +723,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let owner = contract_address_const::<42>();
         let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
 
@@ -745,8 +740,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order2_timestamp);
+        assert_eq!(event.virtual_order_time, order2_timestamp);
     }
 
     #[test]
@@ -778,7 +772,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let owner = contract_address_const::<42>();
         let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         let (_, _, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
@@ -799,8 +792,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.virtual_order_time, order1_end_time);
         assert_eq!(event.token0_sale_rate, order1_state.sale_rate);
         assert_eq!(event.token1_sale_rate, 0);
     // second order execution
@@ -836,7 +828,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let owner = contract_address_const::<42>();
         let amount = 100_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         let (_, _, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
@@ -864,8 +855,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.virtual_order_time, order1_end_time);
         assert_eq!(event.token0_sale_rate, order1_state.sale_rate);
         assert_eq!(event.token1_sale_rate, order2_state.sale_rate);
 
@@ -875,8 +865,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
+        assert_eq!(event.virtual_order_time, order2_end_time);
         assert_eq!(event.token0_sale_rate, 0);
         assert_eq!(event.token1_sale_rate, order2_state.sale_rate);
     // third order execution
@@ -912,7 +901,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let owner = contract_address_const::<42>();
         let amount = 10_000 * 1000000000000000000;
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         let (_, _, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
@@ -943,8 +931,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(event.next_virtual_order_time, order1_end_time);
+        assert_eq!(event.virtual_order_time, order1_end_time);
         assert_eq!(event.token0_sale_rate, order1_state.sale_rate);
         assert_eq!(event.token1_sale_rate, order2_state.sale_rate);
 
@@ -954,8 +941,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
         assert_eq!(event.key.fee, state_key.fee);
-        assert_eq!(event.last_virtual_order_time, order1_end_time);
-        assert_eq!(event.next_virtual_order_time, order2_end_time);
+        assert_eq!(event.virtual_order_time, order2_end_time);
         assert_eq!(event.token0_sale_rate, 0);
         assert_eq!(event.token1_sale_rate, order2_state.sale_rate);
     // third order execution
@@ -1851,9 +1837,8 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_start_time);
         assert_eq!(
-            virtual_orders_executed_event.next_virtual_order_time,
+            virtual_orders_executed_event.virtual_order_time,
             order1_start_time + (order1_end_time - order1_start_time) / 2
         );
 
@@ -2101,7 +2086,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let owner = contract_address_const::<42>();
 
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
@@ -2135,8 +2119,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2188,8 +2171,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order1_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order1_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2256,7 +2238,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let owner = contract_address_const::<42>();
 
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
@@ -2290,8 +2271,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2329,8 +2309,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order1_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order1_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2397,7 +2376,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let owner = contract_address_const::<42>();
 
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
@@ -2431,8 +2409,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2483,8 +2460,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order1_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order1_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2549,7 +2525,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let owner = contract_address_const::<42>();
 
-        let order1_timestamp = timestamp;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
@@ -2583,8 +2558,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order1_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2622,8 +2596,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order1_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order1_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2759,8 +2732,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2827,8 +2799,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -2974,8 +2945,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3020,8 +2990,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3184,8 +3153,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3254,8 +3222,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3390,8 +3357,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3438,8 +3404,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, execution_timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order2_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order2_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
 
@@ -3478,8 +3443,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, order2_end_time);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, order_end_time);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, order_end_time);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3638,8 +3602,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3791,8 +3754,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.last_virtual_order_time, timestamp);
-        assert_eq!(virtual_orders_executed_event.next_virtual_order_time, execution_timestamp);
+        assert_eq!(virtual_orders_executed_event.virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
