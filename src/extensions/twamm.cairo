@@ -185,6 +185,7 @@ pub mod TWAMM {
 
     #[derive(starknet::Event, Drop)]
     pub struct VirtualOrdersExecuted {
+        pub key: StateKey,
         pub last_virtual_order_time: u64,
         pub next_virtual_order_time: u64,
         pub token0_sale_rate: u128,
@@ -896,6 +897,7 @@ pub mod TWAMM {
                         self
                             .emit(
                                 VirtualOrdersExecuted {
+                                    key: key,
                                     last_virtual_order_time,
                                     next_virtual_order_time,
                                     token0_sale_rate: token0_sale_rate,
