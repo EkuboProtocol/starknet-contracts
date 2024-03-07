@@ -296,14 +296,12 @@ pub mod Positions {
             self.mint_v2(Zero::zero())
         }
 
-        #[inline(always)]
         fn mint_with_referrer(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
         ) -> u64 {
             self.mint_v2(referrer)
         }
 
-        #[inline(always)]
         fn mint_v2(ref self: ContractState, referrer: ContractAddress) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
@@ -477,7 +475,6 @@ pub mod Positions {
             self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zero::zero())
         }
 
-        #[inline(always)]
         fn mint_and_deposit_with_referrer(
             ref self: ContractState,
             pool_key: PoolKey,

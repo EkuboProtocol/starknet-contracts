@@ -13,15 +13,12 @@ pub struct Bitmap {
 }
 
 impl BitmapZero of Zero<Bitmap> {
-    #[inline(always)]
     fn zero() -> Bitmap {
         Bitmap { value: Zero::zero() }
     }
-    #[inline(always)]
     fn is_zero(self: @Bitmap) -> bool {
         self.value.is_zero()
     }
-    #[inline(always)]
     fn is_non_zero(self: @Bitmap) -> bool {
         self.value.is_non_zero()
     }

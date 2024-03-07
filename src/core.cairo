@@ -170,38 +170,32 @@ pub mod Core {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
             let lock_count = self.lock_count.read();
             assert(lock_count > 0, 'NOT_LOCKED');
             lock_count - 1
         }
 
-        #[inline(always)]
         fn get_locker_address(self: @ContractState, id: u32) -> ContractAddress {
             Store::read(0, storage_base_address_from_felt252(id.into()))
                 .expect('FAILED_READ_LOCKER_ADDRESS')
         }
 
-        #[inline(always)]
         fn set_locker_address(self: @ContractState, id: u32, address: ContractAddress) {
             Store::write(0, storage_base_address_from_felt252(id.into()), address)
                 .expect('FAILED_WRITE_LOCKER_ADDRESS');
         }
 
-        #[inline(always)]
         fn get_nonzero_delta_count(self: @ContractState, id: u32) -> u32 {
             Store::read(0, storage_base_address_from_felt252(0x100000000 + id.into()))
                 .expect('FAILED_READ_NZD_COUNT')
         }
 
-        #[inline(always)]
         fn set_nonzero_delta_count(self: @ContractState, id: u32, count: u32) {
             Store::write(0, storage_base_address_from_felt252(0x100000000 + id.into()), count)
                 .expect('FAILED_WRITE_NZD_COUNT');
         }
 
-        #[inline(always)]
         fn get_locker(self: @ContractState) -> (u32, ContractAddress) {
             let id = self.get_current_locker_id();
             let locker = self.get_locker_address(id);
@@ -230,7 +224,6 @@ pub mod Core {
             }
         }
 
-        #[inline(always)]
         fn account_pool_delta(ref self: ContractState, id: u32, pool_key: PoolKey, delta: Delta) {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);

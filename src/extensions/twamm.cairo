@@ -111,17 +111,14 @@ pub mod TWAMM {
     }
 
     pub impl OrderStateZero of Zero<OrderState> {
-        #[inline(always)]
         fn zero() -> OrderState {
             OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
         }
 
-        #[inline(always)]
         fn is_zero(self: @OrderState) -> bool {
             self.sale_rate.is_zero()
         }
 
-        #[inline(always)]
         fn is_non_zero(self: @OrderState) -> bool {
             !self.sale_rate.is_zero()
         }
@@ -397,7 +394,6 @@ pub mod TWAMM {
             )
         }
 
-        #[inline(always)]
         fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
             call_core_with_callback(
                 self.core.read(), @LockCallbackData::ExecuteVirtualSwapsCallbackData({

@@ -15,17 +15,14 @@ pub struct Position {
 
 // we only check liquidity is non-zero because fees per liquidity inside is irrelevant if liquidity is 0
 impl PositionZero of Zero<Position> {
-    #[inline(always)]
     fn zero() -> Position {
         Position { liquidity: Zero::zero(), fees_per_liquidity_inside_last: Zero::zero() }
     }
 
-    #[inline(always)]
     fn is_zero(self: @Position) -> bool {
         self.liquidity.is_zero()
     }
 
-    #[inline(always)]
     fn is_non_zero(self: @Position) -> bool {
         !self.liquidity.is_zero()
     }

@@ -23,7 +23,6 @@ pub struct PoolKey {
 
 #[generate_trait]
 pub impl PoolKeyTraitImpl of PoolKeyTrait {
-    #[inline(always)]
     fn check_valid(self: PoolKey) {
         assert(self.token0 < self.token1, 'TOKEN_ORDER');
         assert(self.token0.is_non_zero(), 'TOKEN_NON_ZERO');

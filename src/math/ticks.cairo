@@ -26,7 +26,6 @@ pub mod constants {
 
 // Each step in the approximation performs a multiplication and a shift
 // We assume the mul is safe in this function
-#[inline(always)]
 pub(crate) fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
     let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
     return u256 { low: res.high, high: 0 };
@@ -35,7 +34,6 @@ pub(crate) fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
 // 56234808244317829948461091929465028608 = 0x3ffffffffff (the remaining log2 bits) * 25572630076711825471857579 (the conversion rate);
 const MAX_ERROR_MAGNITUDE: u128 = 112469616488610087266845472033458199637;
 
-#[inline(always)]
 fn max(x: u256, y: u256) -> u256 {
     if (x > y) {
         x
@@ -44,13 +42,11 @@ fn max(x: u256, y: u256) -> u256 {
     }
 }
 
-#[inline(always)]
 fn unsafe_mul(x: u128, y: u128) -> u128 {
     let (_, low) = u128_wide_mul(x, y);
     return low;
 }
 
-#[inline(always)]
 pub(crate) fn by_2_127(x: u256) -> u256 {
     let (sum, overflow) = u256_overflowing_add(x, x);
     u256 { low: sum.high, high: if overflow {
@@ -257,22 +253,18 @@ pub(crate) fn log2(x: u256) -> (u128, bool) {
     (log_2, false)
 }
 
-#[inline(always)]
 pub fn min_tick() -> i129 {
     i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: true }
 }
 
-#[inline(always)]
 pub fn max_tick() -> i129 {
     i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: false }
 }
 
-#[inline(always)]
 pub fn max_sqrt_ratio() -> u256 {
     constants::MAX_SQRT_RATIO
 }
 
-#[inline(always)]
 pub fn min_sqrt_ratio() -> u256 {
     constants::MIN_SQRT_RATIO
 }

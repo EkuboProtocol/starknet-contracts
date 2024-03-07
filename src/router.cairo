@@ -411,7 +411,6 @@ pub mod Router {
             deltas.pop_front().unwrap()
         }
 
-        #[inline(always)]
         fn multihop_swap(
             ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
         ) -> Array<Delta> {
@@ -420,7 +419,6 @@ pub mod Router {
             result.pop_front().unwrap()
         }
 
-        #[inline(always)]
         fn multi_multihop_swap(ref self: ContractState, swaps: Array<Swap>) -> Array<Array<Delta>> {
             call_core_with_callback(self.core.read(), @CallbackParameters::Swap((swaps, false)))
         }
@@ -455,7 +453,6 @@ pub mod Router {
                 )
         }
 
-        #[inline(always)]
         fn get_market_depth_v2(
             self: @ContractState, pool_key: PoolKey, percent_64x64: u128
         ) -> Depth {
@@ -465,7 +462,6 @@ pub mod Router {
                 )
         }
 
-        #[inline(always)]
         fn get_market_depth_at_sqrt_ratio(
             self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128
         ) -> Depth {

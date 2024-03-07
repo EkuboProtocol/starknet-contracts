@@ -11,15 +11,12 @@ pub struct Delta {
 }
 
 impl ZeroDelta of Zero<Delta> {
-    #[inline(always)]
     fn zero() -> Delta {
         Delta { amount0: Zero::zero(), amount1: Zero::zero() }
     }
-    #[inline(always)]
     fn is_zero(self: @Delta) -> bool {
         self.amount0.is_zero() & self.amount1.is_zero()
     }
-    #[inline(always)]
     fn is_non_zero(self: @Delta) -> bool {
         self.amount0.is_non_zero() | self.amount1.is_non_zero()
     }
@@ -37,13 +34,11 @@ impl DeltaSub of Sub<Delta> {
 }
 
 impl DeltaAddEq of AddEq<Delta> {
-    #[inline(always)]
     fn add_eq(ref self: Delta, other: Delta) {
         self = Add::add(self, other);
     }
 }
 impl DeltaSubEq of SubEq<Delta> {
-    #[inline(always)]
     fn sub_eq(ref self: Delta, other: Delta) {
         self = Sub::sub(self, other);
     }

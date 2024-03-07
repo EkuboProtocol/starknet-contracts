@@ -18,7 +18,6 @@ pub struct SwapResult {
     pub fee_amount: u128
 }
 
-#[inline(always)]
 pub fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
     // sqrt_ratio is expressed in token1/token0, thus:
     // negative token0 = true ^ false = true = increasing
@@ -28,7 +27,6 @@ pub fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
     exact_output ^ is_token1
 }
 
-#[inline(always)]
 pub fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
     SwapResult {
         consumed_amount: Zero::zero(),
