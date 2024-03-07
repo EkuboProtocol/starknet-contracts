@@ -3780,12 +3780,7 @@ mod GetOrderInfo {
         let state_key: StateKey = setup.pool_key.into();
 
         let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(
-                array![
-                    (order1_id, array![order1_key].span()), (order2_id, array![order2_key].span())
-                ]
-                    .span()
-            );
+            .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
 
         let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
         let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
@@ -3804,12 +3799,53 @@ mod GetOrderInfo {
         twamm.execute_virtual_orders(state_key);
 
         let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(
-                array![
-                    (order1_id, array![order1_key].span()), (order2_id, array![order2_key].span())
-                ]
-                    .span()
-            );
+            .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
+
+        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
+        let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
+
+        let order1_info = twamm
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
+        let order2_info = twamm
+            .get_order_info(positions.contract_address, order2_id.into(), order2_key);
+
+        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate);
+        assert_eq!(get_order1_info.purchased_amount, order1_info.purchased_amount);
+        assert_eq!(get_order1_info.remaining_sell_amount, order1_info.remaining_sell_amount);
+
+        assert_eq!(get_order2_info.sale_rate, order2_info.sale_rate);
+        assert_eq!(get_order2_info.purchased_amount, order2_info.purchased_amount);
+        assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
+
+        // Withdraw proceeds for order1
+        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        // Withdraw proceeds for order2
+        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+
+        let mut orders_info: Span<OrderInfo> = positions
+            .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
+
+        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
+        let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
+
+        let order1_info = twamm
+            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
+        let order2_info = twamm
+            .get_order_info(positions.contract_address, order2_id.into(), order2_key);
+
+        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate);
+        assert_eq!(get_order1_info.purchased_amount, order1_info.purchased_amount);
+        assert_eq!(get_order1_info.remaining_sell_amount, order1_info.remaining_sell_amount);
+
+        assert_eq!(get_order2_info.sale_rate, order2_info.sale_rate);
+        assert_eq!(get_order2_info.purchased_amount, order2_info.purchased_amount);
+        assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
+
+        set_block_timestamp(order_end_time + 1);
+        twamm.execute_virtual_orders(state_key);
+
+        let mut orders_info: Span<OrderInfo> = positions
+            .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
 
         let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
         let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
@@ -3835,7 +3871,7 @@ mod GetOrderInfo {
         let mut orders_info: Span<OrderInfo> = positions
             .get_orders_info(
                 array![
-                    (order1_id, array![order1_key].span()), (order2_id, array![order2_key].span())
+                    (order1_id, order1_key), (order2_id, order2_key)
                 ]
                     .span()
             );
@@ -3855,238 +3891,6 @@ mod GetOrderInfo {
         assert_eq!(get_order2_info.sale_rate, order2_info.sale_rate);
         assert_eq!(get_order2_info.purchased_amount, order2_info.purchased_amount);
         assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
-
-        set_block_timestamp(order_end_time + 1);
-        twamm.execute_virtual_orders(state_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(
-                array![
-                    (order1_id, array![order1_key].span()), (order2_id, array![order2_key].span())
-                ]
-                    .span()
-            );
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-        let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order2_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate);
-        assert_eq!(get_order1_info.purchased_amount, order1_info.purchased_amount);
-        assert_eq!(get_order1_info.remaining_sell_amount, order1_info.remaining_sell_amount);
-
-        assert_eq!(get_order2_info.sale_rate, order2_info.sale_rate);
-        assert_eq!(get_order2_info.purchased_amount, order2_info.purchased_amount);
-        assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(
-                array![
-                    (order1_id, array![order1_key].span()), (order2_id, array![order2_key].span())
-                ]
-                    .span()
-            );
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-        let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order1_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order2_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate);
-        assert_eq!(get_order1_info.purchased_amount, order1_info.purchased_amount);
-        assert_eq!(get_order1_info.remaining_sell_amount, order1_info.remaining_sell_amount);
-
-        assert_eq!(get_order2_info.sale_rate, order2_info.sale_rate);
-        assert_eq!(get_order2_info.purchased_amount, order2_info.purchased_amount);
-        assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
-    }
-
-    #[test]
-    fn test_place_split_order_and_get_order_info() {
-        let mut d: Deployer = Default::default();
-        let core = d.deploy_core();
-        let fee = 0;
-        let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d,
-            core,
-            fee,
-            initial_tick,
-            amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
-        );
-
-        // set up 1% pool
-        set_up_twamm_pool(
-            core,
-            twamm,
-            positions,
-            setup,
-            FEE_ONE_PERCENT,
-            initial_tick,
-            100_000_000 * 1000000000000000000,
-            100_000_000 * 1000000000000000000
-        );
-
-        let timestamp = SIXTEEN_POW_ONE;
-        set_block_timestamp(timestamp);
-
-        let order_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
-
-        // place the same order on diff pools, use the same nft 
-
-        let amount = 10_000 * 1000000000000000000;
-        let (order_id, order1_key, order1_info) = place_order(
-            positions,
-            get_contract_address(),
-            setup.token0,
-            setup.token1,
-            fee,
-            0,
-            order_end_time,
-            amount
-        );
-
-        let order2_key = OrderKey {
-            sell_token: order1_key.sell_token,
-            buy_token: order1_key.buy_token,
-            fee: FEE_ONE_PERCENT,
-            start_time: 0,
-            end_time: order_end_time,
-        };
-
-        setup.token0.increase_balance(positions.contract_address, amount);
-        positions.increase_sell_amount(order_id, order2_key, amount);
-
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order2_key);
-
-        let state_key: StateKey = setup.pool_key.into();
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(array![(order_id, array![order1_key, order2_key].span())].span());
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate + order2_info.sale_rate);
-        assert_eq!(
-            get_order1_info.purchased_amount,
-            order1_info.purchased_amount + order2_info.purchased_amount
-        );
-        assert_eq!(
-            get_order1_info.remaining_sell_amount,
-            order1_info.remaining_sell_amount + order2_info.remaining_sell_amount
-        );
-
-        // halfway through the order duration
-        let execution_timestamp = timestamp + 2040;
-        set_block_timestamp(execution_timestamp);
-        twamm.execute_virtual_orders(state_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(array![(order_id, array![order1_key, order2_key].span())].span());
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate + order2_info.sale_rate);
-        assert_eq!(
-            get_order1_info.purchased_amount,
-            order1_info.purchased_amount + order2_info.purchased_amount
-        );
-        assert_eq!(
-            get_order1_info.remaining_sell_amount,
-            order1_info.remaining_sell_amount + order2_info.remaining_sell_amount
-        );
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order_id, order1_key);
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order_id, order2_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(array![(order_id, array![order1_key, order2_key].span())].span());
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate + order2_info.sale_rate);
-        assert_eq!(
-            get_order1_info.purchased_amount,
-            order1_info.purchased_amount + order2_info.purchased_amount
-        );
-        assert_eq!(
-            get_order1_info.remaining_sell_amount,
-            order1_info.remaining_sell_amount + order2_info.remaining_sell_amount
-        );
-
-        set_block_timestamp(order_end_time + 1);
-        twamm.execute_virtual_orders(state_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(array![(order_id, array![order1_key, order2_key].span())].span());
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate + order2_info.sale_rate);
-        assert_eq!(
-            get_order1_info.purchased_amount,
-            order1_info.purchased_amount + order2_info.purchased_amount
-        );
-        assert_eq!(
-            get_order1_info.remaining_sell_amount,
-            order1_info.remaining_sell_amount + order2_info.remaining_sell_amount
-        );
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order_id, order1_key);
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order_id, order2_key);
-
-        let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(array![(order_id, array![order1_key, order2_key].span())].span());
-
-        let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
-
-        let order1_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order1_key);
-        let order2_info = twamm
-            .get_order_info(positions.contract_address, order_id.into(), order2_key);
-
-        assert_eq!(get_order1_info.sale_rate, order1_info.sale_rate + order2_info.sale_rate);
-        assert_eq!(
-            get_order1_info.purchased_amount,
-            order1_info.purchased_amount + order2_info.purchased_amount
-        );
-        assert_eq!(
-            get_order1_info.remaining_sell_amount,
-            order1_info.remaining_sell_amount + order2_info.remaining_sell_amount
-        );
     }
 }
 
@@ -4222,13 +4026,17 @@ fn set_up_twamm_pool(
     amount0: u128,
     amount1: u128
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
-    let _ = core.maybe_initialize_pool(PoolKey{
-        token0: setup.token0.contract_address,
-        token1: setup.token1.contract_address,
-        fee: fee,
-        tick_spacing: MAX_TICK_SPACING,
-        extension: twamm.contract_address,
-    }, initial_tick);
+    let _ = core
+        .maybe_initialize_pool(
+            PoolKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                fee: fee,
+                tick_spacing: MAX_TICK_SPACING,
+                extension: twamm.contract_address,
+            },
+            initial_tick
+        );
 
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
@@ -4249,11 +4057,7 @@ fn set_up_twamm_pool(
             pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity
         );
 
-    (
-        twamm,
-        setup,
-        positions
-    )
+    (twamm, setup, positions)
 }
 
 fn place_order(

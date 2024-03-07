@@ -11,7 +11,7 @@ pub mod Positions {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
-        OrderKey, OrderInfo, OrderInfoAddEq, ITWAMMDispatcher, ITWAMMDispatcherTrait
+        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait
     };
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
@@ -377,15 +377,15 @@ pub mod Positions {
         }
 
         fn get_orders_info(
-            self: @ContractState, mut params: Span<(u64, Span<OrderKey>)>
+            self: @ContractState, mut params: Span<(u64, OrderKey)>
         ) -> Span<OrderInfo> {
             let mut results: Array<OrderInfo> = ArrayTrait::new();
 
             loop {
                 match params.pop_front() {
                     Option::Some(request) => {
-                        let (id, order_keys) = request;
-                        results.append(self.get_order_info(*id, *order_keys));
+                        let (id, order_key) = request;
+                        results.append(self.get_order_info(*id, *order_key));
                     },
                     Option::None => { break (); }
                 };
@@ -394,26 +394,8 @@ pub mod Positions {
             results.span()
         }
 
-        fn get_order_info(
-            self: @ContractState, id: u64, mut order_keys: Span<OrderKey>
-        ) -> OrderInfo {
-            let mut result: OrderInfo = OrderInfo {
-                sale_rate: 0, remaining_sell_amount: 0, purchased_amount: 0,
-            };
-
-            loop {
-                match order_keys.pop_front() {
-                    Option::Some(key) => {
-                        result += self
-                            .twamm
-                            .read()
-                            .get_order_info(get_contract_address(), id.into(), *key);
-                    },
-                    Option::None => { break (); }
-                };
-            };
-
-            result
+        fn get_order_info(self: @ContractState, id: u64, order_key: OrderKey) -> OrderInfo {
+            self.twamm.read().get_order_info(get_contract_address(), id.into(), order_key)
         }
 
         fn deposit(

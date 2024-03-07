@@ -25,18 +25,6 @@ pub struct OrderInfo {
     pub purchased_amount: u128,
 }
 
-pub impl OrderInfoAddEq of AddEq<OrderInfo> {
-    #[inline(always)]
-    fn add_eq(ref self: OrderInfo, other: OrderInfo) {
-        self =
-            OrderInfo {
-                sale_rate: self.sale_rate + other.sale_rate,
-                remaining_sell_amount: self.remaining_sell_amount + other.remaining_sell_amount,
-                purchased_amount: self.purchased_amount + other.purchased_amount,
-            }
-    }
-}
-
 #[derive(Drop, Copy, Serde)]
 pub struct SaleRateState {
     pub token0_sale_rate: u128,

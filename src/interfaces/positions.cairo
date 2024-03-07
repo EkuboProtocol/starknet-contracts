@@ -47,10 +47,10 @@ pub trait IPositions<TStorage> {
     ) -> GetTokenInfoResult;
 
     // Returns the sale rate, remaining sell amount and purchased amount for a set of orders
-    fn get_orders_info(self: @TStorage, params: Span<(u64, Span<OrderKey>)>) -> Span<OrderInfo>;
+    fn get_orders_info(self: @TStorage, params: Span<(u64, OrderKey)>) -> Span<OrderInfo>;
 
     // Returns the sale rate, remaining sell amount and purchased amount for an order
-    fn get_order_info(self: @TStorage, id: u64, order_keys: Span<OrderKey>) -> OrderInfo;
+    fn get_order_info(self: @TStorage, id: u64, order_key: OrderKey) -> OrderInfo;
 
     // Create a new NFT that represents liquidity in a pool. Returns the newly minted token ID
     // This function is deprecated. The pool_key and bounds arguments are not used. Instead, use mint_v2.
