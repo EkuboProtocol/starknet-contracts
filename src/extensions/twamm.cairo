@@ -934,9 +934,9 @@ pub mod TWAMM {
                 self
                     .emit(
                         VirtualOrdersExecuted {
-                            key: key,
-                            token0_sale_rate: token0_sale_rate,
-                            token1_sale_rate: token1_sale_rate
+                            key,
+                            token0_sale_rate,
+                            token1_sale_rate
                         }
                     );
 

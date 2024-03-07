@@ -1117,7 +1117,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
+        let (_, setup, positions) = set_up_twamm(
             ref d,
             core,
             fee,
@@ -1160,7 +1160,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
+        let (_, setup, positions) = set_up_twamm(
             ref d,
             core,
             fee,
@@ -1203,7 +1203,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
+        let (_, setup, positions) = set_up_twamm(
             ref d,
             core,
             fee,
