@@ -790,7 +790,7 @@ pub mod TWAMM {
                     selector!("time_reward_rate"), storage_key
                 );
 
-                loop {
+                while last_virtual_order_time != current_time {
                     let mut delta = Zero::zero();
 
                     // we must trade up to the earliest initialzed time because sale rate changes
@@ -939,11 +939,6 @@ pub mod TWAMM {
                     }
 
                     last_virtual_order_time = next_virtual_order_time;
-
-                    // virtual orders were executed up to current time
-                    if next_virtual_order_time == current_time {
-                        break;
-                    }
                 };
 
                 Store::write(

@@ -332,17 +332,13 @@ pub mod Positions {
         ) -> Span<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
 
-            loop {
-                match params.pop_front() {
-                    Option::Some(request) => {
-                        results
-                            .append(
-                                self.get_token_info(*request.id, *request.pool_key, *request.bounds)
-                            );
-                    },
-                    Option::None => { break (); }
+            while let Option::Some(request) = params
+                .pop_front() {
+                    results
+                        .append(
+                            self.get_token_info(*request.id, *request.pool_key, *request.bounds)
+                        );
                 };
-            };
 
             results.span()
         }

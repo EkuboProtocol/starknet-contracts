@@ -863,15 +863,7 @@ pub mod Core {
 
             let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None;
 
-            loop {
-                if (amount_remaining.is_zero()) {
-                    break ();
-                }
-
-                if (sqrt_ratio == params.sqrt_ratio_limit) {
-                    break ();
-                }
-
+            while (amount_remaining.is_non_zero() & (sqrt_ratio != params.sqrt_ratio_limit)) {
                 let (next_tick, is_initialized) = if (increasing) {
                     self_snap
                         .prefix_next_initialized_tick(
