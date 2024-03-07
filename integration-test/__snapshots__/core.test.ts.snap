@@ -3243,7 +3243,109 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > no orders > e
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 320,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 38,
+    "range_check_builtin_applications": 437,
+    "steps": 12562,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 633825300114114700748351602688n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 633825300114114700748351602688n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 384,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 63,
+    "range_check_builtin_applications": 820,
+    "steps": 19448,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1267650600228229401496703205376n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 576,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 844,
+    "steps": 19889,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3254,14 +3356,81 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 38,
+    "range_check_builtin_applications": 436,
+    "steps": 12552,
   },
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 18446748437148339061n,
+    "tick_after": {
+      "mag": 88722884n,
+      "sign": true,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 55,
+    "data_availability": {
+      "l1_data_gas": 384,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 60,
+    "range_check_builtin_applications": 1221,
+    "steps": 28257,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": null,
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 256,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 38,
+    "range_check_builtin_applications": 533,
+    "steps": 13663,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3279,7 +3448,7 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3321,25 +3490,32 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
   "executedSwap": null,
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 320,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 38,
+    "range_check_builtin_applications": 532,
+    "steps": 13663,
   },
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3357,7 +3533,109 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 }
 `;
 
-exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 16n,
+    "next_virtual_order_time": 24n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 316912650057057350374175801344n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 240615969168004511545033772477625056927n,
+    "tick_after": {
+      "mag": 693148n,
+      "sign": true,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 55,
+    "data_availability": {
+      "l1_data_gas": 512,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 2479,
+    "steps": 35009,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 2535301200456458802993406410752n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 633825300114114700748351602688n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 240615969168004511545033772477625056927n,
+    "tick_after": {
+      "mag": 693148n,
+      "sign": true,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 576,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 820,
+    "steps": 19768,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": undefined,
+  "executedSwap": null,
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 320,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 38,
+    "range_check_builtin_applications": 437,
+    "steps": 12562,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3395,6 +3673,48 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     "pedersen_builtin_applications": 64,
     "range_check_builtin_applications": 2441,
     "steps": 29949,
+  },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 633825300114114700748351602688n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 2535301200456458802993406410752n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 0n,
+    "sqrt_ratio_after": 481231938336009023077170621664601309184n,
+    "tick_after": {
+      "mag": 693147n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 1,
+    "data_availability": {
+      "l1_data_gas": 576,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 844,
+    "steps": 19889,
   },
 }
 `;
@@ -3457,24 +3777,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
-      "l1_gas": 0,
-    },
-    "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
-  },
-}
-`;
-
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
-{
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
-  "executionResources": {
-    "bitwise_builtin_applications": 1,
-    "data_availability": {
       "l1_data_gas": 320,
       "l1_gas": 0,
     },
@@ -3486,7 +3788,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3528,25 +3830,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1267650600228229401496703205376n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 576,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 844,
+    "steps": 19889,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3564,7 +3890,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3606,25 +3932,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 74554486103559739945166421132n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 20073287336062910776512971612071208249n,
+    "tick_after": {
+      "mag": 5660775n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 30,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 704,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2434,
+    "steps": 33307,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3642,7 +3992,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3684,25 +4034,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 74554486103559739945166421132n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 5768466684043748832631126345183334720602n,
+    "tick_after": {
+      "mag": 5660774n,
+      "sign": false,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 29,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 768,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2448,
+    "steps": 33251,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3720,7 +4094,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3762,25 +4136,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 2469468944830418366460729743296n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 657030691650729505906818310779n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 5940337003019n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+    "tick_after": {
+      "mag": 693148n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 95,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 896,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4490,
+    "steps": 45796,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -3798,7 +4196,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3836,6 +4234,48 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "pedersen_builtin_applications": 78,
     "range_check_builtin_applications": 4725,
     "steps": 48351,
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 657030691650729505906818310779n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 2469468944830418366460729743296n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 5940337003019n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 481231938311412669592028616206935880801n,
+    "tick_after": {
+      "mag": 693147n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 94,
+    "data_availability": {
+      "l1_data_gas": 896,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4494,
+    "steps": 45792,
   },
 }
 `;
@@ -3898,24 +4338,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
-      "l1_gas": 0,
-    },
-    "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
-  },
-}
-`;
-
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
-{
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
-  "executionResources": {
-    "bitwise_builtin_applications": 1,
-    "data_availability": {
       "l1_data_gas": 320,
       "l1_gas": 0,
     },
@@ -3927,7 +4349,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -3969,25 +4391,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1267650600228229401496703205376n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 576,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 844,
+    "steps": 19889,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4005,7 +4451,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4047,25 +4493,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 74523402269949353040754355456n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 20206791384853827997837375226640263626n,
+    "tick_after": {
+      "mag": 5647517n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 57,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 704,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2802,
+    "steps": 36417,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4083,7 +4553,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4125,25 +4595,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 74523402269949353040754355456n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 5730355058948603724723228389150976680918n,
+    "tick_after": {
+      "mag": 5647516n,
+      "sign": false,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 56,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 768,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2827,
+    "steps": 36371,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4161,7 +4655,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4203,25 +4697,49 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 2469003464235082727197125034519n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 657030691650729505906818310779n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 5982339385868n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+    "tick_after": {
+      "mag": 693148n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 95,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 896,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4490,
+    "steps": 45796,
   },
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4239,7 +4757,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
-exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4277,6 +4795,48 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "pedersen_builtin_applications": 78,
     "range_check_builtin_applications": 4725,
     "steps": 48351,
+  },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 657030691650729505906818310779n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 2469003464235082727197125034519n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 2961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 5982339385868n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000n,
+    "sqrt_ratio_after": 481231938311412669592028616206935880801n,
+    "tick_after": {
+      "mag": 693147n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 94,
+    "data_availability": {
+      "l1_data_gas": 896,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4494,
+    "steps": 45792,
   },
 }
 `;
@@ -4339,24 +4899,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
-      "l1_gas": 0,
-    },
-    "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
-  },
-}
-`;
-
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
-{
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
-  "executionResources": {
-    "bitwise_builtin_applications": 1,
-    "data_availability": {
       "l1_data_gas": 320,
       "l1_gas": 0,
     },
@@ -4368,7 +4910,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4410,25 +4952,49 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1267650600228229401496703205376n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1267650600228229401496703205376n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000000000000000000000n,
+    "sqrt_ratio_after": 340282366920938463463374607431768211456n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
   "executionResources": {
     "bitwise_builtin_applications": 1,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 576,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 844,
+    "steps": 19889,
   },
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4446,7 +5012,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4488,25 +5054,49 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 0n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1254974094225947087437011057212n,
+    "token1_sale_rate": 0n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999810n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000000000000000000000n,
+    "sqrt_ratio_after": 340282366920938458073301915404103035916n,
+    "tick_after": {
+      "mag": 1n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 57,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 704,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2301,
+    "steps": 35896,
   },
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4524,7 +5114,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4566,25 +5156,49 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1254974094225947087516239219727n,
+    "token0_sale_rate": 0n,
+    "token1_reward_rate": 0n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 7919999999999999811n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000000000000000000000n,
+    "sqrt_ratio_after": 340282366920938468853447299459433472714n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 29,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 768,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 75,
+    "range_check_builtin_applications": 2311,
+    "steps": 33134,
   },
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4602,7 +5216,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4644,25 +5258,49 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
-  "VirtualOrdersExecuted": undefined,
-  "executedSwap": null,
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1259147455011977325949775162759n,
+    "token0_sale_rate": 4294967296000000000000000000n,
+    "token1_reward_rate": 1265521404109133026598846067491n,
+    "token1_sale_rate": 2147483648000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 4026831195330073298n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 3986562883376772516n,
+        "sign": true,
+      },
+    },
+    "liquidity_after": 1000000000000000000000000000000000000n,
+    "sqrt_ratio_after": 340282366920938460750260499762549554546n,
+    "tick_after": {
+      "mag": 1n,
+      "sign": true,
+    },
+  },
   "executionResources": {
-    "bitwise_builtin_applications": 1,
+    "bitwise_builtin_applications": 122,
     "data_availability": {
-      "l1_data_gas": 256,
+      "l1_data_gas": 896,
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 36,
-    "range_check_builtin_applications": 417,
-    "steps": 12127,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 2939,
+    "steps": 45799,
   },
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
   "executedSwap": null,
@@ -4680,7 +5318,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
-exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
     "last_virtual_order_time": 16n,
@@ -4718,6 +5356,48 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "pedersen_builtin_applications": 78,
     "range_check_builtin_applications": 2879,
     "steps": 42626,
+  },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
+{
+  "VirtualOrdersExecuted": {
+    "last_virtual_order_time": 24n,
+    "next_virtual_order_time": 32n,
+    "token0_reward_rate": 1265521404109133026598846067491n,
+    "token0_sale_rate": 2147483648000000000000000000n,
+    "token1_reward_rate": 1259147455011977326108231487787n,
+    "token1_sale_rate": 4294967296000000000000000000n,
+  },
+  "executedSwap": {
+    "delta": {
+      "amount0": {
+        "mag": 3986562883376772516n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4026831195330073297n,
+        "sign": false,
+      },
+    },
+    "liquidity_after": 1000000000000000000000000000000000000n,
+    "sqrt_ratio_after": 340282366920938466176488715100986889775n,
+    "tick_after": {
+      "mag": 0n,
+      "sign": false,
+    },
+  },
+  "executionResources": {
+    "bitwise_builtin_applications": 94,
+    "data_availability": {
+      "l1_data_gas": 896,
+      "l1_gas": 0,
+    },
+    "ecdsa_builtin_applications": 1,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 2904,
+    "steps": 43066,
   },
 }
 `;
