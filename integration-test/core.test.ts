@@ -324,7 +324,8 @@ describe("core", () => {
                   };
 
                   const startingTime = 16;
-                  await setDevnetTime(startingTime - 8);
+                  const endingTime =
+                    startingTime + actions[actions.length - 1].after;
 
                   const initializePoolCall = core.populate(
                     "maybe_initialize_pool",
@@ -344,6 +345,7 @@ describe("core", () => {
                       liquidity,
                       bounds,
                     });
+                    await setDevnetTime(startingTime);
                     const { transaction_hash } = await account.execute(
                       [
                         initializePoolCall,
@@ -380,7 +382,9 @@ describe("core", () => {
                     mintReceipts.every(
                       (receipt) => receipt.execution_status === "SUCCEEDED"
                     ),
-                    "mints did not succeed"
+                    `mints did not succeed: ${mintReceipts
+                      .map((r) => r.revert_reason)
+                      .join("; ")}`
                   ).toEqual(true);
 
                   const mintedPositionTokens = mintReceipts.map((receipt) => ({
@@ -418,6 +422,7 @@ describe("core", () => {
                       token1.balanceOf(account.address),
                     ]);
 
+                    await setDevnetTime(startingTime);
                     const { transaction_hash } = await account.execute(
                       [
                         initializePoolCall,
@@ -462,7 +467,7 @@ describe("core", () => {
 
                     expect(
                       orderPlacementReceipt.execution_status,
-                      "order placement succeeded"
+                      `order placement succeeded: ${orderPlacementReceipt.revert_reason}`
                     ).toEqual("SUCCEEDED");
 
                     mintedOrders = twamm
@@ -539,6 +544,7 @@ describe("core", () => {
                   }
 
                   if (mintedPositionTokens.length > 0) {
+                    await setDevnetTime(endingTime);
                     const { transaction_hash: withdrawalTransactionHash } =
                       await account.execute(
                         mintedPositionTokens.map(({ token_id, liquidity }) =>
@@ -562,15 +568,18 @@ describe("core", () => {
 
                     const {
                       execution_status: positionWithdrawalTransactionStatus,
+                      revert_reason,
                     } = await account.waitForTransaction(
                       withdrawalTransactionHash
                     );
-                    expect(positionWithdrawalTransactionStatus).toEqual(
-                      "SUCCEEDED"
-                    );
+                    expect(
+                      positionWithdrawalTransactionStatus,
+                      `position withdrawal succeeded: ${revert_reason}`
+                    ).toEqual("SUCCEEDED");
                   }
 
                   if (mintedOrders.length > 0) {
+                    await setDevnetTime(endingTime);
                     const {
                       transaction_hash: withdrawProceedsTransactionHash,
                     } = await account.execute(
@@ -590,7 +599,7 @@ describe("core", () => {
                       );
                     expect(
                       withdrawProceedsReceipt.execution_status,
-                      "withdraw proceeds success"
+                      `withdraw proceeds failed: ${withdrawProceedsReceipt.revert_reason}`
                     ).toEqual("SUCCEEDED");
                   }
                 },
