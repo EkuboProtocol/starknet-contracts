@@ -11,7 +11,7 @@ export async function setDevnetTime(time: number) {
     headers: {
       "content-type": "application/json",
     },
-    body: `{"time":${time}}`,
+    body: `{"time":${time},"generate_block":false}`,
   });
 
   if (!response.ok) {
