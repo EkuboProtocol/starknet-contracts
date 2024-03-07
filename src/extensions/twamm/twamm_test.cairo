@@ -1139,8 +1139,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
         );
 
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
         set_block_timestamp(order1_end_time);
 
         set_contract_address(owner);
@@ -1184,8 +1182,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
         );
 
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
-
         set_block_timestamp(order1_end_time + 1);
 
         set_contract_address(owner);
@@ -1228,8 +1224,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         let (order1_id, order1_key, order1_state) = place_order(
             positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
         );
-
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate * 2);
@@ -1281,7 +1275,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(setup.pool_key.into());
@@ -1386,7 +1379,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(setup.pool_key.into());
@@ -1491,7 +1483,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(setup.pool_key.into());
@@ -1614,7 +1605,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(setup.pool_key.into());
@@ -1881,7 +1871,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(setup.pool_key.into());
@@ -1960,7 +1949,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(sale_rate_state.last_virtual_order_time, timestamp); // time order was placed
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         // set time to just before order start
         set_block_timestamp(order1_start_time - 1);
