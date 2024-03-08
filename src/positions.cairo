@@ -10,7 +10,9 @@ pub mod Positions {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
-    use ekubo::extensions::interfaces::twamm::{OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait};
+    use ekubo::extensions::interfaces::twamm::{
+        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait
+    };
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
@@ -366,6 +368,24 @@ pub mod Positions {
                 fees0: get_position_result.fees0,
                 fees1: get_position_result.fees1
             }
+        }
+
+        fn get_orders_info(
+            self: @ContractState, mut params: Span<(u64, OrderKey)>
+        ) -> Span<OrderInfo> {
+            let mut results: Array<OrderInfo> = ArrayTrait::new();
+
+            while let Option::Some(request) = params
+                .pop_front() {
+                    let (id, order_key) = request;
+                    results.append(self.get_order_info(*id, *order_key));
+                };
+
+            results.span()
+        }
+
+        fn get_order_info(self: @ContractState, id: u64, order_key: OrderKey) -> OrderInfo {
+            self.twamm.read().get_order_info(get_contract_address(), id.into(), order_key)
         }
 
         fn deposit(
