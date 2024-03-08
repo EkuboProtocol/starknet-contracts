@@ -83,11 +83,7 @@ fn msb_2_96_less_one() {
 #[test]
 fn msb_many_iterations_min_gas() {
     let mut i: u128 = 0;
-    loop {
-        if (i == 1024) {
-            break ();
-        }
-
+    while (i != 1024) {
         msb(i + 1);
 
         i += 1;

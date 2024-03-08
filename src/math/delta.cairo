@@ -7,7 +7,6 @@ use ekubo::types::i129::i129;
 
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
-#[inline(always)]
 pub fn amount0_delta(
     sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
 ) -> u128 {
@@ -38,7 +37,6 @@ pub fn amount0_delta(
 }
 
 // Compute the difference in amount of token1 between two ratios, rounded as specified
-#[inline(always)]
 pub fn amount1_delta(
     sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
 ) -> u128 {

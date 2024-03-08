@@ -31,7 +31,6 @@ pub mod constants {
 // The maximum sale rate for a given 18 decimal token that can be expressed in a 96.32 is approximately ~79,228,162,514 tokens
 // https://www.wolframalpha.com/input?i=%282**128+-+1%29+%2F+2**32+%2F+10**18
 
-#[inline(always)]
 pub fn calculate_sale_rate(amount: u128, duration: u32) -> u128 {
     ((amount.into() * constants::X32_u256) / duration.into())
         .try_into()
@@ -40,7 +39,6 @@ pub fn calculate_sale_rate(amount: u128, duration: u32) -> u128 {
 
 // Computes the amount for the given sale rate over the given start and end time, which is just the amount times the duration
 // Will never revert because we limit the duration of any order to 2**32
-#[inline(always)]
 pub fn calculate_amount_from_sale_rate(sale_rate: u128, duration: u32, round_up: bool) -> u128 {
     div(sale_rate.into() * duration.into(), constants::X32_u256.try_into().unwrap(), round_up)
         .try_into()

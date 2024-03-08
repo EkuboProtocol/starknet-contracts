@@ -1,3 +1,4 @@
+use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use ekubo::types::call_points::{CallPoints, all_call_points};
@@ -33,15 +34,11 @@ fn test_u8_into_all_call_points() {
 #[test]
 fn test_lower_bits_result_in_none() {
     let mut i = 7_u8;
-    loop {
-        assert(TryInto::<u8, CallPoints>::try_into(i).is_none(), 'lower bits');
-
-        if (i == 1) {
-            break ();
+    while i
+        .is_non_zero() {
+            assert(TryInto::<u8, CallPoints>::try_into(i).is_none(), 'lower bits');
+            i -= 1;
         };
-
-        i -= 1;
-    };
 }
 
 #[test]
@@ -125,11 +122,7 @@ fn test_u8_into_after_update_position_call_points() {
 fn test_conversion_all_possible_values() {
     let mut i: u128 = 0;
 
-    loop {
-        if (i == 32) {
-            break ();
-        };
-
+    while (i != 32) {
         let call_points = CallPoints {
             after_initialize_pool: (i & 16) != 0,
             before_swap: (i & 8) != 0,

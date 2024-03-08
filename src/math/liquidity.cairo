@@ -4,7 +4,6 @@ use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129, i129Trait};
 
 // Returns the token0, token1 delta owed for a given change in liquidity
-#[inline(always)]
 pub fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
 ) -> Delta {

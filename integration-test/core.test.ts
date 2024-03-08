@@ -20,16 +20,16 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x2150ef2cf18168b0e42b42fc0484fdebc74bb8a16b51bc5a3569298aeb73bea",
+      core: "0xc125a078e2005bcd810881a52485df74551de34e28da5198909bc62f84d7f4",
       positions:
-        "0x6c8ea6866df62fa24985177a61251b27e4158c30fe501bbcfd71e2f30cc1474",
+        "0x314cd95f946c74c361da0a1b94f556d0f2b17f542cfb3fcdf3ae02f48e9a670",
       router:
-        "0xdf6342b486c8476f41621f60b3bb0cca2a8db23f63c7d8a6396f2f1430f7ec",
-      nft: "0x4a1c8b104306c44d2f3dc54944d3009fd724dd83bb8c21c1c861c2d1a6a431f",
+        "0x155b109a3669301eaa820e36bdc8dc7c649506aabdc54e6e6bec42c674885d5",
+      nft: "0x58f36632c9f6d0eb207a35beffb20d83a581fcb4d89d8c79859da84af36f51a",
       twamm:
-        "0x16292e77ada001b6422c8e5b2520d8709a2999b80fcd00ef3d4949203520b52",
+        "0x55e8b5457fed2dfd74145823d8b2f424d0f53bd3a9a19ad2fe8be6befb07639",
       tokenClassHash:
-        "0x1065ec6dd47efab112d4212197e7864a02851cb1a62d9839a15f8bbcd09ebc1",
+        "0x58d3e055ea3c77b67ad51911ec8f09462e60c169c885f7c8fabc2e4344baf12",
     });
     console.log(setup);
   }, 300_000);
@@ -291,7 +291,7 @@ describe("core", () => {
     }
   });
 
-  describe.only("twamm", () => {
+  describe("twamm", () => {
     for (const {
       name: twammCaseName,
       pool,
@@ -313,6 +313,7 @@ describe("core", () => {
                     twamm,
                     getTxSettings,
                     nft,
+                    router,
                   } = await prepareContracts(setup);
 
                   const poolKey = {
@@ -324,7 +325,8 @@ describe("core", () => {
                   };
 
                   const startingTime = 16;
-                  await setDevnetTime(startingTime - 8);
+                  const endingTime =
+                    startingTime + actions[actions.length - 1].after;
 
                   const initializePoolCall = core.populate(
                     "maybe_initialize_pool",
@@ -344,6 +346,7 @@ describe("core", () => {
                       liquidity,
                       bounds,
                     });
+                    await setDevnetTime(startingTime);
                     const { transaction_hash } = await account.execute(
                       [
                         initializePoolCall,
@@ -380,7 +383,9 @@ describe("core", () => {
                     mintReceipts.every(
                       (receipt) => receipt.execution_status === "SUCCEEDED"
                     ),
-                    "mints did not succeed"
+                    `mints did not succeed: ${mintReceipts
+                      .map((r) => r.revert_reason)
+                      .join("; ")}`
                   ).toEqual(true);
 
                   const mintedPositionTokens = mintReceipts.map((receipt) => ({
@@ -418,16 +423,17 @@ describe("core", () => {
                       token1.balanceOf(account.address),
                     ]);
 
+                    await setDevnetTime(startingTime);
                     const { transaction_hash } = await account.execute(
                       [
                         initializePoolCall,
                         token0.populate("transfer", [
                           setup.positions,
-                          balance0,
+                          balance0 / 2n,
                         ]),
                         token1.populate("transfer", [
                           setup.positions,
-                          balance1,
+                          balance1 / 2n,
                         ]),
                         ...orders.map((order) => {
                           const [buy_token, sell_token] = order.isToken1
@@ -462,7 +468,7 @@ describe("core", () => {
 
                     expect(
                       orderPlacementReceipt.execution_status,
-                      "order placement succeeded"
+                      `order placement succeeded: ${orderPlacementReceipt.revert_reason}`
                     ).toEqual("SUCCEEDED");
 
                     mintedOrders = twamm
@@ -477,9 +483,11 @@ describe("core", () => {
                   }
 
                   for (const action of actions) {
-                    await setDevnetTime(startingTime + action.after);
+                    const { after, type } = action;
 
-                    switch (action.type) {
+                    await setDevnetTime(startingTime + after);
+
+                    switch (type) {
                       case "execute_virtual_orders": {
                         const { transaction_hash } = await account.execute(
                           [
@@ -529,7 +537,80 @@ describe("core", () => {
                           executedSwap,
                           executionResources,
                         }).toMatchSnapshot(
-                          `execute_virtual_orders after ${action.after} seconds`
+                          `execute_virtual_orders after ${after} seconds`
+                        );
+                        break;
+                      }
+                      case "swap": {
+                        if (positions_liquidities.length == 0) {
+                          break;
+                        }
+
+                        let swap_token = action.isToken1 ? token1 : token0;
+
+                        const { transaction_hash } = await account.execute(
+                          [
+                            swap_token.populate("transfer", [setup.router, action.amount]),
+                            router.populate(
+                              "swap",
+                              [
+                                {
+                                  pool_key: poolKey,
+                                  sqrt_ratio_limit: action.sqrtRatioLimit ?? 0,
+                                  skip_ahead: action.skipAhead ?? 0,
+                                },
+                                {
+                                  amount: toI129(action.amount),
+                                  token: swap_token.address
+                                },
+                              ],
+                            )
+                          ],
+                          [],
+                          getTxSettings()
+                        );
+            
+                        const swap_receipt = await provider.waitForTransaction(
+                          transaction_hash,
+                          { retryInterval: 0 }
+                        );
+
+                        expect(
+                          swap_receipt.execution_status,
+                          "swap success"
+                        ).toEqual("SUCCEEDED");
+
+                        const VirtualOrdersExecuted = twamm
+                          .parseEvents(swap_receipt)
+                          .find(
+                            ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
+                          )?.VirtualOrdersExecuted;
+
+                        const Swaps = core
+                          .parseEvents(swap_receipt)
+                          .filter(({ Swapped }) => Swapped);
+
+                        const executedSwaps = Swaps.map((swap) => {
+                          return {
+                              delta: swap.Swapped.delta,
+                              liquidity_after: swap.Swapped.liquidity_after,
+                              sqrt_ratio_after: swap.Swapped.sqrt_ratio_after,
+                              tick_after: swap.Swapped.tick_after
+                          };
+                        });
+
+                        const executionResources =
+                          swap_receipt.execution_resources;
+                        if ("memory_holes" in executionResources) {
+                          delete executionResources["memory_holes"];
+                        }
+
+                        expect({
+                          VirtualOrdersExecuted,
+                          executedSwaps,
+                          executionResources,
+                        }).toMatchSnapshot(
+                          `swap after ${after} seconds`
                         );
                         break;
                       }
@@ -539,6 +620,7 @@ describe("core", () => {
                   }
 
                   if (mintedPositionTokens.length > 0) {
+                    await setDevnetTime(endingTime);
                     const { transaction_hash: withdrawalTransactionHash } =
                       await account.execute(
                         mintedPositionTokens.map(({ token_id, liquidity }) =>
@@ -562,19 +644,22 @@ describe("core", () => {
 
                     const {
                       execution_status: positionWithdrawalTransactionStatus,
+                      revert_reason,
                     } = await account.waitForTransaction(
                       withdrawalTransactionHash
                     );
-                    expect(positionWithdrawalTransactionStatus).toEqual(
-                      "SUCCEEDED"
-                    );
+                    expect(
+                      positionWithdrawalTransactionStatus,
+                      `position withdrawal succeeded: ${revert_reason}`
+                    ).toEqual("SUCCEEDED");
                   }
 
                   if (mintedOrders.length > 0) {
+                    await setDevnetTime(endingTime);
                     const {
                       transaction_hash: withdrawProceedsTransactionHash,
                     } = await account.execute(
-                      mintedOrders.map(({ token_id, order_key, sale_rate }) =>
+                      mintedOrders.map(({ token_id, order_key }) =>
                         positionsContract.populate(
                           "withdraw_proceeds_from_sale",
                           [token_id, order_key]
@@ -588,9 +673,10 @@ describe("core", () => {
                       await account.waitForTransaction(
                         withdrawProceedsTransactionHash
                       );
+
                     expect(
                       withdrawProceedsReceipt.execution_status,
-                      "withdraw proceeds success"
+                      `withdraw proceeds failed: ${withdrawProceedsReceipt.revert_reason}`
                     ).toEqual("SUCCEEDED");
                   }
                 },
