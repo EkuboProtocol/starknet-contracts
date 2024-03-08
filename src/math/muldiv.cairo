@@ -3,7 +3,6 @@ use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
-#[inline(always)]
 pub fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
     let (quotient, remainder) = DivRem::div_rem(x, z);
     return if (!round_up | remainder.is_zero()) {
@@ -16,7 +15,6 @@ pub fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
 }
 
 // Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
-#[inline(always)]
 pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     if (z.is_zero()) {
         return Option::None(());

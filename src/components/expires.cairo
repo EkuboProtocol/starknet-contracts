@@ -9,7 +9,6 @@ pub trait IExpires<TContractState> {
 #[starknet::embeddable]
 pub impl ExpiresImpl<TContractState> of IExpires<TContractState> {
     // Reverts if called after the given time
-    #[inline(always)]
     fn expires(self: @TContractState, at: u64) {
         assert(get_block_timestamp() < at, 'EXPIRED');
     }

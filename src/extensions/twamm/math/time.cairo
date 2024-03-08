@@ -7,13 +7,11 @@ pub(crate) const TIME_SPACING_SIZE: u64 = 16;
 // log base 2 of TIME_SPACING_SIZE, used for our calculations in time validation
 const LOG_SCALE_FACTOR: u8 = 4;
 
-#[inline(always)]
 pub fn to_duration(start: u64, end: u64) -> u32 {
     (end - start).try_into().expect('DURATION_EXCEEDS_MAX_U32')
 }
 
 // Timestamps specified in order keys must be a multiple of a base that depends on how close they are to now
-#[inline(always)]
 pub(crate) fn is_time_valid(now: u64, time: u64) -> bool {
     // = 16**(max(1, floor(log_16(time-now))))
     let step = if time <= (now + TIME_SPACING_SIZE) {

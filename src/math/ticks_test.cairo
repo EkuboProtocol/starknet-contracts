@@ -249,17 +249,15 @@ fn test_max_sqrt_ratio_size() {
 
 #[test]
 fn sqrt_ratio_to_tick_powers_of_tick() {
-    let mut sign = false;
-    let mut pow: u8 = 0;
-    loop {
-        if (pow == 27) {
-            if (sign) {
-                break ();
-            }
-            sign = true;
-            pow = 1;
-        }
-        let tick = i129 { mag: exp2(pow), sign };
+    let mut i: u8 = 0;
+
+    while i < 53 {
+        let tick = if i > 26 {
+            i129 { sign: true, mag: exp2(i - 26) }
+        } else {
+            i129 { sign: false, mag: exp2(i) }
+        };
+
         let sqrt_ratio = tick_to_sqrt_ratio(tick);
         let computed_tick = sqrt_ratio_to_tick(sqrt_ratio);
         assert(tick == computed_tick, 'computed tick');
@@ -270,7 +268,7 @@ fn sqrt_ratio_to_tick_powers_of_tick() {
         );
         let computed_tick_ratio_plus_one = sqrt_ratio_to_tick(sqrt_ratio + 1_u256);
         assert(computed_tick_ratio_plus_one == computed_tick, 'computed tick plus one');
-        pow += 1;
+        i += 1;
     }
 }
 

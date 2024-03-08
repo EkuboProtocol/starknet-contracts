@@ -14,7 +14,6 @@ pub struct CallPoints {
 }
 
 impl CallPointsDefault of Default<CallPoints> {
-    #[inline(always)]
     fn default() -> CallPoints {
         CallPoints {
             after_initialize_pool: false,
@@ -26,7 +25,6 @@ impl CallPointsDefault of Default<CallPoints> {
     }
 }
 
-#[inline(always)]
 pub fn all_call_points() -> CallPoints {
     CallPoints {
         after_initialize_pool: true,
@@ -38,7 +36,6 @@ pub fn all_call_points() -> CallPoints {
 }
 
 impl CallPointsIntoU8 of Into<CallPoints, u8> {
-    #[inline(always)]
     fn into(self: CallPoints) -> u8 {
         let mut res: u8 = 0;
         if (self.after_initialize_pool) {
@@ -61,7 +58,6 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
 }
 
 impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
-    #[inline(always)]
     fn try_into(mut self: u8) -> Option<CallPoints> {
         let after_initialize_pool = if (self >= 128) {
             self -= 128;
