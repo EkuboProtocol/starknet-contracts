@@ -3857,12 +3857,7 @@ mod GetOrderInfo {
         positions.withdraw_proceeds_from_sale(order2_id, order2_key);
 
         let mut orders_info: Span<OrderInfo> = positions
-            .get_orders_info(
-                array![
-                    (order1_id, order1_key), (order2_id, order2_key)
-                ]
-                    .span()
-            );
+            .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
 
         let get_order1_info: OrderInfo = *orders_info.pop_front().unwrap();
         let get_order2_info: OrderInfo = *orders_info.pop_front().unwrap();

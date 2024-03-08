@@ -375,15 +375,11 @@ pub mod Positions {
         ) -> Span<OrderInfo> {
             let mut results: Array<OrderInfo> = ArrayTrait::new();
 
-            loop {
-                match params.pop_front() {
-                    Option::Some(request) => {
-                        let (id, order_key) = request;
-                        results.append(self.get_order_info(*id, *order_key));
-                    },
-                    Option::None => { break (); }
+            while let Option::Some(request) = params
+                .pop_front() {
+                    let (id, order_key) = request;
+                    results.append(self.get_order_info(*id, *order_key));
                 };
-            };
 
             results.span()
         }

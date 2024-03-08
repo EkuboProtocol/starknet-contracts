@@ -922,14 +922,7 @@ pub mod TWAMM {
                     last_virtual_order_time = next_virtual_order_time;
                 };
 
-                self
-                    .emit(
-                        VirtualOrdersExecuted {
-                            key,
-                            token0_sale_rate,
-                            token1_sale_rate
-                        }
-                    );
+                self.emit(VirtualOrdersExecuted { key, token0_sale_rate, token1_sale_rate });
 
                 Store::write(
                     0,
