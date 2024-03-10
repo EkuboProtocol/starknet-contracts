@@ -1372,6 +1372,24 @@ fn test_get_pool_price_normal_pool() {
 }
 
 #[test]
+fn test_get_pool_price_uninitialized_pool() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+    let price = positions
+        .get_pool_price(
+            PoolKey {
+                token0: contract_address_const::<1234>(),
+                token1: contract_address_const::<2345>(),
+                fee: 1234,
+                tick_spacing: 2345,
+                extension: Zero::zero(),
+            }
+        );
+    assert_eq!(price.sqrt_ratio, Zero::zero());
+}
+
+#[test]
 #[should_panic(expected: ('LIQUIDITY_IS_NON_ZERO', 'ENTRYPOINT_FAILED'))]
 fn test_check_liquidity_is_zero() {
     let mut d: Deployer = Default::default();

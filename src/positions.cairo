@@ -15,7 +15,7 @@ pub mod Positions {
     };
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
+        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
@@ -255,17 +255,34 @@ pub mod Positions {
                     serialize(@delta).span()
                 },
                 LockCallbackData::GetPoolPrice(pool_key) => {
-                    core
-                        .update_position(
-                            pool_key,
-                            UpdatePositionParameters {
-                                salt: 0,
-                                bounds: max_bounds(pool_key.tick_spacing),
-                                liquidity_delta: Zero::zero(),
-                            }
-                        );
+                    let price_before = core.get_pool_price(pool_key);
 
-                    let pool_price = core.get_pool_price(pool_key);
+                    let pool_price = if price_before.sqrt_ratio.is_zero() {
+                        price_before
+                    } else {
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: Zero::zero(),
+                                    is_token1: false,
+                                    sqrt_ratio_limit: price_before.sqrt_ratio,
+                                    skip_ahead: Zero::zero(),
+                                }
+                            );
+
+                        core
+                            .update_position(
+                                pool_key,
+                                UpdatePositionParameters {
+                                    salt: 0,
+                                    bounds: max_bounds(pool_key.tick_spacing),
+                                    liquidity_delta: Zero::zero(),
+                                }
+                            );
+
+                        core.get_pool_price(pool_key)
+                    };
 
                     serialize(@pool_price).span()
                 }
