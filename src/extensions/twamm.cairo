@@ -185,6 +185,7 @@ pub mod TWAMM {
         pub key: StateKey,
         pub token0_sale_rate: u128,
         pub token1_sale_rate: u128,
+        pub twamm_delta: Delta
     }
 
     #[derive(starknet::Event, Drop)]
@@ -760,6 +761,7 @@ pub mod TWAMM {
 
                 let mut next_sqrt_ratio = Option::Some(starting_sqrt_ratio);
                 let mut total_delta = Zero::zero();
+                let mut total_twamm_delta = Zero::zero();
 
                 let reward_rate_storage_address = storage_base_address_from_felt252(
                     LegacyHash::hash(selector!("reward_rate"), storage_key)
@@ -876,6 +878,9 @@ pub mod TWAMM {
                         // must accumulate swap deltas to zero out at the end
                         total_delta += delta;
 
+                        // must accumulate twamm delta to twamm calculate volume
+                        total_twamm_delta += twamm_delta;
+
                         if (twamm_delta.amount0.is_non_zero() && twamm_delta.amount0.sign) {
                             token0_reward_rate +=
                                 calculate_reward_rate(twamm_delta.amount0.mag, token1_sale_rate);
@@ -922,7 +927,12 @@ pub mod TWAMM {
                     last_virtual_order_time = next_virtual_order_time;
                 };
 
-                self.emit(VirtualOrdersExecuted { key, token0_sale_rate, token1_sale_rate });
+                self
+                    .emit(
+                        VirtualOrdersExecuted {
+                            key, token0_sale_rate, token1_sale_rate, twamm_delta: total_twamm_delta
+                        }
+                    );
 
                 Store::write(
                     0,

@@ -3265,11 +3265,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1651364521266892060866753239249576097132870150993425804223496981286940573109n,
-      "token1": 2580017763574216901170066228525980491211525322286511346008371506409739499028n,
+      "token0": 710345647756068387987902939299473945400844433057358278330931002091805690942n,
+      "token1": 1824147954723807500294439723825007280968226402012096818299506998708106040503n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3297,8 +3307,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 820,
-    "steps": 19449,
+    "range_check_builtin_applications": 824,
+    "steps": 19552,
   },
 }
 `;
@@ -3308,11 +3318,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1651364521266892060866753239249576097132870150993425804223496981286940573109n,
-      "token1": 2580017763574216901170066228525980491211525322286511346008371506409739499028n,
+      "token0": 710345647756068387987902939299473945400844433057358278330931002091805690942n,
+      "token1": 1824147954723807500294439723825007280968226402012096818299506998708106040503n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3340,8 +3360,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 844,
-    "steps": 19890,
+    "range_check_builtin_applications": 848,
+    "steps": 19993,
   },
 }
 `;
@@ -3368,11 +3388,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1078635418037690127414213023852044084292925439989297451911716035909256935526n,
-      "token1": 1822400330682781036832545396927591506893873448454067970430920533874974928321n,
+      "token0": 2070255291189784562764104918506253134236685136450580629517704165833398457487n,
+      "token1": 2853215442219633397660960425808632881903273821805881297824174559653051090903n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3400,8 +3430,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 60,
-    "range_check_builtin_applications": 1221,
-    "steps": 28258,
+    "range_check_builtin_applications": 1224,
+    "steps": 28362,
   },
 }
 `;
@@ -3411,11 +3441,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1078635418037690127414213023852044084292925439989297451911716035909256935526n,
-      "token1": 1822400330682781036832545396927591506893873448454067970430920533874974928321n,
+      "token0": 2070255291189784562764104918506253134236685136450580629517704165833398457487n,
+      "token1": 2853215442219633397660960425808632881903273821805881297824174559653051090903n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -3426,8 +3466,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 38,
-    "range_check_builtin_applications": 533,
-    "steps": 13664,
+    "range_check_builtin_applications": 535,
+    "steps": 13765,
   },
 }
 `;
@@ -3454,11 +3494,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 645214720195866034114927657868076733394537735565945182266025860883452369600n,
-      "token1": 2407539550956152199614519095205581515678130474280318290485066424154860640180n,
+      "token0": 1033806632760497414135978938499538879419401015107495762385543449741314197446n,
+      "token1": 2177651724144990941223832112496791795105467337606980436099764727367742426872n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3486,8 +3536,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 59,
-    "range_check_builtin_applications": 1166,
-    "steps": 23137,
+    "range_check_builtin_applications": 1169,
+    "steps": 23241,
   },
 }
 `;
@@ -3497,11 +3547,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 645214720195866034114927657868076733394537735565945182266025860883452369600n,
-      "token1": 2407539550956152199614519095205581515678130474280318290485066424154860640180n,
+      "token0": 1033806632760497414135978938499538879419401015107495762385543449741314197446n,
+      "token1": 2177651724144990941223832112496791795105467337606980436099764727367742426872n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -3512,8 +3572,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 38,
-    "range_check_builtin_applications": 532,
-    "steps": 13664,
+    "range_check_builtin_applications": 534,
+    "steps": 13765,
   },
 }
 `;
@@ -3540,11 +3600,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 114245192735906558485788167820760173474387709432559816002880673742914300446n,
-      "token1": 303006380107179900971048779933371050201858589114346318654279790188588874715n,
+      "token0": 2402020314162998728613707248672956618500036049019925342247401947767970232974n,
+      "token1": 3012984043005047588315788149751614267585651262705507250952141082341579484588n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3572,8 +3642,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 2479,
-    "steps": 35010,
+    "range_check_builtin_applications": 2483,
+    "steps": 35113,
   },
 }
 `;
@@ -3583,11 +3653,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 114245192735906558485788167820760173474387709432559816002880673742914300446n,
-      "token1": 303006380107179900971048779933371050201858589114346318654279790188588874715n,
+      "token0": 2402020314162998728613707248672956618500036049019925342247401947767970232974n,
+      "token1": 3012984043005047588315788149751614267585651262705507250952141082341579484588n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3615,8 +3695,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 820,
-    "steps": 19769,
+    "range_check_builtin_applications": 824,
+    "steps": 19872,
   },
 }
 `;
@@ -3643,11 +3723,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 712760407440565086047612176875533338779582168249579557099753463066370455639n,
-      "token1": 2018064247830033852139953680415921676623668764777706779419938266943562011652n,
+      "token0": 647323396164476701338705436075398296521869731405097902676254577623589470686n,
+      "token1": 2399557382784858475363348181430792159149969469931641548128952382277735356251n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3675,8 +3765,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 64,
-    "range_check_builtin_applications": 2441,
-    "steps": 29950,
+    "range_check_builtin_applications": 2445,
+    "steps": 30053,
   },
 }
 `;
@@ -3686,11 +3776,21 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 712760407440565086047612176875533338779582168249579557099753463066370455639n,
-      "token1": 2018064247830033852139953680415921676623668764777706779419938266943562011652n,
+      "token0": 647323396164476701338705436075398296521869731405097902676254577623589470686n,
+      "token1": 2399557382784858475363348181430792159149969469931641548128952382277735356251n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -3718,8 +3818,8 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 844,
-    "steps": 19890,
+    "range_check_builtin_applications": 848,
+    "steps": 19993,
   },
 }
 `;
@@ -3746,11 +3846,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1751306080136276535909945518074297734849183897196212772189185951102626524650n,
-      "token1": 3267178523621817408994359120963351944483300917881922747265132396585907720926n,
+      "token0": 2250760062929255014946908038932832865566384937659664073929089909812773998270n,
+      "token1": 3594284065361188982393320646510984444779501948465378881779697611567643174367n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -3761,7 +3871,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -3771,11 +3881,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1751306080136276535909945518074297734849183897196212772189185951102626524650n,
-      "token1": 3267178523621817408994359120963351944483300917881922747265132396585907720926n,
+      "token0": 2250760062929255014946908038932832865566384937659664073929089909812773998270n,
+      "token1": 3594284065361188982393320646510984444779501948465378881779697611567643174367n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -3786,7 +3906,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -3832,11 +3952,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1501009774887571418267353799637506965232326736878553089454987615192103090782n,
-      "token1": 1862284469144116755227606749019109754178659549967888860165563919220508852381n,
+      "token0": 296652635209213739237223115037622259916144482003313449839669267437086093606n,
+      "token1": 1328158921137254431609515238962490820020333967911271087146047567997066298125n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -3866,7 +3996,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -3876,11 +4006,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1501009774887571418267353799637506965232326736878553089454987615192103090782n,
-      "token1": 1862284469144116755227606749019109754178659549967888860165563919220508852381n,
+      "token0": 296652635209213739237223115037622259916144482003313449839669267437086093606n,
+      "token1": 1328158921137254431609515238962490820020333967911271087146047567997066298125n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -3910,7 +4050,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -3957,11 +4097,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 3277862961096261854696207075985870521073833894247850334624127462816586780019n,
-      "token1": 3594103233378268183819990165536411698012822231294380405737668825828691169278n,
+      "token0": 1004499160708906487587566533839660310350523430253819118742774206946557941553n,
+      "token1": 1551430094162072742556714909937138802448136841869663789060473771901401479250n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -3992,7 +4142,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2812,
-    "steps": 47084,
+    "steps": 47110,
   },
 }
 `;
@@ -4002,11 +4152,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 3277862961096261854696207075985870521073833894247850334624127462816586780019n,
-      "token1": 3594103233378268183819990165536411698012822231294380405737668825828691169278n,
+      "token0": 1004499160708906487587566533839660310350523430253819118742774206946557941553n,
+      "token1": 1551430094162072742556714909937138802448136841869663789060473771901401479250n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4037,7 +4197,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 3209,
-    "steps": 50216,
+    "steps": 50242,
   },
 }
 `;
@@ -4084,11 +4244,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 501152744184782642060884938892929231029454184862575517877913165892431355966n,
-      "token1": 3075100540045074990781325195121718881986706483178448167286096453205429906164n,
+      "token0": 1425194554090634827170693815619677144377551386236417999705279785033469684014n,
+      "token1": 3587153293768196061361724143855947950787817919521315672409042488744992824563n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4119,7 +4289,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2820,
-    "steps": 47017,
+    "steps": 47043,
   },
 }
 `;
@@ -4129,11 +4299,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 501152744184782642060884938892929231029454184862575517877913165892431355966n,
-      "token1": 3075100540045074990781325195121718881986706483178448167286096453205429906164n,
+      "token0": 1425194554090634827170693815619677144377551386236417999705279785033469684014n,
+      "token1": 3587153293768196061361724143855947950787817919521315672409042488744992824563n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4164,7 +4344,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 3236,
-    "steps": 50164,
+    "steps": 50190,
   },
 }
 `;
@@ -4191,11 +4371,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1642279437894909241548377923662573627338671659223547518383776076455955006679n,
-      "token1": 2891785469213322139283731569379292492618443072223366188296735308810000898726n,
+      "token0": 882591681312874391813748902225564481334427428606304299449284016097442236848n,
+      "token1": 1896584466839431978989529180088374391530938572872339902870867788261017258184n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -4223,8 +4413,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 820,
-    "steps": 19449,
+    "range_check_builtin_applications": 824,
+    "steps": 19552,
   },
 }
 `;
@@ -4234,11 +4424,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1642279437894909241548377923662573627338671659223547518383776076455955006679n,
-      "token1": 2891785469213322139283731569379292492618443072223366188296735308810000898726n,
+      "token0": 882591681312874391813748902225564481334427428606304299449284016097442236848n,
+      "token1": 1896584466839431978989529180088374391530938572872339902870867788261017258184n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -4266,8 +4466,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 844,
-    "steps": 19890,
+    "range_check_builtin_applications": 848,
+    "steps": 19993,
   },
 }
 `;
@@ -4313,11 +4513,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 456973466789792815357288157693818983739576486285268218023772492492570383881n,
-      "token1": 499417265831303441884201234359982454044844998183149354487184859252518090781n,
+      "token0": 125531171171441911821487122351686603285248345389949977115354989586355492089n,
+      "token1": 1800539933635154426326971986191918266594379873208316600739275943890921334861n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4365,8 +4575,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1314,
-    "steps": 32334,
+    "range_check_builtin_applications": 1318,
+    "steps": 32437,
   },
 }
 `;
@@ -4376,11 +4586,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 456973466789792815357288157693818983739576486285268218023772492492570383881n,
-      "token1": 499417265831303441884201234359982454044844998183149354487184859252518090781n,
+      "token0": 125531171171441911821487122351686603285248345389949977115354989586355492089n,
+      "token1": 1800539933635154426326971986191918266594379873208316600739275943890921334861n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4428,8 +4648,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1338,
-    "steps": 32775,
+    "range_check_builtin_applications": 1342,
+    "steps": 32878,
   },
 }
 `;
@@ -4476,11 +4696,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1550516080066127124791861726646242409867023837556242436092398575729268155245n,
-      "token1": 3329669599558980045797100920690516077509839194991798398923556397477497481326n,
+      "token0": 3441459147472906678291707403603257693605571971045638912958048630399807491064n,
+      "token1": 3443528971670109924204790054175373364385992135763831391013832175306298047875n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8996999925126744480n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7499248948408510496n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4528,8 +4758,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 6375,
-    "steps": 87993,
+    "range_check_builtin_applications": 6379,
+    "steps": 88096,
   },
 }
 `;
@@ -4539,11 +4769,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1550516080066127124791861726646242409867023837556242436092398575729268155245n,
-      "token1": 3329669599558980045797100920690516077509839194991798398923556397477497481326n,
+      "token0": 3441459147472906678291707403603257693605571971045638912958048630399807491064n,
+      "token1": 3443528971670109924204790054175373364385992135763831391013832175306298047875n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8996999999999996246n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7499248929577426275n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4591,8 +4831,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 143,
-    "range_check_builtin_applications": 6402,
-    "steps": 88438,
+    "range_check_builtin_applications": 6406,
+    "steps": 88541,
   },
 }
 `;
@@ -4639,11 +4879,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1743750459848028393148138641814608182065662512157819661506310864544365941817n,
-      "token1": 2644592751316038706216772189548159981962176388820368061311663530653443561658n,
+      "token0": 1231032220426592923351179931143631836548217659648414705664546344062362635273n,
+      "token1": 3032741746623479686693636936483030293149979038980396768276369319725496410235n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7499248948408510496n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8996999925126744480n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4691,8 +4941,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5415,
-    "steps": 78933,
+    "range_check_builtin_applications": 5419,
+    "steps": 79036,
   },
 }
 `;
@@ -4702,11 +4952,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1743750459848028393148138641814608182065662512157819661506310864544365941817n,
-      "token1": 2644592751316038706216772189548159981962176388820368061311663530653443561658n,
+      "token0": 1231032220426592923351179931143631836548217659648414705664546344062362635273n,
+      "token1": 3032741746623479686693636936483030293149979038980396768276369319725496410235n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7499248929577426276n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8996999999999996247n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4754,8 +5014,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5450,
-    "steps": 79395,
+    "range_check_builtin_applications": 5454,
+    "steps": 79498,
   },
 }
 `;
@@ -4782,11 +5042,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1860334171353269041908636079811751137124296831830915374093147808731744726638n,
-      "token1": 2345732540344521935498234457767017797030745649433821906378305518528164132508n,
+      "token0": 72562815627458309109454469439581427446065521551464588006866389052748881852n,
+      "token1": 2587570603607084014999883755121588330257437710723752816853051677857340282375n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 888591800356506238n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -4814,8 +5084,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 74,
-    "range_check_builtin_applications": 2905,
-    "steps": 41175,
+    "range_check_builtin_applications": 2908,
+    "steps": 41277,
   },
 }
 `;
@@ -4825,11 +5095,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1860334171353269041908636079811751137124296831830915374093147808731744726638n,
-      "token1": 2345732540344521935498234457767017797030745649433821906378305518528164132508n,
+      "token0": 72562815627458309109454469439581427446065521551464588006866389052748881852n,
+      "token1": 2587570603607084014999883755121588330257437710723752816853051677857340282375n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -4857,8 +5137,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2434,
-    "steps": 33308,
+    "range_check_builtin_applications": 2437,
+    "steps": 33410,
   },
 }
 `;
@@ -4904,11 +5184,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 493243944004474514284554361981773298010035015191780988715300328251841102175n,
-      "token1": 1999781972772039116772963956490067452965952285255267309478872738483049997452n,
+      "token0": 954324179557435141112817523124311006081943040888979467034023841989221180316n,
+      "token1": 2927844870917636242650876543183198936291184494386558374049062333177134029832n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 888591800356506238n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -4956,8 +5246,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 115,
-    "range_check_builtin_applications": 3404,
-    "steps": 54063,
+    "range_check_builtin_applications": 3407,
+    "steps": 54165,
   },
 }
 `;
@@ -4967,11 +5257,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 493243944004474514284554361981773298010035015191780988715300328251841102175n,
-      "token1": 1999781972772039116772963956490067452965952285255267309478872738483049997452n,
+      "token0": 954324179557435141112817523124311006081943040888979467034023841989221180316n,
+      "token1": 2927844870917636242650876543183198936291184494386558374049062333177134029832n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5019,8 +5319,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 2934,
-    "steps": 46198,
+    "range_check_builtin_applications": 2937,
+    "steps": 46300,
   },
 }
 `;
@@ -5067,11 +5367,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1585364682909158092322657159535815610146215159582577415309364948657683057476n,
-      "token1": 3102252269889727597740095842443981278991144588967264414781207384531945201010n,
+      "token0": 187728036037232884051196697350935647578100583172405016432627089505758837394n,
+      "token1": 894620648596679427852275814792812550639453434981827784841925751220263298852n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 400480395716406254n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5119,8 +5429,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 5169,
-    "steps": 70828,
+    "range_check_builtin_applications": 5172,
+    "steps": 70930,
   },
 }
 `;
@@ -5130,11 +5440,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1585364682909158092322657159535815610146215159582577415309364948657683057476n,
-      "token1": 3102252269889727597740095842443981278991144588967264414781207384531945201010n,
+      "token0": 187728036037232884051196697350935647578100583172405016432627089505758837394n,
+      "token1": 894620648596679427852275814792812550639453434981827784841925751220263298852n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 38376113044404569n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5182,8 +5502,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4911,
-    "steps": 68235,
+    "range_check_builtin_applications": 4914,
+    "steps": 68337,
   },
 }
 `;
@@ -5230,11 +5550,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 161625868333264257489817659636261749293426629484330965311399548413951817634n,
-      "token1": 1357603942003375947011021696831586491590490468901557744827955174529169033143n,
+      "token0": 3241258965263291495279652860190990175410419533185669182671898394275550990717n,
+      "token1": 3340554254075246589415506386085600519278164894575145923613742669941453269029n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 1879030274918490421n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5282,8 +5612,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5733,
-    "steps": 79034,
+    "range_check_builtin_applications": 5736,
+    "steps": 79136,
   },
 }
 `;
@@ -5293,11 +5623,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 161625868333264257489817659636261749293426629484330965311399548413951817634n,
-      "token1": 1357603942003375947011021696831586491590490468901557744827955174529169033143n,
+      "token0": 3241258965263291495279652860190990175410419533185669182671898394275550990717n,
+      "token1": 3340554254075246589415506386085600519278164894575145923613742669941453269029n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 1002266814835405555n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5345,8 +5685,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 139,
-    "range_check_builtin_applications": 6480,
-    "steps": 85661,
+    "range_check_builtin_applications": 6483,
+    "steps": 85763,
   },
 }
 `;
@@ -5373,11 +5713,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 132616697371827408183026125944732115701076179142682891678620709255829027099n,
-      "token1": 2082752395392437739001670647356113280139624459747574407388514673083620697446n,
+      "token0": 662351055187409293957004580102234959760264044735367045080638888634911461807n,
+      "token1": 3398011525318354867647242232511275060431118673954501130241034513833663840354n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 888591800356506238n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -5405,8 +5755,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 73,
-    "range_check_builtin_applications": 2865,
-    "steps": 36006,
+    "range_check_builtin_applications": 2868,
+    "steps": 36108,
   },
 }
 `;
@@ -5416,11 +5766,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 132616697371827408183026125944732115701076179142682891678620709255829027099n,
-      "token1": 2082752395392437739001670647356113280139624459747574407388514673083620697446n,
+      "token0": 662351055187409293957004580102234959760264044735367045080638888634911461807n,
+      "token1": 3398011525318354867647242232511275060431118673954501130241034513833663840354n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -5448,8 +5808,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2448,
-    "steps": 33252,
+    "range_check_builtin_applications": 2451,
+    "steps": 33354,
   },
 }
 `;
@@ -5495,11 +5855,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 6483763088041503953700536100167346634306746968203013358492654128671063862n,
-      "token1": 762806168107999826428321482956604474567023022461662609176222698057707475588n,
+      "token0": 148638132055336676211778110741649641829679172139221713562422924400685247917n,
+      "token1": 2568286429627882466376214805455009992836517219371926651883585537129665630375n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 888591800356506238n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5547,8 +5917,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 114,
-    "range_check_builtin_applications": 3359,
-    "steps": 48891,
+    "range_check_builtin_applications": 3362,
+    "steps": 48993,
   },
 }
 `;
@@ -5558,11 +5928,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 6483763088041503953700536100167346634306746968203013358492654128671063862n,
-      "token1": 762806168107999826428321482956604474567023022461662609176222698057707475588n,
+      "token0": 148638132055336676211778110741649641829679172139221713562422924400685247917n,
+      "token1": 2568286429627882466376214805455009992836517219371926651883585537129665630375n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 52418109978557470n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5610,8 +5990,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 2942,
-    "steps": 46137,
+    "range_check_builtin_applications": 2945,
+    "steps": 46239,
   },
 }
 `;
@@ -5658,11 +6038,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1110111550361139258489397042944854083169246531730099188320713624574047541863n,
-      "token1": 2794328473686513167493259097479512116026802754465223914547104158588774244406n,
+      "token0": 195692867675722852511514149335405791135835761115899972211239825429121732332n,
+      "token1": 3005479209003604604986671583355446087803971880825136736924147280424855933483n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 1879030274918490421n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5710,8 +6100,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5729,
-    "steps": 79023,
+    "range_check_builtin_applications": 5732,
+    "steps": 79125,
   },
 }
 `;
@@ -5721,11 +6111,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1110111550361139258489397042944854083169246531730099188320713624574047541863n,
-      "token1": 2794328473686513167493259097479512116026802754465223914547104158588774244406n,
+      "token0": 195692867675722852511514149335405791135835761115899972211239825429121732332n,
+      "token1": 3005479209003604604986671583355446087803971880825136736924147280424855933483n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 1002266814835405555n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5773,8 +6173,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 138,
-    "range_check_builtin_applications": 5885,
-    "steps": 79833,
+    "range_check_builtin_applications": 5888,
+    "steps": 79935,
   },
 }
 `;
@@ -5821,11 +6221,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1096166175838673624914136748563520788238400085244856993331299259741452710674n,
-      "token1": 3432477357980738452665197802205902104500673943611071522435975778675844594684n,
+      "token0": 482721562908906349004464580992722600028846739406915180004966017694691171896n,
+      "token1": 2163459597295449382912699168172415759028479716488375490703346410335585727545n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 400480395716406254n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5873,8 +6283,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 5203,
-    "steps": 70712,
+    "range_check_builtin_applications": 5206,
+    "steps": 70814,
   },
 }
 `;
@@ -5884,11 +6294,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1096166175838673624914136748563520788238400085244856993331299259741452710674n,
-      "token1": 3432477357980738452665197802205902104500673943611071522435975778675844594684n,
+      "token0": 482721562908906349004464580992722600028846739406915180004966017694691171896n,
+      "token1": 2163459597295449382912699168172415759028479716488375490703346410335585727545n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 38376113044404569n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -5936,8 +6356,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4940,
-    "steps": 68122,
+    "range_check_builtin_applications": 4943,
+    "steps": 68224,
   },
 }
 `;
@@ -5964,11 +6384,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1211967175037063727662128605637986204659887164713287366086082014796282333562n,
-      "token1": 1698252971861857756196420969955655572330731935904443238914289540382511507196n,
+      "token0": 306238165020849934734910011101849706451020336281514031912312066516161239882n,
+      "token1": 412260945320358280599377313366209096883592002645891601662395301786232811606n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7584545998209808571n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -5996,8 +6426,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 4768,
-    "steps": 53455,
+    "range_check_builtin_applications": 4772,
+    "steps": 53558,
   },
 }
 `;
@@ -6007,11 +6437,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1211967175037063727662128605637986204659887164713287366086082014796282333562n,
-      "token1": 1698252971861857756196420969955655572330731935904443238914289540382511507196n,
+      "token0": 306238165020849934734910011101849706451020336281514031912312066516161239882n,
+      "token1": 412260945320358280599377313366209096883592002645891601662395301786232811606n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999994059662996981n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -6039,8 +6479,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4490,
-    "steps": 45797,
+    "range_check_builtin_applications": 4494,
+    "steps": 45900,
   },
 }
 `;
@@ -6086,11 +6526,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1547106240305127952480058185370505478466078219250361152411588625254074741161n,
-      "token1": 3361307641417929578948389575997874007986131310631338968831737389600916655592n,
+      "token0": 1441594752262044149882341963334095966578018409643675902038492949336686507949n,
+      "token1": 2829396299948818422364344721422230422886426793742102991336753771276960382328n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7584545998209808571n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6138,8 +6588,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 5267,
-    "steps": 66343,
+    "range_check_builtin_applications": 5271,
+    "steps": 66446,
   },
 }
 `;
@@ -6149,11 +6599,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1547106240305127952480058185370505478466078219250361152411588625254074741161n,
-      "token1": 3361307641417929578948389575997874007986131310631338968831737389600916655592n,
+      "token0": 1441594752262044149882341963334095966578018409643675902038492949336686507949n,
+      "token1": 2829396299948818422364344721422230422886426793742102991336753771276960382328n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999994059662996981n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6201,8 +6661,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4990,
-    "steps": 58687,
+    "range_check_builtin_applications": 4994,
+    "steps": 58790,
   },
 }
 `;
@@ -6249,11 +6709,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 811081100574455228751829073851939515573936348780496121127443846902084470756n,
-      "token1": 1776542525228563761296817949098568238270324802835981829058401649816568738934n,
+      "token0": 657281242723104233019069363303161896685134165388758931883750104562432529480n,
+      "token1": 2169296759846757016099824634487215270217005708371731888736669642735382095400n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8582780540163497544n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3793026373342923439n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6301,8 +6771,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 7043,
-    "steps": 85869,
+    "range_check_builtin_applications": 7047,
+    "steps": 85972,
   },
 }
 `;
@@ -6312,11 +6782,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 811081100574455228751829073851939515573936348780496121127443846902084470756n,
-      "token1": 1776542525228563761296817949098568238270324802835981829058401649816568738934n,
+      "token0": 657281242723104233019069363303161896685134165388758931883750104562432529480n,
+      "token1": 2169296759846757016099824634487215270217005708371731888736669642735382095400n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8996996900782263838n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3706745861753940928n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6364,8 +6844,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6504,
-    "steps": 80265,
+    "range_check_builtin_applications": 6508,
+    "steps": 80368,
   },
 }
 `;
@@ -6412,11 +6892,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 2023196037007336874202223686873837681695267474651760691503819690464267122458n,
-      "token1": 2662631711837527480790927207518675004818385686950563694317380659889780169035n,
+      "token0": 1980172447367933841606465228587049126779219167771779350598701463612743784544n,
+      "token1": 3487295321403586234577873901608845498751979296611641225656693100880843177962n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7083805446775007613n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 5289884985658720060n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6464,8 +6954,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7862,
-    "steps": 91545,
+    "range_check_builtin_applications": 7866,
+    "steps": 91648,
   },
 }
 `;
@@ -6475,11 +6965,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 2023196037007336874202223686873837681695267474651760691503819690464267122458n,
-      "token1": 2662631711837527480790927207518675004818385686950563694317380659889780169035n,
+      "token0": 1980172447367933841606465228587049126779219167771779350598701463612743784544n,
+      "token1": 3487295321403586234577873901608845498751979296611641225656693100880843177962n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7170125940750510499n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4997001096452079280n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6527,8 +7027,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7834,
-    "steps": 91955,
+    "range_check_builtin_applications": 7838,
+    "steps": 92058,
   },
 }
 `;
@@ -6555,11 +7055,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 219124411435403538777954948137852434399728382750396287206562502885516704953n,
-      "token1": 1148629105238209232920176704668660173190692606566531896580761464605605191041n,
+      "token0": 2896926550257966810476752409534888983115176618340017960527426367547413170745n,
+      "token1": 3084043073271282270615848961889780421672657474593360743904954780168498085753n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7584545998209808571n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -6587,8 +7097,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 4725,
-    "steps": 48352,
+    "range_check_builtin_applications": 4729,
+    "steps": 48455,
   },
 }
 `;
@@ -6598,11 +7108,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 219124411435403538777954948137852434399728382750396287206562502885516704953n,
-      "token1": 1148629105238209232920176704668660173190692606566531896580761464605605191041n,
+      "token0": 2896926550257966810476752409534888983115176618340017960527426367547413170745n,
+      "token1": 3084043073271282270615848961889780421672657474593360743904954780168498085753n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999994059662996981n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -6630,8 +7150,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4494,
-    "steps": 45793,
+    "range_check_builtin_applications": 4498,
+    "steps": 45896,
   },
 }
 `;
@@ -6677,11 +7197,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1486730861833410771137046731366043491126453671148121176513946266288948100259n,
-      "token1": 2818971270935897872003538584227463188214265353548687143432487603060969634837n,
+      "token0": 592285939049080519839047983043355981463029597659616138101988619055721717436n,
+      "token1": 1030303797652155490375011567189317188681913419500945581312850009031257959831n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7584545998209808571n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6729,8 +7259,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 5219,
-    "steps": 61237,
+    "range_check_builtin_applications": 5223,
+    "steps": 61340,
   },
 }
 `;
@@ -6740,11 +7270,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1486730861833410771137046731366043491126453671148121176513946266288948100259n,
-      "token1": 2818971270935897872003538584227463188214265353548687143432487603060969634837n,
+      "token0": 592285939049080519839047983043355981463029597659616138101988619055721717436n,
+      "token1": 1030303797652155490375011567189317188681913419500945581312850009031257959831n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999994059662996981n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6792,8 +7332,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4988,
-    "steps": 58678,
+    "range_check_builtin_applications": 4992,
+    "steps": 58781,
   },
 }
 `;
@@ -6840,11 +7380,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 907336393511106404861638616392366874909990420870604196202239068220597959460n,
-      "token1": 2986055733312862900448482395158784325249585812249733691674527281524145851038n,
+      "token0": 1872443053384245021499934337400534877613908206306647163683909799622498420021n,
+      "token1": 1908178358964676893848562073026927173296729115601357446325326136546536895446n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 5289884985658720061n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7083805446775007614n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6892,8 +7442,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7825,
-    "steps": 91597,
+    "range_check_builtin_applications": 7829,
+    "steps": 91700,
   },
 }
 `;
@@ -6903,11 +7453,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 907336393511106404861638616392366874909990420870604196202239068220597959460n,
-      "token1": 2986055733312862900448482395158784325249585812249733691674527281524145851038n,
+      "token0": 1872443053384245021499934337400534877613908206306647163683909799622498420021n,
+      "token1": 1908178358964676893848562073026927173296729115601357446325326136546536895446n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4997001096452079281n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7170125940750510499n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -6955,8 +7515,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7838,
-    "steps": 92040,
+    "range_check_builtin_applications": 7842,
+    "steps": 92143,
   },
 }
 `;
@@ -7003,11 +7563,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1093533812437023411427139478355837507851126677431046189753371725228493233131n,
-      "token1": 2349635892133429737128443993616213772204244383641091821964617334535070486309n,
+      "token0": 138439563470557179772560755945547683460659325312202954497059966696509580835n,
+      "token1": 1018275021105789241753198226529794914738897377415738254907246878551834819395n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3793026373342923439n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8582780540163497544n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7055,8 +7625,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6872,
-    "steps": 85646,
+    "range_check_builtin_applications": 6876,
+    "steps": 85749,
   },
 }
 `;
@@ -7066,11 +7636,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 1020847100762815390390123822295304634n,
-      "token0": 1093533812437023411427139478355837507851126677431046189753371725228493233131n,
-      "token1": 2349635892133429737128443993616213772204244383641091821964617334535070486309n,
+      "token0": 138439563470557179772560755945547683460659325312202954497059966696509580835n,
+      "token1": 1018275021105789241753198226529794914738897377415738254907246878551834819395n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3706745861753940927n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8996996900782263839n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7118,8 +7698,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6292,
-    "steps": 79981,
+    "range_check_builtin_applications": 6296,
+    "steps": 80084,
   },
 }
 `;
@@ -7146,11 +7726,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1266337668621173438728727351061000033859564270082865975283586901420953326241n,
-      "token1": 3014373257088923284680838918403125856453772514815353035138729319101980963132n,
+      "token0": 1899155710128749061952324800511912169709929966654867258828036787502134993377n,
+      "token1": 3569435712516581509559871173206538624806901352260364071776889583618381641332n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -7161,7 +7751,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -7171,11 +7761,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1266337668621173438728727351061000033859564270082865975283586901420953326241n,
-      "token1": 3014373257088923284680838918403125856453772514815353035138729319101980963132n,
+      "token0": 1899155710128749061952324800511912169709929966654867258828036787502134993377n,
+      "token1": 3569435712516581509559871173206538624806901352260364071776889583618381641332n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -7186,7 +7786,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -7232,11 +7832,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3264356870841257747757355249477596865928732568495790567672969149793497522539n,
-      "token1": 3363235493487809675317901953355543231869040675567211365022843993098881574142n,
+      "token0": 1151802939844264928289914660454555528186670704380613913550839744486625142433n,
+      "token1": 1834745238223061696732005552385333050106773196436742140534842735414414092151n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7266,7 +7876,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -7276,11 +7886,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3264356870841257747757355249477596865928732568495790567672969149793497522539n,
-      "token1": 3363235493487809675317901953355543231869040675567211365022843993098881574142n,
+      "token0": 1151802939844264928289914660454555528186670704380613913550839744486625142433n,
+      "token1": 1834745238223061696732005552385333050106773196436742140534842735414414092151n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7310,7 +7930,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -7357,11 +7977,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 217345313269545554698564418683010476662729119638045625530000938790415886273n,
-      "token1": 1610242049397431226408621958445466685040568361115480013557375165047834627145n,
+      "token0": 1164643377361226146550365504723443262037030836842590111734281665939602455218n,
+      "token1": 1260284438180590094354597684113776871933250722167705371405383184908925144858n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7392,7 +8022,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2856,
-    "steps": 47117,
+    "steps": 47143,
   },
 }
 `;
@@ -7402,11 +8032,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 217345313269545554698564418683010476662729119638045625530000938790415886273n,
-      "token1": 1610242049397431226408621958445466685040568361115480013557375165047834627145n,
+      "token0": 1164643377361226146550365504723443262037030836842590111734281665939602455218n,
+      "token1": 1260284438180590094354597684113776871933250722167705371405383184908925144858n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7437,7 +8077,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2872,
-    "steps": 47127,
+    "steps": 47153,
   },
 }
 `;
@@ -7484,11 +8124,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2461503855325760335033735636333256847101078545608479156154578366547191187258n,
-      "token1": 3320364363613708589357422541253495433872218993506204477413939117977840719932n,
+      "token0": 1165240322409455395924173957986249224065098279017515002048342572279956724838n,
+      "token1": 3479127526665114430340255439791382658081625934637763238300743387917279432114n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7519,7 +8169,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2865,
-    "steps": 47050,
+    "steps": 47076,
   },
 }
 `;
@@ -7529,11 +8179,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2461503855325760335033735636333256847101078545608479156154578366547191187258n,
-      "token1": 3320364363613708589357422541253495433872218993506204477413939117977840719932n,
+      "token0": 1165240322409455395924173957986249224065098279017515002048342572279956724838n,
+      "token1": 3479127526665114430340255439791382658081625934637763238300743387917279432114n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7564,7 +8224,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2885,
-    "steps": 47065,
+    "steps": 47091,
   },
 }
 `;
@@ -7591,11 +8251,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 197045631600960357619954900441848185413096098215392293950787096948823878663n,
-      "token1": 804877319656560789349437276071533111821856140629762943904479005393003548987n,
+      "token0": 1741020007291472996636593631864550164042331661091831820396598678964275949210n,
+      "token1": 1761860010153526481899873528157150085999325924642098257139155124740708316221n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -7623,8 +8293,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 820,
-    "steps": 19449,
+    "range_check_builtin_applications": 824,
+    "steps": 19552,
   },
 }
 `;
@@ -7634,11 +8304,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 197045631600960357619954900441848185413096098215392293950787096948823878663n,
-      "token1": 804877319656560789349437276071533111821856140629762943904479005393003548987n,
+      "token0": 1741020007291472996636593631864550164042331661091831820396598678964275949210n,
+      "token1": 1761860010153526481899873528157150085999325924642098257139155124740708316221n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -7666,8 +8346,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 844,
-    "steps": 19890,
+    "range_check_builtin_applications": 848,
+    "steps": 19993,
   },
 }
 `;
@@ -7713,11 +8393,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 599082972005394811379202413262981003177728470051007264762637219244812750406n,
-      "token1": 1613519545794507211695376363936547198258838258665039623417700694174715380775n,
+      "token0": 185883481125059539551177426631299636875726649988255645749637146359194256982n,
+      "token1": 1051775147447938074009198078503266973538831355100489521403286041846230009769n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7765,8 +8455,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1314,
-    "steps": 32334,
+    "range_check_builtin_applications": 1318,
+    "steps": 32437,
   },
 }
 `;
@@ -7776,11 +8466,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 599082972005394811379202413262981003177728470051007264762637219244812750406n,
-      "token1": 1613519545794507211695376363936547198258838258665039623417700694174715380775n,
+      "token0": 185883481125059539551177426631299636875726649988255645749637146359194256982n,
+      "token1": 1051775147447938074009198078503266973538831355100489521403286041846230009769n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7828,8 +8528,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1338,
-    "steps": 32775,
+    "range_check_builtin_applications": 1342,
+    "steps": 32878,
   },
 }
 `;
@@ -7876,11 +8576,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1418744996229978495699420353919651517530475037929226367908476747955880112815n,
-      "token1": 1877776252868102856347827528154367357502551829653119964044609949028262606716n,
+      "token0": 2053319128075210937182730066645374645593789656766622108595761460976766538315n,
+      "token1": 2911956711936910801379892051662431439702278499318145928980307801481179724432n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8989999925478376505n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7497487512460291202n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7928,8 +8638,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 6527,
-    "steps": 90880,
+    "range_check_builtin_applications": 6531,
+    "steps": 90983,
   },
 }
 `;
@@ -7939,11 +8649,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1418744996229978495699420353919651517530475037929226367908476747955880112815n,
-      "token1": 1877776252868102856347827528154367357502551829653119964044609949028262606716n,
+      "token0": 2053319128075210937182730066645374645593789656766622108595761460976766538315n,
+      "token1": 2911956711936910801379892051662431439702278499318145928980307801481179724432n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8989999999999996246n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7497487493452097133n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -7991,8 +8711,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 143,
-    "range_check_builtin_applications": 6559,
-    "steps": 91335,
+    "range_check_builtin_applications": 6563,
+    "steps": 91438,
   },
 }
 `;
@@ -8039,11 +8759,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1054391145373345255123173293653434621053116534352074375430924667675593944612n,
-      "token1": 2452222783067925620536550858998841788520771782212695715213164862073346379297n,
+      "token0": 601135971504833083633563338229070551157481565244921500856637242158362215818n,
+      "token1": 859097231273733009264564154686697375743394326721689125301708304483184058087n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7497487512460291204n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8989999925478376506n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8091,8 +8821,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5589,
-    "steps": 81843,
+    "range_check_builtin_applications": 5593,
+    "steps": 81946,
   },
 }
 `;
@@ -8102,11 +8832,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1054391145373345255123173293653434621053116534352074375430924667675593944612n,
-      "token1": 2452222783067925620536550858998841788520771782212695715213164862073346379297n,
+      "token0": 601135971504833083633563338229070551157481565244921500856637242158362215818n,
+      "token1": 859097231273733009264564154686697375743394326721689125301708304483184058087n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7497487493452097133n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8989999999999996247n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8154,8 +8894,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5618,
-    "steps": 82297,
+    "range_check_builtin_applications": 5622,
+    "steps": 82400,
   },
 }
 `;
@@ -8182,11 +8922,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 870705037504845787078176502799367096557497316444272001357640089004036753150n,
-      "token1": 2958783065468270692401598764864541711815034073931280175246275192036515365228n,
+      "token0": 1492272322396687970097914924596352820517018584583189774377367386064520438997n,
+      "token1": 1989359861864114414544682667268061475408978272015341626117417516849956446197n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 887892376681614349n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -8214,8 +8964,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 74,
-    "range_check_builtin_applications": 2433,
-    "steps": 37966,
+    "range_check_builtin_applications": 2436,
+    "steps": 38068,
   },
 }
 `;
@@ -8225,11 +8975,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 870705037504845787078176502799367096557497316444272001357640089004036753150n,
-      "token1": 2958783065468270692401598764864541711815034073931280175246275192036515365228n,
+      "token0": 1492272322396687970097914924596352820517018584583189774377367386064520438997n,
+      "token1": 1989359861864114414544682667268061475408978272015341626117417516849956446197n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -8257,8 +9017,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2802,
-    "steps": 36418,
+    "range_check_builtin_applications": 2805,
+    "steps": 36520,
   },
 }
 `;
@@ -8304,11 +9064,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 416893061840431827239023362606955817047440925022634753447080255785843940917n,
-      "token1": 3170680250030294616016291443351623456298830350535838485237084369292159270873n,
+      "token0": 1923561387432921562727587253010435333628174948741564616161728063226691557439n,
+      "token1": 2453666647514186407931970101199591260634128087692449119373069851393398661779n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 887892376681614349n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8356,8 +9126,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 115,
-    "range_check_builtin_applications": 2932,
-    "steps": 50854,
+    "range_check_builtin_applications": 2935,
+    "steps": 50956,
   },
 }
 `;
@@ -8367,11 +9137,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 416893061840431827239023362606955817047440925022634753447080255785843940917n,
-      "token1": 3170680250030294616016291443351623456298830350535838485237084369292159270873n,
+      "token0": 1923561387432921562727587253010435333628174948741564616161728063226691557439n,
+      "token1": 2453666647514186407931970101199591260634128087692449119373069851393398661779n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8419,8 +9199,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 3302,
-    "steps": 49308,
+    "range_check_builtin_applications": 3305,
+    "steps": 49410,
   },
 }
 `;
@@ -8467,11 +9247,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 944777583060916844473893513050059072762287989164363968919024324258544627258n,
-      "token1": 3369984706433841890334848576229408141359684766955579011596389692733774595574n,
+      "token0": 1871433922178375443300160710631317627466335588857358274933601645392702231528n,
+      "token1": 2421232238720592413225793857419032288525720090987704209948201851878569839577n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 401604389252011825n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8519,8 +9309,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 5642,
-    "steps": 74046,
+    "range_check_builtin_applications": 5645,
+    "steps": 74148,
   },
 }
 `;
@@ -8530,11 +9320,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 944777583060916844473893513050059072762287989164363968919024324258544627258n,
-      "token1": 3369984706433841890334848576229408141359684766955579011596389692733774595574n,
+      "token0": 1871433922178375443300160710631317627466335588857358274933601645392702231528n,
+      "token1": 2421232238720592413225793857419032288525720090987704209948201851878569839577n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 38608156460529009n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8582,8 +9382,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5555,
-    "steps": 74348,
+    "range_check_builtin_applications": 5558,
+    "steps": 74450,
   },
 }
 `;
@@ -8630,11 +9430,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1214490572859524103661322903648183310543709551062664215006090336135975217953n,
-      "token1": 2127207429455812428954399530522742366813071389064216019761872874934839791210n,
+      "token0": 325850149527204193368282285863126462030827406295189330018067576925098075311n,
+      "token1": 1284742316576277412118615762175596905043770485462876037797593085924490239759n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 1871270583743019425n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8682,8 +9492,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5746,
-    "steps": 79036,
+    "range_check_builtin_applications": 5749,
+    "steps": 79138,
   },
 }
 `;
@@ -8693,11 +9503,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1214490572859524103661322903648183310543709551062664215006090336135975217953n,
-      "token1": 2127207429455812428954399530522742366813071389064216019761872874934839791210n,
+      "token0": 325850149527204193368282285863126462030827406295189330018067576925098075311n,
+      "token1": 1284742316576277412118615762175596905043770485462876037797593085924490239759n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 995375578263313976n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8745,8 +9565,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 139,
-    "range_check_builtin_applications": 5957,
-    "steps": 82380,
+    "range_check_builtin_applications": 5960,
+    "steps": 82482,
   },
 }
 `;
@@ -8773,11 +9593,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 12360760719598648086070810596833137674550392242904866819128899436975749201n,
-      "token1": 2311496141686580215028297063070381405599275760774771753262736741458470832692n,
+      "token0": 3240594478014521238183568095498786746153853342581191837566896050883082796124n,
+      "token1": 3263477641204991855115371157424228868456199225841362050664267612959581410050n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 887892376681614349n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -8805,8 +9635,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 73,
-    "range_check_builtin_applications": 2378,
-    "steps": 32779,
+    "range_check_builtin_applications": 2381,
+    "steps": 32881,
   },
 }
 `;
@@ -8816,11 +9646,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 12360760719598648086070810596833137674550392242904866819128899436975749201n,
-      "token1": 2311496141686580215028297063070381405599275760774771753262736741458470832692n,
+      "token0": 3240594478014521238183568095498786746153853342581191837566896050883082796124n,
+      "token1": 3263477641204991855115371157424228868456199225841362050664267612959581410050n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -8848,8 +9688,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2827,
-    "steps": 36372,
+    "range_check_builtin_applications": 2830,
+    "steps": 36474,
   },
 }
 `;
@@ -8895,11 +9735,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1408151735229526680797651795814222460997089138600778615467324049559230653875n,
-      "token1": 3450704505216234295301486558619431891964722208595077066861527774627353912689n,
+      "token0": 3063919240455139822129591522091082319289404744731839052966722208822971640226n,
+      "token1": 3327864402361303880644899792605277029818660331525305187871819625421133078260n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 887892376681614349n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -8947,8 +9797,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 114,
-    "range_check_builtin_applications": 2872,
-    "steps": 45664,
+    "range_check_builtin_applications": 2875,
+    "steps": 45766,
   },
 }
 `;
@@ -8958,11 +9808,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1408151735229526680797651795814222460997089138600778615467324049559230653875n,
-      "token1": 3450704505216234295301486558619431891964722208595077066861527774627353912689n,
+      "token0": 3063919240455139822129591522091082319289404744731839052966722208822971640226n,
+      "token1": 3327864402361303880644899792605277029818660331525305187871819625421133078260n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 52725200515535293n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9010,8 +9870,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 3321,
-    "steps": 49257,
+    "range_check_builtin_applications": 3324,
+    "steps": 49359,
   },
 }
 `;
@@ -9058,11 +9918,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3276347454383081789266501967965681867584250287781413776880442797947579561568n,
-      "token1": 3382865310644889605356295516985356520638692790046795620202033039523560012328n,
+      "token0": 2449206363153119644386405963595090150634875855533691597073439982468828693647n,
+      "token1": 3211322766733144827469849685449972932502528131212672459885301316954685094846n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 1871270583743019425n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9110,8 +9980,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5749,
-    "steps": 79039,
+    "range_check_builtin_applications": 5752,
+    "steps": 79141,
   },
 }
 `;
@@ -9121,11 +9991,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3276347454383081789266501967965681867584250287781413776880442797947579561568n,
-      "token1": 3382865310644889605356295516985356520638692790046795620202033039523560012328n,
+      "token0": 2449206363153119644386405963595090150634875855533691597073439982468828693647n,
+      "token1": 3211322766733144827469849685449972932502528131212672459885301316954685094846n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 995375578263313976n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9173,8 +10053,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 138,
-    "range_check_builtin_applications": 5350,
-    "steps": 76552,
+    "range_check_builtin_applications": 5353,
+    "steps": 76654,
   },
 }
 `;
@@ -9221,11 +10101,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1708235215237738749876097486145857416418137236681329535416086189847761570467n,
-      "token1": 1714282375175883061060562810355489883147152700160791539263623232979531215393n,
+      "token0": 549304868603327547141046414515251213564910172782909905598730708729505537105n,
+      "token1": 3363855947193424039558250983836136080603156664944526142780162993602848669348n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 401604389252011825n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9273,8 +10163,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 5695,
-    "steps": 73958,
+    "range_check_builtin_applications": 5698,
+    "steps": 74060,
   },
 }
 `;
@@ -9284,11 +10174,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1708235215237738749876097486145857416418137236681329535416086189847761570467n,
-      "token1": 1714282375175883061060562810355489883147152700160791539263623232979531215393n,
+      "token0": 549304868603327547141046414515251213564910172782909905598730708729505537105n,
+      "token1": 3363855947193424039558250983836136080603156664944526142780162993602848669348n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 38608156460529009n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9336,8 +10236,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 5609,
-    "steps": 74260,
+    "range_check_builtin_applications": 5612,
+    "steps": 74362,
   },
 }
 `;
@@ -9364,11 +10264,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3127755904657860925032753467243523152513854874309113706107681373570862027649n,
-      "token1": 3295836237280286551814013733510619612589597715923647431356100402620024149828n,
+      "token0": 1709534119885983019658365675393426971263082844866529495631672342194477523201n,
+      "token1": 1811101673618207323132570250252390542439236094393752130191953501112367846547n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7581608444661797117n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -9396,8 +10306,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 4768,
-    "steps": 53455,
+    "range_check_builtin_applications": 4772,
+    "steps": 53558,
   },
 }
 `;
@@ -9407,11 +10317,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 3127755904657860925032753467243523152513854874309113706107681373570862027649n,
-      "token1": 3295836237280286551814013733510619612589597715923647431356100402620024149828n,
+      "token0": 1709534119885983019658365675393426971263082844866529495631672342194477523201n,
+      "token1": 1811101673618207323132570250252390542439236094393752130191953501112367846547n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999994017660614132n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -9439,8 +10359,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4490,
-    "steps": 45797,
+    "range_check_builtin_applications": 4494,
+    "steps": 45900,
   },
 }
 `;
@@ -9486,11 +10406,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 559569076660469611436158799487149205526848918846778957897391153760816310735n,
-      "token1": 2041635838224590921229108023583610365957791719126161264411200325168773276382n,
+      "token0": 2917667935423230439017959512917872120724348347109572903410746672788377907073n,
+      "token1": 3456160505172347880785830154057624468203195182740480653382383691652116204822n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7581608444661797117n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9538,8 +10468,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 5267,
-    "steps": 66343,
+    "range_check_builtin_applications": 5271,
+    "steps": 66446,
   },
 }
 `;
@@ -9549,11 +10479,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 559569076660469611436158799487149205526848918846778957897391153760816310735n,
-      "token1": 2041635838224590921229108023583610365957791719126161264411200325168773276382n,
+      "token0": 2917667935423230439017959512917872120724348347109572903410746672788377907073n,
+      "token1": 3456160505172347880785830154057624468203195182740480653382383691652116204822n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999994017660614132n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9601,8 +10541,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4990,
-    "steps": 58687,
+    "range_check_builtin_applications": 4994,
+    "steps": 58790,
   },
 }
 `;
@@ -9649,11 +10589,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2233862338487817571139931796247500663824481725762190240738317961826211627819n,
-      "token1": 2324181129719173419047522239284675317373029316338337970060096292533560721224n,
+      "token0": 272715048709240905492846948559008245481715654439642180085416972999611468703n,
+      "token1": 3580621902237380061422013609082859035459347693225166087293075979518660874476n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8575780599018441537n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3793342122141113311n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9701,8 +10651,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6505,
-    "steps": 79855,
+    "range_check_builtin_applications": 6509,
+    "steps": 79958,
   },
 }
 `;
@@ -9712,11 +10662,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2233862338487817571139931796247500663824481725762190240738317961826211627819n,
-      "token1": 2324181129719173419047522239284675317373029316338337970060096292533560721224n,
+      "token0": 272715048709240905492846948559008245481715654439642180085416972999611468703n,
+      "token1": 3580621902237380061422013609082859035459347693225166087293075979518660874476n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8989996888716721357n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3705892031416703234n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9764,8 +10724,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6887,
-    "steps": 83387,
+    "range_check_builtin_applications": 6891,
+    "steps": 83490,
   },
 }
 `;
@@ -9812,11 +10772,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1677701540583855630747988765047059378766281331803930994183738931698226266072n,
-      "token1": 2179188734248366335458708918827877305555361663535220905866416609866952914231n,
+      "token0": 2391463839969308484796586977825118247987082378699397564129868552477831300474n,
+      "token1": 2721600387224933514261914694116277768387178522175118332033825978747624565047n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7079106484549875781n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 5282885009086435266n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9864,8 +10834,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 8038,
-    "steps": 94450,
+    "range_check_builtin_applications": 8042,
+    "steps": 94553,
   },
 }
 `;
@@ -9875,11 +10845,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1677701540583855630747988765047059378766281331803930994183738931698226266072n,
-      "token1": 2179188734248366335458708918827877305555361663535220905866416609866952914231n,
+      "token0": 2391463839969308484796586977825118247987082378699397564129868552477831300474n,
+      "token1": 2721600387224933514261914694116277768387178522175118332033825978747624565047n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7166702945568043734n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 4990001102498494844n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -9927,8 +10907,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7814,
-    "steps": 91928,
+    "range_check_builtin_applications": 7818,
+    "steps": 92031,
   },
 }
 `;
@@ -9955,11 +10935,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2035516499703736711234789515895961922781848232453412245651257126465418122811n,
-      "token1": 2881846940659931860206112535759340035701366452345701052101470169547299129115n,
+      "token0": 399991095595394380531209779396939726470077258619561201865662947185337587102n,
+      "token1": 1987894158166007475613728434393978740528949432387398360117195882326342950627n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7581608444661797117n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -9987,8 +10977,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 4725,
-    "steps": 48352,
+    "range_check_builtin_applications": 4729,
+    "steps": 48455,
   },
 }
 `;
@@ -9998,11 +10988,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2035516499703736711234789515895961922781848232453412245651257126465418122811n,
-      "token1": 2881846940659931860206112535759340035701366452345701052101470169547299129115n,
+      "token0": 399991095595394380531209779396939726470077258619561201865662947185337587102n,
+      "token1": 1987894158166007475613728434393978740528949432387398360117195882326342950627n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999994017660614132n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -10030,8 +11030,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4494,
-    "steps": 45793,
+    "range_check_builtin_applications": 4498,
+    "steps": 45896,
   },
 }
 `;
@@ -10077,11 +11077,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1357312637183538641020363346830986092575467029562997841884695791243212502475n,
-      "token1": 1630045682012680709705047675783932853565925200367136415997730112161561803667n,
+      "token0": 1174335209445933995791270681167715609617157299227392122282879404314388166572n,
+      "token1": 1699124991774288169849767607459895101358110079077942642755004229020300697455n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4292890257506913715n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7581608444661797117n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10129,8 +11139,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 5219,
-    "steps": 61237,
+    "range_check_builtin_applications": 5223,
+    "steps": 61340,
   },
 }
 `;
@@ -10140,11 +11150,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1357312637183538641020363346830986092575467029562997841884695791243212502475n,
-      "token1": 1630045682012680709705047675783932853565925200367136415997730112161561803667n,
+      "token0": 1174335209445933995791270681167715609617157299227392122282879404314388166572n,
+      "token1": 1699124991774288169849767607459895101358110079077942642755004229020300697455n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4000002961270397666n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999994017660614132n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10192,8 +11212,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4988,
-    "steps": 58678,
+    "range_check_builtin_applications": 4992,
+    "steps": 58781,
   },
 }
 `;
@@ -10240,11 +11260,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1735478149997547589547565519510015936288937446319699491935937649970448566515n,
-      "token1": 3532346175589833922997237855252494221110087570994751781976612470629358446322n,
+      "token0": 1603965054011882141525942642083729596306359756767641710143769977716017782374n,
+      "token1": 2278674021994775760163206981941791641396945617301925827888471323003475081122n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 5282885009086435266n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7079106484549875782n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10292,8 +11322,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7978,
-    "steps": 94479,
+    "range_check_builtin_applications": 7982,
+    "steps": 94582,
   },
 }
 `;
@@ -10303,11 +11333,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1735478149997547589547565519510015936288937446319699491935937649970448566515n,
-      "token1": 3532346175589833922997237855252494221110087570994751781976612470629358446322n,
+      "token0": 1603965054011882141525942642083729596306359756767641710143769977716017782374n,
+      "token1": 2278674021994775760163206981941791641396945617301925827888471323003475081122n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 4990001102498494843n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7166702945568043734n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10355,8 +11395,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7824,
-    "steps": 92026,
+    "range_check_builtin_applications": 7828,
+    "steps": 92129,
   },
 }
 `;
@@ -10403,11 +11443,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 874049244201242777761202096260619103296896378591440299669020893245739524080n,
-      "token1": 1525358566301669783138483159197258006033405380133925806931025365334969738196n,
+      "token0": 1373923920775483753338413386094499481699310123972317863130954844589102111405n,
+      "token1": 1734061991746970338394772116535953934628140339446852558150957114330994775449n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3793342122141113311n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8575780599018441537n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10455,8 +11505,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6293,
-    "steps": 79577,
+    "range_check_builtin_applications": 6297,
+    "steps": 79680,
   },
 }
 `;
@@ -10466,11 +11516,21 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 874049244201242777761202096260619103296896378591440299669020893245739524080n,
-      "token1": 1525358566301669783138483159197258006033405380133925806931025365334969738196n,
+      "token0": 1373923920775483753338413386094499481699310123972317863130954844589102111405n,
+      "token1": 1734061991746970338394772116535953934628140339446852558150957114330994775449n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3705892031416703234n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8989996888716721358n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10518,8 +11578,8 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6694,
-    "steps": 83127,
+    "range_check_builtin_applications": 6698,
+    "steps": 83230,
   },
 }
 `;
@@ -10546,11 +11606,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 19869573110058016653032905777080569952660239829368030083042044904301180200n,
-      "token1": 3593210932868491338329892888787437379551538663115772808749619301371908236380n,
+      "token0": 201529949963547197864876951378060492052212376421437663202177791334111067116n,
+      "token1": 3353856994275039377137248256864864235485857509209215265544544372834863425751n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -10561,7 +11631,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -10571,11 +11641,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 19869573110058016653032905777080569952660239829368030083042044904301180200n,
-      "token1": 3593210932868491338329892888787437379551538663115772808749619301371908236380n,
+      "token0": 201529949963547197864876951378060492052212376421437663202177791334111067116n,
+      "token1": 3353856994275039377137248256864864235485857509209215265544544372834863425751n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": null,
   "executionResources": {
@@ -10586,7 +11666,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 36,
     "range_check_builtin_applications": 383,
-    "steps": 12193,
+    "steps": 12219,
   },
 }
 `;
@@ -10632,11 +11712,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 261435644164128297009091986762493213480047708504214667257787519840067878884n,
-      "token1": 1109959031515529936252923551376190411630913906758603950525143967107207342041n,
+      "token0": 1496304430842660062302806959581984232506425850433400610786080233454647313657n,
+      "token1": 3476220889270545969358360749869924362832784021844882152440601660299601948444n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10666,7 +11756,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -10676,11 +11766,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 261435644164128297009091986762493213480047708504214667257787519840067878884n,
-      "token1": 1109959031515529936252923551376190411630913906758603950525143967107207342041n,
+      "token0": 1496304430842660062302806959581984232506425850433400610786080233454647313657n,
+      "token1": 3476220889270545969358360749869924362832784021844882152440601660299601948444n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10710,7 +11810,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 77,
     "range_check_builtin_applications": 877,
-    "steps": 25078,
+    "steps": 25104,
   },
 }
 `;
@@ -10757,11 +11857,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1436912690316857211376839846623547841710710685176926181450340071733205780670n,
-      "token1": 2335549508737662728300577185165956788145915846538417789092047054770985834894n,
+      "token0": 1305895327149329194700197511921164902579816209863045582763574130955874408887n,
+      "token1": 2064583778232785340906705722906900442141693068186781422525544576272934593010n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10792,7 +11902,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2679,
-    "steps": 49673,
+    "steps": 49699,
   },
 }
 `;
@@ -10802,11 +11912,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1436912690316857211376839846623547841710710685176926181450340071733205780670n,
-      "token1": 2335549508737662728300577185165956788145915846538417789092047054770985834894n,
+      "token0": 1305895327149329194700197511921164902579816209863045582763574130955874408887n,
+      "token1": 2064583778232785340906705722906900442141693068186781422525544576272934593010n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10837,7 +11957,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2680,
-    "steps": 49675,
+    "steps": 49701,
   },
 }
 `;
@@ -10884,11 +12004,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 523201202719199764230041135149336823405291718512190920667083662350133319730n,
-      "token1": 2304735106357278878014415719213896335024446598391752507824631409404599249807n,
+      "token0": 2833410197728404236567690783978030813110891972483384006224192833583815465927n,
+      "token1": 2874822121401354040800088053263000936035994955630438465483579662834867133672n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10919,7 +12049,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2688,
-    "steps": 46905,
+    "steps": 46931,
   },
 }
 `;
@@ -10929,11 +12059,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 523201202719199764230041135149336823405291718512190920667083662350133319730n,
-      "token1": 2304735106357278878014415719213896335024446598391752507824631409404599249807n,
+      "token0": 2833410197728404236567690783978030813110891972483384006224192833583815465927n,
+      "token1": 2874822121401354040800088053263000936035994955630438465483579662834867133672n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 0n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 0n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -10964,7 +12104,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 98,
     "range_check_builtin_applications": 2689,
-    "steps": 46907,
+    "steps": 46933,
   },
 }
 `;
@@ -10991,11 +12131,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1282368453697824146154824030317434242401393862830432468497168937768709581190n,
-      "token1": 1807773727961935392151853803361731451522438303843823919818649560097466759641n,
+      "token0": 2445015109197198951614356192463232944638340487208464505002456112314419106593n,
+      "token1": 3547692057052302444892490320757700042036195288878599922258263284909631721266n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -11023,8 +12173,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 820,
-    "steps": 19449,
+    "range_check_builtin_applications": 824,
+    "steps": 19552,
   },
 }
 `;
@@ -11034,11 +12184,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1282368453697824146154824030317434242401393862830432468497168937768709581190n,
-      "token1": 1807773727961935392151853803361731451522438303843823919818649560097466759641n,
+      "token0": 2445015109197198951614356192463232944638340487208464505002456112314419106593n,
+      "token1": 3547692057052302444892490320757700042036195288878599922258263284909631721266n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -11066,8 +12226,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 844,
-    "steps": 19890,
+    "range_check_builtin_applications": 848,
+    "steps": 19993,
   },
 }
 `;
@@ -11113,11 +12273,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 109096326650243446553087689500603557145025068939057834023692660587275587385n,
-      "token1": 2314619333059787669453836090690559253200148693153655065678187101550544954926n,
+      "token0": 2774937856537969211267250755903303163432158483868702082282447015489754136792n,
+      "token1": 3490812396383200147187092841024094599860873837561872600444653753582826597284n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11165,8 +12335,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1314,
-    "steps": 32334,
+    "range_check_builtin_applications": 1318,
+    "steps": 32437,
   },
 }
 `;
@@ -11176,11 +12346,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 109096326650243446553087689500603557145025068939057834023692660587275587385n,
-      "token1": 2314619333059787669453836090690559253200148693153655065678187101550544954926n,
+      "token0": 2774937856537969211267250755903303163432158483868702082282447015489754136792n,
+      "token1": 3490812396383200147187092841024094599860873837561872600444653753582826597284n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11228,8 +12408,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1338,
-    "steps": 32775,
+    "range_check_builtin_applications": 1342,
+    "steps": 32878,
   },
 }
 `;
@@ -11276,11 +12456,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1760479996888439275033147837252779602092685241889685115180088190239736985282n,
-      "token1": 1834296129297320811711385145192695029512438357037797741120890681715731608572n,
+      "token0": 1769529399844163305453153505415354516925769938788150709440224999347626835735n,
+      "token1": 1977766249793565088881033202251822363121587622071080946274909500666233946250n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000015n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999999999999999983n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11328,8 +12518,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5238,
-    "steps": 82944,
+    "range_check_builtin_applications": 5242,
+    "steps": 83047,
   },
 }
 `;
@@ -11339,11 +12529,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1760479996888439275033147837252779602092685241889685115180088190239736985282n,
-      "token1": 1834296129297320811711385145192695029512438357037797741120890681715731608572n,
+      "token0": 1769529399844163305453153505415354516925769938788150709440224999347626835735n,
+      "token1": 1977766249793565088881033202251822363121587622071080946274909500666233946250n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000031n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7999999999999999967n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11391,8 +12591,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5264,
-    "steps": 83389,
+    "range_check_builtin_applications": 5268,
+    "steps": 83492,
   },
 }
 `;
@@ -11439,11 +12639,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 159167864275997310618521882905794482201883269937545460927416602807711674463n,
-      "token1": 1334712222466847947239599416467819193681979953193214413832801269600834773514n,
+      "token0": 1599645741264618020808702038329353721629733008255322988592514794481577125288n,
+      "token1": 2247609169124227765723292450871674078753476404270357971619436234746936254846n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999999999999999983n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000015n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11491,8 +12701,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 4866,
-    "steps": 76991,
+    "range_check_builtin_applications": 4870,
+    "steps": 77094,
   },
 }
 `;
@@ -11502,11 +12712,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 159167864275997310618521882905794482201883269937545460927416602807711674463n,
-      "token1": 1334712222466847947239599416467819193681979953193214413832801269600834773514n,
+      "token0": 1599645741264618020808702038329353721629733008255322988592514794481577125288n,
+      "token1": 2247609169124227765723292450871674078753476404270357971619436234746936254846n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7999999999999999967n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000031n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11554,8 +12774,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 4892,
-    "steps": 77436,
+    "range_check_builtin_applications": 4896,
+    "steps": 77539,
   },
 }
 `;
@@ -11582,11 +12802,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1248492855925691111701210910406165362295330522469463106859343729387647547176n,
-      "token1": 2596378415928581654865170426298211098241991431402971873219193779535493224601n,
+      "token0": 417699139648307331965480514561367698061841733015167912303862739808359623884n,
+      "token1": 1111780900351082004269550813539105795904047873008586357915631186307778845435n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999937n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -11614,8 +12844,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 74,
-    "range_check_builtin_applications": 2347,
-    "steps": 40598,
+    "range_check_builtin_applications": 2350,
+    "steps": 40700,
   },
 }
 `;
@@ -11625,11 +12855,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1248492855925691111701210910406165362295330522469463106859343729387647547176n,
-      "token1": 2596378415928581654865170426298211098241991431402971873219193779535493224601n,
+      "token0": 417699139648307331965480514561367698061841733015167912303862739808359623884n,
+      "token1": 1111780900351082004269550813539105795904047873008586357915631186307778845435n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999810n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -11657,8 +12897,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2301,
-    "steps": 35897,
+    "range_check_builtin_applications": 2304,
+    "steps": 35999,
   },
 }
 `;
@@ -11704,11 +12944,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 242271862467044113053700449297224728786743044244984833223000196399983150614n,
-      "token1": 2121867719256020464806948437193868997180821447749028116566793896877700839426n,
+      "token0": 94320072348900417332613931686017643460688100452549880685162341773298166507n,
+      "token1": 2182981249074928927959751644450034426243939770749799490139899073921267695307n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999937n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11756,8 +13006,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 115,
-    "range_check_builtin_applications": 2846,
-    "steps": 53486,
+    "range_check_builtin_applications": 2849,
+    "steps": 53588,
   },
 }
 `;
@@ -11767,11 +13017,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 242271862467044113053700449297224728786743044244984833223000196399983150614n,
-      "token1": 2121867719256020464806948437193868997180821447749028116566793896877700839426n,
+      "token0": 94320072348900417332613931686017643460688100452549880685162341773298166507n,
+      "token1": 2182981249074928927959751644450034426243939770749799490139899073921267695307n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999810n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11819,8 +13079,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 2801,
-    "steps": 48787,
+    "range_check_builtin_applications": 2804,
+    "steps": 48889,
   },
 }
 `;
@@ -11867,11 +13127,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 845805066238840321906426159764978391774397832361509102835745670791865114261n,
-      "token1": 2150434308831766104595379503984020479806353441857755706621799022741802626349n,
+      "token0": 408429918487256202259556402239200995429294934883257638018073651083356257110n,
+      "token1": 825249829158212160080316107690950577846805179427628645071775028112609086251n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999920n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11919,8 +13189,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 4576,
-    "steps": 72951,
+    "range_check_builtin_applications": 4579,
+    "steps": 73053,
   },
 }
 `;
@@ -11930,11 +13200,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 845805066238840321906426159764978391774397832361509102835745670791865114261n,
-      "token1": 2150434308831766104595379503984020479806353441857755706621799022741802626349n,
+      "token0": 408429918487256202259556402239200995429294934883257638018073651083356257110n,
+      "token1": 825249829158212160080316107690950577846805179427628645071775028112609086251n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999779n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -11982,8 +13262,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4593,
-    "steps": 73369,
+    "range_check_builtin_applications": 4596,
+    "steps": 73471,
   },
 }
 `;
@@ -12030,11 +13310,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2052132427309402895651006763659298867483700600050196312370337735298673056478n,
-      "token1": 2953847453171124918599794859669626438464690061171513635510559792837867350248n,
+      "token0": 210915030583781036169447509696616065296758131192969300566372005777814827819n,
+      "token1": 1700443754692376934761983734607929644812422648028669707497515037122651481163n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999950n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12082,8 +13372,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 136,
-    "range_check_builtin_applications": 4939,
-    "steps": 78525,
+    "range_check_builtin_applications": 4942,
+    "steps": 78627,
   },
 }
 `;
@@ -12093,11 +13383,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2052132427309402895651006763659298867483700600050196312370337735298673056478n,
-      "token1": 2953847453171124918599794859669626438464690061171513635510559792837867350248n,
+      "token0": 210915030583781036169447509696616065296758131192969300566372005777814827819n,
+      "token1": 1700443754692376934761983734607929644812422648028669707497515037122651481163n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+      "amount1": {
+        "mag": 7919999999999999842n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12145,8 +13445,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4635,
-    "steps": 73404,
+    "range_check_builtin_applications": 4638,
+    "steps": 73506,
   },
 }
 `;
@@ -12173,11 +13473,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 595753450816555755080432621053830276027286502771233761795134490246960900775n,
-      "token1": 3152664042378938060069317021773576898799845387678987051876646294280816200010n,
+      "token0": 559063502539901024196722933559357688432049284036234918496940949341130792817n,
+      "token1": 2499509975342933166644894954048931879774488753794275293425706826710310951653n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999937n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -12205,8 +13515,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 73,
-    "range_check_builtin_applications": 2290,
-    "steps": 32708,
+    "range_check_builtin_applications": 2293,
+    "steps": 32810,
   },
 }
 `;
@@ -12216,11 +13526,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 595753450816555755080432621053830276027286502771233761795134490246960900775n,
-      "token1": 3152664042378938060069317021773576898799845387678987051876646294280816200010n,
+      "token0": 559063502539901024196722933559357688432049284036234918496940949341130792817n,
+      "token1": 2499509975342933166644894954048931879774488753794275293425706826710310951653n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999811n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -12248,8 +13568,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 75,
-    "range_check_builtin_applications": 2311,
-    "steps": 33135,
+    "range_check_builtin_applications": 2314,
+    "steps": 33237,
   },
 }
 `;
@@ -12295,11 +13615,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 401194562890018938695441512043372343207165526636922145137476201063481206488n,
-      "token1": 1306968920552474765977503450785518627299232795425213441140037461578061989098n,
+      "token0": 1419670485355647155505836937736220024553299102343485224062288169883655334350n,
+      "token1": 3226079701314273035182290548621215484341892683920301591895185521560824928356n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999937n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12347,8 +13677,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 114,
-    "range_check_builtin_applications": 2784,
-    "steps": 45593,
+    "range_check_builtin_applications": 2787,
+    "steps": 45695,
   },
 }
 `;
@@ -12358,11 +13688,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 401194562890018938695441512043372343207165526636922145137476201063481206488n,
-      "token1": 1306968920552474765977503450785518627299232795425213441140037461578061989098n,
+      "token0": 1419670485355647155505836937736220024553299102343485224062288169883655334350n,
+      "token1": 3226079701314273035182290548621215484341892683920301591895185521560824928356n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999811n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12410,8 +13750,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 116,
-    "range_check_builtin_applications": 2805,
-    "steps": 46020,
+    "range_check_builtin_applications": 2808,
+    "steps": 46122,
   },
 }
 `;
@@ -12458,11 +13798,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1953162271676253917838999375223473496091751715049188406601393546992698763012n,
-      "token1": 1977762664143009835611525818326959376561782651906006306818781735882070971845n,
+      "token0": 335335868540685152366311269843116343390489096414327889204383809530022826241n,
+      "token1": 2365474374298848215482681710088996934727766704472488732263647241560055801366n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999952n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12510,8 +13860,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 4131,
-    "steps": 66919,
+    "range_check_builtin_applications": 4134,
+    "steps": 67021,
   },
 }
 `;
@@ -12521,11 +13871,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1953162271676253917838999375223473496091751715049188406601393546992698763012n,
-      "token1": 1977762664143009835611525818326959376561782651906006306818781735882070971845n,
+      "token0": 335335868540685152366311269843116343390489096414327889204383809530022826241n,
+      "token1": 2365474374298848215482681710088996934727766704472488732263647241560055801366n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999843n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12573,8 +13933,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4149,
-    "steps": 67342,
+    "range_check_builtin_applications": 4152,
+    "steps": 67444,
   },
 }
 `;
@@ -12621,11 +13981,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 817126842484569143819466831686662440068886755014291562224671355078484136332n,
-      "token1": 2648738279288935179069113989879689297077437737282063296641989559855439485486n,
+      "token0": 19720827581960620170182255750732753027865683053808688407221662902747650097n,
+      "token1": 3052251894002833513572881851963237249685367873132070877862971363493218669850n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999921n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12673,8 +14043,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 135,
-    "range_check_builtin_applications": 4596,
-    "steps": 67421,
+    "range_check_builtin_applications": 4599,
+    "steps": 67523,
   },
 }
 `;
@@ -12684,11 +14054,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 817126842484569143819466831686662440068886755014291562224671355078484136332n,
-      "token1": 2648738279288935179069113989879689297077437737282063296641989559855439485486n,
+      "token0": 19720827581960620170182255750732753027865683053808688407221662902747650097n,
+      "token1": 3052251894002833513572881851963237249685367873132070877862971363493218669850n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7919999999999999780n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 8000000000000000000n,
+        "sign": false,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12736,8 +14116,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 137,
-    "range_check_builtin_applications": 4613,
-    "steps": 67839,
+    "range_check_builtin_applications": 4616,
+    "steps": 67941,
   },
 }
 `;
@@ -12764,11 +14144,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1190430013449561652622558517582555861879812431811267567768066705062874408547n,
-      "token1": 1722300321965514443631455837031137517400475546897820577369606188662551438794n,
+      "token0": 3090067863844404383145228491569995256678924517925425818640392369404779579618n,
+      "token1": 3446204376050568267361782513853214597085229287592403843193228319136535228775n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926670n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772579n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -12796,8 +14186,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 2977,
-    "steps": 50475,
+    "range_check_builtin_applications": 2981,
+    "steps": 50578,
   },
 }
 `;
@@ -12807,11 +14197,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1190430013449561652622558517582555861879812431811267567768066705062874408547n,
-      "token1": 1722300321965514443631455837031137517400475546897820577369606188662551438794n,
+      "token0": 3090067863844404383145228491569995256678924517925425818640392369404779579618n,
+      "token1": 3446204376050568267361782513853214597085229287592403843193228319136535228775n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926702n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772516n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -12839,8 +14239,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 2939,
-    "steps": 45800,
+    "range_check_builtin_applications": 2943,
+    "steps": 45903,
   },
 }
 `;
@@ -12886,11 +14286,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 736376603094527379744029514633979388151106812538088339650537997784023253706n,
-      "token1": 875742916222100544939823474695457999569570852846200627745486130671277115120n,
+      "token0": 1689152318175715896835471463899885637394927061623493833368482095413969874398n,
+      "token1": 3212253238966055516153258562271320238266915950825637009055309822495062700070n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926670n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772579n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -12938,8 +14348,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 3476,
-    "steps": 63363,
+    "range_check_builtin_applications": 3480,
+    "steps": 63466,
   },
 }
 `;
@@ -12949,11 +14359,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 736376603094527379744029514633979388151106812538088339650537997784023253706n,
-      "token1": 875742916222100544939823474695457999569570852846200627745486130671277115120n,
+      "token0": 1689152318175715896835471463899885637394927061623493833368482095413969874398n,
+      "token1": 3212253238966055516153258562271320238266915950825637009055309822495062700070n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926702n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772516n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13001,8 +14421,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 3439,
-    "steps": 58690,
+    "range_check_builtin_applications": 3443,
+    "steps": 58793,
   },
 }
 `;
@@ -13049,11 +14469,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1798553482956830290217025922326116654738112967365727814558613907652326482337n,
-      "token1": 3135226767639434056602420837149528534134248006490377841681615366934329446983n,
+      "token0": 1170988634779799941924681222308752717175431802768778883094411215684962806326n,
+      "token1": 2033712038717632993168379518975110274828686475806409252732863445011037865428n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926678n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772564n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13101,8 +14531,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5219,
-    "steps": 82855,
+    "range_check_builtin_applications": 5223,
+    "steps": 82958,
   },
 }
 `;
@@ -13112,11 +14542,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1798553482956830290217025922326116654738112967365727814558613907652326482337n,
-      "token1": 3135226767639434056602420837149528534134248006490377841681615366934329446983n,
+      "token0": 1170988634779799941924681222308752717175431802768778883094411215684962806326n,
+      "token1": 2033712038717632993168379518975110274828686475806409252732863445011037865428n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926718n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772484n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13164,8 +14604,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5242,
-    "steps": 83294,
+    "range_check_builtin_applications": 5246,
+    "steps": 83397,
   },
 }
 `;
@@ -13212,11 +14652,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2139256925662766734187466274119337338008431430186287210019813038037767451592n,
-      "token1": 3126582655432865425187615735861324593852888145621673342429132483695314576724n,
+      "token0": 682801824056888520088968135195561657914683620218411259900913865612854890120n,
+      "token1": 2281338585415984546022739635494645372315314328165903376936005671981966489450n,
     },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926661n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772594n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13264,8 +14714,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 5581,
-    "steps": 88420,
+    "range_check_builtin_applications": 5585,
+    "steps": 88523,
   },
 }
 `;
@@ -13275,11 +14725,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2139256925662766734187466274119337338008431430186287210019813038037767451592n,
-      "token1": 3126582655432865425187615735861324593852888145621673342429132483695314576724n,
+      "token0": 682801824056888520088968135195561657914683620218411259900913865612854890120n,
+      "token1": 2281338585415984546022739635494645372315314328165903376936005671981966489450n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 3973168804669926686n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 7986562883376772547n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13327,8 +14787,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5282,
-    "steps": 83325,
+    "range_check_builtin_applications": 5286,
+    "steps": 83428,
   },
 }
 `;
@@ -13355,11 +14815,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2136377814892424119756765583748615486667951415946030878535857824425922319389n,
-      "token1": 2894975396002425011143124244080348045492199122626542295808705667707458996605n,
+      "token0": 803146315262125048634204682980485517313192498933772734609965282853338116765n,
+      "token1": 2579497729340241911250456208999275072569847684789713022575634916523508365193n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772579n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926670n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -13387,8 +14857,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 2879,
-    "steps": 42627,
+    "range_check_builtin_applications": 2883,
+    "steps": 42730,
   },
 }
 `;
@@ -13398,11 +14868,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2136377814892424119756765583748615486667951415946030878535857824425922319389n,
-      "token1": 2894975396002425011143124244080348045492199122626542295808705667707458996605n,
+      "token0": 803146315262125048634204682980485517313192498933772734609965282853338116765n,
+      "token1": 2579497729340241911250456208999275072569847684789713022575634916523508365193n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772516n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926703n,
+        "sign": true,
+      },
+    },
   },
   "executedSwap": {
     "delta": {
@@ -13430,8 +14910,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 2904,
-    "steps": 43067,
+    "range_check_builtin_applications": 2908,
+    "steps": 43170,
   },
 }
 `;
@@ -13477,11 +14957,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 266082522195818284962354660637883344165442829416483534673186805782732432347n,
-      "token1": 1857666432122999145799915473242668285547815438452109881892002156096328960184n,
+      "token0": 76210741715286656364486151384807278835358043630348724476878012248396266454n,
+      "token1": 1191047276526692567594329599588353909920009705246692521963933621841905273122n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772579n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926670n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13529,8 +15019,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 3373,
-    "steps": 55512,
+    "range_check_builtin_applications": 3377,
+    "steps": 55615,
   },
 }
 `;
@@ -13540,11 +15030,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 266082522195818284962354660637883344165442829416483534673186805782732432347n,
-      "token1": 1857666432122999145799915473242668285547815438452109881892002156096328960184n,
+      "token0": 76210741715286656364486151384807278835358043630348724476878012248396266454n,
+      "token1": 1191047276526692567594329599588353909920009705246692521963933621841905273122n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772516n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926703n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13592,8 +15092,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 3398,
-    "steps": 55952,
+    "range_check_builtin_applications": 3402,
+    "steps": 56055,
   },
 }
 `;
@@ -13640,11 +15140,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1723783730479551682903255865398235395440806928396923780661736461915557950042n,
-      "token1": 1779236373453021572718399144396538262823805405703683490830363655952677015970n,
+      "token0": 407631544625759465132820175310024070443616823469630262351348485462848943679n,
+      "token1": 3548672683713708789618031951683807086447113414108988173648454054941233245009n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772595n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926662n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13692,8 +15202,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 4730,
-    "steps": 76851,
+    "range_check_builtin_applications": 4734,
+    "steps": 76954,
   },
 }
 `;
@@ -13703,11 +15213,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 1723783730479551682903255865398235395440806928396923780661736461915557950042n,
-      "token1": 1779236373453021572718399144396538262823805405703683490830363655952677015970n,
+      "token0": 407631544625759465132820175310024070443616823469630262351348485462848943679n,
+      "token1": 3548672683713708789618031951683807086447113414108988173648454054941233245009n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772547n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926686n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13755,8 +15275,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 4751,
-    "steps": 77292,
+    "range_check_builtin_applications": 4755,
+    "steps": 77395,
   },
 }
 `;
@@ -13803,11 +15323,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2300091532225590962517064866475492027032426140511581920998188746528334220906n,
-      "token1": 2855350805210148906285850038693587334165970504006366883617620023950185243316n,
+      "token0": 27381892289136150128280967663017496891117280690268267831784924838486893855n,
+      "token1": 1486500188156904581529070254641992420106956516143243082548848533889807691495n,
     },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772563n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926678n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13855,8 +15385,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5194,
-    "steps": 77354,
+    "range_check_builtin_applications": 5198,
+    "steps": 77457,
   },
 }
 `;
@@ -13866,11 +15396,21 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "VirtualOrdersExecuted": {
     "key": {
       "fee": 3402823669209384634633746074317682114n,
-      "token0": 2300091532225590962517064866475492027032426140511581920998188746528334220906n,
-      "token1": 2855350805210148906285850038693587334165970504006366883617620023950185243316n,
+      "token0": 27381892289136150128280967663017496891117280690268267831784924838486893855n,
+      "token1": 1486500188156904581529070254641992420106956516143243082548848533889807691495n,
     },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
+    "twamm_delta": {
+      "amount0": {
+        "mag": 7986562883376772484n,
+        "sign": true,
+      },
+      "amount1": {
+        "mag": 3973168804669926719n,
+        "sign": true,
+      },
+    },
   },
   "executedSwaps": [
     {
@@ -13918,8 +15458,8 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     },
     "ecdsa_builtin_applications": 1,
     "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5217,
-    "steps": 77793,
+    "range_check_builtin_applications": 5221,
+    "steps": 77896,
   },
 }
 `;
