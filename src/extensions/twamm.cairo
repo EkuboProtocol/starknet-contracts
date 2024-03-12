@@ -832,9 +832,9 @@ pub mod TWAMM {
                                     pool_key,
                                     SwapParameters {
                                         amount: i129 {
-                                            mag: 0xffffffffffffffffffffffffffffffff, sign: false
+                                            mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                         },
-                                        is_token1: sqrt_ratio < next_sqrt_ratio.unwrap(),
+                                        is_token1: sqrt_ratio > next_sqrt_ratio.unwrap(),
                                         sqrt_ratio_limit: next_sqrt_ratio.unwrap(),
                                         skip_ahead: 0
                                     }
