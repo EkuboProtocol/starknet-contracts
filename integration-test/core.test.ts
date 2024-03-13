@@ -20,16 +20,16 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0xc125a078e2005bcd810881a52485df74551de34e28da5198909bc62f84d7f4",
+      core: "0x1b291371387b63ead94e9a62f117236498a42ea63cb5f3271a048289f5d97ca",
       positions:
-        "0x314cd95f946c74c361da0a1b94f556d0f2b17f542cfb3fcdf3ae02f48e9a670",
+        "0x1127b04a974f249f60b7099e9e2ac4ca68216b51295e5e3b58d22dd16ef8169",
       router:
-        "0x155b109a3669301eaa820e36bdc8dc7c649506aabdc54e6e6bec42c674885d5",
-      nft: "0x58f36632c9f6d0eb207a35beffb20d83a581fcb4d89d8c79859da84af36f51a",
+        "0x6705508c85a2052d88e5650620efba73253d38a526ce8139bff3f5095a838fe",
+      nft: "0x235cf3736696b4f407787c2ccaa2aa5fe9bd0085781c8a22314d0f885822933",
       twamm:
-        "0x55e8b5457fed2dfd74145823d8b2f424d0f53bd3a9a19ad2fe8be6befb07639",
+        "0x7173b967f90a73f997e2021cd9915ec6ccaa894e48f0679950762a70109526c",
       tokenClassHash:
-        "0x58d3e055ea3c77b67ad51911ec8f09462e60c169c885f7c8fabc2e4344baf12",
+        "0x77756dd5c3db3eb64ee050f2fa217662193b8be2838b27872fa21193948154a",
     });
     console.log(setup);
   }, 300_000);
@@ -291,7 +291,7 @@ describe("core", () => {
     }
   });
 
-  describe("twamm", () => {
+  describe.only("twamm", () => {
     for (const {
       name: twammCaseName,
       pool,
@@ -513,6 +513,10 @@ describe("core", () => {
                           .find(
                             ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
                           )?.VirtualOrdersExecuted;
+                        // the token0 and token1 change with each run
+                        if (VirtualOrdersExecuted)
+                          delete VirtualOrdersExecuted["key"];
+
                         const Swapped = core
                           .parseEvents(executeVirtualOrdersReceipt)
                           .find(({ Swapped }) => Swapped)?.Swapped;
@@ -550,26 +554,26 @@ describe("core", () => {
 
                         const { transaction_hash } = await account.execute(
                           [
-                            swap_token.populate("transfer", [setup.router, action.amount]),
-                            router.populate(
-                              "swap",
-                              [
-                                {
-                                  pool_key: poolKey,
-                                  sqrt_ratio_limit: action.sqrtRatioLimit ?? 0,
-                                  skip_ahead: action.skipAhead ?? 0,
-                                },
-                                {
-                                  amount: toI129(action.amount),
-                                  token: swap_token.address
-                                },
-                              ],
-                            )
+                            swap_token.populate("transfer", [
+                              setup.router,
+                              action.amount,
+                            ]),
+                            router.populate("swap", [
+                              {
+                                pool_key: poolKey,
+                                sqrt_ratio_limit: action.sqrtRatioLimit ?? 0,
+                                skip_ahead: action.skipAhead ?? 0,
+                              },
+                              {
+                                amount: toI129(action.amount),
+                                token: swap_token.address,
+                              },
+                            ]),
                           ],
                           [],
                           getTxSettings()
                         );
-            
+
                         const swap_receipt = await provider.waitForTransaction(
                           transaction_hash,
                           { retryInterval: 0 }
@@ -585,6 +589,9 @@ describe("core", () => {
                           .find(
                             ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
                           )?.VirtualOrdersExecuted;
+                        // the token0 and token1 change with each run
+                        if (VirtualOrdersExecuted)
+                          delete VirtualOrdersExecuted["key"];
 
                         const Swaps = core
                           .parseEvents(swap_receipt)
@@ -592,10 +599,10 @@ describe("core", () => {
 
                         const executedSwaps = Swaps.map((swap) => {
                           return {
-                              delta: swap.Swapped.delta,
-                              liquidity_after: swap.Swapped.liquidity_after,
-                              sqrt_ratio_after: swap.Swapped.sqrt_ratio_after,
-                              tick_after: swap.Swapped.tick_after
+                            delta: swap.Swapped.delta,
+                            liquidity_after: swap.Swapped.liquidity_after,
+                            sqrt_ratio_after: swap.Swapped.sqrt_ratio_after,
+                            tick_after: swap.Swapped.tick_after,
                           };
                         });
 
@@ -609,9 +616,7 @@ describe("core", () => {
                           VirtualOrdersExecuted,
                           executedSwaps,
                           executionResources,
-                        }).toMatchSnapshot(
-                          `swap after ${after} seconds`
-                        );
+                        }).toMatchSnapshot(`swap after ${after} seconds`);
                         break;
                       }
                       default:

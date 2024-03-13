@@ -3263,11 +3263,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2576573784882181069125132119473118685862461477966758108845506602328567828095n,
-      "token1": 3517372366598557379864737456128514680078960283478437036484275625650825245823n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -3316,11 +3311,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2576573784882181069125132119473118685862461477966758108845506602328567828095n,
-      "token1": 3517372366598557379864737456128514680078960283478437036484275625650825245823n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3386,11 +3376,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1171331574662143125763152312013824584206729600249715694361234161300911005167n,
-      "token1": 2707204401958360191144178396000447604667147227093678154909467510578885685346n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3439,11 +3424,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1171331574662143125763152312013824584206729600249715694361234161300911005167n,
-      "token1": 2707204401958360191144178396000447604667147227093678154909467510578885685346n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3492,11 +3472,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1080136863839108882724928466664760503252994931486123322443932689317486136191n,
-      "token1": 2441251960973008918961351588423449060841247990930647361096445663791239966408n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -3545,11 +3520,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1080136863839108882724928466664760503252994931486123322443932689317486136191n,
-      "token1": 2441251960973008918961351588423449060841247990930647361096445663791239966408n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3598,11 +3568,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 24906212318073052959264492574325749259715946070976217486619119320784595615n,
-      "token1": 1099123893359613897399955971705144800781552753395842676909276226820829311917n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -3651,11 +3616,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 24906212318073052959264492574325749259715946070976217486619119320784595615n,
-      "token1": 1099123893359613897399955971705144800781552753395842676909276226820829311917n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3721,11 +3681,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 619797470881231906748624908394085106949626160897906106334059759962414736443n,
-      "token1": 2981131676918407907711291861675672336745191996392102304558241507254466236199n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -3774,11 +3729,6 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 619797470881231906748624908394085106949626160897906106334059759962414736443n,
-      "token1": 2981131676918407907711291861675672336745191996392102304558241507254466236199n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3844,11 +3794,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 331691300671241710667978389234932178883101973352486348774682369833780967142n,
-      "token1": 2520836492858765658068665080546329900241772753049811937670252455423538346124n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3879,11 +3824,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 331691300671241710667978389234932178883101973352486348774682369833780967142n,
-      "token1": 2520836492858765658068665080546329900241772753049811937670252455423538346124n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -3950,11 +3890,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 76892326191383872662296301182841904893260654107929898341776105881049960764n,
-      "token1": 2129195264813807772693464963438257640207080622338290889585968632545912206806n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4004,11 +3939,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 76892326191383872662296301182841904893260654107929898341776105881049960764n,
-      "token1": 2129195264813807772693464963438257640207080622338290889585968632545912206806n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4095,11 +4025,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 3450287387500479659200453396187810568591509322672471087862975439404167433719n,
-      "token1": 3609097393239695720225593278473991480171152115421631934999353994207329974139n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4150,11 +4075,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 3450287387500479659200453396187810568591509322672471087862975439404167433719n,
-      "token1": 3609097393239695720225593278473991480171152115421631934999353994207329974139n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4242,11 +4162,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1570792906961329596963995544437867720460298518488731644319348951772145138340n,
-      "token1": 2066663103100985477432087879529488952101556635818189374372443235967927780019n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4297,11 +4212,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no order
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1570792906961329596963995544437867720460298518488731644319348951772145138340n,
-      "token1": 2066663103100985477432087879529488952101556635818189374372443235967927780019n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4369,11 +4279,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2781275015915907762432704314654188262586376794915376328298856374677200859175n,
-      "token1": 3568748405606212647028161105654894701875206898992004149449047737104635307560n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -4422,11 +4327,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2781275015915907762432704314654188262586376794915376328298856374677200859175n,
-      "token1": 3568748405606212647028161105654894701875206898992004149449047737104635307560n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4511,11 +4411,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 23534914933349275511098984361756941512903266186039074766568379674836021183n,
-      "token1": 1388714560606793191799067711658810450024233467930031049032517853209372116802n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -4584,11 +4479,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 23534914933349275511098984361756941512903266186039074766568379674836021183n,
-      "token1": 1388714560606793191799067711658810450024233467930031049032517853209372116802n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4694,11 +4584,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1664858805182587645581481181164420581317645805713659541193757086456696990937n,
-      "token1": 3477166915219879535157883573635676218820521196645767551374695784670814652167n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -4767,11 +4652,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1664858805182587645581481181164420581317645805713659541193757086456696990937n,
-      "token1": 3477166915219879535157883573635676218820521196645767551374695784670814652167n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -4877,11 +4757,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 867662079051827595495104602511072993441376659578264091093421599053934287976n,
-      "token1": 2810628438487756349258066635706094808648622040679953488512334536662089952791n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -4950,11 +4825,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 867662079051827595495104602511072993441376659578264091093421599053934287976n,
-      "token1": 2810628438487756349258066635706094808648622040679953488512334536662089952791n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5040,11 +4910,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 747613595631780584501152943625659853366572654576157921020130356453158182332n,
-      "token1": 3317925885574497467150034546165177687948762528617088842475221665840302967980n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5093,11 +4958,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 747613595631780584501152943625659853366572654576157921020130356453158182332n,
-      "token1": 3317925885574497467150034546165177687948762528617088842475221665840302967980n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5182,11 +5042,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1083996486026007837181082830569688322415425825582463178896360397152728243374n,
-      "token1": 3494384069922612678259388786647202451068694870947224799296426655383133466242n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5255,11 +5110,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1083996486026007837181082830569688322415425825582463178896360397152728243374n,
-      "token1": 3494384069922612678259388786647202451068694870947224799296426655383133466242n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5365,11 +5215,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 259787834917489509074890718369913628629596049044194266097022498063121081739n,
-      "token1": 2901505157050333193851851054008308096069971955107165806378466444310906115479n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5438,11 +5283,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 259787834917489509074890718369913628629596049044194266097022498063121081739n,
-      "token1": 2901505157050333193851851054008308096069971955107165806378466444310906115479n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5548,11 +5388,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 610260391317469114146435690016388180263917186637559572149650971348628272672n,
-      "token1": 1378806754645623674059856312213780179606193572781194953109610696667424133179n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5621,11 +5456,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 610260391317469114146435690016388180263917186637559572149650971348628272672n,
-      "token1": 1378806754645623674059856312213780179606193572781194953109610696667424133179n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5711,11 +5541,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 845278028259657357373942627092830629133134169774242359919176246295022768005n,
-      "token1": 2163432628584278565168353791671097508550418638479304988888105481441864458962n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -5764,11 +5589,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 845278028259657357373942627092830629133134169774242359919176246295022768005n,
-      "token1": 2163432628584278565168353791671097508550418638479304988888105481441864458962n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -5853,11 +5673,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1222611044423098813251823750697067320382176470768108090651886192934076428285n,
-      "token1": 2515148326414659345123176396855007462192712589401991537322385478751791782699n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -5926,11 +5741,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1222611044423098813251823750697067320382176470768108090651886192934076428285n,
-      "token1": 2515148326414659345123176396855007462192712589401991537322385478751791782699n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6036,11 +5846,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1456408251651228690387633924833758160167071859573034166639079017336436390397n,
-      "token1": 1956940022722258806277635942747928670338726674117297575809045443847880308130n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -6109,11 +5914,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1456408251651228690387633924833758160167071859573034166639079017336436390397n,
-      "token1": 1956940022722258806277635942747928670338726674117297575809045443847880308130n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6219,11 +6019,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 599167260731696939068142537094992278880880885738952390157180659253357586906n,
-      "token1": 1255294477531246175906791043762471103351912849038350220461316798566343766999n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -6292,11 +6087,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 599167260731696939068142537094992278880880885738952390157180659253357586906n,
-      "token1": 1255294477531246175906791043762471103351912849038350220461316798566343766999n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6382,11 +6172,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1375368687041209601458884291415967608141651326878585881351022929357826756774n,
-      "token1": 2336934145887436398118140096002364392970637863209035633918515910812034567517n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -6435,11 +6220,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1375368687041209601458884291415967608141651326878585881351022929357826756774n,
-      "token1": 2336934145887436398118140096002364392970637863209035633918515910812034567517n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6524,11 +6304,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 959315854396473587828822414558597953848318706097297097701637404789301516478n,
-      "token1": 2671760703821109552581547402525943018046761577803469766751330167401648729177n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -6597,11 +6372,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 959315854396473587828822414558597953848318706097297097701637404789301516478n,
-      "token1": 2671760703821109552581547402525943018046761577803469766751330167401648729177n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6707,11 +6477,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1196789040000651884716692957851056550731199262821238082697741153177826383529n,
-      "token1": 2787156219255113526214242959342692975060572305781745543395848002986798300133n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -6780,11 +6545,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1196789040000651884716692957851056550731199262821238082697741153177826383529n,
-      "token1": 2787156219255113526214242959342692975060572305781745543395848002986798300133n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -6890,11 +6650,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2576950105651828215339910847464406570447335678308291270511020911607597355368n,
-      "token1": 2661960376297423469211095263395600445771479202471822089144417049116327988056n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -6963,11 +6718,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2576950105651828215339910847464406570447335678308291270511020911607597355368n,
-      "token1": 2661960376297423469211095263395600445771479202471822089144417049116327988056n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7053,11 +6803,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1898705877308095915087768578291788552626407473255289415816980490566592119177n,
-      "token1": 2553375775316811996031536125614912205645567795090129807925887930399229549291n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -7106,11 +6851,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1898705877308095915087768578291788552626407473255289415816980490566592119177n,
-      "token1": 2553375775316811996031536125614912205645567795090129807925887930399229549291n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7195,11 +6935,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 3190862606898554061448431051169958777462211894810507021181172714760144202919n,
-      "token1": 3603137352217839414577663307358012287221547454301911445872211058543298154238n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -7268,11 +7003,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 3190862606898554061448431051169958777462211894810507021181172714760144202919n,
-      "token1": 3603137352217839414577663307358012287221547454301911445872211058543298154238n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7378,11 +7108,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1151582793918280620149992360480650849246584204139858775820179877254586103466n,
-      "token1": 2169496869660764951476736717961743145663861850924314642822811208591186918562n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -7451,11 +7176,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 1151582793918280620149992360480650849246584204139858775820179877254586103466n,
-      "token1": 2169496869660764951476736717961743145663861850924314642822811208591186918562n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7561,11 +7281,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2243880958373284105092657630095402188922817099908380785990493553379153237132n,
-      "token1": 2291510983126048917670447495386271989265787492687045626342920163669290234356n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -7634,11 +7349,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 1020847100762815390390123822295304634n,
-      "token0": 2243880958373284105092657630095402188922817099908380785990493553379153237132n,
-      "token1": 2291510983126048917670447495386271989265787492687045626342920163669290234356n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7724,11 +7434,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1428687382403801485919601095948019339440330070927272221190122414396346541246n,
-      "token1": 2736417192389571547201397365354386897367458739150155771054608556225650879312n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7759,11 +7464,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1428687382403801485919601095948019339440330070927272221190122414396346541246n,
-      "token1": 2736417192389571547201397365354386897367458739150155771054608556225650879312n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7830,11 +7530,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1319261470743522481097774431855286656272878765433452608215137538264471251961n,
-      "token1": 2109831926013374678355956868944839763096907282213071291785475051960513367361n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7884,11 +7579,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1319261470743522481097774431855286656272878765433452608215137538264471251961n,
-      "token1": 2109831926013374678355956868944839763096907282213071291785475051960513367361n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -7975,11 +7665,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 341321701992759128119872019127812271858605156953553895945939007754494920348n,
-      "token1": 2218700121363687469716696027071680718046437677076954265918755274923291791212n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8030,11 +7715,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 341321701992759128119872019127812271858605156953553895945939007754494920348n,
-      "token1": 2218700121363687469716696027071680718046437677076954265918755274923291791212n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8122,11 +7802,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1573293823392012876390326488221188612264885763184590739099476108966223810390n,
-      "token1": 2822352158663577352490280501729222134784272864014163042426355842664673024408n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8177,11 +7852,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders 
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1573293823392012876390326488221188612264885763184590739099476108966223810390n,
-      "token1": 2822352158663577352490280501729222134784272864014163042426355842664673024408n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8249,11 +7919,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1200689347849228968229328746779100243190420471049750007857661647854296715388n,
-      "token1": 2852947529591728382731903703241216005892091514635555322530130299131836041433n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -8302,11 +7967,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1200689347849228968229328746779100243190420471049750007857661647854296715388n,
-      "token1": 2852947529591728382731903703241216005892091514635555322530130299131836041433n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8391,11 +8051,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1605048453681928444782021760436006153500554498458816327919867622579714876449n,
-      "token1": 2779875399982772639102628410724976133653487416957695473016491592371648515164n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -8464,11 +8119,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1605048453681928444782021760436006153500554498458816327919867622579714876449n,
-      "token1": 2779875399982772639102628410724976133653487416957695473016491592371648515164n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8574,11 +8224,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 806627418819773986074470498645500034780088776787640978272551310505381649230n,
-      "token1": 3477438682663744467738468963693647434545145396476375367955186723438257904756n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -8647,11 +8292,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 806627418819773986074470498645500034780088776787640978272551310505381649230n,
-      "token1": 3477438682663744467738468963693647434545145396476375367955186723438257904756n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8757,11 +8397,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 155744008610867144809139136195818817033179301325128511369650587635053895403n,
-      "token1": 2293452004413879671500403530089386560393943083354322148369056922204421506343n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -8830,11 +8465,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 155744008610867144809139136195818817033179301325128511369650587635053895403n,
-      "token1": 2293452004413879671500403530089386560393943083354322148369056922204421506343n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8920,11 +8550,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1772456116447913165869536642791923104192201157460026932468290871478149432736n,
-      "token1": 2928291444597670427900521291818302830356624574615385787413663460308807482919n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -8973,11 +8598,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1772456116447913165869536642791923104192201157460026932468290871478149432736n,
-      "token1": 2928291444597670427900521291818302830356624574615385787413663460308807482919n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9062,11 +8682,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1473741625959912863859177588254722890879948533971856338735219058229132983071n,
-      "token1": 2070942850570909360100063767008024489756839323805630784223605475191664588295n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9135,11 +8750,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1473741625959912863859177588254722890879948533971856338735219058229132983071n,
-      "token1": 2070942850570909360100063767008024489756839323805630784223605475191664588295n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9245,11 +8855,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1049763059180316974825799069327211624546022954924382138928134286137218961179n,
-      "token1": 1577945246397713035964083965528993788139285674103006054650868152617752968999n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9318,11 +8923,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1049763059180316974825799069327211624546022954924382138928134286137218961179n,
-      "token1": 1577945246397713035964083965528993788139285674103006054650868152617752968999n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9428,11 +9028,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 849011221514514685798309119903777406545754407293473144604124783533511195840n,
-      "token1": 1682789440947474875078327352014351051237339098466522732235738780077052757938n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9501,11 +9096,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 849011221514514685798309119903777406545754407293473144604124783533511195840n,
-      "token1": 1682789440947474875078327352014351051237339098466522732235738780077052757938n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9591,11 +9181,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1983771944689702390702007958552314256525355310253519960144050025993715602112n,
-      "token1": 3084931043092519236681275508829260270545961733189100994199148994149241698846n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -9644,11 +9229,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1983771944689702390702007958552314256525355310253519960144050025993715602112n,
-      "token1": 3084931043092519236681275508829260270545961733189100994199148994149241698846n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9733,11 +9313,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 736124071918893365510629561233161640072209539746118606150576144236547225739n,
-      "token1": 2557279770257470955379552927911082341488815585457537610862706607578531085975n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -9806,11 +9381,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 736124071918893365510629561233161640072209539746118606150576144236547225739n,
-      "token1": 2557279770257470955379552927911082341488815585457537610862706607578531085975n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -9916,11 +9486,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1034954836706333678561579611371133019582765945861667602453424864990469283823n,
-      "token1": 3357085543729173126365205142323256620609820612789922949710429138923611686140n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -9989,11 +9554,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1034954836706333678561579611371133019582765945861667602453424864990469283823n,
-      "token1": 3357085543729173126365205142323256620609820612789922949710429138923611686140n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10099,11 +9659,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2667243281515489034782908418733632952627771522322923332194568839747360594913n,
-      "token1": 2941758934524301775656269504690769520821456078612621372577282264460544742690n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -10172,11 +9727,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2667243281515489034782908418733632952627771522322923332194568839747360594913n,
-      "token1": 2941758934524301775656269504690769520821456078612621372577282264460544742690n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10262,11 +9812,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1232978034732481474398987791767222867895494449294381457675263771478493334836n,
-      "token1": 3089215930763126827851906881940567011661432235229400743720235434383540941848n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -10315,11 +9860,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1232978034732481474398987791767222867895494449294381457675263771478493334836n,
-      "token1": 3089215930763126827851906881940567011661432235229400743720235434383540941848n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10404,11 +9944,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 3098594143998860758670525174524948936724319925827586254584908173627327916748n,
-      "token1": 3498013355799224604791905326575664592812444250513806963593322776155231607758n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -10477,11 +10012,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 3098594143998860758670525174524948936724319925827586254584908173627327916748n,
-      "token1": 3498013355799224604791905326575664592812444250513806963593322776155231607758n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10587,11 +10117,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1413655138000973049371541532107045853940173070749997007478748975757220704242n,
-      "token1": 1605034312713234231384328556549611205548925343116116955716412966247682836477n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -10660,11 +10185,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1413655138000973049371541532107045853940173070749997007478748975757220704242n,
-      "token1": 1605034312713234231384328556549611205548925343116116955716412966247682836477n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10770,11 +10290,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 4630033476816729970272862470088912286744071061841451501485431843598893715n,
-      "token1": 1559365460706872403707007550327647998534191432382310187553160981364667457651n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -10843,11 +10358,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 4630033476816729970272862470088912286744071061841451501485431843598893715n,
-      "token1": 1559365460706872403707007550327647998534191432382310187553160981364667457651n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -10933,11 +10443,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 158684358139868812912946510745960429941564034165349540221053555957944873590n,
-      "token1": 3579440289189194013714440711789197815358645558197126515568268529627190255902n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -10986,11 +10491,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 158684358139868812912946510745960429941564034165349540221053555957944873590n,
-      "token1": 3579440289189194013714440711789197815358645558197126515568268529627190255902n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11075,11 +10575,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 3103770472787993469796170498853237867386382429787180492993062187228318523902n,
-      "token1": 3447586850955581476844222111323085265967674942741139739514656951836315045018n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -11148,11 +10643,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 3103770472787993469796170498853237867386382429787180492993062187228318523902n,
-      "token1": 3447586850955581476844222111323085265967674942741139739514656951836315045018n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11258,11 +10748,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 86219757773275501660170521851575886012667122727896061764513279016934762731n,
-      "token1": 689220571042664369047493985670996093339292169251877537204893277568931981369n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -11331,11 +10816,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 86219757773275501660170521851575886012667122727896061764513279016934762731n,
-      "token1": 689220571042664369047493985670996093339292169251877537204893277568931981369n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11441,11 +10921,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 999629672320570379754316168436835289865682875680977274545418049140774087953n,
-      "token1": 1670618609641583584731478013751641916554910352637526205149622088043581026873n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -11514,11 +10989,6 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 999629672320570379754316168436835289865682875680977274545418049140774087953n,
-      "token1": 1670618609641583584731478013751641916554910352637526205149622088043581026873n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11604,11 +11074,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1270249174889656467336096628840863242304178259329678310237310120476978577853n,
-      "token1": 1891283529594509807738164967160399077439377590829410249934473423394759898788n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11639,11 +11104,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1270249174889656467336096628840863242304178259329678310237310120476978577853n,
-      "token1": 1891283529594509807738164967160399077439377590829410249934473423394759898788n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11710,11 +11170,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 332121580657101755993329473870225624627162529791252749854935970121299397548n,
-      "token1": 3360086922533772588859984163929141311227605573187278761343951858856360285389n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11764,11 +11219,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 332121580657101755993329473870225624627162529791252749854935970121299397548n,
-      "token1": 3360086922533772588859984163929141311227605573187278761343951858856360285389n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11855,11 +11305,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 910938947965968603505603835433381629216028581711868142505209773264629457572n,
-      "token1": 1074798833639985501456860566031284017246244115182096717461763740219474796331n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -11910,11 +11355,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 910938947965968603505603835433381629216028581711868142505209773264629457572n,
-      "token1": 1074798833639985501456860566031284017246244115182096717461763740219474796331n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12002,11 +11442,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 993783737547523599909376229900228195786267599141703306286897606478640867713n,
-      "token1": 1385157157429229180917534354989165582626478642651373992087603104501177691008n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12057,11 +11492,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > no orders > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 993783737547523599909376229900228195786267599141703306286897606478640867713n,
-      "token1": 1385157157429229180917534354989165582626478642651373992087603104501177691008n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12129,11 +11559,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 65314155440745424360895862544165891367224342796016164255962745491679472994n,
-      "token1": 679269374731694312211406082661422805034336815198421054940639283236906903723n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -12182,11 +11607,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 65314155440745424360895862544165891367224342796016164255962745491679472994n,
-      "token1": 679269374731694312211406082661422805034336815198421054940639283236906903723n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12271,11 +11691,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 565575230182276407879450443147778019862720932975380251263141905850919321457n,
-      "token1": 3606362881535764862270112655448438317932506764674266904335053783509391702677n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -12344,11 +11759,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 565575230182276407879450443147778019862720932975380251263141905850919321457n,
-      "token1": 3606362881535764862270112655448438317932506764674266904335053783509391702677n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12454,11 +11864,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 170713307064335993885116170321529948462392477370617511859886389926447726396n,
-      "token1": 2409910877045596519256638136172303960226659156619973410794871872251297381147n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -12527,11 +11932,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 170713307064335993885116170321529948462392477370617511859886389926447726396n,
-      "token1": 2409910877045596519256638136172303960226659156619973410794871872251297381147n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12637,11 +12037,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1750637644457315416226996474472770147097582611061221803637906087519004542689n,
-      "token1": 2866844348929971562852090123466316569117150039812387845229349779148643817486n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -12710,11 +12105,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1750637644457315416226996474472770147097582611061221803637906087519004542689n,
-      "token1": 2866844348929971562852090123466316569117150039812387845229349779148643817486n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12800,11 +12190,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 779733638225993259369812024751739344241724149538898232638775372685006182073n,
-      "token1": 783903096301326182402516625869506312401320510971113310129904213198387738357n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12853,11 +12238,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 779733638225993259369812024751739344241724149538898232638775372685006182073n,
-      "token1": 783903096301326182402516625869506312401320510971113310129904213198387738357n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -12942,11 +12322,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 912591050962059538274805055344688756364800505479342770171960178452103274547n,
-      "token1": 1056288003990983252056896335370097054433401840539766988478051664953185970731n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13015,11 +12390,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 912591050962059538274805055344688756364800505479342770171960178452103274547n,
-      "token1": 1056288003990983252056896335370097054433401840539766988478051664953185970731n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13125,11 +12495,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 79821214824891799978395473506954653642399222119194965278789267717279679419n,
-      "token1": 2125076793597367345448061355411877524676883391182389797823296383484336834899n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13198,11 +12563,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 79821214824891799978395473506954653642399222119194965278789267717279679419n,
-      "token1": 2125076793597367345448061355411877524676883391182389797823296383484336834899n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13308,11 +12668,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1904470046719775598336076646612031394184240964871354317295973084321101906077n,
-      "token1": 3490348320414169015039307383026753191610615061027319127918526612377058254817n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13381,11 +12736,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1904470046719775598336076646612031394184240964871354317295973084321101906077n,
-      "token1": 3490348320414169015039307383026753191610615061027319127918526612377058254817n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13471,11 +12821,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1716568840162123498632438028526912774425651338418693267874120782374945220346n,
-      "token1": 3083654581882673508532182921949548978866142542479481481626260376341354681691n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -13524,11 +12869,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1716568840162123498632438028526912774425651338418693267874120782374945220346n,
-      "token1": 3083654581882673508532182921949548978866142542479481481626260376341354681691n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13613,11 +12953,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 161528895961966025346960267274722825259939270520089480911889176268105992136n,
-      "token1": 3067273424290931977081761043825563297332406831290367614734070891852160453197n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -13686,11 +13021,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 161528895961966025346960267274722825259939270520089480911889176268105992136n,
-      "token1": 3067273424290931977081761043825563297332406831290367614734070891852160453197n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13796,11 +13126,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 233582191704039256470888791395728967388802127570679010630394896097149537212n,
-      "token1": 2115019927514385921924787122806481853962761614466275597265984968078541058643n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -13869,11 +13194,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 233582191704039256470888791395728967388802127570679010630394896097149537212n,
-      "token1": 2115019927514385921924787122806481853962761614466275597265984968078541058643n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -13979,11 +13299,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1324512799281910108033235765201541043566742757898781639853436718830010419067n,
-      "token1": 2788599046438087100760676475175882733805606628024565053719381190067233947763n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -14052,11 +13367,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1324512799281910108033235765201541043566742757898781639853436718830010419067n,
-      "token1": 2788599046438087100760676475175882733805606628024565053719381190067233947763n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14142,11 +13452,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1154672211912608754945432153901742795231284224699871352383820858623276624148n,
-      "token1": 2517161822139995219402426523533213559788897423590053214771599519834432184772n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -14195,11 +13500,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1154672211912608754945432153901742795231284224699871352383820858623276624148n,
-      "token1": 2517161822139995219402426523533213559788897423590053214771599519834432184772n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14284,11 +13584,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 739962905736686896896932092761638684441456356079313337461838330103302694291n,
-      "token1": 1482428400845976490548467932314448961197163348886146009560970155925291207955n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -14357,11 +13652,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 739962905736686896896932092761638684441456356079313337461838330103302694291n,
-      "token1": 1482428400845976490548467932314448961197163348886146009560970155925291207955n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14467,11 +13757,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1759744027037512079991951186733924631734636348543605040560157672577367619578n,
-      "token1": 3149885779418725686687358148877943457937963134644764012334283386079612823771n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -14540,11 +13825,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1759744027037512079991951186733924631734636348543605040560157672577367619578n,
-      "token1": 3149885779418725686687358148877943457937963134644764012334283386079612823771n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14650,11 +13930,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1840629812497085452589995637176269152162646463733376462550413135460315757708n,
-      "token1": 3369972593834545254571387107714338920079772621975632704339315857147851549597n,
-    },
     "token0_sale_rate": 4294967296000000000000000000n,
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
@@ -14723,11 +13998,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1840629812497085452589995637176269152162646463733376462550413135460315757708n,
-      "token1": 3369972593834545254571387107714338920079772621975632704339315857147851549597n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14813,11 +14083,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1502458583737542282467884068923754946596880171740346566938425760842710013231n,
-      "token1": 2894688293499468215950696702240296710577875605024663784284425188784764293652n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -14866,11 +14131,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 1502458583737542282467884068923754946596880171740346566938425760842710013231n,
-      "token1": 2894688293499468215950696702240296710577875605024663784284425188784764293652n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -14955,11 +14215,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 887449154566835046229182045702283099908570700505988264162474897025130648590n,
-      "token1": 2563369466899854796860574183960935279573742063536106004858850905509478509055n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -15028,11 +14283,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 887449154566835046229182045702283099908570700505988264162474897025130648590n,
-      "token1": 2563369466899854796860574183960935279573742063536106004858850905509478509055n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -15138,11 +14388,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2079176792663366361830390612850268857885574241202173271025152289590211482536n,
-      "token1": 3531116663183937020947266880835027283286978309232083928822017058782368500289n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -15211,11 +14456,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 2079176792663366361830390612850268857885574241202173271025152289590211482536n,
-      "token1": 3531116663183937020947266880835027283286978309232083928822017058782368500289n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
@@ -15321,11 +14561,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 8 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 747825454379612095832555562289795911070594051622582229297677619760517420120n,
-      "token1": 2961617218786327866608626481449354106550390959016857454715863274325843751282n,
-    },
     "token0_sale_rate": 2147483648000000000000000000n,
     "token1_sale_rate": 4294967296000000000000000000n,
     "twamm_delta": {
@@ -15394,11 +14629,6 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 16 seconds 1`] = `
 {
   "VirtualOrdersExecuted": {
-    "key": {
-      "fee": 3402823669209384634633746074317682114n,
-      "token0": 747825454379612095832555562289795911070594051622582229297677619760517420120n,
-      "token1": 2961617218786327866608626481449354106550390959016857454715863274325843751282n,
-    },
     "token0_sale_rate": 0n,
     "token1_sale_rate": 0n,
     "twamm_delta": {
