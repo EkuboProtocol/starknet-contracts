@@ -860,9 +860,6 @@ pub mod TWAMM {
                                 max(next_calculated_sqrt_ratio, MIN_SQRT_RATIO)
                             };
 
-                            println!("next_calculated_sqrt_ratio:\t{}", next_calculated_sqrt_ratio);
-                            println!("next_valid_sqrt_ratio:\t{}", next_valid_sqrt_ratio);
-
                             delta = core
                                 .swap(
                                     pool_key,
