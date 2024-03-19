@@ -25,6 +25,11 @@ pub mod constants {
 
     // ~ ln(2**128) * 2**64
     pub const EXPONENT_LIMIT: u128 = 1623313478486440542208;
+
+    // min and max usable prices given
+    pub const MAX_TICK_MAGNITUDE: u128 = 88368108;
+    pub const MIN_SQRT_RATIO: u256 = 22027144413679976675;
+    pub const MAX_SQRT_RATIO: u256 = 5256790760649093508123362461711849782692726119655358142129;
 }
 
 // Computes the sale rate as a fixed point 96.32 number for a given amount, which is the just the amount divided by the duration in seconds

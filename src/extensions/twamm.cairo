@@ -44,7 +44,8 @@ pub mod TWAMM {
     };
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
-        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
+        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate,
+        constants::{MAX_TICK_MAGNITUDE, MIN_SQRT_RATIO, MAX_SQRT_RATIO}
     };
 
     #[derive(Drop, Copy, Serde)]
@@ -785,23 +786,18 @@ pub mod TWAMM {
                     selector!("time_reward_rate"), storage_key
                 );
 
-                let bounds = max_bounds(MAX_TICK_SPACING);
-                let (min_sqrt_ratio, max_sqrt_ratio) = (
-                    tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper)
-                );
-
                 while last_virtual_order_time != current_time {
                     let mut delta = Zero::zero();
 
-                    // we must trade up to the earliest initialzed time because sale rate changes
+                    // must trade up to the earliest initialzed time because sale rate changes
                     let (next_virtual_order_time, is_initialized) = self_snap
                         .prefix_next_initialized_time(
                             time_bitmap_storage_prefix, last_virtual_order_time, current_time
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let mut sqrt_ratio = match next_sqrt_ratio {
-                            Option::Some(sqrt_ratio) => { sqrt_ratio },
+                        let mut current_sqrt_ratio = match next_sqrt_ratio {
+                            Option::Some(current_sqrt_ratio) => { current_sqrt_ratio },
                             Option::None => {
                                 let price = core.get_pool_price(pool_key);
                                 price.sqrt_ratio
@@ -821,50 +817,51 @@ pub mod TWAMM {
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
-                            let mut liquidity = core.get_pool_liquidity(pool_key);
+                            let mut current_liquidity = core.get_pool_liquidity(pool_key);
 
-                            // if current tick is outside usable range, use liquidity
-                            // and price at the closest usable tick
-                            let (sqrt_ratio, liquidity) = if (liquidity.is_zero()) {
-                                if (sqrt_ratio >= max_sqrt_ratio) {
-                                    (
-                                        max_sqrt_ratio,
-                                        core
-                                            .get_pool_tick_liquidity_delta(pool_key, bounds.upper)
-                                            .mag
-                                    )
-                                } else {
-                                    (
-                                        min_sqrt_ratio,
-                                        core
-                                            .get_pool_tick_liquidity_delta(pool_key, bounds.lower)
-                                            .mag
-                                    )
-                                }
+                            // must use sqrt_ratio and liquidity at the closest usable tick, since swaps
+                            // on this pool could push the price out of range and liquidity to zero
+                            let (sqrt_ratio, liquidity) =
+                                if (current_sqrt_ratio >= MAX_SQRT_RATIO) {
+                                (
+                                    MAX_SQRT_RATIO,
+                                    core
+                                        .get_pool_tick_liquidity_delta(
+                                            pool_key, i129 { mag: MAX_TICK_MAGNITUDE, sign: false }
+                                        )
+                                        .mag
+                                )
+                            } else if (current_sqrt_ratio < MIN_SQRT_RATIO) {
+                                (
+                                    MIN_SQRT_RATIO,
+                                    core
+                                        .get_pool_tick_liquidity_delta(
+                                            pool_key, i129 { mag: MAX_TICK_MAGNITUDE, sign: true }
+                                        )
+                                        .mag
+                                )
                             } else {
-                                (sqrt_ratio, liquidity)
+                                (current_sqrt_ratio, current_liquidity)
                             };
 
-                            next_sqrt_ratio =
-                                Option::Some(
-                                    calculate_next_sqrt_ratio(
-                                        sqrt_ratio,
-                                        liquidity,
-                                        token0_sale_rate,
-                                        token1_sale_rate,
-                                        time_elapsed
-                                    )
-                                );
+                            let next_calculated_sqrt_ratio = calculate_next_sqrt_ratio(
+                                sqrt_ratio,
+                                liquidity,
+                                token0_sale_rate,
+                                token1_sale_rate,
+                                time_elapsed
+                            );
 
-                            // cap the next sqrt_ratio at min and max usable ticks
-                            next_sqrt_ratio =
-                                Option::Some(
-                                    if (next_sqrt_ratio.unwrap() > sqrt_ratio) {
-                                        min(next_sqrt_ratio.unwrap(), max_sqrt_ratio)
-                                    } else {
-                                        max(next_sqrt_ratio.unwrap(), min_sqrt_ratio)
-                                    }
-                                );
+                            // must cap the next calculated sqrt_ratio to avoid swapping outside of usable ticks
+                            let next_valid_sqrt_ratio =
+                                if (next_calculated_sqrt_ratio > current_sqrt_ratio) {
+                                min(next_calculated_sqrt_ratio, MAX_SQRT_RATIO)
+                            } else {
+                                max(next_calculated_sqrt_ratio, MIN_SQRT_RATIO)
+                            };
+
+                            println!("next_calculated_sqrt_ratio:\t{}", next_calculated_sqrt_ratio);
+                            println!("next_valid_sqrt_ratio:\t{}", next_valid_sqrt_ratio);
 
                             delta = core
                                 .swap(
@@ -873,11 +870,13 @@ pub mod TWAMM {
                                         amount: i129 {
                                             mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                         },
-                                        is_token1: sqrt_ratio >= next_sqrt_ratio.unwrap(),
-                                        sqrt_ratio_limit: next_sqrt_ratio.unwrap(),
+                                        is_token1: current_sqrt_ratio >= next_valid_sqrt_ratio,
+                                        sqrt_ratio_limit: next_valid_sqrt_ratio,
                                         skip_ahead: 0
                                     }
                                 );
+
+                            next_sqrt_ratio = Option::Some(next_valid_sqrt_ratio);
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
@@ -889,12 +888,12 @@ pub mod TWAMM {
                         } else {
                             let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
                                 .is_non_zero() {
-                                (token0_amount, false, min_sqrt_ratio)
+                                (token0_amount, false, MIN_SQRT_RATIO)
                             } else {
-                                (token1_amount, true, max_sqrt_ratio)
+                                (token1_amount, true, MAX_SQRT_RATIO)
                             };
 
-                            if sqrt_ratio_limit != sqrt_ratio {
+                            if sqrt_ratio_limit != current_sqrt_ratio {
                                 delta = core
                                     .swap(
                                         pool_key,

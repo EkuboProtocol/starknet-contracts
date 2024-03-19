@@ -4,7 +4,9 @@ use ekubo::extensions::twamm::math::{
     calculate_amount_from_sale_rate, calculate_reward_rate, time::{to_duration}
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
-use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
+use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, tick_to_sqrt_ratio};
+use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 
@@ -335,7 +337,7 @@ mod TWAMMMathTest {
             time_elapsed: 1
         );
         // sqrt_ratio ~= .99
-        assert_eq!(next_sqrt_ratio, 340282366920938463332123722385714104100);
+        assert_eq!(next_sqrt_ratio, 340282366920938463305873545376503282647);
 
         // very low liquidity
         let next_sqrt_ratio = calculate_next_sqrt_ratio(
@@ -347,6 +349,28 @@ mod TWAMMMathTest {
         );
         // sqrt_ratio will be sqrt_sale_ratio
         assert_eq!(next_sqrt_ratio, 107606732706330320687810575726449262521);
+    }
+}
+
+mod MaxPrices {
+    use super::{i129, constants, max_bounds, MAX_TICK_SPACING, tick_to_sqrt_ratio};
+
+    #[test]
+    fn test_max_min_tick() {
+        let bounds = max_bounds(MAX_TICK_SPACING);
+        assert_eq!(bounds.lower, i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: true },);
+        assert_eq!(bounds.upper, i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: false },);
+    }
+
+    #[test]
+    fn test_max_min_sqrt_ratio() {
+        let bounds = max_bounds(MAX_TICK_SPACING);
+        let (min_sqrt_ratio, max_sqrt_ratio) = (
+            tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper)
+        );
+
+        assert_eq!(min_sqrt_ratio, constants::MIN_SQRT_RATIO);
+        assert_eq!(max_sqrt_ratio, constants::MAX_SQRT_RATIO);
     }
 }
 
