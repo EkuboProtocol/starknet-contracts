@@ -4,6 +4,7 @@ use ekubo::extensions::twamm::math::{
     calculate_amount_from_sale_rate, calculate_reward_rate, time::{to_duration}
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
+use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 
@@ -140,7 +141,7 @@ mod SaleRateTest {
 }
 
 mod RewardRateTest {
-    use super::{Delta, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129,};
+    use super::{Delta, calculate_reward_amount, SIXTEEN_POW_EIGHT, i129};
 
     #[test]
     fn test_largest_reward_amount_no_overflow() {
@@ -158,11 +159,14 @@ mod RewardRateTest {
 }
 
 mod TWAMMMathTest {
-    use super::{calculate_c, i129, constants, SIXTEEN_POW_SEVEN, calculate_next_sqrt_ratio};
+    use super::{
+        calculate_c, i129, constants, SIXTEEN_POW_SEVEN, calculate_next_sqrt_ratio, min_sqrt_ratio,
+        max_sqrt_ratio
+    };
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
-        let (val, sign) = calculate_c(sqrt_ratio, sqrt_sell_ratio);
+        let (val, sign) = calculate_c(sqrt_ratio, sqrt_sell_ratio, false);
         let (expected_val, expected_sign) = expected;
 
         assert_eq!(val, expected_val);

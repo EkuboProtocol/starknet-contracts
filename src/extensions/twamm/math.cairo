@@ -71,7 +71,10 @@ pub fn calculate_next_sqrt_ratio(
         u256_sqrt(sale_ratio).into() * constants::X64_u256
     };
 
-    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio);
+    // round towards the current price
+    let round_up = sqrt_ratio > sqrt_sale_ratio;
+
+    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio, round_up);
 
     let sqrt_ratio_next = if (c.is_zero() || liquidity.is_zero()) {
         // current sale ratio is the price
@@ -85,7 +88,7 @@ pub fn calculate_next_sqrt_ratio(
 
         let l: u256 = liquidity.into();
         let exponent = div(
-            u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), false
+            u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), round_up
         );
 
         if (exponent.low > constants::EXPONENT_LIMIT || exponent.high.is_non_zero()) {
@@ -98,14 +101,14 @@ pub fn calculate_next_sqrt_ratio(
             let term2 = e + c;
 
             let scale: u256 = if (sign) {
-                muldiv(term2, constants::X128, term1, false)
+                muldiv(term2, constants::X128, term1, round_up)
                     .expect('NEXT_SQRT_RATIO_TERM2_OVERFLOW')
             } else {
-                muldiv(term1, constants::X128, term2, false)
+                muldiv(term1, constants::X128, term2, round_up)
                     .expect('NEXT_SQRT_RATIO_TERM1_OVERFLOW')
             };
 
-            muldiv(sqrt_sale_ratio, scale, constants::X128, false)
+            muldiv(sqrt_sale_ratio, scale, constants::X128, round_up)
                 .expect('NEXT_SQRT_RATIO_OVERFLOW')
         }
     };
@@ -114,7 +117,7 @@ pub fn calculate_next_sqrt_ratio(
 }
 
 // c = (sqrt_sale_ratio - sqrt_ratio) / (sqrt_sale_ratio + sqrt_ratio)
-pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
+pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256, round_up: bool) -> (u256, bool) {
     if (sqrt_ratio == sqrt_sale_ratio) {
         (0, false)
     } else if (sqrt_ratio.is_zero()) {
@@ -128,7 +131,7 @@ pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
         };
 
         (
-            muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, false)
+            muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, round_up)
                 .expect('C_MULDIV_OVERFLOW'),
             sign
         )

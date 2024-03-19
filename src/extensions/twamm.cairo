@@ -7,7 +7,7 @@ pub(crate) mod twamm_test;
 
 #[starknet::contract]
 pub mod TWAMM {
-    use core::cmp::{max};
+    use core::cmp::{max, min};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
@@ -31,7 +31,7 @@ pub mod TWAMM {
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{max_bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -785,6 +785,11 @@ pub mod TWAMM {
                     selector!("time_reward_rate"), storage_key
                 );
 
+                let bounds = max_bounds(MAX_TICK_SPACING);
+                let (min_sqrt_ratio, max_sqrt_ratio) = (
+                    tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper)
+                );
+
                 while last_virtual_order_time != current_time {
                     let mut delta = Zero::zero();
 
@@ -816,15 +821,49 @@ pub mod TWAMM {
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
+                            let mut liquidity = core.get_pool_liquidity(pool_key);
+
+                            // if current tick is outside usable range, use liquidity
+                            // and price at the closest usable tick
+                            let (sqrt_ratio, liquidity) = if (liquidity.is_zero()) {
+                                if (sqrt_ratio >= max_sqrt_ratio) {
+                                    (
+                                        max_sqrt_ratio,
+                                        core
+                                            .get_pool_tick_liquidity_delta(pool_key, bounds.upper)
+                                            .mag
+                                    )
+                                } else {
+                                    (
+                                        min_sqrt_ratio,
+                                        core
+                                            .get_pool_tick_liquidity_delta(pool_key, bounds.lower)
+                                            .mag
+                                    )
+                                }
+                            } else {
+                                (sqrt_ratio, liquidity)
+                            };
+
                             next_sqrt_ratio =
                                 Option::Some(
                                     calculate_next_sqrt_ratio(
                                         sqrt_ratio,
-                                        core.get_pool_liquidity(pool_key),
+                                        liquidity,
                                         token0_sale_rate,
                                         token1_sale_rate,
                                         time_elapsed
                                     )
+                                );
+
+                            // cap the next sqrt_ratio at min and max usable ticks
+                            next_sqrt_ratio =
+                                Option::Some(
+                                    if (next_sqrt_ratio.unwrap() > sqrt_ratio) {
+                                        min(next_sqrt_ratio.unwrap(), max_sqrt_ratio)
+                                    } else {
+                                        max(next_sqrt_ratio.unwrap(), min_sqrt_ratio)
+                                    }
                                 );
 
                             delta = core
@@ -850,9 +889,9 @@ pub mod TWAMM {
                         } else {
                             let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
                                 .is_non_zero() {
-                                (token0_amount, false, min_sqrt_ratio())
+                                (token0_amount, false, min_sqrt_ratio)
                             } else {
-                                (token1_amount, true, max_sqrt_ratio())
+                                (token1_amount, true, max_sqrt_ratio)
                             };
 
                             if sqrt_ratio_limit != sqrt_ratio {
