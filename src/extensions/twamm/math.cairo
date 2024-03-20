@@ -11,6 +11,7 @@ use core::integer::{u128_wide_mul, u256_sqrt};
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
 use ekubo::math::muldiv::{div, muldiv};
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 
 pub mod constants {
     pub const X32_u128: u128 = 0x100000000_u128;
@@ -117,6 +118,11 @@ pub fn calculate_next_sqrt_ratio(
                 .expect('NEXT_SQRT_RATIO_OVERFLOW')
         }
     };
+
+    // largest sqrt_sale_ratio possible is sqrt((2**256 / 2**28)) * 2**64
+    assert(sqrt_ratio_next < max_sqrt_ratio(), 'SQRT_RATIO_NEXT_TOO_HIGH');
+    // smallest sqrt_sale_ratio possible is sqrt(2**28 * 2**128)
+    assert(sqrt_ratio_next >= min_sqrt_ratio(), 'SQRT_RATIO_NEXT_TOO_LOW');
 
     sqrt_ratio_next
 }

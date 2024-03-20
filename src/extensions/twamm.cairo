@@ -31,7 +31,7 @@ pub mod TWAMM {
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio, max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{max_bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -852,14 +852,6 @@ pub mod TWAMM {
                                 time_elapsed
                             );
 
-                            // must cap the next calculated sqrt_ratio to avoid swapping outside of usable ticks
-                            let next_valid_sqrt_ratio =
-                                if (next_calculated_sqrt_ratio > current_sqrt_ratio) {
-                                min(next_calculated_sqrt_ratio, MAX_SQRT_RATIO)
-                            } else {
-                                max(next_calculated_sqrt_ratio, MIN_SQRT_RATIO)
-                            };
-
                             delta = core
                                 .swap(
                                     pool_key,
@@ -867,13 +859,13 @@ pub mod TWAMM {
                                         amount: i129 {
                                             mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                         },
-                                        is_token1: current_sqrt_ratio >= next_valid_sqrt_ratio,
-                                        sqrt_ratio_limit: next_valid_sqrt_ratio,
+                                        is_token1: current_sqrt_ratio >= next_calculated_sqrt_ratio,
+                                        sqrt_ratio_limit: next_calculated_sqrt_ratio,
                                         skip_ahead: 0
                                     }
                                 );
 
-                            next_sqrt_ratio = Option::Some(next_valid_sqrt_ratio);
+                            next_sqrt_ratio = Option::Some(next_calculated_sqrt_ratio);
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
@@ -885,9 +877,9 @@ pub mod TWAMM {
                         } else {
                             let (amount, is_token1, sqrt_ratio_limit) = if token0_amount
                                 .is_non_zero() {
-                                (token0_amount, false, MIN_SQRT_RATIO)
+                                (token0_amount, false, min_sqrt_ratio())
                             } else {
-                                (token1_amount, true, MAX_SQRT_RATIO)
+                                (token1_amount, true, max_sqrt_ratio())
                             };
 
                             if sqrt_ratio_limit != current_sqrt_ratio {
