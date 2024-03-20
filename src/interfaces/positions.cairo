@@ -22,6 +22,14 @@ pub struct GetTokenInfoRequest {
     pub bounds: Bounds
 }
 
+#[derive(Copy, Drop, Serde)]
+pub struct IncreaseSellAmountNowParams {
+    pub sell_token: ContractAddress,
+    pub buy_token: ContractAddress,
+    pub fee: u128,
+    pub duration: u32,
+}
+
 #[starknet::interface]
 pub trait IPositions<TStorage> {
     // Returns the address of the NFT contract that represents ownership of a position
@@ -133,7 +141,7 @@ pub trait IPositions<TStorage> {
     // with unknown before/after behavior.
     fn get_pool_price(self: @TStorage, pool_key: PoolKey) -> PoolPrice;
 
-    // Mint a twamm position and increase sold amount.
+    // Mint a TWAMM order and increase sold amount.
     fn mint_and_increase_sell_amount(
         ref self: TStorage, order_key: OrderKey, amount: u128
     ) -> (u64, u128);
@@ -141,7 +149,7 @@ pub trait IPositions<TStorage> {
     // Increase the sell amount of the last minted NFT
     fn increase_sell_amount_last(ref self: TStorage, order_key: OrderKey, amount: u128) -> u128;
 
-    // Increase sold amount on a twamm position.
+    // Increase sold amount on a TWAMM order
     fn increase_sell_amount(ref self: TStorage, id: u64, order_key: OrderKey, amount: u128) -> u128;
 
     // Decrease sold amount on a twamm position.
@@ -149,4 +157,22 @@ pub trait IPositions<TStorage> {
 
     // Withdraws proceeds from a twamm position.
     fn withdraw_proceeds_from_sale(ref self: TStorage, id: u64, order_key: OrderKey);
+
+    // Mint a TWAMM order and starts it now
+    // The duration is approximate, it may be shorter by up to 16 seconds
+    fn mint_and_sell_now(
+        ref self: TStorage, sell_params: IncreaseSellAmountNowParams, amount: u128,
+    ) -> (u64, u128);
+
+    // Increase the sell amount of the last minted NFT starting now
+    // The duration is approximate, it may be shorter by up to 16 seconds
+    fn increase_sell_amount_now_last(
+        ref self: TStorage, sell_params: IncreaseSellAmountNowParams, amount: u128,
+    ) -> u128;
+
+    // Increase the sell amount of the specified token ID starting now
+    // The duration is approximate, it may be shorter by up to 16 seconds
+    fn increase_sell_amount_now(
+        ref self: TStorage, id: u64, sell_params: IncreaseSellAmountNowParams, amount: u128,
+    ) -> u128;
 }

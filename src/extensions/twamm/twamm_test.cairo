@@ -3705,7 +3705,7 @@ mod MinMaxSqrtRatio {
         OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
         PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
         ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0,  liquidity_delta_to_amount_delta,
+        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta,
         SaleRateState, StateKey, max_tick, min_tick, MAX_TICK_MAGNITUDE,
         calculate_amount_from_sale_rate, constants, calculate_next_sqrt_ratio
     };
@@ -3778,9 +3778,10 @@ mod MinMaxSqrtRatio {
         // check sqrt_ratio_after is the expected next_sqrt_price
         let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
             constants::MAX_BOUNDS_MIN_SQRT_RATIO,
-            core.get_pool_tick_liquidity_net(
-                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
-            ),
+            core
+                .get_pool_tick_liquidity_net(
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
             (order_end_time - timestamp).try_into().expect('TIME')
@@ -3856,9 +3857,10 @@ mod MinMaxSqrtRatio {
         // check sqrt_ratio_after is the expected next_sqrt_price
         let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
             constants::MAX_BOUNDS_MIN_SQRT_RATIO,
-            core.get_pool_tick_liquidity_net(
-                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
-            ),
+            core
+                .get_pool_tick_liquidity_net(
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
             (order_end_time - timestamp).try_into().expect('TIME')
@@ -3933,13 +3935,13 @@ mod MinMaxSqrtRatio {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-
         // check sqrt_ratio_after is the expected next_sqrt_price
         let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
             constants::MAX_BOUNDS_MAX_SQRT_RATIO,
-            core.get_pool_tick_liquidity_net(
-                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
-            ),
+            core
+                .get_pool_tick_liquidity_net(
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
             (order_end_time - timestamp).try_into().expect('TIME')
@@ -4012,13 +4014,13 @@ mod MinMaxSqrtRatio {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-
         // check sqrt_ratio_after is the expected next_sqrt_price
         let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
             constants::MAX_BOUNDS_MAX_SQRT_RATIO,
-            core.get_pool_tick_liquidity_net(
-                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
-            ),
+            core
+                .get_pool_tick_liquidity_net(
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
             (order_end_time - timestamp).try_into().expect('TIME')
@@ -4081,8 +4083,7 @@ mod MinMaxSqrtRatio {
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
-            .unwrap();
+        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
         assert_eq!(token0_reward_rate, 1267650600228229401496703205376);
@@ -4178,7 +4179,9 @@ mod MinMaxSqrtRatio {
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
 
         // largest sqrt_sale_ratio possible is ~sqrt((2**256 / 2**28)) * 2**64
-        assert_eq!(swapped_event.sqrt_ratio_after, 383123885216472214589586756787275046003037049542672384);
+        assert_eq!(
+            swapped_event.sqrt_ratio_after, 383123885216472214589586756787275046003037049542672384
+        );
     }
 
     #[test]
