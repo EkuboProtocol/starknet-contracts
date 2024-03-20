@@ -2,7 +2,7 @@ use ekubo::types::i129::{i129, i129Trait};
 use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress, ClassHash};
 
-#[derive(Drop, Copy, Serde, Hash)]
+#[derive(Drop, Copy, Serde, Hash, PartialEq, Debug)]
 pub struct OrderKey {
     pub sell_token: ContractAddress,
     pub buy_token: ContractAddress,

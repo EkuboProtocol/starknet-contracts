@@ -3,6 +3,7 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::extensions::interfaces::twamm::{OrderKey};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
@@ -10,6 +11,7 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
     IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest,
+    IncreaseSellAmountNowParams
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
@@ -17,7 +19,7 @@ use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::positions::{Positions};
+use ekubo::positions::{Positions, Positions::IncreaseSellAmountNowParamsIntoOrderKeyImpl};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, swap, IPositionsDispatcherIntoILockerDispatcher,
@@ -26,7 +28,7 @@ use ekubo::tests::helper::{
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use starknet::testing::{set_contract_address, pop_log};
+use starknet::testing::{set_contract_address, pop_log, set_block_timestamp};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 
 #[test]
@@ -123,6 +125,77 @@ fn test_deposit_fails_min_liquidity() {
 }
 
 #[test]
+fn test_increase_sell_amount_now_params_into_order_key() {
+    assert_eq!(
+        IncreaseSellAmountNowParams {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            duration: 16,
+        }
+            .into(),
+        OrderKey {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            start_time: 0,
+            end_time: 16
+        }
+    );
+    set_block_timestamp(1);
+    assert_eq!(
+        IncreaseSellAmountNowParams {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            duration: 16,
+        }
+            .into(),
+        OrderKey {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            start_time: 0,
+            end_time: 16
+        }
+    );
+    set_block_timestamp(15);
+    assert_eq!(
+        IncreaseSellAmountNowParams {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            duration: 16,
+        }
+            .into(),
+        OrderKey {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            start_time: 0,
+            end_time: 16
+        }
+    );
+    set_block_timestamp(16);
+    assert_eq!(
+        IncreaseSellAmountNowParams {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            duration: 16,
+        }
+            .into(),
+        OrderKey {
+            sell_token: contract_address_const::<1>(),
+            buy_token: contract_address_const::<2>(),
+            fee: 3,
+            start_time: 16,
+            end_time: 32
+        }
+    );
+}
+
+#[test]
 fn test_deposit_liquidity_concentrated() {
     let caller = contract_address_const::<1>();
     set_contract_address(caller);
@@ -163,6 +236,7 @@ fn test_deposit_liquidity_concentrated() {
 
     assert(liquidity == 200050104166, 'liquidity');
 }
+
 
 #[test]
 fn test_deposit_liquidity_concentrated_mint_and_deposit() {
