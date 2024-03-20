@@ -3705,13 +3705,15 @@ mod MinMaxSqrtRatio {
         OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
         PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
         ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta,
+        min_sqrt_ratio, next_sqrt_ratio_from_amount0,  liquidity_delta_to_amount_delta,
         SaleRateState, StateKey, max_tick, min_tick, MAX_TICK_MAGNITUDE,
-        calculate_amount_from_sale_rate, constants
+        calculate_amount_from_sale_rate, constants, calculate_next_sqrt_ratio
     };
 
     #[test]
     fn test_place_orders_lower_bound_tick() {
+        // check swap price limit is min usable price
+
         let bounds = max_bounds(MAX_TICK_SPACING);
 
         let mut d: Deployer = Default::default();
@@ -3740,7 +3742,7 @@ mod MinMaxSqrtRatio {
         let order_end_time = timestamp + SIXTEEN_POW_ONE;
 
         let amount = 1000000000000;
-        let (order1_id, order1_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token0,
@@ -3751,10 +3753,8 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (order2_id, order2_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token1,
@@ -3765,84 +3765,35 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-
-        // no trades have been executed
-        assert_eq!(token0_reward_rate, 0x0);
-        assert_eq!(token1_reward_rate, 0x0);
+        let sale_rate_state: SaleRateState = twamm
+            .get_sale_rate_and_last_virtual_order_time(state_key);
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let sale_rate_state: SaleRateState = twamm
-            .get_sale_rate_and_last_virtual_order_time(state_key);
-        assert_eq!(sale_rate_state.token0_sale_rate, 0);
-        assert_eq!(sale_rate_state.token1_sale_rate, 0);
-        assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
-
-        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
-            .unwrap();
-
-        assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
-        assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
-        assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
-        assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
+        // check sqrt_ratio_after is the expected next_sqrt_price
+        let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
+            constants::MAX_BOUNDS_MIN_SQRT_RATIO,
+            core.get_pool_tick_liquidity_net(
+                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+            ),
+            sale_rate_state.token0_sale_rate,
+            sale_rate_state.token1_sale_rate,
+            (order_end_time - timestamp).try_into().expect('TIME')
+        );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-
-        // sqrt_ratio = (sqrt(1.000001)^(-88368108)) * 2**128 ~= 2.2027 × 10^19
-        // time window           = 16 sec
-        // token0 sale-rate      = 0.000001 / 16 ~= 0.0000000625 per sec
-        // token0 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // token1 sale-rate      = 0.000001 / 16 ~= 5,019.6078432256 per sec
-        // token1 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // Using twamm math to calculate the next price based on sell-rates:
-        // next price 0.8334388:1 (sqrt_ratio ~= 0.9129287455630423)
-        // trade token1 for token0 up to the next price
-        // token0 spent amount ~= 0.000001
-        // token1 bought amount ~= 9.99x10^12
-        // token0 reward rate = (9.99x10^12 - 0.000001) / 0.0000000625 = 1.59 × 10^20
-        // token1 reward rate = (0.000001 - (590956666368 / 10**18)) / 0.0000000625 = 6.5446933
-        assert_eq!(swapped_event.delta.amount0.sign, true);
-        assert_eq!(swapped_event.delta.amount0.mag, 9999999999989371178004373540001);
-        assert_eq!(swapped_event.delta.amount1.sign, false);
-        assert_eq!(swapped_event.delta.amount1.mag, 590956666368);
-
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-        assert_eq!(token0_reward_rate, 12676506002268820383652207764911944230556782379042);
-        assert_eq!(token1_reward_rate, 518524027397960694421047649384);
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 6.5446933 * 0.0000000625
-        //        ~= 4.0904 × 10^-7
-        assert_eq!(event.amount, 409043333631);
-
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 1.59 × 10^20 * 0.0000000625
-        //        ~= 9.9375 × 10^12 tokens
-        assert_eq!(event.amount, 9999999999989371179004373540000);
+        assert_eq!(swapped_event.sqrt_ratio_after, expected_sqrt_ratio_after);
     }
 
     #[test]
     fn test_place_orders_min_tick() {
+        // check swap price limit is min usable price
+
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -3869,7 +3820,7 @@ mod MinMaxSqrtRatio {
         let order_end_time = timestamp + SIXTEEN_POW_ONE;
 
         let amount = 1000000000000;
-        let (order1_id, order1_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token0,
@@ -3880,10 +3831,8 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (order2_id, order2_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token1,
@@ -3894,84 +3843,35 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-
-        // no trades have been executed
-        assert_eq!(token0_reward_rate, 0x0);
-        assert_eq!(token1_reward_rate, 0x0);
+        let sale_rate_state: SaleRateState = twamm
+            .get_sale_rate_and_last_virtual_order_time(state_key);
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let sale_rate_state: SaleRateState = twamm
-            .get_sale_rate_and_last_virtual_order_time(state_key);
-        assert_eq!(sale_rate_state.token0_sale_rate, 0);
-        assert_eq!(sale_rate_state.token1_sale_rate, 0);
-        assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
-
-        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
-            .unwrap();
-
-        assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
-        assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
-        assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
-        assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
+        // check sqrt_ratio_after is the expected next_sqrt_price
+        let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
+            constants::MAX_BOUNDS_MIN_SQRT_RATIO,
+            core.get_pool_tick_liquidity_net(
+                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+            ),
+            sale_rate_state.token0_sale_rate,
+            sale_rate_state.token1_sale_rate,
+            (order_end_time - timestamp).try_into().expect('TIME')
+        );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-
-        // sqrt_ratio = (sqrt(1.000001)^(-88368108)) * 2**128 ~= 2.2027 × 10^19
-        // time window           = 16 sec
-        // token0 sale-rate      = 0.000001 / 16 ~= 0.0000000625 per sec
-        // token0 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // token1 sale-rate      = 0.000001 / 16 ~= 5,019.6078432256 per sec
-        // token1 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // Using twamm math to calculate the next price based on sell-rates:
-        // next price 0.8334388:1 (sqrt_ratio ~= 0.9129287455630423)
-        // trade token1 for token0 up to the next price
-        // token0 spent amount ~= 0.000001
-        // token1 bought amount ~= 9.99x10^12
-        // token0 reward rate = (9.99x10^12 - 0.000001) / 0.0000000625 = 1.59 × 10^20
-        // token1 reward rate = (0.000001 - (590956666368 / 10**18)) / 0.0000000625 = 6.5446933
-        assert_eq!(swapped_event.delta.amount0.sign, true);
-        assert_eq!(swapped_event.delta.amount0.mag, 9999999999989371178004373540001);
-        assert_eq!(swapped_event.delta.amount1.sign, false);
-        assert_eq!(swapped_event.delta.amount1.mag, 590956666368);
-
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-        assert_eq!(token0_reward_rate, 12676506002268820383652207764911944230556782379042);
-        assert_eq!(token1_reward_rate, 518524027397960694421047649384);
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 6.5446933 * 0.0000000625
-        //        ~= 4.0904 × 10^-7
-        assert_eq!(event.amount, 409043333631);
-
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 1.59 × 10^20 * 0.0000000625
-        //        ~= 9.9375 × 10^12 tokens
-        assert_eq!(event.amount, 9999999999989371179004373540000);
+        assert_eq!(swapped_event.sqrt_ratio_after, expected_sqrt_ratio_after);
     }
 
     #[test]
     fn test_place_orders_upper_bound_tick() {
+        // check swap price limit is max usable price
+
         let bounds = max_bounds(MAX_TICK_SPACING);
 
         let mut d: Deployer = Default::default();
@@ -4000,7 +3900,7 @@ mod MinMaxSqrtRatio {
         let order_end_time = timestamp + SIXTEEN_POW_ONE;
 
         let amount = 1000000000000;
-        let (order1_id, order1_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token0,
@@ -4011,10 +3911,8 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (order2_id, order2_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token1,
@@ -4025,84 +3923,36 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-
-        // no trades have been executed
-        assert_eq!(token0_reward_rate, 0x0);
-        assert_eq!(token1_reward_rate, 0x0);
+        let sale_rate_state: SaleRateState = twamm
+            .get_sale_rate_and_last_virtual_order_time(state_key);
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let sale_rate_state: SaleRateState = twamm
-            .get_sale_rate_and_last_virtual_order_time(state_key);
-        assert_eq!(sale_rate_state.token0_sale_rate, 0);
-        assert_eq!(sale_rate_state.token1_sale_rate, 0);
-        assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
-        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
-            .unwrap();
-
-        assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
-        assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
-        assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
-        assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
+        // check sqrt_ratio_after is the expected next_sqrt_price
+        let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
+            constants::MAX_BOUNDS_MAX_SQRT_RATIO,
+            core.get_pool_tick_liquidity_net(
+                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+            ),
+            sale_rate_state.token0_sale_rate,
+            sale_rate_state.token1_sale_rate,
+            (order_end_time - timestamp).try_into().expect('TIME')
+        );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-
-        // sqrt_ratio = sqrt(1.000001)^(88368108) * 2**128 ~= 5.2567 × 10^57
-        // time window           = 16 sec
-        // token0 sale-rate      = 0.000001 / 16 ~= 0.0000000625 per sec
-        // token0 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // token1 sale-rate      = 0.000001 / 16 ~= 5,019.6078432256 per sec
-        // token1 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // Using twamm math to calculate the next price based on sell-rates:
-        // next price 1.19984801121:1 (sqrt_ratio ~= 1.09537573974)
-        // trade token1 for token0 up to the next price
-        // token0 bought amount ~= 9.99x10^12
-        // token1 spent amount ~= 0.000001
-        // token0 reward rate = (0.000001 - (590956666367 / 10**18)) / 0.0000000625 = 6.5446933
-        // token1 reward rate = (9.99x10^12 - 0.000001) / 0.0000000625 = 1.59 × 10^20
-        assert_eq!(swapped_event.delta.amount0.sign, false);
-        assert_eq!(swapped_event.delta.amount0.mag, 590956666367);
-        assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 9999999999989371178004373540001);
-
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-        assert_eq!(token0_reward_rate, 518524027399228345021275878786);
-        assert_eq!(token1_reward_rate, 12676506002268820383652207764911944230556782379042);
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 1.59 × 10^20 * 0.0000000625
-        //        ~= 9.9375 × 10^12 tokens
-        assert_eq!(event.amount, 9999999999989371179004373540000);
-
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 6.5446933 * 0.0000000625
-        //        ~= 4.0904 × 10^-7
-        assert_eq!(event.amount, 409043333632);
+        assert_eq!(swapped_event.sqrt_ratio_after, expected_sqrt_ratio_after);
     }
 
     #[test]
     fn test_place_orders_max_tick() {
+        // check swap price limit is max usable price
+
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -4129,7 +3979,7 @@ mod MinMaxSqrtRatio {
         let order_end_time = timestamp + SIXTEEN_POW_ONE;
 
         let amount = 1000000000000;
-        let (order1_id, order1_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token0,
@@ -4140,10 +3990,8 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
-        let (order2_id, order2_key, _) = place_order(
+        place_order(
             positions,
             get_contract_address(),
             setup.token1,
@@ -4154,84 +4002,36 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-
-        // no trades have been executed
-        assert_eq!(token0_reward_rate, 0x0);
-        assert_eq!(token1_reward_rate, 0x0);
+        let sale_rate_state: SaleRateState = twamm
+            .get_sale_rate_and_last_virtual_order_time(state_key);
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let sale_rate_state: SaleRateState = twamm
-            .get_sale_rate_and_last_virtual_order_time(state_key);
-        assert_eq!(sale_rate_state.token0_sale_rate, 0);
-        assert_eq!(sale_rate_state.token1_sale_rate, 0);
-        assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
-        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
-            .unwrap();
-
-        assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
-        assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
-        assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
-        assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
+        // check sqrt_ratio_after is the expected next_sqrt_price
+        let expected_sqrt_ratio_after = calculate_next_sqrt_ratio(
+            constants::MAX_BOUNDS_MAX_SQRT_RATIO,
+            core.get_pool_tick_liquidity_net(
+                setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+            ),
+            sale_rate_state.token0_sale_rate,
+            sale_rate_state.token1_sale_rate,
+            (order_end_time - timestamp).try_into().expect('TIME')
+        );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-
-        // sqrt_ratio = sqrt(1.000001)^(88368108) * 2**128 ~= 5.2567 × 10^57
-        // time window           = 16 sec
-        // token0 sale-rate      = 0.000001 / 16 ~= 0.0000000625 per sec
-        // token0 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // token1 sale-rate      = 0.000001 / 16 ~= 5,019.6078432256 per sec
-        // token1 sold-amount   ~= 16 * 0.0000000625 = 0.000001 tokens
-        // Using twamm math to calculate the next price based on sell-rates:
-        // next price 1.19984801121:1 (sqrt_ratio ~= 1.09537573974)
-        // trade token1 for token0 up to the next price
-        // token0 bought amount ~= 9.99x10^12
-        // token1 spent amount ~= 0.000001
-        // token0 reward rate = (0.000001 - (590956666367 / 10**18)) / 0.0000000625 = 6.5446933
-        // token1 reward rate = (9.99x10^12 - 0.000001) / 0.0000000625 = 1.59 × 10^20
-        assert_eq!(swapped_event.delta.amount0.sign, false);
-        assert_eq!(swapped_event.delta.amount0.mag, 590956666367);
-        assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 9999999999989371178004373540001);
-
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-        assert_eq!(token0_reward_rate, 518524027399228345021275878786);
-        assert_eq!(token1_reward_rate, 12676506002268820383652207764911944230556782379042);
-
-        // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 1.59 × 10^20 * 0.0000000625
-        //        ~= 9.9375 × 10^12 tokens
-        assert_eq!(event.amount, 9999999999989371179004373540000);
-
-        // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
-
-        // amount  = reward_rate * sale_rate
-        //         = 6.5446933 * 0.0000000625
-        //        ~= 4.0904 × 10^-7
-        assert_eq!(event.amount, 409043333632);
+        assert_eq!(swapped_event.sqrt_ratio_after, expected_sqrt_ratio_after);
     }
 
     #[test]
     fn test_place_orders_zero_liquidity() {
+        // zero liquidity, with usable starting tick
+
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -4243,8 +4043,6 @@ mod MinMaxSqrtRatio {
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0
         );
-
-        let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -4262,7 +4060,6 @@ mod MinMaxSqrtRatio {
             order_end_time,
             amount
         );
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
@@ -4276,38 +4073,16 @@ mod MinMaxSqrtRatio {
             order_end_time,
             amount
         );
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
-
-        let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
-
-        // no trades have been executed
-        assert_eq!(token0_reward_rate, 0x0);
-        assert_eq!(token1_reward_rate, 0x0);
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
 
-        let sale_rate_state: SaleRateState = twamm
-            .get_sale_rate_and_last_virtual_order_time(state_key);
-        assert_eq!(sale_rate_state.token0_sale_rate, 0);
-        assert_eq!(sale_rate_state.token1_sale_rate, 0);
-        assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
-
-        let virtual_orders_executed_event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
+        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address)
             .unwrap();
-
-        assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
-        assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
-        assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
-        assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
-        assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
         let (token0_reward_rate, token1_reward_rate) = twamm.get_reward_rate(state_key);
         assert_eq!(token0_reward_rate, 1267650600228229401496703205376);
@@ -4315,7 +4090,6 @@ mod MinMaxSqrtRatio {
 
         // Withdraw proceeds for order1
         positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // 1:1 price
@@ -4323,7 +4097,6 @@ mod MinMaxSqrtRatio {
 
         // Withdraw proceeds for order2
         positions.withdraw_proceeds_from_sale(order2_id, order2_key);
-        let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // 1:1 price
@@ -4332,6 +4105,8 @@ mod MinMaxSqrtRatio {
 
     #[test]
     fn test_place_orders_max_calculated_next_price() {
+        // check swap price limit at max_sale_rate / min_sale_rate
+
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -4345,6 +4120,7 @@ mod MinMaxSqrtRatio {
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -4365,8 +4141,6 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         place_order(
             positions,
@@ -4379,7 +4153,6 @@ mod MinMaxSqrtRatio {
             amount * 2
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let order_key = OrderKey {
             sell_token: setup.token0.contract_address,
@@ -4395,17 +4168,23 @@ mod MinMaxSqrtRatio {
         setup.token0.increase_balance(twamm.contract_address, amount);
         twamm.update_order(0, order_key, i129 { mag: sale_rate, sign: false });
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+
+        // largest sqrt_sale_ratio possible is ~sqrt((2**256 / 2**28)) * 2**64
+        assert_eq!(swapped_event.sqrt_ratio_after, 383123885216472214589586756787275046003037049542672384);
     }
 
     #[test]
     fn test_place_orders_min_calculated_next_price() {
+        // check swap price limit at min_sale_rate / max_sale_rate
+
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -4419,6 +4198,7 @@ mod MinMaxSqrtRatio {
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -4439,8 +4219,6 @@ mod MinMaxSqrtRatio {
             amount
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         place_order(
             positions,
@@ -4453,7 +4231,6 @@ mod MinMaxSqrtRatio {
             amount * 2
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let order_key = OrderKey {
             sell_token: setup.token1.contract_address,
@@ -4469,13 +4246,17 @@ mod MinMaxSqrtRatio {
         setup.token1.increase_balance(twamm.contract_address, amount);
         twamm.update_order(0, order_key, i129 { mag: sale_rate, sign: false });
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
-        let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
         let execution_timestamp = order_end_time;
         set_block_timestamp(execution_timestamp);
         twamm.execute_virtual_orders(state_key);
+
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+
+        // smallest sqrt_sale_ratio possible is sqrt(2**28 * 2**128)
+        assert_eq!(swapped_event.sqrt_ratio_after, 302231454903657293676544);
     }
 }
 
