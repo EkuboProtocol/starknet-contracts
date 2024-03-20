@@ -19,7 +19,7 @@ use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::positions::{Positions, Positions::IncreaseSellAmountNowParamsToOrderKeyImpl};
+use ekubo::positions::{Positions, Positions::IncreaseSellAmountNowParamsIntoOrderKeyImpl};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, swap, IPositionsDispatcherIntoILockerDispatcher,
@@ -125,7 +125,7 @@ fn test_deposit_fails_min_liquidity() {
 }
 
 #[test]
-fn test_increase_sell_amount_now_params_to_order_key() {
+fn test_increase_sell_amount_now_params_into_order_key() {
     assert_eq!(
         IncreaseSellAmountNowParams {
             sell_token: contract_address_const::<1>(),
@@ -133,7 +133,7 @@ fn test_increase_sell_amount_now_params_to_order_key() {
             fee: 3,
             duration: 16,
         }
-            .to_order_key(),
+            .into(),
         OrderKey {
             sell_token: contract_address_const::<1>(),
             buy_token: contract_address_const::<2>(),
@@ -150,7 +150,7 @@ fn test_increase_sell_amount_now_params_to_order_key() {
             fee: 3,
             duration: 16,
         }
-            .to_order_key(),
+            .into(),
         OrderKey {
             sell_token: contract_address_const::<1>(),
             buy_token: contract_address_const::<2>(),
@@ -167,7 +167,7 @@ fn test_increase_sell_amount_now_params_to_order_key() {
             fee: 3,
             duration: 16,
         }
-            .to_order_key(),
+            .into(),
         OrderKey {
             sell_token: contract_address_const::<1>(),
             buy_token: contract_address_const::<2>(),
@@ -184,7 +184,7 @@ fn test_increase_sell_amount_now_params_to_order_key() {
             fee: 3,
             duration: 16,
         }
-            .to_order_key(),
+            .into(),
         OrderKey {
             sell_token: contract_address_const::<1>(),
             buy_token: contract_address_const::<2>(),

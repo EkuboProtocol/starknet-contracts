@@ -293,9 +293,10 @@ pub mod Positions {
         }
     }
 
-    #[generate_trait]
-    pub(crate) impl IncreaseSellAmountNowParamsToOrderKeyImpl of IncreaseSellAmountNowParamsToOrderKeyTrait {
-        fn to_order_key(self: IncreaseSellAmountNowParams) -> OrderKey {
+    pub(crate) impl IncreaseSellAmountNowParamsIntoOrderKeyImpl of Into<
+        IncreaseSellAmountNowParams, OrderKey
+    > {
+        fn into(self: IncreaseSellAmountNowParams) -> OrderKey {
             let now = get_block_timestamp();
             let start_time = now - (now % TIME_SPACING_SIZE);
             let end_time = start_time + self.duration.into();
@@ -622,13 +623,13 @@ pub mod Positions {
         fn mint_and_sell_now(
             ref self: ContractState, sell_params: IncreaseSellAmountNowParams, amount: u128,
         ) -> (u64, u128) {
-            self.mint_and_increase_sell_amount(sell_params.to_order_key(), amount)
+            self.mint_and_increase_sell_amount(sell_params.into(), amount)
         }
 
         fn increase_sell_amount_now_last(
             ref self: ContractState, sell_params: IncreaseSellAmountNowParams, amount: u128,
         ) -> u128 {
-            self.increase_sell_amount_last(sell_params.to_order_key(), amount)
+            self.increase_sell_amount_last(sell_params.into(), amount)
         }
 
         fn increase_sell_amount_now(
@@ -637,7 +638,7 @@ pub mod Positions {
             sell_params: IncreaseSellAmountNowParams,
             amount: u128,
         ) -> u128 {
-            self.increase_sell_amount(id, sell_params.to_order_key(), amount)
+            self.increase_sell_amount(id, sell_params.into(), amount)
         }
     }
 }
