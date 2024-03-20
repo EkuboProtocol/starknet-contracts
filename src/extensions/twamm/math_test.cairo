@@ -358,8 +358,8 @@ mod MaxPrices {
     #[test]
     fn test_max_min_tick() {
         let bounds = max_bounds(MAX_TICK_SPACING);
-        assert_eq!(bounds.lower, i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: true },);
-        assert_eq!(bounds.upper, i129 { mag: constants::MAX_TICK_MAGNITUDE, sign: false },);
+        assert_eq!(bounds.lower, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },);
+        assert_eq!(bounds.upper, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: false },);
     }
 
     #[test]
@@ -369,8 +369,8 @@ mod MaxPrices {
             tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper)
         );
 
-        assert_eq!(min_sqrt_ratio, constants::MIN_SQRT_RATIO);
-        assert_eq!(max_sqrt_ratio, constants::MAX_SQRT_RATIO);
+        assert_eq!(min_sqrt_ratio, constants::MAX_BOUNDS_MIN_SQRT_RATIO);
+        assert_eq!(max_sqrt_ratio, constants::MAX_BOUNDS_MAX_SQRT_RATIO);
     }
 }
 

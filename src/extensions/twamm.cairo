@@ -31,7 +31,7 @@ pub mod TWAMM {
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio, max_sqrt_ratio, min_sqrt_ratio};
+    use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{max_bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -45,7 +45,7 @@ pub mod TWAMM {
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
         calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate,
-        constants::{MAX_TICK_MAGNITUDE, MIN_SQRT_RATIO, MAX_SQRT_RATIO}
+        constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
     };
 
     #[derive(Drop, Copy, Serde)]
@@ -796,7 +796,7 @@ pub mod TWAMM {
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let mut current_sqrt_ratio = match next_sqrt_ratio {
+                        let current_sqrt_ratio = match next_sqrt_ratio {
                             Option::Some(current_sqrt_ratio) => { current_sqrt_ratio },
                             Option::None => {
                                 let price = core.get_pool_price(pool_key);
@@ -817,32 +817,17 @@ pub mod TWAMM {
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
-                            let mut current_liquidity = core.get_pool_liquidity(pool_key);
-
                             // must use sqrt_ratio and liquidity at the closest usable tick, since swaps
                             // on this pool could push the price out of range and liquidity to zero
-                            let (sqrt_ratio, liquidity) =
-                                if (current_sqrt_ratio >= MAX_SQRT_RATIO) {
-                                (
-                                    MAX_SQRT_RATIO,
-                                    core
-                                        .get_pool_tick_liquidity_delta(
-                                            pool_key, i129 { mag: MAX_TICK_MAGNITUDE, sign: false }
-                                        )
-                                        .mag
-                                )
-                            } else if (current_sqrt_ratio < MIN_SQRT_RATIO) {
-                                (
-                                    MIN_SQRT_RATIO,
-                                    core
-                                        .get_pool_tick_liquidity_delta(
-                                            pool_key, i129 { mag: MAX_TICK_MAGNITUDE, sign: true }
-                                        )
-                                        .mag
-                                )
-                            } else {
-                                (current_sqrt_ratio, current_liquidity)
-                            };
+                            let sqrt_ratio = max(
+                                MAX_BOUNDS_MIN_SQRT_RATIO,
+                                min(MAX_BOUNDS_MAX_SQRT_RATIO, current_sqrt_ratio)
+                            );
+
+                            let liquidity = core
+                                .get_pool_tick_liquidity_net(
+                                    pool_key, i129 { mag: MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                                );
 
                             let calculated_next_sqrt_ratio = calculate_next_sqrt_ratio(
                                 sqrt_ratio,
