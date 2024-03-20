@@ -844,7 +844,7 @@ pub mod TWAMM {
                                 (current_sqrt_ratio, current_liquidity)
                             };
 
-                            let next_calculated_sqrt_ratio = calculate_next_sqrt_ratio(
+                            let calculated_next_sqrt_ratio = calculate_next_sqrt_ratio(
                                 sqrt_ratio,
                                 liquidity,
                                 token0_sale_rate,
@@ -859,13 +859,13 @@ pub mod TWAMM {
                                         amount: i129 {
                                             mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                         },
-                                        is_token1: current_sqrt_ratio >= next_calculated_sqrt_ratio,
-                                        sqrt_ratio_limit: next_calculated_sqrt_ratio,
+                                        is_token1: current_sqrt_ratio >= calculated_next_sqrt_ratio,
+                                        sqrt_ratio_limit: calculated_next_sqrt_ratio,
                                         skip_ahead: 0
                                     }
                                 );
 
-                            next_sqrt_ratio = Option::Some(next_calculated_sqrt_ratio);
+                            next_sqrt_ratio = Option::Some(calculated_next_sqrt_ratio);
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
