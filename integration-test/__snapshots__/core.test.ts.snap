@@ -3301,9 +3301,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 823,
-    "steps": 19544,
+    "pedersen_builtin_applications": 64,
+    "range_check_builtin_applications": 830,
+    "steps": 19662,
   },
 }
 `;
@@ -3349,9 +3349,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 847,
-    "steps": 19985,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 854,
+    "steps": 20103,
   },
 }
 `;
@@ -3606,9 +3606,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 2484,
-    "steps": 35111,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 2493,
+    "steps": 35231,
   },
 }
 `;
@@ -3654,9 +3654,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 823,
-    "steps": 19864,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 832,
+    "steps": 19983,
   },
 }
 `;
@@ -3719,9 +3719,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 64,
-    "range_check_builtin_applications": 2445,
-    "steps": 30058,
+    "pedersen_builtin_applications": 65,
+    "range_check_builtin_applications": 2452,
+    "steps": 30176,
   },
 }
 `;
@@ -3767,9 +3767,9 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 847,
-    "steps": 19985,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 854,
+    "steps": 20103,
   },
 }
 `;
@@ -4317,9 +4317,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 823,
-    "steps": 19544,
+    "pedersen_builtin_applications": 64,
+    "range_check_builtin_applications": 830,
+    "steps": 19662,
   },
 }
 `;
@@ -4365,9 +4365,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 847,
-    "steps": 19985,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 854,
+    "steps": 20103,
   },
 }
 `;
@@ -4469,9 +4469,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1317,
-    "steps": 32429,
+    "pedersen_builtin_applications": 105,
+    "range_check_builtin_applications": 1324,
+    "steps": 32547,
   },
 }
 `;
@@ -4537,9 +4537,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1341,
-    "steps": 32870,
+    "pedersen_builtin_applications": 107,
+    "range_check_builtin_applications": 1348,
+    "steps": 32988,
   },
 }
 `;
@@ -4642,9 +4642,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 6383,
-    "steps": 88085,
+    "pedersen_builtin_applications": 142,
+    "range_check_builtin_applications": 6391,
+    "steps": 88204,
   },
 }
 `;
@@ -4710,9 +4710,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 143,
-    "range_check_builtin_applications": 6410,
-    "steps": 88530,
+    "pedersen_builtin_applications": 144,
+    "range_check_builtin_applications": 6418,
+    "steps": 88649,
   },
 }
 `;
@@ -4783,7 +4783,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 340282392398987070585440925603164314315n,
+      "sqrt_ratio_after": 340282392398987070585440925603164314316n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -4801,7 +4801,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 679543912219162718658425409212637221136n,
+      "sqrt_ratio_after": 679543912219162718658425409212637221137n,
       "tick_after": {
         "mag": 1383292n,
         "sign": false,
@@ -4815,9 +4815,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5389,
-    "steps": 78971,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 5399,
+    "steps": 79100,
   },
 }
 `;
@@ -4851,7 +4851,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 340282392398988347438668105936945621990n,
+      "sqrt_ratio_after": 340282392398988347438668105936945621991n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -4869,7 +4869,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 679543912219163995511652589546418528811n,
+      "sqrt_ratio_after": 679543912219163995511652589546418528812n,
       "tick_after": {
         "mag": 1383292n,
         "sign": false,
@@ -4883,9 +4883,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5424,
-    "steps": 79433,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5434,
+    "steps": 79561,
   },
 }
 `;
@@ -6197,7 +6197,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       },
     },
     "liquidity_after": 1000000000000000000n,
-    "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+    "sqrt_ratio_after": 240616976848402699235372763717024003648n,
     "tick_after": {
       "mag": 693140n,
       "sign": true,
@@ -6210,9 +6210,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 4743,
-    "steps": 53495,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4761,
+    "steps": 53643,
   },
 }
 `;
@@ -6245,7 +6245,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       },
     },
     "liquidity_after": 1000000000000000000n,
-    "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+    "sqrt_ratio_after": 240615969180302688288233350076304635041n,
     "tick_after": {
       "mag": 693148n,
       "sign": true,
@@ -6258,9 +6258,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4463,
-    "steps": 45833,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 4481,
+    "steps": 45977,
   },
 }
 `;
@@ -6330,7 +6330,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+      "sqrt_ratio_after": 240616976848402699235372763717024003648n,
       "tick_after": {
         "mag": 693140n,
         "sign": true,
@@ -6348,7 +6348,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+      "sqrt_ratio_after": 240616976848402699235372763717024003648n,
       "tick_after": {
         "mag": 693140n,
         "sign": true,
@@ -6362,9 +6362,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 5242,
-    "steps": 66383,
+    "pedersen_builtin_applications": 121,
+    "range_check_builtin_applications": 5260,
+    "steps": 66531,
   },
 }
 `;
@@ -6398,7 +6398,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+      "sqrt_ratio_after": 240615969180302688288233350076304635041n,
       "tick_after": {
         "mag": 693148n,
         "sign": true,
@@ -6416,7 +6416,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+      "sqrt_ratio_after": 240615969180302688288233350076304635041n,
       "tick_after": {
         "mag": 693148n,
         "sign": true,
@@ -6430,9 +6430,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4963,
-    "steps": 58723,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 4981,
+    "steps": 58867,
   },
 }
 `;
@@ -6535,9 +6535,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 7049,
-    "steps": 85968,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 7058,
+    "steps": 86089,
   },
 }
 `;
@@ -6603,9 +6603,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6510,
-    "steps": 80364,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 6519,
+    "steps": 80485,
   },
 }
 `;
@@ -6676,7 +6676,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240618770765384083582517766753157064755n,
+      "sqrt_ratio_after": 240618770765384083582517766753157064756n,
       "tick_after": {
         "mag": 693125n,
         "sign": true,
@@ -6708,9 +6708,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7806,
-    "steps": 91524,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 7826,
+    "steps": 91679,
   },
 }
 `;
@@ -6744,7 +6744,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240618397662075329821689838706188922270n,
+      "sqrt_ratio_after": 240618397662075329821689838706188922272n,
       "tick_after": {
         "mag": 693128n,
         "sign": true,
@@ -6776,9 +6776,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7778,
-    "steps": 91934,
+    "pedersen_builtin_applications": 145,
+    "range_check_builtin_applications": 7793,
+    "steps": 92074,
   },
 }
 `;
@@ -6841,9 +6841,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 4731,
-    "steps": 48452,
+    "pedersen_builtin_applications": 79,
+    "range_check_builtin_applications": 4738,
+    "steps": 48572,
   },
 }
 `;
@@ -6889,9 +6889,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4496,
-    "steps": 45873,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 4503,
+    "steps": 45993,
   },
 }
 `;
@@ -6993,9 +6993,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 5225,
-    "steps": 61337,
+    "pedersen_builtin_applications": 120,
+    "range_check_builtin_applications": 5232,
+    "steps": 61457,
   },
 }
 `;
@@ -7061,9 +7061,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4990,
-    "steps": 58758,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 4997,
+    "steps": 58878,
   },
 }
 `;
@@ -7166,9 +7166,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7833,
-    "steps": 91689,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 7840,
+    "steps": 91808,
   },
 }
 `;
@@ -7234,9 +7234,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7846,
-    "steps": 92132,
+    "pedersen_builtin_applications": 145,
+    "range_check_builtin_applications": 7853,
+    "steps": 92251,
   },
 }
 `;
@@ -7307,7 +7307,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 481233945138816125181246937525029878751n,
+      "sqrt_ratio_after": 481233945138816125181246937525029878753n,
       "tick_after": {
         "mag": 693155n,
         "sign": false,
@@ -7325,7 +7325,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 820495464958991773254231421134502785572n,
+      "sqrt_ratio_after": 820495464958991773254231421134502785574n,
       "tick_after": {
         "mag": 1760266n,
         "sign": false,
@@ -7339,9 +7339,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6846,
-    "steps": 85684,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 6858,
+    "steps": 85824,
   },
 }
 `;
@@ -7375,7 +7375,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 481234999747962989180352289168429498860n,
+      "sqrt_ratio_after": 481234999747962989180352289168429498862n,
       "tick_after": {
         "mag": 693160n,
         "sign": false,
@@ -7393,7 +7393,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 820496519568138637253336772777902405681n,
+      "sqrt_ratio_after": 820496519568138637253336772777902405683n,
       "tick_after": {
         "mag": 1760268n,
         "sign": false,
@@ -7407,9 +7407,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6266,
-    "steps": 80019,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 6283,
+    "steps": 80171,
   },
 }
 `;
@@ -7957,9 +7957,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 823,
-    "steps": 19544,
+    "pedersen_builtin_applications": 64,
+    "range_check_builtin_applications": 830,
+    "steps": 19662,
   },
 }
 `;
@@ -8005,9 +8005,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 847,
-    "steps": 19985,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 854,
+    "steps": 20103,
   },
 }
 `;
@@ -8109,9 +8109,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1317,
-    "steps": 32429,
+    "pedersen_builtin_applications": 105,
+    "range_check_builtin_applications": 1324,
+    "steps": 32547,
   },
 }
 `;
@@ -8177,9 +8177,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1341,
-    "steps": 32870,
+    "pedersen_builtin_applications": 107,
+    "range_check_builtin_applications": 1348,
+    "steps": 32988,
   },
 }
 `;
@@ -8282,9 +8282,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 6535,
-    "steps": 90972,
+    "pedersen_builtin_applications": 142,
+    "range_check_builtin_applications": 6543,
+    "steps": 91091,
   },
 }
 `;
@@ -8350,9 +8350,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 143,
-    "range_check_builtin_applications": 6567,
-    "steps": 91427,
+    "pedersen_builtin_applications": 144,
+    "range_check_builtin_applications": 6575,
+    "steps": 91546,
   },
 }
 `;
@@ -8423,7 +8423,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 340282392279332892737392516812283721806n,
+      "sqrt_ratio_after": 340282392279332892737392516812283721807n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -8441,7 +8441,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 677161935531061971566133378169734251147n,
+      "sqrt_ratio_after": 677161935531061971566133378169734251148n,
       "tick_after": {
         "mag": 1376270n,
         "sign": false,
@@ -8455,9 +8455,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5563,
-    "steps": 81881,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 5572,
+    "steps": 82010,
   },
 }
 `;
@@ -8491,7 +8491,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 340282392279334169551517296906508966930n,
+      "sqrt_ratio_after": 340282392279334169551517296906508966931n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -8509,7 +8509,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 677161935531063248380258158263959496271n,
+      "sqrt_ratio_after": 677161935531063248380258158263959496272n,
       "tick_after": {
         "mag": 1376270n,
         "sign": false,
@@ -8523,9 +8523,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5592,
-    "steps": 82335,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5597,
+    "steps": 82453,
   },
 }
 `;
@@ -9837,7 +9837,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       },
     },
     "liquidity_after": 1000000000000000000n,
-    "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+    "sqrt_ratio_after": 240616976848402699235372763717024003648n,
     "tick_after": {
       "mag": 693140n,
       "sign": true,
@@ -9850,9 +9850,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 4743,
-    "steps": 53495,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 4761,
+    "steps": 53643,
   },
 }
 `;
@@ -9885,7 +9885,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       },
     },
     "liquidity_after": 1000000000000000000n,
-    "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+    "sqrt_ratio_after": 240615969180302688288233350076304635041n,
     "tick_after": {
       "mag": 693148n,
       "sign": true,
@@ -9898,9 +9898,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4463,
-    "steps": 45833,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 4481,
+    "steps": 45977,
   },
 }
 `;
@@ -9970,7 +9970,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+      "sqrt_ratio_after": 240616976848402699235372763717024003648n,
       "tick_after": {
         "mag": 693140n,
         "sign": true,
@@ -9988,7 +9988,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240616976848402699235372763717024003647n,
+      "sqrt_ratio_after": 240616976848402699235372763717024003648n,
       "tick_after": {
         "mag": 693140n,
         "sign": true,
@@ -10002,9 +10002,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 5242,
-    "steps": 66383,
+    "pedersen_builtin_applications": 121,
+    "range_check_builtin_applications": 5260,
+    "steps": 66531,
   },
 }
 `;
@@ -10038,7 +10038,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+      "sqrt_ratio_after": 240615969180302688288233350076304635041n,
       "tick_after": {
         "mag": 693148n,
         "sign": true,
@@ -10056,7 +10056,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240615969180302688288233350076304635039n,
+      "sqrt_ratio_after": 240615969180302688288233350076304635041n,
       "tick_after": {
         "mag": 693148n,
         "sign": true,
@@ -10070,9 +10070,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4963,
-    "steps": 58723,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 4981,
+    "steps": 58867,
   },
 }
 `;
@@ -10175,9 +10175,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6511,
-    "steps": 79954,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 6520,
+    "steps": 80075,
   },
 }
 `;
@@ -10243,9 +10243,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6893,
-    "steps": 83486,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 6902,
+    "steps": 83607,
   },
 }
 `;
@@ -10316,7 +10316,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240618762793345701890716630358430065784n,
+      "sqrt_ratio_after": 240618762793345701890716630358430065785n,
       "tick_after": {
         "mag": 693125n,
         "sign": true,
@@ -10348,9 +10348,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7982,
-    "steps": 94429,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 8002,
+    "steps": 94580,
   },
 }
 `;
@@ -10384,7 +10384,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 240618387632548349028989508043334031480n,
+      "sqrt_ratio_after": 240618387632548349028989508043334031482n,
       "tick_after": {
         "mag": 693128n,
         "sign": true,
@@ -10416,9 +10416,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7758,
-    "steps": 91907,
+    "pedersen_builtin_applications": 145,
+    "range_check_builtin_applications": 7776,
+    "steps": 92053,
   },
 }
 `;
@@ -10481,9 +10481,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 4731,
-    "steps": 48452,
+    "pedersen_builtin_applications": 79,
+    "range_check_builtin_applications": 4738,
+    "steps": 48572,
   },
 }
 `;
@@ -10529,9 +10529,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 4496,
-    "steps": 45873,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 4503,
+    "steps": 45993,
   },
 }
 `;
@@ -10633,9 +10633,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 5225,
-    "steps": 61337,
+    "pedersen_builtin_applications": 120,
+    "range_check_builtin_applications": 5232,
+    "steps": 61457,
   },
 }
 `;
@@ -10701,9 +10701,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 4990,
-    "steps": 58758,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 4997,
+    "steps": 58878,
   },
 }
 `;
@@ -10806,9 +10806,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 7986,
-    "steps": 94571,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 7993,
+    "steps": 94690,
   },
 }
 `;
@@ -10874,9 +10874,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 144,
-    "range_check_builtin_applications": 7832,
-    "steps": 92118,
+    "pedersen_builtin_applications": 145,
+    "range_check_builtin_applications": 7839,
+    "steps": 92237,
   },
 }
 `;
@@ -10947,7 +10947,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 481233925111516478027613318842937090342n,
+      "sqrt_ratio_after": 481233925111516478027613318842937090344n,
       "tick_after": {
         "mag": 693155n,
         "sign": false,
@@ -10965,7 +10965,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 818113468363245556856354180200387619683n,
+      "sqrt_ratio_after": 818113468363245556856354180200387619685n,
       "tick_after": {
         "mag": 1754451n,
         "sign": false,
@@ -10979,9 +10979,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 6267,
-    "steps": 79615,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 6284,
+    "steps": 79764,
   },
 }
 `;
@@ -11015,7 +11015,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 481234983826354695835092394217819237563n,
+      "sqrt_ratio_after": 481234983826354695835092394217819237566n,
       "tick_after": {
         "mag": 693160n,
         "sign": false,
@@ -11033,7 +11033,7 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
         },
       },
       "liquidity_after": 1000000000000000000n,
-      "sqrt_ratio_after": 818114527078083774663833255575269766904n,
+      "sqrt_ratio_after": 818114527078083774663833255575269766907n,
       "tick_after": {
         "mag": 1754454n,
         "sign": false,
@@ -11047,9 +11047,9 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 6668,
-    "steps": 83165,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 6684,
+    "steps": 83311,
   },
 }
 `;
@@ -11597,9 +11597,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 63,
-    "range_check_builtin_applications": 823,
-    "steps": 19544,
+    "pedersen_builtin_applications": 64,
+    "range_check_builtin_applications": 830,
+    "steps": 19662,
   },
 }
 `;
@@ -11645,9 +11645,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 65,
-    "range_check_builtin_applications": 847,
-    "steps": 19985,
+    "pedersen_builtin_applications": 66,
+    "range_check_builtin_applications": 854,
+    "steps": 20103,
   },
 }
 `;
@@ -11749,9 +11749,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 104,
-    "range_check_builtin_applications": 1317,
-    "steps": 32429,
+    "pedersen_builtin_applications": 105,
+    "range_check_builtin_applications": 1324,
+    "steps": 32547,
   },
 }
 `;
@@ -11817,9 +11817,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 106,
-    "range_check_builtin_applications": 1341,
-    "steps": 32870,
+    "pedersen_builtin_applications": 107,
+    "range_check_builtin_applications": 1348,
+    "steps": 32988,
   },
 }
 `;
@@ -11922,9 +11922,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5244,
-    "steps": 83044,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 5252,
+    "steps": 83163,
   },
 }
 `;
@@ -11990,9 +11990,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5270,
-    "steps": 83489,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5278,
+    "steps": 83608,
   },
 }
 `;
@@ -12063,7 +12063,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938463800254150683497284895n,
+      "sqrt_ratio_after": 340282366920938463800254150683497284880n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -12081,7 +12081,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938464137133693935226363723n,
+      "sqrt_ratio_after": 340282366920938464137133693935226363708n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -12095,9 +12095,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 4841,
-    "steps": 77030,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 4825,
+    "steps": 77136,
   },
 }
 `;
@@ -12131,7 +12131,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938464137133693935226352946n,
+      "sqrt_ratio_after": 340282366920938464137133693935226352898n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -12149,7 +12149,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938464474013237186955431774n,
+      "sqrt_ratio_after": 340282366920938464474013237186955431726n,
       "tick_after": {
         "mag": 0n,
         "sign": false,
@@ -12163,9 +12163,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 4867,
-    "steps": 77475,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 4851,
+    "steps": 77581,
   },
 }
 `;
@@ -13456,11 +13456,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926670n,
+        "mag": 3953809039307762856n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772579n,
+        "mag": 8005729051085314755n,
         "sign": true,
       },
     },
@@ -13468,16 +13468,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "executedSwap": {
     "delta": {
       "amount0": {
-        "mag": 4026831195330073330n,
+        "mag": 4046190960692237144n,
         "sign": false,
       },
       "amount1": {
-        "mag": 3986562883376772579n,
+        "mag": 4005729051085314755n,
         "sign": true,
       },
     },
     "liquidity_after": 1000000000000000000000000000000000000n,
-    "sqrt_ratio_after": 340282366920938462106817553597158872185n,
+    "sqrt_ratio_after": 340282366920938462100295644684492481186n,
     "tick_after": {
       "mag": 1n,
       "sign": true,
@@ -13490,9 +13490,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 79,
-    "range_check_builtin_applications": 2952,
-    "steps": 50514,
+    "pedersen_builtin_applications": 80,
+    "range_check_builtin_applications": 2966,
+    "steps": 50650,
   },
 }
 `;
@@ -13504,11 +13504,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 0n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926702n,
+        "mag": 3953809039307762888n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772516n,
+        "mag": 8005729051085314691n,
         "sign": true,
       },
     },
@@ -13516,16 +13516,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
   "executedSwap": {
     "delta": {
       "amount0": {
-        "mag": 4026831195330073298n,
+        "mag": 4046190960692237112n,
         "sign": false,
       },
       "amount1": {
-        "mag": 3986562883376772516n,
+        "mag": 4005729051085314691n,
         "sign": true,
       },
     },
     "liquidity_after": 1000000000000000000000000000000000000n,
-    "sqrt_ratio_after": 340282366920938460750260499762549554546n,
+    "sqrt_ratio_after": 340282366920938460737216681937216772757n,
     "tick_after": {
       "mag": 1n,
       "sign": true,
@@ -13538,9 +13538,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 2912,
-    "steps": 45835,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 2926,
+    "steps": 45973,
   },
 }
 `;
@@ -13588,11 +13588,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926670n,
+        "mag": 3953809039307762856n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772579n,
+        "mag": 8005729051085314755n,
         "sign": true,
       },
     },
@@ -13601,16 +13601,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073330n,
+          "mag": 4046190960692237144n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772579n,
+          "mag": 4005729051085314755n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938462106817553597158872185n,
+      "sqrt_ratio_after": 340282366920938462100295644684492481186n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13628,7 +13628,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938462106817553597158872185n,
+      "sqrt_ratio_after": 340282366920938462100295644684492481186n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13642,9 +13642,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 120,
-    "range_check_builtin_applications": 3451,
-    "steps": 63402,
+    "pedersen_builtin_applications": 121,
+    "range_check_builtin_applications": 3465,
+    "steps": 63538,
   },
 }
 `;
@@ -13656,11 +13656,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 0n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926702n,
+        "mag": 3953809039307762888n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772516n,
+        "mag": 8005729051085314691n,
         "sign": true,
       },
     },
@@ -13669,16 +13669,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073298n,
+          "mag": 4046190960692237112n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772516n,
+          "mag": 4005729051085314691n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938460750260499762549554546n,
+      "sqrt_ratio_after": 340282366920938460737216681937216772757n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13696,7 +13696,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938460750260499762549554546n,
+      "sqrt_ratio_after": 340282366920938460737216681937216772757n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13710,9 +13710,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 3412,
-    "steps": 58725,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 3426,
+    "steps": 58863,
   },
 }
 `;
@@ -13761,11 +13761,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926678n,
+        "mag": 3953809039307762864n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772564n,
+        "mag": 8005729051085314739n,
         "sign": true,
       },
     },
@@ -13774,16 +13774,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073322n,
+          "mag": 4046190960692237136n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772564n,
+          "mag": 4005729051085314739n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938461769938010345429799062n,
+      "sqrt_ratio_after": 340282366920938461763416101432763408089n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13801,7 +13801,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938461433058467093700724248n,
+      "sqrt_ratio_after": 340282366920938461426536558181034333225n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13815,9 +13815,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5192,
-    "steps": 82890,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 5211,
+    "steps": 83040,
   },
 }
 `;
@@ -13829,11 +13829,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 0n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926718n,
+        "mag": 3953809039307762905n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772484n,
+        "mag": 8005729051085314659n,
         "sign": true,
       },
     },
@@ -13842,16 +13842,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073282n,
+          "mag": 4046190960692237095n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772484n,
+          "mag": 4005729051085314659n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938460076501413259091417353n,
+      "sqrt_ratio_after": 340282366920938460063457595433758635591n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13864,12 +13864,12 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
           "sign": false,
         },
         "amount1": {
-          "mag": 989999999999999979n,
+          "mag": 989999999999999978n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938459739621870007362345660n,
+      "sqrt_ratio_after": 340282366920938459726578052182029564086n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13883,9 +13883,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5215,
-    "steps": 83329,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5227,
+    "steps": 83465,
   },
 }
 `;
@@ -13934,11 +13934,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 2147483648000000000000000000n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926661n,
+        "mag": 3953809039307762847n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772594n,
+        "mag": 8005729051085314770n,
         "sign": true,
       },
     },
@@ -13947,16 +13947,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073339n,
+          "mag": 4046190960692237153n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772594n,
+          "mag": 4005729051085314770n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938462443697096848887945641n,
+      "sqrt_ratio_after": 340282366920938462437175187936221554617n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13974,7 +13974,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938462780576640100617024469n,
+      "sqrt_ratio_after": 340282366920938462774054731187950633445n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -13988,9 +13988,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 141,
-    "range_check_builtin_applications": 5526,
-    "steps": 88399,
+    "pedersen_builtin_applications": 142,
+    "range_check_builtin_applications": 5535,
+    "steps": 88527,
   },
 }
 `;
@@ -14002,11 +14002,11 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "token1_sale_rate": 0n,
     "twamm_delta": {
       "amount0": {
-        "mag": 3973168804669926686n,
+        "mag": 3953809039307762872n,
         "sign": true,
       },
       "amount1": {
-        "mag": 7986562883376772547n,
+        "mag": 8005729051085314723n,
         "sign": true,
       },
     },
@@ -14015,16 +14015,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     {
       "delta": {
         "amount0": {
-          "mag": 4026831195330073314n,
+          "mag": 4046190960692237128n,
           "sign": false,
         },
         "amount1": {
-          "mag": 3986562883376772547n,
+          "mag": 4005729051085314723n,
           "sign": true,
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938461424019586266007696087n,
+      "sqrt_ratio_after": 340282366920938461410975768440674914220n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -14042,7 +14042,7 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
         },
       },
       "liquidity_after": 1000000000000000000000000000000000000n,
-      "sqrt_ratio_after": 340282366920938461760899129517736774915n,
+      "sqrt_ratio_after": 340282366920938461747855311692403993048n,
       "tick_after": {
         "mag": 1n,
         "sign": true,
@@ -14056,9 +14056,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5255,
-    "steps": 83360,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5270,
+    "steps": 83502,
   },
 }
 `;
@@ -14121,9 +14121,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 78,
-    "range_check_builtin_applications": 2885,
-    "steps": 42728,
+    "pedersen_builtin_applications": 79,
+    "range_check_builtin_applications": 2892,
+    "steps": 42848,
   },
 }
 `;
@@ -14169,9 +14169,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 80,
-    "range_check_builtin_applications": 2907,
-    "steps": 43150,
+    "pedersen_builtin_applications": 81,
+    "range_check_builtin_applications": 2914,
+    "steps": 43270,
   },
 }
 `;
@@ -14273,9 +14273,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 119,
-    "range_check_builtin_applications": 3379,
-    "steps": 55613,
+    "pedersen_builtin_applications": 120,
+    "range_check_builtin_applications": 3386,
+    "steps": 55733,
   },
 }
 `;
@@ -14341,9 +14341,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 121,
-    "range_check_builtin_applications": 3401,
-    "steps": 56035,
+    "pedersen_builtin_applications": 122,
+    "range_check_builtin_applications": 3408,
+    "steps": 56155,
   },
 }
 `;
@@ -14446,9 +14446,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 4736,
-    "steps": 76951,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 4743,
+    "steps": 77070,
   },
 }
 `;
@@ -14514,9 +14514,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 4754,
-    "steps": 77375,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 4761,
+    "steps": 77495,
   },
 }
 `;
@@ -14619,9 +14619,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 140,
-    "range_check_builtin_applications": 5197,
-    "steps": 77437,
+    "pedersen_builtin_applications": 141,
+    "range_check_builtin_applications": 5204,
+    "steps": 77557,
   },
 }
 `;
@@ -14687,9 +14687,9 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
       "l1_gas": 0,
     },
     "ecdsa_builtin_applications": 1,
-    "pedersen_builtin_applications": 142,
-    "range_check_builtin_applications": 5220,
-    "steps": 77876,
+    "pedersen_builtin_applications": 143,
+    "range_check_builtin_applications": 5227,
+    "steps": 77996,
   },
 }
 `;

@@ -11,6 +11,7 @@ use core::integer::{u128_wide_mul, u256_sqrt};
 use core::num::traits::{Zero};
 use core::traits::{Into, TryInto};
 use ekubo::math::muldiv::{div, muldiv};
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 
 pub mod constants {
     pub const X32_u128: u128 = 0x100000000_u128;
@@ -25,6 +26,12 @@ pub mod constants {
 
     // ~ ln(2**128) * 2**64
     pub const EXPONENT_LIMIT: u128 = 1623313478486440542208;
+
+    // min and max usable prices
+    pub const MAX_USABLE_TICK_MAGNITUDE: u128 = 88368108;
+    pub const MAX_BOUNDS_MIN_SQRT_RATIO: u256 = 22027144413679976675;
+    pub const MAX_BOUNDS_MAX_SQRT_RATIO: u256 =
+        5256790760649093508123362461711849782692726119655358142129;
 }
 
 // Computes the sale rate as a fixed point 96.32 number for a given amount, which is the just the amount divided by the duration in seconds
@@ -71,7 +78,10 @@ pub fn calculate_next_sqrt_ratio(
         u256_sqrt(sale_ratio).into() * constants::X64_u256
     };
 
-    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio);
+    // round towards the current price
+    let round_up = sqrt_ratio > sqrt_sale_ratio;
+
+    let (c, sign) = calculate_c(sqrt_ratio, sqrt_sale_ratio, round_up);
 
     let sqrt_ratio_next = if (c.is_zero() || liquidity.is_zero()) {
         // current sale ratio is the price
@@ -85,7 +95,7 @@ pub fn calculate_next_sqrt_ratio(
 
         let l: u256 = liquidity.into();
         let exponent = div(
-            u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), false
+            u256 { high: high, low: low }, l.try_into().expect('DIV_ZERO_LIQUIDITY'), round_up
         );
 
         if (exponent.low > constants::EXPONENT_LIMIT || exponent.high.is_non_zero()) {
@@ -98,23 +108,28 @@ pub fn calculate_next_sqrt_ratio(
             let term2 = e + c;
 
             let scale: u256 = if (sign) {
-                muldiv(term2, constants::X128, term1, false)
+                muldiv(term2, constants::X128, term1, round_up)
                     .expect('NEXT_SQRT_RATIO_TERM2_OVERFLOW')
             } else {
-                muldiv(term1, constants::X128, term2, false)
+                muldiv(term1, constants::X128, term2, round_up)
                     .expect('NEXT_SQRT_RATIO_TERM1_OVERFLOW')
             };
 
-            muldiv(sqrt_sale_ratio, scale, constants::X128, false)
+            muldiv(sqrt_sale_ratio, scale, constants::X128, round_up)
                 .expect('NEXT_SQRT_RATIO_OVERFLOW')
         }
     };
+
+    // largest sqrt_sale_ratio possible is sqrt((2**256 / 2**28)) * 2**64
+    assert(sqrt_ratio_next < max_sqrt_ratio(), 'SQRT_RATIO_NEXT_TOO_HIGH');
+    // smallest sqrt_sale_ratio possible is sqrt(2**28 * 2**128)
+    assert(sqrt_ratio_next >= min_sqrt_ratio(), 'SQRT_RATIO_NEXT_TOO_LOW');
 
     sqrt_ratio_next
 }
 
 // c = (sqrt_sale_ratio - sqrt_ratio) / (sqrt_sale_ratio + sqrt_ratio)
-pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
+pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256, round_up: bool) -> (u256, bool) {
     if (sqrt_ratio == sqrt_sale_ratio) {
         (0, false)
     } else if (sqrt_ratio.is_zero()) {
@@ -128,7 +143,7 @@ pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256) -> (u256, bool) {
         };
 
         (
-            muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, false)
+            muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, round_up)
                 .expect('C_MULDIV_OVERFLOW'),
             sign
         )

@@ -7,7 +7,7 @@ pub(crate) mod twamm_test;
 
 #[starknet::contract]
 pub mod TWAMM {
-    use core::cmp::{max};
+    use core::cmp::{max, min};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
@@ -31,7 +31,7 @@ pub mod TWAMM {
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-    use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+    use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{max_bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -44,7 +44,8 @@ pub mod TWAMM {
     };
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
-        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate
+        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate,
+        constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
     };
 
     #[derive(Drop, Copy, Serde)]
@@ -788,15 +789,15 @@ pub mod TWAMM {
                 while last_virtual_order_time != current_time {
                     let mut delta = Zero::zero();
 
-                    // we must trade up to the earliest initialzed time because sale rate changes
+                    // must trade up to the earliest initialzed time because sale rate changes
                     let (next_virtual_order_time, is_initialized) = self_snap
                         .prefix_next_initialized_time(
                             time_bitmap_storage_prefix, last_virtual_order_time, current_time
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let mut sqrt_ratio = match next_sqrt_ratio {
-                            Option::Some(sqrt_ratio) => { sqrt_ratio },
+                        let current_sqrt_ratio = match next_sqrt_ratio {
+                            Option::Some(current_sqrt_ratio) => { current_sqrt_ratio },
                             Option::None => {
                                 let price = core.get_pool_price(pool_key);
                                 price.sqrt_ratio
@@ -816,16 +817,25 @@ pub mod TWAMM {
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
-                            next_sqrt_ratio =
-                                Option::Some(
-                                    calculate_next_sqrt_ratio(
-                                        sqrt_ratio,
-                                        core.get_pool_liquidity(pool_key),
-                                        token0_sale_rate,
-                                        token1_sale_rate,
-                                        time_elapsed
-                                    )
+                            // must use sqrt_ratio and liquidity at the closest usable tick, since swaps
+                            // on this pool could push the price out of range and liquidity to zero
+                            let sqrt_ratio = max(
+                                MAX_BOUNDS_MIN_SQRT_RATIO,
+                                min(MAX_BOUNDS_MAX_SQRT_RATIO, current_sqrt_ratio)
+                            );
+
+                            let liquidity = core
+                                .get_pool_tick_liquidity_net(
+                                    pool_key, i129 { mag: MAX_USABLE_TICK_MAGNITUDE, sign: true }
                                 );
+
+                            let calculated_next_sqrt_ratio = calculate_next_sqrt_ratio(
+                                sqrt_ratio,
+                                liquidity,
+                                token0_sale_rate,
+                                token1_sale_rate,
+                                time_elapsed
+                            );
 
                             delta = core
                                 .swap(
@@ -834,11 +844,13 @@ pub mod TWAMM {
                                         amount: i129 {
                                             mag: 0xffffffffffffffffffffffffffffffff, sign: true
                                         },
-                                        is_token1: sqrt_ratio >= next_sqrt_ratio.unwrap(),
-                                        sqrt_ratio_limit: next_sqrt_ratio.unwrap(),
+                                        is_token1: current_sqrt_ratio >= calculated_next_sqrt_ratio,
+                                        sqrt_ratio_limit: calculated_next_sqrt_ratio,
                                         skip_ahead: 0
                                     }
                                 );
+
+                            next_sqrt_ratio = Option::Some(calculated_next_sqrt_ratio);
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
@@ -855,7 +867,7 @@ pub mod TWAMM {
                                 (token1_amount, true, max_sqrt_ratio())
                             };
 
-                            if sqrt_ratio_limit != sqrt_ratio {
+                            if sqrt_ratio_limit != current_sqrt_ratio {
                                 delta = core
                                     .swap(
                                         pool_key,
