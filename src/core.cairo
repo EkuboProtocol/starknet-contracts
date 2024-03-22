@@ -821,7 +821,11 @@ pub mod Core {
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
             // check the limit is not in the wrong direction and is within the price bounds
-            assert((params.sqrt_ratio_limit > price.sqrt_ratio) == increasing, 'LIMIT_DIRECTION');
+            assert(
+                (params.sqrt_ratio_limit > price.sqrt_ratio) == increasing
+                    || params.sqrt_ratio_limit == price.sqrt_ratio,
+                'LIMIT_DIRECTION'
+            );
             assert(
                 (params.sqrt_ratio_limit >= min_sqrt_ratio())
                     & (params.sqrt_ratio_limit <= max_sqrt_ratio()),
