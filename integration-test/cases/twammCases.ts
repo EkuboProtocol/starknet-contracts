@@ -1,3 +1,5 @@
+import { MAX_SQRT_RATIO, MAX_TICK, MIN_SQRT_RATIO, MIN_TICK } from "../utils/constants";
+
 const THIRTY_BIPS_FEE = (2n ** 128n * 30n) / 10000n;
 const ONE_PERCENT_FEE = (1n << 128n) / 100n;
 
@@ -37,6 +39,22 @@ export const TWAMM_POOL_CASES: Array<{
     name: "1e18 liquidity, starting price of 1, 1% fee",
     pool: {
       startingTick: 0n,
+      fee: ONE_PERCENT_FEE,
+    },
+    positions_liquidities: [10n ** 18n],
+  },
+  // {
+  //   name: "1e18 liquidity, starting price of max sqrt_ratio, 1% fee",
+  //   pool: {
+  //     startingTick: MAX_TICK,
+  //     fee: ONE_PERCENT_FEE,
+  //   },
+  //   positions_liquidities: [10n ** 18n],
+  // },
+  {
+    name: "1e18 liquidity, starting price of min sqrt_ratio, 1% fee",
+    pool: {
+      startingTick: MIN_TICK,
       fee: ONE_PERCENT_FEE,
     },
     positions_liquidities: [10n ** 18n],
