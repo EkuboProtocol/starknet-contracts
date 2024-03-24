@@ -111,6 +111,8 @@ pub mod Positions {
         pool_key: PoolKey,
         salt: felt252,
         bounds: Bounds,
+        amount0: u128,
+        amount1: u128,
         min_liquidity: u128,
     }
 
@@ -139,16 +141,6 @@ pub mod Positions {
         Withdraw: WithdrawCallbackData,
         CollectFees: CollectFeesCallbackData,
         GetPoolPrice: PoolKey,
-    }
-
-    #[generate_trait]
-    impl Internal of InternalTrait {
-        fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
-            let balance = IERC20Dispatcher { contract_address: token }
-                .balanceOf(get_contract_address());
-            assert(balance.high == 0, 'BALANCE_OVERFLOW');
-            balance.low
-        }
     }
 
     #[abi(embed_v0)]
@@ -186,8 +178,8 @@ pub mod Positions {
                         price.sqrt_ratio,
                         tick_to_sqrt_ratio(data.bounds.lower),
                         tick_to_sqrt_ratio(data.bounds.upper),
-                        self.balance_of_token(data.pool_key.token0),
-                        self.balance_of_token(data.pool_key.token1)
+                        data.amount0,
+                        data.amount1
                     );
 
                     assert(liquidity >= data.min_liquidity, 'MIN_LIQUIDITY');
@@ -425,12 +417,14 @@ pub mod Positions {
             self.twamm.read().get_order_info(get_contract_address(), id.into(), order_key)
         }
 
-        fn deposit(
+        fn deposit_amounts(
             ref self: ContractState,
             id: u64,
             pool_key: PoolKey,
             bounds: Bounds,
-            min_liquidity: u128,
+            amount0: u128,
+            amount1: u128,
+            min_liquidity: u128
         ) -> u128 {
             let nft = self.nft.read();
             assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
@@ -439,12 +433,33 @@ pub mod Positions {
                 self.core.read(),
                 @LockCallbackData::Deposit(
                     DepositCallbackData {
-                        pool_key, salt: id.into(), bounds, min_liquidity: min_liquidity
+                        pool_key, salt: id.into(), bounds, min_liquidity, amount0, amount1,
                     }
                 )
             );
 
             liquidity
+        }
+
+        fn deposit(
+            ref self: ContractState,
+            id: u64,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            min_liquidity: u128,
+        ) -> u128 {
+            let address = get_contract_address();
+
+            let amount0 = IERC20Dispatcher { contract_address: pool_key.token0 }
+                .balanceOf(address)
+                .try_into()
+                .expect('AMOUNT0_OVERFLOW_U128');
+            let amount1 = IERC20Dispatcher { contract_address: pool_key.token1 }
+                .balanceOf(address)
+                .try_into()
+                .expect('AMOUNT1_OVERFLOW_U128');
+
+            self.deposit_amounts(id, pool_key, bounds, amount0, amount1, min_liquidity)
         }
 
         fn withdraw(
@@ -524,6 +539,25 @@ pub mod Positions {
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> u128 {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
+        }
+
+        fn deposit_amounts_last(
+            ref self: ContractState,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            amount0: u128,
+            amount1: u128,
+            min_liquidity: u128
+        ) -> u128 {
+            self
+                .deposit_amounts(
+                    self.nft.read().get_next_token_id() - 1,
+                    pool_key,
+                    bounds,
+                    amount0,
+                    amount1,
+                    min_liquidity
+                )
         }
 
         fn mint_and_deposit(
