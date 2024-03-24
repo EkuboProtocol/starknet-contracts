@@ -85,9 +85,31 @@ pub trait IPositions<TStorage> {
         ref self: TStorage, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
     ) -> u128;
 
+    // Deposit the specified amounts in the most recently created token ID. Must be called by an operator, approved address or the owner
+    fn deposit_amounts_last(
+        ref self: TStorage,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        amount0: u128,
+        amount1: u128,
+        min_liquidity: u128
+    ) -> u128;
+
     // Deposit in a specific token ID. Must be called by an operator, approved address or the owner
     fn deposit(
         ref self: TStorage, id: u64, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+    ) -> u128;
+
+    // Deposit the specified amounts of token0 and token1 into the position with the specified ID.
+    // Must be called by an operator, approved address or the owner.
+    fn deposit_amounts(
+        ref self: TStorage,
+        id: u64,
+        pool_key: PoolKey,
+        bounds: Bounds,
+        amount0: u128,
+        amount1: u128,
+        min_liquidity: u128
     ) -> u128;
 
     // Mint and deposit in a single call
