@@ -43,7 +43,11 @@ pub trait IRouter<TContractState> {
     fn multi_multihop_swap(ref self: TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
 
     // Quote the given token amount against the route in the swap
-    fn quote(ref self: TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
+    fn quote_multi_multihop_swap(self: @TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
+    fn quote_multihop_swap(
+        self: @TContractState, route: Array<RouteNode>, token_amount: TokenAmount
+    ) -> Array<Delta>;
+    fn quote_swap(self: @TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
 
     // Returns the delta for swapping a pool to the given price
     fn get_delta_to_sqrt_ratio(self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256) -> Delta;
@@ -424,10 +428,25 @@ pub mod Router {
         }
 
         // Quote the given token amount against the route in the swap
-        fn quote(ref self: ContractState, swaps: Array<Swap>) -> Array<Array<Delta>> {
+        fn quote_multi_multihop_swap(
+            self: @ContractState, swaps: Array<Swap>
+        ) -> Array<Array<Delta>> {
             call_core_with_reverting_callback(
                 self.core.read(), @CallbackParameters::Swap((swaps, true))
             )
+        }
+
+        fn quote_multihop_swap(
+            self: @ContractState, route: Array<RouteNode>, token_amount: TokenAmount
+        ) -> Array<Delta> {
+            let mut result = self.quote_multi_multihop_swap(array![Swap { route, token_amount }]);
+            result.pop_front().unwrap()
+        }
+
+        fn quote_swap(self: @ContractState, node: RouteNode, token_amount: TokenAmount) -> Delta {
+            let mut result = self
+                .quote_multihop_swap(route: array![node], token_amount: token_amount);
+            result.pop_front().unwrap()
         }
 
         // Returns the delta for swapping a pool to the given price
