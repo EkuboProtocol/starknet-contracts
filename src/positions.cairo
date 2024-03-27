@@ -376,11 +376,11 @@ pub mod Positions {
             self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> GetTokenInfoResult {
             let core = self.core.read();
+            let price = self.get_pool_price(pool_key);
             let get_position_result = core
                 .get_position_with_fees(
                     pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
-            let price = core.get_pool_price(pool_key);
 
             let delta = liquidity_delta_to_amount_delta(
                 sqrt_ratio: price.sqrt_ratio,
