@@ -37,7 +37,7 @@ scarb build
 
 declare_class_hash() {
     local class_name=$1
-    starkli declare --max-fee 0.01 --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --casm-file  "target/dev/ekubo_${class_name}.compiled_contract_class.json" "target/dev/ekubo_${class_name}.contract_class.json"
+    starkli declare --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --casm-file  "target/dev/ekubo_${class_name}.compiled_contract_class.json" "target/dev/ekubo_${class_name}.contract_class.json"
 }
 
 echo "Declaring Core"
