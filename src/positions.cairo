@@ -27,7 +27,7 @@ pub mod Positions {
     };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
@@ -261,7 +261,7 @@ pub mod Positions {
                                 SwapParameters {
                                     amount: Zero::zero(),
                                     is_token1: false,
-                                    sqrt_ratio_limit: price_before.sqrt_ratio,
+                                    sqrt_ratio_limit: min_sqrt_ratio(),
                                     skip_ahead: Zero::zero(),
                                 }
                             );
