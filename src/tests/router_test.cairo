@@ -43,7 +43,7 @@ fn test_router_quote_not_initialized_pool() {
     };
 
     router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -77,7 +77,7 @@ fn test_router_quote_initialized_pool_no_liquidity() {
     core.initialize_pool(pool_key, Zero::zero());
 
     let mut result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -162,7 +162,7 @@ fn test_router_quote_initialized_pool_with_liquidity() {
     let (router, pool_key, _) = setup_for_routing(ref d);
 
     let mut result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -178,7 +178,7 @@ fn test_router_quote_initialized_pool_with_liquidity() {
     assert(result.at(0).at(0).amount1 == @i129 { mag: 0x62, sign: true }, '100 token0 in.amount1');
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -195,7 +195,7 @@ fn test_router_quote_initialized_pool_with_liquidity() {
     );
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -211,7 +211,7 @@ fn test_router_quote_initialized_pool_with_liquidity() {
     assert(result.at(0).at(0).amount1 == @i129 { mag: 100, sign: false }, '100 token1 in.amount1');
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -261,7 +261,7 @@ fn test_router_quote_multihop_routes() {
     let (router, pool_key_a, pool_key_b) = setup_for_routing(ref d);
 
     let mut result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -277,7 +277,7 @@ fn test_router_quote_multihop_routes() {
     assert(result.at(0).at(1).amount1 == @i129 { mag: 0x60, sign: true }, '100 token0 in');
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -293,7 +293,7 @@ fn test_router_quote_multihop_routes() {
     assert(result.at(0).at(1).amount1 == @i129 { mag: 0x68, sign: false }, '100 token0 out');
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
@@ -309,7 +309,7 @@ fn test_router_quote_multihop_routes() {
     assert(result.at(0).at(1).amount0 == @i129 { mag: 0x60, sign: true }, '100 token2 in');
 
     result = router
-        .quote(
+        .quote_multi_multihop_swap(
             swaps: array![
                 Swap {
                     route: array![
