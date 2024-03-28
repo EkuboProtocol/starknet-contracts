@@ -146,6 +146,28 @@ pub mod MockExtension {
             self.check_caller_is_core();
             self.insert_call(caller, 5, pool_key);
         }
+
+        fn before_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds
+        ) {
+            self.check_caller_is_core();
+            self.insert_call(caller, 6, pool_key);
+        }
+        fn after_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds,
+            delta: Delta
+        ) {
+            self.check_caller_is_core();
+            self.insert_call(caller, 7, pool_key);
+        }
     }
 
     #[abi(embed_v0)]
@@ -175,6 +197,13 @@ pub mod MockExtension {
                         bounds: max_bounds(data.pool_key.tick_spacing),
                         liquidity_delta: Zero::zero()
                     }
+                );
+
+            delta += core
+                .collect_fees(
+                    data.pool_key,
+                    salt: Zero::zero(),
+                    bounds: max_bounds(data.pool_key.tick_spacing)
                 );
 
             assert(delta.is_zero(), 'delta is zero');

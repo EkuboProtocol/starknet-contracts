@@ -51,6 +51,7 @@ pub mod CoreLocker {
     use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
@@ -115,6 +116,26 @@ pub mod CoreLocker {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
+            delta: Delta
+        ) {
+            assert(false, 'never called');
+        }
+
+        fn before_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds
+        ) {
+            assert(false, 'never called');
+        }
+        fn after_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds,
             delta: Delta
         ) {
             assert(false, 'never called');

@@ -33,7 +33,7 @@ pub mod TWAMM {
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-    use ekubo::types::bounds::{max_bounds};
+    use ekubo::types::bounds::{max_bounds, Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
@@ -242,6 +242,8 @@ pub mod TWAMM {
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
+                before_collect_fees: true,
+                after_collect_fees: false,
             }
         }
 
@@ -291,6 +293,30 @@ pub mod TWAMM {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
+            delta: Delta
+        ) {
+            assert(false, 'NOT_USED');
+        }
+
+        fn before_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds
+        ) {
+            self
+                .execute_virtual_orders(
+                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
+                );
+        }
+
+        fn after_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds,
             delta: Delta
         ) {
             assert(false, 'NOT_USED');

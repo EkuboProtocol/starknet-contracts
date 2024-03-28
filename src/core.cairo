@@ -767,6 +767,14 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
+            let call_points = self.get_pool_price(pool_key).call_points;
+            if (call_points.before_collect_fees) {
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .before_collect_fees(locker, pool_key, salt, bounds);
+                }
+            }
+
             let position_key = PositionKey { owner: locker, salt, bounds };
             let result = self.get_position_with_fees(pool_key, position_key);
 
@@ -789,6 +797,13 @@ pub mod Core {
             self.account_pool_delta(id, pool_key, delta);
 
             self.emit(PositionFeesCollected { pool_key, position_key, delta });
+
+            if (call_points.after_collect_fees) {
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .after_collect_fees(locker, pool_key, salt, bounds, delta);
+                }
+            }
 
             delta
         }
