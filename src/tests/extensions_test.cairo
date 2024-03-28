@@ -112,6 +112,37 @@ fn test_extension_can_call_change_call_points_from_extension() {
     assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
 }
 
+#[test]
+fn test_change_call_points_random_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let before = CallPoints {
+        after_initialize_pool: true,
+        before_swap: false,
+        after_swap: true,
+        before_update_position: false,
+        after_update_position: true,
+        before_collect_fees: false,
+        after_collect_fees: true,
+    };
+    let after = CallPoints {
+        after_initialize_pool: false,
+        before_swap: true,
+        after_swap: false,
+        before_update_position: true,
+        after_update_position: false,
+        before_collect_fees: true,
+        after_collect_fees: false,
+    };
+    let (core, mock_extension, _, _, pool_key) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before
+    );
+    core.initialize_pool(pool_key, Zero::zero());
+    assert_eq!(core.get_pool_price(pool_key).call_points, before);
+    mock_extension.change_call_points(pool_key, after);
+    assert_eq!(core.get_pool_price(pool_key).call_points, after);
+}
+
 
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
     assert(call.token0 == pool_key.token0, 'token0 matches');
