@@ -1072,5 +1072,13 @@ pub mod Core {
 
             self.emit(FeesAccumulated { pool_key, amount0, amount1, });
         }
+
+        fn change_call_points(ref self: ContractState, pool_key: PoolKey, call_points: CallPoints) {
+            assert(pool_key.extension == get_caller_address(), 'EXTENSION_ONLY');
+            let mut price = self.pool_price.read(pool_key);
+            assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
+            price.call_points = call_points;
+            self.pool_price.write(pool_key, price);
+        }
     }
 }

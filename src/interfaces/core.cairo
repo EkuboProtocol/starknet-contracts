@@ -226,4 +226,7 @@ pub trait ICore<TStorage> {
     // Accumulates tokens to fees of a pool. Only callable by the extension of the specified pool key, i.e. the current locker _must_ be the extension.
     // You must call this within a lock callback.
     fn accumulate_as_fees(ref self: TStorage, pool_key: PoolKey, amount0: u128, amount1: u128);
+
+    // Allows an extension to change its own call points.
+    fn change_call_points(ref self: TStorage, pool_key: PoolKey, call_points: CallPoints);
 }

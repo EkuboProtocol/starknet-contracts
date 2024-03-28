@@ -4,7 +4,7 @@ use core::traits::{Into};
 use starknet::storage_access::{StorePacking};
 
 // The points at which an extension should be called
-#[derive(Copy, Drop, Serde, PartialEq)]
+#[derive(Copy, Drop, Serde, PartialEq, Debug)]
 pub struct CallPoints {
     pub after_initialize_pool: bool,
     pub before_swap: bool,

@@ -62,6 +62,56 @@ fn test_mock_extension_can_be_called_by_core() {
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
 }
 
+#[test]
+#[should_panic(expected: ('EXTENSION_ONLY', 'ENTRYPOINT_FAILED'))]
+fn test_core_cannot_change_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, _, _, _, pool_key) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    core.change_call_points(pool_key, Default::default());
+}
+
+#[test]
+#[should_panic(expected: ('NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+fn test_cannot_change_call_points_not_initialized() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, _, extension, _, pool_key) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    set_contract_address(extension.contract_address);
+    core.change_call_points(pool_key, Default::default());
+}
+
+#[test]
+fn test_extension_can_call_change_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, _, extension, _, pool_key) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    core.initialize_pool(pool_key, Zero::zero());
+    set_contract_address(extension.contract_address);
+    assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
+    core.change_call_points(pool_key, Default::default());
+    assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
+}
+
+#[test]
+fn test_extension_can_call_change_call_points_from_extension() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, mock_extension, _, _, pool_key) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    core.initialize_pool(pool_key, Zero::zero());
+    assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
+    mock_extension.change_call_points(pool_key, Default::default());
+    assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
+}
+
 
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
     assert(call.token0 == pool_key.token0, 'token0 matches');
