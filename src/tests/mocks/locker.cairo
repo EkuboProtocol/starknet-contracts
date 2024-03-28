@@ -121,15 +121,15 @@ pub mod CoreLocker {
             assert(false, 'never called');
         }
 
-        // Called before collecting fees for a position
         fn before_collect_fees(
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
             salt: felt252,
             bounds: Bounds
-        ) {}
-        // Called after collecting fees for a position
+        ) {
+            assert(false, 'never called');
+        }
         fn after_collect_fees(
             ref self: ContractState,
             caller: ContractAddress,
@@ -137,7 +137,9 @@ pub mod CoreLocker {
             salt: felt252,
             bounds: Bounds,
             delta: Delta
-        ) {}
+        ) {
+            assert(false, 'never called');
+        }
     }
 
     #[abi(embed_v0)]
