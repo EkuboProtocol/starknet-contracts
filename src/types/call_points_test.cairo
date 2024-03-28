@@ -10,7 +10,7 @@ fn test_default_call_points_into_u8() {
 
 #[test]
 fn test_all_call_points_into_u8() {
-    assert(all_call_points().into() == 248_u8, 'all');
+    assert(all_call_points().into() == 254_u8, 'all');
 }
 
 #[test]
@@ -28,17 +28,12 @@ fn test_u8_max_cannot_convert() {
 
 #[test]
 fn test_u8_into_all_call_points() {
-    assert(TryInto::<u8, CallPoints>::try_into(248_u8).unwrap() == all_call_points(), 'all');
+    assert(TryInto::<u8, CallPoints>::try_into(254_u8).unwrap() == all_call_points(), 'all');
 }
 
 #[test]
 fn test_lower_bits_result_in_none() {
-    let mut i = 7_u8;
-    while i
-        .is_non_zero() {
-            assert(TryInto::<u8, CallPoints>::try_into(i).is_none(), 'lower bits');
-            i -= 1;
-        };
+    assert(TryInto::<u8, CallPoints>::try_into(1_u8).is_none(), 'lower bits');
 }
 
 #[test]
