@@ -199,6 +199,13 @@ pub mod MockExtension {
                     }
                 );
 
+            delta += core
+                .collect_fees(
+                    data.pool_key,
+                    salt: Zero::zero(),
+                    bounds: max_bounds(data.pool_key.tick_spacing)
+                );
+
             assert(delta.is_zero(), 'delta is zero');
 
             ArrayTrait::new().span()

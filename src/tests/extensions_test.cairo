@@ -447,7 +447,7 @@ fn test_mock_extension_is_called_back_into_other_pool() {
     // because the other mock is calling into the pool, the extension should get hit every time
     other_mock.call_into_pool(pool_key);
 
-    assert(mock.get_num_calls() == 6, '# calls made');
+    assert(mock.get_num_calls() == 8, '# calls made');
 
     let call = mock.get_call(0);
     assert(call.caller == get_contract_address(), 'before initialize caller');
@@ -477,6 +477,16 @@ fn test_mock_extension_is_called_back_into_other_pool() {
     let call = mock.get_call(5);
     assert(call.caller == other_mock.contract_address, 'after update caller');
     assert(call.call_point == 5, 'after update');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(6);
+    assert(call.caller == other_mock.contract_address, 'before collect fees caller');
+    assert(call.call_point == 6, 'before collect fees call point');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(7);
+    assert(call.caller == other_mock.contract_address, 'after collect fees caller');
+    assert(call.call_point == 7, 'after collect fees call point');
     check_matches_pool_key(call, pool_key);
 }
 
