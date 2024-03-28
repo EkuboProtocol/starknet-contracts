@@ -96,6 +96,24 @@ pub trait IExtension<TStorage> {
         params: UpdatePositionParameters,
         delta: Delta
     );
+
+    // Called before collecting fees for a position
+    fn before_collect_fees(
+        ref self: TStorage,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        salt: felt252,
+        bounds: Bounds
+    );
+    // Called after collecting fees for a position
+    fn after_collect_fees(
+        ref self: TStorage,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        salt: felt252,
+        bounds: Bounds,
+        delta: Delta
+    );
 }
 
 #[starknet::interface]

@@ -202,6 +202,8 @@ fn test_mock_extension_after_initialize_pool_only() {
             after_swap: false,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -249,6 +251,8 @@ fn test_mock_extension_before_swap_only() {
             after_swap: false,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -295,6 +299,8 @@ fn test_mock_extension_after_swap_only() {
             after_swap: true,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -343,6 +349,8 @@ fn test_mock_extension_before_update_position_only() {
             after_swap: false,
             before_update_position: true,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -389,6 +397,8 @@ fn test_mock_extension_after_update_position_only() {
             after_swap: false,
             before_update_position: false,
             after_update_position: true,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 

@@ -51,6 +51,8 @@ fn test_u8_into_after_initialize_call_points() {
                 after_swap: false,
                 before_update_position: false,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
             },
         'after_initialize_pool'
     );
@@ -67,6 +69,8 @@ fn test_u8_into_before_swap_call_points() {
                 after_swap: false,
                 before_update_position: false,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
             },
         'after_initialize_pool'
     );
@@ -83,6 +87,8 @@ fn test_u8_into_after_swap_call_points() {
                 after_swap: true,
                 before_update_position: false,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
             },
         'after_initialize_pool'
     );
@@ -98,6 +104,8 @@ fn test_u8_into_before_update_position_call_points() {
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
             },
         'after_initialize_pool'
     );
@@ -113,6 +121,42 @@ fn test_u8_into_after_update_position_call_points() {
                 after_swap: false,
                 before_update_position: false,
                 after_update_position: true,
+                before_collect_fees: false,
+                after_collect_fees: false,
+            },
+        'after_initialize_pool'
+    );
+}
+
+#[test]
+fn test_u8_into_before_collect_fees_call_points() {
+    assert(
+        TryInto::<u8, CallPoints>::try_into(4)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: false,
+                before_update_position: false,
+                after_update_position: false,
+                before_collect_fees: true,
+                after_collect_fees: false,
+            },
+        'after_initialize_pool'
+    );
+}
+
+#[test]
+fn test_u8_into_after_collect_fees_call_points() {
+    assert(
+        TryInto::<u8, CallPoints>::try_into(2)
+            .unwrap() == CallPoints {
+                after_initialize_pool: false,
+                before_swap: false,
+                after_swap: false,
+                before_update_position: false,
+                after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: true,
             },
         'after_initialize_pool'
     );
@@ -122,13 +166,15 @@ fn test_u8_into_after_update_position_call_points() {
 fn test_conversion_all_possible_values() {
     let mut i: u128 = 0;
 
-    while (i != 32) {
+    while (i != 128) {
         let call_points = CallPoints {
-            after_initialize_pool: (i & 16) != 0,
-            before_swap: (i & 8) != 0,
-            after_swap: (i & 4) != 0,
-            before_update_position: (i & 2) != 0,
-            after_update_position: (i & 1) != 0,
+            after_initialize_pool: (i & 64) != 0,
+            before_swap: (i & 32) != 0,
+            after_swap: (i & 16) != 0,
+            before_update_position: (i & 8) != 0,
+            after_update_position: (i & 4) != 0,
+            before_collect_fees: (i & 2) != 0,
+            after_collect_fees: (i & 1) != 0,
         };
 
         let mut converted: u8 = call_points.into();

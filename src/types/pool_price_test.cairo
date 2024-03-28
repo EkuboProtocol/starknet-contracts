@@ -41,6 +41,38 @@ fn test_packing_round_trip_many_values() {
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
+            }
+        }
+    );
+    assert_round_trip(
+        PoolPrice {
+            sqrt_ratio: u256 { low: 0, high: 123456 },
+            tick: i129 { mag: 0, sign: false },
+            call_points: CallPoints {
+                after_initialize_pool: true,
+                before_swap: false,
+                after_swap: true,
+                before_update_position: false,
+                after_update_position: true,
+                before_collect_fees: false,
+                after_collect_fees: true,
+            }
+        }
+    );
+    assert_round_trip(
+        PoolPrice {
+            sqrt_ratio: u256 { low: 0, high: 123456 },
+            tick: i129 { mag: 0, sign: false },
+            call_points: CallPoints {
+                after_initialize_pool: false,
+                before_swap: true,
+                after_swap: false,
+                before_update_position: true,
+                after_update_position: false,
+                before_collect_fees: true,
+                after_collect_fees: false,
             }
         }
     );
@@ -133,6 +165,8 @@ fn test_store_packing_pool_price() {
                     after_swap: false,
                     before_update_position: true,
                     after_update_position: false,
+                    before_collect_fees: false,
+                    after_collect_fees: false,
                 }
             }
         )
@@ -147,6 +181,8 @@ fn test_store_packing_pool_price() {
                 after_swap: false,
                 before_update_position: true,
                 after_update_position: false,
+                before_collect_fees: false,
+                after_collect_fees: false,
             },
         'call_points'
     );

@@ -11,6 +11,8 @@ pub struct CallPoints {
     pub after_swap: bool,
     pub before_update_position: bool,
     pub after_update_position: bool,
+    pub before_collect_fees: bool,
+    pub after_collect_fees: bool,
 }
 
 impl CallPointsDefault of Default<CallPoints> {
@@ -21,6 +23,8 @@ impl CallPointsDefault of Default<CallPoints> {
             after_swap: false,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     }
 }
@@ -32,6 +36,8 @@ pub fn all_call_points() -> CallPoints {
         after_swap: true,
         before_update_position: true,
         after_update_position: true,
+        before_collect_fees: true,
+        after_collect_fees: true,
     }
 }
 
@@ -52,6 +58,12 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
         }
         if (self.after_update_position) {
             res += 8;
+        }
+        if (self.before_collect_fees) {
+            res += 4;
+        }
+        if (self.after_collect_fees) {
+            res += 2;
         }
         res
     }
@@ -87,8 +99,22 @@ impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
             false
         };
 
-        let after_update_position = if (self == 8) {
+        let after_update_position = if (self >= 8) {
             self -= 8;
+            true
+        } else {
+            false
+        };
+
+        let before_collect_fees = if (self >= 4) {
+            self -= 4;
+            true
+        } else {
+            false
+        };
+
+        let after_collect_fees = if (self == 2) {
+            self -= 2;
             true
         } else {
             false
@@ -102,10 +128,12 @@ impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
                     after_swap,
                     before_update_position,
                     after_update_position,
+                    before_collect_fees,
+                    after_collect_fees,
                 }
             )
         } else {
-            Option::None(())
+            Option::None
         }
     }
 }
