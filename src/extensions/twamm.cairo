@@ -216,6 +216,18 @@ pub mod TWAMM {
         }
     }
 
+    fn twamm_call_points() -> CallPoints {
+        CallPoints {
+            after_initialize_pool: false,
+            before_swap: true,
+            after_swap: false,
+            before_update_position: true,
+            after_update_position: false,
+            before_collect_fees: true,
+            after_collect_fees: false,
+        }
+    }
+
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
@@ -236,15 +248,7 @@ pub mod TWAMM {
                     }
                 );
 
-            CallPoints {
-                after_initialize_pool: false,
-                before_swap: true,
-                after_swap: false,
-                before_update_position: true,
-                after_update_position: false,
-                before_collect_fees: true,
-                after_collect_fees: false,
-            }
+            twamm_call_points()
         }
 
         fn after_initialize_pool(
@@ -425,6 +429,10 @@ pub mod TWAMM {
                     key
                 })
             )
+        }
+
+        fn update_call_points(ref self: ContractState, key: StateKey) {
+            self.core.read().change_call_points(key.into(), twamm_call_points());
         }
     }
 

@@ -1,3 +1,4 @@
+use ekubo::types::call_points::{CallPoints};
 use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
@@ -17,6 +18,7 @@ pub trait IMockExtension<TStorage> {
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 
     fn call_into_pool(self: @TStorage, pool_key: PoolKey);
+    fn change_call_points(self: @TStorage, pool_key: PoolKey, call_points: CallPoints);
 }
 
 #[starknet::contract]
@@ -30,12 +32,12 @@ pub mod MockExtension {
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
     use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::call_points::{CallPoints, all_call_points};
+    use ekubo::types::call_points::{all_call_points};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
     use starknet::{get_caller_address};
-    use super::{IMockExtension, ExtensionCalled, ContractAddress};
+    use super::{CallPoints, IMockExtension, ExtensionCalled, ContractAddress};
 
     #[storage]
     struct Storage {
@@ -230,6 +232,10 @@ pub mod MockExtension {
 
         fn get_call(self: @ContractState, call_id: u32) -> ExtensionCalled {
             self.calls.read(call_id)
+        }
+
+        fn change_call_points(self: @ContractState, pool_key: PoolKey, call_points: CallPoints) {
+            self.core.read().change_call_points(pool_key, call_points)
         }
     }
 }
