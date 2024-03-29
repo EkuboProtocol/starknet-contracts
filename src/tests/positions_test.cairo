@@ -4,14 +4,14 @@ use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::extensions::interfaces::twamm::{OrderKey};
+use ekubo::extensions::twamm::math::time::{is_time_valid};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest,
-    IncreaseSellAmountNowParams
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
@@ -19,7 +19,7 @@ use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
 
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
-use ekubo::positions::{Positions, Positions::IncreaseSellAmountNowParamsIntoOrderKeyImpl};
+use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, swap, IPositionsDispatcherIntoILockerDispatcher,
@@ -122,77 +122,6 @@ fn test_deposit_fails_min_liquidity() {
     setup.token1.increase_balance(positions.contract_address, 100000000);
     positions
         .deposit_last(pool_key: setup.pool_key, bounds: max_bounds(1), min_liquidity: 100000001);
-}
-
-#[test]
-fn test_increase_sell_amount_now_params_into_order_key() {
-    assert_eq!(
-        IncreaseSellAmountNowParams {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            duration: 16,
-        }
-            .into(),
-        OrderKey {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            start_time: 0,
-            end_time: 16
-        }
-    );
-    set_block_timestamp(1);
-    assert_eq!(
-        IncreaseSellAmountNowParams {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            duration: 16,
-        }
-            .into(),
-        OrderKey {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            start_time: 0,
-            end_time: 16
-        }
-    );
-    set_block_timestamp(15);
-    assert_eq!(
-        IncreaseSellAmountNowParams {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            duration: 16,
-        }
-            .into(),
-        OrderKey {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            start_time: 0,
-            end_time: 16
-        }
-    );
-    set_block_timestamp(16);
-    assert_eq!(
-        IncreaseSellAmountNowParams {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            duration: 16,
-        }
-            .into(),
-        OrderKey {
-            sell_token: contract_address_const::<1>(),
-            buy_token: contract_address_const::<2>(),
-            fee: 3,
-            start_time: 16,
-            end_time: 32
-        }
-    );
 }
 
 #[test]

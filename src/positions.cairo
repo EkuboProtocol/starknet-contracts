@@ -19,9 +19,7 @@ pub mod Positions {
         ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::positions::{
-        IPositions, GetTokenInfoResult, GetTokenInfoRequest, IncreaseSellAmountNowParams
-    };
+    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{
         IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
     };
@@ -281,23 +279,6 @@ pub mod Positions {
 
                     serialize(@pool_price).span()
                 }
-            }
-        }
-    }
-
-    pub(crate) impl IncreaseSellAmountNowParamsIntoOrderKeyImpl of Into<
-        IncreaseSellAmountNowParams, OrderKey
-    > {
-        fn into(self: IncreaseSellAmountNowParams) -> OrderKey {
-            let now = get_block_timestamp();
-            let start_time = now - (now % TIME_SPACING_SIZE);
-            let end_time = start_time + self.duration.into();
-            OrderKey {
-                sell_token: self.sell_token,
-                buy_token: self.buy_token,
-                fee: self.fee,
-                start_time,
-                end_time
             }
         }
     }
@@ -652,27 +633,6 @@ pub mod Positions {
             let twamm = self.twamm.read();
 
             twamm.collect_proceeds(id.into(), order_key);
-        }
-
-        fn mint_and_sell_now(
-            ref self: ContractState, sell_params: IncreaseSellAmountNowParams, amount: u128,
-        ) -> (u64, u128) {
-            self.mint_and_increase_sell_amount(sell_params.into(), amount)
-        }
-
-        fn increase_sell_amount_now_last(
-            ref self: ContractState, sell_params: IncreaseSellAmountNowParams, amount: u128,
-        ) -> u128 {
-            self.increase_sell_amount_last(sell_params.into(), amount)
-        }
-
-        fn increase_sell_amount_now(
-            ref self: ContractState,
-            id: u64,
-            sell_params: IncreaseSellAmountNowParams,
-            amount: u128,
-        ) -> u128 {
-            self.increase_sell_amount(id, sell_params.into(), amount)
         }
     }
 }
