@@ -12,8 +12,6 @@ pub struct PoolPrice {
     pub sqrt_ratio: u256,
     // the current tick, up to 32 bits
     pub tick: i129,
-    // the places where specified extension should be called, 5 bits
-    pub call_points: CallPoints,
 }
 
 impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
@@ -41,8 +39,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         };
 
         let packed = value.sqrt_ratio
-            + ((u256 { low: tick_raw_shifted, high: 0 }
-                + Into::<u8, u256>::into(value.call_points.into()))
+            + ((u256 { low: tick_raw_shifted, high: 0 })
                 * 0x1000000000000000000000000000000000000000000000000);
 
         packed.try_into().unwrap()
@@ -57,7 +54,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             0x1000000000000000000000000000000000000000000000000_u256.try_into().unwrap()
         );
 
-        let (tick_raw, call_points_raw) = DivRem::div_rem(
+        let (tick_raw, _call_points_legacy) = DivRem::div_rem(
             tick_call_points.low, 0x100_u128.try_into().unwrap()
         );
 
@@ -67,12 +64,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             i129 { mag: tick_raw, sign: false }
         };
 
-        let call_points: CallPoints = TryInto::<
-            u8, CallPoints
-        >::try_into(TryInto::<u128, u8>::try_into(call_points_raw).unwrap())
-            .unwrap();
-
-        PoolPrice { sqrt_ratio, tick, call_points }
+        PoolPrice { sqrt_ratio, tick }
     }
 }
 

@@ -1,4 +1,5 @@
 use core::array::{ArrayTrait};
+use core::num::traits::{Zero};
 use core::serde::{Serde};
 use core::traits::{Into};
 use starknet::storage_access::{StorePacking};
@@ -6,6 +7,7 @@ use starknet::storage_access::{StorePacking};
 // The points at which an extension should be called
 #[derive(Copy, Drop, Serde, PartialEq, Debug)]
 pub struct CallPoints {
+    pub before_initialize_pool: bool,
     pub after_initialize_pool: bool,
     pub before_swap: bool,
     pub after_swap: bool,
@@ -18,6 +20,7 @@ pub struct CallPoints {
 impl CallPointsDefault of Default<CallPoints> {
     fn default() -> CallPoints {
         CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
@@ -31,6 +34,7 @@ impl CallPointsDefault of Default<CallPoints> {
 
 pub fn all_call_points() -> CallPoints {
     CallPoints {
+        before_initialize_pool: true,
         after_initialize_pool: true,
         before_swap: true,
         after_swap: true,
@@ -64,6 +68,9 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
         }
         if (self.after_collect_fees) {
             res += 2;
+        }
+        if (self.before_initialize_pool) {
+            res += 1;
         }
         res
     }
@@ -113,16 +120,19 @@ impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
             false
         };
 
-        let after_collect_fees = if (self == 2) {
+        let after_collect_fees = if (self >= 2) {
             self -= 2;
             true
         } else {
             false
         };
 
+        let before_initialize_pool = (self == 1);
+
         if (self == 0) {
             Option::Some(
                 CallPoints {
+                    before_initialize_pool,
                     after_initialize_pool,
                     before_swap,
                     after_swap,
@@ -138,3 +148,11 @@ impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
     }
 }
 
+impl CallPointsStorePacking of StorePacking<CallPoints, u8> {
+    fn pack(value: CallPoints) -> u8 {
+        value.into()
+    }
+    fn unpack(value: u8) -> CallPoints {
+        value.try_into().unwrap()
+    }
+}

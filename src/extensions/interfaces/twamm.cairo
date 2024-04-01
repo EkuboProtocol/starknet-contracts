@@ -72,7 +72,6 @@ pub trait ITWAMM<TContractState> {
     // Execute virtual orders
     fn execute_virtual_orders(ref self: TContractState, key: StateKey);
 
-    // Administrative action to update the call points to the latest version for the given state key
-    // Only required when migrating to new versions
-    fn update_call_points(ref self: TContractState, key: StateKey);
+    // Administrative action to update the call points to the latest version. Anyone can call.
+    fn update_call_points(ref self: TContractState);
 }

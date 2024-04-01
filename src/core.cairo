@@ -72,6 +72,8 @@ pub mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<SavedBalanceKey, u128>,
+        // extensions must be registered before they are used in a pool key
+        extension_call_points: LegacyMap<ContractAddress, CallPoints>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -102,7 +104,6 @@ pub mod Core {
         pub pool_key: PoolKey,
         pub initial_tick: i129,
         pub sqrt_ratio: u256,
-        pub call_points: u8,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -579,30 +580,31 @@ pub mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             pool_key.check_valid();
 
-            let call_points = if (pool_key.extension.is_non_zero()) {
-                IExtensionDispatcher { contract_address: pool_key.extension }
-                    .before_initialize_pool(get_caller_address(), pool_key, initial_tick)
+            let call_points: CallPoints = if pool_key.extension.is_non_zero() {
+                let call_points = self.extension_call_points.read(pool_key.extension);
+                assert(call_points != Default::default(), 'EXTENSION_NOT_REGISTERED');
+                call_points
             } else {
-                Default::<CallPoints>::default()
+                Default::default()
             };
+
+            let caller_is_not_extension = get_caller_address() != pool_key.extension;
+
+            if (call_points.before_initialize_pool && caller_is_not_extension) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_initialize_pool(get_caller_address(), pool_key, initial_tick);
+            }
 
             let price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
             let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
 
-            self
-                .pool_price
-                .write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick, call_points });
+            self.pool_price.write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick });
 
-            self
-                .emit(
-                    PoolInitialized {
-                        pool_key, initial_tick, sqrt_ratio, call_points: call_points.into()
-                    }
-                );
+            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
-            if (call_points.after_initialize_pool) {
+            if (call_points.after_initialize_pool && caller_is_not_extension) {
                 IExtensionDispatcher { contract_address: pool_key.extension }
                     .after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
@@ -635,21 +637,24 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let mut price = self.pool_price.read(pool_key);
+            let call_points = if pool_key.extension.is_non_zero() {
+                self.extension_call_points.read(pool_key.extension)
+            } else {
+                Default::default()
+            };
 
-            if (price.call_points.before_update_position) {
+            if (call_points.before_update_position) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
                         .before_update_position(locker, pool_key, params);
-                    // the extension could have performed actions on the pool, changing its state
-                    // thus, we must re-read it from storage
-                    price = self.pool_price.read(pool_key);
                 }
             }
 
+            // bounds must be multiple of tick spacing
             params.bounds.check_valid(pool_key.tick_spacing);
 
             // pool must be initialized
+            let mut price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
@@ -752,7 +757,7 @@ pub mod Core {
 
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
-            if (price.call_points.after_update_position) {
+            if (call_points.after_update_position) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
                         .after_update_position(locker, pool_key, params, delta);
@@ -767,7 +772,12 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let call_points = self.get_pool_price(pool_key).call_points;
+            let call_points = if pool_key.extension.is_non_zero() {
+                self.extension_call_points.read(pool_key.extension)
+            } else {
+                Default::default()
+            };
+
             if (call_points.before_collect_fees) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
@@ -812,6 +822,19 @@ pub mod Core {
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, locker) = self.require_locker();
 
+            let call_points = if pool_key.extension.is_non_zero() {
+                self.extension_call_points.read(pool_key.extension)
+            } else {
+                Default::default()
+            };
+
+            if (call_points.before_swap) {
+                if (pool_key.extension != locker) {
+                    IExtensionDispatcher { contract_address: pool_key.extension }
+                        .before_swap(locker, pool_key, params);
+                }
+            }
+
             let pool_price_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(selector!("pool_price"), pool_key)
             );
@@ -821,17 +844,6 @@ pub mod Core {
 
             // pool must be initialized
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
-
-            if (price.call_points.before_swap) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_swap(locker, pool_key, params);
-                    // the extension could have performed actions on the pool, changing the price
-                    // thus, we must re-read it from storage
-                    price = Store::read(0, pool_price_storage_address)
-                        .expect('FAILED_READ_POOL_PRICE');
-                }
-            }
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
@@ -1006,11 +1018,7 @@ pub mod Core {
                 }
             };
 
-            Store::write(
-                0,
-                pool_price_storage_address,
-                PoolPrice { sqrt_ratio, tick, call_points: price.call_points }
-            )
+            Store::write(0, pool_price_storage_address, PoolPrice { sqrt_ratio, tick })
                 .expect('FAILED_WRITE_POOL_PRICE');
             Store::write(0, liquidity_storage_address, liquidity).expect('FAILED_WRITE_LIQUIDITY');
             Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity)
@@ -1031,7 +1039,7 @@ pub mod Core {
                     }
                 );
 
-            if (price.call_points.after_swap) {
+            if (call_points.after_swap) {
                 if (pool_key.extension != locker) {
                     IExtensionDispatcher { contract_address: pool_key.extension }
                         .after_swap(locker, pool_key, params, delta);
@@ -1073,12 +1081,13 @@ pub mod Core {
             self.emit(FeesAccumulated { pool_key, amount0, amount1, });
         }
 
-        fn change_call_points(ref self: ContractState, pool_key: PoolKey, call_points: CallPoints) {
-            assert(pool_key.extension == get_caller_address(), 'EXTENSION_ONLY');
-            let mut price = self.pool_price.read(pool_key);
-            assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
-            price.call_points = call_points;
-            self.pool_price.write(pool_key, price);
+        fn set_call_points(ref self: ContractState, call_points: CallPoints) {
+            self.extension_call_points.write(get_caller_address(), call_points);
+        }
+
+        // Returns the call points for the given extension.
+        fn get_call_points(self: @ContractState, extension: ContractAddress) -> CallPoints {
+            self.extension_call_points.read(extension)
         }
     }
 }

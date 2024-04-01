@@ -18,7 +18,7 @@ pub trait IMockExtension<TStorage> {
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 
     fn call_into_pool(self: @TStorage, pool_key: PoolKey);
-    fn change_call_points(self: @TStorage, pool_key: PoolKey, call_points: CallPoints);
+    fn change_call_points(self: @TStorage, call_points: CallPoints);
 }
 
 #[starknet::contract]
@@ -44,15 +44,10 @@ pub mod MockExtension {
         core: ICoreDispatcher,
         num_calls: u32,
         calls: LegacyMap<u32, ExtensionCalled>,
-        call_points: u8
     }
 
     #[generate_trait]
     impl InternalMethods of InternalTrait {
-        fn get_call_points(self: @ContractState) -> CallPoints {
-            TryInto::<u8, CallPoints>::try_into(self.call_points.read()).unwrap()
-        }
-
         fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
             let core = self.core.read();
             assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
@@ -83,21 +78,21 @@ pub mod MockExtension {
     #[constructor]
     fn constructor(ref self: ContractState, core: ICoreDispatcher, call_points: CallPoints) {
         self.core.write(core);
-        self.call_points.write(call_points.into());
+        core.set_call_points(call_points);
     }
 
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
+        ) {
             let core = self.check_caller_is_core();
             let price = core.get_pool_price(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(caller, 0, pool_key);
-            self.get_call_points()
         }
+
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
@@ -234,8 +229,8 @@ pub mod MockExtension {
             self.calls.read(call_id)
         }
 
-        fn change_call_points(self: @ContractState, pool_key: PoolKey, call_points: CallPoints) {
-            self.core.read().change_call_points(pool_key, call_points)
+        fn change_call_points(self: @ContractState, call_points: CallPoints) {
+            self.core.read().set_call_points(call_points)
         }
     }
 }

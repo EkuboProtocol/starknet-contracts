@@ -41,6 +41,7 @@ fn test_u8_into_after_initialize_call_points() {
     assert(
         TryInto::<u8, CallPoints>::try_into(128)
             .unwrap() == CallPoints {
+                before_initialize_pool: false,
                 after_initialize_pool: true,
                 before_swap: false,
                 after_swap: false,
