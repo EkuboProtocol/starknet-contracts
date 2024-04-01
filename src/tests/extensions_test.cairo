@@ -63,15 +63,15 @@ fn test_mock_extension_can_be_called_by_core() {
 }
 
 #[test]
-#[should_panic(expected: ('INVALID_CALL_POINTS','ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('INVALID_CALL_POINTS', 'ENTRYPOINT_FAILED'))]
 fn test_cannot_change_to_default_call_points() {
     let mut deployer: Deployer = Default::default();
 
-    let (core, _, _, _,_) = setup(
+    let (core, _, _, _, _) = setup(
         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
     );
 
-    core.set_call_points( Default::default());
+    core.set_call_points(Default::default());
 }
 
 // #[test]

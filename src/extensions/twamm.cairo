@@ -219,7 +219,7 @@ pub mod TWAMM {
     fn twamm_call_points() -> CallPoints {
         CallPoints {
             before_initialize_pool: true,
-            after_initialize_pool: false,
+            after_initialize_pool: true,
             before_swap: true,
             after_swap: false,
             before_update_position: true,
@@ -236,24 +236,36 @@ pub mod TWAMM {
         ) {
             check_caller_is_core(self.core.read());
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
+        }
 
+        fn after_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ) {
+            check_caller_is_core(self.core.read());
+
+            let key = StateKey {
+                token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee
+            };
             self
                 .sale_rate_and_last_virtual_order_time
                 .write(
-                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                        .into(),
+                    key.into(),
                     SaleRateState {
                         token0_sale_rate: 0,
                         token1_sale_rate: 0,
                         last_virtual_order_time: get_block_timestamp()
                     }
                 );
-        }
 
-        fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) {
-            assert(false, 'NOT_USED');
+            self
+                .emit(
+                    VirtualOrdersExecuted {
+                        key,
+                        token0_sale_rate: Zero::zero(),
+                        token1_sale_rate: Zero::zero(),
+                        twamm_delta: Zero::zero()
+                    }
+                );
         }
 
         fn before_swap(
