@@ -62,18 +62,17 @@ fn test_mock_extension_can_be_called_by_core() {
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
 }
 
-// #[test]
-// #[should_panic(expected: ('ENTRYPOINT_FAILED'))]
-// fn test_core_cannot_change_call_points() {
-//     let mut deployer: Deployer = Default::default();
+#[test]
+#[should_panic(expected: ('INVALID_CALL_POINTS','ENTRYPOINT_FAILED'))]
+fn test_cannot_change_to_default_call_points() {
+    let mut deployer: Deployer = Default::default();
 
-//     let (core, _, _, _,_) = setup(
-//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
-//     );
+    let (core, _, _, _,_) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
 
-//     core.set_call_points( Default::default());
-//     assert_eq!(core.get_call_points(get_contract_address()), Default::default());
-// }
+    core.set_call_points( Default::default());
+}
 
 // #[test]
 // #[should_panic(expected: ('NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
