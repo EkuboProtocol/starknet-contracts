@@ -332,44 +332,15 @@ pub mod TWAMM {
         fn get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderInfo {
-            let current_time = get_block_timestamp();
-            let order_state = self.orders.read((owner, salt, order_key));
-
-            let order_reward_rate = if (order_state.use_snapshot) {
-                order_state.reward_rate
-            } else {
-                self.get_reward_rate_at(order_key, order_key.start_time)
-            };
-
-            let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
-                (
-                    calculate_amount_from_sale_rate(
-                        sale_rate: order_state.sale_rate,
-                        duration: to_duration(start: order_key.start_time, end: order_key.end_time),
-                        round_up: false
-                    ),
-                    0
-                )
-            } else if (current_time < order_key.end_time) {
-                let current_reward_rate = self.get_current_reward_rate(order_key);
-
-                (
-                    calculate_amount_from_sale_rate(
-                        sale_rate: order_state.sale_rate,
-                        duration: to_duration(start: current_time, end: order_key.end_time),
-                        round_up: false
-                    ),
-                    calculate_reward_amount(
-                        current_reward_rate - order_reward_rate, order_state.sale_rate
-                    )
-                )
-            } else {
-                let interval_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
-                    - order_reward_rate;
-                (0, calculate_reward_amount(interval_reward_rate, order_state.sale_rate))
-            };
-
-            OrderInfo { sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount }
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
+                self.core.read(),
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData({
+                    order_key.into()
+                })
+            );
+            self.internal_get_order_info(owner, salt, order_key)
         }
 
         fn get_sale_rate_and_last_virtual_order_time(
@@ -380,6 +351,12 @@ pub mod TWAMM {
 
         fn get_reward_rate(self: @ContractState, key: StateKey) -> (felt252, felt252) {
             self.reward_rate.read(key.into())
+        }
+
+        fn get_time_reward_rate(
+            self: @ContractState, key: StateKey, time: u64
+        ) -> (felt252, felt252) {
+            self.time_reward_rate.read((key.into(), time))
         }
 
         fn get_sale_rate_net(self: @ContractState, key: StateKey, time: u64) -> u128 {
@@ -454,7 +431,7 @@ pub mod TWAMM {
 
                     self.internal_execute_virtual_orders(core, order_key.into());
 
-                    let order_info = self.get_order_info(owner, salt, order_key);
+                    let order_info = self.internal_get_order_info(owner, salt, order_key);
 
                     validate_time(now: current_time, time: order_key.end_time);
                     validate_time(now: current_time, time: order_key.start_time);
@@ -588,7 +565,7 @@ pub mod TWAMM {
                 )) => {
                     self.internal_execute_virtual_orders(core, order_key.into());
 
-                    let order_info = self.get_order_info(owner, salt, order_key);
+                    let order_info = self.internal_get_order_info(owner, salt, order_key);
 
                     // snapshot the reward rate so we know the proceeds of the order have been withdrawn at this current time
                     self
@@ -1003,6 +980,52 @@ pub mod TWAMM {
                     );
             }
         }
+
+        // Gets an order info.
+        // The pool must be executed up to the current time for an accurate response
+        fn internal_get_order_info(
+            self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
+        ) -> OrderInfo {
+            let current_time = get_block_timestamp();
+            let order_state = self.orders.read((owner, salt, order_key));
+
+            let order_reward_rate = if (order_state.use_snapshot) {
+                order_state.reward_rate
+            } else {
+                self.get_reward_rate_at(order_key, order_key.start_time)
+            };
+
+            let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
+                (
+                    calculate_amount_from_sale_rate(
+                        sale_rate: order_state.sale_rate,
+                        duration: to_duration(start: order_key.start_time, end: order_key.end_time),
+                        round_up: false
+                    ),
+                    0
+                )
+            } else if (current_time < order_key.end_time) {
+                let current_reward_rate = self.get_current_reward_rate(order_key);
+
+                (
+                    calculate_amount_from_sale_rate(
+                        sale_rate: order_state.sale_rate,
+                        duration: to_duration(start: current_time, end: order_key.end_time),
+                        round_up: false
+                    ),
+                    calculate_reward_amount(
+                        current_reward_rate - order_reward_rate, order_state.sale_rate
+                    )
+                )
+            } else {
+                let interval_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
+                    - order_reward_rate;
+                (0, calculate_reward_amount(interval_reward_rate, order_state.sale_rate))
+            };
+
+            OrderInfo { sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount }
+        }
+
 
         fn handle_delta_with_saved_balances(
             ref self: ContractState,

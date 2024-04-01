@@ -47,6 +47,9 @@ pub trait ITWAMM<TContractState> {
     // Return the current reward rate
     fn get_reward_rate(self: @TContractState, key: StateKey) -> (felt252, felt252);
 
+    // Returns the reward rate stored for the given time
+    fn get_time_reward_rate(self: @TContractState, key: StateKey, time: u64) -> (felt252, felt252);
+
     // Return the sale rate net for a specific time
     fn get_sale_rate_net(self: @TContractState, key: StateKey, time: u64) -> u128;
 

@@ -56,7 +56,7 @@ pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
     muldiv(reward_rate.into(), sale_rate.into(), constants::X128, false)
         .unwrap()
         .try_into()
-        .unwrap()
+        .expect('REWARD_AMOUNT_OVERFLOW_U128')
 }
 
 pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
