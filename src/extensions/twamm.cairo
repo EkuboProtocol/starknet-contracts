@@ -242,6 +242,8 @@ pub mod TWAMM {
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
+            check_caller_is_core(self.core.read());
+
             let key = StateKey {
                 token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee
             };
