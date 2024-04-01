@@ -1704,6 +1704,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
+        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
