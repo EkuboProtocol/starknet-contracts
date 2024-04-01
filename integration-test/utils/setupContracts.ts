@@ -116,6 +116,10 @@ export async function setupContracts(expected?: {
 
   await positions.invoke("set_twamm", [twammAddress]);
 
+  const twamm = new Contract(TWAMMCompiledContract.abi, twammAddress, deployer);
+
+  await twamm.invoke("update_call_points", []);
+
   const nftAddress = (await positions.call("get_nft_address")) as bigint;
 
   return {
