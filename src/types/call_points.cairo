@@ -76,8 +76,8 @@ impl CallPointsIntoU8 of Into<CallPoints, u8> {
     }
 }
 
-impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
-    fn try_into(mut self: u8) -> Option<CallPoints> {
+impl U8IntoCallPoints of Into<u8, CallPoints> {
+    fn into(mut self: u8) -> CallPoints {
         let after_initialize_pool = if (self >= 128) {
             self -= 128;
             true
@@ -129,21 +129,15 @@ impl U8TryIntoCallPoints of TryInto<u8, CallPoints> {
 
         let before_initialize_pool = (self == 1);
 
-        if (self == 0) {
-            Option::Some(
-                CallPoints {
-                    before_initialize_pool,
-                    after_initialize_pool,
-                    before_swap,
-                    after_swap,
-                    before_update_position,
-                    after_update_position,
-                    before_collect_fees,
-                    after_collect_fees,
-                }
-            )
-        } else {
-            Option::None
+        CallPoints {
+            before_initialize_pool,
+            after_initialize_pool,
+            before_swap,
+            after_swap,
+            before_update_position,
+            after_update_position,
+            before_collect_fees,
+            after_collect_fees,
         }
     }
 }
@@ -153,6 +147,6 @@ impl CallPointsStorePacking of StorePacking<CallPoints, u8> {
         value.into()
     }
     fn unpack(value: u8) -> CallPoints {
-        value.try_into().unwrap()
+        value.into()
     }
 }

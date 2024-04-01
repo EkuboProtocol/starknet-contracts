@@ -76,8 +76,8 @@ pub mod CoreLocker {
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
-            Default::default()
+        ) {
+            assert(false, 'never called');
         }
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129

@@ -582,6 +582,8 @@ pub mod Core {
 
             let call_points: CallPoints = if pool_key.extension.is_non_zero() {
                 let call_points = self.extension_call_points.read(pool_key.extension);
+                // extensions with 0 call points are considered invalid because the pools behave exactly the same as pools without extensions
+                // it also prevents a pool from being initialized before the extension gets a chance to set its call points
                 assert(call_points != Default::default(), 'EXTENSION_NOT_REGISTERED');
                 call_points
             } else {
@@ -1082,6 +1084,7 @@ pub mod Core {
         }
 
         fn set_call_points(ref self: ContractState, call_points: CallPoints) {
+            assert(call_points != Default::default(), 'INVALID_CALL_POINTS');
             self.extension_call_points.write(get_caller_address(), call_points);
         }
 

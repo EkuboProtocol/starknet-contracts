@@ -228,7 +228,7 @@ pub trait ICore<TStorage> {
     // You must call this within a lock callback.
     fn accumulate_as_fees(ref self: TStorage, pool_key: PoolKey, amount0: u128, amount1: u128);
 
-    // Set the call points. The extension must be the caller.
+    // Set the call points for the caller, which must be a valid extension.
     fn set_call_points(ref self: TStorage, call_points: CallPoints);
 
     // Returns the call points for the given extension.

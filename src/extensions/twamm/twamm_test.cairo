@@ -4528,6 +4528,9 @@ fn set_up_twamm(
     set_block_timestamp(1);
 
     let twamm = d.deploy_twamm(core);
+    // this effectively registers the extension with core
+    ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
     let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
         twamm.contract_address
     )

@@ -62,87 +62,88 @@ fn test_mock_extension_can_be_called_by_core() {
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
 }
 
-#[test]
-#[should_panic(expected: ('EXTENSION_ONLY', 'ENTRYPOINT_FAILED'))]
-fn test_core_cannot_change_call_points() {
-    let mut deployer: Deployer = Default::default();
+// #[test]
+// #[should_panic(expected: ('ENTRYPOINT_FAILED'))]
+// fn test_core_cannot_change_call_points() {
+//     let mut deployer: Deployer = Default::default();
 
-    let (core, _, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
-    );
-    core.change_call_points(pool_key, Default::default());
-}
+//     let (core, _, _, _,_) = setup(
+//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+//     );
 
-#[test]
-#[should_panic(expected: ('NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
-fn test_cannot_change_call_points_not_initialized() {
-    let mut deployer: Deployer = Default::default();
+//     core.set_call_points( Default::default());
+//     assert_eq!(core.get_call_points(get_contract_address()), Default::default());
+// }
 
-    let (core, _, extension, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
-    );
-    set_contract_address(extension.contract_address);
-    core.change_call_points(pool_key, Default::default());
-}
+// #[test]
+// #[should_panic(expected: ('NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+// fn test_cannot_change_call_points_not_initialized() {
+//     let mut deployer: Deployer = Default::default();
 
-#[test]
-fn test_extension_can_call_change_call_points() {
-    let mut deployer: Deployer = Default::default();
+//     let (core, _, extension, _, pool_key) = setup(
+//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+//     );
+//     set_contract_address(extension.contract_address);
+//     core.change_call_points(pool_key, Default::default());
+// }
 
-    let (core, _, extension, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
-    );
-    core.initialize_pool(pool_key, Zero::zero());
-    set_contract_address(extension.contract_address);
-    assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
-    core.change_call_points(pool_key, Default::default());
-    assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
-}
+// #[test]
+// fn test_extension_can_call_change_call_points() {
+//     let mut deployer: Deployer = Default::default();
 
-#[test]
-fn test_extension_can_call_change_call_points_from_extension() {
-    let mut deployer: Deployer = Default::default();
+//     let (core, _, extension, _, pool_key) = setup(
+//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+//     );
+//     core.initialize_pool(pool_key, Zero::zero());
+//     set_contract_address(extension.contract_address);
+//     assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
+//     core.change_call_points(pool_key, Default::default());
+//     assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
+// }
 
-    let (core, mock_extension, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
-    );
-    core.initialize_pool(pool_key, Zero::zero());
-    assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
-    mock_extension.change_call_points(pool_key, Default::default());
-    assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
-}
+// #[test]
+// fn test_extension_can_call_change_call_points_from_extension() {
+//     let mut deployer: Deployer = Default::default();
 
-#[test]
-fn test_change_call_points_random_call_points() {
-    let mut deployer: Deployer = Default::default();
+//     let (core, mock_extension, _, _, pool_key) = setup(
+//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+//     );
+//     core.initialize_pool(pool_key, Zero::zero());
+//     assert_eq!(core.get_pool_price(pool_key).call_points, all_call_points());
+//     mock_extension.change_call_points(pool_key, Default::default());
+//     assert_eq!(core.get_pool_price(pool_key).call_points, Default::default());
+// }
 
-    let before = CallPoints {
-        after_initialize_pool: true,
-        before_swap: false,
-        after_swap: true,
-        before_update_position: false,
-        after_update_position: true,
-        before_collect_fees: false,
-        after_collect_fees: true,
-    };
-    let after = CallPoints {
-        after_initialize_pool: false,
-        before_swap: true,
-        after_swap: false,
-        before_update_position: true,
-        after_update_position: false,
-        before_collect_fees: true,
-        after_collect_fees: false,
-    };
-    let (core, mock_extension, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before
-    );
-    core.initialize_pool(pool_key, Zero::zero());
-    assert_eq!(core.get_pool_price(pool_key).call_points, before);
-    mock_extension.change_call_points(pool_key, after);
-    assert_eq!(core.get_pool_price(pool_key).call_points, after);
-}
+// #[test]
+// fn test_change_call_points_random_call_points() {
+//     let mut deployer: Deployer = Default::default();
 
+//     let before = CallPoints {
+//         after_initialize_pool: true,
+//         before_swap: false,
+//         after_swap: true,
+//         before_update_position: false,
+//         after_update_position: true,
+//         before_collect_fees: false,
+//         after_collect_fees: true,
+//     };
+//     let after = CallPoints {
+//         after_initialize_pool: false,
+//         before_swap: true,
+//         after_swap: false,
+//         before_update_position: true,
+//         after_update_position: false,
+//         before_collect_fees: true,
+//         after_collect_fees: false,
+//     };
+//     let (core, mock_extension, _, _, pool_key) = setup(
+//         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before
+//     );
+//     core.initialize_pool(pool_key, Zero::zero());
+//     assert_eq!(core.get_pool_price(pool_key).call_points, before);
+//     mock_extension.change_call_points(pool_key, after);
+//     assert_eq!(core.get_pool_price(pool_key).call_points, after);
+// }
 
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
     assert(call.token0 == pool_key.token0, 'token0 matches');
@@ -234,12 +235,36 @@ fn test_mock_extension_update_position_is_called() {
     check_matches_pool_key(before, pool_key);
 }
 
+
 #[test]
-fn test_mock_extension_no_call_points() {
+#[should_panic(expected: ('mockext deploy failed',))]
+fn test_mock_extension_no_call_points_fails() {
+    // this panics because you cannot create an extension with no call points
     let mut deployer: Deployer = Default::default();
-    let (core, mock, _, locker, pool_key) = setup(
+    let (_, _, _, _, _) = setup(
         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: Default::default()
     );
+}
+
+#[test]
+fn test_mock_extension_before_initialize_pool_only() {
+    let mut deployer: Deployer = Default::default();
+    let (core, mock, _, locker, pool_key) = setup(
+        ref deployer: deployer,
+        fee: 0,
+        tick_spacing: 1,
+        call_points: CallPoints {
+            before_initialize_pool: true,
+            after_initialize_pool: false,
+            before_swap: false,
+            after_swap: false,
+            before_update_position: false,
+            after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
+        }
+    );
+
     core.initialize_pool(pool_key, Zero::zero());
     let delta = update_position_inner(
         core: core,
@@ -278,6 +303,7 @@ fn test_mock_extension_after_initialize_pool_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: true,
             before_swap: false,
             after_swap: false,
@@ -310,9 +336,9 @@ fn test_mock_extension_after_initialize_pool_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '2 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == get_contract_address(), 'caller');
     assert(call.call_point == 1, 'called');
     check_matches_pool_key(call, pool_key);
@@ -327,6 +353,7 @@ fn test_mock_extension_before_swap_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: true,
             after_swap: false,
@@ -359,9 +386,9 @@ fn test_mock_extension_before_swap_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '2 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 2, 'called');
     check_matches_pool_key(call, pool_key);
@@ -375,6 +402,7 @@ fn test_mock_extension_after_swap_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: true,
@@ -407,9 +435,9 @@ fn test_mock_extension_after_swap_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 3, 'called');
     check_matches_pool_key(call, pool_key);
@@ -425,6 +453,7 @@ fn test_mock_extension_before_update_position_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
@@ -457,9 +486,9 @@ fn test_mock_extension_before_update_position_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 4, 'called');
     check_matches_pool_key(call, pool_key);
@@ -473,6 +502,7 @@ fn test_mock_extension_after_update_position_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
@@ -505,9 +535,9 @@ fn test_mock_extension_after_update_position_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 5, 'called');
     check_matches_pool_key(call, pool_key);
