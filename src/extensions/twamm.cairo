@@ -981,19 +981,12 @@ pub mod TWAMM {
             }
         }
 
-        // Gets an order info. The pool must be executed up to the current time for an accurate response
+        // Gets an order info.
+        // The pool must be executed up to the current time for an accurate response
         fn internal_get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderInfo {
             let current_time = get_block_timestamp();
-            let state_key: StateKey = order_key.into();
-            assert(
-                self
-                    .sale_rate_and_last_virtual_order_time
-                    .read(state_key.into())
-                    .last_virtual_order_time == current_time,
-                'MUST_EXECUTE_VIRTUAL_ORDERS'
-            );
             let order_state = self.orders.read((owner, salt, order_key));
 
             let order_reward_rate = if (order_state.use_snapshot) {
