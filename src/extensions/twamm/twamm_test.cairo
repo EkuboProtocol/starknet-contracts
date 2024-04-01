@@ -389,7 +389,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -464,7 +463,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
@@ -539,7 +538,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -614,7 +612,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
@@ -702,7 +699,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -756,7 +752,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
@@ -807,7 +803,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -864,7 +859,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
@@ -1704,7 +1698,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2017,7 +2011,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2165,7 +2159,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2300,7 +2294,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2447,7 +2441,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2599,7 +2593,7 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2801,7 +2795,7 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3011,7 +3005,7 @@ mod PlaceOrderOnBothSides {
             amount0: 2 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3203,7 +3197,7 @@ mod PlaceOrderOnBothSides {
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0, amount1
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3401,7 +3395,7 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3565,7 +3559,7 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -4062,7 +4056,6 @@ mod MinMaxSqrtRatio {
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0
         );
-        let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -4587,7 +4580,7 @@ fn set_up_twamm_pool(
     amount0: u128,
     amount1: u128
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
-    let _ = core
+    match core
         .maybe_initialize_pool(
             PoolKey {
                 token0: setup.token0.contract_address,
@@ -4597,7 +4590,17 @@ fn set_up_twamm_pool(
                 extension: twamm.contract_address,
             },
             initial_tick
-        );
+        ) {
+        Option::Some(_) => {
+            let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+            assert_eq!(event.key.token0, setup.token0.contract_address);
+            assert_eq!(event.key.token1, setup.token1.contract_address);
+            assert_eq!(event.key.fee, fee);
+            assert_eq!(event.token0_sale_rate, Zero::zero());
+            assert_eq!(event.twamm_delta, Zero::zero());
+        },
+        _ => {}
+    }
 
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
