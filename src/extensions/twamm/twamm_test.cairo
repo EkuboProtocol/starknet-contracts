@@ -203,7 +203,8 @@ mod PoolTests {
         IPositionsDispatcher, IPositionsDispatcherTrait, ICoreDispatcher, ICoreDispatcherTrait,
         PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity, contract_address_const,
         tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait
     };
 
     #[test]
@@ -214,6 +215,7 @@ mod PoolTests {
         let twamm = d.deploy_twamm(core);
         let (token0, token1) = d.deploy_two_mock_tokens();
 
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
         core
             .initialize_pool(
                 PoolKey {
@@ -234,6 +236,7 @@ mod PoolTests {
         let twamm = d.deploy_twamm(core);
         let (token0, token1) = d.deploy_two_mock_tokens();
 
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
         core
             .initialize_pool(
                 PoolKey {
@@ -262,6 +265,7 @@ mod PoolTests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);
@@ -310,6 +314,7 @@ mod PoolTests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
         let caller = contract_address_const::<42>();
         set_contract_address(caller);

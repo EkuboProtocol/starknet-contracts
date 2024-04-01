@@ -1131,6 +1131,7 @@ mod locks {
         let core = d.deploy_core();
         let (token0, token1) = d.deploy_two_mock_tokens();
         let locker = d.deploy_locker(core);
+        locker.set_call_points();
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
