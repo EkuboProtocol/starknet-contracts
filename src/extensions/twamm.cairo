@@ -218,6 +218,7 @@ pub mod TWAMM {
 
     fn twamm_call_points() -> CallPoints {
         CallPoints {
+            before_initialize_pool: true,
             after_initialize_pool: true,
             before_swap: true,
             after_swap: false,
@@ -232,11 +233,9 @@ pub mod TWAMM {
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
+        ) {
             check_caller_is_core(self.core.read());
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
-
-            twamm_call_points()
         }
 
         fn after_initialize_pool(
@@ -420,8 +419,8 @@ pub mod TWAMM {
             )
         }
 
-        fn update_call_points(ref self: ContractState, key: StateKey) {
-            self.core.read().change_call_points(key.into(), twamm_call_points());
+        fn update_call_points(ref self: ContractState) {
+            self.core.read().set_call_points(twamm_call_points());
         }
     }
 

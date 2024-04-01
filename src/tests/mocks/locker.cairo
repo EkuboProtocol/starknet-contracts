@@ -37,6 +37,7 @@ pub enum ActionResult {
 #[starknet::interface]
 pub trait ICoreLocker<TStorage> {
     fn call(ref self: TStorage, action: Action) -> ActionResult;
+    fn set_call_points(ref self: TStorage);
 }
 
 #[starknet::contract]
@@ -76,9 +77,7 @@ pub mod CoreLocker {
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
-            Default::default()
-        }
+        ) {}
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
@@ -351,6 +350,24 @@ pub mod CoreLocker {
     impl CoreLockerImpl of ICoreLocker<ContractState> {
         fn call(ref self: ContractState, action: Action) -> ActionResult {
             call_core_with_callback(self.core.read(), @action)
+        }
+
+        fn set_call_points(ref self: ContractState) {
+            self
+                .core
+                .read()
+                .set_call_points(
+                    CallPoints {
+                        before_initialize_pool: true,
+                        after_initialize_pool: false,
+                        before_swap: false,
+                        after_swap: false,
+                        before_update_position: false,
+                        after_update_position: false,
+                        before_collect_fees: false,
+                        after_collect_fees: false,
+                    }
+                );
         }
     }
 }

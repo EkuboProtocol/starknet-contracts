@@ -20,14 +20,14 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x1b291371387b63ead94e9a62f117236498a42ea63cb5f3271a048289f5d97ca",
+      core: "0x18e03afa36c78954f3c1047d309a75b940c97a914080385324c05df5ef1082",
       positions:
-        "0x1127b04a974f249f60b7099e9e2ac4ca68216b51295e5e3b58d22dd16ef8169",
+        "0xd12253cbc5cc432e4f6452d216c6cb621ad77bee2c13658c3810c27dec3683",
       router:
-        "0x6705508c85a2052d88e5650620efba73253d38a526ce8139bff3f5095a838fe",
-      nft: "0x235cf3736696b4f407787c2ccaa2aa5fe9bd0085781c8a22314d0f885822933",
+        "0x36048bf3173cb97f45db204048f9b383cec3d4edbe7cb8bdce97ee9240f6b09",
+      nft: "0x3cbc5669407ce450104b64dfc85f9e5b1ac9f6af6312ec64867a3fdb5be57de",
       twamm:
-        "0x7173b967f90a73f997e2021cd9915ec6ccaa894e48f0679950762a70109526c",
+        "0x5fd67277671523efb4f87fbc06f47eed9906f940a346929a012f7152338f017",
       tokenClassHash:
         "0x77756dd5c3db3eb64ee050f2fa217662193b8be2838b27872fa21193948154a",
     });
@@ -291,7 +291,7 @@ describe("core", () => {
     }
   });
 
-  describe.only("twamm", () => {
+  describe("twamm", () => {
     for (const {
       name: twammCaseName,
       pool,

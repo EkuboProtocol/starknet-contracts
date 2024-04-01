@@ -196,7 +196,6 @@ mod initialize_pool_tests {
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');
-        assert(event.call_points == Default::default(), 'event.call_points');
     }
 
     #[test]
@@ -1132,6 +1131,7 @@ mod locks {
         let core = d.deploy_core();
         let (token0, token1) = d.deploy_two_mock_tokens();
         let locker = d.deploy_locker(core);
+        locker.set_call_points();
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
