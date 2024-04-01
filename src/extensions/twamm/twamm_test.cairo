@@ -4546,6 +4546,14 @@ fn set_up_twamm(
             extension: twamm.contract_address,
         );
 
+    let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
+    assert_eq!(event.key.token0, setup.token0.contract_address);
+    assert_eq!(event.key.token1, setup.token1.contract_address);
+    assert_eq!(event.key.fee, fee);
+    assert_eq!(event.token0_sale_rate, Zero::zero());
+    assert_eq!(event.token1_sale_rate, Zero::zero());
+    assert_eq!(event.twamm_delta, Zero::zero());
+
     let positions = d.deploy_positions(setup.core);
 
     set_contract_address(default_owner());
@@ -4573,29 +4581,6 @@ fn set_up_twamm_pool(
     amount0: u128,
     amount1: u128
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
-    match core
-        .maybe_initialize_pool(
-            PoolKey {
-                token0: setup.token0.contract_address,
-                token1: setup.token1.contract_address,
-                fee: fee,
-                tick_spacing: MAX_TICK_SPACING,
-                extension: twamm.contract_address,
-            },
-            initial_tick
-        ) {
-        Option::Some(_) => {
-            let event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
-            assert_eq!(event.key.token0, setup.token0.contract_address);
-            assert_eq!(event.key.token1, setup.token1.contract_address);
-            assert_eq!(event.key.fee, fee);
-            assert_eq!(event.token0_sale_rate, Zero::zero());
-            assert_eq!(event.token1_sale_rate, Zero::zero());
-            assert_eq!(event.twamm_delta, Zero::zero());
-        },
-        _ => {}
-    }
-
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
 
