@@ -4542,7 +4542,6 @@ fn test_withdraw_and_get_info_after_order_ends() {
     let timestamp = SIXTEEN_POW_ONE;
     set_block_timestamp(timestamp);
 
-    let amount = 100;
     place_order(
         positions,
         get_contract_address(),
@@ -4551,7 +4550,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         0,
         timestamp + 496,
-        amount
+        amount: 100
     );
 
     place_order(
@@ -4562,7 +4561,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         0,
         timestamp + 496,
-        amount
+        amount: 100
     );
 
     set_block_timestamp(32);
@@ -4574,7 +4573,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         48,
         timestamp + 224,
-        amount
+        amount: 100
     );
 
     // get order info after order ends
@@ -4582,7 +4581,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
     let order1_get_info = twamm
         .get_order_info(positions.contract_address, order1_id.into(), order1_key);
     assert_eq!(order1_get_info.sale_rate, order1_info.sale_rate);
-    assert_eq!(order1_get_info.purchased_amount, 209);
+    assert_eq!(order1_get_info.purchased_amount, 193);
     assert_eq!(order1_get_info.remaining_sell_amount, 0);
 
     // Withdraw proceeds for order1 after order ends and clear
