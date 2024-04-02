@@ -578,15 +578,19 @@ pub mod TWAMM {
 
                     let order_info = self.internal_get_order_info(owner, salt, order_key);
 
+                    let reward_rate = if (order_key.end_time < get_block_timestamp()) {
+                        self.get_reward_rate_at(order_key, order_key.end_time)
+                    } else {
+                        self.get_current_reward_rate(order_key)
+                    };
+
                     // snapshot the reward rate so we know the proceeds of the order have been withdrawn at this current time
                     self
                         .orders
                         .write(
                             (owner, salt, order_key),
                             OrderState {
-                                sale_rate: order_info.sale_rate,
-                                reward_rate: self.get_current_reward_rate(order_key),
-                                use_snapshot: true,
+                                sale_rate: order_info.sale_rate, reward_rate, use_snapshot: true,
                             }
                         );
 

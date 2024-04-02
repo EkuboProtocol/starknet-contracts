@@ -4526,6 +4526,81 @@ mod PlaceOrderDurationTooLong {
     }
 }
 
+#[test]
+fn test_withdraw_and_get_info_after_order_ends() {
+    // while orders are live, place order, withdraw after order ends and get order state
+
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let fee = 0;
+    let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
+    let (twamm, setup, positions) = set_up_twamm(
+        ref d, core, fee, initial_tick, amount0: 10_000, amount1: 10_000
+    );
+
+    let timestamp = SIXTEEN_POW_ONE;
+    set_block_timestamp(timestamp);
+
+    let amount = 100;
+    place_order(
+        positions,
+        get_contract_address(),
+        setup.token0,
+        setup.token1,
+        fee,
+        0,
+        timestamp + 496,
+        amount
+    );
+
+    place_order(
+        positions,
+        get_contract_address(),
+        setup.token1,
+        setup.token0,
+        fee,
+        0,
+        timestamp + 496,
+        amount
+    );
+
+    set_block_timestamp(32);
+    let (order1_id, order1_key, order1_info) = place_order(
+        positions,
+        get_contract_address(),
+        setup.token0,
+        setup.token1,
+        fee,
+        48,
+        timestamp + 224,
+        amount
+    );
+
+    // get order info after order ends
+    set_block_timestamp(timestamp + 400);
+    let order1_get_info = twamm
+        .get_order_info(positions.contract_address, order1_id.into(), order1_key);
+    assert_eq!(order1_get_info.sale_rate, order1_info.sale_rate);
+    assert_eq!(order1_get_info.purchased_amount, 209);
+    assert_eq!(order1_get_info.remaining_sell_amount, 0);
+
+    // Withdraw proceeds for order1 after order ends and clear
+    positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+    let amount = IClearDispatcher { contract_address: twamm.contract_address }
+        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
+    assert_eq!(amount, order1_get_info.purchased_amount.into());
+
+    set_block_timestamp(timestamp + 495);
+
+    // get order info after order ends and withdrawal
+    let order1_get_info = twamm
+        .get_order_info(positions.contract_address, order1_id.into(), order1_key);
+
+    assert_eq!(order1_get_info.sale_rate, order1_info.sale_rate);
+    assert_eq!(order1_get_info.purchased_amount, 0);
+    assert_eq!(order1_get_info.remaining_sell_amount, 0);
+}
+
 fn set_up_twamm(
     ref d: Deployer,
     core: ICoreDispatcher,
