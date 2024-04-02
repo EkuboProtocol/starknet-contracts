@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use ekubo::extensions::twamm::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
-    calculate_amount_from_sale_rate, calculate_reward_rate, time::{to_duration}
+    calculate_amount_from_sale_rate, time::{to_duration}
 };
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
@@ -372,16 +372,4 @@ mod MaxPrices {
         assert_eq!(min_sqrt_ratio, constants::MAX_BOUNDS_MIN_SQRT_RATIO);
         assert_eq!(max_sqrt_ratio, constants::MAX_BOUNDS_MAX_SQRT_RATIO);
     }
-}
-
-#[test]
-fn test_calculate_reward_rate() {
-    // largest reward possible
-    assert_eq!(
-        3618502788666131106986593281521497120404053196834988299249819043765042544640,
-        calculate_reward_rate(0xffffffffffffffffffffffffffffffff, 32)
-    );
-
-    // overflow returns 0
-    assert_eq!(0, calculate_reward_rate(0xffffffffffffffffffffffffffffffff, 31));
 }
