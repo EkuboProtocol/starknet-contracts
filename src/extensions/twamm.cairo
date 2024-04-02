@@ -82,20 +82,6 @@ pub mod TWAMM {
         }
     }
 
-    pub impl OrderStateZero of Zero<OrderState> {
-        fn zero() -> OrderState {
-            OrderState { sale_rate: Zero::zero(), reward_rate_snapshot: Zero::zero() }
-        }
-
-        fn is_zero(self: @OrderState) -> bool {
-            self.sale_rate.is_zero() && self.reward_rate_snapshot.is_zero()
-        }
-
-        fn is_non_zero(self: @OrderState) -> bool {
-            !Zero::<OrderState>::is_zero(self)
-        }
-    }
-
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
@@ -582,12 +568,11 @@ pub mod TWAMM {
     #[generate_trait]
     impl Internal of InternalTrait {
         fn get_reward_rate_snapshot_inside(
-            self: @ContractState, key: StateKey, now: u64, start_time: u64, end_time: u64
+            self: @ContractState, storage_key: StorageKey, now: u64, start_time: u64, end_time: u64
         ) -> FeesPerLiquidity {
             if now < start_time {
                 Zero::zero()
             } else {
-                let storage_key: StorageKey = key.into();
                 if now < end_time {
                     self.reward_rate.read(storage_key)
                         - self.time_reward_rate_before.read((storage_key, start_time))
@@ -962,9 +947,11 @@ pub mod TWAMM {
             let current_time = get_block_timestamp();
             let order_state = self.orders.read((owner, salt, order_key));
 
+            let state_key: StateKey = order_key.into();
+
             let reward_rate_inside = self
                 .get_reward_rate_snapshot_inside(
-                    key: order_key.into(),
+                    storage_key: state_key.into(),
                     now: current_time,
                     start_time: order_key.start_time,
                     end_time: order_key.end_time
