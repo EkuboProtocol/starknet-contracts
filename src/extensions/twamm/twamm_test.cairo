@@ -1990,7 +1990,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
         SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
         OrderInfo, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
-        PositionUpdated, place_order, set_up_twamm, PoolKeyIntoStateKey, SaleRateState, StateKey,Zero
+        PositionUpdated, place_order, set_up_twamm, PoolKeyIntoStateKey, SaleRateState, StateKey,
+        Zero
     };
 
     #[test]
