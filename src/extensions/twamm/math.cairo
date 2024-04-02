@@ -59,11 +59,6 @@ pub fn calculate_reward_amount(reward_rate: felt252, sale_rate: u128) -> u128 {
         .expect('REWARD_AMOUNT_OVERFLOW_U128')
 }
 
-pub fn calculate_reward_rate(amount: u128, sale_rate: u128) -> felt252 {
-    // avoid locking pools by defaulting to 0 on overflow
-    (u256 { high: amount, low: 0 } / sale_rate.into()).try_into().unwrap_or_default()
-}
-
 pub fn calculate_next_sqrt_ratio(
     sqrt_ratio: u256,
     liquidity: u128,

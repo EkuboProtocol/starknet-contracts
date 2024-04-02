@@ -36,55 +36,26 @@ pub mod TWAMM {
     use ekubo::types::bounds::{max_bounds, Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
+    use ekubo::types::fees_per_liquidity::{FeesPerLiquidity, to_fees_per_liquidity};
     use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
     use starknet::{
         ContractAddress, Store, get_contract_address, get_caller_address, get_block_timestamp,
-        ClassHash, storage_access::{storage_base_address_from_felt252}
+        ClassHash, storage_access::{storage_base_address_from_felt252, StorePacking}
     };
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
-        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate, calculate_reward_rate,
+        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
         constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
     };
 
-    #[derive(Drop, Copy, Serde)]
+    #[derive(Drop, Copy, Serde, starknet::Store)]
     struct OrderState {
         sale_rate: u128,
-        reward_rate: felt252,
-        use_snapshot: bool
+        reward_rate_snapshot: felt252,
     }
 
-    impl OrderStateStorePacking of starknet::storage_access::StorePacking<
-        OrderState, (felt252, felt252)
-    > {
-        fn pack(value: OrderState) -> (felt252, felt252) {
-            (
-                u256 { low: value.sale_rate, high: if value.use_snapshot {
-                    1
-                } else {
-                    0
-                } }
-                    .try_into()
-                    .unwrap(),
-                value.reward_rate
-            )
-        }
-        fn unpack(value: (felt252, felt252)) -> OrderState {
-            let (sale_rate_use_snapshot, reward_rate) = value;
-            let sale_rate_use_snapshot_u256: u256 = sale_rate_use_snapshot.into();
-
-            OrderState {
-                sale_rate: sale_rate_use_snapshot_u256.low,
-                reward_rate,
-                use_snapshot: sale_rate_use_snapshot_u256.high.is_non_zero(),
-            }
-        }
-    }
-
-    impl SaleRateStorePacking of starknet::storage_access::StorePacking<
-        SaleRateState, (felt252, felt252)
-    > {
+    impl SaleRateStorePacking of StorePacking<SaleRateState, (felt252, felt252)> {
         fn pack(value: SaleRateState) -> (felt252, felt252) {
             (
                 u256 { low: value.token0_sale_rate, high: value.last_virtual_order_time.into() }
@@ -111,21 +82,6 @@ pub mod TWAMM {
         }
     }
 
-    pub impl OrderStateZero of Zero<OrderState> {
-        fn zero() -> OrderState {
-            OrderState { sale_rate: Zero::zero(), reward_rate: Zero::zero(), use_snapshot: false }
-        }
-
-        fn is_zero(self: @OrderState) -> bool {
-            self.sale_rate.is_zero()
-        }
-
-        fn is_non_zero(self: @OrderState) -> bool {
-            !self.sale_rate.is_zero()
-        }
-    }
-
-
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
@@ -151,8 +107,8 @@ pub mod TWAMM {
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
         time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
         time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
-        reward_rate: LegacyMap<StorageKey, (felt252, felt252)>,
-        time_reward_rate: LegacyMap<(StorageKey, u64), (felt252, felt252)>,
+        reward_rate: LegacyMap<StorageKey, FeesPerLiquidity>,
+        time_reward_rate_before: LegacyMap<(StorageKey, u64), FeesPerLiquidity>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -351,7 +307,8 @@ pub mod TWAMM {
                     order_key.into()
                 })
             );
-            self.internal_get_order_info(owner, salt, order_key)
+            let (order_info, _) = self.internal_get_order_info(owner, salt, order_key);
+            order_info
         }
 
         fn get_sale_rate_and_last_virtual_order_time(
@@ -360,14 +317,14 @@ pub mod TWAMM {
             self.sale_rate_and_last_virtual_order_time.read(key.into())
         }
 
-        fn get_reward_rate(self: @ContractState, key: StateKey) -> (felt252, felt252) {
+        fn get_reward_rate(self: @ContractState, key: StateKey) -> FeesPerLiquidity {
             self.reward_rate.read(key.into())
         }
 
-        fn get_time_reward_rate(
+        fn get_time_reward_rate_before(
             self: @ContractState, key: StateKey, time: u64
-        ) -> (felt252, felt252) {
-            self.time_reward_rate.read((key.into(), time))
+        ) -> FeesPerLiquidity {
+            self.time_reward_rate_before.read((key.into(), time))
         }
 
         fn get_sale_rate_net(self: @ContractState, key: StateKey, time: u64) -> u128 {
@@ -437,48 +394,52 @@ pub mod TWAMM {
                     owner, salt, order_key, sale_rate_delta
                 )) => {
                     let current_time = get_block_timestamp();
-                    // there is no reason to adjust the sale rate of an order that has already ended
+
+                    // there is no reason to update an order's sale rate after it has ended, because it is effectively no-op and only incurs additional l1 data cost
+                    // this should be prevented at the periphery contract level
                     assert(current_time < order_key.end_time, 'ORDER_ENDED');
-
-                    self.internal_execute_virtual_orders(core, order_key.into());
-
-                    let order_info = self.internal_get_order_info(owner, salt, order_key);
 
                     validate_time(now: current_time, time: order_key.end_time);
                     validate_time(now: current_time, time: order_key.start_time);
 
+                    let state_key: StateKey = order_key.into();
+
+                    self.internal_execute_virtual_orders(core, state_key);
+
+                    let (order_info, reward_rate_snapshot) = self
+                        .internal_get_order_info(owner, salt, order_key);
                     let sale_rate_next = order_info.sale_rate.add(sale_rate_delta);
 
-                    let (reward_rate, use_snapshot) = if (sale_rate_next.is_zero()) {
-                        // all proceeds must be withdrawn before order is cancelled
+                    let reward_rate_snapshot_adjusted = if sale_rate_next.is_zero() {
                         assert(order_info.purchased_amount.is_zero(), 'MUST_WITHDRAW_PROCEEDS');
-
-                        // zero out the state
-                        (0, false)
+                        0
                     } else {
-                        (
-                            self.get_current_reward_rate(order_key)
-                                - calculate_reward_rate(
-                                    order_info.purchased_amount, sale_rate_next
-                                ),
-                            true
-                        )
+                        // we compute the snapshot here and adjust by the purchased amount divided by sale rate delta so that the computed purchased amount does not change
+                        // after updating the sale rate, except for rounding down by up to 1 wei
+                        reward_rate_snapshot
+                            - to_fees_per_liquidity(order_info.purchased_amount, sale_rate_next)
                     };
 
                     self
                         .orders
                         .write(
                             (owner, salt, order_key),
-                            OrderState { sale_rate: sale_rate_next, reward_rate, use_snapshot }
+                            OrderState {
+                                sale_rate: sale_rate_next,
+                                reward_rate_snapshot: reward_rate_snapshot_adjusted
+                            }
                         );
 
                     self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
 
-                    let key: StateKey = order_key.into();
-
-                    if (order_key.start_time <= current_time) {
-                        // order already started, update the current sale rate
-                        let storage_key: StorageKey = key.into();
+                    // this part updates the pool state only if the order is active or will be active
+                    if current_time < order_key.start_time {
+                        // order starts in the future, update both start and end time
+                        self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
+                        self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
+                    } else {
+                        // we know current_time < order_key.end_time because we assert it above
+                        let storage_key: StorageKey = state_key.into();
 
                         let sale_rate_storage_address = storage_base_address_from_felt252(
                             LegacyHash::hash(
@@ -513,13 +474,10 @@ pub mod TWAMM {
                             }
                         )
                             .expect('FAILED_TO_WRITE_SALE_RATE');
-                    } else {
-                        // order starts in the future, update start time
-                        self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
-                    }
 
-                    // always update end time because this point is only reached if the order is active or hasn't started
-                    self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
+                        // we only need to update the end time, because start time has been crossed and will never be crossed again
+                        self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
+                    }
 
                     // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
                     let amount_delta = calculate_amount_from_sale_rate(
@@ -534,13 +492,12 @@ pub mod TWAMM {
 
                     if (sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
-
-                        let pool_key: PoolKey = key.into();
+                        let pool_key: PoolKey = state_key.into();
 
                         core.load(token: token, salt: 0, amount: amount_delta);
 
                         if (core.get_pool_liquidity(pool_key).is_non_zero()) {
-                            let fee_amount = compute_fee(amount_delta, key.fee);
+                            let fee_amount = compute_fee(amount_delta, state_key.fee);
 
                             let (amount0, amount1) = if (order_key
                                 .sell_token > order_key
@@ -553,6 +510,7 @@ pub mod TWAMM {
                             core.accumulate_as_fees(pool_key, amount0, amount1);
                             core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
                         } else {
+                            // if the pool has 0 liquidity, we cannot pay fees since there are no liquidity providers to receive it so we withdraw the entire amount
                             core.withdraw(token, get_contract_address(), amount_delta);
                         }
                     } else {
@@ -576,22 +534,15 @@ pub mod TWAMM {
                 )) => {
                     self.internal_execute_virtual_orders(core, order_key.into());
 
-                    let order_info = self.internal_get_order_info(owner, salt, order_key);
-
-                    let reward_rate = if (order_key.end_time < get_block_timestamp()) {
-                        self.get_reward_rate_at(order_key, order_key.end_time)
-                    } else {
-                        self.get_current_reward_rate(order_key)
-                    };
+                    let (order_info, reward_rate_snapshot) = self
+                        .internal_get_order_info(owner, salt, order_key);
 
                     // snapshot the reward rate so we know the proceeds of the order have been withdrawn at this current time
                     self
                         .orders
                         .write(
                             (owner, salt, order_key),
-                            OrderState {
-                                sale_rate: order_info.sale_rate, reward_rate, use_snapshot: true,
-                            }
+                            OrderState { sale_rate: order_info.sale_rate, reward_rate_snapshot, }
                         );
 
                     if (order_info.purchased_amount.is_non_zero()) {
@@ -616,6 +567,22 @@ pub mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
+        fn get_reward_rate_snapshot_inside(
+            self: @ContractState, storage_key: StorageKey, now: u64, start_time: u64, end_time: u64
+        ) -> FeesPerLiquidity {
+            if now < start_time {
+                Zero::zero()
+            } else {
+                if now < end_time {
+                    self.reward_rate.read(storage_key)
+                        - self.time_reward_rate_before.read((storage_key, start_time))
+                } else {
+                    self.time_reward_rate_before.read((storage_key, end_time))
+                        - self.time_reward_rate_before.read((storage_key, start_time))
+                }
+            }
+        }
+
         fn update_time(
             ref self: ContractState,
             order_key: OrderKey,
@@ -684,31 +651,6 @@ pub mod TWAMM {
             } else if sale_rate_net.is_non_zero() & next_sale_rate_net.is_zero() {
                 self.remove_initialized_time(storage_key, time);
             };
-        }
-
-        fn get_current_reward_rate(self: @ContractState, order_key: OrderKey) -> felt252 {
-            let key: StateKey = order_key.into();
-            let (token0_reward_rate, token1_reward_rate) = self.reward_rate.read(key.into());
-
-            if (order_key.sell_token > order_key.buy_token) {
-                token0_reward_rate
-            } else {
-                token1_reward_rate
-            }
-        }
-
-        fn get_reward_rate_at(self: @ContractState, order_key: OrderKey, time: u64) -> felt252 {
-            let key: StateKey = order_key.into();
-
-            let (token0_reward_rate, token1_reward_rate) = self
-                .time_reward_rate
-                .read((key.into(), time));
-
-            if (order_key.sell_token > order_key.buy_token) {
-                token0_reward_rate
-            } else {
-                token1_reward_rate
-            }
         }
 
         fn remove_initialized_time(ref self: ContractState, storage_key: StorageKey, time: u64) {
@@ -794,10 +736,7 @@ pub mod TWAMM {
                     LegacyHash::hash(selector!("reward_rate"), storage_key)
                 );
 
-                let (mut token0_reward_rate, mut token1_reward_rate): (felt252, felt252) =
-                    Store::read(
-                    0, reward_rate_storage_address
-                )
+                let mut reward_rate: FeesPerLiquidity = Store::read(0, reward_rate_storage_address)
                     .expect('FAILED_TO_READ_REWARD_RATE');
 
                 let time_bitmap_storage_prefix = LegacyHash::hash(
@@ -809,7 +748,7 @@ pub mod TWAMM {
                 );
 
                 let time_reward_rate_storage_prefix = LegacyHash::hash(
-                    selector!("time_reward_rate"), storage_key
+                    selector!("time_reward_rate_before"), storage_key
                 );
 
                 while last_virtual_order_time != current_time {
@@ -920,13 +859,19 @@ pub mod TWAMM {
                         total_twamm_delta += twamm_delta;
 
                         if (twamm_delta.amount0.is_non_zero() && twamm_delta.amount0.sign) {
-                            token0_reward_rate +=
-                                calculate_reward_rate(twamm_delta.amount0.mag, token1_sale_rate);
+                            reward_rate
+                                .value0 +=
+                                    to_fees_per_liquidity(
+                                        twamm_delta.amount0.mag, token1_sale_rate
+                                    );
                         }
 
                         if (twamm_delta.amount1.is_non_zero() && twamm_delta.amount1.sign) {
-                            token1_reward_rate +=
-                                calculate_reward_rate(twamm_delta.amount1.mag, token0_sale_rate);
+                            reward_rate
+                                .value1 +=
+                                    to_fees_per_liquidity(
+                                        twamm_delta.amount1.mag, token0_sale_rate
+                                    );
                         }
                     }
 
@@ -957,7 +902,7 @@ pub mod TWAMM {
                                     time_reward_rate_storage_prefix, next_virtual_order_time
                                 )
                             ),
-                            (token0_reward_rate, token1_reward_rate)
+                            reward_rate
                         )
                             .expect('FAILED_TO_WRITE_TREWARD_RATE');
                     }
@@ -979,9 +924,7 @@ pub mod TWAMM {
                 )
                     .expect('FAILED_TO_WRITE_SALE_RATE');
 
-                Store::write(
-                    0, reward_rate_storage_address, (token0_reward_rate, token1_reward_rate)
-                )
+                Store::write(0, reward_rate_storage_address, reward_rate)
                     .expect('FAILED_TO_WRITE_REWARD_RATE');
 
                 self
@@ -996,18 +939,28 @@ pub mod TWAMM {
             }
         }
 
-        // Gets an order info.
+        // Gets an order info and the latest reward rate snapshot
         // The pool must be executed up to the current time for an accurate response
         fn internal_get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
-        ) -> OrderInfo {
+        ) -> (OrderInfo, felt252) {
             let current_time = get_block_timestamp();
             let order_state = self.orders.read((owner, salt, order_key));
 
-            let order_reward_rate = if (order_state.use_snapshot) {
-                order_state.reward_rate
+            let state_key: StateKey = order_key.into();
+
+            let reward_rate_inside = self
+                .get_reward_rate_snapshot_inside(
+                    storage_key: state_key.into(),
+                    now: current_time,
+                    start_time: order_key.start_time,
+                    end_time: order_key.end_time
+                );
+
+            let reward_rate_snapshot = if order_key.sell_token > order_key.buy_token {
+                reward_rate_inside.value0
             } else {
-                self.get_reward_rate_at(order_key, order_key.start_time)
+                reward_rate_inside.value1
             };
 
             let (remaining_sell_amount, purchased_amount) = if current_time < order_key.start_time {
@@ -1020,8 +973,6 @@ pub mod TWAMM {
                     0
                 )
             } else if (current_time < order_key.end_time) {
-                let current_reward_rate = self.get_current_reward_rate(order_key);
-
                 (
                     calculate_amount_from_sale_rate(
                         sale_rate: order_state.sale_rate,
@@ -1029,16 +980,26 @@ pub mod TWAMM {
                         round_up: false
                     ),
                     calculate_reward_amount(
-                        current_reward_rate - order_reward_rate, order_state.sale_rate
+                        reward_rate_snapshot - order_state.reward_rate_snapshot,
+                        order_state.sale_rate
                     )
                 )
             } else {
-                let interval_reward_rate = self.get_reward_rate_at(order_key, order_key.end_time)
-                    - order_reward_rate;
-                (0, calculate_reward_amount(interval_reward_rate, order_state.sale_rate))
+                (
+                    0,
+                    calculate_reward_amount(
+                        reward_rate_snapshot - order_state.reward_rate_snapshot,
+                        order_state.sale_rate
+                    )
+                )
             };
 
-            OrderInfo { sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount }
+            (
+                OrderInfo {
+                    sale_rate: order_state.sale_rate, remaining_sell_amount, purchased_amount
+                },
+                reward_rate_snapshot
+            )
         }
 
 
