@@ -619,10 +619,11 @@ pub mod Positions {
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
 
-            self
-                .twamm
-                .read()
-                .update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+            // it's no-op to decrease sale rate of an order that has already ended so we do nothing
+            if get_block_timestamp() < order_key.end_time {
+                let twamm = self.twamm.read();
+                twamm.update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+            }
         }
 
         fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {

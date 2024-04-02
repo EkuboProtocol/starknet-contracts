@@ -4520,7 +4520,7 @@ mod PlaceOrderDurationTooLong {
             buy_token: setup.token1.contract_address,
             fee,
             start_time: timestamp,
-            end_time: 0x100000000 + timestamp // 2**32
+            end_time: 68719476736 // 16**9 == 2**4**9 == 2**36 > 2**32
         };
 
         twamm.update_order(0, order_key, i129 { mag: 1, sign: false });

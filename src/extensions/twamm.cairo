@@ -409,6 +409,10 @@ pub mod TWAMM {
                 )) => {
                     let current_time = get_block_timestamp();
 
+                    // there is no reason to update an order's sale rate after it has ended, because it is effectively no-op and only incurs additional l1 data cost
+                    // this should be prevented at the periphery contract level
+                    assert(current_time < order_key.end_time, 'ORDER_ENDED');
+
                     validate_time(now: current_time, time: order_key.end_time);
                     validate_time(now: current_time, time: order_key.start_time);
 
@@ -447,7 +451,8 @@ pub mod TWAMM {
                         // order starts in the future, update both start and end time
                         self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
                         self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
-                    } else if current_time < order_key.end_time {
+                    } else {
+                        // we know current_time < order_key.end_time because we assert it above
                         let storage_key: StorageKey = state_key.into();
 
                         let sale_rate_storage_address = storage_base_address_from_felt252(
@@ -488,61 +493,54 @@ pub mod TWAMM {
                         self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
                     }
 
-                    // no need to pay anything for a sale rate changes if the order already ended
-                    if current_time < order_key.end_time {
-                        // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
-                        let amount_delta = calculate_amount_from_sale_rate(
-                            sale_rate: sale_rate_delta.mag,
-                            duration: to_duration(
-                                start: max(order_key.start_time, current_time),
-                                end: order_key.end_time
-                            ),
-                            round_up: !sale_rate_delta.sign
-                        );
+                    // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
+                    let amount_delta = calculate_amount_from_sale_rate(
+                        sale_rate: sale_rate_delta.mag,
+                        duration: to_duration(
+                            start: max(order_key.start_time, current_time), end: order_key.end_time
+                        ),
+                        round_up: !sale_rate_delta.sign
+                    );
 
-                        let token = order_key.sell_token;
+                    let token = order_key.sell_token;
 
-                        if (sale_rate_delta.sign) {
-                            // if decreasing sale rate, pay fee and withdraw funds
-                            let pool_key: PoolKey = state_key.into();
+                    if (sale_rate_delta.sign) {
+                        // if decreasing sale rate, pay fee and withdraw funds
+                        let pool_key: PoolKey = state_key.into();
 
-                            core.load(token: token, salt: 0, amount: amount_delta);
+                        core.load(token: token, salt: 0, amount: amount_delta);
 
-                            if (core.get_pool_liquidity(pool_key).is_non_zero()) {
-                                let fee_amount = compute_fee(amount_delta, state_key.fee);
+                        if (core.get_pool_liquidity(pool_key).is_non_zero()) {
+                            let fee_amount = compute_fee(amount_delta, state_key.fee);
 
-                                let (amount0, amount1) = if (order_key
-                                    .sell_token > order_key
-                                    .buy_token) {
-                                    (0, fee_amount)
-                                } else {
-                                    (fee_amount, 0)
-                                };
-
-                                core.accumulate_as_fees(pool_key, amount0, amount1);
-                                core
-                                    .withdraw(
-                                        token, get_contract_address(), amount_delta - fee_amount
-                                    );
+                            let (amount0, amount1) = if (order_key
+                                .sell_token > order_key
+                                .buy_token) {
+                                (0, fee_amount)
                             } else {
-                                // if the pool has 0 liquidity, we cannot pay fees since there are no liquidity providers to receive it so we withdraw the entire amount
-                                core.withdraw(token, get_contract_address(), amount_delta);
-                            }
+                                (fee_amount, 0)
+                            };
+
+                            core.accumulate_as_fees(pool_key, amount0, amount1);
+                            core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
                         } else {
-                            // if increasing sale rate, deposit additional funds
-                            IERC20Dispatcher { contract_address: token }
-                                .approve(core.contract_address, amount_delta.into());
-
-                            core.pay(token);
-
-                            core
-                                .save(
-                                    SavedBalanceKey {
-                                        owner: get_contract_address(), token: token, salt: 0
-                                    },
-                                    amount_delta
-                                );
+                            // if the pool has 0 liquidity, we cannot pay fees since there are no liquidity providers to receive it so we withdraw the entire amount
+                            core.withdraw(token, get_contract_address(), amount_delta);
                         }
+                    } else {
+                        // if increasing sale rate, deposit additional funds
+                        IERC20Dispatcher { contract_address: token }
+                            .approve(core.contract_address, amount_delta.into());
+
+                        core.pay(token);
+
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(), token: token, salt: 0
+                                },
+                                amount_delta
+                            );
                     }
                 },
                 LockCallbackData::CollectProceedsCallbackData((
