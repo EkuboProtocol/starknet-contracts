@@ -426,15 +426,8 @@ pub mod TWAMM {
                     } else {
                         // we compute the snapshot here and adjust by the purchased amount divided by sale rate delta so that the computed purchased amount does not change
                         // after updating the sale rate, except for rounding down by up to 1 wei
-                        let adjustment = to_fees_per_liquidity(
-                            order_info.purchased_amount, sale_rate_next
-                        );
-
-                        if order_key.sell_token < order_key.buy_token {
-                            reward_rate_snapshot - adjustment
-                        } else {
-                            reward_rate_snapshot - adjustment
-                        }
+                        reward_rate_snapshot
+                            - to_fees_per_liquidity(order_info.purchased_amount, sale_rate_next)
                     };
 
                     self
@@ -595,14 +588,15 @@ pub mod TWAMM {
         ) -> FeesPerLiquidity {
             if now < start_time {
                 Zero::zero()
-            } else if now < end_time {
-                let storage_key: StorageKey = key.into();
-                self.reward_rate.read(storage_key)
-                    - self.time_reward_rate_before.read((storage_key, start_time))
             } else {
                 let storage_key: StorageKey = key.into();
-                self.time_reward_rate_before.read((storage_key, end_time))
-                    - self.time_reward_rate_before.read((storage_key, start_time))
+                if now < end_time {
+                    self.reward_rate.read(storage_key)
+                        - self.time_reward_rate_before.read((storage_key, start_time))
+                } else {
+                    self.time_reward_rate_before.read((storage_key, end_time))
+                        - self.time_reward_rate_before.read((storage_key, start_time))
+                }
             }
         }
 
@@ -978,7 +972,7 @@ pub mod TWAMM {
                     end_time: order_key.end_time
                 );
 
-            let reward_rate_snapshot = if order_key.sell_token < order_key.buy_token {
+            let reward_rate_snapshot = if order_key.sell_token > order_key.buy_token {
                 reward_rate_inside.value0
             } else {
                 reward_rate_inside.value1
