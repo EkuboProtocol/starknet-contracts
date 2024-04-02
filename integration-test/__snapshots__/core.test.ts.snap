@@ -3356,6 +3356,58 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 }
 `;
 
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -3452,6 +3504,46 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
 }
 `;
 
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -3545,6 +3637,46 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 
     "range_check_builtin_applications": 527,
     "steps": 13459,
   },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 0n,
+    },
+  ],
 }
 `;
 
@@ -3661,6 +3793,58 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
 }
 `;
 
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -3771,6 +3955,58 @@ exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice
     "range_check_builtin_applications": 853,
     "steps": 19676,
   },
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 8000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 8000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 8000000000000000000n,
+    },
+  ],
+}
+`;
+
+exports[`core > twamm > 0 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 8000000000000000000n,
+    },
+  ],
 }
 `;
 
@@ -4372,6 +4608,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -4541,6 +4790,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 1322,
     "steps": 32294,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
 }
 `;
 
@@ -4717,6 +4979,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 14998497877985936770n,
+    },
+    {
+      "amount": 17993999925126740725n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -4890,6 +5165,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 17993999925126740726n,
+    },
+    {
+      "amount": 14998497877985936771n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -5000,6 +5288,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 2436,
     "steps": 32983,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 941009910335063707n,
+    },
+  ],
 }
 `;
 
@@ -5172,6 +5470,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 2910,
     "steps": 45604,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 941009910335063707n,
+    },
+  ],
 }
 `;
 
@@ -5348,6 +5656,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 438856508760810822n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -5521,6 +5839,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 2881297089753895975n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -5631,6 +5959,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 2450,
     "steps": 32927,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 941009910335063707n,
+    },
+  ],
 }
 `;
 
@@ -5803,6 +6141,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 2919,
     "steps": 45545,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 941009910335063707n,
+    },
+  ],
 }
 `;
 
@@ -5979,6 +6327,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 2881297089753895975n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -6152,6 +6510,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 438856508760810822n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -6262,6 +6630,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 4480,
     "steps": 45550,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8292893218777311380n,
+    },
+    {
+      "amount": 15584540057872805551n,
+    },
+  ],
 }
 `;
 
@@ -6434,6 +6815,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 4954,
     "steps": 58171,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8292893218777311380n,
+    },
+    {
+      "amount": 15584540057872805551n,
+    },
+  ],
 }
 `;
 
@@ -6610,6 +7004,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7499772235096864366n,
+    },
+    {
+      "amount": 17579777440945761381n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -6783,6 +7190,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 10286886082110799339n,
+    },
+    {
+      "amount": 14253931387525518111n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -6893,6 +7313,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 4502,
     "steps": 45566,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15584540057872805551n,
+    },
+    {
+      "amount": 8292893218777311380n,
+    },
+  ],
 }
 `;
 
@@ -7065,6 +7498,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 4971,
     "steps": 58184,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15584540057872805551n,
+    },
+    {
+      "amount": 8292893218777311380n,
+    },
+  ],
 }
 `;
 
@@ -7241,6 +7687,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 14253931387525518112n,
+    },
+    {
+      "amount": 10286886082110799341n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -7411,6 +7870,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling 
     "range_check_builtin_applications": 6257,
     "steps": 79477,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 0.3% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 17579777440945761382n,
+    },
+    {
+      "amount": 7499772235096864365n,
+    },
+  ],
 }
 `;
 
@@ -8012,6 +8484,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -8181,6 +8666,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     "range_check_builtin_applications": 1322,
     "steps": 32294,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
 }
 `;
 
@@ -8357,6 +8855,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 14994975005912388334n,
+    },
+    {
+      "amount": 17979999925478372750n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -8530,6 +9041,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 17979999925478372752n,
+    },
+    {
+      "amount": 14994975005912388336n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -8640,6 +9164,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     "range_check_builtin_applications": 2804,
     "steps": 36093,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 940617577197149641n,
+    },
+  ],
 }
 `;
 
@@ -8812,6 +9346,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     "range_check_builtin_applications": 3278,
     "steps": 48714,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 940617577197149641n,
+    },
+  ],
 }
 `;
 
@@ -8988,6 +9532,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 440212545712540833n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -9161,6 +9715,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 2866646162006333400n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -9271,6 +9835,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     "range_check_builtin_applications": 2829,
     "steps": 36047,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 940617577197149641n,
+    },
+  ],
 }
 `;
 
@@ -9443,6 +10017,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
     "range_check_builtin_applications": 3298,
     "steps": 48665,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 940617577197149641n,
+    },
+  ],
 }
 `;
 
@@ -9619,6 +10203,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 2866646162006333400n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -9792,6 +10386,16 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 440212545712540833n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -9902,6 +10506,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "range_check_builtin_applications": 4480,
     "steps": 45550,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8292893218777311380n,
+    },
+    {
+      "amount": 15581602462322411248n,
+    },
+  ],
 }
 `;
 
@@ -10074,6 +10691,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "range_check_builtin_applications": 4954,
     "steps": 58171,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 8292893218777311380n,
+    },
+    {
+      "amount": 15581602462322411248n,
+    },
+  ],
 }
 `;
 
@@ -10250,6 +10880,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7499234153557816544n,
+    },
+    {
+      "amount": 17565777487735162893n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -10423,6 +11066,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 10272886111584930109n,
+    },
+    {
+      "amount": 14245809430117919514n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -10533,6 +11189,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "range_check_builtin_applications": 4502,
     "steps": 45566,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15581602462322411248n,
+    },
+    {
+      "amount": 8292893218777311380n,
+    },
+  ],
 }
 `;
 
@@ -10705,6 +11374,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "range_check_builtin_applications": 4971,
     "steps": 58184,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15581602462322411248n,
+    },
+    {
+      "amount": 8292893218777311380n,
+    },
+  ],
 }
 `;
 
@@ -10881,6 +11563,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
 }
 `;
 
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 14245809430117919515n,
+    },
+    {
+      "amount": 10272886111584930108n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -11051,6 +11746,19 @@ exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling tw
     "range_check_builtin_applications": 6658,
     "steps": 82617,
   },
+}
+`;
+
+exports[`core > twamm > 1e18 liquidity, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 17565777487735162894n,
+    },
+    {
+      "amount": 7499234153557816544n,
+    },
+  ],
 }
 `;
 
@@ -11652,6 +12360,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -11821,6 +12542,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 1322,
     "steps": 32294,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000000n,
+    },
+    {
+      "amount": 16000000000000000000n,
+    },
+  ],
 }
 `;
 
@@ -11997,6 +12731,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15999999999999999949n,
+    },
+    {
+      "amount": 16000000000000000045n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -12170,6 +12917,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 of both tokens per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16000000000000000045n,
+    },
+    {
+      "amount": 15999999999999999949n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -12280,6 +13040,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2303,
     "steps": 35572,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999746n,
+    },
+  ],
 }
 `;
 
@@ -12452,6 +13222,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2777,
     "steps": 48193,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999746n,
+    },
+  ],
 }
 `;
 
@@ -12628,6 +13408,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999698n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -12801,6 +13591,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token0 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999791n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -12911,6 +13711,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2313,
     "steps": 32810,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999747n,
+    },
+  ],
 }
 `;
 
@@ -13083,6 +13893,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2782,
     "steps": 45428,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999747n,
+    },
+  ],
 }
 `;
 
@@ -13259,6 +14079,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999794n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -13432,6 +14262,16 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling 1e18 token1 per second for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 15839999999999999700n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -13542,6 +14382,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2925,
     "steps": 45546,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16011458102170629445n,
+    },
+    {
+      "amount": 7907618078615525743n,
+    },
+  ],
 }
 `;
 
@@ -13714,6 +14567,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 3399,
     "steps": 58167,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16011458102170629445n,
+    },
+    {
+      "amount": 7907618078615525743n,
+    },
+  ],
 }
 `;
 
@@ -13890,6 +14756,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16011458102170629397n,
+    },
+    {
+      "amount": 7907618078615525768n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -14063,6 +14942,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token0 as token1 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 16011458102170629492n,
+    },
+    {
+      "amount": 7907618078615525718n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds > execute_virtual_orders after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -14173,6 +15065,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 2913,
     "steps": 42843,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > execute at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7946337609339853372n,
+    },
+    {
+      "amount": 15973125766753545094n,
+    },
+  ],
 }
 `;
 
@@ -14345,6 +15250,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 3382,
     "steps": 55461,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7946337609339853372n,
+    },
+    {
+      "amount": 15973125766753545094n,
+    },
+  ],
 }
 `;
 
@@ -14521,6 +15439,19 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
 }
 `;
 
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token0 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7946337609339853347n,
+    },
+    {
+      "amount": 15973125766753545141n,
+    },
+  ],
+}
+`;
+
 exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds > swap after 0 seconds 1`] = `
 {
   "VirtualOrdersExecuted": undefined,
@@ -14691,5 +15622,18 @@ exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 
     "range_check_builtin_applications": 5201,
     "steps": 77302,
   },
+}
+`;
+
+exports[`core > twamm > 1e36 liquidity across 2 positions, starting price of 1, 1% fee > selling twice as much token1 as token0 for one period > swap 1e18 token1 tokens at 0, 8 and 16 seconds 1`] = `
+{
+  "proceedsWithdrawn": [
+    {
+      "amount": 7946337609339853396n,
+    },
+    {
+      "amount": 15973125766753545046n,
+    },
+  ],
 }
 `;
