@@ -82,20 +82,6 @@ pub mod TWAMM {
         }
     }
 
-    pub impl OrderStateZero of Zero<OrderState> {
-        fn zero() -> OrderState {
-            OrderState { sale_rate: Zero::zero(), reward_rate_snapshot: Zero::zero() }
-        }
-
-        fn is_zero(self: @OrderState) -> bool {
-            self.sale_rate.is_zero() && self.reward_rate_snapshot.is_zero()
-        }
-
-        fn is_non_zero(self: @OrderState) -> bool {
-            !Zero::<OrderState>::is_zero(self)
-        }
-    }
-
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
