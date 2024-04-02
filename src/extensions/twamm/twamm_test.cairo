@@ -911,16 +911,7 @@ mod CancelOrderTests {
     };
 
     #[test]
-    #[should_panic(
-        expected: (
-            'ORDER_ENDED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
-    )]
-    fn test_place_order_and_cancel_after_end_time() {
+    fn test_place_order_and_cancel_after_end_time_is_no_op() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let fee = 0;
@@ -954,6 +945,8 @@ mod CancelOrderTests {
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        let state = positions.get_order_info(order1_id, order1_key);
+        assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
 
     #[test]
@@ -1108,16 +1101,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     };
 
     #[test]
-    #[should_panic(
-        expected: (
-            'ORDER_ENDED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
-    )]
-    fn test_update_at_order_expiry() {
+    fn test_update_at_order_expiry_is_no_op() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let fee = 0;
@@ -1148,19 +1132,12 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        let state = positions.get_order_info(order1_id, order1_key);
+        assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'ORDER_ENDED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
-    )]
-    fn test_update_after_order_expiry() {
+    fn test_update_after_order_expiry_is_no_op() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let fee = 0;
@@ -1191,6 +1168,8 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         set_contract_address(owner);
         positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate * 2);
+        let state = positions.get_order_info(order1_id, order1_key);
+        assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
 
     #[test]
