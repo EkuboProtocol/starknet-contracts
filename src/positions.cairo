@@ -148,6 +148,18 @@ pub mod Positions {
         }
     }
 
+    #[generate_trait]
+    impl InternalPositionsMethods of InternalPositionsTrait {
+        fn check_authorization(
+            self: @ContractState, id: u64
+        ) -> (IOwnedNFTDispatcher, ContractAddress) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            (nft, caller)
+        }
+    }
+
     #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
@@ -332,8 +344,7 @@ pub mod Positions {
         }
 
         fn unsafe_burn(ref self: ContractState, id: u64) {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            let (nft, _) = self.check_authorization(id);
             nft.burn(id);
         }
 
@@ -407,8 +418,7 @@ pub mod Positions {
             amount1: u128,
             min_liquidity: u128
         ) -> u128 {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            self.check_authorization(id);
 
             let liquidity: u128 = call_core_with_callback(
                 self.core.read(),
@@ -477,9 +487,7 @@ pub mod Positions {
             min_token0: u128,
             min_token1: u128,
         ) -> (u128, u128) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            let (_, caller) = self.check_authorization(id);
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -502,9 +510,7 @@ pub mod Positions {
         fn collect_fees(
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> (u128, u128) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            let (_, caller) = self.check_authorization(id);
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -590,9 +596,7 @@ pub mod Positions {
         fn increase_sell_amount(
             ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
         ) -> u128 {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            self.check_authorization(id);
 
             let twamm = self.twamm.read();
 
@@ -615,20 +619,17 @@ pub mod Positions {
         fn decrease_sale_rate(
             ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
         ) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            self.check_authorization(id);
 
-            self
-                .twamm
-                .read()
-                .update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+            // it's no-op to decrease sale rate of an order that has already ended so we do nothing
+            if get_block_timestamp() < order_key.end_time {
+                let twamm = self.twamm.read();
+                twamm.update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+            }
         }
 
         fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            self.check_authorization(id);
 
             let twamm = self.twamm.read();
 
