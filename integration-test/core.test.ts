@@ -683,6 +683,22 @@ describe("core", () => {
                       withdrawProceedsReceipt.execution_status,
                       `withdraw proceeds failed: ${withdrawProceedsReceipt.revert_reason}`
                     ).toEqual("SUCCEEDED");
+
+                    const Withdrawals = twamm
+                      .parseEvents(withdrawProceedsReceipt)
+                      .filter(
+                        ({ OrderProceedsWithdrawn }) => OrderProceedsWithdrawn
+                      );
+
+                    const proceedsWithdrawn = Withdrawals.map((withdrawal) => {
+                      return {
+                        amount: withdrawal.OrderProceedsWithdrawn.amount,
+                      };
+                    });
+
+                    expect({
+                      proceedsWithdrawn,
+                    }).toMatchSnapshot();
                   }
                 },
                 300_000
