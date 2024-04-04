@@ -352,6 +352,20 @@ pub mod Core {
                 }
             }
         }
+
+        fn get_call_points_for_caller(
+            self: @ContractState, pool_key: PoolKey, caller: ContractAddress
+        ) -> CallPoints {
+            if pool_key.extension.is_non_zero() {
+                if (pool_key.extension != caller) {
+                    self.extension_call_points.read(pool_key.extension)
+                } else {
+                    Default::default()
+                }
+            } else {
+                Default::default()
+            }
+        }
     }
 
     #[abi(embed_v0)]
@@ -580,19 +594,15 @@ pub mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             pool_key.check_valid();
 
-            let call_points: CallPoints = if pool_key.extension.is_non_zero() {
-                let call_points = self.extension_call_points.read(pool_key.extension);
-                // extensions with 0 call points are considered invalid because the pools behave exactly the same as pools without extensions
-                // it also prevents a pool from being initialized before the extension gets a chance to set its call points
-                assert(call_points != Default::default(), 'EXTENSION_NOT_REGISTERED');
-                call_points
-            } else {
-                Default::default()
-            };
+            assert(
+                pool_key.extension.is_zero()
+                    || (self.extension_call_points.read(pool_key.extension) != Default::default()),
+                'EXTENSION_NOT_REGISTERED'
+            );
 
-            let caller_is_not_extension = get_caller_address() != pool_key.extension;
+            let call_points = self.get_call_points_for_caller(pool_key, get_caller_address());
 
-            if (call_points.before_initialize_pool && caller_is_not_extension) {
+            if (call_points.before_initialize_pool) {
                 IExtensionDispatcher { contract_address: pool_key.extension }
                     .before_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
@@ -606,7 +616,7 @@ pub mod Core {
 
             self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
-            if (call_points.after_initialize_pool && caller_is_not_extension) {
+            if (call_points.after_initialize_pool) {
                 IExtensionDispatcher { contract_address: pool_key.extension }
                     .after_initialize_pool(get_caller_address(), pool_key, initial_tick);
             }
@@ -639,17 +649,11 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let call_points = if pool_key.extension.is_non_zero() {
-                self.extension_call_points.read(pool_key.extension)
-            } else {
-                Default::default()
-            };
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
 
             if (call_points.before_update_position) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_update_position(locker, pool_key, params);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_update_position(locker, pool_key, params);
             }
 
             // bounds must be multiple of tick spacing
@@ -760,10 +764,8 @@ pub mod Core {
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
             if (call_points.after_update_position) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .after_update_position(locker, pool_key, params, delta);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_update_position(locker, pool_key, params, delta);
             }
 
             delta
@@ -774,17 +776,11 @@ pub mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let call_points = if pool_key.extension.is_non_zero() {
-                self.extension_call_points.read(pool_key.extension)
-            } else {
-                Default::default()
-            };
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
 
             if (call_points.before_collect_fees) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_collect_fees(locker, pool_key, salt, bounds);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_collect_fees(locker, pool_key, salt, bounds);
             }
 
             let position_key = PositionKey { owner: locker, salt, bounds };
@@ -811,10 +807,8 @@ pub mod Core {
             self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
             if (call_points.after_collect_fees) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .after_collect_fees(locker, pool_key, salt, bounds, delta);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_collect_fees(locker, pool_key, salt, bounds, delta);
             }
 
             delta
@@ -824,17 +818,11 @@ pub mod Core {
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let call_points = if pool_key.extension.is_non_zero() {
-                self.extension_call_points.read(pool_key.extension)
-            } else {
-                Default::default()
-            };
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
 
             if (call_points.before_swap) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_swap(locker, pool_key, params);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_swap(locker, pool_key, params);
             }
 
             let pool_price_storage_address = storage_base_address_from_felt252(
@@ -1042,10 +1030,8 @@ pub mod Core {
                 );
 
             if (call_points.after_swap) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .after_swap(locker, pool_key, params, delta);
-                }
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_swap(locker, pool_key, params, delta);
             }
 
             delta

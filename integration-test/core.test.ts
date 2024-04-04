@@ -19,7 +19,14 @@ describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
-    setup = await setupContracts();
+    setup = await setupContracts({
+      core: '0xf0c65826954fb209984d939f17c254c54290d43a42c56cb24a01b5caabf6b2',
+      positions: '0x5498af844a3ff73e71ab6e52a56335853efad19b9c8424f5d7acf4d4191b8b2',
+      router: '0x79f095b65b6b7e7526e337d6e5b90138eb80c8b50aa99890b1bc90771bf0650',
+      nft: '0x44301b754b9bed568abb8c0e93194bbb2373a6b1ba7c8b267b2311fecd90dc3',
+      twamm: '0x31aab34c96e0d1a8fae1b58ed96a94ead409b7e1b121268ea411433e8bec9a1',
+      tokenClassHash: '0x77756dd5c3db3eb64ee050f2fa217662193b8be2838b27872fa21193948154a'
+    });
     console.log(setup);
   }, 300_000);
 
