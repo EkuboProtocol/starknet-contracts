@@ -802,14 +802,19 @@ pub mod TWAMM {
                                 time_elapsed
                             );
 
+                            let (is_token1, swap_amount) =
+                                if current_sqrt_ratio < calculated_next_sqrt_ratio {
+                                (true, token1_amount)
+                            } else {
+                                (false, token0_amount)
+                            };
+
                             delta = core
                                 .swap(
                                     pool_key,
                                     SwapParameters {
-                                        amount: i129 {
-                                            mag: 0xffffffffffffffffffffffffffffffff, sign: true
-                                        },
-                                        is_token1: current_sqrt_ratio >= calculated_next_sqrt_ratio,
+                                        amount: i129 { mag: swap_amount, sign: false },
+                                        is_token1,
                                         sqrt_ratio_limit: calculated_next_sqrt_ratio,
                                         skip_ahead: 0
                                     }
