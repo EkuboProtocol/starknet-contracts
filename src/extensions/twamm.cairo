@@ -725,9 +725,6 @@ pub mod TWAMM {
             let mut last_virtual_order_time = sale_rate_state.last_virtual_order_time;
 
             if (last_virtual_order_time != current_time) {
-                let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
-                assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
-
                 let mut total_delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
 
