@@ -820,6 +820,7 @@ pub mod TWAMM {
                                     }
                                 );
 
+                            // must fetch new price if swap amount is reached
                             next_sqrt_ratio =
                                 if ((is_token1 && delta.amount1.mag == swap_amount)
                                     || (!is_token1 && delta.amount0.mag == swap_amount)) {
