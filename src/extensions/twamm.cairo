@@ -820,7 +820,13 @@ pub mod TWAMM {
                                     }
                                 );
 
-                            next_sqrt_ratio = Option::Some(calculated_next_sqrt_ratio);
+                            next_sqrt_ratio =
+                                if ((is_token1 && delta.amount1.mag == swap_amount)
+                                    || (!is_token1 && delta.amount0.mag == swap_amount)) {
+                                    Option::None
+                                } else {
+                                    Option::Some(calculated_next_sqrt_ratio)
+                                };
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
