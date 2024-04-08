@@ -358,6 +358,208 @@ mod PoolTests {
     }
 }
 
+mod UninitializedPoolsTests {
+    use super::{
+        Deployer, DeployerTrait, update_position, ClassHash, set_contract_address, pop_log,
+        IPositionsDispatcher, IPositionsDispatcherTrait, ICoreDispatcher, ICoreDispatcherTrait,
+        PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity, contract_address_const,
+        tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero, IMockERC20,
+        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio,
+        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, default_owner, Action,
+        ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters, UpdatePositionParameters,
+        get_contract_address, StateKey
+    };
+
+    #[test]
+    #[should_panic(expected: ('POOL_NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+    fn test_execute_virtual_orders() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .execute_virtual_orders(
+                StateKey {
+                    token0: token0.contract_address, token1: token1.contract_address, fee: 0,
+                }
+            );
+    }
+
+    #[test]
+    #[should_panic(expected: ('POOL_NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+    fn test_update_sale_rate() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .update_order(
+                0,
+                OrderKey {
+                    sell_token: token0.contract_address,
+                    buy_token: token1.contract_address,
+                    fee: 0,
+                    start_time: 0,
+                    end_time: 16
+                },
+                i129 { mag: 1, sign: false }
+            );
+    }
+
+    #[test]
+    #[should_panic(expected: ('POOL_NOT_INITIALIZED', 'ENTRYPOINT_FAILED'))]
+    fn test_collect_proceeds() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        ITWAMMDispatcher { contract_address: twamm.contract_address }
+            .collect_proceeds(
+                0,
+                OrderKey {
+                    sell_token: token0.contract_address,
+                    buy_token: token1.contract_address,
+                    fee: 0,
+                    start_time: 0,
+                    end_time: 16
+                }
+            );
+    }
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'NOT_INITIALIZED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_swap() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let locker = d.deploy_locker(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address
+        };
+
+        token0.increase_balance(locker.contract_address, 1);
+        locker
+            .call(
+                Action::Swap(
+                    (
+                        pool_key,
+                        SwapParameters {
+                            amount: i129 { mag: 1, sign: false },
+                            is_token1: false,
+                            sqrt_ratio_limit: min_sqrt_ratio(),
+                            skip_ahead: 0,
+                        },
+                        get_contract_address()
+                    )
+                )
+            );
+    }
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'NOT_INITIALIZED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_update_position() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let locker = d.deploy_locker(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address
+        };
+
+        token0.increase_balance(locker.contract_address, 1);
+        locker
+            .call(
+                Action::UpdatePosition(
+                    (
+                        pool_key,
+                        UpdatePositionParameters {
+                            salt: 0,
+                            bounds: max_bounds(MAX_TICK_SPACING),
+                            liquidity_delta: i129 { mag: 1, sign: false }
+                        },
+                        get_contract_address()
+                    )
+                )
+            );
+    }
+
+    #[test]
+    #[should_panic(
+        expected: (
+            'NOT_INITIALIZED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED'
+        )
+    )]
+    fn test_collect_fees() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        let twamm = d.deploy_twamm(core);
+        let locker = d.deploy_locker(core);
+        ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
+
+        let (token0, token1) = d.deploy_two_mock_tokens();
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee: 0,
+            tick_spacing: MAX_TICK_SPACING,
+            extension: twamm.contract_address
+        };
+
+        locker
+            .call(
+                Action::CollectFees(
+                    (pool_key, 0, max_bounds(MAX_TICK_SPACING), get_contract_address())
+                )
+            );
+    }
+}
+
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
         Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,

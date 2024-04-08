@@ -2,6 +2,7 @@ use core::array::{ArrayTrait};
 use core::serde::{Serde};
 use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, IExtension};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::types::bounds::{Bounds};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
@@ -20,6 +21,7 @@ pub enum Action {
     // accumulates some tokens as fees
     AccumulateAsFees: (PoolKey, u128, u128),
     FlashBorrow: (ContractAddress, u128, u128),
+    CollectFees: (PoolKey, felt252, Bounds, ContractAddress)
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -32,6 +34,7 @@ pub enum ActionResult {
     LoadBalance: u128,
     AccumulateAsFees: (),
     FlashBorrow: (),
+    CollectFees: Delta,
 }
 
 #[starknet::interface]
@@ -339,7 +342,53 @@ pub mod CoreLocker {
                     }
 
                     ActionResult::FlashBorrow(())
-                }
+                },
+                Action::CollectFees((
+                    pool_key, salt, bounds, recipient
+                )) => {
+                    let mut state = core.get_locker_state(id);
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(state.nonzero_delta_count == 0, 'no deltas');
+
+                    let delta = core.collect_fees(pool_key, salt, bounds);
+
+                    state = core.get_locker_state(id);
+                    assert(state.address == get_contract_address(), 'is locker');
+                    assert(
+                        state
+                            .nonzero_delta_count == ((if delta.amount0 == Zero::zero() {
+                                0
+                            } else {
+                                1
+                            })
+                                + (if delta.amount1 == Zero::zero() {
+                                    0
+                                } else {
+                                    1
+                                })),
+                        'deltas'
+                    );
+
+                    handle_delta(core, pool_key.token0, delta.amount0, recipient);
+
+                    state = core.get_locker_state(id);
+                    assert(
+                        state
+                            .nonzero_delta_count == (if delta.amount1 == Zero::zero() {
+                                0
+                            } else {
+                                1
+                            }),
+                        'deltas'
+                    );
+
+                    handle_delta(core, pool_key.token1, delta.amount1, recipient);
+
+                    state = core.get_locker_state(id);
+                    assert(state.nonzero_delta_count == 0, 'deltas');
+
+                    ActionResult::CollectFees(delta)
+                },
             };
 
             serialize(@result).span()

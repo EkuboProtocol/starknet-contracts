@@ -14,7 +14,8 @@ pub mod TWAMM {
     use core::traits::{Into, TryInto};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, check_caller_is_core
+        call_core_with_callback, safe_call_core_with_callback, consume_callback_data,
+        check_caller_is_core, handle_delta_with_saved_balances
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::extensions::interfaces::twamm::{
@@ -190,7 +191,6 @@ pub mod TWAMM {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
-            check_caller_is_core(self.core.read());
             assert(pool_key.tick_spacing == MAX_TICK_SPACING, 'TICK_SPACING');
         }
 
@@ -230,10 +230,15 @@ pub mod TWAMM {
             pool_key: PoolKey,
             params: SwapParameters
         ) {
-            self
-                .execute_virtual_orders(
+            let core = self.core.read();
+            check_caller_is_core(core);
+
+            call_core_with_callback(
+                core,
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
                     StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                );
+                )
+            )
         }
 
         fn after_swap(
@@ -252,11 +257,17 @@ pub mod TWAMM {
             pool_key: PoolKey,
             params: UpdatePositionParameters
         ) {
+            let core = self.core.read();
+            check_caller_is_core(core);
+
             assert(params.bounds == max_bounds(pool_key.tick_spacing), 'BOUNDS');
-            self
-                .execute_virtual_orders(
+
+            call_core_with_callback(
+                core,
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
                     StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                );
+                )
+            )
         }
 
         fn after_update_position(
@@ -276,10 +287,15 @@ pub mod TWAMM {
             salt: felt252,
             bounds: Bounds
         ) {
-            self
-                .execute_virtual_orders(
+            let core = self.core.read();
+            check_caller_is_core(core);
+
+            call_core_with_callback(
+                core,
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
                     StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                );
+                )
+            )
         }
 
         fn after_collect_fees(
@@ -351,8 +367,9 @@ pub mod TWAMM {
         fn update_order(
             ref self: ContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
         ) {
-            call_core_with_callback(
+            safe_call_core_with_callback(
                 self.core.read(),
+                order_key.into(),
                 @LockCallbackData::UpdateSaleRateCallbackData(
                     (get_caller_address(), salt, order_key, sale_rate_delta)
                 )
@@ -360,8 +377,9 @@ pub mod TWAMM {
         }
 
         fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
-            call_core_with_callback(
+            safe_call_core_with_callback(
                 self.core.read(),
+                order_key.into(),
                 @LockCallbackData::CollectProceedsCallbackData(
                     (get_caller_address(), salt, order_key)
                 )
@@ -369,8 +387,10 @@ pub mod TWAMM {
         }
 
         fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
-            call_core_with_callback(
-                self.core.read(), @LockCallbackData::ExecuteVirtualSwapsCallbackData({
+            safe_call_core_with_callback(
+                self.core.read(),
+                key.into(),
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData({
                     key
                 })
             )
@@ -725,9 +745,6 @@ pub mod TWAMM {
             let mut last_virtual_order_time = sale_rate_state.last_virtual_order_time;
 
             if (last_virtual_order_time != current_time) {
-                let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
-                assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
-
                 let mut total_delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
 
@@ -919,15 +936,13 @@ pub mod TWAMM {
                 Store::write(0, reward_rate_storage_address, reward_rate)
                     .expect('FAILED_TO_WRITE_REWARD_RATE');
 
-                self
-                    .handle_delta_with_saved_balances(
-                        core, get_contract_address(), pool_key.token0, total_delta.amount0
-                    );
+                handle_delta_with_saved_balances(
+                    core, get_contract_address(), pool_key.token0, 0, total_delta.amount0
+                );
 
-                self
-                    .handle_delta_with_saved_balances(
-                        core, get_contract_address(), pool_key.token1, total_delta.amount1
-                    );
+                handle_delta_with_saved_balances(
+                    core, get_contract_address(), pool_key.token1, 0, total_delta.amount1
+                );
             }
         }
 
@@ -993,23 +1008,6 @@ pub mod TWAMM {
                 reward_rate_snapshot
             )
         }
-
-
-        fn handle_delta_with_saved_balances(
-            ref self: ContractState,
-            core: ICoreDispatcher,
-            owner: ContractAddress,
-            token: ContractAddress,
-            delta: i129
-        ) {
-            if delta.is_non_zero() {
-                if (delta.sign) {
-                    core.save(key: SavedBalanceKey { owner, token, salt: 0 }, amount: delta.mag);
-                } else {
-                    core.load(token: token, salt: 0, amount: delta.mag);
-                }
-            }
-        }
     }
 
     pub(crate) fn time_to_word_and_bit_index(time: u64) -> (u128, u8) {
@@ -1043,6 +1041,24 @@ pub mod TWAMM {
             PoolKey {
                 token0: self.token0,
                 token1: self.token1,
+                fee: self.fee,
+                tick_spacing: MAX_TICK_SPACING,
+                extension: get_contract_address()
+            }
+        }
+    }
+
+    impl OrderKeyIntoPoolKey of Into<OrderKey, PoolKey> {
+        fn into(self: OrderKey) -> PoolKey {
+            let (token0, token1) = if (self.sell_token > self.buy_token) {
+                (self.buy_token, self.sell_token)
+            } else {
+                (self.sell_token, self.buy_token)
+            };
+
+            PoolKey {
+                token0,
+                token1,
                 fee: self.fee,
                 tick_spacing: MAX_TICK_SPACING,
                 extension: get_contract_address()
