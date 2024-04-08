@@ -728,7 +728,6 @@ pub mod TWAMM {
                 let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
                 assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
 
-                let mut next_sqrt_ratio = Option::Some(starting_sqrt_ratio);
                 let mut total_delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
 
@@ -761,13 +760,7 @@ pub mod TWAMM {
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let current_sqrt_ratio = match next_sqrt_ratio {
-                            Option::Some(current_sqrt_ratio) => { current_sqrt_ratio },
-                            Option::None => {
-                                let price = core.get_pool_price(pool_key);
-                                price.sqrt_ratio
-                            }
-                        };
+                        let current_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
 
                         let time_elapsed = to_duration(
                             start: last_virtual_order_time, end: next_virtual_order_time
@@ -794,7 +787,7 @@ pub mod TWAMM {
                                     pool_key, i129 { mag: MAX_USABLE_TICK_MAGNITUDE, sign: true }
                                 );
 
-                            let calculated_next_sqrt_ratio = calculate_next_sqrt_ratio(
+                            let next_sqrt_ratio = calculate_next_sqrt_ratio(
                                 sqrt_ratio,
                                 liquidity,
                                 token0_sale_rate,
@@ -802,8 +795,7 @@ pub mod TWAMM {
                                 time_elapsed
                             );
 
-                            let (is_token1, swap_amount) =
-                                if current_sqrt_ratio < calculated_next_sqrt_ratio {
+                            let (is_token1, swap_amount) = if current_sqrt_ratio < next_sqrt_ratio {
                                 (true, token1_amount)
                             } else {
                                 (false, token0_amount)
@@ -815,19 +807,10 @@ pub mod TWAMM {
                                     SwapParameters {
                                         amount: i129 { mag: swap_amount, sign: false },
                                         is_token1,
-                                        sqrt_ratio_limit: calculated_next_sqrt_ratio,
+                                        sqrt_ratio_limit: next_sqrt_ratio,
                                         skip_ahead: 0
                                     }
                                 );
-
-                            // must fetch new price if swap amount is reached
-                            next_sqrt_ratio =
-                                if ((is_token1 && delta.amount1.mag == swap_amount)
-                                    || (!is_token1 && delta.amount0.mag == swap_amount)) {
-                                    Option::None
-                                } else {
-                                    Option::Some(calculated_next_sqrt_ratio)
-                                };
 
                             // both sides are swapping, twamm delta is the swap amounts needed to reach
                             // the target price minus amounts in the twamm
@@ -856,9 +839,6 @@ pub mod TWAMM {
                                         }
                                     );
                             }
-
-                            // must fetch price from core after a single sided swap
-                            next_sqrt_ratio = Option::None;
 
                             // only one side is swapping, twamm delta is the same as amounts swapped
                             delta
