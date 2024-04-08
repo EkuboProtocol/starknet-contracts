@@ -20,7 +20,7 @@ pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>
     Serde::deserialize(ref output_span).expect('DESERIALIZE_RESULT_FAILED')
 }
 
-pub fn safe_call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
+pub fn validate_sqrt_ratio_and_call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
     core: ICoreDispatcher, pool_key: PoolKey, input: @TInput
 ) -> TOutput {
     let sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;

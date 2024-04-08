@@ -31,7 +31,7 @@ use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING, MAX_TICK_MAGNITUDE};
 use ekubo::math::ticks::{min_tick, max_tick};
-use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio, max_sqrt_ratio};
+use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio, max_sqrt_ratio, sqrt_ratio_to_tick};
 use ekubo::mock_erc20::{IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner, FEE_ONE_PERCENT
@@ -4780,6 +4780,83 @@ fn test_withdraw_and_get_info_after_order_ends() {
     assert_eq!(order1_get_info.sale_rate, order1_info.sale_rate);
     assert_eq!(order1_get_info.purchased_amount, 0);
     assert_eq!(order1_get_info.remaining_sell_amount, 0);
+}
+
+#[test]
+fn test_twamm_swap_input_amount_consumed() {
+    // twamm swap consumes the entirety of input token, and does not reach the price limit.
+
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        core.contract_address
+    )
+        .unwrap();
+
+    let fee = 170141183460469235273462165868118016;
+    let sqrt_ratio = 16988185698248224601569110190524726;
+    let initial_tick = sqrt_ratio_to_tick(sqrt_ratio);
+
+    let liquidity = 2404617496284;
+    let amounts = liquidity_delta_to_amount_delta(
+        sqrt_ratio,
+        i129 { mag: liquidity, sign: false },
+        constants::MAX_BOUNDS_MIN_SQRT_RATIO,
+        constants::MAX_BOUNDS_MAX_SQRT_RATIO
+    );
+
+    let (twamm, setup, positions) = set_up_twamm(
+        ref d, core, fee, initial_tick, amount0: amounts.amount0.mag, amount1: amounts.amount1.mag
+    );
+    let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
+    let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+    let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
+
+    let timestamp = SIXTEEN_POW_ONE;
+    set_block_timestamp(timestamp);
+
+    let duration = 16_u32;
+
+    let token0_sale_rate = 1000000000000000;
+    place_order(
+        positions,
+        get_contract_address(),
+        setup.token0,
+        setup.token1,
+        fee,
+        0,
+        timestamp + duration.into(),
+        amount: calculate_amount_from_sale_rate(token0_sale_rate, duration, true)
+    );
+    let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+    let token1_sale_rate = 81920000000000000000;
+    place_order(
+        positions,
+        get_contract_address(),
+        setup.token1,
+        setup.token0,
+        fee,
+        0,
+        timestamp + duration.into(),
+        amount: calculate_amount_from_sale_rate(token1_sale_rate, duration, true)
+    );
+    let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+
+    set_block_timestamp(timestamp + duration.into());
+    twamm
+        .execute_virtual_orders(
+            StateKey {
+                token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+            }
+        );
+
+    // entire amount1 is consumed
+    let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+    assert_eq!(
+        swapped_event.delta.amount1.mag,
+        calculate_amount_from_sale_rate(token1_sale_rate, duration, false)
+    );
 }
 
 fn set_up_twamm(

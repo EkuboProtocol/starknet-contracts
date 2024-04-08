@@ -14,7 +14,7 @@ pub mod TWAMM {
     use core::traits::{Into, TryInto};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{
-        call_core_with_callback, safe_call_core_with_callback, consume_callback_data,
+        call_core_with_callback, validate_sqrt_ratio_and_call_core_with_callback, consume_callback_data,
         check_caller_is_core, handle_delta_with_saved_balances
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
@@ -230,15 +230,7 @@ pub mod TWAMM {
             pool_key: PoolKey,
             params: SwapParameters
         ) {
-            let core = self.core.read();
-            check_caller_is_core(core);
-
-            call_core_with_callback(
-                core,
-                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                )
-            )
+            self.validate_caller_and_execute_virtual_orders(pool_key);
         }
 
         fn after_swap(
@@ -257,17 +249,8 @@ pub mod TWAMM {
             pool_key: PoolKey,
             params: UpdatePositionParameters
         ) {
-            let core = self.core.read();
-            check_caller_is_core(core);
-
             assert(params.bounds == max_bounds(pool_key.tick_spacing), 'BOUNDS');
-
-            call_core_with_callback(
-                core,
-                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                )
-            )
+            self.validate_caller_and_execute_virtual_orders(pool_key);
         }
 
         fn after_update_position(
@@ -287,15 +270,7 @@ pub mod TWAMM {
             salt: felt252,
             bounds: Bounds
         ) {
-            let core = self.core.read();
-            check_caller_is_core(core);
-
-            call_core_with_callback(
-                core,
-                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
-                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
-                )
-            )
+            self.validate_caller_and_execute_virtual_orders(pool_key);
         }
 
         fn after_collect_fees(
@@ -367,7 +342,7 @@ pub mod TWAMM {
         fn update_order(
             ref self: ContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
         ) {
-            safe_call_core_with_callback(
+            validate_sqrt_ratio_and_call_core_with_callback(
                 self.core.read(),
                 order_key.into(),
                 @LockCallbackData::UpdateSaleRateCallbackData(
@@ -377,7 +352,7 @@ pub mod TWAMM {
         }
 
         fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
-            safe_call_core_with_callback(
+            validate_sqrt_ratio_and_call_core_with_callback(
                 self.core.read(),
                 order_key.into(),
                 @LockCallbackData::CollectProceedsCallbackData(
@@ -387,7 +362,7 @@ pub mod TWAMM {
         }
 
         fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
-            safe_call_core_with_callback(
+            validate_sqrt_ratio_and_call_core_with_callback(
                 self.core.read(),
                 key.into(),
                 @LockCallbackData::ExecuteVirtualSwapsCallbackData({
@@ -587,6 +562,18 @@ pub mod TWAMM {
 
     #[generate_trait]
     impl Internal of InternalTrait {
+        fn validate_caller_and_execute_virtual_orders(ref self: ContractState, pool_key: PoolKey) {
+            let core = self.core.read();
+            check_caller_is_core(core);
+
+            call_core_with_callback(
+                core,
+                @LockCallbackData::ExecuteVirtualSwapsCallbackData(
+                    StateKey { token0: pool_key.token0, token1: pool_key.token1, fee: pool_key.fee }
+                )
+            )
+        }
+
         fn get_reward_rate_snapshot_inside(
             self: @ContractState, storage_key: StorageKey, now: u64, start_time: u64, end_time: u64
         ) -> FeesPerLiquidity {
@@ -937,11 +924,19 @@ pub mod TWAMM {
                     .expect('FAILED_TO_WRITE_REWARD_RATE');
 
                 handle_delta_with_saved_balances(
-                    core, get_contract_address(), pool_key.token0, 0, total_delta.amount0
+                    core,
+                    owner: get_contract_address(),
+                    token: pool_key.token0,
+                    salt: 0,
+                    delta: total_delta.amount0
                 );
 
                 handle_delta_with_saved_balances(
-                    core, get_contract_address(), pool_key.token1, 0, total_delta.amount1
+                    core,
+                    owner: get_contract_address(),
+                    token: pool_key.token1,
+                    salt: 0,
+                    delta: total_delta.amount1
                 );
             }
         }
@@ -1050,19 +1045,8 @@ pub mod TWAMM {
 
     impl OrderKeyIntoPoolKey of Into<OrderKey, PoolKey> {
         fn into(self: OrderKey) -> PoolKey {
-            let (token0, token1) = if (self.sell_token > self.buy_token) {
-                (self.buy_token, self.sell_token)
-            } else {
-                (self.sell_token, self.buy_token)
-            };
-
-            PoolKey {
-                token0,
-                token1,
-                fee: self.fee,
-                tick_spacing: MAX_TICK_SPACING,
-                extension: get_contract_address()
-            }
+            let state_key: StateKey = self.into();
+            state_key.into()
         }
     }
 
