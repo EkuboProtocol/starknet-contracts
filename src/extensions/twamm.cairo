@@ -725,8 +725,8 @@ pub mod TWAMM {
             let mut last_virtual_order_time = sale_rate_state.last_virtual_order_time;
 
             if (last_virtual_order_time != current_time) {
-                let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
-                assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
+                let mut current_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
+                assert(current_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
 
                 let mut total_delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
@@ -750,7 +750,7 @@ pub mod TWAMM {
                     selector!("time_reward_rate_before"), storage_key
                 );
 
-                while last_virtual_order_time != current_time {
+                loop {
                     let mut delta = Zero::zero();
 
                     // must trade up to the earliest initialzed time because sale rate changes
@@ -760,8 +760,6 @@ pub mod TWAMM {
                         );
 
                     if (token0_sale_rate.is_non_zero() || token1_sale_rate.is_non_zero()) {
-                        let current_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
-
                         let time_elapsed = to_duration(
                             start: last_virtual_order_time, end: next_virtual_order_time
                         );
@@ -900,6 +898,12 @@ pub mod TWAMM {
                     }
 
                     last_virtual_order_time = next_virtual_order_time;
+
+                    if (last_virtual_order_time != current_time) {
+                        current_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
+                    } else {
+                        break;
+                    }
                 };
 
                 self
