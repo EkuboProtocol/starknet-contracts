@@ -205,19 +205,26 @@ mod TWAMMMathTest {
         let token0_sale_rate = 1917585044284;
         let token1_sale_rate = 893194653345642013054241177;
         let fee = 0xccccccccccccccccccccccccccccccc;
+        let time_elapsed = 360;
+        let two_pow_32 = 0x100000000;
 
         let sqrt_ratio_next = calculate_next_sqrt_ratio(
             sqrt_ratio: sqrt_ratio,
             liquidity: liquidity,
             token0_sale_rate: token0_sale_rate,
             token1_sale_rate: token1_sale_rate,
-            time_elapsed: 360,
+            time_elapsed: time_elapsed,
             fee: fee,
         );
         assert_gt!(sqrt_ratio_next, 286363514177267035440548892163466107483369185);
 
-        let token0_sold_amount = muldiv(1917585044284, 360, 4294967296, false).unwrap();
-        let token1_sold_amount = muldiv(893194653345642013054241177, 360, 4294967296, false)
+        let token0_sold_amount = muldiv(
+            token0_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+        )
+            .unwrap();
+        let token1_sold_amount = muldiv(
+            token1_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+        )
             .unwrap();
 
         assert_eq!(
@@ -229,6 +236,7 @@ mod TWAMMMathTest {
             ),
             // 0.16073 USDC for 74866710976797883561 - (71015167668577728143/0.95) = 0.113902904610801 EKUBO
             // price ~= 1.411114146291565 USDC/EKUBO
+            // other side gets 100371327 USDC for 74866710976797883561 EKUBO, for a price of approximately 1.3406669759
             (160730, 74866710976797883561, 100210597, 71015167668577728143)
         );
     }
