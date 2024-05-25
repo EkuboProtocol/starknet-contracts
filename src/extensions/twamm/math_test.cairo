@@ -220,9 +220,6 @@ mod TWAMMMathTest {
         let token1_sold_amount = muldiv(893194653345642013054241177, 360, 4294967296, false)
             .unwrap();
 
-        // assert_le!(
-        //     amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(), token0_sold_amount
-        // );
         assert_eq!(
             (
                 token0_sold_amount,
@@ -233,10 +230,6 @@ mod TWAMMMathTest {
             // 0.16073 usdc for 0.113902904610801 ekubo
             (160730, 74866710976797883561, 100210597, 71015167668577728143)
         );
-    // assert_le!(
-    //     amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(),
-    //     token1_sold_amount - compute_fee(token1_sold_amount.try_into().unwrap(), fee).into()
-    // );
     }
 
     #[test]
