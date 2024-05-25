@@ -227,7 +227,8 @@ mod TWAMMMathTest {
                 amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(),
                 amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(),
             ),
-            // 0.16073 usdc for 0.113902904610801 ekubo
+            // 0.16073 USDC for 74866710976797883561 - (71015167668577728143/0.95) = 0.113902904610801 EKUBO
+            // price ~= 1.411114146291565 USDC/EKUBO
             (160730, 74866710976797883561, 100210597, 71015167668577728143)
         );
     }
