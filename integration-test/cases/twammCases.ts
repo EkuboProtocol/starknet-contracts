@@ -1,5 +1,6 @@
 const THIRTY_BIPS_FEE = (2n ** 128n * 30n) / 10000n;
 const ONE_PERCENT_FEE = (1n << 128n) / 100n;
+const FIVE_PERCENT_FEE = (1n << 128n) / 20n;
 
 export const TWAMM_POOL_CASES: Array<{
   name: string;
@@ -40,6 +41,15 @@ export const TWAMM_POOL_CASES: Array<{
       fee: ONE_PERCENT_FEE,
     },
     positions_liquidities: [10n ** 18n],
+  },
+  // this case is similar to the ekubo usdc sale
+  {
+    name: "0.13e8 liquidity, starting price of 0.7e-12, 5% fee",
+    pool: {
+      startingTick: 27286007n,
+      fee: FIVE_PERCENT_FEE,
+    },
+    positions_liquidities: [130385243018985227n],
   },
 ];
 
@@ -120,23 +130,39 @@ export const TWAMM_ORDER_CASES: Array<{
       },
     ],
   },
+  {
+    name: "selling much more token1 than token0",
+    orders: [
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: true,
+        amount: 3327409376746572602n,
+      },
+      {
+        relativeTimes: { start: 0, end: 16 },
+        isToken1: false,
+        amount: 7143n,
+      },
+    ],
+  },
 ];
 
 export const TWAMM_ACTION_SETS: {
   name: string;
-  actions: (
-    { 
-      after: number
-    } & ({
-      type: "execute_virtual_orders"
-    } | {
-      type: "swap";
-      amount: bigint;
-      isToken1: boolean;
-      sqrtRatioLimit?: bigint;
-      skipAhead?: bigint;
-    })
-  )[];
+  actions: ({
+    after: number;
+  } & (
+    | {
+        type: "execute_virtual_orders";
+      }
+    | {
+        type: "swap";
+        amount: bigint;
+        isToken1: boolean;
+        sqrtRatioLimit?: bigint;
+        skipAhead?: bigint;
+      }
+  ))[];
 }[] = [
   {
     name: "execute at 0, 8 and 16 seconds",
