@@ -161,6 +161,10 @@ mod RewardRateTest {
 }
 
 mod TWAMMMathTest {
+    use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::fee::{compute_fee};
+
+    use ekubo::math::muldiv::{muldiv};
     use super::{
         calculate_c, i129, constants, SIXTEEN_POW_SEVEN, calculate_next_sqrt_ratio, min_sqrt_ratio,
         max_sqrt_ratio
@@ -192,6 +196,49 @@ mod TWAMMMathTest {
             sqrt_ratio: 1, sqrt_sell_ratio: 0, expected: (u256 { low: 0, high: 0x1 }, true)
         );
         assert_case_c(sqrt_ratio: 1, sqrt_sell_ratio: 1, expected: (0, false));
+    }
+
+    #[test]
+    fn test_production_issue() {
+        let sqrt_ratio = 286363514177267035440548892163466107483369185;
+        let liquidity = 130385243018985227;
+        let token0_sale_rate = 1917585044284;
+        let token1_sale_rate = 893194653345642013054241177;
+        let fee = 0xccccccccccccccccccccccccccccccc;
+        let time_elapsed = 360;
+        let two_pow_32 = 0x100000000;
+
+        let sqrt_ratio_next = calculate_next_sqrt_ratio(
+            sqrt_ratio: sqrt_ratio,
+            liquidity: liquidity,
+            token0_sale_rate: token0_sale_rate,
+            token1_sale_rate: token1_sale_rate,
+            time_elapsed: time_elapsed,
+            fee: fee,
+        );
+        assert_gt!(sqrt_ratio_next, 286363514177267035440548892163466107483369185);
+
+        let token0_sold_amount = muldiv(
+            token0_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+        )
+            .unwrap();
+        let token1_sold_amount = muldiv(
+            token1_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+        )
+            .unwrap();
+
+        assert_eq!(
+            (
+                token0_sold_amount,
+                token1_sold_amount,
+                amount0_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(),
+                amount1_delta(sqrt_ratio_next, sqrt_ratio, liquidity, false).into(),
+            ),
+            // 0.16073 USDC for 74866710976797883561 - (71015167668577728143/0.95) = 0.113902904610801 EKUBO
+            // price ~= 1.411114146291565 USDC/EKUBO
+            // other side gets 100371327 USDC for 74866710976797883561 EKUBO, for a price of approximately 1.3406669759
+            (160730, 74866710976797883561, 100210597, 71015167668577728143)
+        );
     }
 
     #[test]
@@ -313,7 +360,8 @@ mod TWAMMMathTest {
             liquidity: 0x0,
             token0_sale_rate: constants::X32_u128,
             token1_sale_rate: constants::X32_u128,
-            time_elapsed: 1
+            time_elapsed: 1,
+            fee: 0,
         );
         // sqrt_ratio = 1
         assert_eq!(next_sqrt_ratio, constants::X128);
@@ -324,7 +372,8 @@ mod TWAMMMathTest {
             liquidity: constants::X64_u128,
             token0_sale_rate: constants::X32_u128,
             token1_sale_rate: constants::X32_u128,
-            time_elapsed: 1
+            time_elapsed: 1,
+            fee: 0,
         );
         // sqrt_ratio = 1
         assert_eq!(next_sqrt_ratio, constants::X128);
@@ -334,7 +383,8 @@ mod TWAMMMathTest {
             liquidity: 10_000 * 1000000000000000000,
             token0_sale_rate: 5000 * constants::X32_u128,
             token1_sale_rate: 500 * constants::X32_u128,
-            time_elapsed: 1
+            time_elapsed: 1,
+            fee: 0,
         );
         // sqrt_ratio ~= .99
         assert_eq!(next_sqrt_ratio, 340282366920938463305873545376503282647);
@@ -345,7 +395,8 @@ mod TWAMMMathTest {
             liquidity: 10,
             token0_sale_rate: 5000 * constants::X32_u128,
             token1_sale_rate: 500 * constants::X32_u128,
-            time_elapsed: 1
+            time_elapsed: 1,
+            fee: 0,
         );
         // sqrt_ratio will be sqrt_sale_ratio
         assert_eq!(next_sqrt_ratio, 107606732706330320687810575726449262521);

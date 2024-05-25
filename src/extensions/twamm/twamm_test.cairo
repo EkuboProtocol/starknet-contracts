@@ -3773,7 +3773,8 @@ mod MinMaxSqrtRatio {
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
-            (order_end_time - timestamp).try_into().expect('TIME')
+            (order_end_time - timestamp).try_into().expect('TIME'),
+            fee: state_key.fee,
         );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
@@ -3852,7 +3853,8 @@ mod MinMaxSqrtRatio {
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
-            (order_end_time - timestamp).try_into().expect('TIME')
+            (order_end_time - timestamp).try_into().expect('TIME'),
+            fee: state_key.fee,
         );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
@@ -3933,7 +3935,8 @@ mod MinMaxSqrtRatio {
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
-            (order_end_time - timestamp).try_into().expect('TIME')
+            (order_end_time - timestamp).try_into().expect('TIME'),
+            fee: state_key.fee,
         );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
@@ -4012,7 +4015,8 @@ mod MinMaxSqrtRatio {
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
-            (order_end_time - timestamp).try_into().expect('TIME')
+            (order_end_time - timestamp).try_into().expect('TIME'),
+            fee: state_key.fee,
         );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
