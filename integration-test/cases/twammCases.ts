@@ -44,7 +44,7 @@ export const TWAMM_POOL_CASES: Array<{
   },
   // this case is similar to the ekubo usdc sale
   {
-    name: "0.13e8 liquidity, starting price of 0.7e-12, 5% fee",
+    name: "0.13e18, starting price of 0.7e-12, 5% fee",
     pool: {
       startingTick: 27286007n,
       fee: FIVE_PERCENT_FEE,
