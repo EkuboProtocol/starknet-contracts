@@ -792,7 +792,8 @@ pub mod TWAMM {
                                 liquidity,
                                 token0_sale_rate,
                                 token1_sale_rate,
-                                time_elapsed
+                                time_elapsed,
+                                key.fee,
                             );
 
                             let (is_token1, swap_amount) = if current_sqrt_ratio < next_sqrt_ratio {

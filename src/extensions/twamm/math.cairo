@@ -64,7 +64,8 @@ pub fn calculate_next_sqrt_ratio(
     liquidity: u128,
     token0_sale_rate: u128,
     token1_sale_rate: u128,
-    time_elapsed: u32
+    time_elapsed: u32,
+    fee: u128
 ) -> u256 {
     let sale_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
     let sqrt_sale_ratio: u256 = if (sale_ratio.high.is_zero()) {
@@ -82,7 +83,8 @@ pub fn calculate_next_sqrt_ratio(
         // current sale ratio is the price
         sqrt_sale_ratio
     } else {
-        let sqrt_sale_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
+        let mut sqrt_sale_rate = u256_sqrt(token0_sale_rate.into() * token1_sale_rate.into());
+        sqrt_sale_rate = (sqrt_sale_rate.into() * (u256 { high: 1, low: 0 } - fee.into())).high;
 
         // calculate e
         // sqrt_sale_rate * 2 * t
