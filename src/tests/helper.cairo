@@ -1,15 +1,17 @@
 use core::array::{Array, ArrayTrait};
 
-use core::integer::{u256, u256_from_felt252, BoundedInt};
+use core::integer::{u256, BoundedInt};
 use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
+use ekubo::extensions::twamm::{TWAMM};
 use ekubo::extensions::limit_orders::{LimitOrders};
 use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, Delta, IExtensionDispatcher
+    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
+    SwapParameters, IExtensionDispatcher
 };
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
@@ -24,7 +26,6 @@ use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
-    UpdatePositionParameters, SwapParameters
 };
 use ekubo::tests::mocks::mock_extension::{
     MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
@@ -32,20 +33,21 @@ use ekubo::tests::mocks::mock_extension::{
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 
 use ekubo::types::keys::PoolKey;
-use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_contract_address};
 
 use starknet::{
-    get_contract_address, deploy_syscall, ClassHash, contract_address_const, ContractAddress
+    get_contract_address, syscalls::{deploy_syscall}, ClassHash, contract_address_const,
+    ContractAddress
 };
 
-const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
+pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
 #[derive(Drop, Copy)]
-struct Deployer {
+pub struct Deployer {
     nonce: felt252,
 }
 
@@ -56,22 +58,22 @@ impl DefaultDeployer of core::traits::Default<Deployer> {
 }
 
 
-fn default_owner() -> ContractAddress {
+pub fn default_owner() -> ContractAddress {
     contract_address_const::<12121212121212>()
 }
 
 
 #[derive(Copy, Drop)]
-struct SetupPoolResult {
-    token0: IMockERC20Dispatcher,
-    token1: IMockERC20Dispatcher,
-    pool_key: PoolKey,
-    core: ICoreDispatcher,
-    locker: ICoreLockerDispatcher
+pub struct SetupPoolResult {
+    pub token0: IMockERC20Dispatcher,
+    pub token1: IMockERC20Dispatcher,
+    pub pool_key: PoolKey,
+    pub core: ICoreDispatcher,
+    pub locker: ICoreLockerDispatcher
 }
 
 #[generate_trait]
-impl DeployerTraitImpl of DeployerTrait {
+pub impl DeployerTraitImpl of DeployerTrait {
     fn get_next_nonce(ref self: Deployer) -> felt252 {
         let nonce = self.nonce;
         self.nonce += 1;
@@ -229,6 +231,20 @@ impl DeployerTraitImpl of DeployerTrait {
         return IUpgradeableDispatcher { contract_address: address };
     }
 
+
+    fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
+        let (address, _) = deploy_syscall(
+            TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            serialize(@(default_owner(), core)).span(),
+            true
+        )
+            .expect('twamm deploy failed');
+
+        IExtensionDispatcher { contract_address: address }
+    }
+
+
     fn setup_pool(
         ref self: Deployer,
         fee: u128,
@@ -252,10 +268,36 @@ impl DeployerTraitImpl of DeployerTrait {
 
         SetupPoolResult { token0, token1, pool_key, core, locker }
     }
+
+    fn setup_pool_with_core(
+        ref self: Deployer,
+        core: ICoreDispatcher,
+        fee: u128,
+        tick_spacing: u128,
+        initial_tick: i129,
+        extension: ContractAddress
+    ) -> SetupPoolResult {
+        let locker = self.deploy_locker(core);
+        let (token0, token1) = self.deploy_two_mock_tokens();
+
+        let pool_key = PoolKey {
+            token0: token0.contract_address,
+            token1: token1.contract_address,
+            fee,
+            tick_spacing,
+            extension
+        };
+
+        core.initialize_pool(pool_key, initial_tick);
+
+        SetupPoolResult { token0, token1, pool_key, core, locker }
+    }
 }
 
 
-impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILockerDispatcher> {
+pub impl IPositionsDispatcherIntoILockerDispatcher of Into<
+    IPositionsDispatcher, ILockerDispatcher
+> {
     fn into(self: IPositionsDispatcher) -> ILockerDispatcher {
         ILockerDispatcher { contract_address: self.contract_address }
     }
@@ -263,7 +305,7 @@ impl IPositionsDispatcherIntoILockerDispatcher of Into<IPositionsDispatcher, ILo
 
 
 #[derive(Drop, Copy)]
-struct Balances {
+pub struct Balances {
     token0_balance_core: u256,
     token1_balance_core: u256,
     token0_balance_recipient: u256,
@@ -295,7 +337,7 @@ fn get_balances(
 }
 
 
-fn diff(x: u256, y: u256) -> i129 {
+pub fn diff(x: u256, y: u256) -> i129 {
     let (lower, upper) = if x < y {
         (x, y)
     } else {
@@ -306,7 +348,7 @@ fn diff(x: u256, y: u256) -> i129 {
     i129 { mag: diff.low, sign: (x < y) & (diff != 0) }
 }
 
-fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
+pub fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     assert(
         diff(after.token0_balance_core, before.token0_balance_core) == delta.amount0,
         'token0_balance_core'
@@ -340,7 +382,7 @@ fn assert_balances_delta(before: Balances, after: Balances, delta: Delta) {
     }
 }
 
-fn update_position_inner(
+pub fn update_position_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -382,7 +424,7 @@ fn update_position_inner(
     }
 }
 
-fn flash_borrow_inner(
+pub fn flash_borrow_inner(
     core: ICoreDispatcher,
     locker: ICoreLockerDispatcher,
     token: ContractAddress,
@@ -395,7 +437,7 @@ fn flash_borrow_inner(
     }
 }
 
-fn update_position(
+pub fn update_position(
     setup: SetupPoolResult, bounds: Bounds, liquidity_delta: i129, recipient: ContractAddress
 ) -> Delta {
     update_position_inner(
@@ -409,11 +451,11 @@ fn update_position(
 }
 
 
-fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) {
+pub fn accumulate_as_fees(setup: SetupPoolResult, amount0: u128, amount1: u128) {
     accumulate_as_fees_inner(setup.core, setup.pool_key, setup.locker, amount0, amount1)
 }
 
-fn accumulate_as_fees_inner(
+pub fn accumulate_as_fees_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -426,7 +468,7 @@ fn accumulate_as_fees_inner(
     }
 }
 
-fn swap_inner(
+pub fn swap_inner(
     core: ICoreDispatcher,
     pool_key: PoolKey,
     locker: ICoreLockerDispatcher,
@@ -472,7 +514,7 @@ fn swap_inner(
     }
 }
 
-fn swap(
+pub fn swap(
     setup: SetupPoolResult,
     amount: i129,
     is_token1: bool,

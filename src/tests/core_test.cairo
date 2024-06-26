@@ -3,7 +3,9 @@ use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use ekubo::core::{Core};
-use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, Delta};
+use ekubo::interfaces::core::{
+    ICoreDispatcherTrait, ICoreDispatcher, UpdatePositionParameters, SwapParameters
+};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::muldiv::{div};
 use ekubo::math::ticks::{
@@ -19,26 +21,30 @@ use ekubo::tests::helper::{
 
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
-    UpdatePositionParameters, SwapParameters
 };
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::delta::{Delta};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use starknet::testing::{set_contract_address, pop_log};
 use starknet::{ContractAddress, contract_address_const};
 
+
+// floor(log base 1.000001 of 1.01)
+const TICKS_IN_ONE_PERCENT: u128 = 9950;
+
 mod owner_tests {
     use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 
     use ekubo::positions::{Positions};
-    use starknet::class_hash::{ClassHash, Felt252TryIntoClassHash};
+    use starknet::class_hash::{ClassHash};
     use super::{
         Core, Deployer, DeployerTrait, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
         set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
-        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner
+        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner,
     };
 
 
@@ -190,7 +196,6 @@ mod initialize_pool_tests {
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');
-        assert(event.call_points == Default::default(), 'event.call_points');
     }
 
     #[test]
@@ -336,7 +341,7 @@ mod initialized_ticks {
     use super::{
         Deployer, DeployerTrait, update_position, contract_address_const, FEE_ONE_PERCENT,
         tick_constants, ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick,
-        Bounds, Zero
+        Bounds, Zero, TICKS_IN_ONE_PERCENT
     };
 
     #[test]
@@ -346,7 +351,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -366,7 +371,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -388,7 +393,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -402,7 +407,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -476,7 +481,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -542,7 +547,7 @@ mod initialized_ticks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -553,8 +558,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -562,8 +567,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -571,8 +576,8 @@ mod initialized_ticks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
             recipient: contract_address_const::<42>()
@@ -584,9 +589,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 500, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 500, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
             'next from -500, skip 5'
         );
         assert(
@@ -594,9 +599,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
             'next from -154, skip 5'
         );
         assert(
@@ -604,9 +609,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
             'next from -128, skip 5'
         );
         assert(
@@ -614,9 +619,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
             'next from -12, skip 5'
         );
         assert(
@@ -624,9 +629,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
             'next from 9, skip 5'
         );
         assert(
@@ -634,9 +639,9 @@ mod initialized_ticks {
                 .core
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
             'next from 128, skip 5'
         );
 
@@ -647,9 +652,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 500, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 500, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
             'prev from 500, skip 5'
         );
         assert(
@@ -657,9 +662,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 199, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 199, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
             'prev from 199, skip 5'
         );
         assert(
@@ -667,9 +672,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 127, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 127, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
             'prev from 127, skip 5'
         );
         assert(
@@ -677,9 +682,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 8, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 8, sign: false },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
             'prev from 8, skip 5'
         );
         assert(
@@ -687,9 +692,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 13, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 13, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
             'prev from -13, skip 5'
         );
         assert(
@@ -697,9 +702,9 @@ mod initialized_ticks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 129, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT * 129, sign: true },
                     skip_ahead: 5
-                ) == (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
+                ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
             'prev from -129, skip 5'
         );
     }
@@ -716,7 +721,7 @@ mod locks {
         ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
         IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
         max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zero, PoolKey,
-        accumulate_as_fees, max_bounds, SavedBalanceKey
+        accumulate_as_fees, max_bounds, SavedBalanceKey, TICKS_IN_ONE_PERCENT
     };
 
     #[test]
@@ -726,7 +731,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -860,7 +865,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -873,7 +878,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -891,7 +896,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -909,7 +914,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -922,15 +927,15 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false }
             },
             liquidity_delta: Zero::zero(),
             recipient: contract_address_const::<42>()
@@ -940,9 +945,9 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
                     skip_ahead: 1
-                ) != (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true }, true),
+                ) != (i129 { mag: TICKS_IN_ONE_PERCENT, sign: true }, true),
             'ticks not initialized'
         );
         assert(
@@ -950,9 +955,9 @@ mod locks {
                 .core
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
-                    from: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                    from: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
                     skip_ahead: 1
-                ) != (i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false }, false),
+                ) != (i129 { mag: TICKS_IN_ONE_PERCENT, sign: false }, false),
             'ticks not initialized'
         );
     }
@@ -972,7 +977,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -980,7 +985,7 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
                 upper: i129 { mag: 12, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
@@ -1003,7 +1008,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1011,7 +1016,7 @@ mod locks {
         update_position(
             setup: setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
                 upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
@@ -1035,7 +1040,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1126,6 +1131,7 @@ mod locks {
         let core = d.deploy_core();
         let (token0, token1) = d.deploy_two_mock_tokens();
         let locker = d.deploy_locker(core);
+        locker.set_call_points();
 
         let pool_key = PoolKey {
             token0: token0.contract_address,
@@ -1174,7 +1180,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1185,8 +1191,8 @@ mod locks {
         let delta = update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1337,7 +1343,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1370,13 +1376,13 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 3, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 3, sign: true }
         );
 
         let delta = swap(
@@ -1407,7 +1413,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1442,7 +1448,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1477,7 +1483,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1512,7 +1518,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1523,8 +1529,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1627,7 +1633,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1638,8 +1644,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1681,7 +1687,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1692,15 +1698,15 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 2, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: true }
         );
 
         let delta = swap(
@@ -1738,7 +1744,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1749,15 +1755,15 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 2, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: false }
         );
 
         let delta = swap(
@@ -1793,7 +1799,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1804,8 +1810,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1847,7 +1853,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1858,8 +1864,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -1900,7 +1906,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1911,15 +1917,15 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false }
         );
 
         let delta = swap(
@@ -1958,7 +1964,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -1969,15 +1975,15 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }
         );
 
         let delta = swap(
@@ -2013,7 +2019,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -2025,8 +2031,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2036,8 +2042,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                lower: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2047,8 +2053,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
-                upper: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
+                upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2056,7 +2062,7 @@ mod locks {
 
         // right above the tick price
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }
         )
             + 1;
 
@@ -2077,10 +2083,7 @@ mod locks {
             setup.core.get_pool_liquidity(setup.pool_key),
             setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
-        assert(
-            price.tick == i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: true },
-            'tick after'
-        );
+        assert(price.tick == i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }, 'tick after');
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');
         assert(
@@ -2097,7 +2100,7 @@ mod locks {
         let setup = d
             .setup_pool(
                 fee: FEE_ONE_PERCENT,
-                tick_spacing: tick_constants::TICKS_IN_ONE_PERCENT,
+                tick_spacing: TICKS_IN_ONE_PERCENT,
                 initial_tick: Zero::zero(),
                 extension: Zero::zero(),
             );
@@ -2109,8 +2112,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2120,8 +2123,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: true },
+                lower: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: true },
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2131,8 +2134,8 @@ mod locks {
         update_position(
             setup,
             bounds: Bounds {
-                lower: i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
-                upper: i129 { mag: 2 * tick_constants::TICKS_IN_ONE_PERCENT, sign: false },
+                lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
+                upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
             recipient: contract_address_const::<42>()
@@ -2140,7 +2143,7 @@ mod locks {
 
         // right above the tick price
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: tick_constants::TICKS_IN_ONE_PERCENT * 5, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false }
         )
             - 1;
 
@@ -2162,8 +2165,7 @@ mod locks {
             setup.core.get_pool_fees_per_liquidity(setup.pool_key)
         );
         assert(
-            price.tick == i129 { mag: (tick_constants::TICKS_IN_ONE_PERCENT * 5) - 1, sign: false },
-            'tick after'
+            price.tick == i129 { mag: (TICKS_IN_ONE_PERCENT * 5) - 1, sign: false }, 'tick after'
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');

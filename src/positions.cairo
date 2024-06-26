@@ -1,6 +1,7 @@
 #[starknet::contract]
-mod Positions {
+pub mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
+    use core::cmp::{max};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
     use core::serde::{Serde};
@@ -9,8 +10,13 @@ mod Positions {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::extensions::interfaces::twamm::{
+        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait
+    };
+    use ekubo::extensions::twamm::math::time::{TIME_SPACING_SIZE};
+    use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, UpdatePositionParameters, ICoreDispatcherTrait, ILocker
+        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
@@ -19,7 +25,7 @@ mod Positions {
     };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
@@ -28,7 +34,7 @@ mod Positions {
     use ekubo::types::keys::{PositionKey};
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, replace_class_syscall
+        ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -43,11 +49,14 @@ mod Positions {
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
+        twamm: ITWAMMDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -100,7 +109,9 @@ mod Positions {
         pool_key: PoolKey,
         salt: felt252,
         bounds: Bounds,
-        liquidity: u128,
+        amount0: u128,
+        amount1: u128,
+        min_liquidity: u128,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -130,16 +141,6 @@ mod Positions {
         GetPoolPrice: PoolKey,
     }
 
-    #[generate_trait]
-    impl Internal of InternalTrait {
-        fn balance_of_token(ref self: ContractState, token: ContractAddress) -> u128 {
-            let balance = IERC20Dispatcher { contract_address: token }
-                .balanceOf(get_contract_address());
-            assert(balance.high == 0, 'BALANCE_OVERFLOW');
-            balance.low
-        }
-    }
-
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
@@ -147,21 +148,60 @@ mod Positions {
         }
     }
 
+    #[generate_trait]
+    impl InternalPositionsMethods of InternalPositionsTrait {
+        fn check_authorization(
+            self: @ContractState, id: u64
+        ) -> (IOwnedNFTDispatcher, ContractAddress) {
+            let nft = self.nft.read();
+            let caller = get_caller_address();
+            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            (nft, caller)
+        }
+    }
+
     #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             match consume_callback_data::<LockCallbackData>(core, data) {
                 LockCallbackData::Deposit(data) => {
-                    let delta: Delta = if data.liquidity.is_non_zero() {
+                    // pools with extensions could update the price, perform a zero liquidity
+                    // update and get the most up to date price
+                    if (data.pool_key.extension.is_non_zero()) {
+                        core
+                            .update_position(
+                                data.pool_key,
+                                UpdatePositionParameters {
+                                    salt: 0,
+                                    bounds: max_bounds(data.pool_key.tick_spacing),
+                                    liquidity_delta: Zero::zero(),
+                                }
+                            );
+                    }
+
+                    let price = core.get_pool_price(data.pool_key);
+
+                    // compute how much liquidity we can deposit based on token balances
+                    let liquidity: u128 = max_liquidity(
+                        price.sqrt_ratio,
+                        tick_to_sqrt_ratio(data.bounds.lower),
+                        tick_to_sqrt_ratio(data.bounds.upper),
+                        data.amount0,
+                        data.amount1
+                    );
+
+                    assert(liquidity >= data.min_liquidity, 'MIN_LIQUIDITY');
+
+                    let delta: Delta = if liquidity.is_non_zero() {
                         core
                             .update_position(
                                 data.pool_key,
                                 UpdatePositionParameters {
                                     salt: data.salt,
                                     bounds: data.bounds,
-                                    liquidity_delta: i129 { mag: data.liquidity, sign: false },
+                                    liquidity_delta: i129 { mag: liquidity, sign: false },
                                 }
                             )
                     } else {
@@ -180,7 +220,7 @@ mod Positions {
                         core.pay(data.pool_key.token1);
                     }
 
-                    ArrayTrait::new()
+                    serialize(@liquidity).span()
                 },
                 LockCallbackData::Withdraw(data) => {
                     let delta = core
@@ -204,7 +244,7 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    serialize(@delta)
+                    serialize(@delta).span()
                 },
                 LockCallbackData::CollectFees(data) => {
                     let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
@@ -217,22 +257,39 @@ mod Positions {
                         core.withdraw(data.pool_key.token1, data.recipient, delta.amount1.mag);
                     }
 
-                    serialize(@delta)
+                    serialize(@delta).span()
                 },
                 LockCallbackData::GetPoolPrice(pool_key) => {
-                    core
-                        .update_position(
-                            pool_key,
-                            UpdatePositionParameters {
-                                salt: 0,
-                                bounds: max_bounds(pool_key.tick_spacing),
-                                liquidity_delta: Zero::zero(),
-                            }
-                        );
+                    let price_before = core.get_pool_price(pool_key);
 
-                    let pool_price = core.get_pool_price(pool_key);
+                    let pool_price = if price_before.sqrt_ratio.is_zero() {
+                        price_before
+                    } else {
+                        core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: Zero::zero(),
+                                    is_token1: false,
+                                    sqrt_ratio_limit: min_sqrt_ratio(),
+                                    skip_ahead: Zero::zero(),
+                                }
+                            );
 
-                    serialize(@pool_price)
+                        core
+                            .update_position(
+                                pool_key,
+                                UpdatePositionParameters {
+                                    salt: 0,
+                                    bounds: max_bounds(pool_key.tick_spacing),
+                                    liquidity_delta: Zero::zero(),
+                                }
+                            );
+
+                        core.get_pool_price(pool_key)
+                    };
+
+                    serialize(@pool_price).span()
                 }
             }
         }
@@ -250,18 +307,25 @@ mod Positions {
                 .replace_class_hash(class_hash);
         }
 
+        fn set_twamm(ref self: ContractState, twamm_address: ContractAddress) {
+            self.require_owner();
+            self.twamm.write(ITWAMMDispatcher { contract_address: twamm_address });
+        }
+
+        fn get_twamm_address(self: @ContractState) -> ContractAddress {
+            self.twamm.read().contract_address
+        }
+
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
             self.mint_v2(Zero::zero())
         }
 
-        #[inline(always)]
         fn mint_with_referrer(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
         ) -> u64 {
             self.mint_v2(referrer)
         }
 
-        #[inline(always)]
         fn mint_v2(ref self: ContractState, referrer: ContractAddress) -> u64 {
             let id = self.nft.read().mint(get_caller_address());
 
@@ -272,43 +336,43 @@ mod Positions {
             id
         }
 
+        fn check_liquidity_is_zero(
+            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+        ) {
+            let info = self.get_token_info(id, pool_key, bounds);
+            assert(info.liquidity.is_zero(), 'LIQUIDITY_IS_NON_ZERO');
+        }
+
         fn unsafe_burn(ref self: ContractState, id: u64) {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            let (nft, _) = self.check_authorization(id);
             nft.burn(id);
         }
 
         fn get_tokens_info(
-            self: @ContractState, params: Array<GetTokenInfoRequest>
-        ) -> Array<GetTokenInfoResult> {
+            self: @ContractState, mut params: Span<GetTokenInfoRequest>
+        ) -> Span<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
 
-            let mut params_view = params.span();
-
-            loop {
-                match params_view.pop_front() {
-                    Option::Some(request) => {
-                        results
-                            .append(
-                                self.get_token_info(*request.id, *request.pool_key, *request.bounds)
-                            );
-                    },
-                    Option::None => { break (); }
+            while let Option::Some(request) = params
+                .pop_front() {
+                    results
+                        .append(
+                            self.get_token_info(*request.id, *request.pool_key, *request.bounds)
+                        );
                 };
-            };
 
-            results
+            results.span()
         }
 
         fn get_token_info(
             self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> GetTokenInfoResult {
             let core = self.core.read();
+            let price = self.get_pool_price(pool_key);
             let get_position_result = core
                 .get_position_with_fees(
                     pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
                 );
-            let price = core.get_pool_price(pool_key);
 
             let delta = liquidity_delta_to_amount_delta(
                 sqrt_ratio: price.sqrt_ratio,
@@ -327,6 +391,47 @@ mod Positions {
             }
         }
 
+        fn get_orders_info(
+            self: @ContractState, mut params: Span<(u64, OrderKey)>
+        ) -> Span<OrderInfo> {
+            let mut results: Array<OrderInfo> = ArrayTrait::new();
+
+            while let Option::Some(request) = params
+                .pop_front() {
+                    let (id, order_key) = request;
+                    results.append(self.get_order_info(*id, *order_key));
+                };
+
+            results.span()
+        }
+
+        fn get_order_info(self: @ContractState, id: u64, order_key: OrderKey) -> OrderInfo {
+            self.twamm.read().get_order_info(get_contract_address(), id.into(), order_key)
+        }
+
+        fn deposit_amounts(
+            ref self: ContractState,
+            id: u64,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            amount0: u128,
+            amount1: u128,
+            min_liquidity: u128
+        ) -> u128 {
+            self.check_authorization(id);
+
+            let liquidity: u128 = call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::Deposit(
+                    DepositCallbackData {
+                        pool_key, salt: id.into(), bounds, min_liquidity, amount0, amount1,
+                    }
+                )
+            );
+
+            liquidity
+        }
+
         fn deposit(
             ref self: ContractState,
             id: u64,
@@ -334,35 +439,18 @@ mod Positions {
             bounds: Bounds,
             min_liquidity: u128,
         ) -> u128 {
-            let nft = self.nft.read();
-            assert(nft.is_account_authorized(id, get_caller_address()), 'UNAUTHORIZED');
+            let address = get_contract_address();
 
-            let core = self.core.read();
+            let amount0 = IERC20Dispatcher { contract_address: pool_key.token0 }
+                .balanceOf(address)
+                .try_into()
+                .expect('AMOUNT0_OVERFLOW_U128');
+            let amount1 = IERC20Dispatcher { contract_address: pool_key.token1 }
+                .balanceOf(address)
+                .try_into()
+                .expect('AMOUNT1_OVERFLOW_U128');
 
-            // todo: how do we handle before/after update position that changes the price? 
-            // https://github.com/EkuboProtocol/contracts/issues/102
-            let price = core.get_pool_price(pool_key);
-
-            // compute how much liquidity we can deposit based on token balances
-            let liquidity: u128 = max_liquidity(
-                price.sqrt_ratio,
-                tick_to_sqrt_ratio(bounds.lower),
-                tick_to_sqrt_ratio(bounds.upper),
-                self.balance_of_token(pool_key.token0),
-                self.balance_of_token(pool_key.token1)
-            );
-            assert(liquidity >= min_liquidity, 'MIN_LIQUIDITY');
-
-            call_core_with_callback::<
-                LockCallbackData, ()
-            >(
-                core,
-                @LockCallbackData::Deposit(
-                    DepositCallbackData { pool_key, bounds, liquidity: liquidity, salt: id.into(), }
-                )
-            );
-
-            liquidity
+            self.deposit_amounts(id, pool_key, bounds, amount0, amount1, min_liquidity)
         }
 
         fn withdraw(
@@ -399,9 +487,7 @@ mod Positions {
             min_token0: u128,
             min_token1: u128,
         ) -> (u128, u128) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            let (_, caller) = self.check_authorization(id);
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -424,9 +510,7 @@ mod Positions {
         fn collect_fees(
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
         ) -> (u128, u128) {
-            let nft = self.nft.read();
-            let caller = get_caller_address();
-            assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
+            let (_, caller) = self.check_authorization(id);
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
@@ -444,13 +528,31 @@ mod Positions {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
         }
 
+        fn deposit_amounts_last(
+            ref self: ContractState,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            amount0: u128,
+            amount1: u128,
+            min_liquidity: u128
+        ) -> u128 {
+            self
+                .deposit_amounts(
+                    self.nft.read().get_next_token_id() - 1,
+                    pool_key,
+                    bounds,
+                    amount0,
+                    amount1,
+                    min_liquidity
+                )
+        }
+
         fn mint_and_deposit(
             ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
         ) -> (u64, u128) {
             self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zero::zero())
         }
 
-        #[inline(always)]
         fn mint_and_deposit_with_referrer(
             ref self: ContractState,
             pool_key: PoolKey,
@@ -472,10 +574,66 @@ mod Positions {
             (id, liquidity, amount0, amount1)
         }
 
-        fn get_pool_price(ref self: ContractState, pool_key: PoolKey) -> PoolPrice {
+        fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
             call_core_with_callback::<
                 LockCallbackData, PoolPrice
             >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+        }
+
+        fn mint_and_increase_sell_amount(
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> (u64, u128) {
+            let id = self.mint_v2(Zero::zero());
+            (id, self.increase_sell_amount(id, order_key, amount))
+        }
+
+        fn increase_sell_amount_last(
+            ref self: ContractState, order_key: OrderKey, amount: u128
+        ) -> u128 {
+            self.increase_sell_amount(self.nft.read().get_next_token_id() - 1, order_key, amount)
+        }
+
+        fn increase_sell_amount(
+            ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
+        ) -> u128 {
+            self.check_authorization(id);
+
+            let twamm = self.twamm.read();
+
+            // if increasing sale rate, transfer additional funds to twamm
+            IERC20Dispatcher { contract_address: order_key.sell_token }
+                .transfer(twamm.contract_address, amount.into());
+
+            let sale_rate = calculate_sale_rate(
+                amount: amount,
+                duration: to_duration(
+                    max(order_key.start_time, get_block_timestamp()), order_key.end_time
+                ),
+            );
+
+            twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });
+
+            sale_rate
+        }
+
+        fn decrease_sale_rate(
+            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
+        ) {
+            self.check_authorization(id);
+
+            // it's no-op to decrease sale rate of an order that has already ended so we do nothing
+            if get_block_timestamp() < order_key.end_time {
+                let twamm = self.twamm.read();
+                twamm.update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+            }
+        }
+
+        fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
+            self.check_authorization(id);
+
+            let twamm = self.twamm.read();
+
+            twamm.collect_proceeds(id.into(), order_key);
         }
     }
 }

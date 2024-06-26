@@ -25,8 +25,7 @@ fn setup(
     let core = d.deploy_core();
     let locker = d.deploy_locker(core);
     let extension = d.deploy_mock_extension(core, call_points);
-    let token0 = d.deploy_mock_token();
-    let token1 = d.deploy_mock_token();
+    let (token0, token1) = d.deploy_two_mock_tokens();
     (
         core,
         extension,
@@ -63,6 +62,73 @@ fn test_mock_extension_can_be_called_by_core() {
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
 }
 
+#[test]
+#[should_panic(expected: ('INVALID_CALL_POINTS', 'ENTRYPOINT_FAILED'))]
+fn test_cannot_change_to_default_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, _, _, _, _) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+
+    core.set_call_points(Default::default());
+}
+
+#[test]
+fn test_mock_extension_initializes_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, _, extension, _, _) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    assert_eq!(core.get_call_points(extension.contract_address), all_call_points());
+}
+
+#[test]
+fn test_extension_can_call_change_call_points_from_extension() {
+    let mut deployer: Deployer = Default::default();
+
+    let (core, mock_extension, _, _, _) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+    );
+    assert_eq!(core.get_call_points(mock_extension.contract_address), all_call_points());
+    let mut cp = all_call_points();
+    cp.before_initialize_pool = false;
+    mock_extension.change_call_points(cp);
+    assert_eq!(core.get_call_points(mock_extension.contract_address), cp);
+}
+
+#[test]
+fn test_change_call_points_random_call_points() {
+    let mut deployer: Deployer = Default::default();
+
+    let before = CallPoints {
+        before_initialize_pool: false,
+        after_initialize_pool: true,
+        before_swap: false,
+        after_swap: true,
+        before_update_position: false,
+        after_update_position: true,
+        before_collect_fees: false,
+        after_collect_fees: true,
+    };
+    let after = CallPoints {
+        before_initialize_pool: true,
+        after_initialize_pool: false,
+        before_swap: true,
+        after_swap: false,
+        before_update_position: true,
+        after_update_position: false,
+        before_collect_fees: true,
+        after_collect_fees: false,
+    };
+    let (core, mock_extension, _, _, _) = setup(
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before
+    );
+    assert_eq!(core.get_call_points(mock_extension.contract_address), before);
+    mock_extension.change_call_points(after);
+    assert_eq!(core.get_call_points(mock_extension.contract_address), after);
+}
 
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
     assert(call.token0 == pool_key.token0, 'token0 matches');
@@ -154,12 +220,36 @@ fn test_mock_extension_update_position_is_called() {
     check_matches_pool_key(before, pool_key);
 }
 
+
 #[test]
-fn test_mock_extension_no_call_points() {
+#[should_panic(expected: ('mockext deploy failed',))]
+fn test_mock_extension_no_call_points_fails() {
+    // this panics because you cannot create an extension with no call points
     let mut deployer: Deployer = Default::default();
-    let (core, mock, _, locker, pool_key) = setup(
+    let (_, _, _, _, _) = setup(
         ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: Default::default()
     );
+}
+
+#[test]
+fn test_mock_extension_before_initialize_pool_only() {
+    let mut deployer: Deployer = Default::default();
+    let (core, mock, _, locker, pool_key) = setup(
+        ref deployer: deployer,
+        fee: 0,
+        tick_spacing: 1,
+        call_points: CallPoints {
+            before_initialize_pool: true,
+            after_initialize_pool: false,
+            before_swap: false,
+            after_swap: false,
+            before_update_position: false,
+            after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
+        }
+    );
+
     core.initialize_pool(pool_key, Zero::zero());
     let delta = update_position_inner(
         core: core,
@@ -198,11 +288,14 @@ fn test_mock_extension_after_initialize_pool_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: true,
             before_swap: false,
             after_swap: false,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -228,9 +321,9 @@ fn test_mock_extension_after_initialize_pool_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '2 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == get_contract_address(), 'caller');
     assert(call.call_point == 1, 'called');
     check_matches_pool_key(call, pool_key);
@@ -245,11 +338,14 @@ fn test_mock_extension_before_swap_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: true,
             after_swap: false,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -275,9 +371,9 @@ fn test_mock_extension_before_swap_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '2 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 2, 'called');
     check_matches_pool_key(call, pool_key);
@@ -291,11 +387,14 @@ fn test_mock_extension_after_swap_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: true,
             before_update_position: false,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -321,9 +420,9 @@ fn test_mock_extension_after_swap_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 3, 'called');
     check_matches_pool_key(call, pool_key);
@@ -339,11 +438,14 @@ fn test_mock_extension_before_update_position_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
             before_update_position: true,
             after_update_position: false,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -369,9 +471,9 @@ fn test_mock_extension_before_update_position_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 4, 'called');
     check_matches_pool_key(call, pool_key);
@@ -385,11 +487,14 @@ fn test_mock_extension_after_update_position_only() {
         fee: 0,
         tick_spacing: 1,
         call_points: CallPoints {
+            before_initialize_pool: false,
             after_initialize_pool: false,
             before_swap: false,
             after_swap: false,
             before_update_position: false,
             after_update_position: true,
+            before_collect_fees: false,
+            after_collect_fees: false,
         }
     );
 
@@ -415,9 +520,9 @@ fn test_mock_extension_after_update_position_only() {
     );
     assert(delta.is_zero(), 'no change');
 
-    assert(mock.get_num_calls() == 2, '2 call made');
+    assert(mock.get_num_calls() == 1, '1 call made');
 
-    let call = mock.get_call(1);
+    let call = mock.get_call(0);
     assert(call.caller == locker.contract_address, 'caller');
     assert(call.call_point == 5, 'called');
     check_matches_pool_key(call, pool_key);
@@ -438,7 +543,7 @@ fn test_mock_extension_is_called_back_into_other_pool() {
     // because the other mock is calling into the pool, the extension should get hit every time
     other_mock.call_into_pool(pool_key);
 
-    assert(mock.get_num_calls() == 6, '# calls made');
+    assert(mock.get_num_calls() == 8, '# calls made');
 
     let call = mock.get_call(0);
     assert(call.caller == get_contract_address(), 'before initialize caller');
@@ -468,6 +573,16 @@ fn test_mock_extension_is_called_back_into_other_pool() {
     let call = mock.get_call(5);
     assert(call.caller == other_mock.contract_address, 'after update caller');
     assert(call.call_point == 5, 'after update');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(6);
+    assert(call.caller == other_mock.contract_address, 'before collect fees caller');
+    assert(call.call_point == 6, 'before collect fees call point');
+    check_matches_pool_key(call, pool_key);
+
+    let call = mock.get_call(7);
+    assert(call.caller == other_mock.contract_address, 'after collect fees caller');
+    assert(call.call_point == 7, 'after collect fees call point');
     check_matches_pool_key(call, pool_key);
 }
 

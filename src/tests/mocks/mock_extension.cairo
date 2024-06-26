@@ -1,26 +1,28 @@
+use ekubo::types::call_points::{CallPoints};
 use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress};
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
-struct ExtensionCalled {
-    caller: ContractAddress,
-    call_point: u32,
-    token0: ContractAddress,
-    token1: ContractAddress,
-    fee: u128,
-    tick_spacing: u128,
+pub struct ExtensionCalled {
+    pub caller: ContractAddress,
+    pub call_point: u32,
+    pub token0: ContractAddress,
+    pub token1: ContractAddress,
+    pub fee: u128,
+    pub tick_spacing: u128,
 }
 
 #[starknet::interface]
-trait IMockExtension<TStorage> {
+pub trait IMockExtension<TStorage> {
     fn get_num_calls(self: @TStorage) -> u32;
     fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
 
     fn call_into_pool(self: @TStorage, pool_key: PoolKey);
+    fn change_call_points(self: @TStorage, call_points: CallPoints);
 }
 
 #[starknet::contract]
-mod MockExtension {
+pub mod MockExtension {
     use core::array::{ArrayTrait};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
@@ -30,27 +32,22 @@ mod MockExtension {
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
     use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::call_points::{CallPoints, all_call_points};
+    use ekubo::types::call_points::{all_call_points};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
     use starknet::{get_caller_address};
-    use super::{IMockExtension, ExtensionCalled, ContractAddress};
+    use super::{CallPoints, IMockExtension, ExtensionCalled, ContractAddress};
 
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
         num_calls: u32,
         calls: LegacyMap<u32, ExtensionCalled>,
-        call_points: u8
     }
 
     #[generate_trait]
     impl InternalMethods of InternalTrait {
-        fn get_call_points(self: @ContractState) -> CallPoints {
-            TryInto::<u8, CallPoints>::try_into(self.call_points.read()).unwrap()
-        }
-
         fn check_caller_is_core(self: @ContractState) -> ICoreDispatcher {
             let core = self.core.read();
             assert(get_caller_address() == core.contract_address, 'CORE_ONLY');
@@ -81,21 +78,21 @@ mod MockExtension {
     #[constructor]
     fn constructor(ref self: ContractState, core: ICoreDispatcher, call_points: CallPoints) {
         self.core.write(core);
-        self.call_points.write(call_points.into());
+        core.set_call_points(call_points);
     }
 
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
+        ) {
             let core = self.check_caller_is_core();
             let price = core.get_pool_price(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'pool is not init');
 
             self.insert_call(caller, 0, pool_key);
-            self.get_call_points()
         }
+
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
@@ -146,11 +143,33 @@ mod MockExtension {
             self.check_caller_is_core();
             self.insert_call(caller, 5, pool_key);
         }
+
+        fn before_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds
+        ) {
+            self.check_caller_is_core();
+            self.insert_call(caller, 6, pool_key);
+        }
+        fn after_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds,
+            delta: Delta
+        ) {
+            self.check_caller_is_core();
+            self.insert_call(caller, 7, pool_key);
+        }
     }
 
     #[abi(embed_v0)]
     impl ExtensionLocked of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let data = consume_callback_data::<CallbackData>(core, data);
 
@@ -177,9 +196,16 @@ mod MockExtension {
                     }
                 );
 
+            delta += core
+                .collect_fees(
+                    data.pool_key,
+                    salt: Zero::zero(),
+                    bounds: max_bounds(data.pool_key.tick_spacing)
+                );
+
             assert(delta.is_zero(), 'delta is zero');
 
-            ArrayTrait::new()
+            ArrayTrait::new().span()
         }
     }
 
@@ -201,6 +227,10 @@ mod MockExtension {
 
         fn get_call(self: @ContractState, call_id: u32) -> ExtensionCalled {
             self.calls.read(call_id)
+        }
+
+        fn change_call_points(self: @ContractState, call_points: CallPoints) {
+            self.core.read().set_call_points(call_points)
         }
     }
 }

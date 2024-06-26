@@ -3,7 +3,7 @@ use core::num::traits::{Zero};
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
     tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
-    constants, internal as ticks_internal
+    constants, by_2_127, log2
 };
 use ekubo::types::i129::i129;
 
@@ -124,7 +124,7 @@ fn tick_magnitude_exceeds_max() {
 
 #[test]
 fn test_log2_2_128() {
-    let (log2, sign) = ticks_internal::log2(0x100000000000000000000000000000000_u256);
+    let (log2, sign) = log2(0x100000000000000000000000000000000_u256);
     assert(log2 == 0, 'log2(2**128).mag');
     assert(sign == false, 'log2(2**128).sign');
 }
@@ -132,25 +132,19 @@ fn test_log2_2_128() {
 #[test]
 fn test_internal_div_by_2_127() {
     assert(
-        ticks_internal::by_2_127(
-            0x100000000000000000000000000000000_u256
-        ) == u256 { low: 2, high: 0 },
+        by_2_127(0x100000000000000000000000000000000_u256) == u256 { low: 2, high: 0 },
         '2n**128n/2n**127n'
     );
     assert(
-        ticks_internal::by_2_127(
-            u256 { high: 0, low: 0x80000000000000000000000000000000 }
-        ) == 1_u256,
+        by_2_127(u256 { high: 0, low: 0x80000000000000000000000000000000 }) == 1_u256,
         '2n**127n/2n**127n'
     );
     assert(
-        ticks_internal::by_2_127(
-            u256 { high: 0, low: 0x40000000000000000000000000000000 }
-        ) == 0_u256,
+        by_2_127(u256 { high: 0, low: 0x40000000000000000000000000000000 }) == 0_u256,
         '2n**126n/2n**127n'
     );
     assert(
-        ticks_internal::by_2_127(
+        by_2_127(
             u256 {
                 high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
             }
@@ -255,17 +249,15 @@ fn test_max_sqrt_ratio_size() {
 
 #[test]
 fn sqrt_ratio_to_tick_powers_of_tick() {
-    let mut sign = false;
-    let mut pow: u8 = 0;
-    loop {
-        if (pow == 27) {
-            if (sign) {
-                break ();
-            }
-            sign = true;
-            pow = 1;
-        }
-        let tick = i129 { mag: exp2(pow), sign };
+    let mut i: u8 = 0;
+
+    while i < 53 {
+        let tick = if i > 26 {
+            i129 { sign: true, mag: exp2(i - 26) }
+        } else {
+            i129 { sign: false, mag: exp2(i) }
+        };
+
         let sqrt_ratio = tick_to_sqrt_ratio(tick);
         let computed_tick = sqrt_ratio_to_tick(sqrt_ratio);
         assert(tick == computed_tick, 'computed tick');
@@ -276,7 +268,7 @@ fn sqrt_ratio_to_tick_powers_of_tick() {
         );
         let computed_tick_ratio_plus_one = sqrt_ratio_to_tick(sqrt_ratio + 1_u256);
         assert(computed_tick_ratio_plus_one == computed_tick, 'computed tick plus one');
-        pow += 1;
+        i += 1;
     }
 }
 

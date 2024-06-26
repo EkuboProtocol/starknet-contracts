@@ -3,13 +3,15 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::extensions::interfaces::twamm::{OrderKey};
+use ekubo::extensions::twamm::math::time::{is_time_valid};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
 };
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest,
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
@@ -26,7 +28,7 @@ use ekubo::tests::helper::{
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use starknet::testing::{set_contract_address, pop_log};
+use starknet::testing::{set_contract_address, pop_log, set_block_timestamp};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 
 #[test]
@@ -96,11 +98,14 @@ fn test_locked_cannot_be_called_directly() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
-    ILockerDispatcher { contract_address: positions.contract_address }.locked(1, ArrayTrait::new());
+    ILockerDispatcher { contract_address: positions.contract_address }
+        .locked(1, ArrayTrait::new().span());
 }
 
 #[test]
-#[should_panic(expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED'))]
+#[should_panic(
+    expected: ('MIN_LIQUIDITY', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED')
+)]
 fn test_deposit_fails_min_liquidity() {
     let mut d: Deployer = Default::default();
     let setup = d
@@ -160,6 +165,7 @@ fn test_deposit_liquidity_concentrated() {
 
     assert(liquidity == 200050104166, 'liquidity');
 }
+
 
 #[test]
 fn test_deposit_liquidity_concentrated_mint_and_deposit() {
@@ -1123,11 +1129,12 @@ fn test_create_position_in_range_after_swap_no_fees() {
                 GetTokenInfoRequest { id: p2.id, pool_key: setup.pool_key, bounds: p2.bounds },
                 GetTokenInfoRequest { id: p3.id, pool_key: setup.pool_key, bounds: p3.bounds },
             ]
+                .span()
         );
-    assert(all_info.pop_front().unwrap() == p0_info, 'p0_info');
-    assert(all_info.pop_front().unwrap() == p1_info, 'p1_info');
-    assert(all_info.pop_front().unwrap() == p2_info, 'p2_info');
-    assert(all_info.pop_front().unwrap() == p3_info, 'p3_info');
+    assert(all_info.pop_front().unwrap() == @p0_info, 'p0_info');
+    assert(all_info.pop_front().unwrap() == @p1_info, 'p1_info');
+    assert(all_info.pop_front().unwrap() == @p2_info, 'p2_info');
+    assert(all_info.pop_front().unwrap() == @p3_info, 'p3_info');
     assert(all_info.pop_front().is_none(), 'no others');
 
     assert(p0_info.liquidity == p0.liquidity, 'p0 liquidity');
@@ -1365,4 +1372,61 @@ fn test_get_pool_price_normal_pool() {
     let positions = d.deploy_positions(setup.core);
     let price = positions.get_pool_price(setup.pool_key);
     assert_eq!(price.sqrt_ratio, u256 { high: 1, low: 0 });
+}
+
+#[test]
+fn test_get_pool_price_uninitialized_pool() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+    let price = positions
+        .get_pool_price(
+            PoolKey {
+                token0: contract_address_const::<1234>(),
+                token1: contract_address_const::<2345>(),
+                fee: 1234,
+                tick_spacing: 2345,
+                extension: Zero::zero(),
+            }
+        );
+    assert_eq!(price.sqrt_ratio, Zero::zero());
+}
+
+#[test]
+#[should_panic(expected: ('LIQUIDITY_IS_NON_ZERO', 'ENTRYPOINT_FAILED'))]
+fn test_check_liquidity_is_zero() {
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }
+    };
+    let p0 = create_position(
+        setup: setup, positions: positions, bounds: bounds, amount0: 1000, amount1: 1000
+    );
+    positions.check_liquidity_is_zero(id: p0.id, pool_key: setup.pool_key, bounds: bounds);
+}
+
+#[test]
+fn test_check_liquidity_is_zero_succeeds() {
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let bounds = Bounds {
+        lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false }
+    };
+    let id = positions.mint_v2(Zero::zero());
+    positions.check_liquidity_is_zero(id: id, pool_key: setup.pool_key, bounds: bounds);
 }

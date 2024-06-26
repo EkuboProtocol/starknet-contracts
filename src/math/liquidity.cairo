@@ -1,18 +1,10 @@
-use core::integer::{
-    u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add, u256_as_non_zero,
-    u128_overflowing_add
-};
 use core::num::traits::{Zero};
-use core::result::{ResultTrait};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::muldiv::{muldiv};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129, i129Trait};
 
 // Returns the token0, token1 delta owed for a given change in liquidity
-#[inline(always)]
-fn liquidity_delta_to_amount_delta(
+pub fn liquidity_delta_to_amount_delta(
     sqrt_ratio: u256, liquidity_delta: i129, sqrt_ratio_lower: u256, sqrt_ratio_upper: u256
 ) -> Delta {
     // skip the maths for the 0 case

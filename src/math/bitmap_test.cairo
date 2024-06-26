@@ -21,22 +21,14 @@ fn test_zeroable() {
 fn test_set_all_bits() {
     let mut b: Bitmap = Zero::zero();
     let mut i: u8 = 0;
-    loop {
-        if (i == 251) {
-            break ();
-        }
-
+    while (i != 251) {
         b = b.set_bit(i);
 
         i += 1;
     };
 
     i = 0;
-    loop {
-        if (i == 251) {
-            break ();
-        }
-
+    while i != 251 {
         b = b.unset_bit(i);
 
         i += 1;

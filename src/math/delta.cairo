@@ -1,4 +1,4 @@
-use core::integer::{u256_wide_mul, u256_as_non_zero};
+use core::integer::{u256_wide_mul};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
@@ -7,8 +7,9 @@ use ekubo::types::i129::i129;
 
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
-#[inline(always)]
-fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
+pub fn amount0_delta(
+    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
+) -> u128 {
     // we do this ordering here because it's easier than branching in swap
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)
@@ -29,15 +30,16 @@ fn amount0_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_
     )
         .expect('OVERFLOW_AMOUNT0_DELTA_0');
 
-    let result = div(result_0, u256_as_non_zero(sqrt_ratio_lower), round_up);
+    let result = div(result_0, sqrt_ratio_lower.try_into().unwrap(), round_up);
     assert(result.high.is_zero(), 'OVERFLOW_AMOUNT0_DELTA');
 
     return result.low;
 }
 
 // Compute the difference in amount of token1 between two ratios, rounded as specified
-#[inline(always)]
-fn amount1_delta(sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool) -> u128 {
+pub fn amount1_delta(
+    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
+) -> u128 {
     // we do this ordering here because it's easier than branching in swap
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
         (sqrt_ratio_a, sqrt_ratio_b)

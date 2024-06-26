@@ -1,4 +1,3 @@
-use core::integer::{downcast, upcast};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into, TryInto};
@@ -8,28 +7,25 @@ use ekubo::math::mask::{mask};
 use ekubo::types::i129::{i129, i129Trait};
 
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
-struct Bitmap {
+pub struct Bitmap {
     // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
-    value: felt252
+    pub(crate) value: felt252
 }
 
 impl BitmapZero of Zero<Bitmap> {
-    #[inline(always)]
     fn zero() -> Bitmap {
         Bitmap { value: Zero::zero() }
     }
-    #[inline(always)]
     fn is_zero(self: @Bitmap) -> bool {
         self.value.is_zero()
     }
-    #[inline(always)]
     fn is_non_zero(self: @Bitmap) -> bool {
         self.value.is_non_zero()
     }
 }
 
 #[generate_trait]
-impl BitmapTraitImpl of BitmapTrait {
+pub impl BitmapTraitImpl of BitmapTrait {
     // Returns the index of the most significant bit of less or equal significance as the index bit
     fn next_set_bit(self: Bitmap, index: u8) -> Option<u8> {
         if (self.is_zero()) {
@@ -119,40 +115,40 @@ impl BitmapTraitImpl of BitmapTrait {
     }
 }
 
-mod internal {
-    const NEGATIVE_OFFSET: u128 = 0x100000000;
-}
+
+const NEGATIVE_OFFSET: u128 = 0x100000000;
+
 
 // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
 // The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
-fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
+pub fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     // we don't care about the relative placement of words, only the placement of bits within a word
     if (tick.is_negative()) {
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
         (
-            ((tick.mag - 1) / (tick_spacing * 251)) + internal::NEGATIVE_OFFSET,
-            downcast(((tick.mag - 1) / tick_spacing) % 251).unwrap()
+            ((tick.mag - 1) / (tick_spacing * 251)) + NEGATIVE_OFFSET,
+            (((tick.mag - 1) / tick_spacing) % 251).try_into().unwrap()
         )
     } else {
         // todo: this can be done more efficiently by using divmod
         // we want the word to have bits from smallest tick to largest tick, and larger mag here means larger tick
         (
             tick.mag / (tick_spacing * 251),
-            250_u8 - downcast((tick.mag / tick_spacing) % 251).unwrap()
+            250_u8 - ((tick.mag / tick_spacing) % 251).try_into().unwrap()
         )
     }
 }
 
 // Compute the tick corresponding to the word and bit index
-fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
+pub fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: u128) -> i129 {
     let (word, bit) = word_and_bit_index;
-    if (word >= internal::NEGATIVE_OFFSET) {
+    if (word >= NEGATIVE_OFFSET) {
         i129 {
-            mag: ((word - internal::NEGATIVE_OFFSET) * 251 * tick_spacing)
-                + ((upcast(bit) + 1) * tick_spacing),
+            mag: ((word - NEGATIVE_OFFSET) * 251 * tick_spacing)
+                + ((bit.into() + 1) * tick_spacing),
             sign: true
         }
     } else {
-        i129 { mag: (word * 251 * tick_spacing) + (upcast(250 - bit) * tick_spacing), sign: false }
+        i129 { mag: (word * 251 * tick_spacing) + ((250 - bit).into() * tick_spacing), sign: false }
     }
 }

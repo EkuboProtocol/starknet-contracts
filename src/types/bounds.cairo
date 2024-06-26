@@ -6,13 +6,13 @@ use starknet::ContractAddress;
 
 // Tick bounds for a position
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
-struct Bounds {
-    lower: i129,
-    upper: i129
+pub struct Bounds {
+    pub lower: i129,
+    pub upper: i129
 }
 
 // Returns the max usable bounds given the tick spacing
-fn max_bounds(tick_spacing: u128) -> Bounds {
+pub fn max_bounds(tick_spacing: u128) -> Bounds {
     assert(tick_spacing != 0, 'MAX_BOUNDS_TICK_SPACING_ZERO');
     assert(tick_spacing <= tick_constants::MAX_TICK_MAGNITUDE, 'MAX_BOUNDS_TICK_SPACING_LARGE');
     let mag = (tick_constants::MAX_TICK_MAGNITUDE / tick_spacing) * tick_spacing;
@@ -20,8 +20,7 @@ fn max_bounds(tick_spacing: u128) -> Bounds {
 }
 
 #[generate_trait]
-impl BoudnsTraitImpl of BoundsTrait {
-    #[inline(always)]
+pub impl BoudnsTraitImpl of BoundsTrait {
     fn check_valid(self: Bounds, tick_spacing: u128) {
         assert(self.lower < self.upper, 'BOUNDS_ORDER');
         assert(self.lower >= min_tick(), 'BOUNDS_MIN');

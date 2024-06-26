@@ -1,5 +1,5 @@
 // Returns 2^(n+1) - 1
-fn mask(n: u8) -> u128 {
+pub fn mask(n: u8) -> u128 {
     match n {
         0 => { 0x1 },
         1 => { 0x3 },

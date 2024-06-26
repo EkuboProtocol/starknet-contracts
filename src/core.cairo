@@ -1,5 +1,5 @@
 #[starknet::contract]
-mod Core {
+pub mod Core {
     use core::array::{ArrayTrait, SpanTrait};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
@@ -40,7 +40,8 @@ mod Core {
     use ekubo::types::position::{Position, PositionTrait};
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, replace_class_syscall, storage_base_address_from_felt252
+        get_contract_address, syscalls::{replace_class_syscall},
+        storage_access::{storage_base_address_from_felt252}
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -71,6 +72,8 @@ mod Core {
         tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
         saved_balances: LegacyMap<SavedBalanceKey, u128>,
+        // extensions must be registered before they are used in a pool key
+        extension_call_points: LegacyMap<ContractAddress, CallPoints>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -83,70 +86,69 @@ mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    struct ProtocolFeesWithdrawn {
-        recipient: ContractAddress,
-        token: ContractAddress,
-        amount: u128,
+    pub struct ProtocolFeesWithdrawn {
+        pub recipient: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct ProtocolFeesPaid {
-        pool_key: PoolKey,
-        position_key: PositionKey,
-        delta: Delta,
+    pub struct ProtocolFeesPaid {
+        pub pool_key: PoolKey,
+        pub position_key: PositionKey,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PoolInitialized {
-        pool_key: PoolKey,
-        initial_tick: i129,
-        sqrt_ratio: u256,
-        call_points: u8,
+    pub struct PoolInitialized {
+        pub pool_key: PoolKey,
+        pub initial_tick: i129,
+        pub sqrt_ratio: u256,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PositionUpdated {
-        locker: ContractAddress,
-        pool_key: PoolKey,
-        params: UpdatePositionParameters,
-        delta: Delta,
+    pub struct PositionUpdated {
+        pub locker: ContractAddress,
+        pub pool_key: PoolKey,
+        pub params: UpdatePositionParameters,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct PositionFeesCollected {
-        pool_key: PoolKey,
-        position_key: PositionKey,
-        delta: Delta,
+    pub struct PositionFeesCollected {
+        pub pool_key: PoolKey,
+        pub position_key: PositionKey,
+        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct Swapped {
-        locker: ContractAddress,
-        pool_key: PoolKey,
-        params: SwapParameters,
-        delta: Delta,
-        sqrt_ratio_after: u256,
-        tick_after: i129,
-        liquidity_after: u128,
+    pub struct Swapped {
+        pub locker: ContractAddress,
+        pub pool_key: PoolKey,
+        pub params: SwapParameters,
+        pub delta: Delta,
+        pub sqrt_ratio_after: u256,
+        pub tick_after: i129,
+        pub liquidity_after: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct FeesAccumulated {
-        pool_key: PoolKey,
-        amount0: u128,
-        amount1: u128,
+    pub struct FeesAccumulated {
+        pub pool_key: PoolKey,
+        pub amount0: u128,
+        pub amount1: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct SavedBalance {
-        key: SavedBalanceKey,
-        amount: u128,
+    pub struct SavedBalance {
+        pub key: SavedBalanceKey,
+        pub amount: u128,
     }
 
     #[derive(starknet::Event, Drop)]
-    struct LoadedBalance {
-        key: SavedBalanceKey,
-        amount: u128,
+    pub struct LoadedBalance {
+        pub key: SavedBalanceKey,
+        pub amount: u128,
     }
 
 
@@ -169,38 +171,32 @@ mod Core {
 
     #[generate_trait]
     impl Internal of InternalTrait {
-        #[inline(always)]
         fn get_current_locker_id(self: @ContractState) -> u32 {
             let lock_count = self.lock_count.read();
             assert(lock_count > 0, 'NOT_LOCKED');
             lock_count - 1
         }
 
-        #[inline(always)]
         fn get_locker_address(self: @ContractState, id: u32) -> ContractAddress {
             Store::read(0, storage_base_address_from_felt252(id.into()))
                 .expect('FAILED_READ_LOCKER_ADDRESS')
         }
 
-        #[inline(always)]
         fn set_locker_address(self: @ContractState, id: u32, address: ContractAddress) {
             Store::write(0, storage_base_address_from_felt252(id.into()), address)
                 .expect('FAILED_WRITE_LOCKER_ADDRESS');
         }
 
-        #[inline(always)]
         fn get_nonzero_delta_count(self: @ContractState, id: u32) -> u32 {
             Store::read(0, storage_base_address_from_felt252(0x100000000 + id.into()))
                 .expect('FAILED_READ_NZD_COUNT')
         }
 
-        #[inline(always)]
         fn set_nonzero_delta_count(self: @ContractState, id: u32, count: u32) {
             Store::write(0, storage_base_address_from_felt252(0x100000000 + id.into()), count)
                 .expect('FAILED_WRITE_NZD_COUNT');
         }
 
-        #[inline(always)]
         fn get_locker(self: @ContractState) -> (u32, ContractAddress) {
             let id = self.get_current_locker_id();
             let locker = self.get_locker_address(id);
@@ -229,7 +225,6 @@ mod Core {
             }
         }
 
-        #[inline(always)]
         fn account_pool_delta(ref self: ContractState, id: u32, pool_key: PoolKey, delta: Delta) {
             self.account_delta(id, pool_key.token0, delta.amount0);
             self.account_delta(id, pool_key.token1, delta.amount1);
@@ -357,6 +352,20 @@ mod Core {
                 }
             }
         }
+
+        fn get_call_points_for_caller(
+            self: @ContractState, pool_key: PoolKey, caller: ContractAddress
+        ) -> CallPoints {
+            if pool_key.extension.is_non_zero() {
+                if (pool_key.extension != caller) {
+                    self.extension_call_points.read(pool_key.extension)
+                } else {
+                    Default::default()
+                }
+            } else {
+                Default::default()
+            }
+        }
     }
 
     #[abi(embed_v0)]
@@ -476,7 +485,7 @@ mod Core {
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
         }
 
-        fn lock(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
+        fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {
             let id = self.lock_count.read();
             let caller = get_caller_address();
 
@@ -585,28 +594,27 @@ mod Core {
         fn initialize_pool(ref self: ContractState, pool_key: PoolKey, initial_tick: i129) -> u256 {
             pool_key.check_valid();
 
+            assert(
+                pool_key.extension.is_zero()
+                    || (self.extension_call_points.read(pool_key.extension) != Default::default()),
+                'EXTENSION_NOT_REGISTERED'
+            );
+
+            let call_points = self.get_call_points_for_caller(pool_key, get_caller_address());
+
+            if (call_points.before_initialize_pool) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_initialize_pool(get_caller_address(), pool_key, initial_tick);
+            }
+
             let price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_zero(), 'ALREADY_INITIALIZED');
 
-            let call_points = if (pool_key.extension.is_non_zero()) {
-                IExtensionDispatcher { contract_address: pool_key.extension }
-                    .before_initialize_pool(get_caller_address(), pool_key, initial_tick)
-            } else {
-                Default::<CallPoints>::default()
-            };
-
             let sqrt_ratio = tick_to_sqrt_ratio(initial_tick);
 
-            self
-                .pool_price
-                .write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick, call_points });
+            self.pool_price.write(pool_key, PoolPrice { sqrt_ratio, tick: initial_tick });
 
-            self
-                .emit(
-                    PoolInitialized {
-                        pool_key, initial_tick, sqrt_ratio, call_points: call_points.into()
-                    }
-                );
+            self.emit(PoolInitialized { pool_key, initial_tick, sqrt_ratio });
 
             if (call_points.after_initialize_pool) {
                 IExtensionDispatcher { contract_address: pool_key.extension }
@@ -641,18 +649,18 @@ mod Core {
         ) -> Delta {
             let (id, locker) = self.require_locker();
 
-            let price = self.pool_price.read(pool_key);
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
 
-            if (price.call_points.before_update_position) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_update_position(locker, pool_key, params);
-                }
+            if (call_points.before_update_position) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_update_position(locker, pool_key, params);
             }
 
+            // bounds must be multiple of tick spacing
             params.bounds.check_valid(pool_key.tick_spacing);
 
             // pool must be initialized
+            let mut price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
             let (sqrt_ratio_lower, sqrt_ratio_upper) = (
@@ -755,11 +763,9 @@ mod Core {
 
             self.emit(PositionUpdated { locker, pool_key, params, delta });
 
-            if (price.call_points.after_update_position) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .after_update_position(locker, pool_key, params, delta);
-                }
+            if (call_points.after_update_position) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_update_position(locker, pool_key, params, delta);
             }
 
             delta
@@ -769,6 +775,13 @@ mod Core {
             ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
         ) -> Delta {
             let (id, locker) = self.require_locker();
+
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
+
+            if (call_points.before_collect_fees) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_collect_fees(locker, pool_key, salt, bounds);
+            }
 
             let position_key = PositionKey { owner: locker, salt, bounds };
             let result = self.get_position_with_fees(pool_key, position_key);
@@ -793,6 +806,11 @@ mod Core {
 
             self.emit(PositionFeesCollected { pool_key, position_key, delta });
 
+            if (call_points.after_collect_fees) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_collect_fees(locker, pool_key, salt, bounds, delta);
+            }
+
             delta
         }
 
@@ -800,22 +818,22 @@ mod Core {
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
             let (id, locker) = self.require_locker();
 
+            let call_points = self.get_call_points_for_caller(pool_key, locker);
+
+            if (call_points.before_swap) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .before_swap(locker, pool_key, params);
+            }
+
             let pool_price_storage_address = storage_base_address_from_felt252(
                 LegacyHash::hash(selector!("pool_price"), pool_key)
             );
 
-            let price: PoolPrice = Store::read(0, pool_price_storage_address)
+            let mut price: PoolPrice = Store::read(0, pool_price_storage_address)
                 .expect('FAILED_READ_POOL_PRICE');
 
             // pool must be initialized
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
-
-            if (price.call_points.before_swap) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .before_swap(locker, pool_key, params);
-                }
-            }
 
             let increasing = is_price_increasing(params.amount.sign, params.is_token1);
 
@@ -855,15 +873,7 @@ mod Core {
 
             let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None;
 
-            loop {
-                if (amount_remaining.is_zero()) {
-                    break ();
-                }
-
-                if (sqrt_ratio == params.sqrt_ratio_limit) {
-                    break ();
-                }
-
+            while (amount_remaining.is_non_zero() & (sqrt_ratio != params.sqrt_ratio_limit)) {
                 let (next_tick, is_initialized) = if (increasing) {
                     self_snap
                         .prefix_next_initialized_tick(
@@ -998,11 +1008,7 @@ mod Core {
                 }
             };
 
-            Store::write(
-                0,
-                pool_price_storage_address,
-                PoolPrice { sqrt_ratio, tick, call_points: price.call_points }
-            )
+            Store::write(0, pool_price_storage_address, PoolPrice { sqrt_ratio, tick })
                 .expect('FAILED_WRITE_POOL_PRICE');
             Store::write(0, liquidity_storage_address, liquidity).expect('FAILED_WRITE_LIQUIDITY');
             Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity)
@@ -1023,11 +1029,9 @@ mod Core {
                     }
                 );
 
-            if (price.call_points.after_swap) {
-                if (pool_key.extension != locker) {
-                    IExtensionDispatcher { contract_address: pool_key.extension }
-                        .after_swap(locker, pool_key, params, delta);
-                }
+            if (call_points.after_swap) {
+                IExtensionDispatcher { contract_address: pool_key.extension }
+                    .after_swap(locker, pool_key, params, delta);
             }
 
             delta
@@ -1063,6 +1067,16 @@ mod Core {
                 );
 
             self.emit(FeesAccumulated { pool_key, amount0, amount1, });
+        }
+
+        fn set_call_points(ref self: ContractState, call_points: CallPoints) {
+            assert(call_points != Default::default(), 'INVALID_CALL_POINTS');
+            self.extension_call_points.write(get_caller_address(), call_points);
+        }
+
+        // Returns the call points for the given extension.
+        fn get_call_points(self: @ContractState, extension: ContractAddress) -> CallPoints {
+            self.extension_call_points.read(extension)
         }
     }
 }

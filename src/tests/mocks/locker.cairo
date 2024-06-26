@@ -1,13 +1,14 @@
 use core::array::{ArrayTrait};
 use core::serde::{Serde};
-use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, Delta, IExtension};
+use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, IExtension};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
 use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde)]
-enum Action {
+pub enum Action {
     AssertLockerId: u32,
     Relock: (u32, u32), // expected id, number of relocks
     UpdatePosition: (PoolKey, UpdatePositionParameters, ContractAddress),
@@ -22,7 +23,7 @@ enum Action {
 }
 
 #[derive(Copy, Drop, Serde)]
-enum ActionResult {
+pub enum ActionResult {
     AssertLockerId,
     Relock,
     UpdatePosition: Delta,
@@ -34,12 +35,13 @@ enum ActionResult {
 }
 
 #[starknet::interface]
-trait ICoreLocker<TStorage> {
+pub trait ICoreLocker<TStorage> {
     fn call(ref self: TStorage, action: Action) -> ActionResult;
+    fn set_call_points(ref self: TStorage);
 }
 
 #[starknet::contract]
-mod CoreLocker {
+pub mod CoreLocker {
     use core::array::ArrayTrait;
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
@@ -50,6 +52,7 @@ mod CoreLocker {
     use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+    use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
@@ -74,9 +77,7 @@ mod CoreLocker {
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
-        ) -> CallPoints {
-            Default::default()
-        }
+        ) {}
         fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
@@ -118,11 +119,31 @@ mod CoreLocker {
         ) {
             assert(false, 'never called');
         }
+
+        fn before_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds
+        ) {
+            assert(false, 'never called');
+        }
+        fn after_collect_fees(
+            ref self: ContractState,
+            caller: ContractAddress,
+            pool_key: PoolKey,
+            salt: felt252,
+            bounds: Bounds,
+            delta: Delta
+        ) {
+            assert(false, 'never called');
+        }
     }
 
     #[abi(embed_v0)]
     impl CoreLockerLockedImpl of ILocker<ContractState> {
-        fn locked(ref self: ContractState, id: u32, data: Array<felt252>) -> Array<felt252> {
+        fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
 
             let result = match consume_callback_data::<Action>(core, data) {
@@ -321,7 +342,7 @@ mod CoreLocker {
                 }
             };
 
-            serialize(@result)
+            serialize(@result).span()
         }
     }
 
@@ -329,6 +350,24 @@ mod CoreLocker {
     impl CoreLockerImpl of ICoreLocker<ContractState> {
         fn call(ref self: ContractState, action: Action) -> ActionResult {
             call_core_with_callback(self.core.read(), @action)
+        }
+
+        fn set_call_points(ref self: ContractState) {
+            self
+                .core
+                .read()
+                .set_call_points(
+                    CallPoints {
+                        before_initialize_pool: true,
+                        after_initialize_pool: false,
+                        before_swap: false,
+                        after_swap: false,
+                        before_update_position: false,
+                        after_update_position: false,
+                        before_collect_fees: false,
+                        after_collect_fees: false,
+                    }
+                );
         }
     }
 }
