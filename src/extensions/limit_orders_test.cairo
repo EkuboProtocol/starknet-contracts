@@ -180,7 +180,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 }
 
 #[test]
-#[should_panic(expected: ('ONLY_FROM_PLACE_ORDER', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ("ONLY_FROM_PLACE_ORDER", 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
 fn test_before_initialize_pool_not_from_extension() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();

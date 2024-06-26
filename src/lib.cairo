@@ -15,7 +15,7 @@ pub mod components {
 }
 
 pub mod extensions {
-    mod limit_orders;
+    pub mod limit_orders;
     #[cfg(test)]
     mod limit_orders_test;
 
