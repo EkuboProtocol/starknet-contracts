@@ -291,7 +291,8 @@ pub mod LimitOrders {
         fn before_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
         ) {
-            panic!("ONLY_FROM_PLACE_ORDERS");
+            // this entrypoint is not called if the limit order extension initializes the pool
+            panic!("ONLY_FROM_PLACE_ORDER");
         }
 
         fn after_initialize_pool(
