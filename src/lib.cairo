@@ -1,4 +1,5 @@
 pub mod core;
+pub mod mathlib;
 pub mod mock_erc20;
 pub mod owned_nft;
 pub mod positions;
@@ -25,6 +26,7 @@ pub mod interfaces {
     pub mod core;
     pub mod erc20;
     pub mod erc721;
+    pub mod mathlib;
     pub mod positions;
     pub mod src5;
     pub mod upgradeable;
