@@ -80,5 +80,9 @@ mod MathLib {
         fn tick_to_sqrt_ratio(self: @ContractState, tick: i129) -> u256 {
             ekubo::math::ticks::tick_to_sqrt_ratio(tick)
         }
+
+        fn sqrt_ratio_to_tick(self: @ContractState, sqrt_ratio: u256) -> i129 {
+            ekubo::math::ticks::sqrt_ratio_to_tick(sqrt_ratio)
+        }
     }
 }
