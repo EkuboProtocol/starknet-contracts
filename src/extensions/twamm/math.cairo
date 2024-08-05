@@ -84,7 +84,9 @@ pub fn calculate_next_sqrt_ratio(
         // current sale ratio is the price
         sqrt_sale_ratio
     } else {
-        let sqrt_sale_rate_without_fee: u128 = (Into::<u128,u256>::into(token0_sale_rate) * token1_sale_rate.into()).sqrt();
+        let sqrt_sale_rate_without_fee: u128 = (Into::<u128, u256>::into(token0_sale_rate)
+            * token1_sale_rate.into())
+            .sqrt();
         let sqrt_sale_rate = sqrt_sale_rate_without_fee
             - compute_fee(sqrt_sale_rate_without_fee, fee);
 
