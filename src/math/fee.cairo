@@ -1,14 +1,13 @@
-use core::integer::{u128_wide_mul};
-use core::num::traits::{Zero};
+use core::num::traits::{Zero, WideMul};
 
 // Returns the fee to charge based on the amount, which is the fee (a 0.128 number) times the
 // amount, rounded up
 pub fn compute_fee(amount: u128, fee: u128) -> u128 {
-    let (high, low) = u128_wide_mul(amount, fee);
-    if (low == 0) {
-        high
+    let result = WideMul::<u128, u128>::wide_mul(amount, fee);
+    if (result.low == 0) {
+        result.high
     } else {
-        high + 1
+        result.high + 1
     }
 }
 

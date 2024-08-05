@@ -1,6 +1,7 @@
 use core::array::{ArrayTrait};
 use core::hash::{HashStateTrait, Hash};
 use core::num::traits::{Zero};
+use core::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use starknet::storage_access::{StorePacking};
@@ -102,9 +103,9 @@ impl i129Add of Add<i129> {
     }
 }
 
-impl i129AddEq of AddEq<i129> {
-    fn add_eq(ref self: i129, other: i129) {
-        self = Add::add(self, other);
+impl i129AddAssign of AddAssign<i129, i129> {
+    fn add_assign(ref self: i129, rhs: i129) {
+        self = Add::add(self, rhs);
     }
 }
 
@@ -114,9 +115,9 @@ impl i129Sub of Sub<i129> {
     }
 }
 
-impl i129SubEq of SubEq<i129> {
-    fn sub_eq(ref self: i129, other: i129) {
-        self = Sub::sub(self, other);
+impl i129SubAssign of SubAssign<i129, i129> {
+    fn sub_assign(ref self: i129, rhs: i129) {
+        self = Sub::sub(self, rhs);
     }
 }
 
@@ -126,9 +127,9 @@ impl i129Mul of Mul<i129> {
     }
 }
 
-impl i129MulEq of MulEq<i129> {
-    fn mul_eq(ref self: i129, other: i129) {
-        self = Mul::mul(self, other);
+impl i129MulAssign of MulAssign<i129, i129> {
+    fn mul_assign(ref self: i129, rhs: i129) {
+        self = Mul::mul(self, rhs);
     }
 }
 
@@ -138,9 +139,9 @@ impl i129Div of Div<i129> {
     }
 }
 
-impl i129DivEq of DivEq<i129> {
-    fn div_eq(ref self: i129, other: i129) {
-        self = Div::div(self, other);
+impl i129DivAssign of DivAssign<i129, i129> {
+    fn div_assign(ref self: i129, rhs: i129) {
+        self = Div::div(self, rhs);
     }
 }
 

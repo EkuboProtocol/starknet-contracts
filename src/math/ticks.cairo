@@ -1,4 +1,4 @@
-use core::integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
+use core::num::traits::{WideMul, OverflowingMul, OverflowingAdd};
 use core::option::{OptionTrait, Option};
 use core::traits::{Into, TryInto};
 use ekubo::math::bits::{msb};
@@ -27,7 +27,7 @@ pub mod constants {
 // Each step in the approximation performs a multiplication and a shift
 // We assume the mul is safe in this function
 pub(crate) fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
-    let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
+    let (res, _) = OverflowingMul::overflowing_mul(x, u256 { high: 0, low: mul });
     return u256 { low: res.high, high: 0 };
 }
 
@@ -44,12 +44,12 @@ fn max(x: u256, y: u256) -> u256 {
 }
 
 fn unsafe_mul(x: u128, y: u128) -> u128 {
-    let (_, low) = u128_wide_mul(x, y);
-    return low;
+    let result = WideMul::<u128, u128>::wide_mul(x, y);
+    result.low
 }
 
 pub(crate) fn by_2_127(x: u256) -> u256 {
-    let (sum, overflow) = u256_overflowing_add(x, x);
+    let (sum, overflow) = OverflowingAdd::overflowing_add(x, x);
     u256 { low: sum.high, high: if overflow {
         1
     } else {
@@ -380,9 +380,9 @@ pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
 
     // == 2**64/(log base 2 of tick size)
     // https://www.wolframalpha.com/input?i=floor%28%281%2F+log+base+2+of+%28sqrt%281.000001%29%29%29*2**64%29
-    let (high, low) = u128_wide_mul(25572630076711825471857579, log2_sqrt_ratio);
-
-    let tick_mag_x128 = u256 { high, low };
+    let tick_mag_x128 = WideMul::<
+        u128, u128
+    >::wide_mul(25572630076711825471857579, log2_sqrt_ratio);
 
     let error = u256 { low: MAX_ERROR_MAGNITUDE, high: 0 };
 

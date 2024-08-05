@@ -1,5 +1,5 @@
-use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256};
-use core::num::traits::{Zero};
+use core::integer::{u512, u512_safe_div_rem_by_u256};
+use core::num::traits::{Zero, WideMul};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::muldiv::{muldiv};
 

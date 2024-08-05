@@ -1,12 +1,13 @@
-use core::integer::{u256_wide_mul};
-use core::num::traits::{Zero};
+use core::num::traits::{Zero, WideMul};
 use core::traits::{Into};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::position::{Position, PositionTrait, multiply_and_get_limb1};
 
 // todo: fuzz with this
 fn check_mul(a: u256, b: u128) {
-    assert(u256_wide_mul(a, b.into()).limb1 == multiply_and_get_limb1(a, b), 'check');
+    assert(
+        WideMul::<u256, u256>::wide_mul(a, b.into()).limb1 == multiply_and_get_limb1(a, b), 'check'
+    );
 }
 
 #[test]

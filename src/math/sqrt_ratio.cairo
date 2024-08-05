@@ -1,5 +1,4 @@
-use core::integer::{u256_overflow_mul, u256_overflow_sub, u256_overflowing_add};
-use core::num::traits::{Zero};
+use core::num::traits::{Zero, OverflowingAdd, OverflowingSub, OverflowingMul};
 use core::option::{Option};
 use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::{i129};
@@ -21,7 +20,7 @@ pub fn next_sqrt_ratio_from_amount0(
     if (amount.sign) {
         // this will revert on overflow, which is fine because it also means the denominator
         // underflows on line 17
-        let (product, overflow_mul) = u256_overflow_mul(
+        let (product, overflow_mul) = OverflowingMul::overflowing_mul(
             u256 { low: amount.mag, high: 0 }, sqrt_ratio
         );
 
@@ -29,7 +28,7 @@ pub fn next_sqrt_ratio_from_amount0(
             return Option::None(());
         }
 
-        let (denominator, overflow_sub) = u256_overflow_sub(numerator1, product);
+        let (denominator, overflow_sub) = OverflowingSub::overflowing_sub(numerator1, product);
         if (overflow_sub | denominator.is_zero()) {
             return Option::None(());
         }
@@ -45,7 +44,7 @@ pub fn next_sqrt_ratio_from_amount0(
         return if (remainder.is_zero()) {
             Option::Some(quotient)
         } else {
-            let (result, overflow) = u256_overflowing_add(quotient, 1);
+            let (result, overflow) = OverflowingAdd::overflowing_add(quotient, 1);
             if (overflow) {
                 return Option::None(());
             }
@@ -73,7 +72,7 @@ pub fn next_sqrt_ratio_from_amount1(
     // because quotient is rounded down, this price movement is also rounded towards sqrt_ratio
     if (amount.sign) {
         // adding amount1, taking out amount0
-        let (res, overflow) = u256_overflow_sub(sqrt_ratio, quotient);
+        let (res, overflow) = OverflowingSub::overflowing_sub(sqrt_ratio, quotient);
         if (overflow) {
             return Option::None(());
         }
@@ -89,7 +88,7 @@ pub fn next_sqrt_ratio_from_amount1(
         };
     } else {
         // adding amount1, taking out amount0, price goes up
-        let (res, overflow) = u256_overflowing_add(sqrt_ratio, quotient);
+        let (res, overflow) = OverflowingAdd::overflowing_add(sqrt_ratio, quotient);
         if (overflow) {
             return Option::None(());
         }

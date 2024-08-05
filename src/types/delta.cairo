@@ -1,4 +1,5 @@
 use core::num::traits::{Zero};
+use core::ops::{AddAssign, SubAssign};
 use ekubo::types::i129::{i129};
 
 // From the perspective of the core contract, this represents the change in balances.
@@ -35,13 +36,13 @@ impl DeltaSub of Sub<Delta> {
     }
 }
 
-impl DeltaAddEq of AddEq<Delta> {
-    fn add_eq(ref self: Delta, other: Delta) {
-        self = Add::add(self, other);
+impl DeltaAddEq of AddAssign<Delta, Delta> {
+    fn add_assign(ref self: Delta, rhs: Delta) {
+        self = Add::add(self, rhs);
     }
 }
-impl DeltaSubEq of SubEq<Delta> {
-    fn sub_eq(ref self: Delta, other: Delta) {
-        self = Sub::sub(self, other);
+impl DeltaSubEq of SubAssign<Delta, Delta> {
+    fn sub_assign(ref self: Delta, rhs: Delta) {
+        self = Sub::sub(self, rhs);
     }
 }
