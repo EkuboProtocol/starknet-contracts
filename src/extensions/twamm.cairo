@@ -103,19 +103,12 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        #[feature("deprecated_legacy_map")]
         orders: LegacyMap<(ContractAddress, felt252, OrderKey), OrderState>,
-        #[feature("deprecated_legacy_map")]
         sale_rate_and_last_virtual_order_time: LegacyMap<StorageKey, SaleRateState>,
-        #[feature("deprecated_legacy_map")]
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
-        #[feature("deprecated_legacy_map")]
         time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
-        #[feature("deprecated_legacy_map")]
         time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
-        #[feature("deprecated_legacy_map")]
         reward_rate: LegacyMap<StorageKey, FeesPerLiquidity>,
-        #[feature("deprecated_legacy_map")]
         time_reward_rate_before: LegacyMap<(StorageKey, u64), FeesPerLiquidity>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,

@@ -23,8 +23,8 @@ pub mod Owned {
     use super::{ContractAddress, IOwned, Ownable};
 
     #[storage]
-    struct Storage {
-        owner: ContractAddress,
+    pub struct Storage {
+        pub owner: ContractAddress,
     }
 
     #[derive(starknet::Event, Drop)]

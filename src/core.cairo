@@ -55,28 +55,28 @@ pub mod Core {
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
-    struct Storage {
+    pub struct Storage {
         // withdrawal fees collected, controlled by the owner
-        protocol_fees_collected: LegacyMap<ContractAddress, u128>,
+        pub protocol_fees_collected: LegacyMap<ContractAddress, u128>,
         // transient state of the lockers, which always starts and ends at zero
-        lock_count: u32,
+        pub lock_count: u32,
         // the rest of transient state is accessed directly using Store::read and Store::write to
         // save on hashes
 
         // the persistent state of all the pools is stored in these structs
-        pool_price: LegacyMap<PoolKey, PoolPrice>,
-        pool_liquidity: LegacyMap<PoolKey, u128>,
-        pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
-        tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
-        tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
-        tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
-        positions: LegacyMap<(PoolKey, PositionKey), Position>,
-        tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
+        pub pool_price: LegacyMap<PoolKey, PoolPrice>,
+        pub pool_liquidity: LegacyMap<PoolKey, u128>,
+        pub pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
+        pub tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
+        pub tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
+        pub tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
+        pub positions: LegacyMap<(PoolKey, PositionKey), Position>,
+        pub tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token,
         // cache_key)
-        saved_balances: LegacyMap<SavedBalanceKey, u128>,
+        pub saved_balances: LegacyMap<SavedBalanceKey, u128>,
         // extensions must be registered before they are used in a pool key
-        extension_call_points: LegacyMap<ContractAddress, CallPoints>,
+        pub extension_call_points: LegacyMap<ContractAddress, CallPoints>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]

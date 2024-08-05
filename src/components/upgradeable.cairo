@@ -18,7 +18,7 @@ pub mod Upgradeable {
     use super::{IHasInterface, IHasInterfaceDispatcher, IHasInterfaceDispatcherTrait};
 
     #[storage]
-    struct Storage {}
+    pub struct Storage {}
 
     #[derive(starknet::Event, Drop)]
     pub struct ClassHashReplaced {
