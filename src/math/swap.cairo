@@ -6,8 +6,8 @@ use ekubo::math::fee::{compute_fee, amount_before_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::types::i129::{i129};
 
-// consumed_amount is how much of the amount was used in this step, including the amount that was paid to fees
-// calculated_amount is how much of the other token is given
+// consumed_amount is how much of the amount was used in this step, including the amount that was
+// paid to fees calculated_amount is how much of the other token is given
 // sqrt_ratio_next is the next ratio, limited to the given sqrt_ratio_limit
 // fee_amount is the amount of fee collected, always in terms of the specified amount
 #[derive(Copy, Drop, PartialEq)]
@@ -123,8 +123,8 @@ pub fn swap_result(
 
     // amount was not enough to move the price, so consume everything as a fee
     if (sqrt_ratio_next == sqrt_ratio) {
-        // this scenario should only happen with very small input amounts that do not overcome rounding
-        // output amounts should round s.t. they always move by at least one
+        // this scenario should only happen with very small input amounts that do not overcome
+        // rounding output amounts should round s.t. they always move by at least one
         assert(!amount.sign, 'INPUT_SMALL_AMOUNT');
 
         return SwapResult {

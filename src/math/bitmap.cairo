@@ -55,7 +55,8 @@ pub impl BitmapTraitImpl of BitmapTrait {
         }
     }
 
-    // Returns the index of the least significant bit more or equally significant as the bit at index
+    // Returns the index of the least significant bit more or equally significant as the bit at
+    // index
     fn prev_set_bit(self: Bitmap, index: u8) -> Option<u8> {
         if (self.is_zero()) {
             return Option::None(());
@@ -85,7 +86,8 @@ pub impl BitmapTraitImpl of BitmapTrait {
     }
 
     // Sets the bit at the given index to and returns the new bitmap.
-    // Note this method is not idempotent. You should only call it if you know the bit is not set through some external means.
+    // Note this method is not idempotent. You should only call it if you know the bit is not set
+    // through some external means.
     fn set_bit(self: Bitmap, index: u8) -> Bitmap {
         let mut x: u256 = self.value.into();
 
@@ -100,7 +102,8 @@ pub impl BitmapTraitImpl of BitmapTrait {
     }
 
     // Unsets the 1 bit at the given index and returns the new bitmap.
-    // Note this method is not idempotent. You should only call it if you know the bit is set through some external means.
+    // Note this method is not idempotent. You should only call it if you know the bit is set
+    // through some external means.
     fn unset_bit(self: Bitmap, index: u8) -> Bitmap {
         let x: u256 = self.value.into();
 
@@ -120,18 +123,21 @@ const NEGATIVE_OFFSET: u128 = 0x100000000;
 
 
 // Returns the word and bit index of the closest tick that is possibly initialized and <= tick
-// The word and bit index are where in the bitmap the initialized state is stored for that nearest tick
+// The word and bit index are where in the bitmap the initialized state is stored for that nearest
+// tick
 pub fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) {
     // we don't care about the relative placement of words, only the placement of bits within a word
     if (tick.is_negative()) {
-        // we want the word to have bits from smallest tick to largest tick, and larger mag here means smaller tick
+        // we want the word to have bits from smallest tick to largest tick, and larger mag here
+        // means smaller tick
         (
             ((tick.mag - 1) / (tick_spacing * 251)) + NEGATIVE_OFFSET,
             (((tick.mag - 1) / tick_spacing) % 251).try_into().unwrap()
         )
     } else {
         // todo: this can be done more efficiently by using divmod
-        // we want the word to have bits from smallest tick to largest tick, and larger mag here means larger tick
+        // we want the word to have bits from smallest tick to largest tick, and larger mag here
+        // means larger tick
         (
             tick.mag / (tick_spacing * 251),
             250_u8 - ((tick.mag / tick_spacing) % 251).try_into().unwrap()

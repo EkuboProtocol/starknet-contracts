@@ -353,13 +353,10 @@ pub mod Positions {
         ) -> Span<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
 
-            while let Option::Some(request) = params
-                .pop_front() {
-                    results
-                        .append(
-                            self.get_token_info(*request.id, *request.pool_key, *request.bounds)
-                        );
-                };
+            while let Option::Some(request) = params.pop_front() {
+                results
+                    .append(self.get_token_info(*request.id, *request.pool_key, *request.bounds));
+            };
 
             results.span()
         }
@@ -396,11 +393,10 @@ pub mod Positions {
         ) -> Span<OrderInfo> {
             let mut results: Array<OrderInfo> = ArrayTrait::new();
 
-            while let Option::Some(request) = params
-                .pop_front() {
-                    let (id, order_key) = request;
-                    results.append(self.get_order_info(*id, *order_key));
-                };
+            while let Option::Some(request) = params.pop_front() {
+                let (id, order_key) = request;
+                results.append(self.get_order_info(*id, *order_key));
+            };
 
             results.span()
         }

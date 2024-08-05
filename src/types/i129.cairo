@@ -5,8 +5,8 @@ use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use starknet::storage_access::{StorePacking};
 
-// Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128 bits are magnitude
-// Note the sign can be true while mag is 0, meaning 1 value is wasted 
+// Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128
+// bits are magnitude Note the sign can be true while mag is 0, meaning 1 value is wasted
 // (i.e. sign == true && mag == 0 is redundant with sign == false && mag == 0)
 #[derive(Copy, Drop, Serde, Debug)]
 pub struct i129 {

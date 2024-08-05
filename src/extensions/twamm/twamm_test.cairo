@@ -2105,7 +2105,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aaa);
 
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
-        //               ~= 4,079.5898895263671875 + 4,078.774136054 
+        //               ~= 4,079.5898895263671875 + 4,078.774136054
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
         assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dc39bced5bf);
@@ -2242,7 +2242,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aaa);
 
         // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
-        //               ~= 4,079.5898895263671875 + 4,078.774136054 
+        //               ~= 4,079.5898895263671875 + 4,078.774136054
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
         assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dc39bced5bf);
@@ -2863,8 +2863,9 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.873684315946883792
         // token1 bought amount ~= 4999.494771123186662264
-        // token0 reward rate = (4,999.999999884 + 4999.494771123186662264) / 2.4509803921 ~= 4,079.7938666656
-        // token1 reward rate = (4,999.999999884 - 2499.873684315946883792) / 2.4509803921 ~= 1,020.05153677543
+        // token0 reward rate = (4,999.999999884 + 4999.494771123186662264) / 2.4509803921 ~=
+        // 4,079.7938666656 token1 reward rate = (4,999.999999884 - 2499.873684315946883792) /
+        // 2.4509803921 ~= 1,020.05153677543
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499873684315947842004);
         assert_eq!(swapped_event.delta.amount1.sign, true);
@@ -2907,8 +2908,9 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 spent amount ~= 2499.623696949194922069
         // token1 bought amount ~= 4998.495022657373310749
-        // token0 reward rate = (4,999.999999884 + 4998.495022657373310749) / 2.4509803921 ~= 4,079.3859692915
-        // token1 reward rate = (4,999.999999884 - 2499.623696949194922069) / 2.4509803921 ~= 1,020.1535316211
+        // token0 reward rate = (4,999.999999884 + 4998.495022657373310749) / 2.4509803921 ~=
+        // 4,079.3859692915 token1 reward rate = (4,999.999999884 - 2499.623696949194922069) /
+        // 2.4509803921 ~= 1,020.1535316211
 
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 2499623696949195880089);
@@ -3062,7 +3064,8 @@ mod PlaceOrderOnBothSides {
         // token0 spent amount ~= 0.492129291394822418
         // token1 bought amount ~= 32,981,569.373828693521176462
         // token0 reward rate = (0.5 - 0.492129291394822418) / 245.09803921569 = 0.00003211249111
-        // token1 reward rate = (500,000 + 32,981,569.373828693521176462) / 0.0002450980392 = 136,604,803,053.9637769619
+        // token1 reward rate = (500,000 + 32,981,569.373828693521176462) / 0.0002450980392 =
+        // 136,604,803,053.9637769619
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 492129291394822418);
         assert_eq!(swapped_event.delta.amount1.sign, true);
@@ -3119,7 +3122,8 @@ mod PlaceOrderOnBothSides {
         // token0 spent amount ~= 0.484846500277456573
         // token1 bought amount ~= 16,435,997.977911462045022653
         // token0 reward rate = (0.5 - 0.484846500277456573) / 245.09803921569 = 0.00006182627887
-        // token1 reward rate = (500,000 + 16,435,997.977911462045022653) / 0.0002450980392 = 69,098,871,754.301092936
+        // token1 reward rate = (500,000 + 16,435,997.977911462045022653) / 0.0002450980392 =
+        // 69,098,871,754.301092936
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 484846500277456574);
         assert_eq!(swapped_event.delta.amount1.sign, true);
@@ -3254,8 +3258,9 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 bought amount ~= 5663.417543754833543103
         // token1 spent amount  ~= 2833.312055778486901416
-        // token0 reward rate = (5,334.72803346 - 2833.312055778486901416) / 2.4509803922 = 1,020.5777188761
-        // token1 reward rate = (5663.417543754833543103 + 5,000.000000088) / 2.6150627615 = 4,077.6908687753
+        // token0 reward rate = (5,334.72803346 - 2833.312055778486901416) / 2.4509803922 =
+        // 1,020.5777188761 token1 reward rate = (5663.417543754833543103 + 5,000.000000088) /
+        // 2.6150627615 = 4,077.6908687753
         assert_eq!(swapped_event.delta.amount0.sign, true);
         assert_eq!(swapped_event.delta.amount0.mag, 5663417543754833543103);
         assert_eq!(swapped_event.delta.amount1.sign, false);
@@ -3265,7 +3270,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value0, 0xfedb0dcc5f11e1de241494a3cc0);
         assert_eq!(reward_rate.value1, 0x3fc93e562c2b1883b621228f5a6);
 
-        // Two swaps are executed since order2 expires before order1, end state is 0 sale rate 
+        // Two swaps are executed since order2 expires before order1, end state is 0 sale rate
         set_block_timestamp(order_end_time + 1);
         twamm.execute_virtual_orders(state_key);
 
@@ -3289,14 +3294,15 @@ mod PlaceOrderOnBothSides {
         // trade token1 for token0 up to the next price
         // token0 bought amount ~= 4942.823774128753304972
         // token1 spent amount  ~= 2475.436682518369242249
-        // token0 reward rate = (4,665.271966516 - 2475.436682518369242249) / 2.4509803922 = 893.4527958553
-        // token1 reward rate = (4,942.823774128753304972 + 4,372.5490196848) / 2.6150627615 = 3,562.1985563629
+        // token0 reward rate = (4,665.271966516 - 2475.436682518369242249) / 2.4509803922 =
+        // 893.4527958553 token1 reward rate = (4,942.823774128753304972 + 4,372.5490196848) /
+        // 2.6150627615 = 3,562.1985563629
         assert_eq!(swapped_event.delta.amount0.sign, true);
         assert_eq!(swapped_event.delta.amount0.mag, 4942823774128753304972);
         assert_eq!(swapped_event.delta.amount1.sign, false);
         assert_eq!(swapped_event.delta.amount1.mag, 2475436682518369242249);
 
-        // check second swap 
+        // check second swap
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
@@ -3356,7 +3362,7 @@ mod PlaceOrderOnBothSides {
     #[test]
     fn test_place_orders_and_swap() {
         // place two orders, and trigger twamm swaps with a swap
-        // ensure correct price is used for swapping after twamm swaps 
+        // ensure correct price is used for swapping after twamm swaps
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -3485,7 +3491,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value1, 323234571489130460249292405653163);
 
         // calculate sqrt_ratio_after for initial swap using parameters from twamm swap
-        // essentially checks that the initial swap is executed with the correct price (price set by the twamm)
+        // essentially checks that the initial swap is executed with the correct price (price set by
+        // the twamm)
         let sqrt_ratio_after = swapped_event.sqrt_ratio_after;
         let liquidity_after = swapped_event.liquidity_after;
         let expected_sqrt_ratio_after = next_sqrt_ratio_from_amount0(
@@ -3520,7 +3527,7 @@ mod PlaceOrderOnBothSides {
     #[test]
     fn test_place_orders_and_update_position() {
         // place two orders, and trigger twamm swaps with a positions update
-        // ensure correct price is used for updating the position after twamm swaps 
+        // ensure correct price is used for updating the position after twamm swaps
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();

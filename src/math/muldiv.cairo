@@ -8,13 +8,15 @@ pub fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {
-        // we know this cannot overflow because max real result of x/z where x and z are both u256 is [0, 2**256-1]
+        // we know this cannot overflow because max real result of x/z where x and z are both u256
+        // is [0, 2**256-1]
         let (result, _) = u256_overflowing_add(quotient, 1_u256);
         result
     };
 }
 
-// Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
+// Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256
+// bits
 pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     if (z.is_zero()) {
         return Option::None(());

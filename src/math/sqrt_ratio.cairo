@@ -4,8 +4,9 @@ use core::option::{Option};
 use ekubo::math::muldiv::{muldiv, div};
 use ekubo::types::i129::{i129};
 
-// Compute the next ratio from a delta amount0, always rounded towards starting price for input, and away from starting price for output
-// An empty option is returned on overflow/underflow which means the price exceeded the u256 bounds
+// Compute the next ratio from a delta amount0, always rounded towards starting price for input, and
+// away from starting price for output An empty option is returned on overflow/underflow which means
+// the price exceeded the u256 bounds
 pub fn next_sqrt_ratio_from_amount0(
     sqrt_ratio: u256, liquidity: u128, amount: i129
 ) -> Option<u256> {
@@ -18,7 +19,8 @@ pub fn next_sqrt_ratio_from_amount0(
     let numerator1 = u256 { high: liquidity, low: 0 };
 
     if (amount.sign) {
-        // this will revert on overflow, which is fine because it also means the denominator underflows on line 17
+        // this will revert on overflow, which is fine because it also means the denominator
+        // underflows on line 17
         let (product, overflow_mul) = u256_overflow_mul(
             u256 { low: amount.mag, high: 0 }, sqrt_ratio
         );
@@ -52,8 +54,9 @@ pub fn next_sqrt_ratio_from_amount0(
     }
 }
 
-// Compute the next ratio from a delta amount1, always rounded towards starting price for input, and away from starting price for output
-// An empty option is returned on overflow/underflow which means the price exceeded the u256 bounds
+// Compute the next ratio from a delta amount1, always rounded towards starting price for input, and
+// away from starting price for output An empty option is returned on overflow/underflow which means
+// the price exceeded the u256 bounds
 pub fn next_sqrt_ratio_from_amount1(
     sqrt_ratio: u256, liquidity: u128, amount: i129
 ) -> Option<u256> {

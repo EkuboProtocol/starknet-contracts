@@ -1,6 +1,7 @@
 use core::num::traits::{Zero};
 
-// Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >= 2**mb(integer)
+// Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >=
+// 2**mb(integer)
 pub fn msb(mut x: u128) -> u8 {
     assert(x.is_non_zero(), 'MSB_NONZERO');
 

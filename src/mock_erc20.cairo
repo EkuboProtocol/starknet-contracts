@@ -34,6 +34,7 @@ pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
 }
 
 #[starknet::contract]
+#[feature("deprecated_legacy_map")]
 pub mod MockERC20 {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};

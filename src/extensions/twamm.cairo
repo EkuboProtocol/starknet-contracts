@@ -6,6 +6,7 @@ pub(crate) mod math_test;
 pub(crate) mod twamm_test;
 
 #[starknet::contract]
+#[feature("deprecated_legacy_map")]
 pub mod TWAMM {
     use core::cmp::{max, min};
     use core::hash::{LegacyHash};
@@ -102,12 +103,19 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
+        #[feature("deprecated_legacy_map")]
         orders: LegacyMap<(ContractAddress, felt252, OrderKey), OrderState>,
+        #[feature("deprecated_legacy_map")]
         sale_rate_and_last_virtual_order_time: LegacyMap<StorageKey, SaleRateState>,
+        #[feature("deprecated_legacy_map")]
         time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
+        #[feature("deprecated_legacy_map")]
         time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
+        #[feature("deprecated_legacy_map")]
         time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
+        #[feature("deprecated_legacy_map")]
         reward_rate: LegacyMap<StorageKey, FeesPerLiquidity>,
+        #[feature("deprecated_legacy_map")]
         time_reward_rate_before: LegacyMap<(StorageKey, u64), FeesPerLiquidity>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
@@ -395,8 +403,9 @@ pub mod TWAMM {
                 )) => {
                     let current_time = get_block_timestamp();
 
-                    // there is no reason to update an order's sale rate after it has ended, because it is effectively no-op and only incurs additional l1 data cost
-                    // this should be prevented at the periphery contract level
+                    // there is no reason to update an order's sale rate after it has ended, because
+                    // it is effectively no-op and only incurs additional l1 data cost this should
+                    // be prevented at the periphery contract level
                     assert(current_time < order_key.end_time, 'ORDER_ENDED');
 
                     validate_time(now: current_time, time: order_key.end_time);
@@ -414,7 +423,8 @@ pub mod TWAMM {
                         assert(order_info.purchased_amount.is_zero(), 'MUST_WITHDRAW_PROCEEDS');
                         0
                     } else {
-                        // we compute the snapshot here and adjust by the purchased amount divided by sale rate delta so that the computed purchased amount does not change
+                        // we compute the snapshot here and adjust by the purchased amount divided
+                        // by sale rate delta so that the computed purchased amount does not change
                         // after updating the sale rate, except for rounding down by up to 1 wei
                         reward_rate_snapshot
                             - to_fees_per_liquidity(order_info.purchased_amount, sale_rate_next)
@@ -432,7 +442,8 @@ pub mod TWAMM {
 
                     self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
 
-                    // this part updates the pool state only if the order is active or will be active
+                    // this part updates the pool state only if the order is active or will be
+                    // active
                     if current_time < order_key.start_time {
                         // order starts in the future, update both start and end time
                         self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
@@ -475,11 +486,13 @@ pub mod TWAMM {
                         )
                             .expect('FAILED_TO_WRITE_SALE_RATE');
 
-                        // we only need to update the end time, because start time has been crossed and will never be crossed again
+                        // we only need to update the end time, because start time has been crossed
+                        // and will never be crossed again
                         self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
                     }
 
-                    // must round down if decreasing (withdrawing) and round up if increasing (depositing) sale rate to remain solvent
+                    // must round down if decreasing (withdrawing) and round up if increasing
+                    // (depositing) sale rate to remain solvent
                     let amount_delta = calculate_amount_from_sale_rate(
                         sale_rate: sale_rate_delta.mag,
                         duration: to_duration(
@@ -510,7 +523,8 @@ pub mod TWAMM {
                             core.accumulate_as_fees(pool_key, amount0, amount1);
                             core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
                         } else {
-                            // if the pool has 0 liquidity, we cannot pay fees since there are no liquidity providers to receive it so we withdraw the entire amount
+                            // if the pool has 0 liquidity, we cannot pay fees since there are no
+                            // liquidity providers to receive it so we withdraw the entire amount
                             core.withdraw(token, get_contract_address(), amount_delta);
                         }
                     } else {
@@ -537,7 +551,8 @@ pub mod TWAMM {
                     let (order_info, reward_rate_snapshot) = self
                         .internal_get_order_info(owner, salt, order_key);
 
-                    // snapshot the reward rate so we know the proceeds of the order have been withdrawn at this current time
+                    // snapshot the reward rate so we know the proceeds of the order have been
+                    // withdrawn at this current time
                     self
                         .orders
                         .write(
@@ -720,7 +735,7 @@ pub mod TWAMM {
 
             let mut token0_sale_rate = sale_rate_state.token0_sale_rate;
             let mut token1_sale_rate = sale_rate_state.token1_sale_rate;
-            // all virtual orders are executed at the same time 
+            // all virtual orders are executed at the same time
             // last_virtual_order_time is the same for both tokens
             let mut last_virtual_order_time = sale_rate_state.last_virtual_order_time;
 
@@ -728,7 +743,7 @@ pub mod TWAMM {
                 let starting_sqrt_ratio = core.get_pool_price(pool_key).sqrt_ratio;
                 assert(starting_sqrt_ratio.is_non_zero(), 'POOL_NOT_INITIALIZED');
 
-                let mut total_delta = Zero::zero();
+                let mut total_delta: Delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
 
                 let reward_rate_storage_address = storage_base_address_from_felt252(
@@ -775,8 +790,9 @@ pub mod TWAMM {
 
                         let twamm_delta = if (token0_amount.is_non_zero()
                             && token1_amount.is_non_zero()) {
-                            // must use sqrt_ratio and liquidity at the closest usable tick, since swaps
-                            // on this pool could push the price out of range and liquidity to zero
+                            // must use sqrt_ratio and liquidity at the closest usable tick, since
+                            // swaps on this pool could push the price out of range and liquidity to
+                            // zero
                             let sqrt_ratio = max(
                                 MAX_BOUNDS_MIN_SQRT_RATIO,
                                 min(MAX_BOUNDS_MAX_SQRT_RATIO, current_sqrt_ratio)
@@ -813,8 +829,8 @@ pub mod TWAMM {
                                     }
                                 );
 
-                            // both sides are swapping, twamm delta is the swap amounts needed to reach
-                            // the target price minus amounts in the twamm
+                            // both sides are swapping, twamm delta is the swap amounts needed to
+                            // reach the target price minus amounts in the twamm
                             delta
                                 - Delta {
                                     amount0: i129 { mag: token0_amount, sign: false },

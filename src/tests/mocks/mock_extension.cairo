@@ -43,6 +43,7 @@ pub mod MockExtension {
     struct Storage {
         core: ICoreDispatcher,
         num_calls: u32,
+        #[feature("deprecated_legacy_map")]
         calls: LegacyMap<u32, ExtensionCalled>,
     }
 

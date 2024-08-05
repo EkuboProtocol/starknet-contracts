@@ -6,7 +6,7 @@ pub trait ITokenRegistry<ContractState> {
 }
 
 
-// A simplified interface for a fungible token standard. 
+// A simplified interface for a fungible token standard.
 #[starknet::interface]
 pub trait IERC20Metadata<TStorage> {
     fn name(self: @TStorage) -> felt252;
@@ -120,7 +120,7 @@ pub mod TokenRegistry {
 
             core.withdraw(token.contract_address, refund_to, amount);
 
-            Default::default().span()
+            Default::<Array<felt252>>::default().span()
         }
     }
 }
