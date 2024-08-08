@@ -36,7 +36,7 @@ pub mod MockExtension {
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
-    use starknet::{get_caller_address};
+    use starknet::{get_caller_address, storage::{Map}};
     use super::{CallPoints, IMockExtension, ExtensionCalled, ContractAddress};
 
     #[storage]
@@ -44,7 +44,7 @@ pub mod MockExtension {
         core: ICoreDispatcher,
         num_calls: u32,
         #[feature("deprecated_legacy_map")]
-        calls: LegacyMap<u32, ExtensionCalled>,
+        calls: Map<u32, ExtensionCalled>,
     }
 
     #[generate_trait]
