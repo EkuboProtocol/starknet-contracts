@@ -41,6 +41,10 @@ pub mod OwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
+    use starknet::storage::{
+        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         syscalls::{replace_class_syscall, deploy_syscall}

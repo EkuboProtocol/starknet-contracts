@@ -36,6 +36,10 @@ pub mod MockExtension {
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey};
+    use starknet::storage::{
+        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use starknet::{get_caller_address, storage::{Map}};
     use super::{CallPoints, IMockExtension, ExtensionCalled, ContractAddress};
 

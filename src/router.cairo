@@ -87,6 +87,8 @@ pub mod Router {
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, sqrt_ratio_to_tick};
     use ekubo::types::i129::{i129, i129Trait};
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
     use starknet::syscalls::{call_contract_syscall};
 
     use starknet::{get_caller_address, get_contract_address};

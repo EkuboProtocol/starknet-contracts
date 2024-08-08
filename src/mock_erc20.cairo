@@ -40,6 +40,7 @@ pub mod MockERC20 {
     use core::option::{OptionTrait};
     use core::traits::{Into};
     use ekubo::interfaces::erc20::{IERC20};
+    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
     use super::{IMockERC20};
 

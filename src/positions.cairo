@@ -33,6 +33,8 @@ pub mod Positions {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::keys::{PositionKey};
     use ekubo::types::pool_price::{PoolPrice};
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
     };

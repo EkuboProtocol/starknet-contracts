@@ -39,6 +39,10 @@ pub mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
+    use starknet::storage::{
+        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, syscalls::{replace_class_syscall},
