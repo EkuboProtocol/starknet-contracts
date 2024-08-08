@@ -627,11 +627,17 @@ pub mod Positions {
         }
 
         fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
+            self.withdraw_proceeds_from_sale_to(id, order_key, self.twamm.read().contract_address)
+        }
+
+        fn withdraw_proceeds_from_sale_to(
+            ref self: ContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
+        ) {
             self.check_authorization(id);
 
             let twamm = self.twamm.read();
 
-            twamm.collect_proceeds(id.into(), order_key);
+            twamm.collect_proceeds_to(id.into(), order_key, recipient);
         }
     }
 }

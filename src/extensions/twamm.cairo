@@ -139,7 +139,8 @@ pub mod TWAMM {
         pub owner: ContractAddress,
         pub salt: felt252,
         pub order_key: OrderKey,
-        pub amount: u128
+        pub amount: u128,
+        pub recipient: ContractAddress
     }
 
     #[derive(starknet::Event, Drop)]
@@ -166,8 +167,8 @@ pub mod TWAMM {
         ExecuteVirtualSwapsCallbackData: StateKey,
         // owner, salt, order_key, sale_rate_delta
         UpdateSaleRateCallbackData: (ContractAddress, felt252, OrderKey, i129),
-        // owner, salt, order_key
-        CollectProceedsCallbackData: (ContractAddress, felt252, OrderKey)
+        // owner, salt, order_key, recipient
+        CollectProceedsCallbackData: (ContractAddress, felt252, OrderKey, ContractAddress)
     }
 
     #[abi(embed_v0)]
@@ -364,11 +365,18 @@ pub mod TWAMM {
             )
         }
 
+        // Collect proceeds from a twamm order to the specified recipient
         fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
+            self.collect_proceeds_to(salt, order_key, get_contract_address())
+        }
+
+        fn collect_proceeds_to(
+            ref self: ContractState, salt: felt252, order_key: OrderKey, recipient: ContractAddress
+        ) {
             call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectProceedsCallbackData(
-                    (get_caller_address(), salt, order_key)
+                    (get_caller_address(), salt, order_key, recipient)
                 )
             )
         }
@@ -541,7 +549,7 @@ pub mod TWAMM {
                     }
                 },
                 LockCallbackData::CollectProceedsCallbackData((
-                    owner, salt, order_key
+                    owner, salt, order_key, recipient
                 )) => {
                     self.internal_execute_virtual_orders(core, order_key.into());
 
@@ -561,13 +569,17 @@ pub mod TWAMM {
                         let token = order_key.buy_token;
 
                         core.load(token, 0, order_info.purchased_amount);
-                        core.withdraw(token, get_contract_address(), order_info.purchased_amount);
+                        core.withdraw(token, recipient, order_info.purchased_amount);
                     }
 
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner, salt, order_key, amount: order_info.purchased_amount
+                                owner,
+                                salt,
+                                order_key,
+                                amount: order_info.purchased_amount,
+                                recipient
                             }
                         );
                 }

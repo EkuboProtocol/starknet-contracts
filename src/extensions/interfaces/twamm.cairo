@@ -69,8 +69,13 @@ pub trait ITWAMM<TContractState> {
         ref self: TContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
     );
 
-    // Collect proceeds from a twamm order
+    // Collect proceeds from a twamm order into the TWAMM contract
     fn collect_proceeds(ref self: TContractState, salt: felt252, order_key: OrderKey);
+
+    // Collect proceeds from a twamm order to the specified recipient
+    fn collect_proceeds_to(
+        ref self: TContractState, salt: felt252, order_key: OrderKey, recipient: ContractAddress
+    );
 
     // Execute virtual orders
     fn execute_virtual_orders(ref self: TContractState, key: StateKey);
