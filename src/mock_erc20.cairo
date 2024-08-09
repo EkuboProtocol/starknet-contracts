@@ -34,7 +34,6 @@ pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
 }
 
 #[starknet::contract]
-#[feature("deprecated_legacy_map")]
 pub mod MockERC20 {
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
@@ -42,12 +41,13 @@ pub mod MockERC20 {
     use ekubo::interfaces::erc20::{IERC20};
     use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
+    use starknet::storage::{Map};
     use super::{IMockERC20};
 
     #[storage]
     struct Storage {
-        balances: LegacyMap<ContractAddress, u128>,
-        allowances: LegacyMap<(ContractAddress, ContractAddress), u128>,
+        balances: Map<ContractAddress, u128>,
+        allowances: Map<(ContractAddress, ContractAddress), u128>,
     }
 
     #[derive(starknet::Event, Drop)]

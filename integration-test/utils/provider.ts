@@ -6,12 +6,12 @@ export const provider: RpcProvider = new RpcProvider({
 });
 
 export async function setDevnetTime(time: number) {
-  const response = await fetch(`${DEVNET_URL}/set_time`, {
+  const response = await fetch(`${DEVNET_URL}/rpc`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
     },
-    body: `{"time":${time}}`,
+    body: `{"jsonrpc": "2.0","id": "1","method": "devnet_setTime","params":{"time":${time}}}`,
   });
 
   if (!response.ok) {
@@ -40,12 +40,12 @@ export async function createAccount(): Promise<Account> {
 
   const account = new Account(provider, expectedAccountAddress, privateKey);
 
-  const response = await fetch(`${DEVNET_URL}/mint`, {
+  const response = await fetch(`${DEVNET_URL}/rpc`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
     },
-    body: `{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"WEI","lite":true}`,
+    body: `{"jsonrpc": "2.0","id": "1","method": "devnet_mint","params":{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"WEI"}}`,
   });
 
   if (!response.ok) {

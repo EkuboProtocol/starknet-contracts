@@ -12,7 +12,7 @@
     "@types/node": "^20.3.3",
     "abi-wan-kanabi": "^2.2.0",
     "decimal.js-light": "^2.5.1",
-    "starknet": "^6.2.0",
-    "vitest": "^1.2.2"
+    "starknet": "^6.12.1",
+    "vitest": "^2.0.5"
   }
 }

@@ -45,7 +45,7 @@ export async function setupContracts(expected?: {
   const deployer = new Account(
     provider,
     "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
-    "0x71d7bb07b9a64f6f78ac4c816aff4da9"
+    "0x0000000000000000000000000000000071d7bb07b9a64f6f78ac4c816aff4da9"
   );
 
   const simpleTokenContractDeclare = await deployer.declareIfNot({
