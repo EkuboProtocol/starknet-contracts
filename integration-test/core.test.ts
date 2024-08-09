@@ -15,6 +15,14 @@ import {
 } from "./cases/twammCases";
 import { MAX_BOUNDS_TWAMM, MAX_TICK_SPACING } from "./utils/constants";
 
+function findMap<T, U>(list: T[], fn: (t: T) => U | undefined): U | undefined {
+  const x = list.find(fn);
+  if (x !== undefined) {
+    return fn(x);
+  }
+  return undefined;
+}
+
 describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
@@ -110,13 +118,17 @@ describe("core", () => {
 
             const positionsMinted: { token_id: bigint; liquidity: bigint }[] =
               mintReceipts.map((receipt) => {
-                const { Transfer } = nft
-                  .parseEvents(receipt)
-                  .find(({ Transfer }) => Transfer);
+                const Transfer = findMap(
+                  nft.parseEvents(receipt),
+                  ({ "ekubo::owned_nft::OwnedNFT::Transfer": Transfer }) =>
+                    Transfer
+                );
 
-                const { PositionUpdated } = core
-                  .parseEvents(receipt)
-                  .find(({ PositionUpdated }) => PositionUpdated);
+                const PositionUpdated = findMap(
+                  core.parseEvents(receipt),
+                  ({ "ekubo::core::Core::PositionUpdated": PositionUpdated }) =>
+                    PositionUpdated
+                );
 
                 return {
                   token_id: (Transfer as unknown as { token_id: bigint })
@@ -195,7 +207,9 @@ describe("core", () => {
                 }
 
                 const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                  core.parseEvents(swap_receipt)[0].Swapped;
+                  core.parseEvents(swap_receipt)[0][
+                    "ekubo::core::Core::Swapped"
+                  ];
 
                 const { amount0, amount1 } = delta as unknown as {
                   amount0: i129;
@@ -391,10 +405,13 @@ describe("core", () => {
                   const mintedPositionTokens = mintReceipts.map((receipt) => ({
                     liquidity: fromI129(
                       (
-                        core
-                          .parseEvents(receipt)
-                          .find(({ PositionUpdated }) => PositionUpdated)
-                          ?.PositionUpdated as unknown as {
+                        findMap(
+                          core.parseEvents(receipt),
+                          ({
+                            "ekubo::core::Core::PositionUpdated":
+                              PositionUpdated,
+                          }) => PositionUpdated
+                        ) as unknown as {
                           params: {
                             liquidity_delta: { mag: bigint; sign: boolean };
                           };
@@ -402,8 +419,12 @@ describe("core", () => {
                       ).params.liquidity_delta
                     ),
                     token_id: (
-                      nft.parseEvents(receipt).find(({ Transfer }) => Transfer)
-                        ?.Transfer as {
+                      findMap(
+                        nft.parseEvents(receipt),
+                        ({
+                          "ekubo::owned_nft::OwnedNFT::Transfer": Transfer,
+                        }) => Transfer
+                      ) as {
                         from: bigint;
                         to: bigint;
                         token_id: bigint;
@@ -473,7 +494,12 @@ describe("core", () => {
 
                     mintedOrders = twamm
                       .parseEvents(orderPlacementReceipt)
-                      .map(({ OrderUpdated }) => OrderUpdated)
+                      .map(
+                        ({
+                          "ekubo::extensions::twamm::TWAMM::OrderUpdated":
+                            OrderUpdated,
+                        }) => OrderUpdated
+                      )
                       .filter((x) => !!x)
                       .map(({ salt, order_key, sale_rate_delta }: any) => ({
                         token_id: salt,
@@ -508,18 +534,21 @@ describe("core", () => {
                             retryInterval: 0,
                           });
 
-                        const VirtualOrdersExecuted = twamm
-                          .parseEvents(executeVirtualOrdersReceipt)
-                          .find(
-                            ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
-                          )?.VirtualOrdersExecuted;
+                        const VirtualOrdersExecuted = findMap(
+                          twamm.parseEvents(executeVirtualOrdersReceipt),
+                          ({
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                              VirtualOrdersExecuted,
+                          }) => VirtualOrdersExecuted
+                        );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
                           delete VirtualOrdersExecuted["key"];
 
-                        const Swapped = core
-                          .parseEvents(executeVirtualOrdersReceipt)
-                          .find(({ Swapped }) => Swapped)?.Swapped;
+                        const Swapped = findMap(
+                          core.parseEvents(executeVirtualOrdersReceipt),
+                          ({ "ekubo::core::Core::Swapped": Swapped }) => Swapped
+                        );
 
                         const executionResources =
                           executeVirtualOrdersReceipt.execution_resources;
@@ -584,11 +613,13 @@ describe("core", () => {
                           "swap success"
                         ).toEqual("SUCCEEDED");
 
-                        const VirtualOrdersExecuted = twamm
-                          .parseEvents(swap_receipt)
-                          .find(
-                            ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
-                          )?.VirtualOrdersExecuted;
+                        const VirtualOrdersExecuted = findMap(
+                          twamm.parseEvents(swap_receipt),
+                          ({
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                              VirtualOrdersExecuted,
+                          }) => VirtualOrdersExecuted
+                        );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
                           delete VirtualOrdersExecuted["key"];
