@@ -614,8 +614,22 @@ pub mod Positions {
             sale_rate
         }
 
+
         fn decrease_sale_rate(
             ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
+        ) {
+            self
+                .decrease_sale_rate_to(
+                    id, order_key, sale_rate_delta, self.twamm.read().contract_address
+                )
+        }
+
+        fn decrease_sale_rate_to(
+            ref self: ContractState,
+            id: u64,
+            order_key: OrderKey,
+            sale_rate_delta: u128,
+            recipient: ContractAddress
         ) {
             self.check_authorization(id);
 
@@ -623,6 +637,14 @@ pub mod Positions {
             if get_block_timestamp() < order_key.end_time {
                 let twamm = self.twamm.read();
                 twamm.update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
+                if (recipient != twamm.contract_address) {
+                    twamm
+                        .clear_minimum_to_recipient(
+                            token: IERC20Dispatcher { contract_address: order_key.sell_token },
+                            minimum: 0,
+                            recipient: recipient
+                        );
+                }
             }
         }
 
