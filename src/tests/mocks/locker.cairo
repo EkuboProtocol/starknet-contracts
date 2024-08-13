@@ -54,6 +54,8 @@ pub mod CoreLocker {
     use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address, contract_address_const
     };

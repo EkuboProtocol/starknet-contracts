@@ -1,10 +1,8 @@
-use core::integer::{u256_wide_mul};
-use core::num::traits::{Zero};
+use core::num::traits::{Zero, WideMul};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::math::muldiv::{muldiv, div};
-use ekubo::types::i129::i129;
-
+use ekubo::types::i129::{i129};
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
 pub fn amount0_delta(
@@ -52,7 +50,9 @@ pub fn amount1_delta(
         return Zero::zero();
     }
 
-    let result = u256_wide_mul(liquidity.into(), sqrt_ratio_upper - sqrt_ratio_lower);
+    let result = WideMul::<
+        u256, u256
+    >::wide_mul(sqrt_ratio_upper - sqrt_ratio_lower, liquidity.into());
 
     // todo: result.limb3 is always zero. we can optimize out its computation
     assert(result.limb2.is_zero(), 'OVERFLOW_AMOUNT1_DELTA');

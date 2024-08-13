@@ -6,7 +6,7 @@ pub trait ITokenRegistry<ContractState> {
 }
 
 
-// A simplified interface for a fungible token standard. 
+// A simplified interface for a fungible token standard.
 #[starknet::interface]
 pub trait IERC20Metadata<TStorage> {
     fn name(self: @TStorage) -> felt252;
@@ -22,6 +22,8 @@ pub mod TokenRegistry {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
     use starknet::{ContractAddress, get_contract_address, get_caller_address};
     use super::{
         IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
@@ -120,7 +122,7 @@ pub mod TokenRegistry {
 
             core.withdraw(token.contract_address, refund_to, amount);
 
-            Default::default().span()
+            Default::<Array<felt252>>::default().span()
         }
     }
 }

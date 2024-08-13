@@ -11,7 +11,7 @@ pub trait IOwnedNFT<TStorage> {
     // Returns whether the account is authorized to act on the given token ID
     fn is_account_authorized(self: @TStorage, id: u64, account: ContractAddress) -> bool;
 
-    // Returns the next token ID, 
+    // Returns the next token ID,
     // i.e. the ID of the token that will be minted on the next call to mint from the owner
     fn get_next_token_id(self: @TStorage) -> u64;
 
@@ -20,6 +20,7 @@ pub trait IOwnedNFT<TStorage> {
 }
 
 #[starknet::contract]
+#[feature("deprecated_legacy_map")]
 pub mod OwnedNFT {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::num::traits::{Zero};
@@ -40,6 +41,10 @@ pub mod OwnedNFT {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::i129::{i129};
+    use starknet::storage::{
+        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use starknet::{
         contract_address_const, get_caller_address, get_contract_address, ClassHash,
         syscalls::{replace_class_syscall, deploy_syscall}

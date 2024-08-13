@@ -1,5 +1,5 @@
-use core::integer::{u512, u256_wide_mul, u512_safe_div_rem_by_u256, u256_overflowing_add};
-use core::num::traits::{Zero};
+use core::integer::{u512, u512_safe_div_rem_by_u256};
+use core::num::traits::{Zero, WideMul, OverflowingAdd};
 use core::option::{Option, OptionTrait};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
@@ -8,19 +8,21 @@ pub fn div(x: u256, z: NonZero<u256>, round_up: bool) -> u256 {
     return if (!round_up | remainder.is_zero()) {
         quotient
     } else {
-        // we know this cannot overflow because max real result of x/z where x and z are both u256 is [0, 2**256-1]
-        let (result, _) = u256_overflowing_add(quotient, 1_u256);
+        // we know this cannot overflow because max real result of x/z where x and z are both u256
+        // is [0, 2**256-1]
+        let (result, _) = OverflowingAdd::overflowing_add(quotient, 1_u256);
         result
     };
 }
 
-// Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256 bits
+// Compute floor(x * y / z) OR ceil(x * y / z) without overflowing if the result fits within 256
+// bits
 pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     if (z.is_zero()) {
         return Option::None(());
     }
 
-    let numerator = u256_wide_mul(x, y);
+    let numerator = WideMul::<u256, u256>::wide_mul(x, y);
 
     // we didn't overflow the 256 bit container, so just div
     if ((numerator.limb3 == 0) & (numerator.limb2 == 0)) {
@@ -40,7 +42,7 @@ pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
     } else if (!round_up | (remainder.is_zero())) {
         Option::Some(u256 { low: quotient.limb0, high: quotient.limb1 })
     } else {
-        let (sum, sum_overflows) = u256_overflowing_add(
+        let (sum, sum_overflows) = OverflowingAdd::overflowing_add(
             u256 { low: quotient.limb0, high: quotient.limb1 }, 1_u256
         );
         if (sum_overflows) {

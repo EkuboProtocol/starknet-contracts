@@ -1,6 +1,6 @@
 use core::array::{Array, ArrayTrait};
 
-use core::integer::{u256, BoundedInt};
+use core::integer::{u256};
 use core::num::traits::{Zero};
 use core::option::{Option, OptionTrait};
 use core::result::{Result, ResultTrait};

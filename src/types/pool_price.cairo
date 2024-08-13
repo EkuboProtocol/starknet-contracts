@@ -21,8 +21,9 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             'SQRT_RATIO'
         );
 
-        // todo: when trading to the minimum tick, the tick is crossed and the pool tick is set to the minimum tick minus one
-        // thus the value stored in pool.tick is between min_tick() - 1 and max_tick()
+        // todo: when trading to the minimum tick, the tick is crossed and the pool tick is set to
+        // the minimum tick minus one thus the value stored in pool.tick is between min_tick() - 1
+        // and max_tick()
         assert(
             if (value.tick.sign) {
                 value.tick.mag <= (tick_constants::MAX_TICK_MAGNITUDE + 1)

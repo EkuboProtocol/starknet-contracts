@@ -1,4 +1,4 @@
-use core::integer::{u256_overflow_mul, u256_overflowing_add, u128_wide_mul};
+use core::num::traits::{WideMul, OverflowingMul, OverflowingAdd};
 use core::option::{OptionTrait, Option};
 use core::traits::{Into, TryInto};
 use ekubo::math::bits::{msb};
@@ -10,13 +10,13 @@ pub mod constants {
     // floor(log base 1.000001 of (2**128))
     pub const MAX_TICK_MAGNITUDE: u128 = 88722883;
 
-    // rationale for this value is 2 251-bit tick bitmaps can contain initialized ticks for the entire price range
-    // 2 is the minimum number of bitmaps because the 0 tick is always a bitmap boundary. any tick tick_spacing
-    // larger than this does not offer any gas performance benefit to swappers
-    // ceil(log base 1.000001 of 2)
+    // rationale for this value is 2 251-bit tick bitmaps can contain initialized ticks for the
+    // entire price range 2 is the minimum number of bitmaps because the 0 tick is always a bitmap
+    // boundary. any tick tick_spacing larger than this does not offer any gas performance benefit
+    // to swappers ceil(log base 1.000001 of 2)
     // also == ceil(MAX_TICK_MAGNITUDE / 251)
-    // note that because the 0 tick is in the first bitmap, we actually do ceil(MAX_TICK_MAGNITUDE / 250) to meet this requirement
-    // that the entire tick spacing fits in 2 bitmaps
+    // note that because the 0 tick is in the first bitmap, we actually do ceil(MAX_TICK_MAGNITUDE /
+    // 250) to meet this requirement that the entire tick spacing fits in 2 bitmaps
     pub const MAX_TICK_SPACING: u128 = 354892;
 
     pub const MAX_SQRT_RATIO: u256 = 6277100250585753475930931601400621808602321654880405518632;
@@ -27,11 +27,12 @@ pub mod constants {
 // Each step in the approximation performs a multiplication and a shift
 // We assume the mul is safe in this function
 pub(crate) fn unsafe_mul_shift(x: u256, mul: u128) -> u256 {
-    let (res, _) = u256_overflow_mul(x, u256 { high: 0, low: mul });
+    let (res, _) = OverflowingMul::overflowing_mul(x, u256 { high: 0, low: mul });
     return u256 { low: res.high, high: 0 };
 }
 
-// 56234808244317829948461091929465028608 = 0x3ffffffffff (the remaining log2 bits) * 25572630076711825471857579 (the conversion rate);
+// 56234808244317829948461091929465028608 = 0x3ffffffffff (the remaining log2 bits) *
+// 25572630076711825471857579 (the conversion rate);
 const MAX_ERROR_MAGNITUDE: u128 = 112469616488610087266845472033458199637;
 
 fn max(x: u256, y: u256) -> u256 {
@@ -43,12 +44,12 @@ fn max(x: u256, y: u256) -> u256 {
 }
 
 fn unsafe_mul(x: u128, y: u128) -> u128 {
-    let (_, low) = u128_wide_mul(x, y);
-    return low;
+    let result = WideMul::<u128, u128>::wide_mul(x, y);
+    result.low
 }
 
 pub(crate) fn by_2_127(x: u256) -> u256 {
-    let (sum, overflow) = u256_overflowing_add(x, x);
+    let (sum, overflow) = OverflowingAdd::overflowing_add(x, x);
     u256 { low: sum.high, high: if overflow {
         1
     } else {
@@ -366,9 +367,11 @@ pub fn tick_to_sqrt_ratio(tick: i129) -> u256 {
     return ratio;
 }
 
-// Computes the tick corresponding to the price, i.e. log base sqrt(1.000001) of the ratio aligned with the above function s.t. sqrt_ratio_to_tick(tick_to_sqrt_ratio(tick)) == tick
+// Computes the tick corresponding to the price, i.e. log base sqrt(1.000001) of the ratio aligned
+// with the above function s.t. sqrt_ratio_to_tick(tick_to_sqrt_ratio(tick)) == tick
 pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
-    // max price from max tick, exclusive check because this function should never be called on a price equal to max price
+    // max price from max tick, exclusive check because this function should never be called on a
+    // price equal to max price
     assert(sqrt_ratio < max_sqrt_ratio(), 'SQRT_RATIO_TOO_HIGH');
     // min price from min tick
     assert(sqrt_ratio >= min_sqrt_ratio(), 'SQRT_RATIO_TOO_LOW');
@@ -377,9 +380,9 @@ pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
 
     // == 2**64/(log base 2 of tick size)
     // https://www.wolframalpha.com/input?i=floor%28%281%2F+log+base+2+of+%28sqrt%281.000001%29%29%29*2**64%29
-    let (high, low) = u128_wide_mul(25572630076711825471857579, log2_sqrt_ratio);
-
-    let tick_mag_x128 = u256 { high, low };
+    let tick_mag_x128 = WideMul::<
+        u128, u128
+    >::wide_mul(25572630076711825471857579, log2_sqrt_ratio);
 
     let error = u256 { low: MAX_ERROR_MAGNITUDE, high: 0 };
 

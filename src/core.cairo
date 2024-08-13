@@ -1,4 +1,5 @@
 #[starknet::contract]
+#[feature("deprecated_legacy_map")]
 pub mod Core {
     use core::array::{ArrayTrait, SpanTrait};
     use core::hash::{LegacyHash};
@@ -38,6 +39,10 @@ pub mod Core {
     use ekubo::types::keys::{PositionKey, PoolKey, PoolKeyTrait, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use ekubo::types::position::{Position, PositionTrait};
+    use starknet::storage::{
+        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use starknet::{
         Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
         get_contract_address, syscalls::{replace_class_syscall},
@@ -54,26 +59,28 @@ pub mod Core {
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[storage]
-    struct Storage {
+    pub struct Storage {
         // withdrawal fees collected, controlled by the owner
-        protocol_fees_collected: LegacyMap<ContractAddress, u128>,
+        pub protocol_fees_collected: LegacyMap<ContractAddress, u128>,
         // transient state of the lockers, which always starts and ends at zero
-        lock_count: u32,
-        // the rest of transient state is accessed directly using Store::read and Store::write to save on hashes
+        pub lock_count: u32,
+        // the rest of transient state is accessed directly using Store::read and Store::write to
+        // save on hashes
 
         // the persistent state of all the pools is stored in these structs
-        pool_price: LegacyMap<PoolKey, PoolPrice>,
-        pool_liquidity: LegacyMap<PoolKey, u128>,
-        pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
-        tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
-        tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
-        tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
-        positions: LegacyMap<(PoolKey, PositionKey), Position>,
-        tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
-        // users may save balances in the singleton to avoid transfers, keyed by (owner, token, cache_key)
-        saved_balances: LegacyMap<SavedBalanceKey, u128>,
+        pub pool_price: LegacyMap<PoolKey, PoolPrice>,
+        pub pool_liquidity: LegacyMap<PoolKey, u128>,
+        pub pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
+        pub tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
+        pub tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
+        pub tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
+        pub positions: LegacyMap<(PoolKey, PositionKey), Position>,
+        pub tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
+        // users may save balances in the singleton to avoid transfers, keyed by (owner, token,
+        // cache_key)
+        pub saved_balances: LegacyMap<SavedBalanceKey, u128>,
         // extensions must be registered before they are used in a pool key
-        extension_call_points: LegacyMap<ContractAddress, CallPoints>,
+        pub extension_call_points: LegacyMap<ContractAddress, CallPoints>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -562,7 +569,7 @@ pub mod Core {
         ) -> u128 {
             let id = self.get_current_locker_id();
 
-            // the contract calling load does not have to be the locker! 
+            // the contract calling load does not have to be the locker!
             // this allows for a contract to load a stored balance for another user, e.g.:
             //  wrapping saved balances as an erc1155
             let caller = get_caller_address();
@@ -971,7 +978,8 @@ pub mod Core {
                             )
                         )
                             .expect('FAILED_READ_LIQ_DELTA');
-                        // update our working liquidity based on the direction we are crossing the tick
+                        // update our working liquidity based on the direction we are crossing the
+                        // tick
                         if (increasing) {
                             liquidity = liquidity.add(liquidity_delta);
                         } else {

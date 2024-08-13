@@ -15,21 +15,29 @@ import {
 } from "./cases/twammCases";
 import { MAX_BOUNDS_TWAMM, MAX_TICK_SPACING } from "./utils/constants";
 
+function findMap<T, U>(list: T[], fn: (t: T) => U | undefined): U | undefined {
+  const x = list.find(fn);
+  if (x !== undefined) {
+    return fn(x);
+  }
+  return undefined;
+}
+
 describe("core", () => {
   let setup: Awaited<ReturnType<typeof setupContracts>>;
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0xf0c65826954fb209984d939f17c254c54290d43a42c56cb24a01b5caabf6b2",
+      core: "0x7e9070005a08f1c310f850b437364e4ae0dc5791eab1ddb56bf4b27e1af18e0",
       positions:
-        "0x5498af844a3ff73e71ab6e52a56335853efad19b9c8424f5d7acf4d4191b8b2",
+        "0x56b25bb39a7d598ac35761548ed43a3bbe3487c273830b53c94505c6e1b74b4",
       router:
-        "0x79f095b65b6b7e7526e337d6e5b90138eb80c8b50aa99890b1bc90771bf0650",
-      nft: "0x44301b754b9bed568abb8c0e93194bbb2373a6b1ba7c8b267b2311fecd90dc3",
+        "0x784273724ea467f880e2f16bd7c522a194d7b948ed1dab9164e0f0eeb45f2e5",
+      nft: "0x17ff559b1a28907b4c8aa2de4c9e6bfbaeed97370a957108afc4634b2886a33",
       twamm:
-        "0x39974baf89fc6c5084920764f6893128d7ad977118f5bba9d8f7f91a3bbe99a",
+        "0x4804bf2e70ad2a4adc3825f945c70b5b6fa8fc6ac3f9c0021b731e045ac0763",
       tokenClassHash:
-        "0x77756dd5c3db3eb64ee050f2fa217662193b8be2838b27872fa21193948154a",
+        "0x1d0839ca0d6d69b2684c25adefed23d7483521287fa868b5c3c120281a9119f",
     });
     console.log(setup);
   }, 300_000);
@@ -110,13 +118,17 @@ describe("core", () => {
 
             const positionsMinted: { token_id: bigint; liquidity: bigint }[] =
               mintReceipts.map((receipt) => {
-                const { Transfer } = nft
-                  .parseEvents(receipt)
-                  .find(({ Transfer }) => Transfer);
+                const Transfer = findMap(
+                  nft.parseEvents(receipt),
+                  ({ "ekubo::owned_nft::OwnedNFT::Transfer": Transfer }) =>
+                    Transfer
+                );
 
-                const { PositionUpdated } = core
-                  .parseEvents(receipt)
-                  .find(({ PositionUpdated }) => PositionUpdated);
+                const PositionUpdated = findMap(
+                  core.parseEvents(receipt),
+                  ({ "ekubo::core::Core::PositionUpdated": PositionUpdated }) =>
+                    PositionUpdated
+                );
 
                 return {
                   token_id: (Transfer as unknown as { token_id: bigint })
@@ -195,7 +207,9 @@ describe("core", () => {
                 }
 
                 const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                  core.parseEvents(swap_receipt)[0].Swapped;
+                  core.parseEvents(swap_receipt)[0][
+                    "ekubo::core::Core::Swapped"
+                  ];
 
                 const { amount0, amount1 } = delta as unknown as {
                   amount0: i129;
@@ -391,10 +405,13 @@ describe("core", () => {
                   const mintedPositionTokens = mintReceipts.map((receipt) => ({
                     liquidity: fromI129(
                       (
-                        core
-                          .parseEvents(receipt)
-                          .find(({ PositionUpdated }) => PositionUpdated)
-                          ?.PositionUpdated as unknown as {
+                        findMap(
+                          core.parseEvents(receipt),
+                          ({
+                            "ekubo::core::Core::PositionUpdated":
+                              PositionUpdated,
+                          }) => PositionUpdated
+                        ) as unknown as {
                           params: {
                             liquidity_delta: { mag: bigint; sign: boolean };
                           };
@@ -402,8 +419,12 @@ describe("core", () => {
                       ).params.liquidity_delta
                     ),
                     token_id: (
-                      nft.parseEvents(receipt).find(({ Transfer }) => Transfer)
-                        ?.Transfer as {
+                      findMap(
+                        nft.parseEvents(receipt),
+                        ({
+                          "ekubo::owned_nft::OwnedNFT::Transfer": Transfer,
+                        }) => Transfer
+                      ) as {
                         from: bigint;
                         to: bigint;
                         token_id: bigint;
@@ -473,7 +494,12 @@ describe("core", () => {
 
                     mintedOrders = twamm
                       .parseEvents(orderPlacementReceipt)
-                      .map(({ OrderUpdated }) => OrderUpdated)
+                      .map(
+                        ({
+                          "ekubo::extensions::twamm::TWAMM::OrderUpdated":
+                            OrderUpdated,
+                        }) => OrderUpdated
+                      )
                       .filter((x) => !!x)
                       .map(({ salt, order_key, sale_rate_delta }: any) => ({
                         token_id: salt,
@@ -508,18 +534,21 @@ describe("core", () => {
                             retryInterval: 0,
                           });
 
-                        const VirtualOrdersExecuted = twamm
-                          .parseEvents(executeVirtualOrdersReceipt)
-                          .find(
-                            ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
-                          )?.VirtualOrdersExecuted;
+                        const VirtualOrdersExecuted = findMap(
+                          twamm.parseEvents(executeVirtualOrdersReceipt),
+                          ({
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                              VirtualOrdersExecuted,
+                          }) => VirtualOrdersExecuted
+                        );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
                           delete VirtualOrdersExecuted["key"];
 
-                        const Swapped = core
-                          .parseEvents(executeVirtualOrdersReceipt)
-                          .find(({ Swapped }) => Swapped)?.Swapped;
+                        const Swapped = findMap(
+                          core.parseEvents(executeVirtualOrdersReceipt),
+                          ({ "ekubo::core::Core::Swapped": Swapped }) => Swapped
+                        );
 
                         const executionResources =
                           executeVirtualOrdersReceipt.execution_resources;
@@ -584,11 +613,13 @@ describe("core", () => {
                           "swap success"
                         ).toEqual("SUCCEEDED");
 
-                        const VirtualOrdersExecuted = twamm
-                          .parseEvents(swap_receipt)
-                          .find(
-                            ({ VirtualOrdersExecuted }) => VirtualOrdersExecuted
-                          )?.VirtualOrdersExecuted;
+                        const VirtualOrdersExecuted = findMap(
+                          twamm.parseEvents(swap_receipt),
+                          ({
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                              VirtualOrdersExecuted,
+                          }) => VirtualOrdersExecuted
+                        );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
                           delete VirtualOrdersExecuted["key"];

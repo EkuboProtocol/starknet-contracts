@@ -39,13 +39,15 @@ pub mod MockERC20 {
     use core::option::{OptionTrait};
     use core::traits::{Into};
     use ekubo::interfaces::erc20::{IERC20};
+    use starknet::storage::{Map};
+    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
     use super::{IMockERC20};
 
     #[storage]
     struct Storage {
-        balances: LegacyMap<ContractAddress, u128>,
-        allowances: LegacyMap<(ContractAddress, ContractAddress), u128>,
+        balances: Map<ContractAddress, u128>,
+        allowances: Map<(ContractAddress, ContractAddress), u128>,
     }
 
     #[derive(starknet::Event, Drop)]
