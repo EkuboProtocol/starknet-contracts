@@ -1005,6 +1005,7 @@ mod CancelOrderTests {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
+            'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED'
         )
     )]
@@ -1176,6 +1177,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     #[should_panic(
         expected: (
             'ADD_DELTA',
+            'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
