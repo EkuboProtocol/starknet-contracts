@@ -308,7 +308,8 @@ pub mod TWAMM {
         fn get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderInfo {
-            // we have to do this to return the correct order information, even though this is a view function
+            // we have to do this to return the correct order information, even though this is a
+            // view function
             call_core_with_callback::<
                 StateKey, ()
             >(self.core.read(), @order_key.into::<StateKey>());
@@ -377,6 +378,7 @@ pub mod TWAMM {
             match consume_callback_data::<ForwardCallbackData>(core, data) {
                 ForwardCallbackData::ExecuteVirtualSwapsCallbackData(key) => {
                     self.internal_execute_virtual_orders(core, key);
+                    array![].span()
                 },
                 ForwardCallbackData::UpdateSaleRateCallbackData((
                     salt, order_key, sale_rate_delta
@@ -473,7 +475,7 @@ pub mod TWAMM {
 
                     // must round down if decreasing (withdrawing) and round up if increasing
                     // (depositing) sale rate to remain solvent
-                    let amount_delta = calculate_amount_from_sale_rate(
+                    let mut amount_delta = calculate_amount_from_sale_rate(
                         sale_rate: sale_rate_delta.mag,
                         duration: to_duration(
                             start: max(order_key.start_time, current_time), end: order_key.end_time
@@ -501,14 +503,10 @@ pub mod TWAMM {
                             };
 
                             core.accumulate_as_fees(pool_key, amount0, amount1);
+
+                            amount_delta -= fee_amount;
                         }
                     } else {
-                        // if increasing sale rate, deposit additional funds
-                        IERC20Dispatcher { contract_address: token }
-                            .approve(core.contract_address, amount_delta.into());
-
-                        core.pay(token);
-
                         core
                             .save(
                                 SavedBalanceKey {
@@ -517,6 +515,8 @@ pub mod TWAMM {
                                 amount_delta
                             );
                     }
+
+                    serialize(@i129 { mag: amount_delta, sign: sale_rate_delta.sign }).span()
                 },
                 ForwardCallbackData::CollectProceedsCallbackData((
                     salt, order_key
@@ -551,10 +551,10 @@ pub mod TWAMM {
                                 recipient
                             }
                         );
+
+                    array![order_info.purchased_amount.into()].span()
                 }
             }
-
-            array![].span()
         }
     }
 
