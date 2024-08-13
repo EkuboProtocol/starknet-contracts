@@ -182,8 +182,8 @@ pub trait IPositions<TContractState> {
         ref self: TContractState, id: u64, order_key: OrderKey, amount: u128
     ) -> u128;
 
-    // Decrease sold amount on a TWAMM position, and send the proceeds to the TWAMM contract to be
-    // cleared.
+    // (Legacy): Decrease sold amount on a TWAMM position, and send the proceeds to the TWAMM
+    // contract to be cleared. Prefer `decrease_sale_rate_to`.
     fn decrease_sale_rate(
         ref self: TContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
     );
@@ -198,8 +198,8 @@ pub trait IPositions<TContractState> {
         recipient: ContractAddress
     );
 
-    // Withdraws proceeds from a TWAMM position, and send the proceeds to the TWAMM contract to be
-    // cleared.
+    // (Leagcy): Withdraws proceeds from a TWAMM position, and send the proceeds to the TWAMM
+    // contract to be cleared.
     fn withdraw_proceeds_from_sale(ref self: TContractState, id: u64, order_key: OrderKey);
 
     // Withdraws proceeds from a TWAMM position and send the proceeds to the given recipient

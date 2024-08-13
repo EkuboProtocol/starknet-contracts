@@ -10,8 +10,8 @@ pub mod Core {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         SwapParameters, UpdatePositionParameters, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
-        GetPositionWithFeesResult
+        IForwardeeDispatcher, IForwardeeDispatcherTrait, LockerState, ICore, IExtensionDispatcher,
+        IExtensionDispatcherTrait, GetPositionWithFeesResult
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
@@ -157,7 +157,6 @@ pub mod Core {
         pub key: SavedBalanceKey,
         pub amount: u128,
     }
-
 
     #[derive(starknet::Event, Drop)]
     #[event]
@@ -505,6 +504,20 @@ pub mod Core {
 
             self.lock_count.write(id);
             self.set_locker_address(id, Zero::zero());
+
+            result
+        }
+
+        fn forward(
+            ref self: ContractState, to: IForwardeeDispatcher, data: Span<felt252>
+        ) -> Span<felt252> {
+            let (id, locker) = self.require_locker();
+
+            // update this lock's locker to the forwarded address for the duration of the forwarded
+            // call, meaning only the forwarded address can update state
+            self.set_locker_address(id, to.contract_address);
+            let result = to.forwarded(locker, id, data);
+            self.set_locker_address(id, locker);
 
             result
         }

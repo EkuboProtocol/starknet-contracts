@@ -18,11 +18,12 @@ pub mod TWAMM {
         call_core_with_callback, consume_callback_data, check_caller_is_core
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
         ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState
     };
     use ekubo::interfaces::core::{
-        IExtension, SwapParameters, UpdatePositionParameters, ILocker, ICoreDispatcher,
+        IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
@@ -140,7 +141,6 @@ pub mod TWAMM {
         pub salt: felt252,
         pub order_key: OrderKey,
         pub amount: u128,
-        pub recipient: ContractAddress
     }
 
     #[derive(starknet::Event, Drop)]
@@ -163,12 +163,11 @@ pub mod TWAMM {
     }
 
     #[derive(Serde, Copy, Drop)]
-    enum LockCallbackData {
-        ExecuteVirtualSwapsCallbackData: StateKey,
-        // owner, salt, order_key, sale_rate_delta
-        UpdateSaleRateCallbackData: (ContractAddress, felt252, OrderKey, i129),
-        // owner, salt, order_key, recipient
-        CollectProceedsCallbackData: (ContractAddress, felt252, OrderKey, ContractAddress)
+    pub enum ForwardCallbackData {
+        // salt, order_key, sale_rate_delta
+        UpdateSaleRateCallbackData: (felt252, OrderKey, i129),
+        // salt, order_key
+        CollectProceedsCallbackData: (felt252, OrderKey)
     }
 
     #[abi(embed_v0)]
@@ -302,17 +301,18 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
+        fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
+            call_core_with_callback::<StateKey, ()>(self.core.read(), @key)
+        }
+
         fn get_order_info(
             self: @ContractState, owner: ContractAddress, salt: felt252, order_key: OrderKey
         ) -> OrderInfo {
+            // we have to do this to return the correct order information, even though this is a
+            // view function
             call_core_with_callback::<
-                LockCallbackData, ()
-            >(
-                self.core.read(),
-                @LockCallbackData::ExecuteVirtualSwapsCallbackData({
-                    order_key.into()
-                })
-            );
+                StateKey, ()
+            >(self.core.read(), @Into::<OrderKey, StateKey>::into(order_key));
             let (order_info, _) = self.internal_get_order_info(owner, salt, order_key);
             order_info
         }
@@ -354,41 +354,6 @@ pub mod TWAMM {
                 )
         }
 
-        fn update_order(
-            ref self: ContractState, salt: felt252, order_key: OrderKey, sale_rate_delta: i129
-        ) {
-            call_core_with_callback(
-                self.core.read(),
-                @LockCallbackData::UpdateSaleRateCallbackData(
-                    (get_caller_address(), salt, order_key, sale_rate_delta)
-                )
-            )
-        }
-
-        // Collect proceeds from a twamm order to the specified recipient
-        fn collect_proceeds(ref self: ContractState, salt: felt252, order_key: OrderKey) {
-            self.collect_proceeds_to(salt, order_key, get_contract_address())
-        }
-
-        fn collect_proceeds_to(
-            ref self: ContractState, salt: felt252, order_key: OrderKey, recipient: ContractAddress
-        ) {
-            call_core_with_callback(
-                self.core.read(),
-                @LockCallbackData::CollectProceedsCallbackData(
-                    (get_caller_address(), salt, order_key, recipient)
-                )
-            )
-        }
-
-        fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
-            call_core_with_callback(
-                self.core.read(), @LockCallbackData::ExecuteVirtualSwapsCallbackData({
-                    key
-                })
-            )
-        }
-
         fn update_call_points(ref self: ContractState) {
             self.core.read().set_call_points(twamm_call_points());
         }
@@ -398,13 +363,24 @@ pub mod TWAMM {
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
+            let key = consume_callback_data::<StateKey>(core, data);
+            self.internal_execute_virtual_orders(core, key);
+            array![].span()
+        }
+    }
 
-            match consume_callback_data::<LockCallbackData>(core, data) {
-                LockCallbackData::ExecuteVirtualSwapsCallbackData(key) => {
-                    self.internal_execute_virtual_orders(core, key);
-                },
-                LockCallbackData::UpdateSaleRateCallbackData((
-                    owner, salt, order_key, sale_rate_delta
+    #[abi(embed_v0)]
+    impl ForwardeeImpl of IForwardee<ContractState> {
+        fn forwarded(
+            ref self: ContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>
+        ) -> Span<felt252> {
+            let core = self.core.read();
+
+            let owner = original_locker;
+
+            match consume_callback_data::<ForwardCallbackData>(core, data) {
+                ForwardCallbackData::UpdateSaleRateCallbackData((
+                    salt, order_key, sale_rate_delta
                 )) => {
                     let current_time = get_block_timestamp();
 
@@ -498,7 +474,7 @@ pub mod TWAMM {
 
                     // must round down if decreasing (withdrawing) and round up if increasing
                     // (depositing) sale rate to remain solvent
-                    let amount_delta = calculate_amount_from_sale_rate(
+                    let mut amount_delta = calculate_amount_from_sale_rate(
                         sale_rate: sale_rate_delta.mag,
                         duration: to_duration(
                             start: max(order_key.start_time, current_time), end: order_key.end_time
@@ -526,19 +502,10 @@ pub mod TWAMM {
                             };
 
                             core.accumulate_as_fees(pool_key, amount0, amount1);
-                            core.withdraw(token, get_contract_address(), amount_delta - fee_amount);
-                        } else {
-                            // if the pool has 0 liquidity, we cannot pay fees since there are no
-                            // liquidity providers to receive it so we withdraw the entire amount
-                            core.withdraw(token, get_contract_address(), amount_delta);
+
+                            amount_delta -= fee_amount;
                         }
                     } else {
-                        // if increasing sale rate, deposit additional funds
-                        IERC20Dispatcher { contract_address: token }
-                            .approve(core.contract_address, amount_delta.into());
-
-                        core.pay(token);
-
                         core
                             .save(
                                 SavedBalanceKey {
@@ -547,9 +514,11 @@ pub mod TWAMM {
                                 amount_delta
                             );
                     }
+
+                    serialize(@i129 { mag: amount_delta, sign: sale_rate_delta.sign }).span()
                 },
-                LockCallbackData::CollectProceedsCallbackData((
-                    owner, salt, order_key, recipient
+                ForwardCallbackData::CollectProceedsCallbackData((
+                    salt, order_key
                 )) => {
                     self.internal_execute_virtual_orders(core, order_key.into());
 
@@ -569,23 +538,18 @@ pub mod TWAMM {
                         let token = order_key.buy_token;
 
                         core.load(token, 0, order_info.purchased_amount);
-                        core.withdraw(token, recipient, order_info.purchased_amount);
                     }
 
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner,
-                                salt,
-                                order_key,
-                                amount: order_info.purchased_amount,
-                                recipient
+                                owner, salt, order_key, amount: order_info.purchased_amount,
                             }
                         );
+
+                    array![order_info.purchased_amount.into()].span()
                 }
             }
-
-            array![].span()
         }
     }
 

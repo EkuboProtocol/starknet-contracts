@@ -7,16 +7,20 @@ pub mod Positions {
     use core::serde::{Serde};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::shared_locker::{
+        call_core_with_callback, consume_callback_data, forward_lock
+    };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait
     };
+    use ekubo::extensions::twamm::TWAMM::{ForwardCallbackData};
     use ekubo::extensions::twamm::math::time::{TIME_SPACING_SIZE};
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker
+        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
+        IForwardeeDispatcher
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
@@ -136,11 +140,36 @@ pub mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
+    struct IncreaseSaleRateCallbackData {
+        order_key: OrderKey,
+        salt: felt252,
+        sale_rate_delta_mag: u128,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct DecreaseSaleRateCallbackData {
+        order_key: OrderKey,
+        salt: felt252,
+        sale_rate_delta_mag: u128,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct CollectOrderProceedsCallbackData {
+        order_key: OrderKey,
+        salt: felt252,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
         CollectFees: CollectFeesCallbackData,
         GetPoolPrice: PoolKey,
+        IncreaseSaleRate: IncreaseSaleRateCallbackData,
+        DecreaseSaleRate: DecreaseSaleRateCallbackData,
+        CollectOrderProceeds: CollectOrderProceedsCallbackData,
     }
 
     #[abi(embed_v0)]
@@ -292,6 +321,68 @@ pub mod Positions {
                     };
 
                     serialize(@pool_price).span()
+                },
+                LockCallbackData::IncreaseSaleRate(data) => {
+                    let twamm = self.twamm.read();
+                    let amount_delta: i129 = forward_lock(
+                        core,
+                        IForwardeeDispatcher { contract_address: twamm.contract_address },
+                        @ForwardCallbackData::UpdateSaleRateCallbackData(
+                            (
+                                data.salt,
+                                data.order_key,
+                                i129 { mag: data.sale_rate_delta_mag, sign: false }
+                            )
+                        )
+                    );
+
+                    IERC20Dispatcher { contract_address: data.order_key.sell_token }
+                        .approve(core.contract_address, amount_delta.mag.into());
+                    core.pay(data.order_key.sell_token);
+
+                    serialize(@amount_delta.mag).span()
+                },
+                LockCallbackData::DecreaseSaleRate(data) => {
+                    let twamm = self.twamm.read();
+                    let amount_delta: i129 = forward_lock(
+                        core,
+                        IForwardeeDispatcher { contract_address: twamm.contract_address },
+                        @ForwardCallbackData::UpdateSaleRateCallbackData(
+                            (
+                                data.salt,
+                                data.order_key,
+                                i129 { mag: data.sale_rate_delta_mag, sign: true }
+                            )
+                        )
+                    );
+
+                    core
+                        .withdraw(
+                            data.order_key.sell_token,
+                            recipient: data.recipient,
+                            amount: amount_delta.mag
+                        );
+
+                    serialize(@amount_delta.mag).span()
+                },
+                LockCallbackData::CollectOrderProceeds(data) => {
+                    let twamm = self.twamm.read();
+                    let proceeds_amount: u128 = forward_lock(
+                        core,
+                        IForwardeeDispatcher { contract_address: twamm.contract_address },
+                        @ForwardCallbackData::CollectProceedsCallbackData(
+                            (data.salt, data.order_key)
+                        )
+                    );
+
+                    core
+                        .withdraw(
+                            data.order_key.buy_token,
+                            recipient: data.recipient,
+                            amount: proceeds_amount
+                        );
+
+                    serialize(@proceeds_amount).span()
                 }
             }
         }
@@ -596,12 +687,6 @@ pub mod Positions {
         ) -> u128 {
             self.check_authorization(id);
 
-            let twamm = self.twamm.read();
-
-            // if increasing sale rate, transfer additional funds to twamm
-            IERC20Dispatcher { contract_address: order_key.sell_token }
-                .transfer(twamm.contract_address, amount.into());
-
             let sale_rate = calculate_sale_rate(
                 amount: amount,
                 duration: to_duration(
@@ -609,7 +694,16 @@ pub mod Positions {
                 ),
             );
 
-            twamm.update_order(id.into(), order_key, i129 { mag: sale_rate, sign: false });
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
+                self.core.read(),
+                @LockCallbackData::IncreaseSaleRate(
+                    IncreaseSaleRateCallbackData {
+                        order_key, salt: id.into(), sale_rate_delta_mag: sale_rate
+                    }
+                )
+            );
 
             sale_rate
         }
@@ -635,16 +729,19 @@ pub mod Positions {
 
             // it's no-op to decrease sale rate of an order that has already ended so we do nothing
             if get_block_timestamp() < order_key.end_time {
-                let twamm = self.twamm.read();
-                twamm.update_order(id.into(), order_key, i129 { mag: sale_rate_delta, sign: true });
-                if (recipient != twamm.contract_address) {
-                    twamm
-                        .clear_minimum_to_recipient(
-                            token: IERC20Dispatcher { contract_address: order_key.sell_token },
-                            minimum: 0,
+                call_core_with_callback::<
+                    LockCallbackData, ()
+                >(
+                    self.core.read(),
+                    @LockCallbackData::DecreaseSaleRate(
+                        DecreaseSaleRateCallbackData {
+                            order_key,
+                            salt: id.into(),
+                            sale_rate_delta_mag: sale_rate_delta,
                             recipient: recipient
-                        );
-                }
+                        }
+                    )
+                );
             }
         }
 
@@ -657,9 +754,16 @@ pub mod Positions {
         ) {
             self.check_authorization(id);
 
-            let twamm = self.twamm.read();
-
-            twamm.collect_proceeds_to(id.into(), order_key, recipient);
+            call_core_with_callback::<
+                LockCallbackData, ()
+            >(
+                self.core.read(),
+                @LockCallbackData::CollectOrderProceeds(
+                    CollectOrderProceedsCallbackData {
+                        order_key, salt: id.into(), recipient: recipient
+                    }
+                )
+            );
         }
     }
 }
