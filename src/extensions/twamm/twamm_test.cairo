@@ -4157,21 +4157,11 @@ mod MinMaxSqrtRatio {
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
-        let order_key = OrderKey {
-            sell_token: setup.token0.contract_address,
-            buy_token: setup.token1.contract_address,
-            fee,
-            start_time: timestamp,
-            end_time: order_end_time
-        };
-
         // 2**28 -- anything smaller than this results in 0 tokens sold
         let sale_rate = constants::X32_u128 / 16;
         let amount = calculate_amount_from_sale_rate(sale_rate, 16, true);
         setup.token0.increase_balance(positions.contract_address, amount);
 
-        // todo: fix tests to use new interface
-        // twamm.update_order(0, order_key, i129 { mag: sale_rate, sign: false });
         place_order(
             positions: positions,
             owner: get_contract_address(),
@@ -4249,32 +4239,32 @@ mod MinMaxSqrtRatio {
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
-        let order_key = OrderKey {
-            sell_token: setup.token1.contract_address,
-            buy_token: setup.token0.contract_address,
-            fee,
-            start_time: timestamp,
-            end_time: order_end_time
-        };
-
         // 2**28 -- anything smaller than this results in 0 tokens sold
         let sale_rate = constants::X32_u128 / 16;
         let amount = calculate_amount_from_sale_rate(sale_rate, 16, true);
         setup.token1.increase_balance(twamm.contract_address, amount);
-        // todo: fix tests to use new interface
-    // twamm.update_order(0, order_key, i129 { mag: sale_rate, sign: false });
-    // let _event: SavedBalance = pop_log(core.contract_address).unwrap();
+        place_order(
+            positions: positions,
+            owner: get_contract_address(),
+            sell_token: setup.token1,
+            buy_token: setup.token0,
+            fee: fee,
+            start_time: timestamp,
+            end_time: order_end_time,
+            amount: amount
+        );
+        let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
-        // let state_key: StateKey = setup.pool_key.into();
+        let state_key: StateKey = setup.pool_key.into();
 
-        // let execution_timestamp = order_end_time;
-    // set_block_timestamp(execution_timestamp);
-    // twamm.execute_virtual_orders(state_key);
+        let execution_timestamp = order_end_time;
+        set_block_timestamp(execution_timestamp);
+        twamm.execute_virtual_orders(state_key);
 
-        // let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
+        let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
 
-        // // smallest sqrt_sale_ratio possible is sqrt(2**28 * 2**128)
-    // assert_eq!(swapped_event.sqrt_ratio_after, 302231454903657293676544);
+        // smallest sqrt_sale_ratio possible is sqrt(2**28 * 2**128)
+        assert_eq!(swapped_event.sqrt_ratio_after, 302231454903657293676544);
     }
 }
 
@@ -4501,9 +4491,7 @@ mod PlaceOrderDurationTooLong {
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;
         let amount1 = 10_000_000 * 1000000000000000000;
-        let (twamm, setup, positions) = set_up_twamm(
-            ref d, core, fee, initial_tick, amount0, amount1
-        );
+        let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
