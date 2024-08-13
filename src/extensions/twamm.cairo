@@ -139,7 +139,8 @@ pub mod TWAMM {
         pub owner: ContractAddress,
         pub salt: felt252,
         pub order_key: OrderKey,
-        pub amount: u128
+        pub amount: u128,
+        pub recipient: ContractAddress
     }
 
     #[derive(starknet::Event, Drop)]
@@ -543,7 +544,11 @@ pub mod TWAMM {
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner, salt, order_key, amount: order_info.purchased_amount
+                                owner,
+                                salt,
+                                order_key,
+                                amount: order_info.purchased_amount,
+                                recipient
                             }
                         );
                 }
