@@ -359,6 +359,7 @@ pub mod TWAMM {
         }
     }
 
+    #[abi(embed_v0)]
     impl LockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
@@ -370,10 +371,12 @@ pub mod TWAMM {
 
     #[abi(embed_v0)]
     impl ForwardeeImpl of IForwardee<ContractState> {
-        fn forwarded(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
+        fn forwarded(
+            ref self: ContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>
+        ) -> Span<felt252> {
             let core = self.core.read();
 
-            let owner = core.get_locker_state(id).address;
+            let owner = original_locker;
 
             match consume_callback_data::<ForwardCallbackData>(core, data) {
                 ForwardCallbackData::UpdateSaleRateCallbackData((

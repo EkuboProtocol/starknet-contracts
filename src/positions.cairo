@@ -371,7 +371,7 @@ pub mod Positions {
                         core,
                         IForwardeeDispatcher { contract_address: twamm.contract_address },
                         @ForwardCallbackData::CollectProceedsCallbackData(
-                            (data.salt, data.order_key,)
+                            (data.salt, data.order_key)
                         )
                     );
 

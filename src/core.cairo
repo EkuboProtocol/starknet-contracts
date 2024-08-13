@@ -516,7 +516,7 @@ pub mod Core {
             // update this lock's locker to the forwarded address for the duration of the forwarded
             // call, meaning only the forwarded address can update state
             self.set_locker_address(id, to.contract_address);
-            let result = to.forwarded(id, data);
+            let result = to.forwarded(locker, id, data);
             self.set_locker_address(id, locker);
 
             result

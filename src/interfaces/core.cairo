@@ -22,7 +22,9 @@ pub trait ILocker<TContractState> {
 #[starknet::interface]
 pub trait IForwardee<TContractState> {
     // Passes through the lock identifier and the calldata
-    fn forwarded(ref self: TContractState, id: u32, data: Span<felt252>) -> Span<felt252>;
+    fn forwarded(
+        ref self: TContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>
+    ) -> Span<felt252>;
 }
 
 // Passed as an argument to update a position. The owner of the position is implicitly the locker.
