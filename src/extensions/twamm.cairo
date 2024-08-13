@@ -18,6 +18,7 @@ pub mod TWAMM {
         call_core_with_callback, consume_callback_data, check_caller_is_core
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
         ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState
     };
@@ -140,7 +141,6 @@ pub mod TWAMM {
         pub salt: felt252,
         pub order_key: OrderKey,
         pub amount: u128,
-        pub recipient: ContractAddress
     }
 
     #[derive(starknet::Event, Drop)]
@@ -302,7 +302,7 @@ pub mod TWAMM {
     #[abi(embed_v0)]
     impl TWAMMImpl of ITWAMM<ContractState> {
         fn execute_virtual_orders(ref self: ContractState, key: StateKey) {
-            call_core_with_callback(self.core.read(), @key)
+            call_core_with_callback::<StateKey, ()>(self.core.read(), @key)
         }
 
         fn get_order_info(
@@ -312,7 +312,7 @@ pub mod TWAMM {
             // view function
             call_core_with_callback::<
                 StateKey, ()
-            >(self.core.read(), @order_key.into::<StateKey>());
+            >(self.core.read(), @Into::<OrderKey, StateKey>::into(order_key));
             let (order_info, _) = self.internal_get_order_info(owner, salt, order_key);
             order_info
         }
@@ -376,10 +376,6 @@ pub mod TWAMM {
             let owner = core.get_locker_state(id).address;
 
             match consume_callback_data::<ForwardCallbackData>(core, data) {
-                ForwardCallbackData::ExecuteVirtualSwapsCallbackData(key) => {
-                    self.internal_execute_virtual_orders(core, key);
-                    array![].span()
-                },
                 ForwardCallbackData::UpdateSaleRateCallbackData((
                     salt, order_key, sale_rate_delta
                 )) => {
@@ -544,11 +540,7 @@ pub mod TWAMM {
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner,
-                                salt,
-                                order_key,
-                                amount: order_info.purchased_amount,
-                                recipient
+                                owner, salt, order_key, amount: order_info.purchased_amount,
                             }
                         );
 
