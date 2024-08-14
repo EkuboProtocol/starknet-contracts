@@ -613,9 +613,7 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
     setup
         .core
         .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);
-    setup
-        .core
-        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token1, amount: 1);
+    setup.core.withdraw_all_protocol_fees(recipient: recipient, token: setup.pool_key.token1);
 
     set_contract_address(caller);
     setup.token0.increase_balance(positions.contract_address, 100000000);

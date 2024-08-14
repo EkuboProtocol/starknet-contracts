@@ -28,13 +28,13 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x9ad0e82edcdd70ea2ff1cdba1b45a6ce3ef47ce52055bbb13fd233bb522ec1",
+      core: "0x3e933ccec92bdaf0d729a71d96abde26b68ed6696ce005962e1e29e8e3c56f6",
       positions:
-        "0x30f84b98f4146f2a45ebf1f0afafc113bcdf3b05834c41ed51fa4211e657066",
+        "0x509397475e3418890db007395bd2c67ea0998563553c1f6f27a5ab0fbf5a3bd",
       router:
-        "0x22955682f944a13de8f3f9609816f8972d07c369b1bf2e4779b0d4ab78853a1",
-      nft: "0x1f9b9e64793c92a13e49e9d1331ff78c9532e0014acdb81ec380a98b5222dd",
-      twamm: "0xf34680082b5406e7b603c246d223085b39011ae4e2c552bf6d0739672bf8a0",
+        "0x4eff73f6e1e6e5e7cebe61441ea512d51c929332d7aeb76e12c9141a3f952f0",
+      nft: "0x2841c705d2f449c9076d7e87d20adce3c35520c7d4df8deaef23849c4f905ab",
+      twamm: "0x33b73841fb8d68e68ac040e0f9d6cde945b0de8972cdfffc5a48048d6c14f4",
       tokenClassHash:
         "0x30c12e2853eebbdfed3f579e83ddc10fc77f83bfd5f285a13f6eac748cda0f",
     });

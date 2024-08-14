@@ -473,6 +473,14 @@ pub mod Core {
                 )
         }
 
+        fn withdraw_all_protocol_fees(
+            ref self: ContractState, recipient: ContractAddress, token: ContractAddress
+        ) -> u128 {
+            let amount_collected = self.get_protocol_fees_collected(token);
+            self.withdraw_protocol_fees(recipient, token, amount_collected);
+            amount_collected
+        }
+
         fn withdraw_protocol_fees(
             ref self: ContractState,
             recipient: ContractAddress,

@@ -986,7 +986,10 @@ mod CancelOrderTests {
             .balanceOf(owner);
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        let amount_refunded = positions
+            .decrease_sale_rate_to(
+                order1_id, order1_key, order1_state.sale_rate, recipient: twamm.contract_address
+            );
         IClearDispatcher { contract_address: twamm.contract_address }
             .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
 
@@ -996,6 +999,7 @@ mod CancelOrderTests {
             .balanceOf(owner);
 
         assert_eq!(token_balance_after - token_balance_before, 999999999999999999999);
+        assert_eq!(amount_refunded, 999999999999999999999);
     }
 
     #[test]
@@ -1806,13 +1810,17 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
 
         // withdraw proceeds (same transaction)
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        let amount_withdrawn = positions
+            .withdraw_proceeds_from_sale_to(
+                order1_id, order1_key, recipient: twamm.contract_address
+            );
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // amount  = updated reward_rate * updated sale_rate
         //         = 511.948535281 * 19.53125
         //        ~= 9,998.994829713355494901 tokens
         assert_eq!(event.amount, 9998994829713355494901);
+        assert_eq!(amount_withdrawn, 9998994829713355494901);
     }
 
     #[test]
@@ -4693,7 +4701,7 @@ fn place_order(
         end_time
     };
 
-    let (id, _) = if (owner != current_contract_address) {
+    let (id, sale_rate) = if (owner != current_contract_address) {
         set_contract_address(owner);
         let (id, sale_rate) = positions.mint_and_increase_sell_amount(order_key, amount);
         set_contract_address(current_contract_address);
@@ -4702,11 +4710,11 @@ fn place_order(
         positions.mint_and_increase_sell_amount(order_key, amount)
     };
 
+    let order_info = ITWAMMDispatcher { contract_address: twamm }
+        .get_order_info(positions.contract_address, id.into(), order_key);
+
+    assert_eq!(order_info.sale_rate, sale_rate);
+
     // return token id, order key, and order state
-    (
-        id,
-        order_key,
-        ITWAMMDispatcher { contract_address: twamm }
-            .get_order_info(positions.contract_address, id.into(), order_key)
-    )
+    (id, order_key, order_info)
 }
