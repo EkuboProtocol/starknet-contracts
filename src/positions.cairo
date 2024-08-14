@@ -715,7 +715,13 @@ pub mod Positions {
             self
                 .decrease_sale_rate_to(
                     id, order_key, sale_rate_delta, self.twamm.read().contract_address
-                )
+                );
+        }
+
+        fn decrease_sale_rate_to_self(
+            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
+        ) -> u128 {
+            self.decrease_sale_rate_to(id, order_key, sale_rate_delta, get_caller_address())
         }
 
         fn decrease_sale_rate_to(
@@ -724,14 +730,12 @@ pub mod Positions {
             order_key: OrderKey,
             sale_rate_delta: u128,
             recipient: ContractAddress
-        ) {
+        ) -> u128 {
             self.check_authorization(id);
 
             // it's no-op to decrease sale rate of an order that has already ended so we do nothing
             if get_block_timestamp() < order_key.end_time {
-                call_core_with_callback::<
-                    LockCallbackData, ()
-                >(
+                call_core_with_callback(
                     self.core.read(),
                     @LockCallbackData::DecreaseSaleRate(
                         DecreaseSaleRateCallbackData {
@@ -741,29 +745,35 @@ pub mod Positions {
                             recipient: recipient
                         }
                     )
-                );
+                )
+            } else {
+                0
             }
         }
 
         fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
-            self.withdraw_proceeds_from_sale_to(id, order_key, self.twamm.read().contract_address)
+            self.withdraw_proceeds_from_sale_to(id, order_key, self.twamm.read().contract_address);
+        }
+
+        fn withdraw_proceeds_from_sale_to_self(
+            ref self: ContractState, id: u64, order_key: OrderKey
+        ) -> u128 {
+            self.withdraw_proceeds_from_sale_to(id, order_key, get_caller_address())
         }
 
         fn withdraw_proceeds_from_sale_to(
             ref self: ContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
-        ) {
+        ) -> u128 {
             self.check_authorization(id);
 
-            call_core_with_callback::<
-                LockCallbackData, ()
-            >(
+            call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectOrderProceeds(
                     CollectOrderProceedsCallbackData {
                         order_key, salt: id.into(), recipient: recipient
                     }
                 )
-            );
+            )
         }
     }
 }
