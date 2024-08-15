@@ -20,7 +20,7 @@ pub mod TWAMM {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
-        ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState
+        ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState, ForwardCallbackData
     };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ILocker, ICoreDispatcher,
@@ -162,13 +162,6 @@ pub mod TWAMM {
         VirtualOrdersExecuted: VirtualOrdersExecuted,
     }
 
-    #[derive(Serde, Copy, Drop)]
-    pub enum ForwardCallbackData {
-        // salt, order_key, sale_rate_delta
-        UpdateSaleRateCallbackData: (felt252, OrderKey, i129),
-        // salt, order_key
-        CollectProceedsCallbackData: (felt252, OrderKey)
-    }
 
     #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
@@ -379,26 +372,24 @@ pub mod TWAMM {
             let owner = original_locker;
 
             match consume_callback_data::<ForwardCallbackData>(core, data) {
-                ForwardCallbackData::UpdateSaleRateCallbackData((
-                    salt, order_key, sale_rate_delta
-                )) => {
+                ForwardCallbackData::UpdateSaleRate(data) => {
                     let current_time = get_block_timestamp();
 
                     // there is no reason to update an order's sale rate after it has ended, because
                     // it is effectively no-op and only incurs additional l1 data cost this should
                     // be prevented at the periphery contract level
-                    assert(current_time < order_key.end_time, 'ORDER_ENDED');
+                    assert(current_time < data.order_key.end_time, 'ORDER_ENDED');
 
-                    validate_time(now: current_time, time: order_key.end_time);
-                    validate_time(now: current_time, time: order_key.start_time);
+                    validate_time(now: current_time, time: data.order_key.end_time);
+                    validate_time(now: current_time, time: data.order_key.start_time);
 
-                    let state_key: StateKey = order_key.into();
+                    let state_key: StateKey = data.order_key.into();
 
                     self.internal_execute_virtual_orders(core, state_key);
 
                     let (order_info, reward_rate_snapshot) = self
-                        .internal_get_order_info(owner, salt, order_key);
-                    let sale_rate_next = order_info.sale_rate.add(sale_rate_delta);
+                        .internal_get_order_info(owner, data.salt, data.order_key);
+                    let sale_rate_next = order_info.sale_rate.add(data.sale_rate_delta);
 
                     let reward_rate_snapshot_adjusted = if sale_rate_next.is_zero() {
                         assert(order_info.purchased_amount.is_zero(), 'MUST_WITHDRAW_PROCEEDS');
@@ -414,21 +405,38 @@ pub mod TWAMM {
                     self
                         .orders
                         .write(
-                            (owner, salt, order_key),
+                            (owner, data.salt, data.order_key),
                             OrderState {
                                 sale_rate: sale_rate_next,
                                 reward_rate_snapshot: reward_rate_snapshot_adjusted
                             }
                         );
 
-                    self.emit(OrderUpdated { owner, salt, order_key, sale_rate_delta });
+                    self
+                        .emit(
+                            OrderUpdated {
+                                owner,
+                                salt: data.salt,
+                                order_key: data.order_key,
+                                sale_rate_delta: data.sale_rate_delta
+                            }
+                        );
 
                     // this part updates the pool state only if the order is active or will be
                     // active
-                    if current_time < order_key.start_time {
+                    if current_time < data.order_key.start_time {
                         // order starts in the future, update both start and end time
-                        self.update_time(order_key, order_key.start_time, sale_rate_delta, true);
-                        self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
+                        self
+                            .update_time(
+                                data.order_key,
+                                data.order_key.start_time,
+                                data.sale_rate_delta,
+                                true
+                            );
+                        self
+                            .update_time(
+                                data.order_key, data.order_key.end_time, data.sale_rate_delta, false
+                            );
                     } else {
                         // we know current_time < order_key.end_time because we assert it above
                         let storage_key: StorageKey = state_key.into();
@@ -447,19 +455,19 @@ pub mod TWAMM {
                         Store::write(
                             0,
                             sale_rate_storage_address,
-                            if (order_key.sell_token > order_key.buy_token) {
+                            if (data.order_key.sell_token > data.order_key.buy_token) {
                                 SaleRateState {
                                     token0_sale_rate: sale_rate_state.token0_sale_rate,
                                     token1_sale_rate: sale_rate_state
                                         .token1_sale_rate
-                                        .add(sale_rate_delta),
+                                        .add(data.sale_rate_delta),
                                     last_virtual_order_time: sale_rate_state.last_virtual_order_time
                                 }
                             } else {
                                 SaleRateState {
                                     token0_sale_rate: sale_rate_state
                                         .token0_sale_rate
-                                        .add(sale_rate_delta),
+                                        .add(data.sale_rate_delta),
                                     token1_sale_rate: sale_rate_state.token1_sale_rate,
                                     last_virtual_order_time: sale_rate_state.last_virtual_order_time
                                 }
@@ -469,22 +477,26 @@ pub mod TWAMM {
 
                         // we only need to update the end time, because start time has been crossed
                         // and will never be crossed again
-                        self.update_time(order_key, order_key.end_time, sale_rate_delta, false);
+                        self
+                            .update_time(
+                                data.order_key, data.order_key.end_time, data.sale_rate_delta, false
+                            );
                     }
 
                     // must round down if decreasing (withdrawing) and round up if increasing
                     // (depositing) sale rate to remain solvent
                     let mut amount_delta = calculate_amount_from_sale_rate(
-                        sale_rate: sale_rate_delta.mag,
+                        sale_rate: data.sale_rate_delta.mag,
                         duration: to_duration(
-                            start: max(order_key.start_time, current_time), end: order_key.end_time
+                            start: max(data.order_key.start_time, current_time),
+                            end: data.order_key.end_time
                         ),
-                        round_up: !sale_rate_delta.sign
+                        round_up: !data.sale_rate_delta.sign
                     );
 
-                    let token = order_key.sell_token;
+                    let token = data.order_key.sell_token;
 
-                    if (sale_rate_delta.sign) {
+                    if (data.sale_rate_delta.sign) {
                         // if decreasing sale rate, pay fee and withdraw funds
                         let pool_key: PoolKey = state_key.into();
 
@@ -493,8 +505,10 @@ pub mod TWAMM {
                         if (core.get_pool_liquidity(pool_key).is_non_zero()) {
                             let fee_amount = compute_fee(amount_delta, state_key.fee);
 
-                            let (amount0, amount1) = if (order_key
-                                .sell_token > order_key
+                            let (amount0, amount1) = if (data
+                                .order_key
+                                .sell_token > data
+                                .order_key
                                 .buy_token) {
                                 (0, fee_amount)
                             } else {
@@ -515,27 +529,25 @@ pub mod TWAMM {
                             );
                     }
 
-                    serialize(@i129 { mag: amount_delta, sign: sale_rate_delta.sign }).span()
+                    serialize(@i129 { mag: amount_delta, sign: data.sale_rate_delta.sign }).span()
                 },
-                ForwardCallbackData::CollectProceedsCallbackData((
-                    salt, order_key
-                )) => {
-                    self.internal_execute_virtual_orders(core, order_key.into());
+                ForwardCallbackData::CollectProceeds(data) => {
+                    self.internal_execute_virtual_orders(core, data.order_key.into());
 
                     let (order_info, reward_rate_snapshot) = self
-                        .internal_get_order_info(owner, salt, order_key);
+                        .internal_get_order_info(owner, data.salt, data.order_key);
 
                     // snapshot the reward rate so we know the proceeds of the order have been
                     // withdrawn at this current time
                     self
                         .orders
                         .write(
-                            (owner, salt, order_key),
+                            (owner, data.salt, data.order_key),
                             OrderState { sale_rate: order_info.sale_rate, reward_rate_snapshot, }
                         );
 
                     if (order_info.purchased_amount.is_non_zero()) {
-                        let token = order_key.buy_token;
+                        let token = data.order_key.buy_token;
 
                         core.load(token, 0, order_info.purchased_amount);
                     }
@@ -543,11 +555,14 @@ pub mod TWAMM {
                     self
                         .emit(
                             OrderProceedsWithdrawn {
-                                owner, salt, order_key, amount: order_info.purchased_amount,
+                                owner,
+                                salt: data.salt,
+                                order_key: data.order_key,
+                                amount: order_info.purchased_amount,
                             }
                         );
 
-                    array![order_info.purchased_amount.into()].span()
+                    serialize(@order_info.purchased_amount).span()
                 }
             }
         }

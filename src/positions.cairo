@@ -13,9 +13,9 @@ pub mod Positions {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::twamm::{
-        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait
+        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
+        UpdateSaleRateCallbackData, CollectProceedsCallbackData
     };
-    use ekubo::extensions::twamm::TWAMM::{ForwardCallbackData};
     use ekubo::extensions::twamm::math::time::{TIME_SPACING_SIZE};
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
@@ -327,12 +327,14 @@ pub mod Positions {
                     let amount_delta: i129 = forward_lock(
                         core,
                         IForwardeeDispatcher { contract_address: twamm.contract_address },
-                        @ForwardCallbackData::UpdateSaleRateCallbackData(
-                            (
-                                data.salt,
-                                data.order_key,
-                                i129 { mag: data.sale_rate_delta_mag, sign: false }
-                            )
+                        @ForwardCallbackData::UpdateSaleRate(
+                            UpdateSaleRateCallbackData {
+                                salt: data.salt,
+                                order_key: data.order_key,
+                                sale_rate_delta: i129 {
+                                    mag: data.sale_rate_delta_mag, sign: false
+                                },
+                            }
                         )
                     );
 
@@ -347,12 +349,12 @@ pub mod Positions {
                     let amount_delta: i129 = forward_lock(
                         core,
                         IForwardeeDispatcher { contract_address: twamm.contract_address },
-                        @ForwardCallbackData::UpdateSaleRateCallbackData(
-                            (
-                                data.salt,
-                                data.order_key,
-                                i129 { mag: data.sale_rate_delta_mag, sign: true }
-                            )
+                        @ForwardCallbackData::UpdateSaleRate(
+                            UpdateSaleRateCallbackData {
+                                salt: data.salt,
+                                order_key: data.order_key,
+                                sale_rate_delta: i129 { mag: data.sale_rate_delta_mag, sign: true },
+                            }
                         )
                     );
 
@@ -370,8 +372,10 @@ pub mod Positions {
                     let proceeds_amount: u128 = forward_lock(
                         core,
                         IForwardeeDispatcher { contract_address: twamm.contract_address },
-                        @ForwardCallbackData::CollectProceedsCallbackData(
-                            (data.salt, data.order_key)
+                        @ForwardCallbackData::CollectProceeds(
+                            CollectProceedsCallbackData {
+                                salt: data.salt, order_key: data.order_key
+                            }
                         )
                     );
 
