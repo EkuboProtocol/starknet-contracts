@@ -1,6 +1,5 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::traits::{Into};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
 use ekubo::math::fee::{compute_fee, amount_before_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};

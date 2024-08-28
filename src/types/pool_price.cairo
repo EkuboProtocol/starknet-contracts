@@ -1,10 +1,8 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait, Option};
+use core::option::{OptionTrait};
 use core::traits::{Into, TryInto};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
-use ekubo::types::call_points::{CallPoints};
 use ekubo::types::i129::{i129, i129Trait};
-use starknet::storage_access::{StorageBaseAddress, StorePacking};
+use starknet::storage_access::{StorePacking};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 pub struct PoolPrice {

@@ -1,7 +1,7 @@
 #[starknet::contract]
 #[feature("deprecated_legacy_map")]
 pub mod Core {
-    use core::array::{ArrayTrait, SpanTrait};
+    use core::array::{ArrayTrait,};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
@@ -14,19 +14,14 @@ pub mod Core {
         IExtensionDispatcherTrait, GetPositionWithFeesResult
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::bitmap::{
         Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
     };
-    use ekubo::math::bits::{msb, lsb};
-    use ekubo::math::exp2::{exp2};
     use ekubo::math::fee::{compute_fee, accumulate_fee_amount};
     use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-    use ekubo::math::mask::{mask};
     use ekubo::math::swap::{swap_result, is_price_increasing};
     use ekubo::math::ticks::{
         tick_to_sqrt_ratio, sqrt_ratio_to_tick, min_tick, max_tick, min_sqrt_ratio, max_sqrt_ratio,
-        constants as tick_constants
     };
     use ekubo::types::bounds::{Bounds, BoundsTrait};
     use ekubo::types::call_points::{CallPoints};
@@ -44,8 +39,7 @@ pub mod Core {
         StoragePointerWriteAccess
     };
     use starknet::{
-        Store, ContractAddress, ClassHash, contract_address_const, get_caller_address,
-        get_contract_address, syscalls::{replace_class_syscall},
+        Store, ContractAddress, get_caller_address, get_contract_address,
         storage_access::{storage_base_address_from_felt252}
     };
 

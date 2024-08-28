@@ -1,11 +1,10 @@
-use core::array::{Array, ArrayTrait, SpanTrait};
-use core::cmp::{min, max};
+use core::array::{ArrayTrait};
 
 use core::num::traits::{Zero};
-use ekubo::interfaces::core::{ICoreDispatcherTrait, SwapParameters};
+use ekubo::interfaces::core::{ICoreDispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick};
-use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20DispatcherTrait};
 use ekubo::router::{IRouterDispatcher, IRouterDispatcherTrait, TokenAmount, RouteNode, Depth, Swap};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::types::bounds::{Bounds};

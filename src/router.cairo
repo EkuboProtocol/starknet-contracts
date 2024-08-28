@@ -82,18 +82,17 @@ pub mod Router {
         consume_callback_data, handle_delta, call_core_with_callback
     };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::math::muldiv::{muldiv};
     use ekubo::math::swap::{is_price_increasing};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, sqrt_ratio_to_tick};
-    use ekubo::types::i129::{i129, i129Trait};
+    use ekubo::types::i129::{i129};
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::syscalls::{call_contract_syscall};
 
-    use starknet::{get_caller_address, get_contract_address};
+    use starknet::{get_contract_address};
 
-    use super::{ContractAddress, PoolKey, Delta, IRouter, RouteNode, TokenAmount, Swap, Depth};
+    use super::{PoolKey, Delta, IRouter, RouteNode, TokenAmount, Swap, Depth};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;

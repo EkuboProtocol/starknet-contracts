@@ -1,4 +1,3 @@
-use core::option::OptionTrait;
 use ekubo::math::string::{to_decimal};
 
 #[test]

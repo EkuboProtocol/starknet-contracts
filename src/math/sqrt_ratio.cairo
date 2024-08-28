@@ -1,6 +1,6 @@
 use core::num::traits::{Zero, OverflowingAdd, OverflowingSub, OverflowingMul};
 use core::option::{Option};
-use ekubo::math::muldiv::{muldiv, div};
+use ekubo::math::muldiv::{muldiv};
 use ekubo::types::i129::{i129};
 
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and

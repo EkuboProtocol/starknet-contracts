@@ -3,22 +3,17 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::extensions::interfaces::twamm::{OrderKey};
-use ekubo::extensions::twamm::math::time::{is_time_valid};
-use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait
-};
+use ekubo::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
+    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoRequest
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::ticks::{constants as tick_constants, tick_to_sqrt_ratio, min_tick, max_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio};
+use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
-use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
 use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
@@ -28,7 +23,7 @@ use ekubo::tests::helper::{
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use starknet::testing::{set_contract_address, pop_log, set_block_timestamp};
+use starknet::testing::{set_contract_address, pop_log};
 use starknet::{contract_address_const, get_contract_address, ClassHash};
 
 #[test]

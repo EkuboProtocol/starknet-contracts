@@ -26,28 +26,23 @@ pub mod TWAMM {
         IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
     };
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::upgradeable::{
-        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
-    };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{max_bounds, Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
     use ekubo::types::fees_per_liquidity::{FeesPerLiquidity, to_fees_per_liquidity};
-    use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
-    use ekubo::types::keys::{PoolKey, PoolKeyTrait, SavedBalanceKey};
+    use ekubo::types::i129::{i129, AddDeltaTrait};
+    use ekubo::types::keys::{PoolKey, SavedBalanceKey};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
     use starknet::{
-        ContractAddress, Store, get_contract_address, get_caller_address, get_block_timestamp,
-        ClassHash, storage_access::{storage_base_address_from_felt252, StorePacking}
+        ContractAddress, Store, get_contract_address, get_block_timestamp,
+        storage_access::{storage_base_address_from_felt252, StorePacking}
     };
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},

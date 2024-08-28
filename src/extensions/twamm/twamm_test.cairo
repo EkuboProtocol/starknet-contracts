@@ -1,6 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::traits::{TryInto, Into};
+use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
 
@@ -12,38 +12,27 @@ use ekubo::extensions::twamm::TWAMM::{
     word_and_bit_index_to_time
 };
 use ekubo::extensions::twamm::math::{
-    calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
-    calculate_amount_from_sale_rate, time::{to_duration}
+    calculate_sale_rate, constants, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
+    time::{to_duration}
 };
-use ekubo::interfaces::core::{
-    ICoreDispatcherTrait, ICoreDispatcher, SwapParameters, IExtensionDispatcher
-};
-use ekubo::interfaces::core::{UpdatePositionParameters};
+use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use ekubo::interfaces::positions::{
-    IPositionsDispatcher, IPositionsDispatcherTrait, GetTokenInfoResult, GetTokenInfoRequest
-};
+use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
-use ekubo::math::ticks::constants::{MAX_TICK_SPACING, MAX_TICK_MAGNITUDE};
+use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 use ekubo::math::ticks::{min_tick, max_tick};
-use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio, max_sqrt_ratio};
-use ekubo::mock_erc20::{IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
+use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner, FEE_ONE_PERCENT
 };
-use ekubo::tests::mocks::locker::{
-    Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
-};
-use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
+use ekubo::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
 use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::call_points::{CallPoints};
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129, i129Trait, AddDeltaTrait};
+use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
 use starknet::{
@@ -73,8 +62,8 @@ impl PoolKeyIntoStateKey of Into<PoolKey, StateKey> {
 mod UpgradableTest {
     use ekubo::extensions::twamm::TWAMM;
     use super::{
-        Deployer, DeployerTrait, update_position, ClassHash, MockUpgradeable, set_contract_address,
-        pop_log, IUpgradeableDispatcher, IUpgradeableDispatcherTrait, default_owner
+        Deployer, DeployerTrait, ClassHash, set_contract_address, pop_log, IUpgradeableDispatcher,
+        IUpgradeableDispatcherTrait, default_owner
     };
 
     #[test]
@@ -103,10 +92,9 @@ mod UpgradableTest {
 
 mod BitmapTest {
     use super::{
-        time_to_word_and_bit_index, word_and_bit_index_to_time, Bitmap, BitmapTrait, Deployer,
-        DeployerTrait, set_up_twamm, i129, contract_address_const, calculate_sale_rate,
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order, set_block_timestamp, StateKey,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, get_block_timestamp
+        time_to_word_and_bit_index, word_and_bit_index_to_time, Deployer,
+        DeployerTrait, set_up_twamm, i129, contract_address_const, 
+        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order, set_block_timestamp, StateKey,ITWAMMDispatcherTrait
     };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
@@ -199,12 +187,10 @@ mod BitmapTest {
 
 mod PoolTests {
     use super::{
-        Deployer, DeployerTrait, update_position, ClassHash, set_contract_address, pop_log,
-        IPositionsDispatcher, IPositionsDispatcherTrait, ICoreDispatcher, ICoreDispatcherTrait,
-        PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity, contract_address_const,
-        tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero, IMockERC20,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait
+        Deployer, DeployerTrait, update_position, set_contract_address, IPositionsDispatcherTrait,
+        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity,
+        contract_address_const, tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero,
+        IMockERC20DispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait
     };
 
     #[test]
@@ -360,16 +346,10 @@ mod PoolTests {
 
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, i129Trait, AddDeltaTrait, TICKS_IN_ONE_PERCENT,
-        IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
-        SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
-        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated,
-        VirtualOrdersExecuted, set_up_twamm, place_order, calculate_sale_rate, PoolKeyIntoStateKey,
-        to_duration, StateKey
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
+        contract_address_const, set_contract_address, i129, IPositionsDispatcherTrait,
+        SIXTEEN_POW_TWO, OrderUpdated, VirtualOrdersExecuted, set_up_twamm, place_order,
+        calculate_sale_rate, PoolKeyIntoStateKey, to_duration, StateKey
     };
 
     #[test]
@@ -671,15 +651,9 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderInfo, set_up_twamm, place_order, PoolKeyIntoStateKey, StateKey
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
+        contract_address_const, i129, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, OrderUpdated,
+        VirtualOrdersExecuted, set_up_twamm, place_order, PoolKeyIntoStateKey, StateKey
     };
 
     #[test]
@@ -902,12 +876,10 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
 mod CancelOrderTests {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, get_contract_address, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, IERC20Dispatcher, IERC20DispatcherTrait, place_order,
-        i129, contract_address_const, set_contract_address, IPositionsDispatcher,
-        IPositionsDispatcherTrait, IClearDispatcher, IClearDispatcherTrait, set_up_twamm
+        Deployer, DeployerTrait, set_block_timestamp, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
+        IERC20Dispatcher, IERC20DispatcherTrait, place_order, i129, contract_address_const,
+        set_contract_address, IPositionsDispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
+        set_up_twamm
     };
 
     #[test]
@@ -1090,19 +1062,13 @@ mod CancelOrderTests {
 
 mod PlaceOrdersAndUpdateSaleRate {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, i129Trait, AddDeltaTrait, TICKS_IN_ONE_PERCENT,
-        IPositionsDispatcher, IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher,
-        SetupPoolResult, SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
-        SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, SIXTEEN_POW_EIGHT,
-        OrderUpdated, VirtualOrdersExecuted, OrderInfo, set_up_twamm, place_order,
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
+        IMockERC20DispatcherTrait, contract_address_const, set_contract_address, i129,
+        IPositionsDispatcherTrait, OrderUpdated, VirtualOrdersExecuted, set_up_twamm, place_order,
         calculate_sale_rate, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance,
         PoolInitialized, PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT,
         IERC20Dispatcher, IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
-        PoolKeyIntoStateKey, constants, max_tick, to_duration, SaleRateState, StateKey
+        PoolKeyIntoStateKey, to_duration, SaleRateState, StateKey, SIXTEEN_POW_TWO
     };
 
     #[test]
@@ -1970,15 +1936,10 @@ mod PlaceOrdersAndUpdateSaleRate {
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait,
-        contract_address_const, set_contract_address, max_bounds, update_position, max_liquidity,
-        Bounds, tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderInfo, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
+        contract_address_const, set_contract_address, i129, IPositionsDispatcherTrait,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, OrderUpdated, VirtualOrdersExecuted,
+        OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
         PositionUpdated, place_order, set_up_twamm, PoolKeyIntoStateKey, SaleRateState, StateKey,
         Zero
     };
@@ -2549,19 +2510,14 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, max_bounds, update_position, max_liquidity, Bounds,
-        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
+        Deployer, DeployerTrait, MAX_TICK_SPACING, ITWAMMDispatcherTrait, set_block_timestamp,
+        pop_log, IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
+        max_bounds, max_liquidity, tick_to_sqrt_ratio, i129, IPositionsDispatcherTrait,
+        get_contract_address, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, OrderUpdated,
+        VirtualOrdersExecuted, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
         PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
-        ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta,
-        SaleRateState, StateKey
+        ICoreLockerDispatcherTrait, SwapParameters, min_sqrt_ratio, next_sqrt_ratio_from_amount0,
+        liquidity_delta_to_amount_delta, SaleRateState, StateKey
     };
 
     #[test]
@@ -3700,20 +3656,12 @@ mod PlaceOrderOnBothSides {
 
 mod MinMaxSqrtRatio {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, max_bounds, update_position, max_liquidity, Bounds,
-        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
-        PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
-        ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta,
-        SaleRateState, StateKey, max_tick, min_tick, MAX_TICK_MAGNITUDE,
-        calculate_amount_from_sale_rate, constants, calculate_next_sqrt_ratio
+        Deployer, DeployerTrait, ICoreDispatcherTrait, MAX_TICK_SPACING, ITWAMMDispatcherTrait,
+        set_block_timestamp, pop_log, IMockERC20DispatcherTrait, max_bounds, i129,
+        IPositionsDispatcherTrait, get_contract_address, SIXTEEN_POW_ONE, OrderUpdated,
+        VirtualOrdersExecuted, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
+        PositionUpdated, SavedBalance, Swapped, PoolKeyIntoStateKey, SaleRateState, StateKey,
+        max_tick, min_tick, calculate_amount_from_sale_rate, constants, calculate_next_sqrt_ratio
     };
 
     #[test]
@@ -4278,19 +4226,9 @@ mod MinMaxSqrtRatio {
 
 mod GetOrderInfo {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcher, ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING,
-        ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey, get_block_timestamp, set_block_timestamp,
-        pop_log, IMockERC20Dispatcher, IMockERC20DispatcherTrait, contract_address_const,
-        set_contract_address, max_bounds, update_position, max_liquidity, Bounds,
-        tick_to_sqrt_ratio, i129, TICKS_IN_ONE_PERCENT, IPositionsDispatcher,
-        IPositionsDispatcherTrait, get_contract_address, IExtensionDispatcher, SetupPoolResult,
-        SIXTEEN_POW_ZERO, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR,
-        SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN, OrderUpdated, VirtualOrdersExecuted,
-        OrderInfo, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
-        PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
-        ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, SwapParameters,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0, liquidity_delta_to_amount_delta,
-        SaleRateState, StateKey, FEE_ONE_PERCENT
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, i129,
+        IPositionsDispatcherTrait, get_contract_address, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE,
+        OrderInfo, set_up_twamm, place_order, PoolKeyIntoStateKey, StateKey
     };
 
     #[test]
@@ -4453,8 +4391,7 @@ mod GetOrderInfo {
 mod PlaceOrderDurationTooLong {
     use super::{
         Deployer, DeployerTrait, i129, set_up_twamm, pop_log, PoolInitialized, PositionUpdated,
-        SIXTEEN_POW_ONE, set_block_timestamp, place_order, get_contract_address, constants,
-        OrderKey, ITWAMMDispatcher, ITWAMMDispatcherTrait
+        SIXTEEN_POW_ONE, set_block_timestamp, place_order, get_contract_address
     };
 
     #[test]

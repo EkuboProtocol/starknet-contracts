@@ -36,7 +36,6 @@ pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
 #[starknet::contract]
 pub mod MockERC20 {
     use core::num::traits::{Zero};
-    use core::option::{OptionTrait};
     use core::traits::{Into};
     use ekubo::interfaces::erc20::{IERC20};
     use starknet::storage::{Map};

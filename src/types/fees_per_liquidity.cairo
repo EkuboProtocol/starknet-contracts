@@ -1,7 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{TryInto, Into};
-use ekubo::math::muldiv::{div};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store, Debug)]
 pub struct FeesPerLiquidity {

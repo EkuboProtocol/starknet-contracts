@@ -1,12 +1,9 @@
 use core::hash::{LegacyHash};
 use core::num::traits::{Zero};
-use core::option::{Option, OptionTrait};
-use core::traits::{Into};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::types::i129::{i129, AddDeltaTrait};
 use ekubo::types::keys_test::{check_hashes_differ};
-use starknet::storage_access::{storage_base_address_const, StorePacking, Store};
-use starknet::{SyscallResult, SyscallResultTrait};
+use starknet::storage_access::{StorePacking};
 
 #[test]
 fn test_legacy_hash_i129() {

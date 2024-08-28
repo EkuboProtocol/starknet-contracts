@@ -1,30 +1,24 @@
-use core::array::{ArrayTrait};
 use core::num::traits::{Zero};
-use core::option::{Option, OptionTrait};
-use core::traits::{Into, TryInto};
+use core::option::{OptionTrait};
+use core::traits::{TryInto};
 use ekubo::core::{Core};
-use ekubo::interfaces::core::{
-    ICoreDispatcherTrait, ICoreDispatcher, UpdatePositionParameters, SwapParameters
-};
+use ekubo::interfaces::core::{ICoreDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::muldiv::{div};
 use ekubo::math::ticks::{
     max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants,
     tick_to_sqrt_ratio
 };
-use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{MockERC20, IMockERC20DispatcherTrait};
 
 use ekubo::tests::helper::{
     FEE_ONE_PERCENT, Deployer, DeployerTrait, swap, update_position, accumulate_as_fees,
-    SetupPoolResult, default_owner
+    default_owner
 };
 
 use ekubo::tests::mocks::locker::{
-    CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+    Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::delta::{Delta};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
@@ -41,10 +35,9 @@ mod owner_tests {
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash};
     use super::{
-        Core, Deployer, DeployerTrait, PoolKey, ICoreDispatcherTrait, i129, contract_address_const,
-        set_contract_address, MockERC20, MockUpgradeable, TryInto, OptionTrait, Zero,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, ContractAddress, Into,
-        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log, default_owner,
+        Core, Deployer, DeployerTrait, contract_address_const, set_contract_address, MockERC20,
+        TryInto, OptionTrait, Zero, IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log,
+        default_owner,
     };
 
 
@@ -716,12 +709,11 @@ mod locks {
         Deployer, DeployerTrait, update_position_inner, accumulate_as_fees_inner, flash_borrow_inner
     };
     use super::{
-        FeesPerLiquidity, FEE_ONE_PERCENT, swap, update_position, SetupPoolResult, tick_constants,
-        div, contract_address_const, Action, ActionResult, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129, UpdatePositionParameters, SwapParameters,
-        IMockERC20Dispatcher, IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick,
-        max_tick, ICoreDispatcherTrait, ContractAddress, Delta, Bounds, Zero, PoolKey,
-        accumulate_as_fees, max_bounds, SavedBalanceKey, TICKS_IN_ONE_PERCENT
+        FeesPerLiquidity, FEE_ONE_PERCENT, swap, update_position, contract_address_const, Action,
+        ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, i129,
+        IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick,
+        ICoreDispatcherTrait, ContractAddress, Bounds, Zero, PoolKey, accumulate_as_fees,
+        max_bounds, SavedBalanceKey, TICKS_IN_ONE_PERCENT
     };
 
     #[test]

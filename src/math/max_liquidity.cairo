@@ -1,6 +1,4 @@
-use core::integer::{u512, u512_safe_div_rem_by_u256};
-use core::num::traits::{Zero, WideMul};
-use ekubo::math::delta::{amount0_delta, amount1_delta};
+use core::num::traits::{Zero};
 use ekubo::math::muldiv::{muldiv};
 
 // Returns the max amount of liquidity that can be deposited based on amount of token0

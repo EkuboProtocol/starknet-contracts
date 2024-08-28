@@ -22,7 +22,7 @@ pub trait IOwnedNFT<TStorage> {
 #[starknet::contract]
 #[feature("deprecated_legacy_map")]
 pub mod OwnedNFT {
-    use core::array::{Array, ArrayTrait, SpanTrait};
+    use core::array::{Array, ArrayTrait};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
@@ -30,26 +30,18 @@ pub mod OwnedNFT {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
 
     use ekubo::components::util::{serialize};
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
         ISRC5, SRC5_SRC5_ID, SRC5_ERC721_ID, SRC5_ERC721_METADATA_ID, ERC165_ERC721_METADATA_ID,
         ERC165_ERC721_ID, ERC165_ERC165_ID
     };
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
     use ekubo::math::string::{to_decimal};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
-
-    use ekubo::types::i129::{i129};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
-    use starknet::{
-        contract_address_const, get_caller_address, get_contract_address, ClassHash,
-        syscalls::{replace_class_syscall, deploy_syscall}
-    };
     use starknet::{SyscallResultTrait};
+    use starknet::{get_caller_address, ClassHash, syscalls::{deploy_syscall}};
     use super::{IOwnedNFT, ContractAddress};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

@@ -4,7 +4,6 @@ pub mod Positions {
     use core::cmp::{max};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
-    use core::serde::{Serde};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{
@@ -16,7 +15,6 @@ pub mod Positions {
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
     };
-    use ekubo::extensions::twamm::math::time::{TIME_SPACING_SIZE};
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
@@ -24,9 +22,7 @@ pub mod Positions {
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
-    use ekubo::interfaces::upgradeable::{
-        IUpgradeable, IUpgradeableDispatcher, IUpgradeableDispatcherTrait
-    };
+    use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{max_liquidity};
     use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};

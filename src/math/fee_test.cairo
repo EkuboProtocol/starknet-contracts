@@ -1,5 +1,4 @@
 use ekubo::math::fee::{compute_fee, amount_before_fee, accumulate_fee_amount};
-use ekubo::types::i129::i129;
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
 const FIFTY_PERCENT_FEE: u128 = 0x80000000000000000000000000000000;

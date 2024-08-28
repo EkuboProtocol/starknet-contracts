@@ -1,10 +1,7 @@
 use core::num::traits::{Zero};
-use core::option::{Option, OptionTrait};
-use core::traits::{Into, TryInto};
 use ekubo::math::ticks::{constants as tick_constants};
 use ekubo::types::bounds::{Bounds};
-use ekubo::types::i129::{i129};
-use starknet::{contract_address_const, ContractAddress};
+use starknet::{ContractAddress};
 
 // Uniquely identifies a pool
 // token0 is the token with the smaller address (sorted by integer value)

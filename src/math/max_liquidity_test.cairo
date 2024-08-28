@@ -1,9 +1,7 @@
 use core::num::traits::{Zero};
 use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
 use ekubo::math::max_liquidity::{max_liquidity_for_token0, max_liquidity_for_token1, max_liquidity};
-use ekubo::math::ticks::{
-    min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick, constants, tick_to_sqrt_ratio
-};
+use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, tick_to_sqrt_ratio};
 use ekubo::types::i129::{i129};
 
 #[test]

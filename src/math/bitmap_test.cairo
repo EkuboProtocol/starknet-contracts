@@ -1,10 +1,8 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::traits::{Into};
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
 };
-use ekubo::math::string::{to_decimal};
 use ekubo::types::i129::{i129};
 
 #[test]

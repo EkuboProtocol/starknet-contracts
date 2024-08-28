@@ -1,16 +1,14 @@
 use core::num::traits::{Zero};
 use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
-    SwapParameters, UpdatePositionParameters
+    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait
 };
 use ekubo::tests::helper::{Deployer, DeployerTrait, swap_inner, update_position_inner};
-use ekubo::tests::mocks::locker::{ICoreLockerDispatcher, ICoreLockerDispatcherTrait};
+use ekubo::tests::mocks::locker::{ICoreLockerDispatcher};
 use ekubo::tests::mocks::mock_extension::{
-    MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait, ExtensionCalled
+    IMockExtensionDispatcher, IMockExtensionDispatcherTrait, ExtensionCalled
 };
-use ekubo::types::bounds::{Bounds, max_bounds};
+use ekubo::types::bounds::{max_bounds};
 use ekubo::types::call_points::{CallPoints, all_call_points};
-use ekubo::types::delta::Delta;
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address};

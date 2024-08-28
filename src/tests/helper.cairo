@@ -1,9 +1,7 @@
-use core::array::{Array, ArrayTrait};
-
 use core::integer::{u256};
 use core::num::traits::{Zero};
-use core::option::{Option, OptionTrait};
-use core::result::{Result, ResultTrait};
+use core::option::{OptionTrait};
+use core::result::{ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
@@ -12,23 +10,17 @@ use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
     SwapParameters, IExtensionDispatcher
 };
-use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick};
-use ekubo::mock_erc20::{
-    MockERC20, IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait
-};
+use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
 use ekubo::tests::mocks::locker::{
     CoreLocker, Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use ekubo::tests::mocks::mock_extension::{
-    MockExtension, IMockExtensionDispatcher, IMockExtensionDispatcherTrait
-};
+use ekubo::tests::mocks::mock_extension::{MockExtension, IMockExtensionDispatcher};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
@@ -36,12 +28,8 @@ use ekubo::types::delta::{Delta};
 use ekubo::types::i129::i129;
 
 use ekubo::types::keys::PoolKey;
-use starknet::testing::{set_contract_address};
 
-use starknet::{
-    get_contract_address, syscalls::{deploy_syscall}, ClassHash, contract_address_const,
-    ContractAddress
-};
+use starknet::{syscalls::{deploy_syscall}, contract_address_const, ContractAddress};
 
 pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 

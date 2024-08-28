@@ -1,5 +1,5 @@
 use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use ekubo::interfaces::upgradeable::{IUpgradeableDispatcherTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use starknet::testing::{set_contract_address, pop_log};
