@@ -19,7 +19,6 @@ use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParamet
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::bitmap::{Bitmap, BitmapTrait};
 use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
@@ -35,9 +34,7 @@ use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
 use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
-use starknet::{
-    get_contract_address, get_block_timestamp, contract_address_const, ClassHash, ContractAddress
-};
+use starknet::{get_contract_address, contract_address_const, ClassHash, ContractAddress};
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
 const SIXTEEN_POW_ONE: u64 = 0x10;
@@ -92,9 +89,9 @@ mod UpgradableTest {
 
 mod BitmapTest {
     use super::{
-        time_to_word_and_bit_index, word_and_bit_index_to_time, Deployer,
-        DeployerTrait, set_up_twamm, i129, contract_address_const, 
-        SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order, set_block_timestamp, StateKey,ITWAMMDispatcherTrait
+        time_to_word_and_bit_index, word_and_bit_index_to_time, Deployer, DeployerTrait,
+        set_up_twamm, i129, contract_address_const, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order,
+        set_block_timestamp, StateKey, ITWAMMDispatcherTrait
     };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
