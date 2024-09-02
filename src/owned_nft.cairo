@@ -20,7 +20,6 @@ pub trait IOwnedNFT<TStorage> {
 }
 
 #[starknet::contract]
-#[feature("deprecated_legacy_map")]
 pub mod OwnedNFT {
     use core::array::{Array, ArrayTrait};
     use core::num::traits::{Zero};
@@ -38,10 +37,9 @@ pub mod OwnedNFT {
     use ekubo::math::string::{to_decimal};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess
+        StoragePointerWriteAccess, Map
     };
-    use starknet::{SyscallResultTrait};
-    use starknet::{get_caller_address, ClassHash, syscalls::{deploy_syscall}};
+    use starknet::{SyscallResultTrait, get_caller_address, ClassHash, syscalls::{deploy_syscall}};
     use super::{IOwnedNFT, ContractAddress};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -59,10 +57,10 @@ pub mod OwnedNFT {
         name: felt252,
         symbol: felt252,
         next_token_id: u64,
-        approvals: LegacyMap<u64, ContractAddress>,
-        owners: LegacyMap<u64, ContractAddress>,
-        balances: LegacyMap<ContractAddress, u64>,
-        operators: LegacyMap<(ContractAddress, ContractAddress), bool>,
+        approvals: Map<u64, ContractAddress>,
+        owners: Map<u64, ContractAddress>,
+        balances: Map<ContractAddress, u64>,
+        operators: Map<(ContractAddress, ContractAddress), bool>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]

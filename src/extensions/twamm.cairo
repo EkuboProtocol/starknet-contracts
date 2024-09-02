@@ -6,7 +6,6 @@ pub(crate) mod math_test;
 pub(crate) mod twamm_test;
 
 #[starknet::contract]
-#[feature("deprecated_legacy_map")]
 pub mod TWAMM {
     use core::cmp::{max, min};
     use core::hash::{LegacyHash};
@@ -38,7 +37,7 @@ pub mod TWAMM {
     use ekubo::types::keys::{PoolKey, SavedBalanceKey};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess
+        StoragePointerWriteAccess, Map
     };
     use starknet::{
         ContractAddress, Store, get_contract_address, get_block_timestamp,
@@ -103,13 +102,13 @@ pub mod TWAMM {
     #[storage]
     struct Storage {
         core: ICoreDispatcher,
-        orders: LegacyMap<(ContractAddress, felt252, OrderKey), OrderState>,
-        sale_rate_and_last_virtual_order_time: LegacyMap<StorageKey, SaleRateState>,
-        time_sale_rate_delta: LegacyMap<(StorageKey, u64), (i129, i129)>,
-        time_sale_rate_net: LegacyMap<(StorageKey, u64), u128>,
-        time_sale_rate_bitmaps: LegacyMap<(StorageKey, u128), Bitmap>,
-        reward_rate: LegacyMap<StorageKey, FeesPerLiquidity>,
-        time_reward_rate_before: LegacyMap<(StorageKey, u64), FeesPerLiquidity>,
+        orders: Map<(ContractAddress, felt252, OrderKey), OrderState>,
+        sale_rate_and_last_virtual_order_time: Map<StorageKey, SaleRateState>,
+        time_sale_rate_delta: Map<(StorageKey, u64), (i129, i129)>,
+        time_sale_rate_net: Map<(StorageKey, u64), u128>,
+        time_sale_rate_bitmaps: Map<(StorageKey, u128), Bitmap>,
+        reward_rate: Map<StorageKey, FeesPerLiquidity>,
+        time_reward_rate_before: Map<(StorageKey, u64), FeesPerLiquidity>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]

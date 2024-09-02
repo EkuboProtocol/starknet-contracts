@@ -1,7 +1,6 @@
 #[starknet::contract]
-#[feature("deprecated_legacy_map")]
 pub mod Core {
-    use core::array::{ArrayTrait,};
+    use core::array::{ArrayTrait};
     use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{Option, OptionTrait};
@@ -36,7 +35,7 @@ pub mod Core {
     use ekubo::types::position::{Position, PositionTrait};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess
+        StoragePointerWriteAccess, Map
     };
     use starknet::{
         Store, ContractAddress, get_caller_address, get_contract_address,
@@ -55,26 +54,26 @@ pub mod Core {
     #[storage]
     pub struct Storage {
         // withdrawal fees collected, controlled by the owner
-        pub protocol_fees_collected: LegacyMap<ContractAddress, u128>,
+        pub protocol_fees_collected: Map<ContractAddress, u128>,
         // transient state of the lockers, which always starts and ends at zero
         pub lock_count: u32,
         // the rest of transient state is accessed directly using Store::read and Store::write to
         // save on hashes
 
         // the persistent state of all the pools is stored in these structs
-        pub pool_price: LegacyMap<PoolKey, PoolPrice>,
-        pub pool_liquidity: LegacyMap<PoolKey, u128>,
-        pub pool_fees: LegacyMap<PoolKey, FeesPerLiquidity>,
-        pub tick_liquidity_net: LegacyMap<(PoolKey, i129), u128>,
-        pub tick_liquidity_delta: LegacyMap<(PoolKey, i129), i129>,
-        pub tick_fees_outside: LegacyMap<(PoolKey, i129), FeesPerLiquidity>,
-        pub positions: LegacyMap<(PoolKey, PositionKey), Position>,
-        pub tick_bitmaps: LegacyMap<(PoolKey, u128), Bitmap>,
+        pub pool_price: Map<PoolKey, PoolPrice>,
+        pub pool_liquidity: Map<PoolKey, u128>,
+        pub pool_fees: Map<PoolKey, FeesPerLiquidity>,
+        pub tick_liquidity_net: Map<(PoolKey, i129), u128>,
+        pub tick_liquidity_delta: Map<(PoolKey, i129), i129>,
+        pub tick_fees_outside: Map<(PoolKey, i129), FeesPerLiquidity>,
+        pub positions: Map<(PoolKey, PositionKey), Position>,
+        pub tick_bitmaps: Map<(PoolKey, u128), Bitmap>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token,
         // cache_key)
-        pub saved_balances: LegacyMap<SavedBalanceKey, u128>,
+        pub saved_balances: Map<SavedBalanceKey, u128>,
         // extensions must be registered before they are used in a pool key
-        pub extension_call_points: LegacyMap<ContractAddress, CallPoints>,
+        pub extension_call_points: Map<ContractAddress, CallPoints>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
