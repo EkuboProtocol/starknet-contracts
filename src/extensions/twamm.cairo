@@ -683,7 +683,6 @@ pub mod TWAMM {
             let pool_key: PoolKey = key.into();
             let storage_key: StorageKey = key.into();
             let current_time = get_block_timestamp();
-            let self_snap = @self;
 
             let sale_rate_storage_address = self
                 .sale_rate_and_last_virtual_order_time
@@ -725,7 +724,7 @@ pub mod TWAMM {
                     let mut delta = Zero::zero();
 
                     // must trade up to the earliest initialzed time because sale rate changes
-                    let (next_virtual_order_time, is_initialized) = self_snap
+                    let (next_virtual_order_time, is_initialized) = self
                         .prefix_next_initialized_time(
                             time_bitmap_storage_prefix, last_virtual_order_time, current_time
                         );
