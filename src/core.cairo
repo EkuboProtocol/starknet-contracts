@@ -1,9 +1,8 @@
 #[starknet::contract]
 pub mod Core {
     use core::array::{ArrayTrait};
-    use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
-    use core::option::{Option, OptionTrait};
+    use core::option::{Option};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
@@ -37,6 +36,7 @@ pub mod Core {
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess, Map
     };
+    use starknet::storage::{StoragePathEntry, StoragePath};
     use starknet::{
         Store, ContractAddress, get_caller_address, get_contract_address,
         storage_access::{storage_base_address_from_felt252}
@@ -64,11 +64,11 @@ pub mod Core {
         pub pool_price: Map<PoolKey, PoolPrice>,
         pub pool_liquidity: Map<PoolKey, u128>,
         pub pool_fees: Map<PoolKey, FeesPerLiquidity>,
-        pub tick_liquidity_net: Map<(PoolKey, i129), u128>,
-        pub tick_liquidity_delta: Map<(PoolKey, i129), i129>,
-        pub tick_fees_outside: Map<(PoolKey, i129), FeesPerLiquidity>,
+        pub tick_liquidity_net: Map<PoolKey, Map<i129, u128>>,
+        pub tick_liquidity_delta: Map<PoolKey, Map<i129, i129>>,
+        pub tick_fees_outside: Map<PoolKey, Map<i129, FeesPerLiquidity>>,
         pub positions: Map<(PoolKey, PositionKey), Position>,
-        pub tick_bitmaps: Map<(PoolKey, u128), Bitmap>,
+        pub tick_bitmaps: Map<PoolKey, Map<u128, Bitmap>>,
         // users may save balances in the singleton to avoid transfers, keyed by (owner, token,
         // cache_key)
         pub saved_balances: Map<SavedBalanceKey, u128>,
@@ -232,17 +232,19 @@ pub mod Core {
         // Remove the initialized tick for the given pool
         fn remove_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            let bitmap_entry = self.tick_bitmaps.entry(pool_key).entry(word_index);
+            let bitmap = bitmap_entry.read();
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
-            self.tick_bitmaps.write((pool_key, word_index), bitmap.unset_bit(bit_index));
+            bitmap_entry.write(bitmap.unset_bit(bit_index));
         }
 
         // Insert an initialized tick for the given pool
         fn insert_initialized_tick(ref self: ContractState, pool_key: PoolKey, index: i129) {
             let (word_index, bit_index) = tick_to_word_and_bit_index(index, pool_key.tick_spacing);
-            let bitmap = self.tick_bitmaps.read((pool_key, word_index));
+            let bitmap_entry = self.tick_bitmaps.entry(pool_key).entry(word_index);
+            let bitmap = bitmap_entry.read();
             // it is assumed that bitmap does not contain the set bit exp2(bit_index) already
-            self.tick_bitmaps.write((pool_key, word_index), bitmap.set_bit(bit_index));
+            bitmap_entry.write(bitmap.set_bit(bit_index));
         }
 
         fn update_tick(
@@ -252,16 +254,20 @@ pub mod Core {
             liquidity_delta: i129,
             is_upper: bool
         ) {
-            let key = (pool_key, index);
-            let liquidity_delta_current = self.tick_liquidity_delta.read(key);
+            let liquidity_delta_current = self
+                .tick_liquidity_delta
+                .entry(pool_key)
+                .entry(index)
+                .read();
 
-            let liquidity_net_current = self.tick_liquidity_net.read(key);
+            let liquidity_net_current = self.tick_liquidity_net.entry(pool_key).entry(index).read();
             let next_liquidity_net = liquidity_net_current.add(liquidity_delta);
 
             self
                 .tick_liquidity_delta
+                .entry(pool_key)
                 .write(
-                    key,
+                    index,
                     if is_upper {
                         liquidity_delta_current - liquidity_delta
                     } else {
@@ -269,7 +275,7 @@ pub mod Core {
                     }
                 );
 
-            self.tick_liquidity_net.write(key, next_liquidity_net);
+            self.tick_liquidity_net.entry(pool_key).write(index, next_liquidity_net);
 
             if ((next_liquidity_net == 0) != (liquidity_net_current == 0)) {
                 if (next_liquidity_net == 0) {
@@ -282,7 +288,11 @@ pub mod Core {
 
 
         fn prefix_next_initialized_tick(
-            self: @ContractState, prefix: felt252, tick_spacing: u128, from: i129, skip_ahead: u128
+            self: @ContractState,
+            prefix: StoragePath<Map<u128, Bitmap>>,
+            tick_spacing: u128,
+            from: i129,
+            skip_ahead: u128
         ) -> (i129, bool) {
             assert(from < max_tick(), 'NEXT_FROM_MAX');
 
@@ -290,10 +300,7 @@ pub mod Core {
                 from + i129 { mag: tick_spacing, sign: false }, tick_spacing
             );
 
-            let bitmap: Bitmap = Store::read(
-                0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
-            )
-                .expect('BITMAP_READ_FAILED');
+            let bitmap = prefix.read(word_index);
 
             match bitmap.next_set_bit(bit_index) {
                 Option::Some(next_bit) => {
@@ -317,15 +324,16 @@ pub mod Core {
         }
 
         fn prefix_prev_initialized_tick(
-            self: @ContractState, prefix: felt252, tick_spacing: u128, from: i129, skip_ahead: u128
+            self: @ContractState,
+            prefix: StoragePath<Map<u128, Bitmap>>,
+            tick_spacing: u128,
+            from: i129,
+            skip_ahead: u128
         ) -> (i129, bool) {
             assert(from >= min_tick(), 'PREV_FROM_MIN');
             let (word_index, bit_index) = tick_to_word_and_bit_index(from, tick_spacing);
 
-            let bitmap: Bitmap = Store::read(
-                0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
-            )
-                .expect('BITMAP_READ_FAILED');
+            let bitmap = prefix.read(word_index);
 
             match bitmap.prev_set_bit(bit_index) {
                 Option::Some(prev_bit_index) => {
@@ -403,19 +411,19 @@ pub mod Core {
         fn get_pool_tick_liquidity_delta(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> i129 {
-            self.tick_liquidity_delta.read((pool_key, index))
+            self.tick_liquidity_delta.entry(pool_key).entry(index).read()
         }
 
         fn get_pool_tick_liquidity_net(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> u128 {
-            self.tick_liquidity_net.read((pool_key, index))
+            self.tick_liquidity_net.entry(pool_key).entry(index).read()
         }
 
         fn get_pool_tick_fees_outside(
             self: @ContractState, pool_key: PoolKey, index: i129
         ) -> FeesPerLiquidity {
-            self.tick_fees_outside.read((pool_key, index))
+            self.tick_fees_outside.entry(pool_key).entry(index).read()
         }
 
         fn get_position(
@@ -447,10 +455,7 @@ pub mod Core {
         ) -> (i129, bool) {
             self
                 .prefix_next_initialized_tick(
-                    LegacyHash::hash(selector!("tick_bitmaps"), pool_key),
-                    pool_key.tick_spacing,
-                    from,
-                    skip_ahead
+                    self.tick_bitmaps.entry(pool_key), pool_key.tick_spacing, from, skip_ahead
                 )
         }
 
@@ -459,10 +464,7 @@ pub mod Core {
         ) -> (i129, bool) {
             self
                 .prefix_prev_initialized_tick(
-                    LegacyHash::hash(selector!("tick_bitmaps"), pool_key),
-                    pool_key.tick_spacing,
-                    from,
-                    skip_ahead
+                    self.tick_bitmaps.entry(pool_key), pool_key.tick_spacing, from, skip_ahead
                 )
         }
 
@@ -651,8 +653,9 @@ pub mod Core {
             let price = self.pool_price.read(pool_key);
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
 
-            let fees_outside_lower = self.tick_fees_outside.read((pool_key, bounds.lower));
-            let fees_outside_upper = self.tick_fees_outside.read((pool_key, bounds.upper));
+            let pool_key_entry = self.tick_fees_outside.entry(pool_key);
+            let fees_outside_lower = pool_key_entry.entry(bounds.lower).read();
+            let fees_outside_upper = pool_key_entry.entry(bounds.upper).read();
 
             if (price.tick < bounds.lower) {
                 fees_outside_lower - fees_outside_upper
@@ -846,12 +849,9 @@ pub mod Core {
                     .before_swap(locker, pool_key, params);
             }
 
-            let pool_price_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(selector!("pool_price"), pool_key)
-            );
+            let pool_price_entry = self.pool_price.entry(pool_key);
 
-            let mut price: PoolPrice = Store::read(0, pool_price_storage_address)
-                .expect('FAILED_READ_POOL_PRICE');
+            let mut price: PoolPrice = pool_price_entry.read();
 
             // pool must be initialized
             assert(price.sqrt_ratio.is_non_zero(), 'NOT_INITIALIZED');
@@ -870,33 +870,26 @@ pub mod Core {
             let mut amount_remaining = params.amount;
             let mut sqrt_ratio = price.sqrt_ratio;
 
-            let liquidity_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(selector!("pool_liquidity"), pool_key)
-            );
+            let liquidity_storage_address = self.pool_liquidity.entry(pool_key);
 
-            let mut liquidity: u128 = Store::read(0, liquidity_storage_address)
-                .expect('FAILED_READ_POOL_LIQUIDITY');
+            let mut liquidity = liquidity_storage_address.read();
             let mut calculated_amount: u128 = Zero::zero();
 
-            let fees_per_liquidity_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(selector!("pool_fees"), pool_key)
-            );
+            let fees_per_liquidity_storage_address = self.pool_fees.entry(pool_key);
 
-            let mut fees_per_liquidity: FeesPerLiquidity = Store::read(
-                0, fees_per_liquidity_storage_address
-            )
-                .expect('FAILED_READ_POOL_FEES');
+            let mut fees_per_liquidity = fees_per_liquidity_storage_address.read();
 
-            // we need to take a snapshot to call view methods within the loop
-            let self_snap = @self;
+            let tick_bitmap_storage_prefix: StoragePath<Map<u128, Bitmap>> = self
+                .tick_bitmaps
+                .entry(pool_key)
+                .into();
 
-            let tick_bitmap_storage_prefix = LegacyHash::hash(selector!("tick_bitmaps"), pool_key);
-
-            let mut tick_crossing_storage_prefixes: Option<(felt252, felt252)> = Option::None;
+            let mut tick_crossing_storage_prefixes: Option<(StoragePath, StoragePath)> =
+                Option::None;
 
             while (amount_remaining.is_non_zero() & (sqrt_ratio != params.sqrt_ratio_limit)) {
                 let (next_tick, is_initialized) = if (increasing) {
-                    self_snap
+                    self
                         .prefix_next_initialized_tick(
                             tick_bitmap_storage_prefix,
                             pool_key.tick_spacing,
@@ -904,7 +897,7 @@ pub mod Core {
                             params.skip_ahead
                         )
                 } else {
-                    self_snap
+                    self
                         .prefix_prev_initialized_tick(
                             tick_bitmap_storage_prefix,
                             pool_key.tick_spacing,
@@ -967,31 +960,20 @@ pub mod Core {
 
                     if (is_initialized) {
                         // only compute the storage prefixes if we haven't already
-                        tick_crossing_storage_prefixes = match tick_crossing_storage_prefixes {
-                            Option::Some => { tick_crossing_storage_prefixes },
-                            Option::None => {
-                                Option::Some(
-                                    (
-                                        LegacyHash::hash(
-                                            selector!("tick_liquidity_delta"), pool_key
-                                        ),
-                                        LegacyHash::hash(selector!("tick_fees_outside"), pool_key)
-                                    )
-                                )
-                            }
+                        let (liquidity_delta_storage_prefix, fees_per_liquidity_storage_prefix) =
+                            if let Option::Some(prefixes) =
+                            tick_crossing_storage_prefixes {
+                            prefixes
+                        } else {
+                            let prefixes = (
+                                self.tick_liquidity_delta.entry(pool_key),
+                                self.tick_fees_outside.entry(pool_key)
+                            );
+                            tick_crossing_storage_prefixes = Option::Some(prefixes);
+                            prefixes
                         };
 
-                        let (liquidity_delta_storage_prefix, fees_per_liquidity_storage_prefix) =
-                            tick_crossing_storage_prefixes
-                            .unwrap();
-
-                        let liquidity_delta: i129 = Store::read(
-                            0,
-                            storage_base_address_from_felt252(
-                                LegacyHash::hash(liquidity_delta_storage_prefix, next_tick)
-                            )
-                        )
-                            .expect('FAILED_READ_LIQ_DELTA');
+                        let liquidity_delta = liquidity_delta_storage_prefix.read(next_tick);
                         // update our working liquidity based on the direction we are crossing the
                         // tick
                         if (increasing) {
@@ -1000,18 +982,10 @@ pub mod Core {
                             liquidity = liquidity.sub(liquidity_delta);
                         }
 
-                        // update the tick fee state
-                        let fpl_storage_base_address = storage_base_address_from_felt252(
-                            LegacyHash::hash(fees_per_liquidity_storage_prefix, next_tick)
-                        );
-                        Store::write(
-                            0,
-                            fpl_storage_base_address,
-                            fees_per_liquidity
-                                - Store::read(0, fpl_storage_base_address)
-                                    .expect('FAILED_READ_TICK_FPL')
-                        )
-                            .expect('FAILED_WRITE_TICK_FPL');
+                        let tick_fpl_storage_address = fees_per_liquidity_storage_prefix
+                            .entry(next_tick);
+                        tick_fpl_storage_address
+                            .write(fees_per_liquidity - tick_fpl_storage_address.read());
                     }
                 } else {
                     tick = sqrt_ratio_to_tick(sqrt_ratio);
@@ -1030,11 +1004,9 @@ pub mod Core {
                 }
             };
 
-            Store::write(0, pool_price_storage_address, PoolPrice { sqrt_ratio, tick })
-                .expect('FAILED_WRITE_POOL_PRICE');
-            Store::write(0, liquidity_storage_address, liquidity).expect('FAILED_WRITE_LIQUIDITY');
-            Store::write(0, fees_per_liquidity_storage_address, fees_per_liquidity)
-                .expect('FAILED_WRITE_FEES');
+            pool_price_entry.write(PoolPrice { sqrt_ratio, tick });
+            liquidity_storage_address.write(liquidity);
+            fees_per_liquidity_storage_address.write(fees_per_liquidity);
 
             self.account_pool_delta(id, pool_key, delta);
 

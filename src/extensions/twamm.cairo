@@ -8,7 +8,6 @@ pub(crate) mod twamm_test;
 #[starknet::contract]
 pub mod TWAMM {
     use core::cmp::{max, min};
-    use core::hash::{LegacyHash};
     use core::num::traits::{Zero};
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
@@ -39,9 +38,9 @@ pub mod TWAMM {
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess, Map
     };
+    use starknet::storage::{StoragePathEntry, StoragePath};
     use starknet::{
-        ContractAddress, Store, get_contract_address, get_block_timestamp,
-        storage_access::{storage_base_address_from_felt252, StorePacking}
+        ContractAddress, get_contract_address, get_block_timestamp, storage_access::{StorePacking}
     };
     use super::math::{
         calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
@@ -104,11 +103,11 @@ pub mod TWAMM {
         core: ICoreDispatcher,
         orders: Map<(ContractAddress, felt252, OrderKey), OrderState>,
         sale_rate_and_last_virtual_order_time: Map<StorageKey, SaleRateState>,
-        time_sale_rate_delta: Map<(StorageKey, u64), (i129, i129)>,
-        time_sale_rate_net: Map<(StorageKey, u64), u128>,
-        time_sale_rate_bitmaps: Map<(StorageKey, u128), Bitmap>,
+        time_sale_rate_delta: Map<StorageKey, Map<u64, (i129, i129)>>,
+        time_sale_rate_net: Map<StorageKey, Map<u64, u128>>,
+        time_sale_rate_bitmaps: Map<StorageKey, Map<u128, Bitmap>>,
         reward_rate: Map<StorageKey, FeesPerLiquidity>,
-        time_reward_rate_before: Map<(StorageKey, u64), FeesPerLiquidity>,
+        time_reward_rate_before: Map<StorageKey, Map<u64, FeesPerLiquidity>>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -317,15 +316,15 @@ pub mod TWAMM {
         fn get_time_reward_rate_before(
             self: @ContractState, key: StateKey, time: u64
         ) -> FeesPerLiquidity {
-            self.time_reward_rate_before.read((key.into(), time))
+            self.time_reward_rate_before.entry(key.into()).read(time)
         }
 
         fn get_sale_rate_net(self: @ContractState, key: StateKey, time: u64) -> u128 {
-            self.time_sale_rate_net.read((key.into(), time))
+            self.time_sale_rate_net.entry(key.into()).read(time)
         }
 
         fn get_sale_rate_delta(self: @ContractState, key: StateKey, time: u64) -> (i129, i129) {
-            self.time_sale_rate_delta.read((key.into(), time))
+            self.time_sale_rate_delta.entry(key.into()).read(time)
         }
 
         fn next_initialized_time(
@@ -335,9 +334,7 @@ pub mod TWAMM {
 
             self
                 .prefix_next_initialized_time(
-                    LegacyHash::hash(selector!("time_sale_rate_bitmaps"), storage_key),
-                    from,
-                    max_time
+                    self.time_sale_rate_bitmaps.entry(storage_key), from, max_time
                 )
         }
 
@@ -435,39 +432,34 @@ pub mod TWAMM {
                         // we know current_time < order_key.end_time because we assert it above
                         let storage_key: StorageKey = state_key.into();
 
-                        let sale_rate_storage_address = storage_base_address_from_felt252(
-                            LegacyHash::hash(
-                                selector!("sale_rate_and_last_virtual_order_time"), storage_key
-                            )
-                        );
+                        let sale_rate_storage_address = self
+                            .sale_rate_and_last_virtual_order_time
+                            .entry(storage_key);
 
-                        let sale_rate_state: SaleRateState = Store::read(
-                            0, sale_rate_storage_address
-                        )
-                            .expect('FAILED_TO_READ_SALE_RATE');
+                        let sale_rate_state = sale_rate_storage_address.read();
 
-                        Store::write(
-                            0,
-                            sale_rate_storage_address,
-                            if (data.order_key.sell_token > data.order_key.buy_token) {
-                                SaleRateState {
-                                    token0_sale_rate: sale_rate_state.token0_sale_rate,
-                                    token1_sale_rate: sale_rate_state
-                                        .token1_sale_rate
-                                        .add(data.sale_rate_delta),
-                                    last_virtual_order_time: sale_rate_state.last_virtual_order_time
+                        sale_rate_storage_address
+                            .write(
+                                if (data.order_key.sell_token > data.order_key.buy_token) {
+                                    SaleRateState {
+                                        token0_sale_rate: sale_rate_state.token0_sale_rate,
+                                        token1_sale_rate: sale_rate_state
+                                            .token1_sale_rate
+                                            .add(data.sale_rate_delta),
+                                        last_virtual_order_time: sale_rate_state
+                                            .last_virtual_order_time
+                                    }
+                                } else {
+                                    SaleRateState {
+                                        token0_sale_rate: sale_rate_state
+                                            .token0_sale_rate
+                                            .add(data.sale_rate_delta),
+                                        token1_sale_rate: sale_rate_state.token1_sale_rate,
+                                        last_virtual_order_time: sale_rate_state
+                                            .last_virtual_order_time
+                                    }
                                 }
-                            } else {
-                                SaleRateState {
-                                    token0_sale_rate: sale_rate_state
-                                        .token0_sale_rate
-                                        .add(data.sale_rate_delta),
-                                    token1_sale_rate: sale_rate_state.token1_sale_rate,
-                                    last_virtual_order_time: sale_rate_state.last_virtual_order_time
-                                }
-                            }
-                        )
-                            .expect('FAILED_TO_WRITE_SALE_RATE');
+                            );
 
                         // we only need to update the end time, because start time has been crossed
                         // and will never be crossed again
@@ -570,12 +562,13 @@ pub mod TWAMM {
             if now < start_time {
                 Zero::zero()
             } else {
+                let time_reward_rate_before_entry = self.time_reward_rate_before.entry(storage_key);
                 if now < end_time {
                     self.reward_rate.read(storage_key)
-                        - self.time_reward_rate_before.read((storage_key, start_time))
+                        - time_reward_rate_before_entry.read(start_time)
                 } else {
-                    self.time_reward_rate_before.read((storage_key, end_time))
-                        - self.time_reward_rate_before.read((storage_key, start_time))
+                    time_reward_rate_before_entry.read(end_time)
+                        - time_reward_rate_before_entry.read(start_time)
                 }
             }
         }
@@ -590,16 +583,14 @@ pub mod TWAMM {
             let key: StateKey = order_key.into();
             let storage_key: StorageKey = key.into();
 
-            let time_sale_rate_delta_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_delta"), storage_key), time
-                )
-            );
+            let time_sale_rate_delta_storage_address = self
+                .time_sale_rate_delta
+                .entry(storage_key)
+                .entry(time);
 
-            let (token0_sale_rate_delta, token1_sale_rate_delta): (i129, i129) = Store::read(
-                0, time_sale_rate_delta_storage_address
-            )
-                .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
+            let (token0_sale_rate_delta, token1_sale_rate_delta) =
+                time_sale_rate_delta_storage_address
+                .read();
 
             if (order_key.sell_token > order_key.buy_token) {
                 let next_sale_rate_delta = if (is_start_time) {
@@ -608,12 +599,8 @@ pub mod TWAMM {
                     token1_sale_rate_delta - sale_rate_delta
                 };
 
-                Store::write(
-                    0,
-                    time_sale_rate_delta_storage_address,
-                    (token0_sale_rate_delta, next_sale_rate_delta)
-                )
-                    .expect('FAILED_WRITE_TSALE_RATE_DELTA');
+                time_sale_rate_delta_storage_address
+                    .write((token0_sale_rate_delta, next_sale_rate_delta));
             } else {
                 let next_sale_rate_delta = if (is_start_time) {
                     token0_sale_rate_delta + sale_rate_delta
@@ -621,27 +608,20 @@ pub mod TWAMM {
                     token0_sale_rate_delta - sale_rate_delta
                 };
 
-                Store::write(
-                    0,
-                    time_sale_rate_delta_storage_address,
-                    (next_sale_rate_delta, token1_sale_rate_delta)
-                )
-                    .expect('FAILED_WRITE_TSALE_RATE_DELTA');
+                time_sale_rate_delta_storage_address
+                    .write((next_sale_rate_delta, token1_sale_rate_delta));
             }
 
-            let sale_rate_net_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(
-                    LegacyHash::hash(selector!("time_sale_rate_net"), storage_key), time
-                )
-            );
+            let sale_rate_net_storage_address = self
+                .time_sale_rate_net
+                .entry(storage_key)
+                .entry(time);
 
-            let sale_rate_net: u128 = Store::read(0, sale_rate_net_storage_address)
-                .expect('FAILED_TO_SALE_RATE_NET');
+            let sale_rate_net = sale_rate_net_storage_address.read();
 
             let next_sale_rate_net = sale_rate_net.add(sale_rate_delta);
 
-            Store::write(0, sale_rate_net_storage_address, next_sale_rate_net)
-                .expect('FAILED_TO_WRITE_SALE_RATE_NET');
+            sale_rate_net_storage_address.write(next_sale_rate_net);
 
             if sale_rate_net.is_zero() & next_sale_rate_net.is_non_zero() {
                 self.insert_initialized_time(storage_key, time);
@@ -653,31 +633,28 @@ pub mod TWAMM {
         fn remove_initialized_time(ref self: ContractState, storage_key: StorageKey, time: u64) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.time_sale_rate_bitmaps.read((storage_key, word_index));
+            let bitmap_entry = self.time_sale_rate_bitmaps.entry(storage_key).entry(word_index);
+            let bitmap = bitmap_entry.read();
 
             // it is assumed that bitmap already contains the set bit exp2(bit_index)
-            self
-                .time_sale_rate_bitmaps
-                .write((storage_key, word_index), bitmap.unset_bit(bit_index));
+            bitmap_entry.write(bitmap.unset_bit(bit_index));
         }
 
         fn insert_initialized_time(ref self: ContractState, storage_key: StorageKey, time: u64) {
             let (word_index, bit_index) = time_to_word_and_bit_index(time);
 
-            let bitmap = self.time_sale_rate_bitmaps.read((storage_key, word_index));
+            let bitmap_entry = self.time_sale_rate_bitmaps.entry(storage_key).entry(word_index);
+            let bitmap = bitmap_entry.read();
 
-            self.time_sale_rate_bitmaps.write((storage_key, word_index), bitmap.set_bit(bit_index));
+            bitmap_entry.write(bitmap.set_bit(bit_index));
         }
 
         fn prefix_next_initialized_time(
-            self: @ContractState, prefix: felt252, from: u64, max_time: u64
+            self: @ContractState, prefix: StoragePath<Map<u128, Bitmap>>, from: u64, max_time: u64
         ) -> (u64, bool) {
             let (word_index, bit_index) = time_to_word_and_bit_index(from + TIME_SPACING_SIZE);
 
-            let bitmap: Bitmap = Store::read(
-                0, storage_base_address_from_felt252(LegacyHash::hash(prefix, word_index))
-            )
-                .expect('BITMAP_READ_FAILED');
+            let bitmap = prefix.read(word_index);
 
             match bitmap.next_set_bit(bit_index) {
                 Option::Some(next_bit) => {
@@ -708,12 +685,11 @@ pub mod TWAMM {
             let current_time = get_block_timestamp();
             let self_snap = @self;
 
-            let sale_rate_storage_address = storage_base_address_from_felt252(
-                LegacyHash::hash(selector!("sale_rate_and_last_virtual_order_time"), storage_key)
-            );
+            let sale_rate_storage_address = self
+                .sale_rate_and_last_virtual_order_time
+                .entry(storage_key);
 
-            let sale_rate_state: SaleRateState = Store::read(0, sale_rate_storage_address)
-                .expect('FAILED_TO_READ_SALE_RATE');
+            let sale_rate_state = sale_rate_storage_address.read();
 
             let mut token0_sale_rate = sale_rate_state.token0_sale_rate;
             let mut token1_sale_rate = sale_rate_state.token1_sale_rate;
@@ -728,24 +704,22 @@ pub mod TWAMM {
                 let mut total_delta: Delta = Zero::zero();
                 let mut total_twamm_delta = Zero::zero();
 
-                let reward_rate_storage_address = storage_base_address_from_felt252(
-                    LegacyHash::hash(selector!("reward_rate"), storage_key)
-                );
+                let reward_rate_storage_address = self.reward_rate.entry(storage_key);
 
-                let mut reward_rate: FeesPerLiquidity = Store::read(0, reward_rate_storage_address)
-                    .expect('FAILED_TO_READ_REWARD_RATE');
+                let mut reward_rate = reward_rate_storage_address.read();
 
-                let time_bitmap_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_bitmaps"), storage_key
-                );
+                let time_bitmap_storage_prefix: StoragePath<Map<u128, Bitmap>> = self
+                    .time_sale_rate_bitmaps
+                    .entry(storage_key)
+                    .into();
 
-                let time_sale_rate_delta_storage_prefix = LegacyHash::hash(
-                    selector!("time_sale_rate_delta"), storage_key
-                );
+                let time_sale_rate_delta_storage_prefix = self
+                    .time_sale_rate_delta
+                    .entry(storage_key);
 
-                let time_reward_rate_storage_prefix = LegacyHash::hash(
-                    selector!("time_reward_rate_before"), storage_key
-                );
+                let time_reward_rate_storage_prefix = self
+                    .time_reward_rate_before
+                    .entry(storage_key);
 
                 while last_virtual_order_time != current_time {
                     let mut delta = Zero::zero();
@@ -867,16 +841,9 @@ pub mod TWAMM {
                     }
 
                     if (is_initialized) {
-                        let (token0_sale_rate_delta, token1_sale_rate_delta): (i129, i129) =
-                            Store::read(
-                            0,
-                            storage_base_address_from_felt252(
-                                LegacyHash::hash(
-                                    time_sale_rate_delta_storage_prefix, next_virtual_order_time
-                                )
-                            )
-                        )
-                            .expect('FAILED_TO_READ_TSALE_RATE_DELTA');
+                        let (token0_sale_rate_delta, token1_sale_rate_delta) =
+                            time_sale_rate_delta_storage_prefix
+                            .read(next_virtual_order_time);
 
                         if (token0_sale_rate_delta.is_non_zero()) {
                             token0_sale_rate = token0_sale_rate.add(token0_sale_rate_delta);
@@ -886,16 +853,7 @@ pub mod TWAMM {
                             token1_sale_rate = token1_sale_rate.add(token1_sale_rate_delta);
                         }
 
-                        Store::write(
-                            0,
-                            storage_base_address_from_felt252(
-                                LegacyHash::hash(
-                                    time_reward_rate_storage_prefix, next_virtual_order_time
-                                )
-                            ),
-                            reward_rate
-                        )
-                            .expect('FAILED_TO_WRITE_TREWARD_RATE');
+                        time_reward_rate_storage_prefix.write(next_virtual_order_time, reward_rate);
                     }
 
                     last_virtual_order_time = next_virtual_order_time;
@@ -908,15 +866,13 @@ pub mod TWAMM {
                         }
                     );
 
-                Store::write(
-                    0,
-                    sale_rate_storage_address,
-                    SaleRateState { token0_sale_rate, token1_sale_rate, last_virtual_order_time }
-                )
-                    .expect('FAILED_TO_WRITE_SALE_RATE');
-
-                Store::write(0, reward_rate_storage_address, reward_rate)
-                    .expect('FAILED_TO_WRITE_REWARD_RATE');
+                sale_rate_storage_address
+                    .write(
+                        SaleRateState {
+                            token0_sale_rate, token1_sale_rate, last_virtual_order_time
+                        }
+                    );
+                reward_rate_storage_address.write(reward_rate);
 
                 self
                     .handle_delta_with_saved_balances(
