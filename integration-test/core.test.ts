@@ -30,12 +30,12 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x27c7794b7222e7600aca38a01226c9eb8973fb9e904600263dab5b0ffd27bca",
       positions:
-        "0x4bd53758d6e432d76d92ca060748d7e64c78e1d0a442a9a3b2a581a2fe02c9f",
+        "0x1496017aa7c3fffb54ac38db87a1fbc823c3c02a7aaffc0ed8d85941aac7cb6",
       router:
         "0x6e0f193e53e9960f7acffa5f24a80abdcdcb99f0ba8285ab734d2f03d15973b",
-      nft: "0x68000bcfac91272aa6e26f03e2810170d5eba6c1536d1c4a8a4adef9dcb7dfc",
+      nft: "0x314d26e915591fdf494733b05aa2b8720c2fbe891bc9e6b4561f887a697f2c3",
       twamm:
-        "0x7d0266a761c28129446883951e1f4c39aa7ae2fa8aa75ee0c18cef778b61a4f",
+        "0x323a7f89a6f91d407cd495d1db24d8f72ed6309009a06a597750cfebe1e82d0",
       tokenClassHash:
         "0x4d46e434ff09b0b2fa99500ce1f1198389598824990bf8881c5e287a558520f",
     });
@@ -697,7 +697,7 @@ describe("core", () => {
                     } = await account.execute(
                       mintedOrders.map(({ token_id, order_key }) =>
                         positionsContract.populate(
-                          "withdraw_proceeds_from_sale",
+                          "withdraw_proceeds_from_sale_to_self",
                           [token_id, order_key]
                         )
                       ),

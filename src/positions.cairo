@@ -708,16 +708,6 @@ pub mod Positions {
             sale_rate
         }
 
-
-        fn decrease_sale_rate(
-            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
-        ) {
-            self
-                .decrease_sale_rate_to(
-                    id, order_key, sale_rate_delta, self.twamm.read().contract_address
-                );
-        }
-
         fn decrease_sale_rate_to_self(
             ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
         ) -> u128 {
@@ -749,10 +739,6 @@ pub mod Positions {
             } else {
                 0
             }
-        }
-
-        fn withdraw_proceeds_from_sale(ref self: ContractState, id: u64, order_key: OrderKey) {
-            self.withdraw_proceeds_from_sale_to(id, order_key, self.twamm.read().contract_address);
         }
 
         fn withdraw_proceeds_from_sale_to_self(

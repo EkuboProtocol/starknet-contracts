@@ -1,7 +1,6 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
 
 use ekubo::extensions::interfaces::twamm::{
@@ -560,12 +559,12 @@ mod PlaceOrdersCheckDeltaAndNet {
         // cancel both orders
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net);
 
-        positions.decrease_sale_rate(order2_id, order2_key, order2_state.sale_rate,);
+        positions.decrease_sale_rate_to_self(order2_id, order2_key, order2_state.sale_rate,);
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, 0);
@@ -634,12 +633,12 @@ mod PlaceOrdersCheckDeltaAndNet {
         // cancel both orders
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net);
 
-        positions.decrease_sale_rate(order2_id, order2_key, order2_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order2_id, order2_key, order2_state.sale_rate);
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, 0);
@@ -875,8 +874,7 @@ mod CancelOrderTests {
     use super::{
         Deployer, DeployerTrait, set_block_timestamp, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
         IERC20Dispatcher, IERC20DispatcherTrait, place_order, i129, contract_address_const,
-        set_contract_address, IPositionsDispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
-        set_up_twamm
+        set_contract_address, IPositionsDispatcherTrait, set_up_twamm
     };
 
     #[test]
@@ -913,7 +911,7 @@ mod CancelOrderTests {
         set_block_timestamp(order1_key.end_time + 1);
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
         let state = positions.get_order_info(order1_id, order1_key);
         assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
@@ -924,7 +922,7 @@ mod CancelOrderTests {
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
-        let (twamm, setup, positions) = set_up_twamm(
+        let (_, setup, positions) = set_up_twamm(
             ref d,
             core,
             fee,
@@ -956,11 +954,7 @@ mod CancelOrderTests {
 
         set_contract_address(owner);
         let amount_refunded = positions
-            .decrease_sale_rate_to(
-                order1_id, order1_key, order1_state.sale_rate, recipient: twamm.contract_address
-            );
-        IClearDispatcher { contract_address: twamm.contract_address }
-            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+            .decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
 
         let token_balance_after = IERC20Dispatcher {
             contract_address: setup.token0.contract_address
@@ -1015,7 +1009,7 @@ mod CancelOrderTests {
         set_block_timestamp(SIXTEEN_POW_THREE - 1);
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
     }
 
     #[test]
@@ -1052,8 +1046,8 @@ mod CancelOrderTests {
         set_block_timestamp(SIXTEEN_POW_THREE - 1);
 
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
     }
 }
 
@@ -1064,8 +1058,8 @@ mod PlaceOrdersAndUpdateSaleRate {
         IPositionsDispatcherTrait, OrderUpdated, VirtualOrdersExecuted, set_up_twamm, place_order,
         calculate_sale_rate, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance,
         PoolInitialized, PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT,
-        IERC20Dispatcher, IERC20DispatcherTrait, IClearDispatcher, IClearDispatcherTrait,
-        PoolKeyIntoStateKey, to_duration, SaleRateState, StateKey, SIXTEEN_POW_TWO
+        IERC20Dispatcher, IERC20DispatcherTrait, PoolKeyIntoStateKey, to_duration, SaleRateState,
+        StateKey, SIXTEEN_POW_TWO
     };
 
     #[test]
@@ -1099,7 +1093,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_block_timestamp(order1_end_time);
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
         let state = positions.get_order_info(order1_id, order1_key);
         assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
@@ -1135,7 +1129,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_block_timestamp(order1_end_time + 1);
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate * 2);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate * 2);
         let state = positions.get_order_info(order1_id, order1_key);
         assert_eq!(state.sale_rate, order1_state.sale_rate);
     }
@@ -1179,7 +1173,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         );
 
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_state.sale_rate * 2);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate * 2);
     }
 
     #[test]
@@ -1256,7 +1250,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // decrease sale rate
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_info.sale_rate / 2);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
@@ -1360,7 +1354,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // decrease sale rate
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_info.sale_rate / 2);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let event: LoadedBalance = pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
@@ -1711,7 +1705,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // decrease sale rate by half
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_info.sale_rate / 2);
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -1845,9 +1839,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // decrease sale rate
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_info.sale_rate / 2);
-        IClearDispatcher { contract_address: twamm.contract_address }
-            .clear(IERC20Dispatcher { contract_address: setup.token0.contract_address });
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let token_balance_after = IERC20Dispatcher {
             contract_address: setup.token0.contract_address
@@ -1917,9 +1909,7 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // decrease sale rate
         set_contract_address(owner);
-        positions.decrease_sale_rate(order1_id, order1_key, order1_info.sale_rate / 2);
-        IClearDispatcher { contract_address: twamm.contract_address }
-            .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
+        positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let token_balance_after = IERC20Dispatcher {
             contract_address: setup.token1.contract_address
@@ -1994,7 +1984,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         // Withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -2080,7 +2070,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
@@ -2178,7 +2168,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         set_block_timestamp(order1_end_time + 1);
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -2276,7 +2266,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         set_block_timestamp(execution_timestamp);
         // Withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -2325,7 +2315,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         set_block_timestamp(order1_end_time + 1);
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -2459,7 +2449,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         set_block_timestamp(order1_end_time + 1);
         // withdraw proceeds
         set_contract_address(owner);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -2630,7 +2620,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value1, 323234571489130460249292405653163);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2640,7 +2630,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9999494771123188578494);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2697,7 +2687,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value1, 646436826018820399037308779701797);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2707,7 +2697,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9998495022657375226213);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2886,7 +2876,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order1
         set_contract_address(owner0);
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2897,7 +2887,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order2
         set_contract_address(owner1);
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2908,7 +2898,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order3
         set_contract_address(owner0);
-        positions.withdraw_proceeds_from_sale(order3_id, order3_key);
+        positions.withdraw_proceeds_from_sale_to_self(order3_id, order3_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -2919,7 +2909,7 @@ mod PlaceOrderOnBothSides {
 
         // Withdraw proceeds for order4
         set_contract_address(owner1);
-        positions.withdraw_proceeds_from_sale(order4_id, order4_key);
+        positions.withdraw_proceeds_from_sale_to_self(order4_id, order4_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3039,7 +3029,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value1, 10822947535895846779414836246191870836720);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3049,7 +3039,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 33481569373828693533079532);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3106,7 +3096,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3116,7 +3106,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 16935997977911462046447545);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3302,7 +3292,7 @@ mod PlaceOrderOnBothSides {
         );
 
         // // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3312,7 +3302,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 5005623406881568362072);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3467,7 +3457,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.sqrt_ratio_after, expected_sqrt_ratio_after);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3477,7 +3467,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9999494771123188578494);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3630,7 +3620,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.delta.amount1.mag, expected_delta.amount1.mag);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -3640,7 +3630,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9999494771123188578494);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -4045,14 +4035,14 @@ mod MinMaxSqrtRatio {
         assert_eq!(reward_rate.value1, 1267650600228229401496703205376);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // 1:1 price
         assert_eq!(event.amount, 1000000000000);
 
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
         // 1:1 price
@@ -4314,9 +4304,9 @@ mod GetOrderInfo {
         assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
 
         let mut orders_info: Span<OrderInfo> = positions
             .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
@@ -4360,9 +4350,9 @@ mod GetOrderInfo {
         assert_eq!(get_order2_info.remaining_sell_amount, order2_info.remaining_sell_amount);
 
         // Withdraw proceeds for order1
-        positions.withdraw_proceeds_from_sale(order1_id, order1_key);
+        positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         // Withdraw proceeds for order2
-        positions.withdraw_proceeds_from_sale(order2_id, order2_key);
+        positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
 
         let mut orders_info: Span<OrderInfo> = positions
             .get_orders_info(array![(order1_id, order1_key), (order2_id, order2_key)].span());
@@ -4509,9 +4499,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
     assert_eq!(order1_get_info.remaining_sell_amount, 0);
 
     // Withdraw proceeds for order1 after order ends and clear
-    positions.withdraw_proceeds_from_sale(order1_id, order1_key);
-    let amount = IClearDispatcher { contract_address: twamm.contract_address }
-        .clear(IERC20Dispatcher { contract_address: setup.token1.contract_address });
+    let amount = positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
     assert_eq!(amount, order1_get_info.purchased_amount.into());
 
     set_block_timestamp(timestamp + 495);

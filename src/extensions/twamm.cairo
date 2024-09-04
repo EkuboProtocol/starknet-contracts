@@ -81,9 +81,6 @@ pub mod TWAMM {
         }
     }
 
-    #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
-
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
     impl Owned = owned_component::OwnedImpl<ContractState>;
