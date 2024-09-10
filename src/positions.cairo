@@ -664,9 +664,13 @@ pub mod Positions {
         }
 
         fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
-            call_core_with_callback::<
-                LockCallbackData, PoolPrice
-            >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+            if pool_key.extension.is_zero() {
+                self.core.read().get_pool_price(pool_key)
+            } else {
+                call_core_with_callback::<
+                    LockCallbackData, PoolPrice
+                >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
+            }
         }
 
         fn mint_and_increase_sell_amount(

@@ -12,6 +12,12 @@ pub struct PoolPrice {
     pub tick: i129,
 }
 
+const X192: u256 = 0x1000000000000000000000000000000000000000000000000;
+const DENOMINATOR_X192: NonZero<u256> = 0x1000000000000000000000000000000000000000000000000;
+const X8: u128 = 0x100;
+const DENOMINATOR_X8: NonZero<u128> = 0x100;
+const SIGN_MODIFIER: u128 = 0x100000000;
+
 impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
     fn pack(value: PoolPrice) -> felt252 {
         assert(
@@ -32,14 +38,12 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         );
 
         let tick_raw_shifted: u128 = if (value.tick.is_negative()) {
-            (value.tick.mag + 0x100000000) * 0x100
+            (value.tick.mag + SIGN_MODIFIER) * X8
         } else {
-            value.tick.mag * 0x100
+            value.tick.mag * X8
         };
 
-        let packed = value.sqrt_ratio
-            + ((u256 { low: tick_raw_shifted, high: 0 })
-                * 0x1000000000000000000000000000000000000000000000000);
+        let packed = value.sqrt_ratio + ((u256 { low: tick_raw_shifted, high: 0 }) * X192);
 
         packed.try_into().unwrap()
     }
@@ -48,17 +52,13 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
 
         // quotient, remainder
         let (tick_call_points, sqrt_ratio) = DivRem::div_rem(
-            packed_first_slot_u256,
-            // 2n ** 192n
-            0x1000000000000000000000000000000000000000000000000_u256.try_into().unwrap()
+            packed_first_slot_u256, DENOMINATOR_X192
         );
 
-        let (tick_raw, _call_points_legacy) = DivRem::div_rem(
-            tick_call_points.low, 0x100_u128.try_into().unwrap()
-        );
+        let (tick_raw, _call_points_legacy) = DivRem::div_rem(tick_call_points.low, DENOMINATOR_X8);
 
-        let tick = if (tick_raw >= 0x100000000) {
-            i129 { mag: tick_raw - 0x100000000, sign: (tick_raw != 0x100000000) }
+        let tick = if (tick_raw >= SIGN_MODIFIER) {
+            i129 { mag: tick_raw - SIGN_MODIFIER, sign: (tick_raw != SIGN_MODIFIER) }
         } else {
             i129 { mag: tick_raw, sign: false }
         };
