@@ -481,6 +481,12 @@ pub mod Positions {
             }
         }
 
+        fn get_orders_info_with_block_timestamp(
+            self: @ContractState, mut params: Span<(u64, OrderKey)>
+        ) -> (u64, Span<OrderInfo>) {
+            (get_block_timestamp(), self.get_orders_info(params))
+        }
+
         fn get_orders_info(
             self: @ContractState, mut params: Span<(u64, OrderKey)>
         ) -> Span<OrderInfo> {

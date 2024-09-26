@@ -45,6 +45,11 @@ pub trait IPositions<TContractState> {
         self: @TContractState, id: u64, pool_key: PoolKey, bounds: Bounds
     ) -> GetTokenInfoResult;
 
+    // Returns the current block timestamp plus all the order information
+    fn get_orders_info_with_block_timestamp(
+        self: @TContractState, params: Span<(u64, OrderKey)>
+    ) -> (u64, Span<OrderInfo>);
+
     // Returns the sale rate, remaining sell amount and purchased amount for a set of orders
     fn get_orders_info(self: @TContractState, params: Span<(u64, OrderKey)>) -> Span<OrderInfo>;
 
