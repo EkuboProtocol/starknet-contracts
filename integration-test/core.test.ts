@@ -28,16 +28,15 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x719ce072b21f5206b6b3cb19056e64f17127abd6a80068c89e8b21e06050496",
+      core: "0x4d2ca9a53779e2d9c7d0cc33d6dff4156e9dda3e21bc4c77661a7599f58a707",
       positions:
-        "0x25b41a3526d930a7656d414678e9df3f210b8ebdb0075ac1d0836ef31a2a101",
+        "0x7b81f77e21cbd04f296d89b983f415bfe737e9d0d863874f918de0c8330d947",
       router:
-        "0x45f87833be2015b06e80ff3ce84c0257749b5adb2220110abb62ba8382a07a3",
-      nft: "0xb2c834f584435d9e2f9ce58cf1f1e49c25a263286993a6036ee966e12882e2",
-      twamm:
-        "0x2316df79526209f00f1693f7abfd9da19c7fb719781b609ff3f6614a45d0dd2",
+        "0x15a9b8a0c6daf62c1e0c5f197100d29ec7f28e365016d3a61de5cbda3246576",
+      nft: "0x4691c8dfc3dc34df0a2626180da7a83f7aca7a8bbeab7f176f75991b5ad2f19",
+      twamm: "0x551b8e374e83a144d8b9ecb5b31a60465cd66c35abd5376379bafec5c784a6",
       tokenClassHash:
-        "0x5d4e4db9c2895e6fd9c56aadad32cb93f14cb834626b5ef8b8953358126b7f",
+        "0x61dd2d827b998586a752282194b066a2ba7ba8966a2efe8ac43b3fcc50c6dcf",
     });
     console.log(setup);
   }, 300_000);

@@ -10,7 +10,12 @@ export async function deployTokens({
   classHash: string;
   getTxSettings: TxSettingsFn;
 }): Promise<[token0: string, token1: string]> {
-  const constructorCalldata = [deployer.address, (1n << 128n) - 1n];
+  const constructorCalldata = [
+    deployer.address,
+    (1n << 128n) - 1n,
+    "0x0",
+    "0x0",
+  ];
 
   const {
     contract_address: [tokenAddressA, tokenAddressB],
