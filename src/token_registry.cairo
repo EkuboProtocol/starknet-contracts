@@ -9,8 +9,6 @@ pub trait ITokenRegistry<ContractState> {
 // A simplified interface for a fungible token standard.
 #[starknet::interface]
 pub trait IERC20Metadata<TStorage> {
-    fn name(self: @TStorage) -> felt252;
-    fn symbol(self: @TStorage) -> felt252;
     fn decimals(self: @TStorage) -> u8;
     fn totalSupply(self: @TStorage) -> u256;
 }
@@ -22,9 +20,11 @@ pub mod TokenRegistry {
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
-    use starknet::storage::StoragePointerReadAccess;
-    use starknet::storage::StoragePointerWriteAccess;
-    use starknet::{ContractAddress, get_contract_address, get_caller_address};
+    use ekubo::math::bits::{msb};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::{
+        syscalls::{call_contract_syscall}, ContractAddress, get_contract_address, get_caller_address
+    };
     use super::{
         IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
     };
@@ -40,11 +40,11 @@ pub mod TokenRegistry {
         Registration: Registration,
     }
 
-    #[derive(starknet::Event, Drop)]
+    #[derive(starknet::Event, Drop, PartialEq, Debug)]
     pub struct Registration {
         pub address: ContractAddress,
-        pub name: felt252,
-        pub symbol: felt252,
+        pub name: ByteArray,
+        pub symbol: ByteArray,
         pub decimals: u8,
         pub total_supply: u128,
     }
@@ -70,6 +70,40 @@ pub mod TokenRegistry {
         }
     }
 
+    pub(crate) impl FeltIntoByteArray of Into<felt252, ByteArray> {
+        fn into(self: felt252) -> ByteArray {
+            let mut data: u256 = self.into();
+            let num_bits = if data.high.is_non_zero() {
+                msb(data.high) + 127
+            } else if data.low.is_non_zero() {
+                msb(data.low)
+            } else {
+                0
+            };
+
+            let length_bytes = (num_bits + 7) / 8;
+
+            let mut res: ByteArray = "";
+            res.append_word(self, length_bytes.into());
+            res
+        }
+    }
+
+    // Returns the string representation of the token's symbol/name
+    pub(crate) fn get_string_metadata(address: ContractAddress, selector: felt252) -> ByteArray {
+        let mut result = call_contract_syscall(address, selector, array![].span())
+            .expect('Failed to get metadata');
+
+        let result_len = result.len();
+        assert(result_len == 1 || result_len > 2, 'Unexpected metadata len');
+
+        if result.len() == 1 {
+            (*result.pop_front().unwrap()).into()
+        } else {
+            Serde::deserialize(ref result).unwrap()
+        }
+    }
+
     #[abi(embed_v0)]
     impl TokenRegistryImpl of ITokenRegistry<ContractState> {
         fn register_token(ref self: ContractState, token: IERC20Dispatcher) {
@@ -81,7 +115,10 @@ pub mod TokenRegistry {
                 .expect('Balance exceeds u128');
 
             let (name, symbol, decimals, total_supply) = (
-                metadata.name(), metadata.symbol(), metadata.decimals(), metadata.totalSupply()
+                get_string_metadata(token.contract_address, selector!("name")),
+                get_string_metadata(token.contract_address, selector!("symbol")),
+                metadata.decimals(),
+                metadata.totalSupply()
             );
 
             assert(decimals < 78, 'Decimals too large');

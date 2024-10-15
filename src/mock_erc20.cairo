@@ -2,10 +2,19 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-pub trait IMockERC20<TStorage> {
-    fn set_balance(ref self: TStorage, address: ContractAddress, amount: u128);
-    fn increase_balance(ref self: TStorage, address: ContractAddress, amount: u128);
-    fn decrease_balance(ref self: TStorage, address: ContractAddress, amount: u128);
+pub trait IMockERC20<TContractState> {
+    fn set_balance(ref self: TContractState, address: ContractAddress, amount: u128);
+    fn increase_balance(ref self: TContractState, address: ContractAddress, amount: u128);
+    fn decrease_balance(ref self: TContractState, address: ContractAddress, amount: u128);
+}
+
+#[starknet::interface]
+trait IERC20StableMetadata<TContractState> {
+    fn name(self: @TContractState) -> felt252;
+    fn symbol(self: @TContractState) -> felt252;
+    fn totalSupply(ref self: TContractState) -> u256;
+    fn total_supply(ref self: TContractState) -> u256;
+    fn decimals(ref self: TContractState) -> u8;
 }
 
 
@@ -38,15 +47,20 @@ pub mod MockERC20 {
     use core::num::traits::{Zero};
     use core::traits::{Into};
     use ekubo::interfaces::erc20::{IERC20};
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::{Map};
     use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
-    use super::{IMockERC20};
+    use super::{IMockERC20, IERC20StableMetadata};
 
     #[storage]
     struct Storage {
+        name: felt252,
+        symbol: felt252,
         balances: Map<ContractAddress, u128>,
         allowances: Map<(ContractAddress, ContractAddress), u128>,
+        total_supply: u128,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -72,7 +86,16 @@ pub mod MockERC20 {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, owner: ContractAddress, starting_balance: u128) {
+    fn constructor(
+        ref self: ContractState,
+        owner: ContractAddress,
+        starting_balance: u128,
+        name: felt252,
+        symbol: felt252
+    ) {
+        self.name.write(name);
+        self.symbol.write(symbol);
+        self.total_supply.write(starting_balance);
         self.balances.write(owner, starting_balance);
         self
             .emit(
@@ -141,10 +164,31 @@ pub mod MockERC20 {
 
         fn increase_balance(ref self: ContractState, address: ContractAddress, amount: u128) {
             self.balances.write(address, self.balances.read(address) + amount);
+            self.total_supply.write(self.total_supply.read() + amount);
         }
 
         fn decrease_balance(ref self: ContractState, address: ContractAddress, amount: u128) {
             self.balances.write(address, self.balances.read(address) - amount);
+            self.total_supply.write(self.total_supply.read() - amount);
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl MetadataImpl of IERC20StableMetadata<ContractState> {
+        fn name(self: @ContractState) -> felt252 {
+            self.name.read()
+        }
+        fn symbol(self: @ContractState) -> felt252 {
+            self.symbol.read()
+        }
+        fn totalSupply(ref self: ContractState) -> u256 {
+            self.total_supply()
+        }
+        fn total_supply(ref self: ContractState) -> u256 {
+            self.total_supply.read().into()
+        }
+        fn decimals(ref self: ContractState) -> u8 {
+            18
         }
     }
 }

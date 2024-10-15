@@ -22,6 +22,7 @@ use ekubo::tests::mocks::locker::{
 };
 use ekubo::tests::mocks::mock_extension::{MockExtension, IMockExtensionDispatcher};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
+use ekubo::token_registry::{TokenRegistry, ITokenRegistryDispatcher,};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::delta::{Delta};
@@ -67,17 +68,28 @@ pub impl DeployerTraitImpl of DeployerTrait {
         nonce
     }
 
-    fn deploy_mock_token_with_balance(
-        ref self: Deployer, owner: ContractAddress, starting_balance: u128
+    fn deploy_mock_token_with_balance_and_metadata(
+        ref self: Deployer,
+        owner: ContractAddress,
+        starting_balance: u128,
+        name: felt252,
+        symbol: felt252
     ) -> IMockERC20Dispatcher {
         let (address, _) = deploy_syscall(
             MockERC20::TEST_CLASS_HASH.try_into().unwrap(),
             self.get_next_nonce(),
-            array![owner.into(), starting_balance.into()].span(),
+            array![owner.into(), starting_balance.into(), name, symbol].span(),
             true
         )
             .expect('token deploy failed');
         return IMockERC20Dispatcher { contract_address: address };
+    }
+
+
+    fn deploy_mock_token_with_balance(
+        ref self: Deployer, owner: ContractAddress, starting_balance: u128
+    ) -> IMockERC20Dispatcher {
+        self.deploy_mock_token_with_balance_and_metadata(owner, starting_balance, '', '')
     }
 
     fn deploy_mock_token(ref self: Deployer) -> IMockERC20Dispatcher {
@@ -210,6 +222,20 @@ pub impl DeployerTraitImpl of DeployerTrait {
             .expect('twamm deploy failed');
 
         IExtensionDispatcher { contract_address: address }
+    }
+
+    fn deploy_token_registry(
+        ref self: Deployer, core: ICoreDispatcher
+    ) -> ITokenRegistryDispatcher {
+        let (address, _) = deploy_syscall(
+            TokenRegistry::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            array![core.contract_address.into()].span(),
+            true
+        )
+            .expect('token registry deploy');
+
+        ITokenRegistryDispatcher { contract_address: address }
     }
 
 
