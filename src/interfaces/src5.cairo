@@ -14,12 +14,12 @@ pub const SRC5_ERC721_METADATA_ID: felt252 =
     0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd;
 
 #[starknet::interface]
-pub trait ISRC5<TStorage> {
+pub trait ISRC5<TContractState> {
     // Returns true if the contract supports the interface
     // Note this is backwards compatible with the old spec that took a u32, since they
     // share a selector
-    fn supportsInterface(self: @TStorage, interfaceId: felt252) -> bool;
+    fn supportsInterface(self: @TContractState, interfaceId: felt252) -> bool;
 
     // snake_case
-    fn supports_interface(self: @TStorage, interface_id: felt252) -> bool;
+    fn supports_interface(self: @TContractState, interface_id: felt252) -> bool;
 }

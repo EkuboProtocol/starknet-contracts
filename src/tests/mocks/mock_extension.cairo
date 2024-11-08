@@ -13,12 +13,12 @@ pub struct ExtensionCalled {
 }
 
 #[starknet::interface]
-pub trait IMockExtension<TStorage> {
-    fn get_num_calls(self: @TStorage) -> u32;
-    fn get_call(self: @TStorage, call_id: u32) -> ExtensionCalled;
+pub trait IMockExtension<TContractState> {
+    fn get_num_calls(self: @TContractState) -> u32;
+    fn get_call(self: @TContractState, call_id: u32) -> ExtensionCalled;
 
-    fn call_into_pool(self: @TStorage, pool_key: PoolKey);
-    fn change_call_points(self: @TStorage, call_points: CallPoints);
+    fn call_into_pool(self: @TContractState, pool_key: PoolKey);
+    fn change_call_points(self: @TContractState, call_points: CallPoints);
 }
 
 #[starknet::contract]

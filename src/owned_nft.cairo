@@ -1,22 +1,24 @@
 use starknet::{ContractAddress};
 
 #[starknet::interface]
-pub trait IOwnedNFT<TStorage> {
+pub trait IOwnedNFT<TContractState> {
     // Create a new token, only callable by the owner
-    fn mint(ref self: TStorage, owner: ContractAddress) -> u64;
+    fn mint(ref self: TContractState, owner: ContractAddress) -> u64;
 
     // Burn the token with the given ID
-    fn burn(ref self: TStorage, id: u64);
+    fn burn(ref self: TContractState, id: u64);
 
     // Returns whether the account is authorized to act on the given token ID
-    fn is_account_authorized(self: @TStorage, id: u64, account: ContractAddress) -> bool;
+    fn is_account_authorized(self: @TContractState, id: u64, account: ContractAddress) -> bool;
 
     // Returns the next token ID,
     // i.e. the ID of the token that will be minted on the next call to mint from the owner
-    fn get_next_token_id(self: @TStorage) -> u64;
+    fn get_next_token_id(self: @TContractState) -> u64;
 
     // Allows the owner to update the metadata
-    fn set_metadata(ref self: TStorage, name: felt252, symbol: felt252, token_uri_base: felt252);
+    fn set_metadata(
+        ref self: TContractState, name: felt252, symbol: felt252, token_uri_base: felt252
+    );
 }
 
 #[starknet::contract]

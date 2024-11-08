@@ -33,9 +33,9 @@ pub enum ActionResult {
 }
 
 #[starknet::interface]
-pub trait ICoreLocker<TStorage> {
-    fn call(ref self: TStorage, action: Action) -> ActionResult;
-    fn set_call_points(ref self: TStorage);
+pub trait ICoreLocker<TContractState> {
+    fn call(ref self: TContractState, action: Action) -> ActionResult;
+    fn set_call_points(ref self: TContractState);
 }
 
 #[starknet::contract]

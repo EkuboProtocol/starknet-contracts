@@ -8,9 +8,9 @@ pub trait ITokenRegistry<ContractState> {
 
 // A simplified interface for a fungible token standard.
 #[starknet::interface]
-pub trait IERC20Metadata<TStorage> {
-    fn decimals(self: @TStorage) -> u8;
-    fn totalSupply(self: @TStorage) -> u256;
+pub trait IERC20Metadata<TContractState> {
+    fn decimals(self: @TContractState) -> u8;
+    fn totalSupply(self: @TContractState) -> u256;
 }
 
 
