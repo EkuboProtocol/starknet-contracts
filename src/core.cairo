@@ -942,10 +942,6 @@ pub mod Core {
                     fee: pool_key.fee
                 );
 
-                amount_remaining -= swap_result.consumed_amount;
-                sqrt_ratio = swap_result.sqrt_ratio_next;
-                calculated_amount += swap_result.calculated_amount;
-
                 // we know this only happens when liquidity is non zero
                 if (swap_result.fee_amount.is_non_zero()) {
                     fees_per_liquidity = fees_per_liquidity
@@ -960,7 +956,12 @@ pub mod Core {
                         };
                 }
 
-                if (sqrt_ratio == next_tick_sqrt_ratio) {
+                amount_remaining -= swap_result.consumed_amount;
+                calculated_amount += swap_result.calculated_amount;
+
+                // we hit the tick boundary, transition to the next tick
+                if (swap_result.sqrt_ratio_next == next_tick_sqrt_ratio) {
+                    sqrt_ratio = swap_result.sqrt_ratio_next;
                     // we are crossing the tick, so the tick is changed to the next tick
                     tick =
                         if (increasing) {
@@ -998,7 +999,11 @@ pub mod Core {
                         tick_fpl_storage_address
                             .write(fees_per_liquidity - tick_fpl_storage_address.read());
                     }
-                } else {
+                } else if sqrt_ratio != swap_result.sqrt_ratio_next {
+                    // the price moved but it did not cross the next tick
+                    // we must only update the tick in case the price moved, otherwise we may
+                    // transition the tick incorrectly
+                    sqrt_ratio = swap_result.sqrt_ratio_next;
                     tick = sqrt_ratio_to_tick(sqrt_ratio);
                 };
             };
