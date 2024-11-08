@@ -144,6 +144,9 @@ pub trait ICore<TContractState> {
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TContractState, id: u32) -> LockerState;
 
+    // Get the current value of the delta for a particular locker and token
+    fn get_locker_delta(self: @TContractState, id: u32, token_address: ContractAddress) -> i129;
+
     // Get the price of the pool
     fn get_pool_price(self: @TContractState, pool_key: PoolKey) -> PoolPrice;
 

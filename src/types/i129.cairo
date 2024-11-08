@@ -4,6 +4,8 @@ use core::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use starknet::storage_access::{StorePacking};
+use core::fmt::{Display, Formatter, Error};
+
 
 // Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128
 // bits are magnitude Note the sign can be true while mag is 0, meaning 1 value is wasted
@@ -12,6 +14,28 @@ use starknet::storage_access::{StorePacking};
 pub struct i129 {
     pub mag: u128,
     pub sign: bool,
+}
+
+impl i129Display of Display<i129> {
+    fn fmt(self: @i129, ref f: Formatter) -> Result<(), Error> {
+        let str: ByteArray = if (*self).is_negative() {
+            format!("-{}", *self.mag)
+        } else {
+            format!("{}", *self.mag)
+        };
+        f.buffer.append(@str);
+        Result::Ok(())
+    }
+}
+
+impl i128IntoI129 of Into<i128, i129> {
+    fn into(self: i128) -> i129 {
+        if self < 0 {
+            i129 { mag: (-self).try_into().unwrap(), sign: true }
+        } else {
+            i129 { mag: self.try_into().unwrap(), sign: false }
+        }
+    }
 }
 
 impl HashI129<S, +HashStateTrait<S>, +Drop<S>> of Hash<i129, S> {
