@@ -38,7 +38,7 @@ pub mod Core {
     };
     use starknet::storage::{StoragePathEntry, StoragePath};
     use starknet::{
-        Store, ContractAddress, get_caller_address, get_contract_address,
+        Store, ContractAddress, get_caller_address, get_contract_address, contract_address_const,
         storage_access::{storage_base_address_from_felt252}
     };
 
@@ -382,6 +382,39 @@ pub mod Core {
         }
     }
 
+
+    fn assert_pool_key_not_banned(pool_key: PoolKey) {
+        let banned = PoolKey {
+            token0: contract_address_const::<
+                0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac
+            >(),
+            token1: contract_address_const::<
+                0x68f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8
+            >(),
+            fee: 1020847100762815411640772995208708096,
+            tick_spacing: 5982,
+            extension: contract_address_const::<0>(),
+        };
+        if pool_key == banned {
+            panic!("Frozen pool");
+        };
+
+        let banned = PoolKey {
+            token0: contract_address_const::<
+                0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac
+            >(),
+            token1: contract_address_const::<
+                0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+            >(),
+            fee: 3402823669209384634633746074317682114,
+            tick_spacing: 19802,
+            extension: contract_address_const::<0>(),
+        };
+        if pool_key == banned {
+            panic!("Frozen pool");
+        }
+    }
+
     #[abi(embed_v0)]
     impl Core of ICore<ContractState> {
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
@@ -682,6 +715,7 @@ pub mod Core {
         fn update_position(
             ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
         ) -> Delta {
+            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
@@ -809,6 +843,7 @@ pub mod Core {
         fn collect_fees(
             ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
         ) -> Delta {
+            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
@@ -851,6 +886,7 @@ pub mod Core {
 
 
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
+            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
