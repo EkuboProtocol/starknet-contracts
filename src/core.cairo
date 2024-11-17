@@ -38,7 +38,7 @@ pub mod Core {
     };
     use starknet::storage::{StoragePathEntry, StoragePath};
     use starknet::{
-        Store, ContractAddress, get_caller_address, get_contract_address, contract_address_const,
+        Store, ContractAddress, get_caller_address, get_contract_address,
         storage_access::{storage_base_address_from_felt252}
     };
 
@@ -57,6 +57,7 @@ pub mod Core {
         pub protocol_fees_collected: Map<ContractAddress, u128>,
         // transient state of the lockers, which always starts and ends at zero
         pub lock_count: u32,
+        pub locker_token_deltas: Map<(u32, ContractAddress), i129>,
         // the rest of transient state is accessed directly using Store::read and Store::write to
         // save on hashes
 
@@ -191,8 +192,21 @@ pub mod Core {
                 .expect('FAILED_READ_NZD_COUNT')
         }
 
-        fn set_nonzero_delta_count(self: @ContractState, id: u32, count: u32) {
-            Store::write(0, storage_base_address_from_felt252(0x100000000 + id.into()), count)
+        fn crement_storage_delta_count(self: @ContractState, id: u32, decrease: bool) {
+            let delta_count_storage_location = storage_base_address_from_felt252(
+                0x100000000 + id.into()
+            );
+
+            let count = Store::read(0, delta_count_storage_location)
+                .expect('FAILED_READ_NZD_COUNT');
+
+            Store::write(
+                0, delta_count_storage_location, if decrease {
+                    count - 1
+                } else {
+                    count + 1
+                }
+            )
                 .expect('FAILED_WRITE_NZD_COUNT');
         }
 
@@ -211,16 +225,15 @@ pub mod Core {
         fn account_delta(
             ref self: ContractState, id: u32, token_address: ContractAddress, delta: i129
         ) {
-            let delta_storage_location = storage_base_address_from_felt252(
-                core::pedersen::pedersen(id.into(), token_address.into())
-            );
-            let current: i129 = Store::read(0, delta_storage_location).expect('FAILED_READ_DELTA');
+            let delta_storage_location = self.locker_token_deltas.entry((id, token_address));
+            let current = delta_storage_location.read();
             let next = current + delta;
-            Store::write(0, delta_storage_location, next).expect('FAILED_WRITE_DELTA');
-            if (current.is_zero() & next.is_non_zero()) {
-                self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) + 1);
-            } else if (current.is_non_zero() & next.is_zero()) {
-                self.set_nonzero_delta_count(id, self.get_nonzero_delta_count(id) - 1);
+            delta_storage_location.write(next);
+
+            let next_is_zero = next.is_zero();
+
+            if (current.is_zero() != next_is_zero) {
+                self.crement_storage_delta_count(id, next_is_zero);
             }
         }
 
@@ -379,39 +392,6 @@ pub mod Core {
     impl CoreHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
             return selector!("ekubo::core::Core");
-        }
-    }
-
-
-    fn assert_pool_key_not_banned(pool_key: PoolKey) {
-        let banned = PoolKey {
-            token0: contract_address_const::<
-                0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac
-            >(),
-            token1: contract_address_const::<
-                0x68f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8
-            >(),
-            fee: 1020847100762815411640772995208708096,
-            tick_spacing: 5982,
-            extension: contract_address_const::<0>(),
-        };
-        if pool_key == banned {
-            panic!("Frozen pool");
-        };
-
-        let banned = PoolKey {
-            token0: contract_address_const::<
-                0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac
-            >(),
-            token1: contract_address_const::<
-                0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
-            >(),
-            fee: 3402823669209384634633746074317682114,
-            tick_spacing: 19802,
-            extension: contract_address_const::<0>(),
-        };
-        if pool_key == banned {
-            panic!("Frozen pool");
         }
     }
 
@@ -715,7 +695,6 @@ pub mod Core {
         fn update_position(
             ref self: ContractState, pool_key: PoolKey, params: UpdatePositionParameters
         ) -> Delta {
-            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
@@ -843,7 +822,6 @@ pub mod Core {
         fn collect_fees(
             ref self: ContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
         ) -> Delta {
-            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
@@ -884,9 +862,7 @@ pub mod Core {
             delta
         }
 
-
         fn swap(ref self: ContractState, pool_key: PoolKey, params: SwapParameters) -> Delta {
-            assert_pool_key_not_banned(pool_key);
             let (id, locker) = self.require_locker();
 
             let call_points = self.get_call_points_for_caller(pool_key, locker);
