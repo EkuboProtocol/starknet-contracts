@@ -409,13 +409,7 @@ pub mod Core {
 
 
         fn get_locker_delta(self: @ContractState, id: u32, token_address: ContractAddress) -> i129 {
-            Store::read(
-                0,
-                storage_base_address_from_felt252(
-                    core::pedersen::pedersen(id.into(), token_address.into())
-                )
-            )
-                .expect('FAILED_READ_DELTA')
+            self.locker_token_deltas.read((id, token_address))
         }
 
         fn get_pool_price(self: @ContractState, pool_key: PoolKey) -> PoolPrice {
