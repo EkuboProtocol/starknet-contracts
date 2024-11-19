@@ -1,5 +1,6 @@
 pub mod core;
 pub mod mathlib;
+pub mod migrate_core;
 pub mod mock_erc20;
 pub mod owned_nft;
 pub mod positions;
