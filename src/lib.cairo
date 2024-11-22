@@ -18,6 +18,7 @@ pub mod components {
 pub mod extensions {
     pub mod twamm;
     pub mod interfaces {
+        pub mod limit_orders;
         pub mod twamm;
     }
 }

@@ -11,6 +11,11 @@ pub mod Positions {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::extensions::interfaces::limit_orders::{
+        OrderKey as LimitOrderKey, ILimitOrdersDispatcher,
+        ForwardCallbackData as LimitOrderForwardCallbackData,
+        ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData
+    };
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
@@ -59,6 +64,7 @@ pub mod Positions {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
         twamm: ITWAMMDispatcher,
+        limit_orders: ILimitOrdersDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -158,6 +164,21 @@ pub mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
+    struct PlaceOrderCallbackData {
+        salt: felt252,
+        order_key: LimitOrderKey,
+        amount: u128,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct CloseOrderCallbackData {
+        salt: felt252,
+        order_key: LimitOrderKey,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
@@ -166,6 +187,8 @@ pub mod Positions {
         IncreaseSaleRate: IncreaseSaleRateCallbackData,
         DecreaseSaleRate: DecreaseSaleRateCallbackData,
         CollectOrderProceeds: CollectOrderProceedsCallbackData,
+        PlaceOrder: PlaceOrderCallbackData,
+        CloseOrder: CloseOrderCallbackData,
     }
 
     #[abi(embed_v0)]
@@ -383,7 +406,28 @@ pub mod Positions {
                         );
 
                     serialize(@proceeds_amount).span()
-                }
+                },
+                LockCallbackData::PlaceOrder(data) => {
+                    let limit_orders = self.limit_orders.read();
+                    let result: LimitOrderForwardCallbackResult = forward_lock(
+                        core,
+                        IForwardeeDispatcher { contract_address: limit_orders.contract_address },
+                        @LimitOrderForwardCallbackData::PlaceOrder(
+                            PlaceOrderForwardCallbackData {
+                                salt: data.salt, order_key: data.order_key, liquidity: 0,
+                            }
+                        )
+                    );
+                    // core
+                    //     .withdraw(
+                    //         data.order_key.sell_token,
+                    //         recipient: data.recipient,
+                    //         amount: amount_delta.mag
+                    //     );
+
+                    serialize(@(0)).span()
+                },
+                LockCallbackData::CloseOrder(data) => { serialize(@(0)).span() }
             }
         }
     }
@@ -405,8 +449,19 @@ pub mod Positions {
             self.twamm.write(ITWAMMDispatcher { contract_address: twamm_address });
         }
 
+        fn set_limit_orders(ref self: ContractState, limit_orders_address: ContractAddress) {
+            self.require_owner();
+            self
+                .limit_orders
+                .write(ILimitOrdersDispatcher { contract_address: limit_orders_address });
+        }
+
         fn get_twamm_address(self: @ContractState) -> ContractAddress {
             self.twamm.read().contract_address
+        }
+
+        fn get_limit_orders_address(self: @ContractState) -> ContractAddress {
+            self.limit_orders.read().contract_address
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
@@ -770,6 +825,52 @@ pub mod Positions {
                     }
                 )
             )
+        }
+
+        fn place_limit_order(
+            ref self: ContractState,
+            id: u64,
+            order_key: LimitOrderKey,
+            amount: u128,
+            recipient: ContractAddress
+        ) -> (u128, u128) {
+            self.check_authorization(id);
+
+            call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::PlaceOrder(
+                    PlaceOrderCallbackData { salt: id.into(), order_key, amount, recipient }
+                )
+            )
+        }
+
+        fn mint_and_place_limit_order(
+            ref self: ContractState,
+            order_key: LimitOrderKey,
+            amount: u128,
+            recipient: ContractAddress
+        ) -> (u64, u128, u128) {
+            let id = self.mint_v2(Zero::zero());
+            let (liquidity, purchased) = self.place_limit_order(id, order_key, amount, recipient);
+            (id, liquidity, purchased)
+        }
+
+        fn close_limit_order(
+            ref self: ContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
+        ) -> (u128, u128) {
+            self.check_authorization(id);
+            call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::CloseOrder(
+                    CloseOrderCallbackData { salt: id.into(), order_key, recipient }
+                )
+            )
+        }
+
+        fn close_limit_order_to_self(
+            ref self: ContractState, id: u64, order_key: LimitOrderKey
+        ) -> (u128, u128) {
+            self.close_limit_order(id, order_key, get_caller_address())
         }
     }
 }
