@@ -12,10 +12,11 @@ pub mod Positions {
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
     use ekubo::extensions::interfaces::limit_orders::{
-        OrderKey as LimitOrderKey, ILimitOrdersDispatcher,
+        OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
         ForwardCallbackData as LimitOrderForwardCallbackData,
         ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
-        LIMIT_ORDER_TICK_SPACING
+        CloseOrderForwardCallbackData, LIMIT_ORDER_TICK_SPACING,
+        GetOrderInfoRequest as GetLimitOrderInfoRequest
     };
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
@@ -514,12 +515,76 @@ pub mod Positions {
                             let token = IERC20Dispatcher { contract_address: sell_token };
                             token.approve(core.contract_address, amount.into());
                             core.pay(data.order_key.token1);
+                        } else {
+                            panic!("Unexpected return data from forward call");
                         }
                     }
 
                     serialize(@(liquidity, amount_bought)).span()
                 },
-                LockCallbackData::CloseOrder(data) => { serialize(@(0)).span() }
+                LockCallbackData::CloseOrder(data) => {
+                    let limit_orders = self.limit_orders.read();
+
+                    let buy_token = if (data.order_key.tick.mag % LIMIT_ORDER_TICK_SPACING)
+                        .is_zero() {
+                        data.order_key.token1
+                    } else {
+                        data.order_key.token0
+                    };
+
+                    let order_info = limit_orders
+                        .get_order_info(
+                            GetLimitOrderInfoRequest {
+                                owner: get_contract_address(),
+                                salt: data.salt,
+                                order_key: data.order_key,
+                            }
+                        );
+
+                    if order_info.state.liquidity.is_non_zero() {
+                        let result: LimitOrderForwardCallbackResult = forward_lock(
+                            core,
+                            IForwardeeDispatcher {
+                                contract_address: limit_orders.contract_address
+                            },
+                            @LimitOrderForwardCallbackData::CloseOrder(
+                                CloseOrderForwardCallbackData {
+                                    salt: data.salt, order_key: data.order_key,
+                                }
+                            )
+                        );
+
+                        if let LimitOrderForwardCallbackResult::CloseOrder((amount0, amount1)) =
+                            result {
+                            if amount0 > 0 {
+                                core.withdraw(data.order_key.token0, data.recipient, amount0);
+                            }
+                            if amount1 > 0 {
+                                core.withdraw(data.order_key.token0, data.recipient, amount1);
+                            }
+                        } else {
+                            panic!("Unexpected return data from forward call");
+                        }
+                    }
+
+                    let saved_balance_key = SavedBalanceKey {
+                        owner: get_contract_address(), token: buy_token, salt: data.salt,
+                    };
+                    let amount_saved = core.get_saved_balance(saved_balance_key);
+
+                    if amount_saved > 0 {
+                        core.load(saved_balance_key.token, saved_balance_key.salt, amount_saved);
+                        core.withdraw(buy_token, data.recipient, amount_saved);
+                    }
+
+                    let (total0, total1) = if buy_token == data.order_key.token0 {
+                        (order_info.amount0 + amount_saved, order_info.amount1)
+                    } else {
+                        (order_info.amount0, order_info.amount1 + amount_saved)
+                    };
+
+                    serialize(@(total0, total1)).span()
+                }
             }
         }
     }
