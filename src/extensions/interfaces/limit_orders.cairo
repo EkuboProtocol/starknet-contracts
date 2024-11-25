@@ -90,3 +90,5 @@ pub trait ILimitOrders<TContractState> {
         self: @TContractState, requests: Span<GetOrderInfoRequest>
     ) -> Span<GetOrderInfoResult>;
 }
+
+pub const LIMIT_ORDER_TICK_SPACING: u128 = 128;

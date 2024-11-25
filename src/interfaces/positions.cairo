@@ -220,31 +220,26 @@ pub trait IPositions<TContractState> {
     ) -> u128;
 
     // Creates a limit order and returns the amount of liquidity that was associated with the sell
-    // amount, as well as the amount immediately executed.
+    // amount, as well as the amount immediately purchased.
     fn place_limit_order(
-        ref self: TContractState,
-        id: u64,
-        order_key: LimitOrderKey,
-        amount: u128,
-        recipient: ContractAddress
+        ref self: TContractState, id: u64, order_key: LimitOrderKey, amount: u128
     ) -> (u128, u128);
 
     // Creates a new position NFT and creates a limit order associated with the position. Returns
     // the ID and the amount of liquidity associated with the limit order as well as the amount
     // immediately executed.
     fn mint_and_place_limit_order(
-        ref self: TContractState, order_key: LimitOrderKey, amount: u128, recipient: ContractAddress
+        ref self: TContractState, order_key: LimitOrderKey, amount: u128
     ) -> (u64, u128, u128);
 
     // Closes the limit order for the given NFT ID and order key, and returns the amount of token0
     // and token1 received
     fn close_limit_order(
-        ref self: TContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
+        ref self: TContractState, id: u64, order_key: LimitOrderKey
     ) -> (u128, u128);
 
-    // Closes a limit order and sends the proceeds to the caller, and returns the amount of token0
-    // and token1 received
-    fn close_limit_order_to_self(
-        ref self: TContractState, id: u64, order_key: LimitOrderKey
+    // Same as above but sends the proceeds to the given address
+    fn close_limit_order_to(
+        ref self: TContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
     ) -> (u128, u128);
 }
