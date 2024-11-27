@@ -142,14 +142,16 @@ pub mod LimitOrders {
     use core::traits::{Into};
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ICoreDispatcher,
         ICoreDispatcherTrait, ILocker
     };
+    use ekubo::math::delta::{amount0_delta, amount1_delta};
+    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
+
+    use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
@@ -166,8 +168,6 @@ pub mod LimitOrders {
         GetOrderInfoResult, ForwardCallbackData, PlaceOrderForwardCallbackData,
         CloseOrderForwardCallbackData, ForwardCallbackResult
     };
-
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
     pub const LIMIT_ORDER_TICK_SPACING: u128 = 128;
     pub const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 256;

@@ -17,7 +17,6 @@ pub mod Positions {
         ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
         CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest
     };
-    use ekubo::limit_orders::{LimitOrders::{LIMIT_ORDER_TICK_SPACING}};
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
@@ -30,6 +29,7 @@ pub mod Positions {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+    use ekubo::limit_orders::{LimitOrders::{LIMIT_ORDER_TICK_SPACING}};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1
