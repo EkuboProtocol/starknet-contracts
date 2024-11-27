@@ -1,4 +1,4 @@
-use ekubo::extensions::interfaces::limit_orders::{OrderKey as LimitOrderKey};
+use ekubo::extensions::interfaces::limit_orders::{OrderKey as LimitOrderKey, GetOrderInfoResult};
 use ekubo::extensions::interfaces::twamm::{OrderKey, OrderInfo};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::keys::{PoolKey};
@@ -242,4 +242,9 @@ pub trait IPositions<TContractState> {
     fn close_limit_order_to(
         ref self: TContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
     ) -> (u128, u128);
+
+    // Returns the current state of the given token ID, limit order key tuples
+    fn get_limit_orders_info(
+        self: @TContractState, params: Span<(u64, LimitOrderKey)>
+    ) -> Span<GetOrderInfoResult>;
 }

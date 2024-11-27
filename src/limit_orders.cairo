@@ -199,7 +199,7 @@ pub mod LimitOrders {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, owner: ContractAddress, core: ICoreDispatcher,) {
+    fn constructor(ref self: ContractState, owner: ContractAddress, core: ICoreDispatcher) {
         self.initialize_owned(owner);
         self.core.write(core);
         core

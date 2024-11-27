@@ -6,6 +6,7 @@ use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
 use ekubo::extensions::twamm::{TWAMM};
+use ekubo::limit_orders::{LimitOrders};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
     SwapParameters, IExtensionDispatcher
@@ -220,6 +221,19 @@ pub impl DeployerTraitImpl of DeployerTrait {
             true
         )
             .expect('twamm deploy failed');
+
+        IExtensionDispatcher { contract_address: address }
+    }
+
+
+    fn deploy_limit_orders(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
+        let (address, _) = deploy_syscall(
+            LimitOrders::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            serialize(@(default_owner(), core)).span(),
+            true
+        )
+            .expect('limit_orders deploy failed');
 
         IExtensionDispatcher { contract_address: address }
     }

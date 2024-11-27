@@ -15,7 +15,8 @@ pub mod Positions {
         OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
         ForwardCallbackData as LimitOrderForwardCallbackData,
         ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
-        CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest
+        CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest,
+        GetOrderInfoResult as GetLimitOrderInfoResult
     };
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
@@ -29,7 +30,9 @@ pub mod Positions {
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-    use ekubo::limit_orders::{LimitOrders::{LIMIT_ORDER_TICK_SPACING}};
+    use ekubo::limit_orders::{
+        LimitOrders::{LIMIT_ORDER_TICK_SPACING, DOUBLE_LIMIT_ORDER_TICK_SPACING}
+    };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1
@@ -424,7 +427,7 @@ pub mod Positions {
                     let (sell_token, buy_token) = if (data
                         .order_key
                         .tick
-                        .mag % LIMIT_ORDER_TICK_SPACING)
+                        .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
                         .is_zero() {
                         (data.order_key.token0, data.order_key.token1)
                     } else {
@@ -455,7 +458,7 @@ pub mod Positions {
                             );
                         (delta.amount0.mag, delta.amount1.mag)
                     } else if sell_token == pool_key.token1
-                        && pool_price.sqrt_ratio > sqrt_ratio_upper {
+                        && pool_price.sqrt_ratio < sqrt_ratio_upper {
                         let delta = core
                             .swap(
                                 pool_key,
@@ -483,8 +486,9 @@ pub mod Positions {
                             );
                     }
 
-                    let liquidity: u128 = if data.amount != amount_sold {
-                        if sell_token == data.order_key.token0 {
+                    // we may not have enough amount left over to need to place an order
+                    let order_liquidity = if data.amount != amount_sold {
+                        let liquidity = if sell_token == data.order_key.token0 {
                             max_liquidity_for_token0(
                                 sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
                             )
@@ -492,13 +496,8 @@ pub mod Positions {
                             max_liquidity_for_token1(
                                 sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
                             )
-                        }
-                    } else {
-                        0
-                    };
+                        };
 
-                    // we may not have enough amount left over to need to place an order
-                    if liquidity > 0 {
                         let result: LimitOrderForwardCallbackResult = forward_lock(
                             core,
                             IForwardeeDispatcher {
@@ -514,18 +513,22 @@ pub mod Positions {
                         if let LimitOrderForwardCallbackResult::PlaceOrder(amount) = result {
                             let token = IERC20Dispatcher { contract_address: sell_token };
                             token.approve(core.contract_address, amount.into());
-                            core.pay(data.order_key.token1);
+                            core.pay(sell_token);
                         } else {
                             panic!("Unexpected return data from forward call");
                         }
-                    }
 
-                    serialize(@(liquidity, amount_bought)).span()
+                        liquidity
+                    } else {
+                        0
+                    };
+
+                    serialize(@(order_liquidity, amount_bought)).span()
                 },
                 LockCallbackData::CloseOrder(data) => {
                     let limit_orders = self.limit_orders.read();
 
-                    let buy_token = if (data.order_key.tick.mag % LIMIT_ORDER_TICK_SPACING)
+                    let buy_token = if (data.order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
                         .is_zero() {
                         data.order_key.token1
                     } else {
@@ -560,7 +563,7 @@ pub mod Positions {
                                 core.withdraw(data.order_key.token0, data.recipient, amount0);
                             }
                             if amount1 > 0 {
-                                core.withdraw(data.order_key.token0, data.recipient, amount1);
+                                core.withdraw(data.order_key.token1, data.recipient, amount1);
                             }
                         } else {
                             panic!("Unexpected return data from forward call");
@@ -656,7 +659,7 @@ pub mod Positions {
         fn get_tokens_info(
             self: @ContractState, mut params: Span<GetTokenInfoRequest>
         ) -> Span<GetTokenInfoResult> {
-            let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
+            let mut results: Array<GetTokenInfoResult> = array![];
 
             while let Option::Some(request) = params.pop_front() {
                 results
@@ -702,7 +705,7 @@ pub mod Positions {
         fn get_orders_info(
             self: @ContractState, mut params: Span<(u64, OrderKey)>
         ) -> Span<OrderInfo> {
-            let mut results: Array<OrderInfo> = ArrayTrait::new();
+            let mut results: Array<OrderInfo> = array![];
 
             while let Option::Some(request) = params.pop_front() {
                 let (id, order_key) = request;
@@ -1021,6 +1024,25 @@ pub mod Positions {
                     CloseOrderCallbackData { salt: id.into(), order_key, recipient }
                 )
             )
+        }
+
+        fn get_limit_orders_info(
+            self: @ContractState, mut params: Span<(u64, LimitOrderKey)>
+        ) -> Span<GetLimitOrderInfoResult> {
+            let mut requests: Array<GetLimitOrderInfoRequest> = array![];
+
+            let this_address = get_contract_address();
+            while let Option::Some(request) = params.pop_front() {
+                let (id, order_key) = request;
+                requests
+                    .append(
+                        GetLimitOrderInfoRequest {
+                            owner: this_address, salt: (*id).into(), order_key: *order_key
+                        }
+                    );
+            };
+
+            self.limit_orders.read().get_order_infos(requests.span())
         }
     }
 }
