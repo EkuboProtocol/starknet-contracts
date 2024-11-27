@@ -15,9 +15,9 @@ pub mod Positions {
         OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
         ForwardCallbackData as LimitOrderForwardCallbackData,
         ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
-        CloseOrderForwardCallbackData, LIMIT_ORDER_TICK_SPACING,
-        GetOrderInfoRequest as GetLimitOrderInfoRequest
+        CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest
     };
+    use ekubo::limit_orders::{LimitOrders::{LIMIT_ORDER_TICK_SPACING}};
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
