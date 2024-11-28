@@ -1,9 +1,9 @@
-use ekubo::extensions::twamm::math::{
+use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
+use ekubo::math::ticks::{tick_to_sqrt_ratio};
+use ekubo::math::{
     calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
     calculate_amount_from_sale_rate, time::{to_duration}
 };
-use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::types::bounds::{max_bounds};
 use ekubo::types::i129::{i129};
 

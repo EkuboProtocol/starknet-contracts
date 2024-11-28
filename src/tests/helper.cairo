@@ -5,7 +5,7 @@ use core::result::{ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
-use ekubo::extensions::twamm::{TWAMM};
+use ekubo::twamm::{TWAMM};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
     SwapParameters, IExtensionDispatcher

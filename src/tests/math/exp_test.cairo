@@ -1,4 +1,5 @@
-use ekubo::extensions::twamm::math::{exp::{exp}, constants};
+use ekubo::math::exp::{exp};
+use ekubo::math::twamm::{constants};
 
 #[test]
 fn test_exp() {

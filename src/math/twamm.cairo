@@ -1,17 +1,9 @@
-mod exp;
-#[cfg(test)]
-mod exp_test;
-
-pub mod time;
-
-#[cfg(test)]
-mod time_test;
-
 use core::num::traits::{Zero, Sqrt};
 use core::traits::{Into, TryInto};
 use ekubo::math::fee::{compute_fee};
 use ekubo::math::muldiv::{div, muldiv};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use ekubo::math::exp::{exp};
 
 pub mod constants {
     pub const X32_u128: u128 = 0x100000000_u128;
@@ -105,7 +97,7 @@ pub fn calculate_next_sqrt_ratio(
             // sale_rate * t >> liquidity
             sqrt_sale_ratio
         } else {
-            let e = exp::exp(exponent.low);
+            let e = exp(exponent.low);
 
             let term1 = e - c;
             let term2 = e + c;

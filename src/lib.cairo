@@ -1,9 +1,10 @@
 pub mod core;
-pub mod limit_orders;
 pub mod mock_erc20;
 pub mod owned_nft;
 pub mod positions;
 pub mod router;
+pub mod limit_orders;
+pub mod twamm;
 pub mod token_registry;
 
 pub mod components {
@@ -15,10 +16,6 @@ pub mod components {
     pub mod util;
 }
 
-pub mod extensions {
-    pub mod twamm;
-}
-
 pub mod interfaces {
     pub mod core;
     pub mod erc20;
@@ -26,7 +23,6 @@ pub mod interfaces {
     pub mod positions;
     pub mod src5;
     pub mod upgradeable;
-
     pub mod extensions {
         pub mod limit_orders;
         pub mod twamm;
@@ -37,6 +33,7 @@ pub mod math {
     pub mod bitmap;
     pub mod bits;
     pub mod delta;
+    pub mod exp;
     pub mod exp2;
     pub mod fee;
     pub mod liquidity;
@@ -47,6 +44,8 @@ pub mod math {
     pub mod string;
     pub mod swap;
     pub mod ticks;
+    pub mod time;
+    pub mod twamm;
 }
 
 #[cfg(test)]
@@ -74,6 +73,7 @@ pub(crate) mod tests {
         pub(crate) mod bits_test;
         pub(crate) mod delta_test;
         pub(crate) mod exp2_test;
+        pub(crate) mod exp_test;
         pub(crate) mod fee_test;
         pub(crate) mod liquidity_test;
         pub(crate) mod mask_test;
@@ -83,6 +83,7 @@ pub(crate) mod tests {
         pub(crate) mod string_test;
         pub(crate) mod swap_test;
         pub(crate) mod ticks_test;
+        pub(crate) mod time_test;
     }
 
     pub(crate) mod types {

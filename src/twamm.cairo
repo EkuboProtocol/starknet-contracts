@@ -1,10 +1,3 @@
-pub mod math;
-#[cfg(test)]
-pub(crate) mod math_test;
-
-#[cfg(test)]
-pub(crate) mod twamm_test;
-
 #[starknet::contract]
 pub mod TWAMM {
     use core::cmp::{max, min};
@@ -17,12 +10,12 @@ pub mod TWAMM {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
-    use ekubo::interfaces::extensions::twamm::{
-        ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState, ForwardCallbackData
-    };
     use ekubo::interfaces::core::{
         IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ILocker, ICoreDispatcher,
         ICoreDispatcherTrait
+    };
+    use ekubo::interfaces::extensions::twamm::{
+        ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState, ForwardCallbackData
     };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
     use ekubo::math::fee::{compute_fee};
@@ -42,8 +35,9 @@ pub mod TWAMM {
     use starknet::{
         ContractAddress, get_contract_address, get_block_timestamp, storage_access::{StorePacking}
     };
-    use super::math::{
-        calculate_reward_amount, time::{validate_time, to_duration, TIME_SPACING_SIZE},
+    use ekubo::math::time::{validate_time, to_duration, TIME_SPACING_SIZE};
+    use ekubo::math::twamm::{
+        calculate_reward_amount, 
         calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
         constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
     };

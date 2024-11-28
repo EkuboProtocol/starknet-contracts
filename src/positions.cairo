@@ -11,6 +11,11 @@ pub mod Positions {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::interfaces::core::{
+        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
+        IForwardeeDispatcher,
+    };
+    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::extensions::limit_orders::{
         OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
         ForwardCallbackData as LimitOrderForwardCallbackData,
@@ -22,12 +27,6 @@ pub mod Positions {
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
     };
-    use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
-    use ekubo::interfaces::core::{
-        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
-        IForwardeeDispatcher,
-    };
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use ekubo::limit_orders::{
@@ -38,6 +37,8 @@ pub mod Positions {
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1
     };
     use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
+    use ekubo::math::time::{to_duration};
+    use ekubo::math::twamm::{calculate_sale_rate};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
