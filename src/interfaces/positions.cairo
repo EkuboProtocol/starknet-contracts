@@ -243,8 +243,9 @@ pub trait IPositions<TContractState> {
         ref self: TContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
     ) -> (u128, u128);
 
-    // Returns the current state of the given token ID, limit order key tuples
+    // Returns the current state of the given token ID, limit order key tuples.
+    // Also returns the amount purchased for the immediately executed portion of each order.
     fn get_limit_orders_info(
         self: @TContractState, params: Span<(u64, LimitOrderKey)>
-    ) -> Span<GetOrderInfoResult>;
+    ) -> Span<(GetOrderInfoResult, u128)>;
 }

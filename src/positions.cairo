@@ -215,6 +215,19 @@ pub mod Positions {
         }
     }
 
+    fn limit_order_key_saved_balance_salt(salt: felt252, order_key: LimitOrderKey) -> felt252 {
+        core::pedersen::pedersen(
+            core::pedersen::pedersen(
+                core::pedersen::pedersen(
+                    core::pedersen::pedersen(salt, order_key.token0.into()),
+                    order_key.token1.into(),
+                ),
+                order_key.tick.sign.into()
+            ),
+            order_key.tick.mag.into(),
+        )
+    }
+
     #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
@@ -486,7 +499,9 @@ pub mod Positions {
                                 SavedBalanceKey {
                                     owner: get_contract_address(),
                                     token: buy_token,
-                                    salt: data.salt,
+                                    salt: limit_order_key_saved_balance_salt(
+                                        data.salt, data.order_key
+                                    ),
                                 },
                                 amount_bought
                             );
@@ -577,7 +592,9 @@ pub mod Positions {
                     }
 
                     let saved_balance_key = SavedBalanceKey {
-                        owner: get_contract_address(), token: buy_token, salt: data.salt,
+                        owner: get_contract_address(),
+                        token: buy_token,
+                        salt: limit_order_key_saved_balance_salt(data.salt, data.order_key),
                     };
                     let amount_saved = core.get_saved_balance(saved_balance_key);
 
@@ -1034,8 +1051,10 @@ pub mod Positions {
 
         fn get_limit_orders_info(
             self: @ContractState, mut params: Span<(u64, LimitOrderKey)>
-        ) -> Span<GetLimitOrderInfoResult> {
+        ) -> Span<(GetLimitOrderInfoResult, u128)> {
+            let core = self.core.read();
             let mut requests: Array<GetLimitOrderInfoRequest> = array![];
+            let mut keys: Array<(ContractAddress, felt252)> = array![];
 
             let this_address = get_contract_address();
             while let Option::Some(request) = params.pop_front() {
@@ -1046,9 +1065,35 @@ pub mod Positions {
                             owner: this_address, salt: (*id).into(), order_key: *order_key
                         }
                     );
+                keys
+                    .append(
+                        (
+                            if (*order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
+                                *order_key.token1
+                            } else {
+                                *order_key.token0
+                            },
+                            limit_order_key_saved_balance_salt((*id).into(), *order_key)
+                        )
+                    );
             };
 
-            self.limit_orders.read().get_order_infos(requests.span())
+            let mut infos = self.limit_orders.read().get_order_infos(requests.span());
+
+            let mut results: Array<(GetLimitOrderInfoResult, u128)> = array![];
+            let saved_balance_owner = get_contract_address();
+            while let Option::Some(info) = infos.pop_front() {
+                let (buy_token, saved_balance_salt) = keys.pop_front().expect('Order key missing');
+                let saved_balance = core
+                    .get_saved_balance(
+                        SavedBalanceKey {
+                            owner: saved_balance_owner, token: buy_token, salt: saved_balance_salt,
+                        }
+                    );
+                results.append((*info, saved_balance));
+            };
+
+            results.span()
         }
     }
 }
