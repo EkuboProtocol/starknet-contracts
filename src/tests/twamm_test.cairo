@@ -2,10 +2,6 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
-use ekubo::twamm::TWAMM::{
-    OrderUpdated, VirtualOrdersExecuted, OrderProceedsWithdrawn, time_to_word_and_bit_index,
-    word_and_bit_index_to_time
-};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
@@ -29,6 +25,10 @@ use ekubo::tests::helper::{
     Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner, FEE_ONE_PERCENT
 };
 use ekubo::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
+use ekubo::twamm::TWAMM::{
+    OrderUpdated, VirtualOrdersExecuted, OrderProceedsWithdrawn, time_to_word_and_bit_index,
+    word_and_bit_index_to_time
+};
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};

@@ -1,9 +1,9 @@
 use core::num::traits::{Zero, Sqrt};
 use core::traits::{Into, TryInto};
+use ekubo::math::exp::{exp};
 use ekubo::math::fee::{compute_fee};
 use ekubo::math::muldiv::{div, muldiv};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-use ekubo::math::exp::{exp};
 
 pub mod constants {
     pub const X32_u128: u128 = 0x100000000_u128;

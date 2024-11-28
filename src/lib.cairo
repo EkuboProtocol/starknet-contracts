@@ -1,11 +1,11 @@
 pub mod core;
+pub mod limit_orders;
 pub mod mock_erc20;
 pub mod owned_nft;
 pub mod positions;
 pub mod router;
-pub mod limit_orders;
-pub mod twamm;
 pub mod token_registry;
+pub mod twamm;
 
 pub mod components {
     pub mod clear;

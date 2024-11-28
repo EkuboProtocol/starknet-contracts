@@ -21,6 +21,11 @@ pub mod TWAMM {
     use ekubo::math::fee::{compute_fee};
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+    use ekubo::math::time::{validate_time, to_duration, TIME_SPACING_SIZE};
+    use ekubo::math::twamm::{
+        calculate_reward_amount, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
+        constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
+    };
     use ekubo::types::bounds::{max_bounds, Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
@@ -34,12 +39,6 @@ pub mod TWAMM {
     use starknet::storage::{StoragePathEntry, StoragePath};
     use starknet::{
         ContractAddress, get_contract_address, get_block_timestamp, storage_access::{StorePacking}
-    };
-    use ekubo::math::time::{validate_time, to_duration, TIME_SPACING_SIZE};
-    use ekubo::math::twamm::{
-        calculate_reward_amount, 
-        calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
-        constants::{MAX_USABLE_TICK_MAGNITUDE, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_BOUNDS_MAX_SQRT_RATIO}
     };
 
     #[derive(Drop, Copy, Serde, starknet::Store)]

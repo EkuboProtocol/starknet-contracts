@@ -5,7 +5,6 @@ use core::result::{ResultTrait};
 use core::traits::{Into, TryInto};
 use ekubo::components::util::{serialize};
 use ekubo::core::{Core};
-use ekubo::twamm::{TWAMM};
 use ekubo::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, ILockerDispatcher, UpdatePositionParameters,
     SwapParameters, IExtensionDispatcher
@@ -24,6 +23,7 @@ use ekubo::tests::mocks::locker::{
 use ekubo::tests::mocks::mock_extension::{MockExtension, IMockExtensionDispatcher};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::token_registry::{TokenRegistry, ITokenRegistryDispatcher,};
+use ekubo::twamm::{TWAMM};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::delta::{Delta};
