@@ -48,6 +48,8 @@ echo "Declaring NFT"
 NFT_CLASS_HASH=$(declare_class_hash OwnedNFT)
 echo "Declaring TWAMM"
 TWAMM_CLASS_HASH=$(declare_class_hash TWAMM)
+echo "Declaring LimitOrders"
+LIMIT_ORDERS_CLASS_HASH=$(declare_class_hash LimitOrders)
 # echo "Declaring Router"
 # ROUTER_CLASS_HASH=$(declare_class_hash Router)
 # echo "Declaring TokenRegistry"
@@ -57,6 +59,7 @@ echo "Declared Core @ $CORE_CLASS_HASH"
 echo "Declared Positions @ $POSITIONS_CLASS_HASH"
 echo "Declared NFT @ $NFT_CLASS_HASH"
 echo "Declared TWAMM @ $TWAMM_CLASS_HASH"
+echo "Declared LimitOrders @ $LIMIT_ORDERS_CLASS_HASH"
 # echo "Declared router @ $ROUTER_CLASS_HASH"
 # echo "Declared token registry @ $TOKEN_REGISTRY_CLASS_HASH"
 

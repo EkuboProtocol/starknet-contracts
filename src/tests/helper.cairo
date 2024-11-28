@@ -13,6 +13,7 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
+use ekubo::limit_orders::{LimitOrders};
 use ekubo::mock_erc20::{MockERC20, IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher};
 use ekubo::positions::{Positions};
@@ -220,6 +221,19 @@ pub impl DeployerTraitImpl of DeployerTrait {
             true
         )
             .expect('twamm deploy failed');
+
+        IExtensionDispatcher { contract_address: address }
+    }
+
+
+    fn deploy_limit_orders(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
+        let (address, _) = deploy_syscall(
+            LimitOrders::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            serialize(@(default_owner(), core)).span(),
+            true
+        )
+            .expect('limit_orders deploy failed');
 
         IExtensionDispatcher { contract_address: address }
     }

@@ -1,3 +1,4 @@
+use ekubo::extensions::interfaces::limit_orders::{OrderKey as LimitOrderKey, GetOrderInfoResult};
 use ekubo::extensions::interfaces::twamm::{OrderKey, OrderInfo};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::keys::{PoolKey};
@@ -29,11 +30,17 @@ pub trait IPositions<TContractState> {
     // Upgrades the classhash of the nft
     fn upgrade_nft(ref self: TContractState, class_hash: ClassHash);
 
-    // Set the contract address of the twamm
+    // Set the contract address of the TWAMM extension
     fn set_twamm(ref self: TContractState, twamm_address: ContractAddress);
 
-    // Returns the twamm contract address
+    // Set the contract address of the limit order extension
+    fn set_limit_orders(ref self: TContractState, limit_orders_address: ContractAddress);
+
+    // Returns the TWAMM contract address
     fn get_twamm_address(self: @TContractState) -> ContractAddress;
+
+    // Returns the limit order contract address
+    fn get_limit_orders_address(self: @TContractState) -> ContractAddress;
 
     // Returns the principal and fee amount for a set of positions
     fn get_tokens_info(
@@ -211,4 +218,34 @@ pub trait IPositions<TContractState> {
     fn withdraw_proceeds_from_sale_to(
         ref self: TContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
     ) -> u128;
+
+    // Creates a limit order and returns the amount of liquidity that was associated with the sell
+    // amount, as well as the amount immediately purchased.
+    fn place_limit_order(
+        ref self: TContractState, id: u64, order_key: LimitOrderKey, amount: u128
+    ) -> (u128, u128);
+
+    // Creates a new position NFT and creates a limit order associated with the position. Returns
+    // the ID and the amount of liquidity associated with the limit order as well as the amount
+    // immediately executed.
+    fn mint_and_place_limit_order(
+        ref self: TContractState, order_key: LimitOrderKey, amount: u128
+    ) -> (u64, u128, u128);
+
+    // Closes the limit order for the given NFT ID and order key, and returns the amount of token0
+    // and token1 received
+    fn close_limit_order(
+        ref self: TContractState, id: u64, order_key: LimitOrderKey
+    ) -> (u128, u128);
+
+    // Same as above but sends the proceeds to the given address
+    fn close_limit_order_to(
+        ref self: TContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
+    ) -> (u128, u128);
+
+    // Returns the current state of the given token ID, limit order key tuples.
+    // Also returns the amount purchased for the immediately executed portion of each order.
+    fn get_limit_orders_info(
+        self: @TContractState, params: Span<(u64, LimitOrderKey)>
+    ) -> Span<(GetOrderInfoResult, u128)>;
 }

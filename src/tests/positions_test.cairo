@@ -3,6 +3,10 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use ekubo::extensions::interfaces::limit_orders::{
+    OrderKey as LimitOrderKey, GetOrderInfoResult as GetLimitOrderInfoResult,
+    OrderState as LimitOrderState
+};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
@@ -228,6 +232,388 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     assert(balance0 == u256 { low: 66674999, high: 0 }, 'balance0');
     assert(balance1 == Zero::zero(), 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
+}
+
+#[test]
+fn test_create_limit_order_token0() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token0.increase_balance(positions.contract_address, 100);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            },
+            amount: 100
+        );
+
+    assert_eq!(id, 1);
+    assert_eq!(liquidity, 1562550);
+    assert_eq!(amount_bought, 0);
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 99);
+    assert_eq!(amount1, 0);
+}
+
+#[test]
+fn test_create_limit_order_token1() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token1.increase_balance(positions.contract_address, 100);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            },
+            amount: 100
+        );
+
+    assert_eq!(id, 1);
+    assert_eq!(liquidity, 1562350);
+    assert_eq!(amount_bought, 0);
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 0);
+    assert_eq!(amount1, 99);
+}
+
+#[test]
+fn test_create_limit_order_token0_then_token1() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token0.increase_balance(positions.contract_address, 100);
+    positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            },
+            amount: 100
+        );
+
+    setup.token1.increase_balance(positions.contract_address, 50);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            },
+            amount: 50
+        );
+
+    assert_eq!(id, 2);
+    assert_eq!(liquidity, 0);
+    assert_eq!(amount_bought, 49);
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 49);
+    assert_eq!(amount1, 0);
+}
+
+#[test]
+fn test_create_limit_order_token1_then_token0() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token1.increase_balance(positions.contract_address, 100);
+    positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            },
+            amount: 100
+        );
+
+    setup.token0.increase_balance(positions.contract_address, 50);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            },
+            amount: 50
+        );
+
+    assert_eq!(id, 2);
+    assert_eq!(liquidity, 0);
+    assert_eq!(amount_bought, 49);
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 0);
+    assert_eq!(amount1, 49);
+}
+
+#[test]
+fn test_create_limit_order_token0_then_token1_fully_execute() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token0.increase_balance(positions.contract_address, 100);
+    positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            },
+            amount: 100
+        );
+
+    setup.token1.increase_balance(positions.contract_address, 150);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            },
+            amount: 150
+        );
+
+    assert_eq!(id, 2);
+    assert_eq!(liquidity, 765551);
+    assert_eq!(amount_bought, 99);
+
+    assert_eq!(
+        positions
+            .get_limit_orders_info(
+                array![
+                    (
+                        id,
+                        LimitOrderKey {
+                            token0: setup.token0.contract_address,
+                            token1: setup.token1.contract_address,
+                            tick: i129 { mag: 128, sign: false },
+                        }
+                    )
+                ]
+                    .span()
+            ),
+        array![
+            (
+                GetLimitOrderInfoResult {
+                    state: LimitOrderState {
+                        initialized_ticks_crossed_snapshot: 2, liquidity: 765551
+                    },
+                    executed: false,
+                    amount0: 0,
+                    amount1: 48
+                },
+                99
+            )
+        ]
+            .span()
+    );
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 99);
+    assert_eq!(amount1, 48);
+}
+
+#[test]
+fn test_create_limit_order_token1_then_token0_fully_execute() {
+    let caller = contract_address_const::<1>();
+    set_contract_address(caller);
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: i129 { mag: 500, sign: false },
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    let limit_orders = d.deploy_limit_orders(setup.core);
+    set_contract_address(default_owner());
+    positions.set_limit_orders(limit_orders.contract_address);
+
+    setup.token1.increase_balance(positions.contract_address, 100);
+    positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 128, sign: false },
+            },
+            amount: 100
+        );
+
+    setup.token0.increase_balance(positions.contract_address, 150);
+    let (id, liquidity, amount_bought) = positions
+        .mint_and_place_limit_order(
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            },
+            amount: 150
+        );
+
+    assert_eq!(id, 2);
+    assert_eq!(liquidity, 781275);
+    assert_eq!(amount_bought, 99);
+
+    assert_eq!(
+        positions
+            .get_limit_orders_info(
+                array![
+                    (
+                        id,
+                        LimitOrderKey {
+                            token0: setup.token0.contract_address,
+                            token1: setup.token1.contract_address,
+                            tick: i129 { mag: 0, sign: false },
+                        }
+                    )
+                ]
+                    .span()
+            ),
+        array![
+            (
+                GetLimitOrderInfoResult {
+                    state: LimitOrderState {
+                        initialized_ticks_crossed_snapshot: 2, liquidity: 781275
+                    },
+                    executed: false,
+                    amount0: 49,
+                    amount1: 0
+                },
+                99
+            )
+        ]
+            .span()
+    );
+
+    let (amount0, amount1) = positions
+        .close_limit_order(
+            id,
+            LimitOrderKey {
+                token0: setup.token0.contract_address,
+                token1: setup.token1.contract_address,
+                tick: i129 { mag: 0, sign: false },
+            }
+        );
+
+    assert_eq!(amount0, 49);
+    assert_eq!(amount1, 99);
 }
 
 #[test]

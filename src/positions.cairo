@@ -11,6 +11,13 @@ pub mod Positions {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
+    use ekubo::extensions::interfaces::limit_orders::{
+        OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
+        ForwardCallbackData as LimitOrderForwardCallbackData,
+        ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
+        CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest,
+        GetOrderInfoResult as GetLimitOrderInfoResult
+    };
     use ekubo::extensions::interfaces::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
@@ -18,20 +25,24 @@ pub mod Positions {
     use ekubo::extensions::twamm::math::{calculate_sale_rate, time::{to_duration}};
     use ekubo::interfaces::core::{
         ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
-        IForwardeeDispatcher
+        IForwardeeDispatcher,
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+    use ekubo::limit_orders::{
+        LimitOrders::{LIMIT_ORDER_TICK_SPACING, DOUBLE_LIMIT_ORDER_TICK_SPACING}
+    };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
-    use ekubo::math::max_liquidity::{max_liquidity};
+    use ekubo::math::max_liquidity::{
+        max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1
+    };
     use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
     use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129};
-    use ekubo::types::keys::{PoolKey};
-    use ekubo::types::keys::{PositionKey};
+    use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
     use ekubo::types::pool_price::{PoolPrice};
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StoragePointerWriteAccess;
@@ -59,6 +70,7 @@ pub mod Positions {
         core: ICoreDispatcher,
         nft: IOwnedNFTDispatcher,
         twamm: ITWAMMDispatcher,
+        limit_orders: ILimitOrdersDispatcher,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -158,6 +170,20 @@ pub mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
+    struct PlaceOrderCallbackData {
+        salt: felt252,
+        order_key: LimitOrderKey,
+        amount: u128
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct CloseOrderCallbackData {
+        salt: felt252,
+        order_key: LimitOrderKey,
+        recipient: ContractAddress,
+    }
+
+    #[derive(Serde, Copy, Drop)]
     enum LockCallbackData {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
@@ -166,6 +192,8 @@ pub mod Positions {
         IncreaseSaleRate: IncreaseSaleRateCallbackData,
         DecreaseSaleRate: DecreaseSaleRateCallbackData,
         CollectOrderProceeds: CollectOrderProceedsCallbackData,
+        PlaceOrder: PlaceOrderCallbackData,
+        CloseOrder: CloseOrderCallbackData,
     }
 
     #[abi(embed_v0)]
@@ -185,6 +213,19 @@ pub mod Positions {
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
             (nft, caller)
         }
+    }
+
+    fn limit_order_key_saved_balance_salt(salt: felt252, order_key: LimitOrderKey) -> felt252 {
+        core::pedersen::pedersen(
+            core::pedersen::pedersen(
+                core::pedersen::pedersen(
+                    core::pedersen::pedersen(salt, order_key.token0.into()),
+                    order_key.token1.into(),
+                ),
+                order_key.tick.sign.into()
+            ),
+            order_key.tick.mag.into(),
+        )
     }
 
     #[abi(embed_v0)]
@@ -383,6 +424,192 @@ pub mod Positions {
                         );
 
                     serialize(@proceeds_amount).span()
+                },
+                LockCallbackData::PlaceOrder(data) => {
+                    let limit_orders = self.limit_orders.read();
+                    let pool_key = PoolKey {
+                        token0: data.order_key.token0,
+                        token1: data.order_key.token1,
+                        fee: 0,
+                        tick_spacing: LIMIT_ORDER_TICK_SPACING,
+                        extension: limit_orders.contract_address,
+                    };
+
+                    let pool_price = core.get_pool_price(pool_key);
+
+                    let (sell_token, buy_token) = if (data
+                        .order_key
+                        .tick
+                        .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                        .is_zero() {
+                        (data.order_key.token0, data.order_key.token1)
+                    } else {
+                        (data.order_key.token1, data.order_key.token0)
+                    };
+
+                    let bounds = Bounds {
+                        lower: data.order_key.tick,
+                        upper: data.order_key.tick
+                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                    };
+                    let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
+                    let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
+
+                    let (amount_sold, amount_bought) = if pool_price.sqrt_ratio.is_zero() {
+                        (0, 0)
+                    } else if sell_token == pool_key.token0
+                        && pool_price.sqrt_ratio > sqrt_ratio_lower {
+                        let delta = core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 { mag: data.amount, sign: false },
+                                    is_token1: false,
+                                    sqrt_ratio_limit: sqrt_ratio_lower,
+                                    skip_ahead: 0
+                                }
+                            );
+                        (delta.amount0.mag, delta.amount1.mag)
+                    } else if sell_token == pool_key.token1
+                        && pool_price.sqrt_ratio < sqrt_ratio_upper {
+                        let delta = core
+                            .swap(
+                                pool_key,
+                                SwapParameters {
+                                    amount: i129 { mag: data.amount, sign: false },
+                                    is_token1: true,
+                                    sqrt_ratio_limit: sqrt_ratio_upper,
+                                    skip_ahead: 0
+                                }
+                            );
+                        (delta.amount1.mag, delta.amount0.mag)
+                    } else {
+                        (0, 0)
+                    };
+
+                    if amount_sold > 0 {
+                        let token = IERC20Dispatcher { contract_address: sell_token };
+                        token.approve(core.contract_address, amount_sold.into());
+                        core.pay(sell_token);
+                    }
+
+                    if amount_bought > 0 {
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(),
+                                    token: buy_token,
+                                    salt: limit_order_key_saved_balance_salt(
+                                        data.salt, data.order_key
+                                    ),
+                                },
+                                amount_bought
+                            );
+                    }
+
+                    // we may not have enough amount left over to need to place an order
+                    let order_liquidity = if data.amount != amount_sold {
+                        let liquidity = if sell_token == data.order_key.token0 {
+                            max_liquidity_for_token0(
+                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
+                            )
+                        } else {
+                            max_liquidity_for_token1(
+                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
+                            )
+                        };
+
+                        let result: LimitOrderForwardCallbackResult = forward_lock(
+                            core,
+                            IForwardeeDispatcher {
+                                contract_address: limit_orders.contract_address
+                            },
+                            @LimitOrderForwardCallbackData::PlaceOrder(
+                                PlaceOrderForwardCallbackData {
+                                    salt: data.salt, order_key: data.order_key, liquidity,
+                                }
+                            )
+                        );
+
+                        if let LimitOrderForwardCallbackResult::PlaceOrder(amount) = result {
+                            let token = IERC20Dispatcher { contract_address: sell_token };
+                            token.approve(core.contract_address, amount.into());
+                            core.pay(sell_token);
+                        } else {
+                            panic!("Unexpected return data from forward call");
+                        }
+
+                        liquidity
+                    } else {
+                        0
+                    };
+
+                    serialize(@(order_liquidity, amount_bought)).span()
+                },
+                LockCallbackData::CloseOrder(data) => {
+                    let limit_orders = self.limit_orders.read();
+
+                    let buy_token = if (data.order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                        .is_zero() {
+                        data.order_key.token1
+                    } else {
+                        data.order_key.token0
+                    };
+
+                    let order_info = limit_orders
+                        .get_order_info(
+                            GetLimitOrderInfoRequest {
+                                owner: get_contract_address(),
+                                salt: data.salt,
+                                order_key: data.order_key,
+                            }
+                        );
+
+                    if order_info.state.liquidity.is_non_zero() {
+                        let result: LimitOrderForwardCallbackResult = forward_lock(
+                            core,
+                            IForwardeeDispatcher {
+                                contract_address: limit_orders.contract_address
+                            },
+                            @LimitOrderForwardCallbackData::CloseOrder(
+                                CloseOrderForwardCallbackData {
+                                    salt: data.salt, order_key: data.order_key,
+                                }
+                            )
+                        );
+
+                        if let LimitOrderForwardCallbackResult::CloseOrder((amount0, amount1)) =
+                            result {
+                            if amount0 > 0 {
+                                core.withdraw(data.order_key.token0, data.recipient, amount0);
+                            }
+                            if amount1 > 0 {
+                                core.withdraw(data.order_key.token1, data.recipient, amount1);
+                            }
+                        } else {
+                            panic!("Unexpected return data from forward call");
+                        }
+                    }
+
+                    let saved_balance_key = SavedBalanceKey {
+                        owner: get_contract_address(),
+                        token: buy_token,
+                        salt: limit_order_key_saved_balance_salt(data.salt, data.order_key),
+                    };
+                    let amount_saved = core.get_saved_balance(saved_balance_key);
+
+                    if amount_saved > 0 {
+                        core.load(saved_balance_key.token, saved_balance_key.salt, amount_saved);
+                        core.withdraw(buy_token, data.recipient, amount_saved);
+                    }
+
+                    let (total0, total1) = if buy_token == data.order_key.token0 {
+                        (order_info.amount0 + amount_saved, order_info.amount1)
+                    } else {
+                        (order_info.amount0, order_info.amount1 + amount_saved)
+                    };
+
+                    serialize(@(total0, total1)).span()
                 }
             }
         }
@@ -405,8 +632,19 @@ pub mod Positions {
             self.twamm.write(ITWAMMDispatcher { contract_address: twamm_address });
         }
 
+        fn set_limit_orders(ref self: ContractState, limit_orders_address: ContractAddress) {
+            self.require_owner();
+            self
+                .limit_orders
+                .write(ILimitOrdersDispatcher { contract_address: limit_orders_address });
+        }
+
         fn get_twamm_address(self: @ContractState) -> ContractAddress {
             self.twamm.read().contract_address
+        }
+
+        fn get_limit_orders_address(self: @ContractState) -> ContractAddress {
+            self.limit_orders.read().contract_address
         }
 
         fn mint(ref self: ContractState, pool_key: PoolKey, bounds: Bounds) -> u64 {
@@ -444,7 +682,7 @@ pub mod Positions {
         fn get_tokens_info(
             self: @ContractState, mut params: Span<GetTokenInfoRequest>
         ) -> Span<GetTokenInfoResult> {
-            let mut results: Array<GetTokenInfoResult> = ArrayTrait::new();
+            let mut results: Array<GetTokenInfoResult> = array![];
 
             while let Option::Some(request) = params.pop_front() {
                 results
@@ -490,7 +728,7 @@ pub mod Positions {
         fn get_orders_info(
             self: @ContractState, mut params: Span<(u64, OrderKey)>
         ) -> Span<OrderInfo> {
-            let mut results: Array<OrderInfo> = ArrayTrait::new();
+            let mut results: Array<OrderInfo> = array![];
 
             while let Option::Some(request) = params.pop_front() {
                 let (id, order_key) = request;
@@ -770,6 +1008,92 @@ pub mod Positions {
                     }
                 )
             )
+        }
+
+        fn place_limit_order(
+            ref self: ContractState, id: u64, order_key: LimitOrderKey, amount: u128
+        ) -> (u128, u128) {
+            self.check_authorization(id);
+
+            call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::PlaceOrder(
+                    PlaceOrderCallbackData { salt: id.into(), order_key, amount }
+                )
+            )
+        }
+
+        fn mint_and_place_limit_order(
+            ref self: ContractState, order_key: LimitOrderKey, amount: u128
+        ) -> (u64, u128, u128) {
+            let id = self.mint_v2(Zero::zero());
+            let (liquidity, purchased) = self.place_limit_order(id, order_key, amount);
+            (id, liquidity, purchased)
+        }
+
+        fn close_limit_order(
+            ref self: ContractState, id: u64, order_key: LimitOrderKey
+        ) -> (u128, u128) {
+            self.close_limit_order_to(id, order_key, get_caller_address())
+        }
+
+        fn close_limit_order_to(
+            ref self: ContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
+        ) -> (u128, u128) {
+            self.check_authorization(id);
+            call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::CloseOrder(
+                    CloseOrderCallbackData { salt: id.into(), order_key, recipient }
+                )
+            )
+        }
+
+        fn get_limit_orders_info(
+            self: @ContractState, mut params: Span<(u64, LimitOrderKey)>
+        ) -> Span<(GetLimitOrderInfoResult, u128)> {
+            let core = self.core.read();
+            let mut requests: Array<GetLimitOrderInfoRequest> = array![];
+            let mut keys: Array<(ContractAddress, felt252)> = array![];
+
+            let this_address = get_contract_address();
+            while let Option::Some(request) = params.pop_front() {
+                let (id, order_key) = request;
+                requests
+                    .append(
+                        GetLimitOrderInfoRequest {
+                            owner: this_address, salt: (*id).into(), order_key: *order_key
+                        }
+                    );
+                keys
+                    .append(
+                        (
+                            if (*order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
+                                *order_key.token1
+                            } else {
+                                *order_key.token0
+                            },
+                            limit_order_key_saved_balance_salt((*id).into(), *order_key)
+                        )
+                    );
+            };
+
+            let mut infos = self.limit_orders.read().get_order_infos(requests.span());
+
+            let mut results: Array<(GetLimitOrderInfoResult, u128)> = array![];
+            let saved_balance_owner = get_contract_address();
+            while let Option::Some(info) = infos.pop_front() {
+                let (buy_token, saved_balance_salt) = keys.pop_front().expect('Order key missing');
+                let saved_balance = core
+                    .get_saved_balance(
+                        SavedBalanceKey {
+                            owner: saved_balance_owner, token: buy_token, salt: saved_balance_salt,
+                        }
+                    );
+                results.append((*info, saved_balance));
+            };
+
+            results.span()
         }
     }
 }
