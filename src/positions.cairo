@@ -474,6 +474,12 @@ pub mod Positions {
                         (0, 0)
                     };
 
+                    if amount_sold > 0 {
+                        let token = IERC20Dispatcher { contract_address: sell_token };
+                        token.approve(core.contract_address, amount_sold.into());
+                        core.pay(sell_token);
+                    }
+
                     if amount_bought > 0 {
                         core
                             .save(
