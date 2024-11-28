@@ -11,14 +11,14 @@ pub mod Positions {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
-    use ekubo::extensions::interfaces::limit_orders::{
+    use ekubo::interfaces::extensions::limit_orders::{
         OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
         ForwardCallbackData as LimitOrderForwardCallbackData,
         ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
         CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest,
         GetOrderInfoResult as GetLimitOrderInfoResult
     };
-    use ekubo::extensions::interfaces::twamm::{
+    use ekubo::interfaces::extensions::twamm::{
         OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
         UpdateSaleRateCallbackData, CollectProceedsCallbackData
     };

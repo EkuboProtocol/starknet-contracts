@@ -1,5 +1,5 @@
-use ekubo::extensions::interfaces::limit_orders::{OrderKey as LimitOrderKey, GetOrderInfoResult};
-use ekubo::extensions::interfaces::twamm::{OrderKey, OrderInfo};
+use ekubo::interfaces::extensions::limit_orders::{OrderKey as LimitOrderKey, GetOrderInfoResult};
+use ekubo::interfaces::extensions::twamm::{OrderKey, OrderInfo};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::keys::{PoolKey};
 use ekubo::types::pool_price::{PoolPrice};

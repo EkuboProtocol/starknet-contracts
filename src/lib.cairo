@@ -1,6 +1,5 @@
 pub mod core;
 pub mod limit_orders;
-pub mod mathlib;
 pub mod mock_erc20;
 pub mod owned_nft;
 pub mod positions;
@@ -18,20 +17,20 @@ pub mod components {
 
 pub mod extensions {
     pub mod twamm;
-    pub mod interfaces {
-        pub mod limit_orders;
-        pub mod twamm;
-    }
 }
 
 pub mod interfaces {
     pub mod core;
     pub mod erc20;
     pub mod erc721;
-    pub mod mathlib;
     pub mod positions;
     pub mod src5;
     pub mod upgradeable;
+
+    pub mod extensions {
+        pub mod limit_orders;
+        pub mod twamm;
+    }
 }
 
 pub mod math {

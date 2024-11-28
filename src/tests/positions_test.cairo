@@ -3,7 +3,7 @@ use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::extensions::interfaces::limit_orders::{
+use ekubo::interfaces::extensions::limit_orders::{
     OrderKey as LimitOrderKey, GetOrderInfoResult as GetLimitOrderInfoResult,
     OrderState as LimitOrderState
 };

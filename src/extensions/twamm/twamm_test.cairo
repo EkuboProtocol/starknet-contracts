@@ -3,7 +3,7 @@ use core::option::{OptionTrait};
 use core::traits::{Into};
 use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
 
-use ekubo::extensions::interfaces::twamm::{
+use ekubo::interfaces::extensions::twamm::{
     ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo, OrderKey, StateKey, SaleRateState
 };
 use ekubo::extensions::twamm::TWAMM::{

@@ -17,7 +17,7 @@ pub mod TWAMM {
     };
     use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
     use ekubo::components::util::{serialize};
-    use ekubo::extensions::interfaces::twamm::{
+    use ekubo::interfaces::extensions::twamm::{
         ITWAMM, StateKey, OrderKey, OrderInfo, SaleRateState, ForwardCallbackData
     };
     use ekubo::interfaces::core::{
