@@ -1,8 +1,10 @@
 pub mod core;
 pub mod limit_orders;
 pub mod mock_erc20;
+pub mod oracle;
 pub mod owned_nft;
 pub mod positions;
+pub mod price_fetcher;
 pub mod router;
 pub mod token_registry;
 pub mod twamm;
@@ -95,6 +97,7 @@ pub(crate) mod tests {
         pub(crate) mod keys_test;
         pub(crate) mod pool_price_test;
         pub(crate) mod position_test;
+        pub(crate) mod snapshot_test;
     }
 }
 
@@ -107,5 +110,6 @@ pub mod types {
     pub mod keys;
     pub mod pool_price;
     pub mod position;
+    pub mod snapshot;
 }
 
