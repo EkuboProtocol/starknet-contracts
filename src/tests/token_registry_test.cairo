@@ -4,10 +4,10 @@ use ekubo::mock_erc20::{MockERC20IERC20ImplTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::token_registry::{
     ITokenRegistryDispatcherTrait,
-    TokenRegistry::{ten_pow, Registration, get_string_metadata, FeltIntoByteArray}
+    TokenRegistry::{FeltIntoByteArray, Registration, get_string_metadata, ten_pow},
 };
 use starknet::{
-    get_contract_address, ContractAddress, syscalls::{deploy_syscall}, testing::{pop_log}
+    ContractAddress, get_contract_address, syscalls::{deploy_syscall}, testing::{pop_log},
 };
 
 #[test]
@@ -63,7 +63,7 @@ fn deploy_test_target(a: felt252, b: ByteArray) -> ContractAddress {
     Serde::serialize(@b, ref args);
 
     let (address, _) = deploy_syscall(
-        TestTarget::TEST_CLASS_HASH.try_into().unwrap(), 0, args.span(), true
+        TestTarget::TEST_CLASS_HASH.try_into().unwrap(), 0, args.span(), true,
     )
         .expect('test target deploy');
 
@@ -77,7 +77,7 @@ fn test_felt252_into_byte_array() {
     assert_eq!(FeltIntoByteArray::into(''), "");
     assert_eq!(
         FeltIntoByteArray::into('1234567890123456789012345678901'),
-        "1234567890123456789012345678901"
+        "1234567890123456789012345678901",
     );
 }
 
@@ -87,14 +87,14 @@ fn test_get_string_metadata() {
     assert_eq!(get_string_metadata(tt, selector!("a")), get_string_metadata(tt, selector!("b")));
     // max length
     let tt = deploy_test_target(
-        '1234567890123456789012345678901', "1234567890123456789012345678901"
+        '1234567890123456789012345678901', "1234567890123456789012345678901",
     );
     assert_eq!(get_string_metadata(tt, selector!("a")), get_string_metadata(tt, selector!("b")));
     // longer than max length
     let tt = deploy_test_target('', "12345678901234567890123456789012345678901234567890");
     assert_eq!(
         get_string_metadata(tt, selector!("b")),
-        "12345678901234567890123456789012345678901234567890"
+        "12345678901234567890123456789012345678901234567890",
     )
 }
 
@@ -119,6 +119,6 @@ fn test_register() {
             symbol: "",
             decimals: 18,
             total_supply: 0xffffffffffffffffffffffffffffffff,
-        }
+        },
     )
 }

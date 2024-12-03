@@ -2,8 +2,8 @@ use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
 use starknet::{
-    contract_address_const, syscalls::{deploy_syscall}, ContractAddress,
-    testing::{set_contract_address}
+    ContractAddress, contract_address_const, syscalls::{deploy_syscall},
+    testing::{set_contract_address},
 };
 
 #[starknet::contract]
@@ -19,7 +19,10 @@ fn setup() -> (IClearDispatcher, IERC20Dispatcher, ContractAddress) {
     let mut d: Deployer = Default::default();
 
     let (test_contract, _) = deploy_syscall(
-        TestContract::TEST_CLASS_HASH.try_into().unwrap(), d.get_next_nonce(), array![].span(), true
+        TestContract::TEST_CLASS_HASH.try_into().unwrap(),
+        d.get_next_nonce(),
+        array![].span(),
+        true,
     )
         .unwrap();
 
@@ -31,7 +34,7 @@ fn setup() -> (IClearDispatcher, IERC20Dispatcher, ContractAddress) {
     (
         IClearDispatcher { contract_address: test_contract },
         IERC20Dispatcher { contract_address: token.contract_address },
-        caller
+        caller,
     )
 }
 

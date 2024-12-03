@@ -131,6 +131,6 @@ pub fn mask(n: u8) -> u128 {
         _ => {
             assert(n == 127, 'mask');
             0xffffffffffffffffffffffffffffffff
-        }
+        },
     }
 }

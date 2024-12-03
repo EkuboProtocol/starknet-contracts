@@ -5,10 +5,10 @@ use ekubo::components::util::{serialize};
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::i129::{i129};
-use starknet::{get_caller_address, ContractAddress};
+use starknet::{ContractAddress, get_caller_address};
 
 pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
-    core: ICoreDispatcher, input: @TInput
+    core: ICoreDispatcher, input: @TInput,
 ) -> TOutput {
     let mut output_span = core.lock(serialize(input).span());
 
@@ -16,7 +16,7 @@ pub fn call_core_with_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>
 }
 
 pub fn forward_lock<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
-    core: ICoreDispatcher, forwardee: IForwardeeDispatcher, input: @TInput
+    core: ICoreDispatcher, forwardee: IForwardeeDispatcher, input: @TInput,
 ) -> TOutput {
     let mut output_span = core.forward(forwardee, serialize(input).span());
 
@@ -28,14 +28,14 @@ pub fn check_caller_is_core(core: ICoreDispatcher) {
 }
 
 pub fn consume_callback_data<TInput, +Serde<TInput>>(
-    core: ICoreDispatcher, mut callback_data: Span<felt252>
+    core: ICoreDispatcher, mut callback_data: Span<felt252>,
 ) -> TInput {
     check_caller_is_core(core);
     Serde::deserialize(ref callback_data).expect('DESERIALIZE_INPUT_FAILED')
 }
 
 pub fn handle_delta(
-    core: ICoreDispatcher, token: ContractAddress, delta: i129, recipient: ContractAddress
+    core: ICoreDispatcher, token: ContractAddress, delta: i129, recipient: ContractAddress,
 ) {
     if (delta.is_non_zero()) {
         if (delta.sign) {

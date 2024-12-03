@@ -33,7 +33,7 @@ impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
         let x: u256 = value.into();
 
         OrderState {
-            initialized_ticks_crossed_snapshot: x.high.try_into().unwrap(), liquidity: x.low
+            initialized_ticks_crossed_snapshot: x.high.try_into().unwrap(), liquidity: x.low,
         }
     }
 }
@@ -55,7 +55,7 @@ impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
                 value.initialized_ticks_crossed.into() + 0x10000000000000000
             } else {
                 value.initialized_ticks_crossed.into()
-            }
+            },
         }
             .try_into()
             .unwrap()
@@ -66,12 +66,12 @@ impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
         if (x.high >= 0x10000000000000000) {
             PoolState {
                 last_tick: i129 { mag: x.low, sign: true },
-                initialized_ticks_crossed: (x.high - 0x10000000000000000).try_into().unwrap()
+                initialized_ticks_crossed: (x.high - 0x10000000000000000).try_into().unwrap(),
             }
         } else {
             PoolState {
                 last_tick: i129 { mag: x.low, sign: false },
-                initialized_ticks_crossed: x.high.try_into().unwrap()
+                initialized_ticks_crossed: x.high.try_into().unwrap(),
             }
         }
     }
@@ -121,7 +121,7 @@ pub enum ForwardCallbackResult {
     // Returns the amount of {token0,token1} that must be paid to cover the order
     PlaceOrder: u128,
     // The amount of token0 and token1 received for closing the order
-    CloseOrder: (u128, u128)
+    CloseOrder: (u128, u128),
 }
 
 #[starknet::interface]
@@ -131,7 +131,7 @@ pub trait ILimitOrders<TContractState> {
 
     // Return information on each of the given orders
     fn get_order_infos(
-        self: @TContractState, requests: Span<GetOrderInfoRequest>
+        self: @TContractState, requests: Span<GetOrderInfoRequest>,
     ) -> Span<GetOrderInfoResult>;
 }
 
@@ -143,10 +143,10 @@ pub mod LimitOrders {
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::interfaces::core::{
-        IExtension, SwapParameters, UpdatePositionParameters, IForwardee, ICoreDispatcher,
-        ICoreDispatcherTrait, ILocker
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
+        UpdatePositionParameters,
     };
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
@@ -159,14 +159,14 @@ pub mod LimitOrders {
     use ekubo::types::keys::{PoolKey, PositionKey};
     use ekubo::types::keys::{SavedBalanceKey};
     use starknet::storage::{
-        StoragePointerWriteAccess, StorageMapWriteAccess, StorageMapReadAccess,
-        StoragePointerReadAccess, StoragePathEntry, Map
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::{get_contract_address};
     use super::{
-        ILimitOrders, i129, ContractAddress, OrderKey, OrderState, PoolState, GetOrderInfoRequest,
-        GetOrderInfoResult, ForwardCallbackData, PlaceOrderForwardCallbackData,
-        CloseOrderForwardCallbackData, ForwardCallbackResult
+        CloseOrderForwardCallbackData, ContractAddress, ForwardCallbackData, ForwardCallbackResult,
+        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
+        PlaceOrderForwardCallbackData, PoolState, i129,
     };
 
     pub const LIMIT_ORDER_TICK_SPACING: u128 = 128;
@@ -189,7 +189,7 @@ pub mod LimitOrders {
         core: ICoreDispatcher,
         pools: Map<(ContractAddress, ContractAddress), PoolState>,
         initialized_ticks_crossed_last_crossing: Map<
-            (ContractAddress, ContractAddress), Map<i129, u64>
+            (ContractAddress, ContractAddress), Map<i129, u64>,
         >,
         orders: Map<(ContractAddress, felt252, OrderKey), OrderState>,
         #[substorage(v0)]
@@ -213,7 +213,7 @@ pub mod LimitOrders {
                     after_update_position: false,
                     before_collect_fees: false,
                     after_collect_fees: false,
-                }
+                },
             );
     }
 
@@ -255,7 +255,7 @@ pub mod LimitOrders {
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             // This entrypoint is not called if the limit order extension initializes the pool. Only
             // the limit order extension can create pools using this extension.
@@ -263,7 +263,7 @@ pub mod LimitOrders {
         }
 
         fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             panic!("Not used");
         }
@@ -272,7 +272,7 @@ pub mod LimitOrders {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: SwapParameters
+            params: SwapParameters,
         ) {
             panic!("Not used");
         }
@@ -282,7 +282,7 @@ pub mod LimitOrders {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: SwapParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             let core = self.core.read();
 
@@ -293,7 +293,7 @@ pub mod LimitOrders {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: UpdatePositionParameters
+            params: UpdatePositionParameters,
         ) {
             // pools with this extension may only contain limit orders, to simplify routing
             panic!("Only limit orders");
@@ -304,7 +304,7 @@ pub mod LimitOrders {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             panic!("Not used");
         }
@@ -314,7 +314,7 @@ pub mod LimitOrders {
             caller: ContractAddress,
             pool_key: PoolKey,
             salt: felt252,
-            bounds: Bounds
+            bounds: Bounds,
         ) {
             panic!("Not used");
         }
@@ -324,7 +324,7 @@ pub mod LimitOrders {
             pool_key: PoolKey,
             salt: felt252,
             bounds: Bounds,
-            delta: Delta
+            delta: Delta,
         ) {
             panic!("Not used");
         }
@@ -339,7 +339,7 @@ pub mod LimitOrders {
                 token1: self.token1,
                 fee: 0,
                 tick_spacing: LIMIT_ORDER_TICK_SPACING,
-                extension: get_contract_address()
+                extension: get_contract_address(),
             }
         }
         // Returns the bounds for the position that is used to implement the order
@@ -354,7 +354,7 @@ pub mod LimitOrders {
     #[generate_trait]
     impl InternalMethods of InternalMethodsTrait {
         fn _get_order_info(
-            self: @ContractState, core: ICoreDispatcher, request: GetOrderInfoRequest
+            self: @ContractState, core: ICoreDispatcher, request: GetOrderInfoRequest,
         ) -> GetOrderInfoResult {
             let price = core.get_pool_price(request.order_key.get_pool_key());
             assert(price.sqrt_ratio.is_non_zero(), 'Pool not initialized');
@@ -370,7 +370,7 @@ pub mod LimitOrders {
                         request.order_key.tick
                     } else {
                         request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                    }
+                    },
                 );
 
             let order = self.orders.read((request.owner, request.salt, request.order_key));
@@ -380,22 +380,22 @@ pub mod LimitOrders {
                 .initialized_ticks_crossed_snapshot) {
                 let sqrt_ratio_a = tick_to_sqrt_ratio(request.order_key.tick);
                 let sqrt_ratio_b = tick_to_sqrt_ratio(
-                    request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                    request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                 );
 
                 let (amount0, amount1) = if is_selling_token1 {
                     (
                         amount0_delta(
-                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
+                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false,
                         ),
-                        0
+                        0,
                     )
                 } else {
                     (
                         0,
                         amount1_delta(
-                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false
-                        )
+                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false,
+                        ),
                     )
                 };
 
@@ -406,15 +406,16 @@ pub mod LimitOrders {
                     liquidity_delta: i129 { mag: order.liquidity, sign: true },
                     sqrt_ratio_lower: tick_to_sqrt_ratio(request.order_key.tick),
                     sqrt_ratio_upper: tick_to_sqrt_ratio(
-                        request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                    )
+                        request.order_key.tick
+                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+                    ),
                 );
 
                 GetOrderInfoResult {
                     state: order,
                     executed: false,
                     amount0: delta.amount0.mag,
-                    amount1: delta.amount1.mag
+                    amount1: delta.amount1.mag,
                 }
             }
         }
@@ -470,7 +471,7 @@ pub mod LimitOrders {
 
                         let position_data = core
                             .get_position(
-                                pool_key, PositionKey { salt: 0, owner: this_address, bounds }
+                                pool_key, PositionKey { salt: 0, owner: this_address, bounds },
                             );
 
                         let delta = core
@@ -480,9 +481,9 @@ pub mod LimitOrders {
                                     salt: 0,
                                     bounds,
                                     liquidity_delta: i129 {
-                                        mag: position_data.liquidity, sign: true
-                                    }
-                                }
+                                        mag: position_data.liquidity, sign: true,
+                                    },
+                                },
                             );
 
                         save_amount +=
@@ -516,7 +517,7 @@ pub mod LimitOrders {
                                 },
                                 salt: 0,
                             },
-                            save_amount
+                            save_amount,
                         );
                 }
 
@@ -531,7 +532,7 @@ pub mod LimitOrders {
     #[abi(embed_v0)]
     impl ForwardeeImpl of IForwardee<ContractState> {
         fn forwarded(
-            ref self: ContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>
+            ref self: ContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>,
         ) -> Span<felt252> {
             let core = self.core.read();
 
@@ -572,8 +573,8 @@ pub mod LimitOrders {
                             OrderState {
                                 initialized_ticks_crossed_snapshot: pool_state
                                     .initialized_ticks_crossed,
-                                liquidity
-                            }
+                                liquidity,
+                            },
                         );
 
                     let delta = core
@@ -583,8 +584,8 @@ pub mod LimitOrders {
                                 // all the positions have the same salt
                                 salt: 0,
                                 bounds: order_key.get_bounds(),
-                                liquidity_delta: i129 { mag: liquidity, sign: false }
-                            }
+                                liquidity_delta: i129 { mag: liquidity, sign: false },
+                            },
                         );
 
                     let amount = if is_selling_token1 {
@@ -598,8 +599,8 @@ pub mod LimitOrders {
                     self
                         .emit(
                             OrderPlaced {
-                                owner: original_locker, salt, order_key, liquidity, amount
-                            }
+                                owner: original_locker, salt, order_key, liquidity, amount,
+                            },
                         );
 
                     ForwardCallbackResult::PlaceOrder(amount)
@@ -609,7 +610,7 @@ pub mod LimitOrders {
 
                     let order_info = self
                         ._get_order_info(
-                            core, GetOrderInfoRequest { owner: original_locker, salt, order_key }
+                            core, GetOrderInfoRequest { owner: original_locker, salt, order_key },
                         );
                     assert(order_info.state.liquidity.is_non_zero(), 'Order does not exist');
 
@@ -618,7 +619,7 @@ pub mod LimitOrders {
                         .orders
                         .write(
                             (original_locker, salt, order_key),
-                            OrderState { liquidity: 0, initialized_ticks_crossed_snapshot: 0 }
+                            OrderState { liquidity: 0, initialized_ticks_crossed_snapshot: 0 },
                         );
 
                     if order_info.executed {
@@ -637,9 +638,9 @@ pub mod LimitOrders {
                                     salt: 0,
                                     bounds: order_key.get_bounds(),
                                     liquidity_delta: i129 {
-                                        mag: order_info.state.liquidity, sign: true
-                                    }
-                                }
+                                        mag: order_info.state.liquidity, sign: true,
+                                    },
+                                },
                             );
                         // safety check that the result of _get_order_info matches up with the
                         // amount we get from withdrawing
@@ -654,12 +655,12 @@ pub mod LimitOrders {
                                 salt,
                                 order_key,
                                 amount0: order_info.amount0,
-                                amount1: order_info.amount1
-                            }
+                                amount1: order_info.amount1,
+                            },
                         );
 
                     ForwardCallbackResult::CloseOrder((order_info.amount0, order_info.amount1))
-                }
+                },
             };
 
             let mut result_data = array![];
@@ -671,13 +672,13 @@ pub mod LimitOrders {
     #[abi(embed_v0)]
     impl LimitOrderImpl of ILimitOrders<ContractState> {
         fn get_order_info(
-            self: @ContractState, request: GetOrderInfoRequest
+            self: @ContractState, request: GetOrderInfoRequest,
         ) -> GetOrderInfoResult {
             self._get_order_info(self.core.read(), request)
         }
 
         fn get_order_infos(
-            self: @ContractState, mut requests: Span<GetOrderInfoRequest>
+            self: @ContractState, mut requests: Span<GetOrderInfoRequest>,
         ) -> Span<GetOrderInfoResult> {
             let core = self.core.read();
             let mut result: Array<GetOrderInfoResult> = array![];

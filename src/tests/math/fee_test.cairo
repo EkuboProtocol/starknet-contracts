@@ -1,4 +1,4 @@
-use ekubo::math::fee::{compute_fee, amount_before_fee, accumulate_fee_amount};
+use ekubo::math::fee::{accumulate_fee_amount, amount_before_fee, compute_fee};
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
 const FIFTY_PERCENT_FEE: u128 = 0x80000000000000000000000000000000;
@@ -28,20 +28,20 @@ fn test_accumulate_fee_amount() {
     assert(accumulate_fee_amount(1, 1) == 2, '1+1');
     assert(
         accumulate_fee_amount(
-            0xffffffffffffffffffffffffffffffff_u128, 1
+            0xffffffffffffffffffffffffffffffff_u128, 1,
         ) == 0xffffffffffffffffffffffffffffffff_u128,
-        'max+1'
+        'max+1',
     );
     assert(
         accumulate_fee_amount(
-            1, 0xffffffffffffffffffffffffffffffff_u128
+            1, 0xffffffffffffffffffffffffffffffff_u128,
         ) == 0xffffffffffffffffffffffffffffffff_u128,
-        '1+max'
+        '1+max',
     );
     assert(
         accumulate_fee_amount(
-            0xffffffffffffffffffffffffffffffff_u128, 0xffffffffffffffffffffffffffffffff_u128
+            0xffffffffffffffffffffffffffffffff_u128, 0xffffffffffffffffffffffffffffffff_u128,
         ) == 0xffffffffffffffffffffffffffffffff_u128,
-        'max+max'
+        'max+max',
     );
 }

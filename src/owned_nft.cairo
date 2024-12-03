@@ -17,7 +17,7 @@ pub trait IOwnedNFT<TContractState> {
 
     // Allows the owner to update the metadata
     fn set_metadata(
-        ref self: TContractState, name: felt252, symbol: felt252, token_uri_base: felt252
+        ref self: TContractState, name: felt252, symbol: felt252, token_uri_base: felt252,
     );
 }
 
@@ -28,21 +28,21 @@ pub mod OwnedNFT {
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
 
     use ekubo::components::util::{serialize};
     use ekubo::interfaces::erc721::{IERC721};
     use ekubo::interfaces::src5::{
-        ISRC5, SRC5_SRC5_ID, SRC5_ERC721_ID, SRC5_ERC721_METADATA_ID, ERC165_ERC721_METADATA_ID,
-        ERC165_ERC721_ID, ERC165_ERC165_ID
+        ERC165_ERC165_ID, ERC165_ERC721_ID, ERC165_ERC721_METADATA_ID, ISRC5, SRC5_ERC721_ID,
+        SRC5_ERC721_METADATA_ID, SRC5_SRC5_ID,
     };
     use ekubo::math::string::{to_decimal};
     use starknet::storage::{
-        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess, Map
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
     };
-    use starknet::{SyscallResultTrait, get_caller_address, ClassHash, syscalls::{deploy_syscall}};
-    use super::{IOwnedNFT, ContractAddress};
+    use starknet::{ClassHash, SyscallResultTrait, get_caller_address, syscalls::{deploy_syscall}};
+    use super::{ContractAddress, IOwnedNFT};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -74,21 +74,21 @@ pub mod OwnedNFT {
     pub struct Transfer {
         pub from: ContractAddress,
         pub to: ContractAddress,
-        pub token_id: u256
+        pub token_id: u256,
     }
 
     #[derive(starknet::Event, Drop)]
     pub struct Approval {
         pub owner: ContractAddress,
         pub approved: ContractAddress,
-        pub token_id: u256
+        pub token_id: u256,
     }
 
     #[derive(starknet::Event, Drop)]
     pub struct ApprovalForAll {
         pub owner: ContractAddress,
         pub operator: ContractAddress,
-        pub approved: bool
+        pub approved: bool,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -108,7 +108,7 @@ pub mod OwnedNFT {
         owner: ContractAddress,
         name: felt252,
         symbol: felt252,
-        token_uri_base: felt252
+        token_uri_base: felt252,
     ) {
         self.initialize_owned(owner);
         self.name.write(name);
@@ -123,7 +123,7 @@ pub mod OwnedNFT {
         name: felt252,
         symbol: felt252,
         token_uri_base: felt252,
-        salt: felt252
+        salt: felt252,
     ) -> super::IOwnedNFTDispatcher {
         let calldata = serialize(@(owner, name, symbol, token_uri_base)).span();
 
@@ -145,7 +145,7 @@ pub mod OwnedNFT {
     #[generate_trait]
     impl Internal of InternalTrait {
         fn is_account_authorized_internal(
-            self: @ContractState, id: u64, account: ContractAddress
+            self: @ContractState, id: u64, account: ContractAddress,
         ) -> (bool, ContractAddress) {
             let owner = self.owners.read(id);
             if (account != owner) {
@@ -191,7 +191,7 @@ pub mod OwnedNFT {
         }
 
         fn transferFrom(
-            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256,
         ) {
             let id = validate_token_id(token_id);
 
@@ -219,7 +219,7 @@ pub mod OwnedNFT {
         }
 
         fn isApprovedForAll(
-            self: @ContractState, owner: ContractAddress, operator: ContractAddress
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress,
         ) -> bool {
             self.operators.read((owner, operator))
         }
@@ -238,12 +238,12 @@ pub mod OwnedNFT {
             self.ownerOf(token_id)
         }
         fn transfer_from(
-            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256,
         ) {
             self.transferFrom(from, to, token_id)
         }
         fn set_approval_for_all(
-            ref self: ContractState, operator: ContractAddress, approved: bool
+            ref self: ContractState, operator: ContractAddress, approved: bool,
         ) {
             self.setApprovalForAll(operator, approved)
         }
@@ -251,7 +251,7 @@ pub mod OwnedNFT {
             self.getApproved(token_id)
         }
         fn is_approved_for_all(
-            self: @ContractState, owner: ContractAddress, operator: ContractAddress
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress,
         ) -> bool {
             self.isApprovedForAll(owner, operator)
         }
@@ -291,8 +291,8 @@ pub mod OwnedNFT {
             self
                 .emit(
                     Transfer {
-                        from: Zero::zero(), to: owner, token_id: u256 { low: id.into(), high: 0 }
-                    }
+                        from: Zero::zero(), to: owner, token_id: u256 { low: id.into(), high: 0 },
+                    },
                 );
 
             id
@@ -321,7 +321,7 @@ pub mod OwnedNFT {
         }
 
         fn set_metadata(
-            ref self: ContractState, name: felt252, symbol: felt252, token_uri_base: felt252
+            ref self: ContractState, name: felt252, symbol: felt252, token_uri_base: felt252,
         ) {
             self.require_owner();
             self.token_uri_base.write(token_uri_base);

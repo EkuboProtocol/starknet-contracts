@@ -36,12 +36,12 @@ pub mod Owned {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        OwnershipTransferred: OwnershipTransferred
+        OwnershipTransferred: OwnershipTransferred,
     }
 
 
     pub impl OwnableImpl<
-        TContractState, +Drop<TContractState>, +HasComponent<TContractState>
+        TContractState, +Drop<TContractState>, +HasComponent<TContractState>,
     > of Ownable<TContractState> {
         fn initialize_owned(ref self: TContractState, owner: ContractAddress) {
             let mut component = self.get_component_mut();
@@ -59,14 +59,14 @@ pub mod Owned {
 
     #[embeddable_as(OwnedImpl)]
     pub impl Owned<
-        TContractState, +Drop<TContractState>, +HasComponent<TContractState>
+        TContractState, +Drop<TContractState>, +HasComponent<TContractState>,
     > of IOwned<ComponentState<TContractState>> {
         fn get_owner(self: @ComponentState<TContractState>) -> ContractAddress {
             self.owner.read()
         }
 
         fn transfer_ownership(
-            ref self: ComponentState<TContractState>, new_owner: ContractAddress
+            ref self: ComponentState<TContractState>, new_owner: ContractAddress,
         ) {
             let old_owner = self.get_contract().require_owner();
             self.owner.write(new_owner);

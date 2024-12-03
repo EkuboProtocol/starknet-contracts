@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into, TryInto};
-use ekubo::math::bits::{msb, lsb};
+use ekubo::math::bits::{lsb, msb};
 use ekubo::math::exp2::{exp2};
 use ekubo::math::mask::{mask};
 use ekubo::types::i129::{i129, i129Trait};
@@ -9,7 +9,7 @@ use ekubo::types::i129::{i129, i129Trait};
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
 pub struct Bitmap {
     // there are 251 bits that can all be set to 1 without exceeding the max prime of felt252
-    pub(crate) value: felt252
+    pub(crate) value: felt252,
 }
 
 impl BitmapZero of Zero<Bitmap> {
@@ -96,7 +96,7 @@ pub impl BitmapTraitImpl of BitmapTrait {
         } else {
             assert(index < 251, 'MAX_INDEX');
             Bitmap {
-                value: u256 { high: x.high + exp2(index - 128), low: x.low }.try_into().unwrap()
+                value: u256 { high: x.high + exp2(index - 128), low: x.low }.try_into().unwrap(),
             }
         }
     }
@@ -112,7 +112,7 @@ pub impl BitmapTraitImpl of BitmapTrait {
         } else {
             assert(index < 251, 'MAX_INDEX');
             Bitmap {
-                value: u256 { high: x.high - exp2(index - 128), low: x.low }.try_into().unwrap()
+                value: u256 { high: x.high - exp2(index - 128), low: x.low }.try_into().unwrap(),
             }
         }
     }
@@ -132,7 +132,7 @@ pub fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) 
         // means smaller tick
         (
             ((tick.mag - 1) / (tick_spacing * 251)) + NEGATIVE_OFFSET,
-            (((tick.mag - 1) / tick_spacing) % 251).try_into().unwrap()
+            (((tick.mag - 1) / tick_spacing) % 251).try_into().unwrap(),
         )
     } else {
         // todo: this can be done more efficiently by using divmod
@@ -140,7 +140,7 @@ pub fn tick_to_word_and_bit_index(tick: i129, tick_spacing: u128) -> (u128, u8) 
         // means larger tick
         (
             tick.mag / (tick_spacing * 251),
-            250_u8 - ((tick.mag / tick_spacing) % 251).try_into().unwrap()
+            250_u8 - ((tick.mag / tick_spacing) % 251).try_into().unwrap(),
         )
     }
 }
@@ -152,7 +152,7 @@ pub fn word_and_bit_index_to_tick(word_and_bit_index: (u128, u8), tick_spacing: 
         i129 {
             mag: ((word - NEGATIVE_OFFSET) * 251 * tick_spacing)
                 + ((bit.into() + 1) * tick_spacing),
-            sign: true
+            sign: true,
         }
     } else {
         i129 { mag: (word * 251 * tick_spacing) + ((250 - bit).into() * tick_spacing), sign: false }

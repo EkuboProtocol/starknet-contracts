@@ -37,7 +37,7 @@ pub trait IRouter<TContractState> {
     // Does a multihop swap, where the output/input of each hop is passed as input/output of the
     // next swap Note to do exact output swaps, the route must be given in reverse
     fn multihop_swap(
-        ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount
+        ref self: TContractState, route: Array<RouteNode>, token_amount: TokenAmount,
     ) -> Array<Delta>;
 
     // Does multiple multihop swaps
@@ -46,7 +46,7 @@ pub trait IRouter<TContractState> {
     // Quote the given token amount against the route in the swap
     fn quote_multi_multihop_swap(self: @TContractState, swaps: Array<Swap>) -> Array<Array<Delta>>;
     fn quote_multihop_swap(
-        self: @TContractState, route: Array<RouteNode>, token_amount: TokenAmount
+        self: @TContractState, route: Array<RouteNode>, token_amount: TokenAmount,
     ) -> Array<Delta>;
     fn quote_swap(self: @TContractState, node: RouteNode, token_amount: TokenAmount) -> Delta;
 
@@ -65,21 +65,21 @@ pub trait IRouter<TContractState> {
 
     // Same as above, but starting from the given price
     fn get_market_depth_at_sqrt_ratio(
-        self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128
+        self: @TContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128,
     ) -> Depth;
 }
 
 #[starknet::contract]
 pub mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
-    use core::cmp::{min, max};
-    use core::num::traits::{Zero, Sqrt};
+    use core::cmp::{max, min};
+    use core::num::traits::{Sqrt, Zero};
     use core::option::{OptionTrait};
     use core::result::{ResultTrait};
     use core::traits::{Into};
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::shared_locker::{
-        consume_callback_data, handle_delta, call_core_with_callback
+        call_core_with_callback, consume_callback_data, handle_delta,
     };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::math::muldiv::{muldiv};
@@ -92,7 +92,7 @@ pub mod Router {
 
     use starknet::{get_contract_address};
 
-    use super::{PoolKey, Delta, IRouter, RouteNode, TokenAmount, Swap, Depth};
+    use super::{Delta, Depth, IRouter, PoolKey, RouteNode, Swap, TokenAmount};
 
     #[abi(embed_v0)]
     impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
@@ -126,7 +126,7 @@ pub mod Router {
 
             match consume_callback_data::<CallbackParameters>(core, data) {
                 CallbackParameters::Swap((
-                    mut swaps, simulate
+                    mut swaps, simulate,
                 )) => {
                     let mut outputs: Array<Array<Delta>> = ArrayTrait::new();
 
@@ -160,7 +160,7 @@ pub mod Router {
                                         is_token1: is_token1,
                                         sqrt_ratio_limit,
                                         skip_ahead: node.skip_ahead,
-                                    }
+                                    },
                                 );
 
                             deltas.append(delta);
@@ -170,14 +170,14 @@ pub mod Router {
                                     if is_token1 {
                                         Option::Some(
                                             TokenAmount {
-                                                token: node.pool_key.token1, amount: delta.amount1
-                                            }
+                                                token: node.pool_key.token1, amount: delta.amount1,
+                                            },
                                         )
                                     } else {
                                         Option::Some(
                                             TokenAmount {
-                                                token: node.pool_key.token0, amount: delta.amount0
-                                            }
+                                                token: node.pool_key.token0, amount: delta.amount0,
+                                            },
                                         )
                                     }
                             }
@@ -185,11 +185,11 @@ pub mod Router {
                             token_amount =
                                 if (is_token1) {
                                     TokenAmount {
-                                        amount: -delta.amount0, token: node.pool_key.token0
+                                        amount: -delta.amount0, token: node.pool_key.token0,
                                     }
                                 } else {
                                     TokenAmount {
-                                        amount: -delta.amount1, token: node.pool_key.token1
+                                        amount: -delta.amount1, token: node.pool_key.token1,
                                     }
                                 };
                         };
@@ -219,7 +219,7 @@ pub mod Router {
                     serialized.span()
                 },
                 CallbackParameters::GetDeltaToSqrtRatio((
-                    pool_key, sqrt_ratio
+                    pool_key, sqrt_ratio,
                 )) => {
                     let current_pool_price = core.get_pool_price(pool_key);
                     let skip_ahead: u128 = ((current_pool_price.tick
@@ -234,12 +234,12 @@ pub mod Router {
                             pool_key,
                             SwapParameters {
                                 amount: i129 {
-                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                    mag: 0xffffffffffffffffffffffffffffffff, sign: true,
                                 },
                                 is_token1: sqrt_ratio <= current_pool_price.sqrt_ratio,
                                 sqrt_ratio_limit: sqrt_ratio,
                                 skip_ahead,
-                            }
+                            },
                         );
 
                     let mut output: Array<felt252> = ArrayTrait::new();
@@ -253,7 +253,7 @@ pub mod Router {
                     ArrayTrait::new().span()
                 },
                 CallbackParameters::GetMarketDepth((
-                    pool_key, sqrt_ratio, percent_64x64
+                    pool_key, sqrt_ratio, percent_64x64,
                 )) => {
                     // takes the 64x64 percent, shifts it left 64 and sqrts it to get a 32.64. we
                     // add 1 so the sqrt always makes it smaller
@@ -276,7 +276,7 @@ pub mod Router {
                                 pool_key,
                                 SwapParameters {
                                     amount: i129 {
-                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true,
                                     },
                                     is_token1: sqrt_ratio < current_pool_price.sqrt_ratio,
                                     sqrt_ratio_limit: sqrt_ratio,
@@ -284,7 +284,7 @@ pub mod Router {
                                         / (pool_key.tick_spacing * 127_u128))
                                         .try_into()
                                         .expect('TICK_DIFF_TOO_LARGE'),
-                                }
+                                },
                             );
 
                         current_pool_price.sqrt_ratio = sqrt_ratio;
@@ -294,12 +294,12 @@ pub mod Router {
                     let price_high = min(
                         muldiv(current_pool_price.sqrt_ratio, num, denom, false)
                             .unwrap_or(max_sqrt_ratio()),
-                        max_sqrt_ratio()
+                        max_sqrt_ratio(),
                     );
                     let price_low = max(
                         muldiv(current_pool_price.sqrt_ratio, denom, num, true)
                             .unwrap_or(min_sqrt_ratio()),
-                        min_sqrt_ratio()
+                        min_sqrt_ratio(),
                     );
 
                     let skip_ahead: u128 = ((current_pool_price.tick
@@ -317,12 +317,12 @@ pub mod Router {
                                 pool_key,
                                 SwapParameters {
                                     amount: i129 {
-                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true,
                                     },
                                     is_token1: false,
                                     sqrt_ratio_limit: price_high,
                                     skip_ahead,
-                                }
+                                },
                             )
                     };
 
@@ -333,12 +333,12 @@ pub mod Router {
                                 pool_key,
                                 SwapParameters {
                                     amount: i129 {
-                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true,
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: current_pool_price.sqrt_ratio,
                                     skip_ahead,
-                                }
+                                },
                             );
                     }
 
@@ -350,12 +350,12 @@ pub mod Router {
                                 pool_key,
                                 SwapParameters {
                                     amount: i129 {
-                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true
+                                        mag: 0xffffffffffffffffffffffffffffffff, sign: true,
                                     },
                                     is_token1: true,
                                     sqrt_ratio_limit: price_low,
                                     skip_ahead,
-                                }
+                                },
                             )
                     };
 
@@ -379,7 +379,7 @@ pub mod Router {
     }
 
     fn call_core_with_reverting_callback<TInput, TOutput, +Serde<TInput>, +Serde<TOutput>>(
-        core: ICoreDispatcher, input: @TInput
+        core: ICoreDispatcher, input: @TInput,
     ) -> TOutput {
         let mut input_data: Array<felt252> = ArrayTrait::new();
         Serde::serialize(input, ref input_data);
@@ -390,7 +390,7 @@ pub mod Router {
         Serde::<Array<felt252>>::serialize(@input_data, ref lock_call_arguments);
 
         let output = call_contract_syscall(
-            core.contract_address, selector!("lock"), lock_call_arguments.span()
+            core.contract_address, selector!("lock"), lock_call_arguments.span(),
         )
             .unwrap_err();
 
@@ -415,7 +415,7 @@ pub mod Router {
         }
 
         fn multihop_swap(
-            ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount
+            ref self: ContractState, route: Array<RouteNode>, token_amount: TokenAmount,
         ) -> Array<Delta> {
             let mut result = self.multi_multihop_swap(array![Swap { route, token_amount }]);
 
@@ -428,15 +428,15 @@ pub mod Router {
 
         // Quote the given token amount against the route in the swap
         fn quote_multi_multihop_swap(
-            self: @ContractState, swaps: Array<Swap>
+            self: @ContractState, swaps: Array<Swap>,
         ) -> Array<Array<Delta>> {
             call_core_with_reverting_callback(
-                self.core.read(), @CallbackParameters::Swap((swaps, true))
+                self.core.read(), @CallbackParameters::Swap((swaps, true)),
             )
         }
 
         fn quote_multihop_swap(
-            self: @ContractState, route: Array<RouteNode>, token_amount: TokenAmount
+            self: @ContractState, route: Array<RouteNode>, token_amount: TokenAmount,
         ) -> Array<Delta> {
             let mut result = self.quote_multi_multihop_swap(array![Swap { route, token_amount }]);
             result.pop_front().unwrap()
@@ -450,10 +450,10 @@ pub mod Router {
 
         // Returns the delta for swapping a pool to the given price
         fn get_delta_to_sqrt_ratio(
-            self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256
+            self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256,
         ) -> Delta {
             call_core_with_reverting_callback(
-                self.core.read(), @CallbackParameters::GetDeltaToSqrtRatio((pool_key, sqrt_ratio))
+                self.core.read(), @CallbackParameters::GetDeltaToSqrtRatio((pool_key, sqrt_ratio)),
             )
         }
 
@@ -461,31 +461,31 @@ pub mod Router {
             // we add 1 so that squaring it doesn't make it smaller
             let p_plus_one = u256 { high: 1, low: sqrt_percent };
             let percent_64x64_plus_one = muldiv(
-                p_plus_one, p_plus_one, 0x1000000000000000000000000000000000000000000000000, false
+                p_plus_one, p_plus_one, 0x1000000000000000000000000000000000000000000000000, false,
             )
                 .unwrap();
 
             self
                 .get_market_depth_v2(
-                    pool_key, (percent_64x64_plus_one - 0x10000000000000000).try_into().unwrap()
+                    pool_key, (percent_64x64_plus_one - 0x10000000000000000).try_into().unwrap(),
                 )
         }
 
         fn get_market_depth_v2(
-            self: @ContractState, pool_key: PoolKey, percent_64x64: u128
+            self: @ContractState, pool_key: PoolKey, percent_64x64: u128,
         ) -> Depth {
             self
                 .get_market_depth_at_sqrt_ratio(
-                    pool_key, self.core.read().get_pool_price(pool_key).sqrt_ratio, percent_64x64
+                    pool_key, self.core.read().get_pool_price(pool_key).sqrt_ratio, percent_64x64,
                 )
         }
 
         fn get_market_depth_at_sqrt_ratio(
-            self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128
+            self: @ContractState, pool_key: PoolKey, sqrt_ratio: u256, percent_64x64: u128,
         ) -> Depth {
             call_core_with_reverting_callback(
                 self.core.read(),
-                @CallbackParameters::GetMarketDepth((pool_key, sqrt_ratio, percent_64x64))
+                @CallbackParameters::GetMarketDepth((pool_key, sqrt_ratio, percent_64x64)),
             )
         }
     }

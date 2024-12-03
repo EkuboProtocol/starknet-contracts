@@ -1,4 +1,4 @@
-use core::num::traits::{Zero, Sqrt};
+use core::num::traits::{Sqrt, Zero};
 use core::traits::{Into, TryInto};
 use ekubo::math::exp::{exp};
 use ekubo::math::fee::{compute_fee};
@@ -58,7 +58,7 @@ pub fn calculate_next_sqrt_ratio(
     token0_sale_rate: u128,
     token1_sale_rate: u128,
     time_elapsed: u32,
-    fee: u128
+    fee: u128,
 ) -> u256 {
     let sale_ratio = (u256 { high: token1_sale_rate, low: 0 } / token0_sale_rate.into());
     let sqrt_sale_ratio: u256 = if (sale_ratio.high.is_zero()) {
@@ -90,7 +90,7 @@ pub fn calculate_next_sqrt_ratio(
         let exponent = div(
             u256 { high: result_mul.high, low: result_mul.low },
             l.try_into().expect('DIV_ZERO_LIQUIDITY'),
-            round_up
+            round_up,
         );
 
         if (exponent.low > constants::EXPONENT_LIMIT || exponent.high.is_non_zero()) {
@@ -140,7 +140,7 @@ pub fn calculate_c(sqrt_ratio: u256, sqrt_sale_ratio: u256, round_up: bool) -> (
         (
             muldiv(numerator, constants::X128, sqrt_sale_ratio + sqrt_ratio, round_up)
                 .expect('C_MULDIV_OVERFLOW'),
-            sign
+            sign,
         )
     }
 }

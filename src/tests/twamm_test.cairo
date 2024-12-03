@@ -1,12 +1,12 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::core::Core::{PoolInitialized, PositionUpdated, Swapped, LoadedBalance, SavedBalance};
-use ekubo::interfaces::core::{ICoreDispatcherTrait, ICoreDispatcher, SwapParameters};
+use ekubo::core::Core::{LoadedBalance, PoolInitialized, PositionUpdated, SavedBalance, Swapped};
+use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 use ekubo::interfaces::extensions::twamm::{
-    ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo, OrderKey, StateKey, SaleRateState
+    ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo, OrderKey, SaleRateState, StateKey,
 };
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -14,26 +14,26 @@ use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
 use ekubo::math::max_liquidity::{max_liquidity};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-use ekubo::math::ticks::{min_tick, max_tick};
-use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
+use ekubo::math::ticks::{max_tick, min_tick};
+use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
 use ekubo::math::{
-    calculate_sale_rate, constants, calculate_next_sqrt_ratio, calculate_amount_from_sale_rate,
-    time::{to_duration}
+    calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_sale_rate, constants,
+    time::{to_duration},
 };
 use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::helper::{
-    Deployer, DeployerTrait, update_position, SetupPoolResult, default_owner, FEE_ONE_PERCENT
+    Deployer, DeployerTrait, FEE_ONE_PERCENT, SetupPoolResult, default_owner, update_position,
 };
 use ekubo::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
 use ekubo::twamm::TWAMM::{
-    OrderUpdated, VirtualOrdersExecuted, OrderProceedsWithdrawn, time_to_word_and_bit_index,
-    word_and_bit_index_to_time
+    OrderProceedsWithdrawn, OrderUpdated, VirtualOrdersExecuted, time_to_word_and_bit_index,
+    word_and_bit_index_to_time,
 };
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey};
-use starknet::testing::{set_contract_address, set_block_timestamp, pop_log};
-use starknet::{get_contract_address, contract_address_const, ClassHash, ContractAddress};
+use starknet::testing::{pop_log, set_block_timestamp, set_contract_address};
+use starknet::{ClassHash, ContractAddress, contract_address_const, get_contract_address};
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
 const SIXTEEN_POW_ONE: u64 = 0x10;
@@ -58,8 +58,8 @@ impl PoolKeyIntoStateKey of Into<PoolKey, StateKey> {
 mod UpgradableTest {
     use ekubo::twamm::TWAMM;
     use super::{
-        Deployer, DeployerTrait, ClassHash, set_contract_address, pop_log, IUpgradeableDispatcher,
-        IUpgradeableDispatcherTrait, default_owner
+        ClassHash, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
+        default_owner, pop_log, set_contract_address,
     };
 
     #[test]
@@ -68,7 +68,7 @@ mod UpgradableTest {
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            twamm.contract_address
+            twamm.contract_address,
         )
             .unwrap();
 
@@ -79,7 +79,7 @@ mod UpgradableTest {
             .replace_class_hash(class_hash);
 
         let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
-            twamm.contract_address
+            twamm.contract_address,
         )
             .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
@@ -88,9 +88,9 @@ mod UpgradableTest {
 
 mod BitmapTest {
     use super::{
-        time_to_word_and_bit_index, word_and_bit_index_to_time, Deployer, DeployerTrait,
-        set_up_twamm, i129, contract_address_const, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, place_order,
-        set_block_timestamp, StateKey, ITWAMMDispatcherTrait
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO,
+        StateKey, contract_address_const, i129, place_order, set_block_timestamp, set_up_twamm,
+        time_to_word_and_bit_index, word_and_bit_index_to_time,
     };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
@@ -123,7 +123,7 @@ mod BitmapTest {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -135,7 +135,7 @@ mod BitmapTest {
         let order1_end_time = SIXTEEN_POW_THREE;
 
         let state_key: StateKey = StateKey {
-            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee
+            token0: setup.token0.contract_address, token1: setup.token1.contract_address, fee,
         };
 
         place_order(
@@ -146,47 +146,48 @@ mod BitmapTest {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         assert_eq!(
-            twamm.next_initialized_time(state_key, from: 0, max_time: timestamp), (timestamp, false)
+            twamm.next_initialized_time(state_key, from: 0, max_time: timestamp),
+            (timestamp, false),
         );
 
         assert_eq!(
             twamm.next_initialized_time(state_key, from: timestamp, max_time: order1_end_time),
-            (order1_start_time, true)
+            (order1_start_time, true),
         );
 
         assert_eq!(
             twamm.next_initialized_time(state_key, from: timestamp, max_time: order1_start_time),
-            (order1_start_time, true)
+            (order1_start_time, true),
         );
 
         assert_eq!(
             twamm
                 .next_initialized_time(
-                    state_key, from: order1_start_time, max_time: order1_start_time + 16
+                    state_key, from: order1_start_time, max_time: order1_start_time + 16,
                 ),
-            (order1_start_time + 16, false)
+            (order1_start_time + 16, false),
         );
 
         assert_eq!(
             twamm
                 .next_initialized_time(
-                    state_key, from: order1_start_time, max_time: order1_end_time
+                    state_key, from: order1_start_time, max_time: order1_end_time,
                 ),
-            (order1_end_time, true)
+            (order1_end_time, true),
         );
     }
 }
 
 mod PoolTests {
     use super::{
-        Deployer, DeployerTrait, update_position, set_contract_address, IPositionsDispatcherTrait,
-        ICoreDispatcherTrait, PoolKey, MAX_TICK_SPACING, max_bounds, max_liquidity,
-        contract_address_const, tick_to_sqrt_ratio, Bounds, i129, TICKS_IN_ONE_PERCENT, Zero,
-        IMockERC20DispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait
+        Bounds, Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
+        IPositionsDispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait, MAX_TICK_SPACING,
+        PoolKey, TICKS_IN_ONE_PERCENT, Zero, contract_address_const, i129, max_bounds,
+        max_liquidity, set_contract_address, tick_to_sqrt_ratio, update_position,
     };
 
     #[test]
@@ -207,7 +208,7 @@ mod PoolTests {
                     tick_spacing: 1,
                     extension: twamm.contract_address,
                 },
-                Zero::zero()
+                Zero::zero(),
             );
     }
 
@@ -228,7 +229,7 @@ mod PoolTests {
                     tick_spacing: MAX_TICK_SPACING,
                     extension: twamm.contract_address,
                 },
-                Zero::zero()
+                Zero::zero(),
             );
     }
 
@@ -240,8 +241,8 @@ mod PoolTests {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_before_update_position_invalid_bounds() {
         let mut d: Deployer = Default::default();
@@ -277,7 +278,7 @@ mod PoolTests {
 
         positions
             .mint_and_deposit(
-                pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity
+                pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity,
             );
 
         update_position(
@@ -326,7 +327,7 @@ mod PoolTests {
 
         positions
             .mint_and_deposit(
-                pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity
+                pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity,
             );
 
         setup.token0.increase_balance(setup.locker.contract_address, 100_000_000);
@@ -342,10 +343,10 @@ mod PoolTests {
 
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
-        contract_address_const, set_contract_address, i129, IPositionsDispatcherTrait,
-        SIXTEEN_POW_TWO, OrderUpdated, VirtualOrdersExecuted, set_up_twamm, place_order,
-        calculate_sale_rate, PoolKeyIntoStateKey, to_duration, StateKey
+        Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, OrderUpdated,
+        PoolKeyIntoStateKey, SIXTEEN_POW_TWO, StateKey, VirtualOrdersExecuted, calculate_sale_rate,
+        contract_address_const, i129, place_order, pop_log, set_block_timestamp,
+        set_contract_address, set_up_twamm, to_duration,
     };
 
     #[test]
@@ -368,7 +369,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -379,7 +380,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
         let expected_sale_rate_net = calculate_sale_rate(
-            amount: amount, duration: to_duration(start: timestamp, end: order1_end_time)
+            amount: amount, duration: to_duration(start: timestamp, end: order1_end_time),
         );
 
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
@@ -402,7 +403,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             order2_start_time,
             order2_end_time,
-            amount
+            amount,
         );
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -442,7 +443,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -453,7 +454,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
         let expected_sale_rate_net = calculate_sale_rate(
-            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+            amount, duration: to_duration(start: timestamp, end: order1_end_time),
         );
 
         place_order(positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount);
@@ -476,7 +477,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             order2_start_time,
             order2_end_time,
-            amount
+            amount,
         );
 
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -517,7 +518,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -528,11 +529,11 @@ mod PlaceOrdersCheckDeltaAndNet {
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
         let expected_sale_rate_net = calculate_sale_rate(
-            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+            amount, duration: to_duration(start: timestamp, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_state) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -550,7 +551,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             order2_start_time,
             order2_end_time,
-            amount
+            amount,
         );
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
@@ -564,7 +565,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net);
 
-        positions.decrease_sale_rate_to_self(order2_id, order2_key, order2_state.sale_rate,);
+        positions.decrease_sale_rate_to_self(order2_id, order2_key, order2_state.sale_rate);
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, 0);
@@ -591,7 +592,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -602,11 +603,11 @@ mod PlaceOrdersCheckDeltaAndNet {
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
         let expected_sale_rate_net = calculate_sale_rate(
-            amount, duration: to_duration(start: timestamp, end: order1_end_time)
+            amount, duration: to_duration(start: timestamp, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_state) = place_order(
-            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount
+            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -624,7 +625,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             fee,
             order2_start_time,
             order2_end_time,
-            amount
+            amount,
         );
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
@@ -647,9 +648,9 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
-        contract_address_const, i129, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, OrderUpdated,
-        VirtualOrdersExecuted, set_up_twamm, place_order, PoolKeyIntoStateKey, StateKey
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, OrderUpdated, PoolKeyIntoStateKey,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, VirtualOrdersExecuted, contract_address_const,
+        i129, place_order, pop_log, set_block_timestamp, set_up_twamm,
     };
 
     #[test]
@@ -672,7 +673,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -682,7 +683,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         let amount = 10_000 * 1000000000000000000;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let (_, _, order1_info) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -725,7 +726,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -776,7 +777,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = 1_000_000;
@@ -832,7 +833,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = 1_000_000;
@@ -872,9 +873,9 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
 mod CancelOrderTests {
     use super::{
-        Deployer, DeployerTrait, set_block_timestamp, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE,
-        IERC20Dispatcher, IERC20DispatcherTrait, place_order, i129, contract_address_const,
-        set_contract_address, IPositionsDispatcherTrait, set_up_twamm
+        Deployer, DeployerTrait, IERC20Dispatcher, IERC20DispatcherTrait, IPositionsDispatcherTrait,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, contract_address_const, i129, place_order,
+        set_block_timestamp, set_contract_address, set_up_twamm,
     };
 
     #[test]
@@ -889,7 +890,7 @@ mod CancelOrderTests {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -905,7 +906,7 @@ mod CancelOrderTests {
             fee,
             SIXTEEN_POW_TWO,
             SIXTEEN_POW_THREE,
-            amount
+            amount,
         );
 
         set_block_timestamp(order1_key.end_time + 1);
@@ -928,7 +929,7 @@ mod CancelOrderTests {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -944,11 +945,11 @@ mod CancelOrderTests {
             fee,
             SIXTEEN_POW_TWO,
             SIXTEEN_POW_THREE,
-            amount
+            amount,
         );
 
         let token_balance_before = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
+            contract_address: setup.token0.contract_address,
         }
             .balanceOf(owner);
 
@@ -957,7 +958,7 @@ mod CancelOrderTests {
             .decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
 
         let token_balance_after = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
+            contract_address: setup.token0.contract_address,
         }
             .balanceOf(owner);
 
@@ -973,8 +974,8 @@ mod CancelOrderTests {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
         let mut d: Deployer = Default::default();
@@ -987,7 +988,7 @@ mod CancelOrderTests {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1003,7 +1004,7 @@ mod CancelOrderTests {
             fee,
             SIXTEEN_POW_TWO,
             SIXTEEN_POW_THREE,
-            amount
+            amount,
         );
 
         set_block_timestamp(SIXTEEN_POW_THREE - 1);
@@ -1024,7 +1025,7 @@ mod CancelOrderTests {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1040,7 +1041,7 @@ mod CancelOrderTests {
             fee,
             SIXTEEN_POW_TWO,
             SIXTEEN_POW_THREE,
-            amount
+            amount,
         );
 
         set_block_timestamp(SIXTEEN_POW_THREE - 1);
@@ -1053,13 +1054,12 @@ mod CancelOrderTests {
 
 mod PlaceOrdersAndUpdateSaleRate {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
-        IMockERC20DispatcherTrait, contract_address_const, set_contract_address, i129,
-        IPositionsDispatcherTrait, OrderUpdated, VirtualOrdersExecuted, set_up_twamm, place_order,
-        calculate_sale_rate, OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance,
-        PoolInitialized, PositionUpdated, calculate_amount_from_sale_rate, FEE_ONE_PERCENT,
-        IERC20Dispatcher, IERC20DispatcherTrait, PoolKeyIntoStateKey, to_duration, SaleRateState,
-        StateKey, SIXTEEN_POW_TWO
+        Deployer, DeployerTrait, FEE_ONE_PERCENT, IERC20Dispatcher, IERC20DispatcherTrait,
+        IMockERC20DispatcherTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
+        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
+        SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey, Swapped, VirtualOrdersExecuted,
+        calculate_amount_from_sale_rate, calculate_sale_rate, contract_address_const, i129,
+        place_order, pop_log, set_block_timestamp, set_contract_address, set_up_twamm, to_duration,
     };
 
     #[test]
@@ -1074,7 +1074,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1087,7 +1087,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_end_time = timestamp + duration;
 
         let (order1_id, order1_key, order1_state) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         set_block_timestamp(order1_end_time);
@@ -1110,7 +1110,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1123,7 +1123,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_end_time = timestamp + duration;
 
         let (order1_id, order1_key, order1_state) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         set_block_timestamp(order1_end_time + 1);
@@ -1142,8 +1142,8 @@ mod PlaceOrdersAndUpdateSaleRate {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_update_invalid_sale_rate() {
         let mut d: Deployer = Default::default();
@@ -1156,7 +1156,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1169,7 +1169,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_end_time = timestamp + duration;
 
         let (order1_id, order1_key, order1_state) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         set_contract_address(owner);
@@ -1181,7 +1181,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -1192,7 +1192,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1207,7 +1207,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
         let expected_sale_rate = calculate_sale_rate(
-            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_info) = place_order(
@@ -1218,7 +1218,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -1285,7 +1285,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -1296,7 +1296,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1311,7 +1311,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
         let expected_sale_rate = calculate_sale_rate(
-            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_info) = place_order(
@@ -1322,7 +1322,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -1389,7 +1389,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -1400,7 +1400,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1415,7 +1415,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
         let expected_sale_rate = calculate_sale_rate(
-            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_info) = place_order(
@@ -1426,7 +1426,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -1462,7 +1462,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
             sale_rate_delta.mag,
             duration: to_duration(start: order1_start_time, end: order1_end_time),
-            round_up: false
+            round_up: false,
         );
 
         setup
@@ -1496,13 +1496,13 @@ mod PlaceOrdersAndUpdateSaleRate {
         let (token0_start_sale_rate_delta, _) = twamm
             .get_sale_rate_delta(setup.pool_key.into(), order1_start_time);
         assert_eq!(
-            token0_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false }
+            token0_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false },
         );
         // end sale rate delta
         let (token0_end_sale_rate_delta, _) = twamm
             .get_sale_rate_delta(setup.pool_key.into(), order1_end_time);
         assert_eq!(
-            token0_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true }
+            token0_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true },
         );
     }
 
@@ -1511,7 +1511,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -1522,7 +1522,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1537,7 +1537,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
         let expected_sale_rate = calculate_sale_rate(
-            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_info) = place_order(
@@ -1548,7 +1548,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -1584,7 +1584,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let sale_rate_delta_amount = calculate_amount_from_sale_rate(
             sale_rate_delta.mag,
             duration: to_duration(start: order1_start_time, end: order1_end_time),
-            round_up: false
+            round_up: false,
         );
         setup
             .token1
@@ -1617,13 +1617,13 @@ mod PlaceOrdersAndUpdateSaleRate {
         let (_, token1_start_sale_rate_delta) = twamm
             .get_sale_rate_delta(setup.pool_key.into(), order1_start_time);
         assert_eq!(
-            token1_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false }
+            token1_start_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: false },
         );
         // end sale rate delta
         let (_, token1_end_sale_rate_delta) = twamm
             .get_sale_rate_delta(setup.pool_key.into(), order1_end_time);
         assert_eq!(
-            token1_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true }
+            token1_end_sale_rate_delta, i129 { mag: expected_updated_sale_rate, sign: true },
         );
     }
 
@@ -1632,7 +1632,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -1643,7 +1643,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1658,7 +1658,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
         let order1_end_time = order1_start_time + SIXTEEN_POW_TWO;
         let expected_sale_rate = calculate_sale_rate(
-            amount, duration: to_duration(start: order1_start_time, end: order1_end_time)
+            amount, duration: to_duration(start: order1_start_time, end: order1_end_time),
         );
 
         let (order1_id, order1_key, order1_info) = place_order(
@@ -1669,7 +1669,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -1769,7 +1769,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         // withdraw proceeds (same transaction)
         let amount_withdrawn = positions
             .withdraw_proceeds_from_sale_to(
-                order1_id, order1_key, recipient: twamm.contract_address
+                order1_id, order1_key, recipient: twamm.contract_address,
             );
         let event: OrderProceedsWithdrawn = pop_log(twamm.contract_address).unwrap();
 
@@ -1785,7 +1785,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = FEE_ONE_PERCENT;
@@ -1796,7 +1796,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1818,7 +1818,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -1833,7 +1833,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_block_timestamp(order1_start_time - 1);
 
         let token_balance_before = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
+            contract_address: setup.token0.contract_address,
         }
             .balanceOf(owner);
 
@@ -1842,7 +1842,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let token_balance_after = IERC20Dispatcher {
-            contract_address: setup.token0.contract_address
+            contract_address: setup.token0.contract_address,
         }
             .balanceOf(owner);
 
@@ -1855,7 +1855,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = FEE_ONE_PERCENT;
@@ -1866,7 +1866,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1888,7 +1888,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             fee,
             order1_start_time,
             order1_end_time,
-            amount
+            amount,
         );
 
         let sale_rate_state: SaleRateState = twamm
@@ -1903,7 +1903,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_block_timestamp(order1_start_time - 1);
 
         let token_balance_before = IERC20Dispatcher {
-            contract_address: setup.token1.contract_address
+            contract_address: setup.token1.contract_address,
         }
             .balanceOf(owner);
 
@@ -1912,7 +1912,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
         let token_balance_after = IERC20Dispatcher {
-            contract_address: setup.token1.contract_address
+            contract_address: setup.token1.contract_address,
         }
             .balanceOf(owner);
 
@@ -1923,12 +1923,11 @@ mod PlaceOrdersAndUpdateSaleRate {
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, pop_log,
-        contract_address_const, set_contract_address, i129, IPositionsDispatcherTrait,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, OrderUpdated, VirtualOrdersExecuted,
-        OrderProceedsWithdrawn, Swapped, LoadedBalance, SavedBalance, PoolInitialized,
-        PositionUpdated, place_order, set_up_twamm, PoolKeyIntoStateKey, SaleRateState, StateKey,
-        Zero
+        Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
+        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SaleRateState, SavedBalance, StateKey, Swapped,
+        VirtualOrdersExecuted, Zero, contract_address_const, i129, place_order, pop_log,
+        set_block_timestamp, set_contract_address, set_up_twamm,
     };
 
     #[test]
@@ -1939,7 +1938,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
 
@@ -1951,7 +1950,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -1965,7 +1964,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -2087,7 +2086,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2098,7 +2097,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2112,7 +2111,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
-            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount
+            positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -2221,7 +2220,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2232,7 +2231,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -2247,7 +2246,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
-            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount
+            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -2368,7 +2367,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2379,7 +2378,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2393,7 +2392,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
-            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount
+            positions, owner, setup.token1, setup.token0, fee, 0, order1_end_time, amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -2497,14 +2496,14 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-        Deployer, DeployerTrait, MAX_TICK_SPACING, ITWAMMDispatcherTrait, set_block_timestamp,
-        pop_log, IMockERC20DispatcherTrait, contract_address_const, set_contract_address,
-        max_bounds, max_liquidity, tick_to_sqrt_ratio, i129, IPositionsDispatcherTrait,
-        get_contract_address, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO, SIXTEEN_POW_THREE, OrderUpdated,
-        VirtualOrdersExecuted, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
-        PositionUpdated, SavedBalance, Swapped, LoadedBalance, PoolKeyIntoStateKey, Action,
-        ICoreLockerDispatcherTrait, SwapParameters, min_sqrt_ratio, next_sqrt_ratio_from_amount0,
-        liquidity_delta_to_amount_delta, SaleRateState, StateKey
+        Action, Deployer, DeployerTrait, ICoreLockerDispatcherTrait, IMockERC20DispatcherTrait,
+        IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance, MAX_TICK_SPACING,
+        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey,
+        SwapParameters, Swapped, VirtualOrdersExecuted, contract_address_const,
+        get_contract_address, i129, liquidity_delta_to_amount_delta, max_bounds, max_liquidity,
+        min_sqrt_ratio, next_sqrt_ratio_from_amount0, place_order, pop_log, set_block_timestamp,
+        set_contract_address, set_up_twamm, tick_to_sqrt_ratio,
     };
 
     #[test]
@@ -2514,7 +2513,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2525,7 +2524,7 @@ mod PlaceOrderOnBothSides {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -2546,7 +2545,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
@@ -2560,7 +2559,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -2716,7 +2715,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2727,7 +2726,7 @@ mod PlaceOrderOnBothSides {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -2743,26 +2742,26 @@ mod PlaceOrderOnBothSides {
 
         let amount = 5_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_info) = place_order(
-            positions, owner0, setup.token0, setup.token1, fee, 0, order_end_time, amount
+            positions, owner0, setup.token0, setup.token1, fee, 0, order_end_time, amount,
         );
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
         let (order2_id, order2_key, order2_info) = place_order(
-            positions, owner1, setup.token0, setup.token1, fee, 0, order_end_time, amount
+            positions, owner1, setup.token0, setup.token1, fee, 0, order_end_time, amount,
         );
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
         let (order3_id, order3_key, order3_info) = place_order(
-            positions, owner0, setup.token1, setup.token0, fee, 0, order_end_time, amount
+            positions, owner0, setup.token1, setup.token0, fee, 0, order_end_time, amount,
         );
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
         let (order4_id, order4_key, order4_info) = place_order(
-            positions, owner1, setup.token1, setup.token0, fee, 0, order_end_time, amount
+            positions, owner1, setup.token1, setup.token0, fee, 0, order_end_time, amount,
         );
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
@@ -2794,11 +2793,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(
             virtual_orders_executed_event.token0_sale_rate,
-            order1_info.sale_rate + order2_info.sale_rate
+            order1_info.sale_rate + order2_info.sale_rate,
         );
         assert_eq!(
             virtual_orders_executed_event.token1_sale_rate,
-            order3_info.sale_rate + order4_info.sale_rate
+            order3_info.sale_rate + order4_info.sale_rate,
         );
 
         let swapped_event: Swapped = pop_log(core.contract_address).unwrap();
@@ -2927,7 +2926,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -2938,7 +2937,7 @@ mod PlaceOrderOnBothSides {
             fee,
             initial_tick,
             amount0: 2 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -2959,7 +2958,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
@@ -2974,7 +2973,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -3124,7 +3123,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3132,7 +3131,7 @@ mod PlaceOrderOnBothSides {
         let amount0 = 10_000_000 * 1000000000000000000;
         let amount1 = 10_000_000 * 1000000000000000000;
         let (twamm, setup, positions) = set_up_twamm(
-            ref d, core, fee, initial_tick, amount0, amount1
+            ref d, core, fee, initial_tick, amount0, amount1,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3153,7 +3152,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
@@ -3168,7 +3167,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order2_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -3282,13 +3281,13 @@ mod PlaceOrderOnBothSides {
 
         let reward_rate = twamm.get_reward_rate(state_key);
         assert_eq!(
-            reward_rate.value0, 0xfedb0dcc5f11e1de241494a3cc0 + 0xdea32d49659bff590dfff190dd7
+            reward_rate.value0, 0xfedb0dcc5f11e1de241494a3cc0 + 0xdea32d49659bff590dfff190dd7,
         );
         assert_eq!(
             reward_rate.value1,
             0x3fc93e562c2b1883b621228f5a6
                 + 0x37d73ea6e3578f4cc8e5ad2f6ce
-                + 0x80438ab4b06581e84114b622a2
+                + 0x80438ab4b06581e84114b622a2,
         );
 
         // // Withdraw proceeds for order1
@@ -3320,7 +3319,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3331,7 +3330,7 @@ mod PlaceOrderOnBothSides {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -3352,7 +3351,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
@@ -3366,7 +3365,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -3397,9 +3396,9 @@ mod PlaceOrderOnBothSides {
                             sqrt_ratio_limit: min_sqrt_ratio(),
                             skip_ahead: 0,
                         },
-                        get_contract_address()
-                    )
-                )
+                        get_contract_address(),
+                    ),
+                ),
             );
 
         let sale_rate_state: SaleRateState = twamm
@@ -3449,7 +3448,7 @@ mod PlaceOrderOnBothSides {
         let sqrt_ratio_after = swapped_event.sqrt_ratio_after;
         let liquidity_after = swapped_event.liquidity_after;
         let expected_sqrt_ratio_after = next_sqrt_ratio_from_amount0(
-            sqrt_ratio_after, liquidity_after, i129 { mag: 1, sign: false }
+            sqrt_ratio_after, liquidity_after, i129 { mag: 1, sign: false },
         )
             .unwrap();
 
@@ -3485,7 +3484,7 @@ mod PlaceOrderOnBothSides {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3496,7 +3495,7 @@ mod PlaceOrderOnBothSides {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3516,7 +3515,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
@@ -3530,7 +3529,7 @@ mod PlaceOrderOnBothSides {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -3607,13 +3606,13 @@ mod PlaceOrderOnBothSides {
         let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
         let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
         let liquidity: u128 = max_liquidity(
-            sqrt_ratio_after, sqrt_ratio_lower, sqrt_ratio_upper, amount_delta, amount_delta
+            sqrt_ratio_after, sqrt_ratio_lower, sqrt_ratio_upper, amount_delta, amount_delta,
         );
         let expected_delta = liquidity_delta_to_amount_delta(
             sqrt_ratio_after,
             i129 { mag: liquidity, sign: false },
             sqrt_ratio_lower,
-            sqrt_ratio_upper
+            sqrt_ratio_upper,
         );
 
         assert_eq!(event.delta.amount0.mag, expected_delta.amount0.mag);
@@ -3643,12 +3642,13 @@ mod PlaceOrderOnBothSides {
 
 mod MinMaxSqrtRatio {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, MAX_TICK_SPACING, ITWAMMDispatcherTrait,
-        set_block_timestamp, pop_log, IMockERC20DispatcherTrait, max_bounds, i129,
-        IPositionsDispatcherTrait, get_contract_address, SIXTEEN_POW_ONE, OrderUpdated,
-        VirtualOrdersExecuted, set_up_twamm, place_order, OrderProceedsWithdrawn, PoolInitialized,
-        PositionUpdated, SavedBalance, Swapped, PoolKeyIntoStateKey, SaleRateState, StateKey,
-        max_tick, min_tick, calculate_amount_from_sale_rate, constants, calculate_next_sqrt_ratio
+        Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
+        IPositionsDispatcherTrait, ITWAMMDispatcherTrait, MAX_TICK_SPACING, OrderProceedsWithdrawn,
+        OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE,
+        SaleRateState, SavedBalance, StateKey, Swapped, VirtualOrdersExecuted,
+        calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, constants, get_contract_address,
+        i129, max_bounds, max_tick, min_tick, place_order, pop_log, set_block_timestamp,
+        set_up_twamm,
     };
 
     #[test]
@@ -3660,7 +3660,7 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3671,7 +3671,7 @@ mod MinMaxSqrtRatio {
             fee,
             initial_tick,
             amount0: 10_000_000_000_000 * 1000000000000000000,
-            amount1: 10_000_000_000_000 * 1000000000000000000
+            amount1: 10_000_000_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3691,7 +3691,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3703,7 +3703,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3721,7 +3721,7 @@ mod MinMaxSqrtRatio {
             constants::MAX_BOUNDS_MIN_SQRT_RATIO,
             core
                 .get_pool_tick_liquidity_net(
-                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
@@ -3740,7 +3740,7 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3751,7 +3751,7 @@ mod MinMaxSqrtRatio {
             fee,
             initial_tick,
             amount0: 10_000_000_000_000 * 1000000000000000000,
-            amount1: 10_000_000_000_000 * 1000000000000000000
+            amount1: 10_000_000_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3771,7 +3771,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3783,7 +3783,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3801,7 +3801,7 @@ mod MinMaxSqrtRatio {
             constants::MAX_BOUNDS_MIN_SQRT_RATIO,
             core
                 .get_pool_tick_liquidity_net(
-                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
@@ -3822,7 +3822,7 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3833,7 +3833,7 @@ mod MinMaxSqrtRatio {
             fee,
             initial_tick,
             amount0: 10_000_000_000_000 * 1000000000000000000,
-            amount1: 10_000_000_000_000 * 1000000000000000000
+            amount1: 10_000_000_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3853,7 +3853,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3865,7 +3865,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3883,7 +3883,7 @@ mod MinMaxSqrtRatio {
             constants::MAX_BOUNDS_MAX_SQRT_RATIO,
             core
                 .get_pool_tick_liquidity_net(
-                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
@@ -3902,7 +3902,7 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -3913,7 +3913,7 @@ mod MinMaxSqrtRatio {
             fee,
             initial_tick,
             amount0: 10_000_000_000_000 * 1000000000000000000,
-            amount1: 10_000_000_000_000 * 1000000000000000000
+            amount1: 10_000_000_000_000 * 1000000000000000000,
         );
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
@@ -3933,7 +3933,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3945,7 +3945,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -3963,7 +3963,7 @@ mod MinMaxSqrtRatio {
             constants::MAX_BOUNDS_MAX_SQRT_RATIO,
             core
                 .get_pool_tick_liquidity_net(
-                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true }
+                    setup.pool_key, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },
                 ),
             sale_rate_state.token0_sale_rate,
             sale_rate_state.token1_sale_rate,
@@ -3982,13 +3982,13 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
-            ref d, core, fee, initial_tick, amount0: 0, amount1: 0
+            ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4005,7 +4005,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: VirtualOrdersExecuted = pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
@@ -4018,7 +4018,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: OrderUpdated = pop_log(twamm.contract_address).unwrap();
 
@@ -4056,13 +4056,13 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
-            ref d, core, fee, initial_tick, amount0: 0, amount1: 0
+            ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -4084,7 +4084,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4096,7 +4096,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time + 16,
-            amount * 2
+            amount * 2,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4113,7 +4113,7 @@ mod MinMaxSqrtRatio {
             fee: fee,
             start_time: timestamp,
             end_time: order_end_time,
-            amount: amount
+            amount: amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4127,7 +4127,7 @@ mod MinMaxSqrtRatio {
 
         // largest sqrt_sale_ratio possible is ~sqrt((2**256 / 2**28)) * 2**64
         assert_eq!(
-            swapped_event.sqrt_ratio_after, 383123885216472214589586756787275046003037049542672384
+            swapped_event.sqrt_ratio_after, 383123885216472214589586756787275046003037049542672384,
         );
     }
 
@@ -4138,13 +4138,13 @@ mod MinMaxSqrtRatio {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
-            ref d, core, fee, initial_tick, amount0: 0, amount1: 0
+            ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
         let _event: PoolInitialized = pop_log(core.contract_address).unwrap();
@@ -4166,7 +4166,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4178,7 +4178,7 @@ mod MinMaxSqrtRatio {
             fee,
             0,
             order_end_time + 16,
-            amount * 2
+            amount * 2,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4194,7 +4194,7 @@ mod MinMaxSqrtRatio {
             fee: fee,
             start_time: timestamp,
             end_time: order_end_time,
-            amount: amount
+            amount: amount,
         );
         let _event: SavedBalance = pop_log(core.contract_address).unwrap();
 
@@ -4213,9 +4213,9 @@ mod MinMaxSqrtRatio {
 
 mod GetOrderInfo {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, set_block_timestamp, i129,
-        IPositionsDispatcherTrait, get_contract_address, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE,
-        OrderInfo, set_up_twamm, place_order, PoolKeyIntoStateKey, StateKey
+        Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, OrderInfo,
+        PoolKeyIntoStateKey, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, get_contract_address,
+        i129, place_order, set_block_timestamp, set_up_twamm,
     };
 
     #[test]
@@ -4232,7 +4232,7 @@ mod GetOrderInfo {
             fee,
             initial_tick,
             amount0: 100_000_000 * 1000000000000000000,
-            amount1: 100_000_000 * 1000000000000000000
+            amount1: 100_000_000 * 1000000000000000000,
         );
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4249,7 +4249,7 @@ mod GetOrderInfo {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
 
         let (order2_id, order2_key, order2_info) = place_order(
@@ -4260,7 +4260,7 @@ mod GetOrderInfo {
             fee,
             0,
             order_end_time,
-            amount
+            amount,
         );
 
         let state_key: StateKey = setup.pool_key.into();
@@ -4377,8 +4377,8 @@ mod GetOrderInfo {
 
 mod PlaceOrderDurationTooLong {
     use super::{
-        Deployer, DeployerTrait, i129, set_up_twamm, pop_log, PoolInitialized, PositionUpdated,
-        SIXTEEN_POW_ONE, set_block_timestamp, place_order, get_contract_address
+        Deployer, DeployerTrait, PoolInitialized, PositionUpdated, SIXTEEN_POW_ONE,
+        get_contract_address, i129, place_order, pop_log, set_block_timestamp, set_up_twamm,
     };
 
     #[test]
@@ -4387,7 +4387,7 @@ mod PlaceOrderDurationTooLong {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         let fee = 0;
@@ -4410,12 +4410,12 @@ mod PlaceOrderDurationTooLong {
             fee,
             timestamp,
             0x100000000 + timestamp,
-            1
+            1,
         );
     }
 
     #[test]
-    #[should_panic(expected: ('DURATION_EXCEEDS_MAX_U32', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('DURATION_EXCEEDS_MAX_U32', 'ENTRYPOINT_FAILED'))]
     fn test_order_duration_too_long_twamm() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -4436,7 +4436,7 @@ mod PlaceOrderDurationTooLong {
             fee: fee,
             start_time: timestamp,
             end_time: 68719476736, // 16**9 == 2**4**9 == 2**36 > 2**32,
-            amount: 0
+            amount: 0,
         );
     }
 }
@@ -4450,7 +4450,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
     let fee = 0;
     let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
     let (twamm, setup, positions) = set_up_twamm(
-        ref d, core, fee, initial_tick, amount0: 10_000, amount1: 10_000
+        ref d, core, fee, initial_tick, amount0: 10_000, amount1: 10_000,
     );
 
     let timestamp = SIXTEEN_POW_ONE;
@@ -4464,7 +4464,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         0,
         timestamp + 496,
-        amount: 100
+        amount: 100,
     );
 
     place_order(
@@ -4475,7 +4475,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         0,
         timestamp + 496,
-        amount: 100
+        amount: 100,
     );
 
     set_block_timestamp(32);
@@ -4487,7 +4487,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         fee,
         48,
         timestamp + 224,
-        amount: 100
+        amount: 100,
     );
 
     // get order info after order ends
@@ -4519,7 +4519,7 @@ fn set_up_twamm(
     fee: u128,
     initial_tick: i129,
     amount0: u128,
-    amount1: u128
+    amount1: u128,
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
     set_block_timestamp(1);
 
@@ -4528,7 +4528,7 @@ fn set_up_twamm(
     ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
     let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-        twamm.contract_address
+        twamm.contract_address,
     )
         .unwrap();
 
@@ -4562,7 +4562,7 @@ fn set_up_twamm(
         fee,
         initial_tick,
         amount0,
-        amount1
+        amount1,
     )
 }
 
@@ -4574,7 +4574,7 @@ fn set_up_twamm_pool(
     fee: u128,
     initial_tick: i129,
     amount0: u128,
-    amount1: u128
+    amount1: u128,
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
     let liquidity_provider = contract_address_const::<42>();
     set_contract_address(liquidity_provider);
@@ -4592,7 +4592,7 @@ fn set_up_twamm_pool(
     setup.token1.increase_balance(positions.contract_address, amount1);
     positions
         .mint_and_deposit_and_clear_both(
-            pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity
+            pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity,
         );
 
     (twamm, setup, positions)
@@ -4606,7 +4606,7 @@ fn place_order(
     fee: u128,
     start_time: u64,
     end_time: u64,
-    amount: u128
+    amount: u128,
 ) -> (u64, OrderKey, OrderInfo) {
     // place order
     let twamm = positions.get_twamm_address();
@@ -4620,7 +4620,7 @@ fn place_order(
         buy_token: buy_token.contract_address,
         fee,
         start_time,
-        end_time
+        end_time,
     };
 
     let (id, sale_rate) = if (owner != current_contract_address) {

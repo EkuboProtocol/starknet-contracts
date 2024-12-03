@@ -77,7 +77,7 @@ pub enum ForwardCallbackResult {
     // Returns the amount of {token0,token1} that must be paid to cover the order
     PlaceOrder: u128,
     // The amount of token0 and token1 received for closing the order
-    CloseOrder: (u128, u128)
+    CloseOrder: (u128, u128),
 }
 
 #[starknet::interface]
@@ -87,6 +87,6 @@ pub trait ILimitOrders<TContractState> {
 
     // Return information on each of the given orders
     fn get_order_infos(
-        self: @TContractState, requests: Span<GetOrderInfoRequest>
+        self: @TContractState, requests: Span<GetOrderInfoRequest>,
     ) -> Span<GetOrderInfoResult>;
 }

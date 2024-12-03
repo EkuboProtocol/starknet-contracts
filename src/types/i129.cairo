@@ -1,7 +1,7 @@
-use core::fmt::{Display, Formatter, Error};
-use core::hash::{HashStateTrait, Hash};
+use core::fmt::{Display, Error, Formatter};
+use core::hash::{Hash, HashStateTrait};
 use core::num::traits::{Zero};
-use core::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
+use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
 use starknet::storage_access::{StorePacking};

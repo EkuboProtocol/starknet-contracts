@@ -1,6 +1,6 @@
 use core::num::traits::{Zero};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use starknet::{ContractAddress, get_contract_address, get_caller_address};
+use starknet::{ContractAddress, get_caller_address, get_contract_address};
 
 #[starknet::interface]
 pub trait IClear<TContractState> {
@@ -12,7 +12,7 @@ pub trait IClear<TContractState> {
     // Clears the contract's balance of the given token to the given recipient, and reverts if it's
     // less than the given minimum amount
     fn clear_minimum_to_recipient(
-        self: @TContractState, token: IERC20Dispatcher, minimum: u256, recipient: ContractAddress
+        self: @TContractState, token: IERC20Dispatcher, minimum: u256, recipient: ContractAddress,
     ) -> u256;
 }
 
@@ -27,7 +27,7 @@ pub impl ClearImpl<TContractState> of IClear<TContractState> {
     }
 
     fn clear_minimum_to_recipient(
-        self: @TContractState, token: IERC20Dispatcher, minimum: u256, recipient: ContractAddress
+        self: @TContractState, token: IERC20Dispatcher, minimum: u256, recipient: ContractAddress,
     ) -> u256 {
         let balance = token.balanceOf(get_contract_address());
         if minimum.is_non_zero() {

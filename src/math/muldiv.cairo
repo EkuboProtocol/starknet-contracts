@@ -1,5 +1,5 @@
 use core::integer::{u512_safe_div_rem_by_u256};
-use core::num::traits::{Zero, WideMul, OverflowingAdd};
+use core::num::traits::{OverflowingAdd, WideMul, Zero};
 use core::option::{Option, OptionTrait};
 
 // Compute floor(x/z) OR ceil(x/z) depending on round_up
@@ -30,8 +30,8 @@ pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
             div(
                 u256 { low: numerator.limb0, high: numerator.limb1 },
                 z.try_into().unwrap(),
-                round_up
-            )
+                round_up,
+            ),
         );
     }
 
@@ -43,7 +43,7 @@ pub fn muldiv(x: u256, y: u256, z: u256, round_up: bool) -> Option<u256> {
         Option::Some(u256 { low: quotient.limb0, high: quotient.limb1 })
     } else {
         let (sum, sum_overflows) = OverflowingAdd::overflowing_add(
-            u256 { low: quotient.limb0, high: quotient.limb1 }, 1_u256
+            u256 { low: quotient.limb0, high: quotient.limb1 }, 1_u256,
         );
         if (sum_overflows) {
             Option::None(())

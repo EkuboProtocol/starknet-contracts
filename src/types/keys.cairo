@@ -26,7 +26,7 @@ pub impl PoolKeyTraitImpl of PoolKeyTrait {
         assert(
             (self.tick_spacing.is_non_zero())
                 & (self.tick_spacing <= tick_constants::MAX_TICK_SPACING),
-            'TICK_SPACING'
+            'TICK_SPACING',
         );
     }
 }

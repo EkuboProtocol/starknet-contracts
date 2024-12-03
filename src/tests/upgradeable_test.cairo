@@ -2,8 +2,8 @@ use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcherTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
-use starknet::testing::{set_contract_address, pop_log};
-use starknet::{class_hash::class_hash_const, ClassHash, contract_address_const};
+use starknet::testing::{pop_log, set_contract_address};
+use starknet::{ClassHash, class_hash::class_hash_const, contract_address_const};
 
 #[test]
 fn test_replace_class_hash() {
@@ -14,11 +14,11 @@ fn test_replace_class_hash() {
     mock_upgradeable.replace_class_hash(class_hash);
 
     pop_log::<
-        ekubo::components::owned::Owned::OwnershipTransferred
+        ekubo::components::owned::Owned::OwnershipTransferred,
     >(mock_upgradeable.contract_address)
         .unwrap();
     let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
-        mock_upgradeable.contract_address
+        mock_upgradeable.contract_address,
     )
         .unwrap();
     assert(event.new_class_hash == class_hash, 'event.class_hash');

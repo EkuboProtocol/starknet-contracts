@@ -6,7 +6,7 @@ pub trait IOracle<TContractState> {
     // Returns the timestamp of the earliest observation for a given pair, or Option::None if the
     // pair has no observations
     fn get_earliest_observation_time(
-        self: @TContractState, token_a: ContractAddress, token_b: ContractAddress
+        self: @TContractState, token_a: ContractAddress, token_b: ContractAddress,
     ) -> Option<u64>;
 
     // Returns the time weighted average tick between the given start and end time
@@ -15,7 +15,7 @@ pub trait IOracle<TContractState> {
         base_token: ContractAddress,
         quote_token: ContractAddress,
         start_time: u64,
-        end_time: u64
+        end_time: u64,
     ) -> i129;
 
     // Returns the time weighted average tick between the given start and end time
@@ -23,7 +23,7 @@ pub trait IOracle<TContractState> {
         self: @TContractState,
         base_token: ContractAddress,
         quote_token: ContractAddress,
-        start_and_end_times: Span<(u64, u64)>
+        start_and_end_times: Span<(u64, u64)>,
     ) -> Span<i129>;
 
     // Returns the time weighted average tick over the last `period` seconds
@@ -31,7 +31,7 @@ pub trait IOracle<TContractState> {
         self: @TContractState,
         base_token: ContractAddress,
         quote_token: ContractAddress,
-        period: u64
+        period: u64,
     ) -> i129;
 
     // Returns the a list of ticks representing the TWAP history from `end_time - (num_intervals *
@@ -60,7 +60,7 @@ pub trait IOracle<TContractState> {
         end_time: u64,
         num_intervals: u32,
         interval_seconds: u32,
-        extrapolated_to: u32
+        extrapolated_to: u32,
     ) -> u64;
 
     // Returns the geomean average price of a token as a 128.128 between the given start and end
@@ -70,7 +70,7 @@ pub trait IOracle<TContractState> {
         base_token: ContractAddress,
         quote_token: ContractAddress,
         start_time: u64,
-        end_time: u64
+        end_time: u64,
     ) -> u256;
 
     // Returns the geomean average price of a token as a 128.128 over the last `period` seconds
@@ -78,7 +78,7 @@ pub trait IOracle<TContractState> {
         self: @TContractState,
         base_token: ContractAddress,
         quote_token: ContractAddress,
-        period: u64
+        period: u64,
     ) -> u256;
 
 
@@ -104,13 +104,13 @@ pub trait IOracle<TContractState> {
 #[starknet::contract]
 pub mod Oracle {
     use core::cmp::{max};
-    use core::num::traits::{Zero, Sqrt, WideMul};
+    use core::num::traits::{Sqrt, WideMul, Zero};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{check_caller_is_core};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
     };
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::types::bounds::{Bounds};
@@ -120,13 +120,13 @@ pub mod Oracle {
     use ekubo::types::keys::{PoolKey};
     use ekubo::types::snapshot::{Snapshot};
     use starknet::storage::{
-        Map, StoragePointerWriteAccess, StorageMapReadAccess, StoragePointerReadAccess, StoragePath,
-        StoragePathEntry, StorageMapWriteAccess
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     };
 
     use starknet::{get_block_timestamp, get_contract_address};
 
-    use super::{IOracle, ContractAddress};
+    use super::{ContractAddress, IOracle};
 
     // Converts a tick to the price as a 128.128 number
     pub fn tick_to_price_x128(tick: i129) -> u256 {
@@ -185,7 +185,7 @@ pub mod Oracle {
     enum Event {
         UpgradeableEvent: upgradeable_component::Event,
         OwnedEvent: owned_component::Event,
-        SnapshotEvent: SnapshotEvent
+        SnapshotEvent: SnapshotEvent,
     }
 
     #[abi(embed_v0)]
@@ -211,7 +211,7 @@ pub mod Oracle {
                 token1,
                 fee: 0,
                 tick_spacing: MAX_TICK_SPACING,
-                extension: get_contract_address()
+                extension: get_contract_address(),
             }
         }
     }
@@ -221,7 +221,7 @@ pub mod Oracle {
         ref self: ContractState,
         owner: ContractAddress,
         core: ICoreDispatcher,
-        oracle_token: ContractAddress
+        oracle_token: ContractAddress,
     ) {
         self.initialize_owned(owner);
         self.core.write(core);
@@ -244,7 +244,7 @@ pub mod Oracle {
             entry: StoragePath<PoolState>,
             count: u64,
             current_tick: i129,
-            time: u64
+            time: u64,
         ) -> i129 {
             let mut l = 0_u64;
             let mut r = count;
@@ -282,7 +282,7 @@ pub mod Oracle {
                     (next.tick_cumulative - snapshot.tick_cumulative)
                         / i129 {
                             mag: (next.block_timestamp - snapshot.block_timestamp).into(),
-                            sign: false
+                            sign: false,
                         }
                 };
                 snapshot.tick_cumulative
@@ -294,7 +294,7 @@ pub mod Oracle {
     #[abi(embed_v0)]
     impl OracleImpl of IOracle<ContractState> {
         fn get_earliest_observation_time(
-            self: @ContractState, token_a: ContractAddress, token_b: ContractAddress
+            self: @ContractState, token_a: ContractAddress, token_b: ContractAddress,
         ) -> Option<u64> {
             let oracle_token = self.oracle_token.read();
 
@@ -332,7 +332,7 @@ pub mod Oracle {
             base_token: ContractAddress,
             quote_token: ContractAddress,
             start_time: u64,
-            end_time: u64
+            end_time: u64,
         ) -> i129 {
             let times: Span<(u64, u64)> = array![(start_time, end_time)].span();
             let mut result: Span<i129> = self
@@ -344,7 +344,7 @@ pub mod Oracle {
             self: @ContractState,
             base_token: ContractAddress,
             quote_token: ContractAddress,
-            mut start_and_end_times: Span<(u64, u64)>
+            mut start_and_end_times: Span<(u64, u64)>,
         ) -> Span<i129> {
             let current_time = get_block_timestamp();
 
@@ -378,7 +378,7 @@ pub mod Oracle {
                     results
                         .append(
                             difference
-                                / i129 { mag: (*end_time - *start_time).into(), sign: flipped }
+                                / i129 { mag: (*end_time - *start_time).into(), sign: flipped },
                         );
                 };
             } else {
@@ -404,7 +404,7 @@ pub mod Oracle {
             self: @ContractState,
             base_token: ContractAddress,
             quote_token: ContractAddress,
-            period: u64
+            period: u64,
         ) -> i129 {
             let now = get_block_timestamp();
             self.get_average_tick_over_period(base_token, quote_token, now - period, now)
@@ -437,12 +437,12 @@ pub mod Oracle {
             end_time: u64,
             num_intervals: u32,
             interval_seconds: u32,
-            extrapolated_to: u32
+            extrapolated_to: u32,
         ) -> u64 {
             assert(num_intervals > 1, 'num_intervals must be g.t. 1');
             let mut history = self
                 .get_average_tick_history(
-                    token_a, token_b, end_time, num_intervals, interval_seconds
+                    token_a, token_b, end_time, num_intervals, interval_seconds,
                 );
 
             let mut previous: Option<i129> = Option::None;
@@ -469,7 +469,7 @@ pub mod Oracle {
             end_time: u64,
         ) -> u256 {
             tick_to_price_x128(
-                self.get_average_tick_over_period(base_token, quote_token, start_time, end_time)
+                self.get_average_tick_over_period(base_token, quote_token, start_time, end_time),
             )
         }
 
@@ -477,7 +477,7 @@ pub mod Oracle {
             self: @ContractState,
             base_token: ContractAddress,
             quote_token: ContractAddress,
-            period: u64
+            period: u64,
         ) -> u256 {
             let now = get_block_timestamp();
             self.get_price_x128_over_period(base_token, quote_token, now - period, now)
@@ -493,7 +493,7 @@ pub mod Oracle {
         ) -> Span<u256> {
             let mut ticks = self
                 .get_average_tick_history(
-                    base_token, quote_token, end_time, num_intervals, interval_seconds
+                    base_token, quote_token, end_time, num_intervals, interval_seconds,
                 );
 
             let mut converted: Array<u256> = array![];
@@ -522,7 +522,7 @@ pub mod Oracle {
                         after_update_position: false,
                         before_collect_fees: false,
                         after_collect_fees: false,
-                    }
+                    },
                 );
         }
 
@@ -536,14 +536,14 @@ pub mod Oracle {
     #[abi(embed_v0)]
     impl OracleExtension of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             self.check_caller_is_core();
 
             let oracle_token = self.oracle_token.read();
             assert(
                 pool_key.token0 == oracle_token || pool_key.token1 == oracle_token,
-                'Must use oracle token'
+                'Must use oracle token',
             );
 
             let key = pool_key.to_pair_key();
@@ -558,13 +558,13 @@ pub mod Oracle {
             self
                 .emit(
                     SnapshotEvent {
-                        token0: pool_key.token0, token1: pool_key.token1, index: 0, snapshot
-                    }
+                        token0: pool_key.token0, token1: pool_key.token1, index: 0, snapshot,
+                    },
                 )
         }
 
         fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             assert(false, 'Call point not used');
         }
@@ -573,7 +573,7 @@ pub mod Oracle {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: SwapParameters
+            params: SwapParameters,
         ) {
             let core = self.check_caller_is_core();
             let key = pool_key.to_pair_key();
@@ -602,8 +602,8 @@ pub mod Oracle {
             self
                 .emit(
                     SnapshotEvent {
-                        token0: pool_key.token0, token1: pool_key.token1, index: count, snapshot
-                    }
+                        token0: pool_key.token0, token1: pool_key.token1, index: count, snapshot,
+                    },
                 );
         }
 
@@ -612,7 +612,7 @@ pub mod Oracle {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: SwapParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'Call point not used');
         }
@@ -621,7 +621,7 @@ pub mod Oracle {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: UpdatePositionParameters
+            params: UpdatePositionParameters,
         ) {
             assert(
                 params
@@ -629,7 +629,7 @@ pub mod Oracle {
                         lower: i129 { mag: 88368108, sign: true },
                         upper: i129 { mag: 88368108, sign: false },
                     },
-                'Position must be full range'
+                'Position must be full range',
             );
 
             let oracle_token = self.oracle_token.read();
@@ -640,7 +640,7 @@ pub mod Oracle {
                     || pool_key.token1 == oracle_token
                     || params.liquidity_delta.is_zero()
                     || params.liquidity_delta.sign,
-                'Must use oracle token'
+                'Must use oracle token',
             );
         }
 
@@ -649,7 +649,7 @@ pub mod Oracle {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'Call point not used');
         }
@@ -659,7 +659,7 @@ pub mod Oracle {
             caller: ContractAddress,
             pool_key: PoolKey,
             salt: felt252,
-            bounds: Bounds
+            bounds: Bounds,
         ) {
             assert(false, 'Call point not used');
         }
@@ -670,7 +670,7 @@ pub mod Oracle {
             pool_key: PoolKey,
             salt: felt252,
             bounds: Bounds,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'Call point not used');
         }

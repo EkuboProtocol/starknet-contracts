@@ -1,4 +1,4 @@
-use ekubo::interfaces::core::{UpdatePositionParameters, SwapParameters, IExtension};
+use ekubo::interfaces::core::{IExtension, SwapParameters, UpdatePositionParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::delta::{Delta};
 use ekubo::types::i129::{i129};
@@ -44,7 +44,7 @@ pub mod CoreLocker {
     use core::num::traits::{Zero};
     use core::option::{Option};
     use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, handle_delta
+        call_core_with_callback, consume_callback_data, handle_delta,
     };
     use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
@@ -52,16 +52,16 @@ pub mod CoreLocker {
     use ekubo::types::call_points::{CallPoints};
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StoragePointerWriteAccess;
-    use starknet::{ContractAddress, get_contract_address, contract_address_const};
+    use starknet::{ContractAddress, contract_address_const, get_contract_address};
     use super::{
-        Action, ActionResult, Delta, IERC20Dispatcher, IERC20DispatcherTrait, ICoreLockerDispatcher,
-        ICoreLockerDispatcherTrait, i129, ICoreLocker, IExtension, SwapParameters,
-        UpdatePositionParameters, PoolKey
+        Action, ActionResult, Delta, ICoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+        IERC20Dispatcher, IERC20DispatcherTrait, IExtension, PoolKey, SwapParameters,
+        UpdatePositionParameters, i129,
     };
 
     #[storage]
     struct Storage {
-        core: ICoreDispatcher
+        core: ICoreDispatcher,
     }
 
     #[constructor]
@@ -72,10 +72,10 @@ pub mod CoreLocker {
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {}
         fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             assert(false, 'never called');
         }
@@ -84,7 +84,7 @@ pub mod CoreLocker {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: SwapParameters
+            params: SwapParameters,
         ) {
             assert(false, 'never called');
         }
@@ -93,7 +93,7 @@ pub mod CoreLocker {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: SwapParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'never called');
         }
@@ -102,7 +102,7 @@ pub mod CoreLocker {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: UpdatePositionParameters
+            params: UpdatePositionParameters,
         ) {
             assert(false, 'never called');
         }
@@ -111,7 +111,7 @@ pub mod CoreLocker {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'never called');
         }
@@ -121,7 +121,7 @@ pub mod CoreLocker {
             caller: ContractAddress,
             pool_key: PoolKey,
             salt: felt252,
-            bounds: Bounds
+            bounds: Bounds,
         ) {
             assert(false, 'never called');
         }
@@ -131,7 +131,7 @@ pub mod CoreLocker {
             pool_key: PoolKey,
             salt: felt252,
             bounds: Bounds,
-            delta: Delta
+            delta: Delta,
         ) {
             assert(false, 'never called');
         }
@@ -154,7 +154,7 @@ pub mod CoreLocker {
                     ActionResult::AssertLockerId(())
                 },
                 Action::Relock((
-                    locker_id, relock_count
+                    locker_id, relock_count,
                 )) => {
                     assert(locker_id == id, 'RL_INVALID_LOCKER_ID');
 
@@ -177,7 +177,7 @@ pub mod CoreLocker {
                     ActionResult::Relock(())
                 },
                 Action::UpdatePosition((
-                    pool_key, params, recipient
+                    pool_key, params, recipient,
                 )) => {
                     let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
@@ -199,7 +199,7 @@ pub mod CoreLocker {
                                 } else {
                                     1
                                 })),
-                        'deltas'
+                        'deltas',
                     );
 
                     handle_delta(core, pool_key.token0, delta.amount0, recipient);
@@ -212,7 +212,7 @@ pub mod CoreLocker {
                             } else {
                                 1
                             }),
-                        'deltas'
+                        'deltas',
                     );
 
                     handle_delta(core, pool_key.token1, delta.amount1, recipient);
@@ -223,7 +223,7 @@ pub mod CoreLocker {
                     ActionResult::UpdatePosition(delta)
                 },
                 Action::Swap((
-                    pool_key, params, recipient
+                    pool_key, params, recipient,
                 )) => {
                     let mut state = core.get_locker_state(id);
                     assert(state.address == get_contract_address(), 'is locker');
@@ -246,7 +246,7 @@ pub mod CoreLocker {
                                 } else {
                                     1
                                 })),
-                        'deltas'
+                        'deltas',
                     );
 
                     handle_delta(core, pool_key.token0, delta.amount0, recipient);
@@ -259,7 +259,7 @@ pub mod CoreLocker {
                             } else {
                                 1
                             }),
-                        'deltas'
+                        'deltas',
                     );
 
                     handle_delta(core, pool_key.token1, delta.amount1, recipient);
@@ -270,7 +270,7 @@ pub mod CoreLocker {
                     ActionResult::Swap(delta)
                 },
                 Action::SaveBalance((
-                    key, amount
+                    key, amount,
                 )) => {
                     let balance_next = core.save(key, amount);
 
@@ -286,7 +286,7 @@ pub mod CoreLocker {
                     ActionResult::SaveBalance(balance_next)
                 },
                 Action::LoadBalance((
-                    token, salt, amount, recipient
+                    token, salt, amount, recipient,
                 )) => {
                     let balance_next = core.load(token, salt, amount);
 
@@ -302,7 +302,7 @@ pub mod CoreLocker {
                     ActionResult::LoadBalance(balance_next)
                 },
                 Action::AccumulateAsFees((
-                    pool_key, amount0, amount1
+                    pool_key, amount0, amount1,
                 )) => {
                     core.accumulate_as_fees(pool_key, amount0, amount1);
 
@@ -310,19 +310,19 @@ pub mod CoreLocker {
                         core,
                         pool_key.token0,
                         i129 { mag: amount0, sign: false },
-                        contract_address_const::<0>()
+                        contract_address_const::<0>(),
                     );
                     handle_delta(
                         core,
                         pool_key.token1,
                         i129 { mag: amount1, sign: false },
-                        contract_address_const::<0>()
+                        contract_address_const::<0>(),
                     );
 
                     ActionResult::AccumulateAsFees
                 },
                 Action::FlashBorrow((
-                    token, amount_borrow, amount_repay
+                    token, amount_borrow, amount_repay,
                 )) => {
                     if (amount_borrow.is_non_zero()) {
                         core.withdraw(token, get_contract_address(), amount_borrow);
@@ -335,7 +335,7 @@ pub mod CoreLocker {
                     }
 
                     ActionResult::FlashBorrow(())
-                }
+                },
             };
 
             serialize(@result).span()
@@ -362,7 +362,7 @@ pub mod CoreLocker {
                         after_update_position: false,
                         before_collect_fees: false,
                         after_collect_fees: false,
-                    }
+                    },
                 );
         }
     }

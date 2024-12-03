@@ -11,7 +11,7 @@ pub mod Upgradeable {
     use core::result::ResultTrait;
     use ekubo::components::owned::{Ownable};
     use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use starknet::{ClassHash, syscalls::{replace_class_syscall, library_call_syscall}};
+    use starknet::{ClassHash, syscalls::{library_call_syscall, replace_class_syscall}};
     use super::{IHasInterface};
 
     #[storage]
@@ -25,7 +25,7 @@ pub mod Upgradeable {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        ClassHashReplaced: ClassHashReplaced
+        ClassHashReplaced: ClassHashReplaced,
     }
 
 
@@ -44,7 +44,7 @@ pub mod Upgradeable {
             let id = this_contract.get_primary_interface_id();
 
             let mut result = library_call_syscall(
-                class_hash, selector!("get_primary_interface_id"), array![].span()
+                class_hash, selector!("get_primary_interface_id"), array![].span(),
             )
                 .expect('MISSING_PRIMARY_INTERFACE_ID');
 

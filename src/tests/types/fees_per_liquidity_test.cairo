@@ -1,6 +1,6 @@
 use core::num::traits::{Zero};
 use ekubo::types::fees_per_liquidity::{
-    FeesPerLiquidity, to_fees_per_liquidity, fees_per_liquidity_new
+    FeesPerLiquidity, fees_per_liquidity_new, to_fees_per_liquidity,
 };
 
 const MAX_PRIME: felt252 =
@@ -48,19 +48,19 @@ fn test_fpl_overflow_add() {
 
     let sum = fpl_max + fpl_one;
 
-    assert(sum == FeesPerLiquidity { value0: 0, value1: 0, }, 'sum');
+    assert(sum == FeesPerLiquidity { value0: 0, value1: 0 }, 'sum');
 }
 
 #[test]
 fn test_fees_per_liquidity_new() {
     assert(
         fees_per_liquidity_new(
-            100, 250, 10000
+            100, 250, 10000,
         ) == FeesPerLiquidity {
             value0: 3402823669209384634633746074317682114,
-            value1: 8507059173023461586584365185794205286
+            value1: 8507059173023461586584365185794205286,
         },
-        'example'
+        'example',
     );
 }
 

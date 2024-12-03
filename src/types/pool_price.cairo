@@ -1,6 +1,6 @@
 use core::option::{OptionTrait};
 use core::traits::{Into, TryInto};
-use ekubo::math::ticks::{min_sqrt_ratio, max_sqrt_ratio, constants as tick_constants};
+use ekubo::math::ticks::{constants as tick_constants, max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::types::i129::{i129, i129Trait};
 use starknet::storage_access::{StorePacking};
 
@@ -22,7 +22,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
     fn pack(value: PoolPrice) -> felt252 {
         assert(
             (value.sqrt_ratio >= min_sqrt_ratio()) & (value.sqrt_ratio <= max_sqrt_ratio()),
-            'SQRT_RATIO'
+            'SQRT_RATIO',
         );
 
         // todo: when trading to the minimum tick, the tick is crossed and the pool tick is set to
@@ -34,7 +34,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
             } else {
                 value.tick.mag <= tick_constants::MAX_TICK_MAGNITUDE
             },
-            'TICK_MAGNITUDE'
+            'TICK_MAGNITUDE',
         );
 
         let tick_raw_shifted: u128 = if (value.tick.is_negative()) {
@@ -52,7 +52,7 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
 
         // quotient, remainder
         let (tick_call_points, sqrt_ratio) = DivRem::div_rem(
-            packed_first_slot_u256, DENOMINATOR_X192
+            packed_first_slot_u256, DENOMINATOR_X192,
         );
 
         let (tick_raw, _call_points_legacy) = DivRem::div_rem(tick_call_points.low, DENOMINATOR_X8);

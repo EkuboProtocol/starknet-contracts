@@ -1,4 +1,4 @@
-use core::num::traits::{WideMul, OverflowingMul, OverflowingAdd};
+use core::num::traits::{OverflowingAdd, OverflowingMul, WideMul};
 use ekubo::math::bits::{msb};
 use ekubo::math::exp2::{exp2};
 use ekubo::types::i129::{i129};
@@ -60,9 +60,9 @@ pub(crate) fn log2(x: u256) -> (u128, bool) {
     if (x.high == 0) {
         let (mag, sign) = log2(
             u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
+                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff,
             }
-                / x
+                / x,
         );
         return (mag, !sign);
     }
@@ -71,7 +71,7 @@ pub(crate) fn log2(x: u256) -> (u128, bool) {
     let msb_high = msb(x.high);
 
     let (mut r, mut log_2) = (
-        x / u256 { low: exp2(msb_high + 1), high: 0 }, msb_high.into() * 0x10000000000000000
+        x / u256 { low: exp2(msb_high + 1), high: 0 }, msb_high.into() * 0x10000000000000000,
     );
 
     // 63
@@ -379,7 +379,7 @@ pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
     // == 2**64/(log base 2 of tick size)
     // https://www.wolframalpha.com/input?i=floor%28%281%2F+log+base+2+of+%28sqrt%281.000001%29%29%29*2**64%29
     let tick_mag_x128 = WideMul::<
-        u128, u128
+        u128, u128,
     >::wide_mul(25572630076711825471857579, log2_sqrt_ratio);
 
     let error = u256 { low: MAX_ERROR_MAGNITUDE, high: 0 };
@@ -392,13 +392,13 @@ pub fn sqrt_ratio_to_tick(sqrt_ratio: u256) -> i129 {
                     + error
                     + u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 })
                     .high,
-                sign
+                sign,
             },
             i129 {
                 mag: (tick_mag_x128 + u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 })
                     .high,
-                sign
-            }
+                sign,
+            },
         )
     } else {
         (i129 { mag: tick_mag_x128.high, sign }, i129 { mag: (tick_mag_x128 + error).high, sign })

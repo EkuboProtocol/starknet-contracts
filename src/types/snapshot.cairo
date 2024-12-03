@@ -1,5 +1,5 @@
 use core::option::{OptionTrait};
-use core::traits::{TryInto, Into};
+use core::traits::{Into, TryInto};
 use ekubo::types::i129::{i129};
 use starknet::storage_access::{StorePacking};
 
@@ -20,7 +20,7 @@ impl SnapshotPacking of StorePacking<Snapshot, felt252> {
             } else {
                 value.block_timestamp.into()
             },
-            low: value.tick_cumulative.mag
+            low: value.tick_cumulative.mag,
         };
         total.try_into().unwrap()
     }
@@ -36,7 +36,7 @@ impl SnapshotPacking of StorePacking<Snapshot, felt252> {
 
         Snapshot {
             block_timestamp: block_timestamp.try_into().unwrap(),
-            tick_cumulative: i129 { mag: split.low, sign }
+            tick_cumulative: i129 { mag: split.low, sign },
         }
     }
 }

@@ -3,7 +3,7 @@
 #[starknet::contract]
 pub mod MockUpgradeable {
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use starknet::{ContractAddress};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

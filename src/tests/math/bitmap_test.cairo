@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use ekubo::math::bitmap::{
-    Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick
+    Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
 };
 use ekubo::types::i129::{i129};
 
@@ -41,34 +41,34 @@ fn test_set_bit() {
     assert(Bitmap { value: 0 }.set_bit(1) == Bitmap { value: 2 }, 'set 1');
     assert(
         Bitmap { value: 0 }.set_bit(128) == Bitmap { value: 0x100000000000000000000000000000000 },
-        'set 128'
+        'set 128',
     );
     assert(
         Bitmap { value: 0 }
             .set_bit(128)
             .set_bit(129) == Bitmap { value: 0x300000000000000000000000000000000 },
-        'set 128/129'
+        'set 128/129',
     );
     assert(
         Bitmap { value: 0 }
             .set_bit(128)
             .set_bit(129)
             .unset_bit(128) == Bitmap { value: 0x200000000000000000000000000000000 },
-        'set 128/129 - unset 128'
+        'set 128/129 - unset 128',
     );
     assert(
         Bitmap { value: 0 }
             .set_bit(
-                250
+                250,
             ) == Bitmap {
-                value: 0x400000000000000000000000000000000000000000000000000000000000000
+                value: 0x400000000000000000000000000000000000000000000000000000000000000,
             },
-        'set 250'
+        'set 250',
     );
 
     assert(Bitmap { value: 0 }.set_bit(250).unset_bit(250) == Bitmap { value: 0 }, 'set/unset 251');
     assert(
-        Bitmap { value: 0 }.set_bit(0).set_bit(0) == Bitmap { value: 2 }, 'set 0 twice sets next'
+        Bitmap { value: 0 }.set_bit(0).set_bit(0) == Bitmap { value: 2 }, 'set 0 twice sets next',
     );
     assert(Bitmap { value: 0 }.set_bit(0).unset_bit(0) == Bitmap { value: 0 }, 'set/unset 0');
     assert(Bitmap { value: 5 }.set_bit(0).unset_bit(0) == Bitmap { value: 5 }, 'set/unset 0');
@@ -263,22 +263,22 @@ fn test_positive_cases_non_one_tick_spacing() {
 #[test]
 fn test_negative_cases_tick_spacing_one() {
     assert_case_ticks(
-        tick: i129 { mag: 253, sign: true }, location: (0x100000001, 1), tick_spacing: 1
+        tick: i129 { mag: 253, sign: true }, location: (0x100000001, 1), tick_spacing: 1,
     );
     assert_case_ticks(
-        tick: i129 { mag: 252, sign: true }, location: (0x100000001, 0), tick_spacing: 1
+        tick: i129 { mag: 252, sign: true }, location: (0x100000001, 0), tick_spacing: 1,
     );
     assert_case_ticks(
-        tick: i129 { mag: 251, sign: true }, location: (0x100000000, 250), tick_spacing: 1
+        tick: i129 { mag: 251, sign: true }, location: (0x100000000, 250), tick_spacing: 1,
     );
     assert_case_ticks(
-        tick: i129 { mag: 250, sign: true }, location: (0x100000000, 249), tick_spacing: 1
+        tick: i129 { mag: 250, sign: true }, location: (0x100000000, 249), tick_spacing: 1,
     );
     assert_case_ticks(
-        tick: i129 { mag: 3, sign: true }, location: (0x100000000, 2), tick_spacing: 1
+        tick: i129 { mag: 3, sign: true }, location: (0x100000000, 2), tick_spacing: 1,
     );
     assert_case_ticks(
-        tick: i129 { mag: 1, sign: true }, location: (0x100000000, 0), tick_spacing: 1
+        tick: i129 { mag: 1, sign: true }, location: (0x100000000, 0), tick_spacing: 1,
     );
 }
 
@@ -286,21 +286,21 @@ fn test_negative_cases_tick_spacing_one() {
 #[test]
 fn test_negative_cases_tick_spacing_ten() {
     assert_case_ticks(
-        tick: i129 { mag: 2525, sign: true }, location: (0x100000001, 1), tick_spacing: 10
+        tick: i129 { mag: 2525, sign: true }, location: (0x100000001, 1), tick_spacing: 10,
     );
     assert_case_ticks(
-        tick: i129 { mag: 2519, sign: true }, location: (0x100000001, 0), tick_spacing: 10
+        tick: i129 { mag: 2519, sign: true }, location: (0x100000001, 0), tick_spacing: 10,
     );
     assert_case_ticks(
-        tick: i129 { mag: 2503, sign: true }, location: (0x100000000, 250), tick_spacing: 10
+        tick: i129 { mag: 2503, sign: true }, location: (0x100000000, 250), tick_spacing: 10,
     );
     assert_case_ticks(
-        tick: i129 { mag: 2500, sign: true }, location: (0x100000000, 249), tick_spacing: 10
+        tick: i129 { mag: 2500, sign: true }, location: (0x100000000, 249), tick_spacing: 10,
     );
     assert_case_ticks(
-        tick: i129 { mag: 25, sign: true }, location: (0x100000000, 2), tick_spacing: 10
+        tick: i129 { mag: 25, sign: true }, location: (0x100000000, 2), tick_spacing: 10,
     );
     assert_case_ticks(
-        tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10
+        tick: i129 { mag: 5, sign: true }, location: (0x100000000, 0), tick_spacing: 10,
     );
 }

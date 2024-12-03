@@ -7,39 +7,39 @@ pub mod Positions {
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, forward_lock
+        call_core_with_callback, consume_callback_data, forward_lock,
     };
-    use ekubo::components::upgradeable::{Upgradeable as upgradeable_component, IHasInterface};
+    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{
-        ICoreDispatcher, UpdatePositionParameters, SwapParameters, ICoreDispatcherTrait, ILocker,
-        IForwardeeDispatcher,
+        ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher, ILocker, SwapParameters,
+        UpdatePositionParameters,
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::extensions::limit_orders::{
-        OrderKey as LimitOrderKey, ILimitOrdersDispatcher, ILimitOrdersDispatcherTrait,
-        ForwardCallbackData as LimitOrderForwardCallbackData,
-        ForwardCallbackResult as LimitOrderForwardCallbackResult, PlaceOrderForwardCallbackData,
-        CloseOrderForwardCallbackData, GetOrderInfoRequest as GetLimitOrderInfoRequest,
-        GetOrderInfoResult as GetLimitOrderInfoResult
+        CloseOrderForwardCallbackData, ForwardCallbackData as LimitOrderForwardCallbackData,
+        ForwardCallbackResult as LimitOrderForwardCallbackResult,
+        GetOrderInfoRequest as GetLimitOrderInfoRequest,
+        GetOrderInfoResult as GetLimitOrderInfoResult, ILimitOrdersDispatcher,
+        ILimitOrdersDispatcherTrait, OrderKey as LimitOrderKey, PlaceOrderForwardCallbackData,
     };
     use ekubo::interfaces::extensions::twamm::{
-        OrderKey, OrderInfo, ITWAMMDispatcher, ITWAMMDispatcherTrait, ForwardCallbackData,
-        UpdateSaleRateCallbackData, CollectProceedsCallbackData
+        CollectProceedsCallbackData, ForwardCallbackData, ITWAMMDispatcher, ITWAMMDispatcherTrait,
+        OrderInfo, OrderKey, UpdateSaleRateCallbackData,
     };
-    use ekubo::interfaces::positions::{IPositions, GetTokenInfoResult, GetTokenInfoRequest};
+    use ekubo::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use ekubo::limit_orders::{
-        LimitOrders::{LIMIT_ORDER_TICK_SPACING, DOUBLE_LIMIT_ORDER_TICK_SPACING}
+        LimitOrders::{DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING},
     };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
     use ekubo::math::max_liquidity::{
-        max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1
+        max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
-    use ekubo::math::ticks::{tick_to_sqrt_ratio, min_sqrt_ratio};
+    use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
     use ekubo::math::time::{to_duration};
     use ekubo::math::twamm::{calculate_sale_rate};
-    use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+    use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
     use ekubo::types::bounds::{Bounds, max_bounds};
     use ekubo::types::delta::{Delta};
     use ekubo::types::i129::{i129};
@@ -48,7 +48,7 @@ pub mod Positions {
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::{
-        ContractAddress, get_caller_address, get_contract_address, ClassHash, get_block_timestamp,
+        ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
     };
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -100,7 +100,7 @@ pub mod Positions {
         owner: ContractAddress,
         core: ICoreDispatcher,
         nft_class_hash: ClassHash,
-        token_uri_base: felt252
+        token_uri_base: felt252,
     ) {
         self.initialize_owned(owner);
         self.core.write(core);
@@ -114,8 +114,8 @@ pub mod Positions {
                     name: 'Ekubo Position',
                     symbol: 'EkuPo',
                     token_uri_base: token_uri_base,
-                    salt: 0
-                )
+                    salt: 0,
+                ),
             );
     }
 
@@ -174,7 +174,7 @@ pub mod Positions {
     struct PlaceOrderCallbackData {
         salt: felt252,
         order_key: LimitOrderKey,
-        amount: u128
+        amount: u128,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -207,7 +207,7 @@ pub mod Positions {
     #[generate_trait]
     impl InternalPositionsMethods of InternalPositionsTrait {
         fn check_authorization(
-            self: @ContractState, id: u64
+            self: @ContractState, id: u64,
         ) -> (IOwnedNFTDispatcher, ContractAddress) {
             let nft = self.nft.read();
             let caller = get_caller_address();
@@ -223,7 +223,7 @@ pub mod Positions {
                     core::pedersen::pedersen(salt, order_key.token0.into()),
                     order_key.token1.into(),
                 ),
-                order_key.tick.sign.into()
+                order_key.tick.sign.into(),
             ),
             order_key.tick.mag.into(),
         )
@@ -246,7 +246,7 @@ pub mod Positions {
                                     salt: 0,
                                     bounds: max_bounds(data.pool_key.tick_spacing),
                                     liquidity_delta: Zero::zero(),
-                                }
+                                },
                             );
                     }
 
@@ -258,7 +258,7 @@ pub mod Positions {
                         tick_to_sqrt_ratio(data.bounds.lower),
                         tick_to_sqrt_ratio(data.bounds.upper),
                         data.amount0,
-                        data.amount1
+                        data.amount1,
                     );
 
                     assert(liquidity >= data.min_liquidity, 'MIN_LIQUIDITY');
@@ -271,7 +271,7 @@ pub mod Positions {
                                     salt: data.salt,
                                     bounds: data.bounds,
                                     liquidity_delta: i129 { mag: liquidity, sign: false },
-                                }
+                                },
                             )
                     } else {
                         Zero::zero()
@@ -299,7 +299,7 @@ pub mod Positions {
                                 salt: data.salt,
                                 bounds: data.bounds,
                                 liquidity_delta: i129 { mag: data.liquidity, sign: true },
-                            }
+                            },
                         );
 
                     assert(delta.amount0.mag >= data.min_token0, 'MIN_TOKEN0');
@@ -316,7 +316,7 @@ pub mod Positions {
                     serialize(@delta).span()
                 },
                 LockCallbackData::CollectFees(data) => {
-                    let delta = core.collect_fees(data.pool_key, data.salt, data.bounds,);
+                    let delta = core.collect_fees(data.pool_key, data.salt, data.bounds);
 
                     if delta.amount0.is_non_zero() {
                         core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
@@ -342,7 +342,7 @@ pub mod Positions {
                                     is_token1: false,
                                     sqrt_ratio_limit: min_sqrt_ratio(),
                                     skip_ahead: Zero::zero(),
-                                }
+                                },
                             );
 
                         core
@@ -352,7 +352,7 @@ pub mod Positions {
                                     salt: 0,
                                     bounds: max_bounds(pool_key.tick_spacing),
                                     liquidity_delta: Zero::zero(),
-                                }
+                                },
                             );
 
                         core.get_pool_price(pool_key)
@@ -370,10 +370,10 @@ pub mod Positions {
                                 salt: data.salt,
                                 order_key: data.order_key,
                                 sale_rate_delta: i129 {
-                                    mag: data.sale_rate_delta_mag, sign: false
+                                    mag: data.sale_rate_delta_mag, sign: false,
                                 },
-                            }
-                        )
+                            },
+                        ),
                     );
 
                     IERC20Dispatcher { contract_address: data.order_key.sell_token }
@@ -392,15 +392,15 @@ pub mod Positions {
                                 salt: data.salt,
                                 order_key: data.order_key,
                                 sale_rate_delta: i129 { mag: data.sale_rate_delta_mag, sign: true },
-                            }
-                        )
+                            },
+                        ),
                     );
 
                     core
                         .withdraw(
                             data.order_key.sell_token,
                             recipient: data.recipient,
-                            amount: amount_delta.mag
+                            amount: amount_delta.mag,
                         );
 
                     serialize(@amount_delta.mag).span()
@@ -412,16 +412,16 @@ pub mod Positions {
                         IForwardeeDispatcher { contract_address: twamm.contract_address },
                         @ForwardCallbackData::CollectProceeds(
                             CollectProceedsCallbackData {
-                                salt: data.salt, order_key: data.order_key
-                            }
-                        )
+                                salt: data.salt, order_key: data.order_key,
+                            },
+                        ),
                     );
 
                     core
                         .withdraw(
                             data.order_key.buy_token,
                             recipient: data.recipient,
-                            amount: proceeds_amount
+                            amount: proceeds_amount,
                         );
 
                     serialize(@proceeds_amount).span()
@@ -451,7 +451,7 @@ pub mod Positions {
                     let bounds = Bounds {
                         lower: data.order_key.tick,
                         upper: data.order_key.tick
-                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
                     };
                     let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
                     let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
@@ -467,8 +467,8 @@ pub mod Positions {
                                     amount: i129 { mag: data.amount, sign: false },
                                     is_token1: false,
                                     sqrt_ratio_limit: sqrt_ratio_lower,
-                                    skip_ahead: 0
-                                }
+                                    skip_ahead: 0,
+                                },
                             );
                         (delta.amount0.mag, delta.amount1.mag)
                     } else if sell_token == pool_key.token1
@@ -480,8 +480,8 @@ pub mod Positions {
                                     amount: i129 { mag: data.amount, sign: false },
                                     is_token1: true,
                                     sqrt_ratio_limit: sqrt_ratio_upper,
-                                    skip_ahead: 0
-                                }
+                                    skip_ahead: 0,
+                                },
                             );
                         (delta.amount1.mag, delta.amount0.mag)
                     } else {
@@ -501,10 +501,10 @@ pub mod Positions {
                                     owner: get_contract_address(),
                                     token: buy_token,
                                     salt: limit_order_key_saved_balance_salt(
-                                        data.salt, data.order_key
+                                        data.salt, data.order_key,
                                     ),
                                 },
-                                amount_bought
+                                amount_bought,
                             );
                     }
 
@@ -512,24 +512,24 @@ pub mod Positions {
                     let order_liquidity = if data.amount != amount_sold {
                         let liquidity = if sell_token == data.order_key.token0 {
                             max_liquidity_for_token0(
-                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
+                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold,
                             )
                         } else {
                             max_liquidity_for_token1(
-                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold
+                                sqrt_ratio_lower, sqrt_ratio_upper, data.amount - amount_sold,
                             )
                         };
 
                         let result: LimitOrderForwardCallbackResult = forward_lock(
                             core,
                             IForwardeeDispatcher {
-                                contract_address: limit_orders.contract_address
+                                contract_address: limit_orders.contract_address,
                             },
                             @LimitOrderForwardCallbackData::PlaceOrder(
                                 PlaceOrderForwardCallbackData {
                                     salt: data.salt, order_key: data.order_key, liquidity,
-                                }
-                            )
+                                },
+                            ),
                         );
 
                         if let LimitOrderForwardCallbackResult::PlaceOrder(amount) = result {
@@ -563,20 +563,20 @@ pub mod Positions {
                                 owner: get_contract_address(),
                                 salt: data.salt,
                                 order_key: data.order_key,
-                            }
+                            },
                         );
 
                     if order_info.state.liquidity.is_non_zero() {
                         let result: LimitOrderForwardCallbackResult = forward_lock(
                             core,
                             IForwardeeDispatcher {
-                                contract_address: limit_orders.contract_address
+                                contract_address: limit_orders.contract_address,
                             },
                             @LimitOrderForwardCallbackData::CloseOrder(
                                 CloseOrderForwardCallbackData {
                                     salt: data.salt, order_key: data.order_key,
-                                }
-                            )
+                                },
+                            ),
                         );
 
                         if let LimitOrderForwardCallbackResult::CloseOrder((amount0, amount1)) =
@@ -611,7 +611,7 @@ pub mod Positions {
                     };
 
                     serialize(@(total0, total1)).span()
-                }
+                },
             }
         }
     }
@@ -653,7 +653,7 @@ pub mod Positions {
         }
 
         fn mint_with_referrer(
-            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, referrer: ContractAddress,
         ) -> u64 {
             self.mint_v2(referrer)
         }
@@ -669,7 +669,7 @@ pub mod Positions {
         }
 
         fn check_liquidity_is_zero(
-            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) {
             let info = self.get_token_info(id, pool_key, bounds);
             assert(info.liquidity.is_zero(), 'LIQUIDITY_IS_NON_ZERO');
@@ -681,7 +681,7 @@ pub mod Positions {
         }
 
         fn get_tokens_info(
-            self: @ContractState, mut params: Span<GetTokenInfoRequest>
+            self: @ContractState, mut params: Span<GetTokenInfoRequest>,
         ) -> Span<GetTokenInfoResult> {
             let mut results: Array<GetTokenInfoResult> = array![];
 
@@ -694,13 +694,14 @@ pub mod Positions {
         }
 
         fn get_token_info(
-            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+            self: @ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> GetTokenInfoResult {
             let core = self.core.read();
             let price = self.get_pool_price(pool_key);
             let get_position_result = core
                 .get_position_with_fees(
-                    pool_key, PositionKey { owner: get_contract_address(), salt: id.into(), bounds }
+                    pool_key,
+                    PositionKey { owner: get_contract_address(), salt: id.into(), bounds },
                 );
 
             let delta = liquidity_delta_to_amount_delta(
@@ -716,18 +717,18 @@ pub mod Positions {
                 amount0: delta.amount0.mag,
                 amount1: delta.amount1.mag,
                 fees0: get_position_result.fees0,
-                fees1: get_position_result.fees1
+                fees1: get_position_result.fees1,
             }
         }
 
         fn get_orders_info_with_block_timestamp(
-            self: @ContractState, mut params: Span<(u64, OrderKey)>
+            self: @ContractState, mut params: Span<(u64, OrderKey)>,
         ) -> (u64, Span<OrderInfo>) {
             (get_block_timestamp(), self.get_orders_info(params))
         }
 
         fn get_orders_info(
-            self: @ContractState, mut params: Span<(u64, OrderKey)>
+            self: @ContractState, mut params: Span<(u64, OrderKey)>,
         ) -> Span<OrderInfo> {
             let mut results: Array<OrderInfo> = array![];
 
@@ -750,7 +751,7 @@ pub mod Positions {
             bounds: Bounds,
             amount0: u128,
             amount1: u128,
-            min_liquidity: u128
+            min_liquidity: u128,
         ) -> u128 {
             self.check_authorization(id);
 
@@ -759,8 +760,8 @@ pub mod Positions {
                 @LockCallbackData::Deposit(
                     DepositCallbackData {
                         pool_key, salt: id.into(), bounds, min_liquidity, amount0, amount1,
-                    }
-                )
+                    },
+                ),
             );
 
             liquidity
@@ -795,7 +796,7 @@ pub mod Positions {
             liquidity: u128,
             min_token0: u128,
             min_token1: u128,
-            collect_fees: bool
+            collect_fees: bool,
         ) -> (u128, u128) {
             let (fees0, fees1) = if collect_fees {
                 self.collect_fees(id, pool_key, bounds)
@@ -833,31 +834,33 @@ pub mod Positions {
                         salt: id.into(),
                         min_token0,
                         min_token1,
-                        recipient: caller
-                    }
-                )
+                        recipient: caller,
+                    },
+                ),
             );
 
             (delta.amount0.mag, delta.amount1.mag)
         }
 
         fn collect_fees(
-            ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds
+            ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> (u128, u128) {
             let (_, caller) = self.check_authorization(id);
 
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectFees(
-                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient: caller }
-                )
+                    CollectFeesCallbackData {
+                        bounds, pool_key, salt: id.into(), recipient: caller,
+                    },
+                ),
             );
 
             (delta.amount0.mag, delta.amount1.mag)
         }
 
         fn deposit_last(
-            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128,
         ) -> u128 {
             self.deposit(self.nft.read().get_next_token_id() - 1, pool_key, bounds, min_liquidity)
         }
@@ -868,7 +871,7 @@ pub mod Positions {
             bounds: Bounds,
             amount0: u128,
             amount1: u128,
-            min_liquidity: u128
+            min_liquidity: u128,
         ) -> u128 {
             self
                 .deposit_amounts(
@@ -877,12 +880,12 @@ pub mod Positions {
                     bounds,
                     amount0,
                     amount1,
-                    min_liquidity
+                    min_liquidity,
                 )
         }
 
         fn mint_and_deposit(
-            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128,
         ) -> (u64, u128) {
             self.mint_and_deposit_with_referrer(pool_key, bounds, min_liquidity, Zero::zero())
         }
@@ -892,7 +895,7 @@ pub mod Positions {
             pool_key: PoolKey,
             bounds: Bounds,
             min_liquidity: u128,
-            referrer: ContractAddress
+            referrer: ContractAddress,
         ) -> (u64, u128) {
             let id = self.mint_v2(referrer);
             let liquidity = self.deposit(id, pool_key, bounds, min_liquidity);
@@ -900,7 +903,7 @@ pub mod Positions {
         }
 
         fn mint_and_deposit_and_clear_both(
-            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128
+            ref self: ContractState, pool_key: PoolKey, bounds: Bounds, min_liquidity: u128,
         ) -> (u64, u128, u256, u256) {
             let (id, liquidity) = self.mint_and_deposit(pool_key, bounds, min_liquidity);
             let amount0 = self.clear(IERC20Dispatcher { contract_address: pool_key.token0 });
@@ -913,52 +916,52 @@ pub mod Positions {
                 self.core.read().get_pool_price(pool_key)
             } else {
                 call_core_with_callback::<
-                    LockCallbackData, PoolPrice
+                    LockCallbackData, PoolPrice,
                 >(self.core.read(), @LockCallbackData::GetPoolPrice(pool_key))
             }
         }
 
         fn mint_and_increase_sell_amount(
-            ref self: ContractState, order_key: OrderKey, amount: u128
+            ref self: ContractState, order_key: OrderKey, amount: u128,
         ) -> (u64, u128) {
             let id = self.mint_v2(Zero::zero());
             (id, self.increase_sell_amount(id, order_key, amount))
         }
 
         fn increase_sell_amount_last(
-            ref self: ContractState, order_key: OrderKey, amount: u128
+            ref self: ContractState, order_key: OrderKey, amount: u128,
         ) -> u128 {
             self.increase_sell_amount(self.nft.read().get_next_token_id() - 1, order_key, amount)
         }
 
         fn increase_sell_amount(
-            ref self: ContractState, id: u64, order_key: OrderKey, amount: u128
+            ref self: ContractState, id: u64, order_key: OrderKey, amount: u128,
         ) -> u128 {
             self.check_authorization(id);
 
             let sale_rate = calculate_sale_rate(
                 amount: amount,
                 duration: to_duration(
-                    max(order_key.start_time, get_block_timestamp()), order_key.end_time
+                    max(order_key.start_time, get_block_timestamp()), order_key.end_time,
                 ),
             );
 
             call_core_with_callback::<
-                LockCallbackData, ()
+                LockCallbackData, (),
             >(
                 self.core.read(),
                 @LockCallbackData::IncreaseSaleRate(
                     IncreaseSaleRateCallbackData {
-                        order_key, salt: id.into(), sale_rate_delta_mag: sale_rate
-                    }
-                )
+                        order_key, salt: id.into(), sale_rate_delta_mag: sale_rate,
+                    },
+                ),
             );
 
             sale_rate
         }
 
         fn decrease_sale_rate_to_self(
-            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128
+            ref self: ContractState, id: u64, order_key: OrderKey, sale_rate_delta: u128,
         ) -> u128 {
             self.decrease_sale_rate_to(id, order_key, sale_rate_delta, get_caller_address())
         }
@@ -968,7 +971,7 @@ pub mod Positions {
             id: u64,
             order_key: OrderKey,
             sale_rate_delta: u128,
-            recipient: ContractAddress
+            recipient: ContractAddress,
         ) -> u128 {
             self.check_authorization(id);
 
@@ -981,9 +984,9 @@ pub mod Positions {
                             order_key,
                             salt: id.into(),
                             sale_rate_delta_mag: sale_rate_delta,
-                            recipient: recipient
-                        }
-                    )
+                            recipient: recipient,
+                        },
+                    ),
                 )
             } else {
                 0
@@ -991,13 +994,13 @@ pub mod Positions {
         }
 
         fn withdraw_proceeds_from_sale_to_self(
-            ref self: ContractState, id: u64, order_key: OrderKey
+            ref self: ContractState, id: u64, order_key: OrderKey,
         ) -> u128 {
             self.withdraw_proceeds_from_sale_to(id, order_key, get_caller_address())
         }
 
         fn withdraw_proceeds_from_sale_to(
-            ref self: ContractState, id: u64, order_key: OrderKey, recipient: ContractAddress
+            ref self: ContractState, id: u64, order_key: OrderKey, recipient: ContractAddress,
         ) -> u128 {
             self.check_authorization(id);
 
@@ -1005,27 +1008,27 @@ pub mod Positions {
                 self.core.read(),
                 @LockCallbackData::CollectOrderProceeds(
                     CollectOrderProceedsCallbackData {
-                        order_key, salt: id.into(), recipient: recipient
-                    }
-                )
+                        order_key, salt: id.into(), recipient: recipient,
+                    },
+                ),
             )
         }
 
         fn place_limit_order(
-            ref self: ContractState, id: u64, order_key: LimitOrderKey, amount: u128
+            ref self: ContractState, id: u64, order_key: LimitOrderKey, amount: u128,
         ) -> (u128, u128) {
             self.check_authorization(id);
 
             call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::PlaceOrder(
-                    PlaceOrderCallbackData { salt: id.into(), order_key, amount }
-                )
+                    PlaceOrderCallbackData { salt: id.into(), order_key, amount },
+                ),
             )
         }
 
         fn mint_and_place_limit_order(
-            ref self: ContractState, order_key: LimitOrderKey, amount: u128
+            ref self: ContractState, order_key: LimitOrderKey, amount: u128,
         ) -> (u64, u128, u128) {
             let id = self.mint_v2(Zero::zero());
             let (liquidity, purchased) = self.place_limit_order(id, order_key, amount);
@@ -1033,25 +1036,25 @@ pub mod Positions {
         }
 
         fn close_limit_order(
-            ref self: ContractState, id: u64, order_key: LimitOrderKey
+            ref self: ContractState, id: u64, order_key: LimitOrderKey,
         ) -> (u128, u128) {
             self.close_limit_order_to(id, order_key, get_caller_address())
         }
 
         fn close_limit_order_to(
-            ref self: ContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress
+            ref self: ContractState, id: u64, order_key: LimitOrderKey, recipient: ContractAddress,
         ) -> (u128, u128) {
             self.check_authorization(id);
             call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CloseOrder(
-                    CloseOrderCallbackData { salt: id.into(), order_key, recipient }
-                )
+                    CloseOrderCallbackData { salt: id.into(), order_key, recipient },
+                ),
             )
         }
 
         fn get_limit_orders_info(
-            self: @ContractState, mut params: Span<(u64, LimitOrderKey)>
+            self: @ContractState, mut params: Span<(u64, LimitOrderKey)>,
         ) -> Span<(GetLimitOrderInfoResult, u128)> {
             let core = self.core.read();
             let mut requests: Array<GetLimitOrderInfoRequest> = array![];
@@ -1063,8 +1066,8 @@ pub mod Positions {
                 requests
                     .append(
                         GetLimitOrderInfoRequest {
-                            owner: this_address, salt: (*id).into(), order_key: *order_key
-                        }
+                            owner: this_address, salt: (*id).into(), order_key: *order_key,
+                        },
                     );
                 keys
                     .append(
@@ -1074,8 +1077,8 @@ pub mod Positions {
                             } else {
                                 *order_key.token0
                             },
-                            limit_order_key_saved_balance_salt((*id).into(), *order_key)
-                        )
+                            limit_order_key_saved_balance_salt((*id).into(), *order_key),
+                        ),
                     );
             };
 
@@ -1089,7 +1092,7 @@ pub mod Positions {
                     .get_saved_balance(
                         SavedBalanceKey {
                             owner: saved_balance_owner, token: buy_token, salt: saved_balance_salt,
-                        }
+                        },
                     );
                 results.append((*info, saved_balance));
             };

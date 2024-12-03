@@ -3,7 +3,7 @@ use ekubo::types::call_points::{CallPoints};
 use ekubo::types::delta::{Delta};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
-use ekubo::types::keys::{PositionKey, PoolKey, SavedBalanceKey};
+use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
 use ekubo::types::pool_price::{PoolPrice};
 use ekubo::types::position::{Position};
 use starknet::{ContractAddress};
@@ -23,7 +23,7 @@ pub trait ILocker<TContractState> {
 pub trait IForwardee<TContractState> {
     // Passes through the lock identifier and the calldata
     fn forwarded(
-        ref self: TContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>
+        ref self: TContractState, original_locker: ContractAddress, id: u32, data: Span<felt252>,
     ) -> Span<felt252>;
 }
 
@@ -71,7 +71,7 @@ pub struct GetPositionWithFeesResult {
 #[derive(Copy, Drop, Serde)]
 pub struct LockerState {
     pub address: ContractAddress,
-    pub nonzero_delta_count: u32
+    pub nonzero_delta_count: u32,
 }
 
 // An extension is an optional contract that can be specified as part of a pool key to modify pool
@@ -80,17 +80,20 @@ pub struct LockerState {
 pub trait IExtension<TContractState> {
     // Called before a pool is initialized
     fn before_initialize_pool(
-        ref self: TContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ref self: TContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
     );
 
     // Called after a pool is initialized
     fn after_initialize_pool(
-        ref self: TContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+        ref self: TContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
     );
 
     // Called before a swap happens
     fn before_swap(
-        ref self: TContractState, caller: ContractAddress, pool_key: PoolKey, params: SwapParameters
+        ref self: TContractState,
+        caller: ContractAddress,
+        pool_key: PoolKey,
+        params: SwapParameters,
     );
     // Called after a swap happens with the result of the swap
     fn after_swap(
@@ -98,7 +101,7 @@ pub trait IExtension<TContractState> {
         caller: ContractAddress,
         pool_key: PoolKey,
         params: SwapParameters,
-        delta: Delta
+        delta: Delta,
     );
 
     // Called before an update to a position
@@ -106,7 +109,7 @@ pub trait IExtension<TContractState> {
         ref self: TContractState,
         caller: ContractAddress,
         pool_key: PoolKey,
-        params: UpdatePositionParameters
+        params: UpdatePositionParameters,
     );
     // Called after the position is updated with the result of the update
     fn after_update_position(
@@ -114,7 +117,7 @@ pub trait IExtension<TContractState> {
         caller: ContractAddress,
         pool_key: PoolKey,
         params: UpdatePositionParameters,
-        delta: Delta
+        delta: Delta,
     );
 
     // Called before collecting fees for a position
@@ -123,7 +126,7 @@ pub trait IExtension<TContractState> {
         caller: ContractAddress,
         pool_key: PoolKey,
         salt: felt252,
-        bounds: Bounds
+        bounds: Bounds,
     );
     // Called after collecting fees for a position
     fn after_collect_fees(
@@ -132,7 +135,7 @@ pub trait IExtension<TContractState> {
         pool_key: PoolKey,
         salt: felt252,
         bounds: Bounds,
-        delta: Delta
+        delta: Delta,
     );
 }
 
@@ -158,7 +161,7 @@ pub trait ICore<TContractState> {
 
     // Get the fees per liquidity inside a given tick range for a pool
     fn get_pool_fees_per_liquidity_inside(
-        self: @TContractState, pool_key: PoolKey, bounds: Bounds
+        self: @TContractState, pool_key: PoolKey, bounds: Bounds,
     ) -> FeesPerLiquidity;
 
     // Get the liquidity delta for the tick of the given pool
@@ -169,17 +172,17 @@ pub trait ICore<TContractState> {
 
     // Get the fees on the other side of the tick from the current tick
     fn get_pool_tick_fees_outside(
-        self: @TContractState, pool_key: PoolKey, index: i129
+        self: @TContractState, pool_key: PoolKey, index: i129,
     ) -> FeesPerLiquidity;
 
     // Get the state of a given position for the given pool
     fn get_position(
-        self: @TContractState, pool_key: PoolKey, position_key: PositionKey
+        self: @TContractState, pool_key: PoolKey, position_key: PositionKey,
     ) -> Position;
 
     // Get the state of a given position for the given pool including the calculated fees
     fn get_position_with_fees(
-        self: @TContractState, pool_key: PoolKey, position_key: PositionKey
+        self: @TContractState, pool_key: PoolKey, position_key: PositionKey,
     ) -> GetPositionWithFeesResult;
 
     // Get the balance that is saved in core for a given account for use in a future lock (i.e.
@@ -189,24 +192,24 @@ pub trait ICore<TContractState> {
     // Return the next initialized tick from the given tick, i.e. the initialized tick that is
     // greater than the given `from` tick
     fn next_initialized_tick(
-        self: @TContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TContractState, pool_key: PoolKey, from: i129, skip_ahead: u128,
     ) -> (i129, bool);
 
     // Return the previous initialized tick from the given tick, i.e. the initialized tick that is
     // less than or equal to the given `from` tick Note this can also be used to check if the tick
     // is initialized
     fn prev_initialized_tick(
-        self: @TContractState, pool_key: PoolKey, from: i129, skip_ahead: u128
+        self: @TContractState, pool_key: PoolKey, from: i129, skip_ahead: u128,
     ) -> (i129, bool);
 
     // Withdraws all protocol fees for a given token and returns the amount withdrawn
     fn withdraw_all_protocol_fees(
-        ref self: TContractState, recipient: ContractAddress, token: ContractAddress
+        ref self: TContractState, recipient: ContractAddress, token: ContractAddress,
     ) -> u128;
 
     // Withdraws any fees collected by the contract (only the owner can call this function)
     fn withdraw_protocol_fees(
-        ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128
+        ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128,
     );
 
     // Locks the core contract, allowing other functions to be called that require locking.
@@ -218,7 +221,7 @@ pub trait ICore<TContractState> {
     // The forwardee callback is called with the input data, and the returned array is passed
     // through to the caller.
     fn forward(
-        ref self: TContractState, to: IForwardeeDispatcher, data: Span<felt252>
+        ref self: TContractState, to: IForwardeeDispatcher, data: Span<felt252>,
     ) -> Span<felt252>;
 
     // Withdraws a given token from core. This is used to withdraw the output of swaps or burnt
@@ -228,7 +231,7 @@ pub trait ICore<TContractState> {
         ref self: TContractState,
         token_address: ContractAddress,
         recipient: ContractAddress,
-        amount: u128
+        amount: u128,
     );
 
     // Save a given token balance in core for a given account for use in a future lock. It can be
@@ -256,19 +259,19 @@ pub trait ICore<TContractState> {
     // Initialize a pool if it's not already initialized. Useful as part of a batch of other
     // operations.
     fn maybe_initialize_pool(
-        ref self: TContractState, pool_key: PoolKey, initial_tick: i129
+        ref self: TContractState, pool_key: PoolKey, initial_tick: i129,
     ) -> Option<u256>;
 
     // Update a liquidity position in a pool. The owner of the position is always the locker.
     // Must be called within a ILocker#locked. Note also that a position cannot be burned to 0
     // unless all fees have been collected
     fn update_position(
-        ref self: TContractState, pool_key: PoolKey, params: UpdatePositionParameters
+        ref self: TContractState, pool_key: PoolKey, params: UpdatePositionParameters,
     ) -> Delta;
 
     // Collect the fees owed on a position
     fn collect_fees(
-        ref self: TContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds
+        ref self: TContractState, pool_key: PoolKey, salt: felt252, bounds: Bounds,
     ) -> Delta;
 
     // Make a swap against a pool.
@@ -279,7 +282,7 @@ pub trait ICore<TContractState> {
     // key, i.e. the current locker _must_ be the extension.
     // You must call this within a lock callback.
     fn accumulate_as_fees(
-        ref self: TContractState, pool_key: PoolKey, amount0: u128, amount1: u128
+        ref self: TContractState, pool_key: PoolKey, amount0: u128, amount1: u128,
     );
 
     // Set the call points for the caller, which must be a valid extension.

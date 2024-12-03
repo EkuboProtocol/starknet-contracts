@@ -1,4 +1,4 @@
-use core::num::traits::{Zero, WideMul};
+use core::num::traits::{WideMul, Zero};
 
 // Returns the fee to charge based on the amount, which is the fee (a 0.128 number) times the
 // amount, rounded up
@@ -15,7 +15,7 @@ pub fn compute_fee(amount: u128, fee: u128) -> u128 {
 pub fn amount_before_fee(after_fee: u128, fee: u128) -> u128 {
     let (quotient, remainder) = DivRem::div_rem(
         u256 { high: after_fee, low: 0 },
-        (0x100000000000000000000000000000000_u256 - fee.into()).try_into().unwrap()
+        (0x100000000000000000000000000000000_u256 - fee.into()).try_into().unwrap(),
     );
 
     assert(quotient.high.is_zero(), 'AMOUNT_BEFORE_FEE_OVERFLOW');

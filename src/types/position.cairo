@@ -45,7 +45,7 @@ pub impl PositionTraitImpl of PositionTrait {
         // wide multiplication that only cares about limb1
         (
             multiply_and_get_limb1(diff.value0.into(), self.liquidity),
-            multiply_and_get_limb1(diff.value1.into(), self.liquidity)
+            multiply_and_get_limb1(diff.value1.into(), self.liquidity),
         )
     }
 }

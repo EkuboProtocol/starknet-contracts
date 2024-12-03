@@ -1,11 +1,11 @@
 use core::num::traits::{Zero};
 use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait
+    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
 };
 use ekubo::tests::helper::{Deployer, DeployerTrait, swap_inner, update_position_inner};
 use ekubo::tests::mocks::locker::{ICoreLockerDispatcher};
 use ekubo::tests::mocks::mock_extension::{
-    IMockExtensionDispatcher, IMockExtensionDispatcherTrait, ExtensionCalled
+    ExtensionCalled, IMockExtensionDispatcher, IMockExtensionDispatcherTrait,
 };
 use ekubo::types::bounds::{max_bounds};
 use ekubo::types::call_points::{CallPoints, all_call_points};
@@ -15,9 +15,9 @@ use starknet::testing::{set_contract_address};
 use starknet::{get_contract_address};
 
 fn setup(
-    ref deployer: Deployer, fee: u128, tick_spacing: u128, call_points: CallPoints
+    ref deployer: Deployer, fee: u128, tick_spacing: u128, call_points: CallPoints,
 ) -> (
-    ICoreDispatcher, IMockExtensionDispatcher, IExtensionDispatcher, ICoreLockerDispatcher, PoolKey
+    ICoreDispatcher, IMockExtensionDispatcher, IExtensionDispatcher, ICoreLockerDispatcher, PoolKey,
 ) {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -34,8 +34,8 @@ fn setup(
             token1: token1.contract_address,
             fee,
             tick_spacing,
-            extension: extension.contract_address
-        }
+            extension: extension.contract_address,
+        },
     )
 }
 
@@ -44,7 +44,7 @@ fn setup(
 fn test_mock_extension_cannot_be_called_directly() {
     let mut deployer: Deployer = Default::default();
     let (_, _, extension, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
 }
@@ -54,7 +54,7 @@ fn test_mock_extension_can_be_called_by_core() {
     let mut deployer: Deployer = Default::default();
 
     let (core, _, extension, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     set_contract_address(core.contract_address);
     extension.before_initialize_pool(Zero::zero(), pool_key, Zero::zero());
@@ -66,7 +66,7 @@ fn test_cannot_change_to_default_call_points() {
     let mut deployer: Deployer = Default::default();
 
     let (core, _, _, _, _) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
 
     core.set_call_points(Default::default());
@@ -77,7 +77,7 @@ fn test_mock_extension_initializes_call_points() {
     let mut deployer: Deployer = Default::default();
 
     let (core, _, extension, _, _) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     assert_eq!(core.get_call_points(extension.contract_address), all_call_points());
 }
@@ -87,7 +87,7 @@ fn test_extension_can_call_change_call_points_from_extension() {
     let mut deployer: Deployer = Default::default();
 
     let (core, mock_extension, _, _, _) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     assert_eq!(core.get_call_points(mock_extension.contract_address), all_call_points());
     let mut cp = all_call_points();
@@ -121,7 +121,7 @@ fn test_change_call_points_random_call_points() {
         after_collect_fees: false,
     };
     let (core, mock_extension, _, _, _) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: before,
     );
     assert_eq!(core.get_call_points(mock_extension.contract_address), before);
     mock_extension.change_call_points(after);
@@ -139,7 +139,7 @@ fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
 fn test_mock_extension_initialize_pool_is_called() {
     let mut deployer: Deployer = Default::default();
     let (core, mock, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     core.initialize_pool(pool_key, Zero::zero());
     assert(mock.get_num_calls() == 2, '2 calls made');
@@ -160,7 +160,7 @@ fn test_mock_extension_initialize_pool_is_called() {
 fn test_mock_extension_swap_is_called() {
     let mut deployer: Deployer = Default::default();
     let (core, mock, _, locker, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     core.initialize_pool(pool_key, Zero::zero());
     let delta = swap_inner(
@@ -192,7 +192,7 @@ fn test_mock_extension_swap_is_called() {
 fn test_mock_extension_update_position_is_called() {
     let mut deployer: Deployer = Default::default();
     let (core, mock, _, locker, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
     core.initialize_pool(pool_key, Zero::zero());
     let delta = update_position_inner(
@@ -225,7 +225,7 @@ fn test_mock_extension_no_call_points_fails() {
     // this panics because you cannot create an extension with no call points
     let mut deployer: Deployer = Default::default();
     let (_, _, _, _, _) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: Default::default()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: Default::default(),
     );
 }
 
@@ -245,7 +245,7 @@ fn test_mock_extension_before_initialize_pool_only() {
             after_update_position: false,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -294,7 +294,7 @@ fn test_mock_extension_after_initialize_pool_only() {
             after_update_position: false,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -344,7 +344,7 @@ fn test_mock_extension_before_swap_only() {
             after_update_position: false,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -393,7 +393,7 @@ fn test_mock_extension_after_swap_only() {
             after_update_position: false,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -444,7 +444,7 @@ fn test_mock_extension_before_update_position_only() {
             after_update_position: false,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -493,7 +493,7 @@ fn test_mock_extension_after_update_position_only() {
             after_update_position: true,
             before_collect_fees: false,
             after_collect_fees: false,
-        }
+        },
     );
 
     core.initialize_pool(pool_key, Zero::zero());
@@ -530,7 +530,7 @@ fn test_mock_extension_after_update_position_only() {
 fn test_mock_extension_is_called_back_into_other_pool() {
     let mut deployer: Deployer = Default::default();
     let (core, mock, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
 
     // shadow the mock variable
@@ -588,7 +588,7 @@ fn test_mock_extension_is_called_back_into_other_pool() {
 fn test_mock_extension_not_called_back_into_own_pool() {
     let mut deployer: Deployer = Default::default();
     let (core, mock, _, _, pool_key) = setup(
-        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points()
+        ref deployer: deployer, fee: 0, tick_spacing: 1, call_points: all_call_points(),
     );
 
     core.initialize_pool(pool_key, Zero::zero());

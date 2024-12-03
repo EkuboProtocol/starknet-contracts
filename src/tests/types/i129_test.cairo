@@ -2,7 +2,7 @@ use core::hash::{LegacyHash};
 use core::num::traits::{Zero};
 use ekubo::tests::store_packing_test::{assert_round_trip};
 use ekubo::tests::types::keys_test::{check_hashes_differ};
-use ekubo::types::i129::{i129, AddDeltaTrait};
+use ekubo::types::i129::{AddDeltaTrait, i129};
 use starknet::storage_access::{StorePacking};
 
 #[test]
@@ -13,9 +13,9 @@ fn test_legacy_hash_i129() {
 
     assert(
         LegacyHash::hash(
-            0, i129 { mag: 0, sign: false }
+            0, i129 { mag: 0, sign: false },
         ) == LegacyHash::hash(0, i129 { mag: 0, sign: true }),
-        'hash of 0'
+        'hash of 0',
     );
 }
 
@@ -39,19 +39,19 @@ fn test_div_i129() {
     assert(
         i129 { mag: 15, sign: false }
             / i129 { mag: 4, sign: false } == i129 { mag: 3, sign: false },
-        '15/4'
+        '15/4',
     );
     assert(
         i129 { mag: 15, sign: true } / i129 { mag: 4, sign: false } == i129 { mag: 3, sign: true },
-        '-15/4'
+        '-15/4',
     );
     assert(
         i129 { mag: 15, sign: false } / i129 { mag: 4, sign: true } == i129 { mag: 3, sign: true },
-        '15/-4'
+        '15/-4',
     );
     assert(
         i129 { mag: 15, sign: true } / i129 { mag: 4, sign: true } == i129 { mag: 3, sign: false },
-        '-15/-4'
+        '-15/-4',
     );
 }
 
@@ -183,7 +183,7 @@ fn test_store_write_read_min_value() {
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_min_value_minus_one() {
     StorePacking::<
-        i129, felt252
+        i129, felt252,
     >::pack(i129 { mag: 0x80000000000000000000000000000000, sign: true });
 }
 
@@ -191,7 +191,7 @@ fn test_store_write_min_value_minus_one() {
 #[should_panic(expected: ('i129_store_overflow',))]
 fn test_store_write_max_value_plus_one() {
     StorePacking::<
-        i129, felt252
+        i129, felt252,
     >::pack(i129 { mag: 0x80000000000000000000000000000000, sign: false });
 }
 
@@ -204,11 +204,11 @@ fn test_add_delta_no_overflow() {
     assert(
         0xfffffffffffffffffffffffffffffffe
             .add(i129 { mag: 1, sign: false }) == 0xffffffffffffffffffffffffffffffff,
-        'max-1 +1'
+        'max-1 +1',
     );
     assert(
         0xffffffffffffffffffffffffffffffff.add(Zero::zero()) == 0xffffffffffffffffffffffffffffffff,
-        'max+0'
+        'max+0',
     );
 }
 
@@ -230,7 +230,7 @@ fn test_add_delta_max_inputs() {
     assert(
         0xffffffffffffffffffffffffffffffff
             .add(i129 { mag: 0xffffffffffffffffffffffffffffffff, sign: true }) == 0,
-        'max-max'
+        'max-max',
     );
 }
 

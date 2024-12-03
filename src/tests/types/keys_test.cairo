@@ -166,7 +166,7 @@ fn test_pool_key_check_valid_is_valid() {
 #[test]
 fn test_pool_key_hash() {
     let hash = LegacyHash::<
-        PoolKey
+        PoolKey,
     >::hash(
         0,
         PoolKey {
@@ -175,10 +175,10 @@ fn test_pool_key_hash() {
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
-        }
+        },
     );
     let hash_with_different_extension = LegacyHash::<
-        PoolKey
+        PoolKey,
     >::hash(
         0,
         PoolKey {
@@ -187,10 +187,10 @@ fn test_pool_key_hash() {
             fee: 0,
             tick_spacing: 1,
             extension: contract_address_const::<3>(),
-        }
+        },
     );
     let hash_with_different_fee = LegacyHash::<
-        PoolKey
+        PoolKey,
     >::hash(
         0,
         PoolKey {
@@ -199,10 +199,10 @@ fn test_pool_key_hash() {
             fee: 1,
             tick_spacing: 1,
             extension: Zero::zero(),
-        }
+        },
     );
     let hash_with_different_tick_spacing = LegacyHash::<
-        PoolKey
+        PoolKey,
     >::hash(
         0,
         PoolKey {
@@ -211,7 +211,7 @@ fn test_pool_key_hash() {
             fee: 0,
             tick_spacing: 2,
             extension: Zero::zero(),
-        }
+        },
     );
     assert(hash != hash_with_different_extension, 'not equal');
     assert(hash != hash_with_different_fee, 'not equal');
@@ -223,7 +223,7 @@ fn test_pool_key_hash() {
 fn test_pool_key_hash_result() {
     assert(
         LegacyHash::<
-            PoolKey
+            PoolKey,
         >::hash(
             1234,
             PoolKey {
@@ -232,9 +232,9 @@ fn test_pool_key_hash_result() {
                 fee: 3,
                 tick_spacing: 4,
                 extension: contract_address_const::<5>(),
-            }
+            },
         ) == 0x2cfe2f704e1821da98a42a506dbd7fa4f356af4a491d2bd0901beedd4027db6,
-        'hash'
+        'hash',
     );
 }
 
@@ -242,7 +242,7 @@ fn test_pool_key_hash_result() {
 fn test_pool_key_hash_result_reverse() {
     assert(
         LegacyHash::<
-            PoolKey
+            PoolKey,
         >::hash(
             4321,
             PoolKey {
@@ -251,9 +251,9 @@ fn test_pool_key_hash_result_reverse() {
                 fee: 32,
                 tick_spacing: 2,
                 extension: contract_address_const::<1>(),
-            }
+            },
         ) == 0x48442dcb25c83d8e9eab16c4d669e79407743073e9b76798ec54d528dd35aa2,
-        'hash'
+        'hash',
     );
 }
 
@@ -263,7 +263,7 @@ fn test_position_key_hash_differs_for_any_field_or_state_change() {
     let base = PositionKey {
         salt: Zero::zero(),
         owner: Zero::zero(),
-        bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() }
+        bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
     };
 
     let mut other_salt = base;
@@ -296,36 +296,36 @@ fn test_position_key_hash_differs_for_any_field_or_state_change() {
 #[test]
 fn test_position_key_hash() {
     let hash = LegacyHash::<
-        PositionKey
+        PositionKey,
     >::hash(
         0,
         PositionKey {
             salt: 0,
             owner: contract_address_const::<1>(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
-        }
+        },
     );
 
     let hash_with_diff_salt = LegacyHash::<
-        PositionKey
+        PositionKey,
     >::hash(
         0,
         PositionKey {
             salt: 1,
             owner: contract_address_const::<1>(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
-        }
+        },
     );
 
     let hash_with_diff_state = LegacyHash::<
-        PositionKey
+        PositionKey,
     >::hash(
         1,
         PositionKey {
             salt: 1,
             owner: contract_address_const::<1>(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
-        }
+        },
     );
     assert(hash != hash_with_diff_salt, 'not equal');
     assert(hash != hash_with_diff_state, 'not equal');
@@ -340,11 +340,11 @@ fn test_position_key_hash_result() {
                 salt: 1,
                 owner: contract_address_const::<2>(),
                 bounds: Bounds {
-                    lower: i129 { mag: 3, sign: false }, upper: i129 { mag: 4, sign: false }
+                    lower: i129 { mag: 3, sign: false }, upper: i129 { mag: 4, sign: false },
                 },
-            }
+            },
         ) == 0x103df9e683d9ca32325eb076200ba9e872904b133018ce0d3943756fcb2d01e,
-        'hash'
+        'hash',
     );
 }
 
@@ -357,18 +357,18 @@ fn test_position_key_hash_result_reverse() {
                 salt: 5,
                 owner: contract_address_const::<4>(),
                 bounds: Bounds {
-                    lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 1, sign: true }
+                    lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 1, sign: true },
                 },
-            }
+            },
         ) == 0x559ca4d70a491d29c8d29d8513a71c3ae28b410766cea8c55859c9097071603,
-        'hash'
+        'hash',
     );
 }
 
 #[test]
 fn test_saved_balance_key_hash_differs() {
     let base = SavedBalanceKey {
-        owner: contract_address_const::<1>(), token: contract_address_const::<2>(), salt: 3
+        owner: contract_address_const::<1>(), token: contract_address_const::<2>(), salt: 3,
     };
 
     let mut other_owner = base;
@@ -394,9 +394,9 @@ fn test_saved_balance_key_hash() {
             1,
             SavedBalanceKey {
                 owner: contract_address_const::<2>(), token: contract_address_const::<3>(), salt: 4,
-            }
+            },
         ) == 0x4c1cec8ca0d266e102559432703b9807b75dae05048908f6dedcb29f125e2da,
-        'hash'
+        'hash',
     );
 }
 
@@ -407,8 +407,8 @@ fn test_saved_balance_key_hash_reverse() {
             4,
             SavedBalanceKey {
                 owner: contract_address_const::<3>(), token: contract_address_const::<2>(), salt: 1,
-            }
+            },
         ) == 0x1439c58e1c389a2ac51f8462ecc0a4ec7f812be1c04e3b82ce2af1c2cf959ef,
-        'hash'
+        'hash',
     );
 }

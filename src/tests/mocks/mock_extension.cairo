@@ -26,7 +26,7 @@ pub mod MockExtension {
     use core::array::{ArrayTrait};
     use core::num::traits::{Zero};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
-    use ekubo::interfaces::core::{IExtension, ILocker, ICoreDispatcher, ICoreDispatcherTrait};
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio};
     use ekubo::types::bounds::{Bounds, max_bounds};
@@ -35,10 +35,10 @@ pub mod MockExtension {
     use ekubo::types::keys::{PoolKey};
     use starknet::storage::{
         StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess
+        StoragePointerWriteAccess,
     };
     use starknet::{get_caller_address, storage::{Map}};
-    use super::{CallPoints, IMockExtension, ExtensionCalled, ContractAddress};
+    use super::{CallPoints, ContractAddress, ExtensionCalled, IMockExtension};
 
     #[storage]
     struct Storage {
@@ -57,7 +57,7 @@ pub mod MockExtension {
         }
 
         fn insert_call(
-            ref self: ContractState, caller: ContractAddress, call_point: u32, pool_key: PoolKey
+            ref self: ContractState, caller: ContractAddress, call_point: u32, pool_key: PoolKey,
         ) {
             let num_calls = self.num_calls.read();
             self
@@ -71,7 +71,7 @@ pub mod MockExtension {
                         token1: pool_key.token1,
                         fee: pool_key.fee,
                         tick_spacing: pool_key.tick_spacing,
-                    }
+                    },
                 );
             self.num_calls.write(num_calls + 1);
         }
@@ -86,7 +86,7 @@ pub mod MockExtension {
     #[abi(embed_v0)]
     impl ExtensionImpl of IExtension<ContractState> {
         fn before_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             let core = self.check_caller_is_core();
             let price = core.get_pool_price(pool_key);
@@ -96,7 +96,7 @@ pub mod MockExtension {
         }
 
         fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             let core = self.check_caller_is_core();
             self.insert_call(caller, 1, pool_key);
@@ -110,7 +110,7 @@ pub mod MockExtension {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: SwapParameters
+            params: SwapParameters,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 2, pool_key);
@@ -120,7 +120,7 @@ pub mod MockExtension {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: SwapParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 3, pool_key);
@@ -130,7 +130,7 @@ pub mod MockExtension {
             ref self: ContractState,
             caller: ContractAddress,
             pool_key: PoolKey,
-            params: UpdatePositionParameters
+            params: UpdatePositionParameters,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 4, pool_key);
@@ -140,7 +140,7 @@ pub mod MockExtension {
             caller: ContractAddress,
             pool_key: PoolKey,
             params: UpdatePositionParameters,
-            delta: Delta
+            delta: Delta,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 5, pool_key);
@@ -151,7 +151,7 @@ pub mod MockExtension {
             caller: ContractAddress,
             pool_key: PoolKey,
             salt: felt252,
-            bounds: Bounds
+            bounds: Bounds,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 6, pool_key);
@@ -162,7 +162,7 @@ pub mod MockExtension {
             pool_key: PoolKey,
             salt: felt252,
             bounds: Bounds,
-            delta: Delta
+            delta: Delta,
         ) {
             self.check_caller_is_core();
             self.insert_call(caller, 7, pool_key);
@@ -184,8 +184,8 @@ pub mod MockExtension {
                         amount: Zero::zero(),
                         is_token1: false,
                         sqrt_ratio_limit: min_sqrt_ratio(),
-                        skip_ahead: 0
-                    }
+                        skip_ahead: 0,
+                    },
                 );
 
             delta += core
@@ -194,15 +194,15 @@ pub mod MockExtension {
                     UpdatePositionParameters {
                         salt: Zero::zero(),
                         bounds: max_bounds(data.pool_key.tick_spacing),
-                        liquidity_delta: Zero::zero()
-                    }
+                        liquidity_delta: Zero::zero(),
+                    },
                 );
 
             delta += core
                 .collect_fees(
                     data.pool_key,
                     salt: Zero::zero(),
-                    bounds: max_bounds(data.pool_key.tick_spacing)
+                    bounds: max_bounds(data.pool_key.tick_spacing),
                 );
 
             assert(delta.is_zero(), 'delta is zero');
@@ -213,14 +213,14 @@ pub mod MockExtension {
 
     #[derive(Serde, Copy, Drop)]
     struct CallbackData {
-        pool_key: PoolKey
+        pool_key: PoolKey,
     }
 
     #[abi(embed_v0)]
     impl MockExtensionImpl of IMockExtension<ContractState> {
         fn call_into_pool(self: @ContractState, pool_key: PoolKey) {
             call_core_with_callback::<
-                CallbackData, ()
+                CallbackData, (),
             >(self.core.read(), @CallbackData { pool_key });
         }
         fn get_num_calls(self: @ContractState) -> u32 {

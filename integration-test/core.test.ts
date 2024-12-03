@@ -28,16 +28,16 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x4e820c5b525e91fb4b4f3bdb7b78c57dc19432dad3f78dc025e2e43de47e538",
+      core: "0x6e7ba99808336df6f8603f814a0007c7b9453698ecf46e8dd304e946e555653",
       positions:
-        "0x6c06ede57cc6693b496a008a2926a181e8cbf26cbb3031f2356d83106fe6499",
+        "0x172bad15a999793edaf07a5d1db4487821f01ecf05a31f5aca70b5a14e7baa3",
       router:
-        "0x73bb5b61a230aeb95753bf157b4fa7d72c635b5b19dc6af3c8ffa0faf100ce0",
-      nft: "0x1305eb77d84eed2819d0860f9f2005f9548b7cb840144cbaac2b73c4a2a2db8",
+        "0x113963db0af66a6ef8413937eae07870a7e942bc96c9528e4a940b283bd8546",
+      nft: "0x2cfee915e03e352970bdae64f8d730454772a208ad7086c78582bdb7b664b14",
       twamm:
-        "0x33732d03405b32b0b6921e63079de45d2a35c2706c1ce069de5b060d03402cf",
+        "0x668b78c9a7db9df0e3dceba8c667946d3b20a278ceb14b55b2b43e2068200b9",
       tokenClassHash:
-        "0x61dd2d827b998586a752282194b066a2ba7ba8966a2efe8ac43b3fcc50c6dcf",
+        "0x491bc293668091c94d9dae2ca19b38e2f6d7673085bc7ab6b008eaa94a86bbc",
     });
     console.log(setup);
   }, 300_000);
@@ -496,8 +496,7 @@ describe("core", () => {
                       .parseEvents(orderPlacementReceipt)
                       .map(
                         ({
-                          "ekubo::extensions::twamm::TWAMM::OrderUpdated":
-                            OrderUpdated,
+                          "ekubo::twamm::TWAMM::OrderUpdated": OrderUpdated,
                         }) => OrderUpdated
                       )
                       .filter((x) => !!x)
@@ -537,7 +536,7 @@ describe("core", () => {
                         const VirtualOrdersExecuted = findMap(
                           twamm.parseEvents(executeVirtualOrdersReceipt),
                           ({
-                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                            "ekubo::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
                           }) => VirtualOrdersExecuted
                         );
@@ -616,7 +615,7 @@ describe("core", () => {
                         const VirtualOrdersExecuted = findMap(
                           twamm.parseEvents(swap_receipt),
                           ({
-                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
+                            "ekubo::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
                           }) => VirtualOrdersExecuted
                         );

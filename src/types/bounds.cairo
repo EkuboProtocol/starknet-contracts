@@ -1,11 +1,11 @@
-use ekubo::math::ticks::{min_tick, max_tick, constants as tick_constants};
+use ekubo::math::ticks::{constants as tick_constants, max_tick, min_tick};
 use ekubo::types::i129::{i129};
 
 // Tick bounds for a position
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]
 pub struct Bounds {
     pub lower: i129,
-    pub upper: i129
+    pub upper: i129,
 }
 
 // Returns the max usable bounds given the tick spacing
@@ -24,7 +24,7 @@ pub impl BoudnsTraitImpl of BoundsTrait {
         assert(self.upper <= max_tick(), 'BOUNDS_MAX');
         assert(
             ((self.lower.mag % tick_spacing) == 0) & ((self.upper.mag % tick_spacing) == 0),
-            'BOUNDS_TICK_SPACING'
+            'BOUNDS_TICK_SPACING',
         );
     }
 }

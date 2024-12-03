@@ -4,10 +4,10 @@ use core::traits::{Into};
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::owned_nft::{OwnedNFT, IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait};
+use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
-use starknet::{contract_address_const, ClassHash};
-use starknet::{testing::{set_contract_address, pop_log}};
+use starknet::{ClassHash, contract_address_const};
+use starknet::{testing::{pop_log, set_contract_address}};
 
 fn switch_to_controller() {
     set_contract_address(default_owner());
@@ -38,34 +38,34 @@ fn test_nft_supports_interfaces() {
     assert(
         !src
             .supportsInterface(
-                3618502788666131213697322783095070105623107215331596699973092056135872020480
+                3618502788666131213697322783095070105623107215331596699973092056135872020480,
             ),
-        'max'
+        'max',
     );
 
     assert(
         src.supportsInterface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
-        'src5.721'
+        'src5.721',
     );
     assert(
         src.supports_interface(0x33eb2f84c309543403fd69f0d0f363781ef06ef6faeb0131ff16ea3175bd943),
-        'src5.721.snake'
+        'src5.721.snake',
     );
     assert(
         src.supportsInterface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
-        'src5.721_metadata'
+        'src5.721_metadata',
     );
     assert(
         src.supports_interface(0x6069a70848f907fa57668ba1875164eb4dcee693952468581406d131081bbd),
-        'src5.721_metadata.snake'
+        'src5.721_metadata.snake',
     );
     assert(
         src.supportsInterface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
-        'src5.src5'
+        'src5.src5',
     );
     assert(
         src.supports_interface(0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055),
-        'src5.src5.snake'
+        'src5.src5.snake',
     );
 
     assert(src.supportsInterface(0x80ac58cd), 'erc165.721');
@@ -89,7 +89,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         .replace_class_hash(class_hash);
 
     let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
-        nft.contract_address
+        nft.contract_address,
     )
         .unwrap();
     assert(event.new_class_hash == class_hash, 'event.class_hash');
@@ -247,7 +247,7 @@ fn test_is_account_authorized() {
 
     assert(controller.is_account_authorized(id, alice), 'owner is authorized');
     assert(
-        !controller.is_account_authorized(id, contract_address_const::<912344>()), 'random is not'
+        !controller.is_account_authorized(id, contract_address_const::<912344>()), 'random is not',
     );
     assert(!controller.is_account_authorized(id, default_owner()), 'controller is not');
 
@@ -291,7 +291,7 @@ fn test_burn_makes_token_non_transferrable_error() {
 }
 
 #[test]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_nft_approve_fails_id_not_exists() {
     let mut d: Deployer = Default::default();
     let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
@@ -384,15 +384,15 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
 fn test_our_uris_fit() {
     assert_eq!(
         'https://mainnet-api.ekubo.org/',
-        720921236364732369706534923124483860251178706923075318028571232657631023
+        720921236364732369706534923124483860251178706923075318028571232657631023,
     );
     assert_eq!(
         'https://goerli-api.ekubo.org/',
-        2816098579549735819157462870646613929535768190509430455118393030895407
+        2816098579549735819157462870646613929535768190509430455118393030895407,
     );
     assert_eq!(
         'https://sepolia-api.ekubo.org/',
-        720921236364732369708785675631036703012891917686160277264444065418733359
+        720921236364732369708785675631036703012891917686160277264444065418733359,
     );
 }
 
@@ -404,21 +404,21 @@ fn test_nft_token_uri() {
     assert(nft.tokenURI(1_u256) == array!['https://z.ekubo.org/', '1'], 'token_uri');
     assert(
         nft.tokenURI(u256 { low: 9999999, high: 0 }) == array!['https://z.ekubo.org/', '9999999'],
-        'token_uri'
+        'token_uri',
     );
     assert(
         nft
             .tokenURI(
-                u256 { low: 239020510, high: 0 }
+                u256 { low: 239020510, high: 0 },
             ) == array!['https://z.ekubo.org/', '239020510'],
-        'token_uri'
+        'token_uri',
     );
     assert(
         nft
             .tokenURI(
-                u256 { low: 99999999999, high: 0 }
+                u256 { low: 99999999999, high: 0 },
             ) == array!['https://z.ekubo.org/', '99999999999'],
-        'max token_uri'
+        'max token_uri',
     );
 }
 
@@ -441,7 +441,7 @@ fn test_nft_token_uri_reverts_token_id_too_big() {
 }
 
 #[test]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED',))]
+#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
 fn test_nft_approve_only_owner_can_approve() {
     let mut d: Deployer = Default::default();
     let (controller, nft) = deploy_default(ref d);

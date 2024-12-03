@@ -1,8 +1,8 @@
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 use ekubo::math::{
-    calculate_sale_rate, calculate_reward_amount, calculate_c, constants, calculate_next_sqrt_ratio,
-    calculate_amount_from_sale_rate, time::{to_duration}
+    calculate_amount_from_sale_rate, calculate_c, calculate_next_sqrt_ratio,
+    calculate_reward_amount, calculate_sale_rate, constants, time::{to_duration},
 };
 use ekubo::types::bounds::{max_bounds};
 use ekubo::types::i129::{i129};
@@ -21,46 +21,46 @@ const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
 mod SaleRateTest {
     use super::{
-        calculate_sale_rate, calculate_amount_from_sale_rate, SIXTEEN_POW_ONE, SIXTEEN_POW_TWO,
-        SIXTEEN_POW_THREE, SIXTEEN_POW_FOUR, SIXTEEN_POW_FIVE, SIXTEEN_POW_SIX, SIXTEEN_POW_SEVEN,
-        SIXTEEN_POW_EIGHT, constants, to_duration
+        SIXTEEN_POW_EIGHT, SIXTEEN_POW_FIVE, SIXTEEN_POW_FOUR, SIXTEEN_POW_ONE, SIXTEEN_POW_SEVEN,
+        SIXTEEN_POW_SIX, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, calculate_amount_from_sale_rate,
+        calculate_sale_rate, constants, to_duration,
     };
 
     #[test]
     fn test_sale_rates_smallest_amount() {
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_ONE)),
-            0x10000000
+            0x10000000,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_TWO)),
-            0x1000000
+            0x1000000,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_THREE)),
-            0x100000
+            0x100000,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_FOUR)),
-            0x10000
+            0x10000,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_FIVE)),
-            0x1000
+            0x1000,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_SIX)),
-            0x100
+            0x100,
         );
         assert_eq!(
             calculate_sale_rate(amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_SEVEN)),
-            0x10
+            0x10,
         );
         assert_eq!(
             calculate_sale_rate(
-                amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_EIGHT - 1)
+                amount: 1, duration: to_duration(start: 0, end: SIXTEEN_POW_EIGHT - 1),
             ),
-            0x1
+            0x1,
         );
     }
 
@@ -130,17 +130,17 @@ mod SaleRateTest {
     }
 
     fn run_place_order_and_validate_sale_rate(
-        amount: u128, start_time: u64, end_time: u64, expected_sale_rate: u128
+        amount: u128, start_time: u64, end_time: u64, expected_sale_rate: u128,
     ) {
         assert_eq!(
             calculate_sale_rate(amount, duration: to_duration(start: start_time, end: end_time)),
-            expected_sale_rate
+            expected_sale_rate,
         );
     }
 }
 
 mod RewardRateTest {
-    use super::{calculate_reward_amount, SIXTEEN_POW_EIGHT};
+    use super::{SIXTEEN_POW_EIGHT, calculate_reward_amount};
 
     #[test]
     fn test_largest_reward_amount_no_overflow() {
@@ -161,7 +161,7 @@ mod TWAMMMathTest {
     use ekubo::math::delta::{amount0_delta, amount1_delta};
 
     use ekubo::math::muldiv::{muldiv};
-    use super::{calculate_c, constants, calculate_next_sqrt_ratio};
+    use super::{calculate_c, calculate_next_sqrt_ratio, constants};
 
 
     fn assert_case_c(sqrt_ratio: u256, sqrt_sell_ratio: u256, expected: (u256, bool)) {
@@ -183,10 +183,10 @@ mod TWAMMMathTest {
     fn test_c_min_values() {
         assert_case_c(sqrt_ratio: 0, sqrt_sell_ratio: 0, expected: (0, false));
         assert_case_c(
-            sqrt_ratio: 0, sqrt_sell_ratio: 1, expected: (u256 { low: 0, high: 0x1 }, false)
+            sqrt_ratio: 0, sqrt_sell_ratio: 1, expected: (u256 { low: 0, high: 0x1 }, false),
         );
         assert_case_c(
-            sqrt_ratio: 1, sqrt_sell_ratio: 0, expected: (u256 { low: 0, high: 0x1 }, true)
+            sqrt_ratio: 1, sqrt_sell_ratio: 0, expected: (u256 { low: 0, high: 0x1 }, true),
         );
         assert_case_c(sqrt_ratio: 1, sqrt_sell_ratio: 1, expected: (0, false));
     }
@@ -212,11 +212,11 @@ mod TWAMMMathTest {
         assert_gt!(sqrt_ratio_next, 286363514177267035440548892163466107483369185);
 
         let token0_sold_amount = muldiv(
-            token0_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+            token0_sale_rate.into(), time_elapsed.into(), two_pow_32, false,
         )
             .unwrap();
         let token1_sold_amount = muldiv(
-            token1_sale_rate.into(), time_elapsed.into(), two_pow_32, false
+            token1_sale_rate.into(), time_elapsed.into(), two_pow_32, false,
         )
             .unwrap();
 
@@ -231,7 +231,7 @@ mod TWAMMMathTest {
             // 0.113902904610801 EKUBO price ~= 1.411114146291565 USDC/EKUBO
             // other side gets 100371327 USDC for 74866710976797883561 EKUBO, for a price of
             // approximately 1.3406669759
-            (160730, 74866710976797883561, 100210597, 71015167668577728143)
+            (160730, 74866710976797883561, 100210597, 71015167668577728143),
         );
     }
 
@@ -245,7 +245,7 @@ mod TWAMMMathTest {
         assert_case_c(
             sqrt_ratio: max_sqrt_ratio,
             sqrt_sell_ratio: max_sqrt_sell_ratio,
-            expected: (u256 { low: 0xfffffffffffffffe0000000000000001, high: 0 }, true)
+            expected: (u256 { low: 0xfffffffffffffffe0000000000000001, high: 0 }, true),
         );
     }
 
@@ -255,93 +255,93 @@ mod TWAMMMathTest {
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 15,
-            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, false)
+            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 20,
-            expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, false)
+            expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 30,
-            expected: (u256 { low: 0x80000000000000000000000000000000, high: 0 }, false)
+            expected: (u256 { low: 0x80000000000000000000000000000000, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 40,
-            expected: (u256 { low: 0x99999999999999999999999999999999, high: 0 }, false)
+            expected: (u256 { low: 0x99999999999999999999999999999999, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 50,
-            expected: (u256 { low: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, high: 0 }, false)
+            expected: (u256 { low: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 60,
-            expected: (u256 { low: 0xb6db6db6db6db6db6db6db6db6db6db6, high: 0 }, false)
+            expected: (u256 { low: 0xb6db6db6db6db6db6db6db6db6db6db6, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 90,
-            expected: (u256 { low: 0xcccccccccccccccccccccccccccccccc, high: 0 }, false)
+            expected: (u256 { low: 0xcccccccccccccccccccccccccccccccc, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 150,
-            expected: (u256 { low: 0xe0000000000000000000000000000000, high: 0 }, false)
+            expected: (u256 { low: 0xe0000000000000000000000000000000, high: 0 }, false),
         );
         assert_case_c(
             sqrt_ratio: 10,
             sqrt_sell_ratio: 190,
-            expected: (u256 { low: 0xe6666666666666666666666666666666, high: 0 }, false)
+            expected: (u256 { low: 0xe6666666666666666666666666666666, high: 0 }, false),
         );
         // negative
         assert_case_c(
             sqrt_ratio: 15,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, true)
+            expected: (u256 { low: 0x33333333333333333333333333333333, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 20,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, true)
+            expected: (u256 { low: 0x55555555555555555555555555555555, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 30,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0x80000000000000000000000000000000, high: 0 }, true)
+            expected: (u256 { low: 0x80000000000000000000000000000000, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 40,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0x99999999999999999999999999999999, high: 0 }, true)
+            expected: (u256 { low: 0x99999999999999999999999999999999, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 50,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, high: 0 }, true)
+            expected: (u256 { low: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 60,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0xb6db6db6db6db6db6db6db6db6db6db6, high: 0 }, true)
+            expected: (u256 { low: 0xb6db6db6db6db6db6db6db6db6db6db6, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 90,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0xcccccccccccccccccccccccccccccccc, high: 0 }, true)
+            expected: (u256 { low: 0xcccccccccccccccccccccccccccccccc, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 150,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0xe0000000000000000000000000000000, high: 0 }, true)
+            expected: (u256 { low: 0xe0000000000000000000000000000000, high: 0 }, true),
         );
         assert_case_c(
             sqrt_ratio: 190,
             sqrt_sell_ratio: 10,
-            expected: (u256 { low: 0xe6666666666666666666666666666666, high: 0 }, true)
+            expected: (u256 { low: 0xe6666666666666666666666666666666, high: 0 }, true),
         );
     }
 
@@ -398,20 +398,20 @@ mod TWAMMMathTest {
 }
 
 mod MaxPrices {
-    use super::{i129, constants, max_bounds, MAX_TICK_SPACING, tick_to_sqrt_ratio};
+    use super::{MAX_TICK_SPACING, constants, i129, max_bounds, tick_to_sqrt_ratio};
 
     #[test]
     fn test_max_min_tick() {
         let bounds = max_bounds(MAX_TICK_SPACING);
-        assert_eq!(bounds.lower, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true },);
-        assert_eq!(bounds.upper, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: false },);
+        assert_eq!(bounds.lower, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: true });
+        assert_eq!(bounds.upper, i129 { mag: constants::MAX_USABLE_TICK_MAGNITUDE, sign: false });
     }
 
     #[test]
     fn test_max_min_sqrt_ratio() {
         let bounds = max_bounds(MAX_TICK_SPACING);
         let (min_sqrt_ratio, max_sqrt_ratio) = (
-            tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper)
+            tick_to_sqrt_ratio(bounds.lower), tick_to_sqrt_ratio(bounds.upper),
         );
 
         assert_eq!(min_sqrt_ratio, constants::MAX_BOUNDS_MIN_SQRT_RATIO);

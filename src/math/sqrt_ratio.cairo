@@ -1,4 +1,4 @@
-use core::num::traits::{Zero, OverflowingAdd, OverflowingSub, OverflowingMul};
+use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub, Zero};
 use core::option::{Option};
 use ekubo::math::muldiv::{muldiv};
 use ekubo::types::i129::{i129};
@@ -7,7 +7,7 @@ use ekubo::types::i129::{i129};
 // away from starting price for output An empty option is returned on overflow/underflow which means
 // the price exceeded the u256 bounds
 pub fn next_sqrt_ratio_from_amount0(
-    sqrt_ratio: u256, liquidity: u128, amount: i129
+    sqrt_ratio: u256, liquidity: u128, amount: i129,
 ) -> Option<u256> {
     if (amount.is_zero()) {
         return Option::Some(sqrt_ratio);
@@ -21,7 +21,7 @@ pub fn next_sqrt_ratio_from_amount0(
         // this will revert on overflow, which is fine because it also means the denominator
         // underflows on line 17
         let (product, overflow_mul) = OverflowingMul::overflowing_mul(
-            u256 { low: amount.mag, high: 0 }, sqrt_ratio
+            u256 { low: amount.mag, high: 0 }, sqrt_ratio,
         );
 
         if (overflow_mul) {
@@ -57,7 +57,7 @@ pub fn next_sqrt_ratio_from_amount0(
 // away from starting price for output An empty option is returned on overflow/underflow which means
 // the price exceeded the u256 bounds
 pub fn next_sqrt_ratio_from_amount1(
-    sqrt_ratio: u256, liquidity: u128, amount: i129
+    sqrt_ratio: u256, liquidity: u128, amount: i129,
 ) -> Option<u256> {
     if (amount.is_zero()) {
         return Option::Some(sqrt_ratio);
@@ -66,7 +66,7 @@ pub fn next_sqrt_ratio_from_amount1(
     assert(liquidity.is_non_zero(), 'NO_LIQUIDITY');
 
     let (quotient, remainder) = DivRem::div_rem(
-        u256 { low: 0, high: amount.mag }, u256 { low: liquidity, high: 0 }.try_into().unwrap()
+        u256 { low: 0, high: amount.mag }, u256 { low: liquidity, high: 0 }.try_into().unwrap(),
     );
 
     // because quotient is rounded down, this price movement is also rounded towards sqrt_ratio

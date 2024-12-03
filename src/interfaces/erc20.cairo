@@ -16,7 +16,7 @@ pub trait IERC20<TContractState> {
     // Transfers the amount from the `sender` address to the `recipient` address.
     // The caller must be approved for at least the `amount`.
     fn transferFrom(
-        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
     ) -> bool;
 
     // Returns the current allowance of the given owner to spender

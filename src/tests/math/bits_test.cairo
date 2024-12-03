@@ -1,4 +1,4 @@
-use ekubo::math::bits::{msb, lsb};
+use ekubo::math::bits::{lsb, msb};
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO',))]

@@ -2,8 +2,8 @@ use core::num::traits::{Zero};
 
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
-    tick_to_sqrt_ratio, sqrt_ratio_to_tick, max_sqrt_ratio, min_sqrt_ratio, max_tick, min_tick,
-    constants, by_2_127, log2
+    by_2_127, constants, log2, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
+    sqrt_ratio_to_tick, tick_to_sqrt_ratio,
 };
 use ekubo::types::i129::i129;
 
@@ -49,7 +49,7 @@ fn one_tick() {
 
     assert(
         sqrt_ratio == u256 { high: 1, low: 170141140925194634249019658794763 },
-        '~= sqrt(1.000001) * 2**128'
+        '~= sqrt(1.000001) * 2**128',
     );
 }
 
@@ -59,7 +59,7 @@ fn one_hundred_tick() {
 
     assert(
         sqrt_ratio == u256 { high: 1, low: 17014535198616014082186950856589198 },
-        '~= sqrt(1.000001)^100 * 2**128'
+        '~= sqrt(1.000001)^100 * 2**128',
     );
 }
 
@@ -70,7 +70,7 @@ fn negative_one_tick() {
 
     assert(
         sqrt_ratio == u256 { high: 0, low: 340282196779882608775400081051345954875 },
-        '~= sqrt(1.000001)^-1 * 2**128'
+        '~= sqrt(1.000001)^-1 * 2**128',
     );
 }
 
@@ -80,7 +80,7 @@ fn negative_one_hundred_tick() {
 
     assert(
         sqrt_ratio == u256 { high: 0, low: 340265353236444914223731134834256897676 },
-        '~= sqrt(1.000001)^-100 * 2**128'
+        '~= sqrt(1.000001)^-100 * 2**128',
     );
 }
 
@@ -133,23 +133,23 @@ fn test_log2_2_128() {
 fn test_internal_div_by_2_127() {
     assert(
         by_2_127(0x100000000000000000000000000000000_u256) == u256 { low: 2, high: 0 },
-        '2n**128n/2n**127n'
+        '2n**128n/2n**127n',
     );
     assert(
         by_2_127(u256 { high: 0, low: 0x80000000000000000000000000000000 }) == 1_u256,
-        '2n**127n/2n**127n'
+        '2n**127n/2n**127n',
     );
     assert(
         by_2_127(u256 { high: 0, low: 0x40000000000000000000000000000000 }) == 0_u256,
-        '2n**126n/2n**127n'
+        '2n**126n/2n**127n',
     );
     assert(
         by_2_127(
             u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
-            }
+                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff,
+            },
         ) == u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0x01 },
-        'max/2n**127n'
+        'max/2n**127n',
     );
 }
 
@@ -238,7 +238,7 @@ fn sqrt_ratio_to_tick_min_sqrt_ratio() {
 fn test_min_sqrt_ratio_to_max_sqrt_ratio_size() {
     assert(
         max_sqrt_ratio() - min_sqrt_ratio() < u256 { high: 0x10000000000000000, low: 0 },
-        'difference lt 192 bits'
+        'difference lt 192 bits',
     );
 }
 
@@ -264,7 +264,7 @@ fn sqrt_ratio_to_tick_powers_of_tick() {
         let computed_tick_ratio_minus_one = sqrt_ratio_to_tick(sqrt_ratio - 1_u256);
         assert(
             computed_tick_ratio_minus_one == (computed_tick - i129 { mag: 1, sign: false }),
-            'computed tick minus one'
+            'computed tick minus one',
         );
         let computed_tick_ratio_plus_one = sqrt_ratio_to_tick(sqrt_ratio + 1_u256);
         assert(computed_tick_ratio_plus_one == computed_tick, 'computed tick plus one');

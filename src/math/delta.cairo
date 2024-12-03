@@ -1,11 +1,11 @@
-use core::num::traits::{Zero, WideMul};
+use core::num::traits::{WideMul, Zero};
 use core::option::{OptionTrait};
 use core::traits::{Into};
-use ekubo::math::muldiv::{muldiv, div};
+use ekubo::math::muldiv::{div, muldiv};
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
 pub fn amount0_delta(
-    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
+    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool,
 ) -> u128 {
     // we do this ordering here because it's easier than branching in swap
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
@@ -23,7 +23,7 @@ pub fn amount0_delta(
         u256 { low: 0, high: liquidity },
         sqrt_ratio_upper - sqrt_ratio_lower,
         sqrt_ratio_upper,
-        round_up
+        round_up,
     )
         .expect('OVERFLOW_AMOUNT0_DELTA_0');
 
@@ -35,7 +35,7 @@ pub fn amount0_delta(
 
 // Compute the difference in amount of token1 between two ratios, rounded as specified
 pub fn amount1_delta(
-    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool
+    sqrt_ratio_a: u256, sqrt_ratio_b: u256, liquidity: u128, round_up: bool,
 ) -> u128 {
     // we do this ordering here because it's easier than branching in swap
     let (sqrt_ratio_lower, sqrt_ratio_upper) = if sqrt_ratio_a < sqrt_ratio_b {
@@ -50,7 +50,7 @@ pub fn amount1_delta(
     }
 
     let result = WideMul::<
-        u256, u256
+        u256, u256,
     >::wide_mul(sqrt_ratio_upper - sqrt_ratio_lower, liquidity.into());
 
     // todo: result.limb3 is always zero. we can optimize out its computation

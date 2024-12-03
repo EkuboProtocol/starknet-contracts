@@ -23,10 +23,11 @@ pub mod TokenRegistry {
     use ekubo::math::bits::{msb};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{
-        syscalls::{call_contract_syscall}, ContractAddress, get_contract_address, get_caller_address
+        ContractAddress, get_caller_address, get_contract_address,
+        syscalls::{call_contract_syscall},
     };
     use super::{
-        IERC20Dispatcher, ITokenRegistry, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait
+        IERC20Dispatcher, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait, ITokenRegistry,
     };
 
     #[storage]
@@ -118,7 +119,7 @@ pub mod TokenRegistry {
                 get_string_metadata(token.contract_address, selector!("name")),
                 get_string_metadata(token.contract_address, selector!("symbol")),
                 metadata.decimals(),
-                metadata.totalSupply()
+                metadata.totalSupply(),
             );
 
             assert(decimals < 78, 'Decimals too large');
@@ -129,7 +130,7 @@ pub mod TokenRegistry {
             assert(balance >= tokens_required_for_test.into(), 'Must transfer tokens for test');
 
             call_core_with_callback::<
-                (ContractAddress, IERC20Dispatcher, u128), ()
+                (ContractAddress, IERC20Dispatcher, u128), (),
             >(self.core.read(), @(get_caller_address(), token, balance));
 
             self
@@ -140,7 +141,7 @@ pub mod TokenRegistry {
                         symbol,
                         decimals,
                         total_supply: total_supply.low,
-                    }
+                    },
                 );
         }
     }
@@ -150,7 +151,7 @@ pub mod TokenRegistry {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let (refund_to, token, amount) = consume_callback_data::<
-                (ContractAddress, IERC20Dispatcher, u128)
+                (ContractAddress, IERC20Dispatcher, u128),
             >(core, data);
 
             token.approve(core.contract_address, amount.into());

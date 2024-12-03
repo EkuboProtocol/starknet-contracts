@@ -1,7 +1,7 @@
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::fee::{compute_fee, amount_before_fee};
+use ekubo::math::fee::{amount_before_fee, compute_fee};
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use ekubo::types::i129::{i129};
 
@@ -14,7 +14,7 @@ pub struct SwapResult {
     pub consumed_amount: i129,
     pub calculated_amount: u128,
     pub sqrt_ratio_next: u256,
-    pub fee_amount: u128
+    pub fee_amount: u128,
 }
 
 pub fn is_price_increasing(exact_output: bool, is_token1: bool) -> bool {
@@ -31,7 +31,7 @@ pub fn no_op_swap_result(next_sqrt_ratio: u256) -> SwapResult {
         consumed_amount: Zero::zero(),
         calculated_amount: Zero::zero(),
         fee_amount: Zero::zero(),
-        sqrt_ratio_next: next_sqrt_ratio
+        sqrt_ratio_next: next_sqrt_ratio,
     }
 }
 
@@ -43,7 +43,7 @@ pub fn swap_result(
     sqrt_ratio_limit: u256,
     amount: i129,
     is_token1: bool,
-    fee: u128
+    fee: u128,
 ) -> SwapResult {
     // no amount traded means no-op, price doesn't move
     // also if the limit is the current price, price cannot move
@@ -78,7 +78,7 @@ pub fn swap_result(
 
     let limited = match sqrt_ratio_next_from_amount {
         Option::Some(next) => (next > sqrt_ratio_limit) == increasing,
-        Option::None => true
+        Option::None => true,
     };
 
     // if we exceeded the limit, then adjust the delta to be the amount spent to reach the limit
@@ -87,17 +87,17 @@ pub fn swap_result(
             (
                 i129 {
                     mag: amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
-                    sign: amount.sign
+                    sign: amount.sign,
                 },
-                amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
+                amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign),
             )
         } else {
             (
                 i129 {
                     mag: amount0_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, !amount.sign),
-                    sign: amount.sign
+                    sign: amount.sign,
                 },
-                amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign)
+                amount1_delta(sqrt_ratio_limit, sqrt_ratio, liquidity, amount.sign),
             )
         };
 
@@ -109,12 +109,12 @@ pub fn swap_result(
             (
                 i129 { mag: before_fee, sign: false },
                 calculated_amount_delta,
-                before_fee - specified_amount_delta.mag
+                before_fee - specified_amount_delta.mag,
             )
         };
 
         return SwapResult {
-            consumed_amount, calculated_amount, sqrt_ratio_next: sqrt_ratio_limit, fee_amount
+            consumed_amount, calculated_amount, sqrt_ratio_next: sqrt_ratio_limit, fee_amount,
         };
     }
 
@@ -130,7 +130,7 @@ pub fn swap_result(
             consumed_amount: amount,
             calculated_amount: 0,
             sqrt_ratio_next: sqrt_ratio,
-            fee_amount: amount.mag
+            fee_amount: amount.mag,
         };
     }
 

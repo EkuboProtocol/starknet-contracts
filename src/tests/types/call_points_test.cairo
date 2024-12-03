@@ -25,9 +25,9 @@ fn test_max_u8_is_all_call_points() {
 fn test_u8_into_after_initialize_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            128
+            128,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: true,
@@ -38,7 +38,7 @@ fn test_u8_into_after_initialize_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -47,9 +47,9 @@ fn test_u8_into_after_initialize_call_points() {
 fn test_u8_into_before_swap_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            64
+            64,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -60,7 +60,7 @@ fn test_u8_into_before_swap_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -69,9 +69,9 @@ fn test_u8_into_before_swap_call_points() {
 fn test_u8_into_after_swap_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            32
+            32,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -82,7 +82,7 @@ fn test_u8_into_after_swap_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -90,9 +90,9 @@ fn test_u8_into_after_swap_call_points() {
 fn test_u8_into_before_update_position_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            16
+            16,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -103,7 +103,7 @@ fn test_u8_into_before_update_position_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -111,9 +111,9 @@ fn test_u8_into_before_update_position_call_points() {
 fn test_u8_into_after_update_position_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            8
+            8,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -124,7 +124,7 @@ fn test_u8_into_after_update_position_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -132,9 +132,9 @@ fn test_u8_into_after_update_position_call_points() {
 fn test_u8_into_before_collect_fees_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            4
+            4,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -145,7 +145,7 @@ fn test_u8_into_before_collect_fees_call_points() {
             before_collect_fees: true,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -153,9 +153,9 @@ fn test_u8_into_before_collect_fees_call_points() {
 fn test_u8_into_after_collect_fees_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            2
+            2,
         ) == CallPoints {
             before_initialize_pool: false,
             after_initialize_pool: false,
@@ -166,7 +166,7 @@ fn test_u8_into_after_collect_fees_call_points() {
             before_collect_fees: false,
             after_collect_fees: true,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 
@@ -174,9 +174,9 @@ fn test_u8_into_after_collect_fees_call_points() {
 fn test_u8_into_before_initialize_pool_call_points() {
     assert(
         Into::<
-            u8, CallPoints
+            u8, CallPoints,
         >::into(
-            1
+            1,
         ) == CallPoints {
             before_initialize_pool: true,
             after_initialize_pool: false,
@@ -187,7 +187,7 @@ fn test_u8_into_before_initialize_pool_call_points() {
             before_collect_fees: false,
             after_collect_fees: false,
         },
-        'after_initialize_pool'
+        'after_initialize_pool',
     );
 }
 

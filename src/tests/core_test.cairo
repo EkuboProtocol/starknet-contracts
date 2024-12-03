@@ -5,14 +5,14 @@ use ekubo::core::{Core};
 use ekubo::interfaces::core::{ICoreDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{
-    max_sqrt_ratio, min_sqrt_ratio, min_tick, max_tick, constants as tick_constants,
-    tick_to_sqrt_ratio
+    constants as tick_constants, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
+    tick_to_sqrt_ratio,
 };
-use ekubo::mock_erc20::{MockERC20, IMockERC20DispatcherTrait};
+use ekubo::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
 
 use ekubo::tests::helper::{
-    FEE_ONE_PERCENT, Deployer, DeployerTrait, swap, update_position, accumulate_as_fees,
-    default_owner
+    Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner, swap,
+    update_position,
 };
 
 use ekubo::tests::mocks::locker::{
@@ -22,7 +22,7 @@ use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
 use ekubo::types::i129::{i129};
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use starknet::testing::{set_contract_address, pop_log};
+use starknet::testing::{pop_log, set_contract_address};
 use starknet::{ContractAddress, contract_address_const};
 
 
@@ -35,14 +35,14 @@ mod owner_tests {
     use ekubo::positions::{Positions};
     use starknet::class_hash::{ClassHash};
     use super::{
-        Core, Deployer, DeployerTrait, contract_address_const, set_contract_address, MockERC20,
-        TryInto, OptionTrait, Zero, IUpgradeableDispatcher, IUpgradeableDispatcherTrait, pop_log,
-        default_owner,
+        Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
+        MockERC20, OptionTrait, TryInto, Zero, contract_address_const, default_owner, pop_log,
+        set_contract_address,
     };
 
 
     #[test]
-    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED'))]
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -65,7 +65,7 @@ mod owner_tests {
             .replace_class_hash(class_hash);
 
         let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
@@ -78,7 +78,7 @@ mod owner_tests {
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         assert(event.old_owner.is_zero(), 'zero');
@@ -90,7 +90,7 @@ mod owner_tests {
         owned.transfer_ownership(new_owner);
 
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
-            core.contract_address
+            core.contract_address,
         )
             .unwrap();
         assert(event.old_owner == default_owner(), 'old owner');
@@ -99,7 +99,7 @@ mod owner_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('OWNER_ONLY', 'ENTRYPOINT_FAILED'))]
     fn test_transfer_ownership_then_replace_class_hash_fails() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -154,8 +154,8 @@ mod owner_tests {
 mod initialize_pool_tests {
     use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
     use super::{
-        PoolKey, Deployer, DeployerTrait, ICoreDispatcherTrait, i129, contract_address_const, Zero,
-        OptionTrait, pop_log, tick_to_sqrt_ratio
+        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero,
+        contract_address_const, i129, pop_log, tick_to_sqrt_ratio,
     };
 
     #[test]
@@ -173,11 +173,11 @@ mod initialize_pool_tests {
         let (price, liquidity, fees_per_liquidity) = (
             core.get_pool_price(pool_key),
             core.get_pool_liquidity(pool_key),
-            core.get_pool_fees_per_liquidity(pool_key)
+            core.get_pool_fees_per_liquidity(pool_key),
         );
         assert(
             price.sqrt_ratio == u256 { low: 340112268350713539826535022315348447443, high: 0 },
-            'sqrt_ratio'
+            'sqrt_ratio',
         );
         assert(price.tick == i129 { mag: 1000, sign: true }, 'tick');
         assert(liquidity.is_zero(), 'tick');
@@ -192,7 +192,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_token_order_same_token() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -207,7 +207,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('TOKEN_ORDER', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_token_order_wrong_order() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -223,7 +223,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('TOKEN_NON_ZERO', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_token_order_zero_token() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -238,7 +238,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_zero_tick_spacing() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -267,7 +267,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('TICK_SPACING', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_max_tick_spacing_plus_one() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -282,7 +282,7 @@ mod initialize_pool_tests {
     }
 
     #[test]
-    #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('ALREADY_INITIALIZED', 'ENTRYPOINT_FAILED'))]
     fn test_initialize_pool_fails_already_initialized() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -312,19 +312,19 @@ mod initialize_pool_tests {
             core
                 .maybe_initialize_pool(pool_key, Zero::zero())
                 .unwrap() == 0x100000000000000000000000000000000_u256,
-            'price'
+            'price',
         );
         assert(
             core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: false }).is_none(),
-            'second'
+            'second',
         );
         assert(
-            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: true }).is_none(), 'third'
+            core.maybe_initialize_pool(pool_key, i129 { mag: 1000, sign: true }).is_none(), 'third',
         );
 
         assert(
             core.get_pool_price(pool_key).sqrt_ratio == 0x100000000000000000000000000000000_u256,
-            'ratio'
+            'ratio',
         );
     }
 }
@@ -332,13 +332,13 @@ mod initialize_pool_tests {
 
 mod initialized_ticks {
     use super::{
-        Deployer, DeployerTrait, update_position, contract_address_const, FEE_ONE_PERCENT,
-        tick_constants, ICoreDispatcherTrait, i129, IMockERC20DispatcherTrait, min_tick, max_tick,
-        Bounds, Zero, TICKS_IN_ONE_PERCENT
+        Bounds, Deployer, DeployerTrait, FEE_ONE_PERCENT, ICoreDispatcherTrait,
+        IMockERC20DispatcherTrait, TICKS_IN_ONE_PERCENT, Zero, contract_address_const, i129,
+        max_tick, min_tick, tick_constants, update_position,
     };
 
     #[test]
-    #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('PREV_FROM_MIN', 'ENTRYPOINT_FAILED'))]
     fn test_prev_initialized_tick_min_tick_minus_one() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -354,7 +354,7 @@ mod initialized_ticks {
             .prev_initialized_tick(
                 pool_key: setup.pool_key,
                 from: min_tick() - i129 { mag: 1, sign: false },
-                skip_ahead: 0
+                skip_ahead: 0,
             );
     }
 
@@ -373,14 +373,14 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 5,
                 ) == (min_tick(), false),
-            'min tick always limited'
+            'min tick always limited',
         );
     }
 
     #[test]
-    #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED',))]
+    #[should_panic(expected: ('NEXT_FROM_MAX', 'ENTRYPOINT_FAILED'))]
     fn test_next_initialized_tick_max_tick() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -411,9 +411,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: max_tick() - i129 { mag: 1, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (max_tick(), false),
-            'max tick always limited'
+            'max tick always limited',
         );
     }
 
@@ -432,9 +432,9 @@ mod initialized_ticks {
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0,
                 ) == (max_tick(), false),
-            'max tick limited'
+            'max tick limited',
         );
     }
 
@@ -453,18 +453,18 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0,
                 ) == (i129 { mag: Zero::zero(), sign: false }, false),
-            'min tick 0'
+            'min tick 0',
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: i129 { mag: 1, sign: true }, skip_ahead: 0
+                    pool_key: setup.pool_key, from: i129 { mag: 1, sign: true }, skip_ahead: 0,
                 ) == (min_tick(), false),
-            'min tick'
+            'min tick',
         );
     }
 
@@ -483,54 +483,54 @@ mod initialized_ticks {
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0,
                 ) == (Zero::zero(), false),
-            'prev from 0'
+            'prev from 0',
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 2
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 2,
                 ) == (i129 { mag: 4994900, sign: true }, false), // 5014800 == 251*9950*2
-            'prev from 0, skip 2'
+            'prev from 0, skip 2',
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5,
                 ) == (i129 { mag: 12487250, sign: true }, false), // 2547200 == 251*9950*5
-            'prev from 0, skip 5'
+            'prev from 0, skip 5',
         );
 
         assert(
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 0,
                 ) == (i129 { mag: 2487500, sign: false }, false),
-            'next from 0'
+            'next from 0',
         );
 
         assert(
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 1,
                 ) == (i129 { mag: 4984950, sign: false }, false),
-            'next from 0, skip 1'
+            'next from 0, skip 1',
         );
 
         assert(
             setup
                 .core
                 .next_initialized_tick(
-                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5
+                    pool_key: setup.pool_key, from: Zero::zero(), skip_ahead: 5,
                 ) == (i129 { mag: 14974750, sign: false }, false),
-            'next from 0, skip 5'
+            'next from 0, skip 5',
         );
     }
 
@@ -555,7 +555,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         update_position(
             setup: setup,
@@ -564,7 +564,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         update_position(
             setup: setup,
@@ -573,7 +573,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         // -154, -128, -12, 9, 128, 200
 
@@ -583,9 +583,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 500, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
-            'next from -500, skip 5'
+            'next from -500, skip 5',
         );
         assert(
             setup
@@ -593,9 +593,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
-            'next from -154, skip 5'
+            'next from -154, skip 5',
         );
         assert(
             setup
@@ -603,9 +603,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
-            'next from -128, skip 5'
+            'next from -128, skip 5',
         );
         assert(
             setup
@@ -613,9 +613,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
-            'next from -12, skip 5'
+            'next from -12, skip 5',
         );
         assert(
             setup
@@ -623,9 +623,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
-            'next from 9, skip 5'
+            'next from 9, skip 5',
         );
         assert(
             setup
@@ -633,9 +633,9 @@ mod initialized_ticks {
                 .next_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
-            'next from 128, skip 5'
+            'next from 128, skip 5',
         );
 
         // prev
@@ -646,9 +646,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 500, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false }, true),
-            'prev from 500, skip 5'
+            'prev from 500, skip 5',
         );
         assert(
             setup
@@ -656,9 +656,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 199, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false }, true),
-            'prev from 199, skip 5'
+            'prev from 199, skip 5',
         );
         assert(
             setup
@@ -666,9 +666,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 127, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false }, true),
-            'prev from 127, skip 5'
+            'prev from 127, skip 5',
         );
         assert(
             setup
@@ -676,9 +676,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 8, sign: false },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 12, sign: true }, true),
-            'prev from 8, skip 5'
+            'prev from 8, skip 5',
         );
         assert(
             setup
@@ -686,9 +686,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 13, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: true }, true),
-            'prev from -13, skip 5'
+            'prev from -13, skip 5',
         );
         assert(
             setup
@@ -696,9 +696,9 @@ mod initialized_ticks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT * 129, sign: true },
-                    skip_ahead: 5
+                    skip_ahead: 5,
                 ) == (i129 { mag: TICKS_IN_ONE_PERCENT * 154, sign: true }, true),
-            'prev from -129, skip 5'
+            'prev from -129, skip 5',
         );
     }
 }
@@ -706,14 +706,15 @@ mod initialized_ticks {
 mod locks {
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
     use ekubo::tests::helper::{
-        Deployer, DeployerTrait, update_position_inner, accumulate_as_fees_inner, flash_borrow_inner
+        Deployer, DeployerTrait, accumulate_as_fees_inner, flash_borrow_inner,
+        update_position_inner,
     };
     use super::{
-        FeesPerLiquidity, FEE_ONE_PERCENT, swap, update_position, contract_address_const, Action,
-        ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait, i129,
-        IMockERC20DispatcherTrait, min_sqrt_ratio, max_sqrt_ratio, min_tick, max_tick,
-        ICoreDispatcherTrait, ContractAddress, Bounds, Zero, PoolKey, accumulate_as_fees,
-        max_bounds, SavedBalanceKey, TICKS_IN_ONE_PERCENT
+        Action, ActionResult, Bounds, ContractAddress, FEE_ONE_PERCENT, FeesPerLiquidity,
+        ICoreDispatcherTrait, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+        IMockERC20DispatcherTrait, PoolKey, SavedBalanceKey, TICKS_IN_ONE_PERCENT, Zero,
+        accumulate_as_fees, contract_address_const, i129, max_bounds, max_sqrt_ratio, max_tick,
+        min_sqrt_ratio, min_tick, swap, update_position,
     };
 
     #[test]
@@ -737,11 +738,11 @@ mod locks {
                 Action::SaveBalance(
                     (
                         SavedBalanceKey {
-                            owner: contract_address_const::<0>(), token: token, salt: 0
+                            owner: contract_address_const::<0>(), token: token, salt: 0,
                         },
-                        amount
-                    )
-                )
+                        amount,
+                    ),
+                ),
             ) {
             ActionResult::SaveBalance => {},
             _ => { assert(false, 'expected save'); },
@@ -763,21 +764,21 @@ mod locks {
             locker: locker,
             token: token.contract_address,
             amount_borrow: 0,
-            amount_repay: 0
+            amount_repay: 0,
         );
         flash_borrow_inner(
             core: core,
             locker: locker,
             token: token.contract_address,
             amount_borrow: 10,
-            amount_repay: 10
+            amount_repay: 10,
         );
         flash_borrow_inner(
             core: core,
             locker: locker,
             token: token.contract_address,
             amount_borrow: 100000000,
-            amount_repay: 100000000
+            amount_repay: 100000000,
         );
     }
 
@@ -797,7 +798,7 @@ mod locks {
             locker: locker,
             token: token.contract_address,
             amount_borrow: 100,
-            amount_repay: 0
+            amount_repay: 0,
         );
     }
 
@@ -817,7 +818,7 @@ mod locks {
             locker: locker,
             token: token.contract_address,
             amount_borrow: 0,
-            amount_repay: 100
+            amount_repay: 100,
         );
     }
 
@@ -829,8 +830,8 @@ mod locks {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_flash_borrow_more_than_core_balance() {
         let mut d: Deployer = Default::default();
@@ -846,7 +847,7 @@ mod locks {
             locker: locker,
             token: token.contract_address,
             amount_borrow: 100000000 + 10,
-            amount_repay: 100000000 + 10
+            amount_repay: 100000000 + 10,
         );
     }
 
@@ -880,8 +881,8 @@ mod locks {
     #[test]
     #[should_panic(
         expected: (
-            'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
-        )
+            'INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_assert_locker_id_call_wrong() {
         let mut d: Deployer = Default::default();
@@ -898,8 +899,8 @@ mod locks {
     #[test]
     #[should_panic(
         expected: (
-            'RL_INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'
-        )
+            'RL_INVALID_LOCKER_ID', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_relock_call_fails_invalid_id() {
         let mut d: Deployer = Default::default();
@@ -927,10 +928,10 @@ mod locks {
             setup: setup,
             bounds: Bounds {
                 lower: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
-                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false }
+                upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: Zero::zero(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         assert(
             setup
@@ -938,9 +939,9 @@ mod locks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
-                    skip_ahead: 1
+                    skip_ahead: 1,
                 ) != (i129 { mag: TICKS_IN_ONE_PERCENT, sign: true }, true),
-            'ticks not initialized'
+            'ticks not initialized',
         );
         assert(
             setup
@@ -948,9 +949,9 @@ mod locks {
                 .prev_initialized_tick(
                     pool_key: setup.pool_key,
                     from: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
-                    skip_ahead: 1
+                    skip_ahead: 1,
                 ) != (i129 { mag: TICKS_IN_ONE_PERCENT, sign: false }, false),
-            'ticks not initialized'
+            'ticks not initialized',
         );
     }
 
@@ -961,8 +962,8 @@ mod locks {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
         let mut d: Deployer = Default::default();
@@ -981,7 +982,7 @@ mod locks {
                 upper: i129 { mag: 12, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
     }
 
@@ -992,8 +993,8 @@ mod locks {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
         let mut d: Deployer = Default::default();
@@ -1012,7 +1013,7 @@ mod locks {
                 upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
     }
 
@@ -1024,8 +1025,8 @@ mod locks {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_small_amount_liquidity_add_no_tokens() {
         let mut d: Deployer = Default::default();
@@ -1043,7 +1044,7 @@ mod locks {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: Zero::zero(),
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         assert(delta.amount0 == Zero::zero(), 'amount0');
         assert(delta.amount1 == Zero::zero(), 'amount1');
@@ -1070,7 +1071,7 @@ mod locks {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         assert(delta.amount0 == i129 { mag: 50, sign: false }, 'amount0');
@@ -1084,8 +1085,8 @@ mod locks {
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
             'ENTRYPOINT_FAILED',
-            'ENTRYPOINT_FAILED'
-        )
+            'ENTRYPOINT_FAILED',
+        ),
     )]
     fn test_accumulate_fees_per_liquidity_not_extension() {
         let mut d: Deployer = Default::default();
@@ -1107,11 +1108,11 @@ mod locks {
                 lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         assert(setup.core.get_pool_liquidity(setup.pool_key) == 1, 'liquidity');
         assert(
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key).is_zero(), 'fees_per_liquidity'
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key).is_zero(), 'fees_per_liquidity',
         );
 
         accumulate_as_fees(setup: setup, amount0: 2, amount1: 3);
@@ -1147,7 +1148,7 @@ mod locks {
                 lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
         assert(core.get_pool_liquidity(pool_key) == 1, 'liquidity');
         assert(core.get_pool_fees_per_liquidity(pool_key).is_zero(), 'fees_per_liquidity');
@@ -1157,12 +1158,12 @@ mod locks {
         assert(
             core
                 .get_pool_fees_per_liquidity(
-                    pool_key
+                    pool_key,
                 ) == FeesPerLiquidity {
                     value0: 680564733841876926926749214863536422912,
-                    value1: 1020847100762815390390123822295304634368
+                    value1: 1020847100762815390390123822295304634368,
                 },
-            'fees_per_liquidity'
+            'fees_per_liquidity',
         );
     }
 
@@ -1187,7 +1188,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         assert(delta.amount0 == i129 { mag: 4962643, sign: false }, 'amount0');
@@ -1216,7 +1217,7 @@ mod locks {
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         assert(delta.amount0 == i129 { mag: 1000000000, sign: false }, 'amount0');
@@ -1245,31 +1246,31 @@ mod locks {
             setup: setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = update_position(
             setup: setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 500000000, sign: true },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1,
                 ) == (min_tick(), true),
-            'ticks initialized'
+            'ticks initialized',
         );
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1,
                 ) == (max_tick(), true),
-            'ticks initialized'
+            'ticks initialized',
         );
 
         assert(delta.amount0 == i129 { mag: 494999999, sign: true }, 'amount0');
@@ -1298,31 +1299,31 @@ mod locks {
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = update_position(
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: true },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: min_tick(), skip_ahead: 1,
                 ) != (min_tick(), true),
-            'ticks initialized'
+            'ticks initialized',
         );
         assert(
             setup
                 .core
                 .prev_initialized_tick(
-                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1
+                    pool_key: setup.pool_key, from: max_tick(), skip_ahead: 1,
                 ) != (max_tick(), true),
-            'ticks initialized'
+            'ticks initialized',
         );
 
         assert(delta.amount0 == i129 { mag: 989999999, sign: true }, 'amount0');
@@ -1355,7 +1356,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == 0x100000000000000000000000000000000_u256, 'price did not move');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1374,7 +1375,7 @@ mod locks {
             );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 3, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 3, sign: true },
         );
 
         let delta = swap(
@@ -1392,7 +1393,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1427,7 +1428,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is max');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1462,7 +1463,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is capped');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1497,7 +1498,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price is min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1525,7 +1526,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = swap(
@@ -1534,7 +1535,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 1000, sign: false }, 'amount0');
@@ -1543,18 +1544,18 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
             price.sqrt_ratio == u256 { low: 340282030041728722151939677011487970083, high: 0 },
-            'price lower'
+            'price lower',
         );
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 3402823669209384634633746074317, value1: 0,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1586,17 +1587,17 @@ mod locks {
                 is_token1: true,
                 sqrt_ratio_limit: 21175949444679574865522613902772161611,
                 recipient: contract_address_const::<42>(),
-                skip_ahead: 0
+                skip_ahead: 0,
             )
                 .is_zero(),
-            'swap to price zero'
+            'swap to price zero',
         );
 
         update_position(
             setup,
             bounds: Bounds { lower: lower_tick, upper: upper_tick },
             liquidity_delta: i129 { mag: 717193642384, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let (price, liquidity) = (
@@ -1613,7 +1614,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
         assert(delta.amount0 == i129 { mag: 9995000000, sign: false }, 'amount0');
         assert(delta.amount1 == i129 { mag: 38557555, sign: true }, 'amount1');
@@ -1640,7 +1641,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = swap(
@@ -1649,7 +1650,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 1000, sign: true }, 'amount0');
@@ -1658,17 +1659,18 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
-            price.sqrt_ratio == u256 { low: 0x10c6f8ba2f9812745d280cca2e8d, high: 1 }, 'price lower'
+            price.sqrt_ratio == u256 { low: 0x10c6f8ba2f9812745d280cca2e8d, high: 1 },
+            'price lower',
         );
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 0x2f3ea0be6ace18ebf8fbc39f15
+                value0: 0, value1: 0x2f3ea0be6ace18ebf8fbc39f15,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1694,11 +1696,11 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: true },
         );
 
         let delta = swap(
@@ -1707,7 +1709,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 505, sign: false }, 'amount0');
@@ -1716,7 +1718,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(liquidity == 0, 'liquidity is 0');
@@ -1725,7 +1727,7 @@ mod locks {
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 0x3eea209aaa3ad18d25edd052934ac, value1: 0,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1751,11 +1753,11 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 2, sign: false },
         );
 
         let delta = swap(
@@ -1764,7 +1766,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 496, sign: true }, 'amount0');
@@ -1773,15 +1775,15 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'price min');
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 0x3eea209aaa3ad18d25edd052934ac
+                value0: 0, value1: 0x3eea209aaa3ad18d25edd052934ac,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1806,7 +1808,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = swap(
@@ -1815,7 +1817,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: max_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount1 == i129 { mag: 1000, sign: false }, 'amount0');
@@ -1824,18 +1826,18 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
             price.sqrt_ratio == u256 { low: 336879543251729078828740861357450, high: 1 },
-            'price lower'
+            'price lower',
         );
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 0, value1: 3402823669209384634633746074317,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1860,7 +1862,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let delta = swap(
@@ -1869,7 +1871,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 1012, sign: false }, 'amount1');
@@ -1878,17 +1880,17 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
-            price.sqrt_ratio == u256 { low: 0xffffef39085f4a1272c94b380cb6c7a7, high: 0 }, 'price'
+            price.sqrt_ratio == u256 { low: 0xffffef39085f4a1272c94b380cb6c7a7, high: 0 }, 'price',
         );
         assert(liquidity == 1000000000, 'liquidity is original');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0x2f3ea0be6ace18ebf8fbc39f15, value1: 0
+                value0: 0x2f3ea0be6ace18ebf8fbc39f15, value1: 0,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1913,11 +1915,11 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false },
         );
 
         let delta = swap(
@@ -1926,7 +1928,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 49626, sign: true }, 'amount0');
@@ -1935,18 +1937,18 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
             price.sqrt_ratio == u256 { low: 0x672a6ec856fce6c85fbf4a4920eb890, high: 1 },
-            'ratio after'
+            'ratio after',
         );
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0, value1: 0x34d925a0a379166c530f718d0b15d
+                value0: 0, value1: 0x34d925a0a379166c530f718d0b15d,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -1971,11 +1973,11 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true },
         );
 
         let delta = swap(
@@ -1984,7 +1986,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 50378, sign: false }, 'amount0');
@@ -1993,15 +1995,15 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');
         assert(
             fees_per_liquidity == FeesPerLiquidity {
-                value0: 0x34d925a0a379166c530f718d0b15d, value1: 0
+                value0: 0x34d925a0a379166c530f718d0b15d, value1: 0,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -2027,7 +2029,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // out of range liquidity in the direction of the price movement
@@ -2038,7 +2040,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // out of range liquidity in the OPPOSITE direction that cancels out the delta
@@ -2049,12 +2051,12 @@ mod locks {
                 upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // right above the tick price
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true },
         )
             + 1;
 
@@ -2064,7 +2066,7 @@ mod locks {
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 101008, sign: false }, 'amount0');
@@ -2073,7 +2075,7 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(price.tick == i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: true }, 'tick after');
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
@@ -2082,7 +2084,7 @@ mod locks {
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 0x6a02d31917283ab1acb5d610426d5, value1: 0,
             },
-            'fees'
+            'fees',
         );
     }
 
@@ -2108,7 +2110,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // out of range liquidity in the OPPOSITE direction
@@ -2119,7 +2121,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // out of range liquidity in the direction
@@ -2130,12 +2132,12 @@ mod locks {
                 upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>()
+            recipient: contract_address_const::<42>(),
         );
 
         // right above the tick price
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
-            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false }
+            i129 { mag: TICKS_IN_ONE_PERCENT * 5, sign: false },
         )
             - 1;
 
@@ -2145,7 +2147,7 @@ mod locks {
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
             recipient: contract_address_const::<42>(),
-            skip_ahead: 0
+            skip_ahead: 0,
         );
 
         assert(delta.amount0 == i129 { mag: 0x182be, sign: true }, 'amount0');
@@ -2154,10 +2156,10 @@ mod locks {
         let (price, liquidity, fees_per_liquidity) = (
             setup.core.get_pool_price(setup.pool_key),
             setup.core.get_pool_liquidity(setup.pool_key),
-            setup.core.get_pool_fees_per_liquidity(setup.pool_key)
+            setup.core.get_pool_fees_per_liquidity(setup.pool_key),
         );
         assert(
-            price.tick == i129 { mag: (TICKS_IN_ONE_PERCENT * 5) - 1, sign: false }, 'tick after'
+            price.tick == i129 { mag: (TICKS_IN_ONE_PERCENT * 5) - 1, sign: false }, 'tick after',
         );
         assert(price.sqrt_ratio == sqrt_ratio_limit, 'ratio after');
         assert(liquidity == 0, 'liquidity is 0');
@@ -2165,7 +2167,7 @@ mod locks {
             fees_per_liquidity == FeesPerLiquidity {
                 value0: 0, value1: 0x6a02d31917283ab1acb5d610426d5,
             },
-            'fees'
+            'fees',
         );
     }
 }
@@ -2174,8 +2176,8 @@ mod locks {
 mod save_load_tests {
     use ekubo::tests::mocks::locker::{Action, ActionResult};
     use super::{
-        Deployer, DeployerTrait, IMockERC20DispatcherTrait, ICoreLockerDispatcherTrait,
-        ICoreDispatcherTrait, contract_address_const, set_contract_address, SavedBalanceKey
+        Deployer, DeployerTrait, ICoreDispatcherTrait, ICoreLockerDispatcherTrait,
+        IMockERC20DispatcherTrait, SavedBalanceKey, contract_address_const, set_contract_address,
     };
 
     #[test]
@@ -2198,11 +2200,11 @@ mod save_load_tests {
                 Action::SaveBalance(
                     (
                         SavedBalanceKey {
-                            owner: recipient, token: token.contract_address, salt: cache_key
+                            owner: recipient, token: token.contract_address, salt: cache_key,
                         },
-                        1
-                    )
-                )
+                        1,
+                    ),
+                ),
             ) {
             ActionResult::SaveBalance(balance_next) => {
                 assert(balance_next == 1, 'balance_next');
@@ -2214,19 +2216,19 @@ mod save_load_tests {
             core
                 .get_saved_balance(
                     key: SavedBalanceKey {
-                        owner: recipient, token: token.contract_address, salt: cache_key
-                    }
+                        owner: recipient, token: token.contract_address, salt: cache_key,
+                    },
                 ) == 1,
-            'saved 1'
+            'saved 1',
         );
         assert(
             core
                 .get_saved_balance(
                     key: SavedBalanceKey {
-                        owner: recipient, token: token.contract_address, salt: 0
-                    }
+                        owner: recipient, token: token.contract_address, salt: 0,
+                    },
                 ) == 0,
-            'other cache key'
+            'other cache key',
         );
 
         match locker.call(Action::LoadBalance((token.contract_address, cache_key, 1, recipient))) {

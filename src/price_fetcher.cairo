@@ -6,7 +6,7 @@ pub enum PriceResult {
     NotInitialized,
     InsufficientLiquidity,
     PeriodTooLong,
-    Price: u256
+    Price: u256,
 }
 
 #[derive(Copy, Drop, PartialEq, Serde, Debug)]
@@ -27,12 +27,12 @@ pub trait IPriceFetcher<TContractState> {
         quote_token: ContractAddress,
         base_tokens: Span<ContractAddress>,
         period: u64,
-        min_token: u128
+        min_token: u128,
     ) -> Span<PriceResult>;
 
     // Returns the prices in terms of the oracle token
     fn get_prices_in_oracle_tokens(
-        self: @TContractState, base_tokens: Span<ContractAddress>, period: u64, min_token: u128
+        self: @TContractState, base_tokens: Span<ContractAddress>, period: u64, min_token: u128,
     ) -> (ContractAddress, Span<PriceResult>);
 
     // Returns data to populate a candlestick chart
@@ -54,24 +54,24 @@ pub trait IPriceFetcher<TContractState> {
         quote_token: ContractAddress,
         interval_seconds: u32,
         num_intervals: u32,
-        max_resolution: u8
+        max_resolution: u8,
     ) -> (u64, Span<CandlestickPoint>);
 }
 
 #[starknet::contract]
 pub mod PriceFetcher {
-    use core::cmp::{min, max};
+    use core::cmp::{max, min};
     use core::num::traits::{Zero};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::oracle::{
-        IOracleDispatcher, IOracleDispatcherTrait, Oracle::{tick_to_price_x128, MAX_TICK_SPACING}
+        IOracleDispatcher, IOracleDispatcherTrait, Oracle::{MAX_TICK_SPACING, tick_to_price_x128},
     };
     use ekubo::types::keys::{PoolKey};
 
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{get_block_timestamp};
-    use super::{IPriceFetcher, PriceResult, ContractAddress, CandlestickPoint, i129};
+    use super::{CandlestickPoint, ContractAddress, IPriceFetcher, PriceResult, i129};
 
 
     #[derive(Drop, Clone, Copy)]
@@ -121,7 +121,7 @@ pub mod PriceFetcher {
             quote_token: ContractAddress,
             mut base_tokens: Span<ContractAddress>,
             period: u64,
-            min_token: u128
+            min_token: u128,
         ) -> Span<PriceResult> {
             let core = self.core.read();
             let oracle = self.oracle.read();
@@ -183,9 +183,9 @@ pub mod PriceFetcher {
                                         PriceResult::Price(
                                             oracle
                                                 .get_price_x128_over_last(
-                                                    *next, quote_token, period
-                                                )
-                                        )
+                                                    *next, quote_token, period,
+                                                ),
+                                        ),
                                     );
                             }
                         } else {
@@ -199,7 +199,7 @@ pub mod PriceFetcher {
         }
 
         fn get_prices_in_oracle_tokens(
-            self: @ContractState, base_tokens: Span<ContractAddress>, period: u64, min_token: u128
+            self: @ContractState, base_tokens: Span<ContractAddress>, period: u64, min_token: u128,
         ) -> (ContractAddress, Span<PriceResult>) {
             let oracle_token = self.oracle.read().get_oracle_token();
             (oracle_token, self.get_prices(oracle_token, base_tokens, period, min_token))
@@ -218,7 +218,7 @@ pub mod PriceFetcher {
             let mut result: Array<CandlestickPoint> = array![];
 
             let (query_interval_seconds, resolution) = get_query_interval(
-                interval_seconds, max_resolution
+                interval_seconds, max_resolution,
             );
             let query_num_intervals = num_intervals * resolution.into();
 
@@ -243,7 +243,7 @@ pub mod PriceFetcher {
                                 available_num_intervals
                                     .try_into()
                                     .expect('Too many intervals queried'),
-                                query_interval_seconds
+                                query_interval_seconds,
                             );
 
                         let mut index: u32 = 0;
@@ -265,8 +265,8 @@ pub mod PriceFetcher {
                                                 min_tick: min(tick, last.min_tick),
                                                 max_tick: max(tick, last.max_tick),
                                                 first_tick: last.first_tick,
-                                                last_tick: tick
-                                            }
+                                                last_tick: tick,
+                                            },
                                         );
                                 } else {
                                     aggs.append(last);
@@ -277,8 +277,8 @@ pub mod PriceFetcher {
                                                 min_tick: tick,
                                                 max_tick: tick,
                                                 first_tick: last.last_tick,
-                                                last_tick: tick
-                                            }
+                                                last_tick: tick,
+                                            },
                                         );
                                 }
                             } else {
@@ -289,8 +289,8 @@ pub mod PriceFetcher {
                                             min_tick: tick,
                                             max_tick: tick,
                                             first_tick: tick,
-                                            last_tick: tick
-                                        }
+                                            last_tick: tick,
+                                        },
                                     );
                             }
 
@@ -310,8 +310,8 @@ pub mod PriceFetcher {
                                         low: tick_to_price_x128(p.min_tick),
                                         high: tick_to_price_x128(p.max_tick),
                                         open: tick_to_price_x128(p.first_tick),
-                                        close: tick_to_price_x128(p.last_tick)
-                                    }
+                                        close: tick_to_price_x128(p.last_tick),
+                                    },
                                 );
                         }
                     }
@@ -327,7 +327,7 @@ pub mod PriceFetcher {
             quote_token: ContractAddress,
             interval_seconds: u32,
             num_intervals: u32,
-            max_resolution: u8
+            max_resolution: u8,
         ) -> (u64, Span<CandlestickPoint>) {
             let block_timestamp = get_block_timestamp();
             (
@@ -339,8 +339,8 @@ pub mod PriceFetcher {
                         interval_seconds,
                         num_intervals,
                         max_resolution,
-                        block_timestamp
-                    )
+                        block_timestamp,
+                    ),
             )
         }
     }

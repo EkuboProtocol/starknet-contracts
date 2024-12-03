@@ -215,7 +215,7 @@ fn exp_inner(x: u128) -> u256 {
     if (x != 0) {
         ratio =
             u256 {
-                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff
+                high: 0xffffffffffffffffffffffffffffffff, low: 0xffffffffffffffffffffffffffffffff,
             }
             / ratio;
     }

@@ -35,7 +35,7 @@ pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
         self: IMockERC20Dispatcher,
         sender: ContractAddress,
         recipient: ContractAddress,
-        amount: u256
+        amount: u256,
     ) -> bool {
         IERC20Dispatcher { contract_address: self.contract_address }
             .transferFrom(sender, recipient, amount)
@@ -52,7 +52,7 @@ pub mod MockERC20 {
     use starknet::storage::{Map};
     use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
-    use super::{IMockERC20, IERC20StableMetadata};
+    use super::{IERC20StableMetadata, IMockERC20};
 
     #[storage]
     struct Storage {
@@ -74,7 +74,7 @@ pub mod MockERC20 {
     pub struct Approval {
         pub owner: ContractAddress,
         pub spender: ContractAddress,
-        pub value: u256
+        pub value: u256,
     }
 
 
@@ -91,7 +91,7 @@ pub mod MockERC20 {
         owner: ContractAddress,
         starting_balance: u128,
         name: felt252,
-        symbol: felt252
+        symbol: felt252,
     ) {
         self.name.write(name);
         self.symbol.write(symbol);
@@ -100,8 +100,8 @@ pub mod MockERC20 {
         self
             .emit(
                 Transfer {
-                    from: contract_address_const::<0>(), to: owner, amount: starting_balance.into()
-                }
+                    from: contract_address_const::<0>(), to: owner, amount: starting_balance.into(),
+                },
             );
     }
 
@@ -134,7 +134,7 @@ pub mod MockERC20 {
             ref self: ContractState,
             sender: ContractAddress,
             recipient: ContractAddress,
-            amount: u256
+            amount: u256,
         ) -> bool {
             assert(amount.high.is_zero(), 'AMOUNT_OVERFLOW');
             let key = (sender, get_caller_address());
@@ -150,7 +150,7 @@ pub mod MockERC20 {
         }
 
         fn allowance(
-            self: @ContractState, owner: ContractAddress, spender: ContractAddress
+            self: @ContractState, owner: ContractAddress, spender: ContractAddress,
         ) -> u256 {
             self.allowances.read((owner, spender)).into()
         }

@@ -1,7 +1,7 @@
 use core::array::{Array, ArrayTrait};
 use core::num::traits::{Zero};
 use core::option::{OptionTrait};
-use core::traits::{TryInto, Into};
+use core::traits::{Into, TryInto};
 use ekubo::math::exp2::{exp2};
 
 // Convert a u64 number to a decimal string in a felt252
