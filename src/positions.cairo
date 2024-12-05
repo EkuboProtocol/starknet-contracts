@@ -29,7 +29,7 @@ pub mod Positions {
     };
     use ekubo::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-    use ekubo::limit_orders::{
+    use ekubo::extensions::limit_orders::{
         LimitOrders::{DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING},
     };
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};

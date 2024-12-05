@@ -4,7 +4,7 @@ use core::num::traits::{Zero};
 use ekubo::interfaces::core::{ICoreDispatcherTrait};
 use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
 use ekubo::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
-use ekubo::mock_erc20::{IMockERC20DispatcherTrait};
+use ekubo::tests::mock_erc20::{IMockERC20DispatcherTrait};
 use ekubo::router::{Depth, IRouterDispatcher, IRouterDispatcherTrait, RouteNode, Swap, TokenAmount};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::types::bounds::{Bounds};

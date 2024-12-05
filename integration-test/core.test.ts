@@ -496,7 +496,8 @@ describe("core", () => {
                       .parseEvents(orderPlacementReceipt)
                       .map(
                         ({
-                          "ekubo::twamm::TWAMM::OrderUpdated": OrderUpdated,
+                          "ekubo::extensions::twamm::TWAMM::OrderUpdated":
+                            OrderUpdated,
                         }) => OrderUpdated
                       )
                       .filter((x) => !!x)
@@ -536,7 +537,7 @@ describe("core", () => {
                         const VirtualOrdersExecuted = findMap(
                           twamm.parseEvents(executeVirtualOrdersReceipt),
                           ({
-                            "ekubo::twamm::TWAMM::VirtualOrdersExecuted":
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
                           }) => VirtualOrdersExecuted
                         );
@@ -615,7 +616,7 @@ describe("core", () => {
                         const VirtualOrdersExecuted = findMap(
                           twamm.parseEvents(swap_receipt),
                           ({
-                            "ekubo::twamm::TWAMM::VirtualOrdersExecuted":
+                            "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
                           }) => VirtualOrdersExecuted
                         );

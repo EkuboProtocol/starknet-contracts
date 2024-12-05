@@ -64,7 +64,7 @@ pub mod PriceFetcher {
     use core::num::traits::{Zero};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::oracle::{
+    use ekubo::extensions::oracle::{
         IOracleDispatcher, IOracleDispatcherTrait, Oracle::{MAX_TICK_SPACING, tick_to_price_x128},
     };
     use ekubo::types::keys::{PoolKey};

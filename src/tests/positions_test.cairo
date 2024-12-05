@@ -17,7 +17,9 @@ use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatc
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
 
-use ekubo::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
+use ekubo::tests::mock_erc20::{
+    IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
+};
 use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{

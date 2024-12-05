@@ -1,7 +1,4 @@
 pub mod core;
-pub mod limit_orders;
-pub mod mock_erc20;
-pub mod oracle;
 pub mod owned_nft;
 pub mod positions;
 pub mod price_fetcher;
@@ -10,7 +7,12 @@ pub mod router;
 #[cfg(test)]
 pub(crate) mod tests;
 pub mod token_registry;
-pub mod twamm;
+
+pub mod extensions {
+    pub mod twamm;
+    pub mod oracle;
+    pub mod limit_orders;
+}
 
 pub mod components {
     pub mod clear;

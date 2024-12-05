@@ -12,8 +12,8 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
-use ekubo::limit_orders::{LimitOrders};
-use ekubo::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
+use ekubo::extensions::limit_orders::{LimitOrders};
+use ekubo::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
 use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
@@ -23,7 +23,7 @@ use ekubo::tests::mocks::locker::{
 use ekubo::tests::mocks::mock_extension::{IMockExtensionDispatcher, MockExtension};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
 use ekubo::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
-use ekubo::twamm::{TWAMM};
+use ekubo::extensions::twamm::{TWAMM};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::delta::{Delta};

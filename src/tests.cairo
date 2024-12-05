@@ -2,6 +2,7 @@ pub(crate) mod clear_test;
 pub(crate) mod core_test;
 pub(crate) mod extensions_test;
 pub(crate) mod helper;
+pub(crate) mod mock_erc20;
 pub(crate) mod mock_erc20_test;
 pub(crate) mod owned_nft_test;
 pub(crate) mod positions_test;

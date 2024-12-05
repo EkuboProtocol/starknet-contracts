@@ -8,7 +8,7 @@ use ekubo::math::ticks::{
     constants as tick_constants, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
     tick_to_sqrt_ratio,
 };
-use ekubo::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
+use ekubo::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner, swap,

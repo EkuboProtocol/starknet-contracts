@@ -3,6 +3,9 @@ use ekubo::interfaces::erc20::{IERC20Dispatcher};
 #[starknet::interface]
 pub trait ITokenRegistry<ContractState> {
     fn register_token(ref self: ContractState, token: IERC20Dispatcher);
+    fn get_token_metadata(
+        self: @ContractState, token: IERC20Dispatcher,
+    ) -> (ByteArray, ByteArray, u8, u256);
 }
 
 
@@ -107,20 +110,26 @@ pub mod TokenRegistry {
 
     #[abi(embed_v0)]
     impl TokenRegistryImpl of ITokenRegistry<ContractState> {
-        fn register_token(ref self: ContractState, token: IERC20Dispatcher) {
+        fn get_token_metadata(
+            self: @ContractState, token: IERC20Dispatcher,
+        ) -> (ByteArray, ByteArray, u8, u256) {
             let metadata = IERC20MetadataDispatcher { contract_address: token.contract_address };
 
+            (
+                get_string_metadata(token.contract_address, selector!("name")),
+                get_string_metadata(token.contract_address, selector!("symbol")),
+                metadata.decimals(),
+                metadata.totalSupply(),
+            )
+        }
+
+        fn register_token(ref self: ContractState, token: IERC20Dispatcher) {
             let balance: u128 = token
                 .balanceOf(get_contract_address())
                 .try_into()
                 .expect('Balance exceeds u128');
 
-            let (name, symbol, decimals, total_supply) = (
-                get_string_metadata(token.contract_address, selector!("name")),
-                get_string_metadata(token.contract_address, selector!("symbol")),
-                metadata.decimals(),
-                metadata.totalSupply(),
-            );
+            let (name, symbol, decimals, total_supply) = self.get_token_metadata(token);
 
             assert(decimals < 78, 'Decimals too large');
             assert(total_supply.high.is_zero(), 'Total supply exceeds u128');
