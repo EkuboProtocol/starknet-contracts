@@ -34,16 +34,18 @@ jobs:
 
       - name: Prepare files to mirror
         run: |
-          rsync -av --delete --prune-empty-dirs \
+          rsync -av --delete --delete-excluded --prune-empty-dirs \
             --include='.gitignore' \
             --include='.tool-versions' \
             --include='README.md' \
             --include='LICENSE' \
             --include='Scarb.lock' \
             --include='Scarb.toml' \
-            --include='src/***' \
-            --exclude='src/tests/***' \
+            --include='src/' \
+            --exclude='src/tests' \
+            --exclude='src/tests/**' \
             --exclude='src/tests.cairo' \
+            --include='src/**' \
             --exclude='*' \
             . mirror_repo/
 
