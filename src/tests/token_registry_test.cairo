@@ -1,7 +1,7 @@
 use core::option::{OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
-use ekubo::tests::mock_erc20::{MockERC20IERC20ImplTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
+use ekubo::tests::mock_erc20::{MockERC20IERC20ImplTrait};
 use ekubo::token_registry::{
     ITokenRegistryDispatcherTrait,
     TokenRegistry::{FeltIntoByteArray, Registration, get_string_metadata, ten_pow},

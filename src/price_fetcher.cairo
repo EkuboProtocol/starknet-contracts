@@ -62,11 +62,11 @@ pub trait IPriceFetcher<TContractState> {
 pub mod PriceFetcher {
     use core::cmp::{max, min};
     use core::num::traits::{Zero};
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::extensions::oracle::{
         IOracleDispatcher, IOracleDispatcherTrait, Oracle::{MAX_TICK_SPACING, tick_to_price_x128},
     };
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+    use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::types::keys::{PoolKey};
 
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};

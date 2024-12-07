@@ -9,9 +9,9 @@ pub(crate) mod tests;
 pub mod token_registry;
 
 pub mod extensions {
-    pub mod twamm;
-    pub mod oracle;
     pub mod limit_orders;
+    pub mod oracle;
+    pub mod twamm;
 }
 
 pub mod components {

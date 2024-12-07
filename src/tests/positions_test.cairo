@@ -16,15 +16,15 @@ use ekubo::interfaces::positions::{
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
-
-use ekubo::tests::mock_erc20::{
-    IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
-};
 use ekubo::positions::{Positions};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
     SetupPoolResult, default_owner, swap,
+};
+
+use ekubo::tests::mock_erc20::{
+    IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
 };
 use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::{i129};
@@ -254,7 +254,7 @@ fn test_create_limit_order_token0() {
     positions.set_limit_orders(limit_orders.contract_address);
 
     setup.token0.increase_balance(positions.contract_address, 100);
-    let (id, liquidity, amount_bought) = positions
+    let (id, liquidity) = positions
         .mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
@@ -266,7 +266,6 @@ fn test_create_limit_order_token0() {
 
     assert_eq!(id, 1);
     assert_eq!(liquidity, 1562550);
-    assert_eq!(amount_bought, 0);
 
     let (amount0, amount1) = positions
         .close_limit_order(
@@ -300,7 +299,7 @@ fn test_create_limit_order_token1() {
     positions.set_limit_orders(limit_orders.contract_address);
 
     setup.token1.increase_balance(positions.contract_address, 100);
-    let (id, liquidity, amount_bought) = positions
+    let (id, liquidity) = positions
         .mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
@@ -312,7 +311,6 @@ fn test_create_limit_order_token1() {
 
     assert_eq!(id, 1);
     assert_eq!(liquidity, 1562350);
-    assert_eq!(amount_bought, 0);
 
     let (amount0, amount1) = positions
         .close_limit_order(
@@ -357,8 +355,8 @@ fn test_create_limit_order_token0_then_token1() {
         );
 
     setup.token1.increase_balance(positions.contract_address, 50);
-    let (id, liquidity, amount_bought) = positions
-        .mint_and_place_limit_order(
+    let (amount_sold, amount_bought, mint_result) = positions
+        .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
                 token1: setup.token1.contract_address,
@@ -367,22 +365,9 @@ fn test_create_limit_order_token0_then_token1() {
             amount: 50,
         );
 
-    assert_eq!(id, 2);
-    assert_eq!(liquidity, 0);
+    assert_eq!(amount_sold, 50);
     assert_eq!(amount_bought, 49);
-
-    let (amount0, amount1) = positions
-        .close_limit_order(
-            id,
-            LimitOrderKey {
-                token0: setup.token0.contract_address,
-                token1: setup.token1.contract_address,
-                tick: i129 { mag: 128, sign: false },
-            },
-        );
-
-    assert_eq!(amount0, 49);
-    assert_eq!(amount1, 0);
+    assert_eq!(mint_result, Option::None);
 }
 
 #[test]
@@ -414,8 +399,8 @@ fn test_create_limit_order_token1_then_token0() {
         );
 
     setup.token0.increase_balance(positions.contract_address, 50);
-    let (id, liquidity, amount_bought) = positions
-        .mint_and_place_limit_order(
+    let (amount_sold, amount_bought, mint_result) = positions
+        .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
                 token1: setup.token1.contract_address,
@@ -424,22 +409,9 @@ fn test_create_limit_order_token1_then_token0() {
             amount: 50,
         );
 
-    assert_eq!(id, 2);
-    assert_eq!(liquidity, 0);
+    assert_eq!(amount_sold, 50);
     assert_eq!(amount_bought, 49);
-
-    let (amount0, amount1) = positions
-        .close_limit_order(
-            id,
-            LimitOrderKey {
-                token0: setup.token0.contract_address,
-                token1: setup.token1.contract_address,
-                tick: i129 { mag: 0, sign: false },
-            },
-        );
-
-    assert_eq!(amount0, 0);
-    assert_eq!(amount1, 49);
+    assert_eq!(mint_result, Option::None);
 }
 
 #[test]
@@ -471,8 +443,8 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
         );
 
     setup.token1.increase_balance(positions.contract_address, 150);
-    let (id, liquidity, amount_bought) = positions
-        .mint_and_place_limit_order(
+    let (amount_sold, amount_bought, mint_result) = positions
+        .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
                 token1: setup.token1.contract_address,
@@ -481,8 +453,10 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
             amount: 150,
         );
 
+    let (id, liquidity) = mint_result.expect('mint did not happen');
     assert_eq!(id, 2);
     assert_eq!(liquidity, 765551);
+    assert_eq!(amount_sold, 100);
     assert_eq!(amount_bought, 99);
 
     assert_eq!(
@@ -501,17 +475,12 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
                     .span(),
             ),
         array![
-            (
-                GetLimitOrderInfoResult {
-                    state: LimitOrderState {
-                        initialized_ticks_crossed_snapshot: 2, liquidity: 765551,
-                    },
-                    executed: false,
-                    amount0: 0,
-                    amount1: 48,
-                },
-                99,
-            ),
+            GetLimitOrderInfoResult {
+                state: LimitOrderState { initialized_ticks_crossed_snapshot: 2, liquidity: 765551 },
+                executed: false,
+                amount0: 0,
+                amount1: 48,
+            },
         ]
             .span(),
     );
@@ -559,8 +528,8 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
         );
 
     setup.token0.increase_balance(positions.contract_address, 150);
-    let (id, liquidity, amount_bought) = positions
-        .mint_and_place_limit_order(
+    let (amount_sold, amount_bought, mint_result) = positions
+        .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
                 token0: setup.token0.contract_address,
                 token1: setup.token1.contract_address,
@@ -569,8 +538,10 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
             amount: 150,
         );
 
+    let (id, liquidity) = mint_result.expect('mint did not happen');
     assert_eq!(id, 2);
     assert_eq!(liquidity, 781275);
+    assert_eq!(amount_sold, 100);
     assert_eq!(amount_bought, 99);
 
     assert_eq!(
@@ -589,17 +560,12 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
                     .span(),
             ),
         array![
-            (
-                GetLimitOrderInfoResult {
-                    state: LimitOrderState {
-                        initialized_ticks_crossed_snapshot: 2, liquidity: 781275,
-                    },
-                    executed: false,
-                    amount0: 49,
-                    amount1: 0,
-                },
-                99,
-            ),
+            GetLimitOrderInfoResult {
+                state: LimitOrderState { initialized_ticks_crossed_snapshot: 2, liquidity: 781275 },
+                executed: false,
+                amount0: 49,
+                amount1: 0,
+            },
         ]
             .span(),
     );
