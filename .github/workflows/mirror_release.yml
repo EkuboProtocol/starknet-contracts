@@ -34,7 +34,7 @@ jobs:
 
       - name: Prepare files to mirror
         run: |
-          rsync -av --delete --delete-excluded --prune-empty-dirs \
+          rsync -av --delete --prune-empty-dirs \
             --include='.gitignore' \
             --include='.tool-versions' \
             --include='README.md' \
