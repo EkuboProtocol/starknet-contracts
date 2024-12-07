@@ -456,7 +456,7 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
     let (id, liquidity) = mint_result.expect('mint did not happen');
     assert_eq!(id, 2);
     assert_eq!(liquidity, 765551);
-    assert_eq!(amount_sold, 100);
+    assert_eq!(amount_sold, 101);
     assert_eq!(amount_bought, 99);
 
     assert_eq!(
@@ -495,7 +495,7 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
             },
         );
 
-    assert_eq!(amount0, 99);
+    assert_eq!(amount0, 0);
     assert_eq!(amount1, 48);
 }
 
@@ -581,7 +581,7 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
         );
 
     assert_eq!(amount0, 49);
-    assert_eq!(amount1, 99);
+    assert_eq!(amount1, 0);
 }
 
 #[test]

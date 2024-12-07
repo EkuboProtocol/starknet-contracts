@@ -1016,7 +1016,7 @@ pub mod Positions {
                 .swap_to_limit_order_price(order_key, amount, recipient);
 
             let mint_result: Option<(u64, u128)> = if amount_sold != amount {
-                Option::Some(self.mint_and_place_limit_order(order_key, amount))
+                Option::Some(self.mint_and_place_limit_order(order_key, amount - amount_sold))
             } else {
                 Option::None
             };
