@@ -72,13 +72,10 @@ pub enum ForwardCallbackData {
     CloseOrder: CloseOrderForwardCallbackData,
 }
 
-#[derive(Drop, Copy, Serde)]
-pub enum ForwardCallbackResult {
-    // Returns the amount of {token0,token1} that must be paid to cover the order
-    PlaceOrder: u128,
-    // The amount of token0 and token1 received for closing the order
-    CloseOrder: (u128, u128),
-}
+// Returns the amount of {token0,token1} that must be paid to cover the order
+pub type PlaceOrderForwardCallbackResult = u128;
+// The amount of token0 and token1 received for closing the order
+pub type CloseOrderForwardCallbackResult = (u128, u128);
 
 #[starknet::interface]
 pub trait ILimitOrders<TContractState> {

@@ -20,11 +20,12 @@ pub mod Positions {
     };
     use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use ekubo::interfaces::extensions::limit_orders::{
-        CloseOrderForwardCallbackData, ForwardCallbackData as LimitOrderForwardCallbackData,
-        ForwardCallbackResult as LimitOrderForwardCallbackResult,
+        CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult,
+        ForwardCallbackData as LimitOrderForwardCallbackData,
         GetOrderInfoRequest as GetLimitOrderInfoRequest,
         GetOrderInfoResult as GetLimitOrderInfoResult, ILimitOrdersDispatcher,
         ILimitOrdersDispatcherTrait, OrderKey as LimitOrderKey, PlaceOrderForwardCallbackData,
+        PlaceOrderForwardCallbackResult,
     };
     use ekubo::interfaces::extensions::twamm::{
         CollectProceedsCallbackData, ForwardCallbackData, ITWAMMDispatcher, ITWAMMDispatcherTrait,
@@ -181,7 +182,8 @@ pub mod Positions {
     struct PlaceOrderCallbackData {
         salt: felt252,
         order_key: LimitOrderKey,
-        amount: u128,
+        liquidity: u128,
+        sell_token: ContractAddress,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -424,46 +426,23 @@ pub mod Positions {
                 LockCallbackData::PlaceOrder(data) => {
                     let limit_orders = self.limit_orders.read();
 
-                    let sell_token = if (data.order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
-                        .is_zero() {
-                        data.order_key.token0
-                    } else {
-                        data.order_key.token1
-                    };
-
-                    let bounds = Bounds {
-                        lower: data.order_key.tick,
-                        upper: data.order_key.tick
-                            + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
-                    };
-                    let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
-                    let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
-
-                    let liquidity = if sell_token == data.order_key.token0 {
-                        max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, data.amount)
-                    } else {
-                        max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, data.amount)
-                    };
-
-                    let result: LimitOrderForwardCallbackResult = forward_lock(
+                    let amount: PlaceOrderForwardCallbackResult = forward_lock(
                         core,
                         IForwardeeDispatcher { contract_address: limit_orders.contract_address },
                         @LimitOrderForwardCallbackData::PlaceOrder(
                             PlaceOrderForwardCallbackData {
-                                salt: data.salt, order_key: data.order_key, liquidity,
+                                salt: data.salt,
+                                order_key: data.order_key,
+                                liquidity: data.liquidity,
                             },
                         ),
                     );
 
-                    if let LimitOrderForwardCallbackResult::PlaceOrder(amount) = result {
-                        let token = IERC20Dispatcher { contract_address: sell_token };
-                        token.approve(core.contract_address, amount.into());
-                        core.pay(sell_token);
-                    } else {
-                        panic!("Unexpected return data from forward call");
-                    }
+                    let token = IERC20Dispatcher { contract_address: data.sell_token };
+                    token.approve(core.contract_address, amount.into());
+                    core.pay(data.sell_token);
 
-                    serialize(@liquidity).span()
+                    array![].span()
                 },
                 LockCallbackData::CloseOrder(data) => {
                     let limit_orders = self.limit_orders.read();
@@ -485,7 +464,7 @@ pub mod Positions {
                         );
 
                     if order_info.state.liquidity.is_non_zero() {
-                        let result: LimitOrderForwardCallbackResult = forward_lock(
+                        let (amount0, amount1): CloseOrderForwardCallbackResult = forward_lock(
                             core,
                             IForwardeeDispatcher {
                                 contract_address: limit_orders.contract_address,
@@ -497,16 +476,11 @@ pub mod Positions {
                             ),
                         );
 
-                        if let LimitOrderForwardCallbackResult::CloseOrder((amount0, amount1)) =
-                            result {
-                            if amount0 > 0 {
-                                core.withdraw(data.order_key.token0, data.recipient, amount0);
-                            }
-                            if amount1 > 0 {
-                                core.withdraw(data.order_key.token1, data.recipient, amount1);
-                            }
-                        } else {
-                            panic!("Unexpected return data from forward call");
+                        if amount0 > 0 {
+                            core.withdraw(data.order_key.token0, data.recipient, amount0);
+                        }
+                        if amount1 > 0 {
+                            core.withdraw(data.order_key.token1, data.recipient, amount1);
                         }
                     }
 
@@ -1039,20 +1013,49 @@ pub mod Positions {
         ) -> u128 {
             self.check_authorization(id);
 
-            call_core_with_callback(
+            let sell_token = if (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
+                order_key.token0
+            } else {
+                order_key.token1
+            };
+
+            let bounds = Bounds {
+                lower: order_key.tick,
+                upper: order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+            };
+            let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
+            let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
+
+            let liquidity = if sell_token == order_key.token0 {
+                max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
+            } else {
+                max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
+            };
+
+            call_core_with_callback::<
+                LockCallbackData, (),
+            >(
                 self.core.read(),
                 @LockCallbackData::PlaceOrder(
-                    PlaceOrderCallbackData { salt: id.into(), order_key, amount },
+                    PlaceOrderCallbackData { salt: id.into(), order_key, liquidity, sell_token },
                 ),
-            )
+            );
+
+            liquidity
+        }
+
+        fn maybe_mint_and_place_limit_order(
+            ref self: ContractState, order_key: LimitOrderKey, amount: u128,
+        ) -> Option<(u64, u128)> {
+            let id = self.mint_v2(Zero::zero());
+            let liquidity = self.place_limit_order(id, order_key, amount);
+            Option::Some((id, liquidity))
         }
 
         fn mint_and_place_limit_order(
             ref self: ContractState, order_key: LimitOrderKey, amount: u128,
         ) -> (u64, u128) {
-            let id = self.mint_v2(Zero::zero());
-            let liquidity = self.place_limit_order(id, order_key, amount);
-            (id, liquidity)
+            self.maybe_mint_and_place_limit_order(order_key, amount).expect('Insufficient amount')
         }
 
         fn close_limit_order(

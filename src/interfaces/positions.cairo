@@ -249,6 +249,13 @@ pub trait IPositions<TContractState> {
         ref self: TContractState, id: u64, order_key: LimitOrderKey, amount: u128,
     ) -> u128;
 
+    // Creates a new position NFT and creates a limit order associated with the position, only if
+    // the amount is sufficient for a non-zero amount of liquidity.
+    // Returns the ID and the amount of liquidity associated with the limit order.
+    fn maybe_mint_and_place_limit_order(
+        ref self: TContractState, order_key: LimitOrderKey, amount: u128,
+    ) -> Option<(u64, u128)>;
+
     // Creates a new position NFT and creates a limit order associated with the position. Returns
     // the ID and the amount of liquidity associated with the limit order.
     fn mint_and_place_limit_order(

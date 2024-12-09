@@ -1,173 +1,83 @@
-use core::traits::{Into, TryInto};
-use ekubo::types::i129::{i129, i129Trait};
-use starknet::{ContractAddress, storage_access::{StorePacking}};
-
-#[derive(Drop, Copy, Serde, Hash, PartialEq, Debug)]
-pub struct OrderKey {
-    // The first token sorted by address
-    pub token0: ContractAddress,
-    // The second token sorted by address
-    pub token1: ContractAddress,
-    // The price at which the token should be bought/sold. Must be a multiple of tick spacing.
-    // If the specified tick is evenly divisible by 2 * tick_spacing, it implies that the order is
-    // selling token0. Otherwise, it is selling token1.
-    pub tick: i129,
-}
-
-// State of a particular order, stored separately per (owner, salt, order key)
-#[derive(Drop, Copy, Serde, PartialEq, Debug)]
-pub(crate) struct OrderState {
-    // Snapshot of the pool's initialized_ticks_crossed when the order was created
-    pub initialized_ticks_crossed_snapshot: u64,
-    // How much liquidity was deposited for this order
-    pub liquidity: u128,
-}
-
-impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
-    fn pack(value: OrderState) -> felt252 {
-        u256 { low: value.liquidity, high: value.initialized_ticks_crossed_snapshot.into() }
-            .try_into()
-            .unwrap()
-    }
-    fn unpack(value: felt252) -> OrderState {
-        let x: u256 = value.into();
-
-        OrderState {
-            initialized_ticks_crossed_snapshot: x.high.try_into().unwrap(), liquidity: x.low,
-        }
-    }
-}
-
-// The state of the pool as it was last seen
-#[derive(Drop, Copy, Serde, PartialEq)]
-pub(crate) struct PoolState {
-    // The number of times this pool has crossed an initialized tick plus one
-    pub initialized_ticks_crossed: u64,
-    // The last tick that was seen for the pool
-    pub last_tick: i129,
-}
-
-impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
-    fn pack(value: PoolState) -> felt252 {
-        u256 {
-            low: value.last_tick.mag,
-            high: if value.last_tick.is_negative() {
-                value.initialized_ticks_crossed.into() + 0x10000000000000000
-            } else {
-                value.initialized_ticks_crossed.into()
-            },
-        }
-            .try_into()
-            .unwrap()
-    }
-    fn unpack(value: felt252) -> PoolState {
-        let x: u256 = value.into();
-
-        if (x.high >= 0x10000000000000000) {
-            PoolState {
-                last_tick: i129 { mag: x.low, sign: true },
-                initialized_ticks_crossed: (x.high - 0x10000000000000000).try_into().unwrap(),
-            }
-        } else {
-            PoolState {
-                last_tick: i129 { mag: x.low, sign: false },
-                initialized_ticks_crossed: x.high.try_into().unwrap(),
-            }
-        }
-    }
-}
-
-#[derive(Drop, Copy, Serde, PartialEq, Debug)]
-pub struct GetOrderInfoRequest {
-    pub owner: ContractAddress,
-    pub salt: felt252,
-    pub order_key: OrderKey,
-}
-
-#[derive(Drop, Copy, Serde, PartialEq, Debug)]
-pub struct GetOrderInfoResult {
-    pub(crate) state: OrderState,
-    pub executed: bool,
-    pub amount0: u128,
-    pub amount1: u128,
-}
-
-// One of the enum options that can be passed through to `Core#forward` to create a new limit order
-// with a given key and liquidity
-#[derive(Drop, Copy, Serde)]
-pub struct PlaceOrderForwardCallbackData {
-    pub salt: felt252,
-    pub order_key: OrderKey,
-    pub liquidity: u128,
-}
-
-// One of the enum options that can be passed through to `Core#forward` to close an order with the
-// given key
-#[derive(Drop, Copy, Serde)]
-pub struct CloseOrderForwardCallbackData {
-    pub salt: felt252,
-    pub order_key: OrderKey,
-}
-
-// Pass to `Core#forward` to interact with limit orders placed via this extension
-#[derive(Drop, Copy, Serde)]
-pub enum ForwardCallbackData {
-    PlaceOrder: PlaceOrderForwardCallbackData,
-    CloseOrder: CloseOrderForwardCallbackData,
-}
-
-#[derive(Drop, Copy, Serde)]
-pub enum ForwardCallbackResult {
-    // Returns the amount of {token0,token1} that must be paid to cover the order
-    PlaceOrder: u128,
-    // The amount of token0 and token1 received for closing the order
-    CloseOrder: (u128, u128),
-}
-
-#[starknet::interface]
-pub trait ILimitOrders<TContractState> {
-    // Return information on a single order
-    fn get_order_info(self: @TContractState, request: GetOrderInfoRequest) -> GetOrderInfoResult;
-
-    // Return information on each of the given orders
-    fn get_order_infos(
-        self: @TContractState, requests: Span<GetOrderInfoRequest>,
-    ) -> Span<GetOrderInfoResult>;
-}
-
 #[starknet::contract]
 pub mod LimitOrders {
     use core::array::{ArrayTrait};
     use core::num::traits::{Zero};
-    use core::traits::{Into};
+    use core::traits::{Into, TryInto};
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::owned::{Owned as owned_component};
     use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
         UpdatePositionParameters,
     };
+    use ekubo::interfaces::extensions::limit_orders::{
+        CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult, ForwardCallbackData,
+        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
+        PlaceOrderForwardCallbackData, PlaceOrderForwardCallbackResult, PoolState,
+    };
     use ekubo::math::delta::{amount0_delta, amount1_delta};
     use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
-
     use ekubo::math::ticks::{tick_to_sqrt_ratio};
-
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};
     use ekubo::types::delta::{Delta};
+    use ekubo::types::i129::{i129, i129Trait};
     use ekubo::types::keys::{PoolKey, PositionKey};
     use ekubo::types::keys::{SavedBalanceKey};
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
-    use starknet::{get_contract_address};
-    use super::{
-        CloseOrderForwardCallbackData, ContractAddress, ForwardCallbackData, ForwardCallbackResult,
-        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
-        PlaceOrderForwardCallbackData, PoolState, i129,
-    };
+    use starknet::{ContractAddress, get_contract_address, storage_access::{StorePacking}};
+
+    impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
+        fn pack(value: OrderState) -> felt252 {
+            u256 { low: value.liquidity, high: value.initialized_ticks_crossed_snapshot.into() }
+                .try_into()
+                .unwrap()
+        }
+        fn unpack(value: felt252) -> OrderState {
+            let x: u256 = value.into();
+
+            OrderState {
+                initialized_ticks_crossed_snapshot: x.high.try_into().unwrap(), liquidity: x.low,
+            }
+        }
+    }
+
+
+    impl PoolStateStorePacking of StorePacking<PoolState, felt252> {
+        fn pack(value: PoolState) -> felt252 {
+            u256 {
+                low: value.last_tick.mag,
+                high: if value.last_tick.is_negative() {
+                    value.initialized_ticks_crossed.into() + 0x10000000000000000
+                } else {
+                    value.initialized_ticks_crossed.into()
+                },
+            }
+                .try_into()
+                .unwrap()
+        }
+        fn unpack(value: felt252) -> PoolState {
+            let x: u256 = value.into();
+
+            if (x.high >= 0x10000000000000000) {
+                PoolState {
+                    last_tick: i129 { mag: x.low, sign: true },
+                    initialized_ticks_crossed: (x.high - 0x10000000000000000).try_into().unwrap(),
+                }
+            } else {
+                PoolState {
+                    last_tick: i129 { mag: x.low, sign: false },
+                    initialized_ticks_crossed: x.high.try_into().unwrap(),
+                }
+            }
+        }
+    }
+
 
     pub const LIMIT_ORDER_TICK_SPACING: u128 = 128;
     pub const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 256;
@@ -536,8 +446,7 @@ pub mod LimitOrders {
         ) -> Span<felt252> {
             let core = self.core.read();
 
-            let result: ForwardCallbackResult =
-                match consume_callback_data::<ForwardCallbackData>(core, data) {
+            match consume_callback_data::<ForwardCallbackData>(core, data) {
                 ForwardCallbackData::PlaceOrder(params) => {
                     let PlaceOrderForwardCallbackData { salt, order_key, liquidity } = params;
 
@@ -603,7 +512,9 @@ pub mod LimitOrders {
                             },
                         );
 
-                    ForwardCallbackResult::PlaceOrder(amount)
+                    let result: PlaceOrderForwardCallbackResult = amount;
+
+                    serialize(@result).span()
                 },
                 ForwardCallbackData::CloseOrder(params) => {
                     let CloseOrderForwardCallbackData { salt, order_key } = params;
@@ -659,13 +570,13 @@ pub mod LimitOrders {
                             },
                         );
 
-                    ForwardCallbackResult::CloseOrder((order_info.amount0, order_info.amount1))
-                },
-            };
+                    let result: CloseOrderForwardCallbackResult = (
+                        order_info.amount0, order_info.amount1,
+                    );
 
-            let mut result_data = array![];
-            Serde::serialize(@result, ref result_data);
-            result_data.span()
+                    serialize(@result).span()
+                },
+            }
         }
     }
 
