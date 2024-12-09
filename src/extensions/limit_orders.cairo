@@ -285,47 +285,58 @@ pub mod LimitOrders {
 
             let order = self.orders.read((request.owner, request.salt, request.order_key));
 
-            // the order is fully executed, just withdraw the saved balance
-            if (initialized_ticks_crossed_at_order_tick > order
-                .initialized_ticks_crossed_snapshot) {
-                let sqrt_ratio_a = tick_to_sqrt_ratio(request.order_key.tick);
-                let sqrt_ratio_b = tick_to_sqrt_ratio(
-                    request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
-                );
-
-                let (amount0, amount1) = if is_selling_token1 {
-                    (
-                        amount0_delta(
-                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false,
-                        ),
-                        0,
-                    )
-                } else {
-                    (
-                        0,
-                        amount1_delta(
-                            sqrt_ratio_a, sqrt_ratio_b, liquidity: order.liquidity, round_up: false,
-                        ),
-                    )
-                };
-
-                GetOrderInfoResult { state: order, executed: true, amount0, amount1 }
+            if order.liquidity.is_zero() {
+                GetOrderInfoResult { state: order, executed: false, amount0: 0, amount1: 0 }
             } else {
-                let delta = liquidity_delta_to_amount_delta(
-                    sqrt_ratio: price.sqrt_ratio,
-                    liquidity_delta: i129 { mag: order.liquidity, sign: true },
-                    sqrt_ratio_lower: tick_to_sqrt_ratio(request.order_key.tick),
-                    sqrt_ratio_upper: tick_to_sqrt_ratio(
+                // the order is fully executed, just withdraw the saved balance
+                if (initialized_ticks_crossed_at_order_tick > order
+                    .initialized_ticks_crossed_snapshot) {
+                    let sqrt_ratio_a = tick_to_sqrt_ratio(request.order_key.tick);
+                    let sqrt_ratio_b = tick_to_sqrt_ratio(
                         request.order_key.tick
                             + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
-                    ),
-                );
+                    );
 
-                GetOrderInfoResult {
-                    state: order,
-                    executed: false,
-                    amount0: delta.amount0.mag,
-                    amount1: delta.amount1.mag,
+                    let (amount0, amount1) = if is_selling_token1 {
+                        (
+                            amount0_delta(
+                                sqrt_ratio_a,
+                                sqrt_ratio_b,
+                                liquidity: order.liquidity,
+                                round_up: false,
+                            ),
+                            0,
+                        )
+                    } else {
+                        (
+                            0,
+                            amount1_delta(
+                                sqrt_ratio_a,
+                                sqrt_ratio_b,
+                                liquidity: order.liquidity,
+                                round_up: false,
+                            ),
+                        )
+                    };
+
+                    GetOrderInfoResult { state: order, executed: true, amount0, amount1 }
+                } else {
+                    let delta = liquidity_delta_to_amount_delta(
+                        sqrt_ratio: price.sqrt_ratio,
+                        liquidity_delta: i129 { mag: order.liquidity, sign: true },
+                        sqrt_ratio_lower: tick_to_sqrt_ratio(request.order_key.tick),
+                        sqrt_ratio_upper: tick_to_sqrt_ratio(
+                            request.order_key.tick
+                                + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+                        ),
+                    );
+
+                    GetOrderInfoResult {
+                        state: order,
+                        executed: false,
+                        amount0: delta.amount0.mag,
+                        amount1: delta.amount1.mag,
+                    }
                 }
             }
         }
