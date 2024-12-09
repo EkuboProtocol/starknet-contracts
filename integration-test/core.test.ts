@@ -30,14 +30,14 @@ describe("core", () => {
     setup = await setupContracts({
       core: "0x6e7ba99808336df6f8603f814a0007c7b9453698ecf46e8dd304e946e555653",
       positions:
-        "0x172bad15a999793edaf07a5d1db4487821f01ecf05a31f5aca70b5a14e7baa3",
+        "0x4861c99d92b43c67d5d63db29234beea573a6ce2eea1aa047db37c8c73ccf0a",
       router:
         "0x113963db0af66a6ef8413937eae07870a7e942bc96c9528e4a940b283bd8546",
-      nft: "0x2cfee915e03e352970bdae64f8d730454772a208ad7086c78582bdb7b664b14",
+      nft: "0x4842a16129efd6291debf8a02cb65e1cbf58a5478274db8ef6d92ac8605d5ba",
       twamm:
-        "0x668b78c9a7db9df0e3dceba8c667946d3b20a278ceb14b55b2b43e2068200b9",
+        "0x48525fe09a59a02450ffb72682303a5dc1059e04b55fafe06632fdc40f53f0f",
       tokenClassHash:
-        "0x491bc293668091c94d9dae2ca19b38e2f6d7673085bc7ab6b008eaa94a86bbc",
+        "0x1d7f0f241d31b078e270df7d28bf159246fdeaa6b83e5e622a6bcb233acc2e",
     });
     console.log(setup);
   }, 300_000);

@@ -1,7 +1,6 @@
 import { Account, Contract, num, shortString } from "starknet";
-import MockERC20 from "../../target/dev/ekubo_MockERC20.contract_class.json";
-import MockERC20Contract from "../../target/dev/ekubo_MockERC20.contract_class.json";
-import MockERC20CASM from "../../target/dev/ekubo_MockERC20.compiled_contract_class.json";
+import MockERC20Contract from "./resources/MockERC20.contract_class.json";
+import MockERC20CASM from "./resources/MockERC20.compiled_contract_class.json";
 import CoreCompiledContract from "../../target/dev/ekubo_Core.contract_class.json";
 import CoreContract from "../../target/dev/ekubo_Core.contract_class.json";
 import CoreCompiledContractCASM from "../../target/dev/ekubo_Core.compiled_contract_class.json";
@@ -49,7 +48,7 @@ export async function setupContracts(expected?: {
   );
 
   const simpleTokenContractDeclare = await deployer.declareIfNot({
-    contract: MockERC20 as any,
+    contract: MockERC20Contract as any,
     casm: MockERC20CASM as any,
   });
   const coreContractDeclare = await deployer.declareIfNot({
