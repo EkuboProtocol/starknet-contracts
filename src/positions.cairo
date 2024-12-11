@@ -1013,16 +1013,7 @@ pub mod Positions {
 
             let mint_result: Option<(u64, u128)> = if amount_sold.is_non_zero() {
                 let remaining = amount - amount_sold;
-                // Note: this calculation is repeated inside mint_and_place_limit_order
-                //  A refactoring could make this code more efficient, but we are prioritizing
-                //  avoiding calling this function in the case where creation of the limit order
-                //  will fail
-                let (liquidity, _) = amount_to_limit_order_liquidity(order_key, remaining);
-                if liquidity.is_non_zero() {
-                    Option::Some(self.mint_and_place_limit_order(order_key, remaining))
-                } else {
-                    Option::None
-                }
+                self.maybe_mint_and_place_limit_order(order_key, remaining)
             } else {
                 Option::None
             };
@@ -1062,9 +1053,18 @@ pub mod Positions {
         fn maybe_mint_and_place_limit_order(
             ref self: ContractState, order_key: LimitOrderKey, amount: u128,
         ) -> Option<(u64, u128)> {
-            let id = self.mint_v2(Zero::zero());
-            let liquidity = self.place_limit_order(id, order_key, amount);
-            Option::Some((id, liquidity))
+            // Note: this calculation is repeated inside place_limit_order
+            //  A refactoring could make this code more efficient, but we are prioritizing
+            //  avoiding calling this function in the case where creation of the limit order
+            //  will fail
+            let (liquidity, _) = amount_to_limit_order_liquidity(order_key, amount);
+            if liquidity.is_non_zero() {
+                let id = self.mint_v2(Zero::zero());
+                let liquidity = self.place_limit_order(id, order_key, amount);
+                Option::Some((id, liquidity))
+            } else {
+                Option::None
+            }
         }
 
         fn mint_and_place_limit_order(
