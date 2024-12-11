@@ -5,9 +5,8 @@ pub mod LimitOrders {
     use core::traits::{Into, TryInto};
     use ekubo::components::clear::{ClearImpl};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{serialize};
+    use ekubo::components::util::{call_core_with_callback, consume_callback_data, serialize};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
         UpdatePositionParameters,
@@ -269,25 +268,29 @@ pub mod LimitOrders {
             let price = core.get_pool_price(request.order_key.get_pool_key());
             assert(price.sqrt_ratio.is_non_zero(), 'Pool not initialized');
 
-            let is_selling_token1 = (request.order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
-                .is_non_zero();
-
-            let initialized_ticks_crossed_at_order_tick = self
-                .initialized_ticks_crossed_last_crossing
-                .entry((request.order_key.token0, request.order_key.token1))
-                .read(
-                    if is_selling_token1 {
-                        request.order_key.tick
-                    } else {
-                        request.order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                    },
-                );
-
             let order = self.orders.read((request.owner, request.salt, request.order_key));
 
             if order.liquidity.is_zero() {
                 GetOrderInfoResult { state: order, executed: false, amount0: 0, amount1: 0 }
             } else {
+                let is_selling_token1 = (request
+                    .order_key
+                    .tick
+                    .mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
+                    .is_non_zero();
+
+                let initialized_ticks_crossed_at_order_tick = self
+                    .initialized_ticks_crossed_last_crossing
+                    .entry((request.order_key.token0, request.order_key.token1))
+                    .read(
+                        if is_selling_token1 {
+                            request.order_key.tick
+                        } else {
+                            request.order_key.tick
+                                + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
+                        },
+                    );
+
                 // the order is fully executed, just withdraw the saved balance
                 if (initialized_ticks_crossed_at_order_tick > order
                     .initialized_ticks_crossed_snapshot) {

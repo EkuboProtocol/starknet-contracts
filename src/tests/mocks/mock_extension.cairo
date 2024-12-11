@@ -25,7 +25,7 @@ pub trait IMockExtension<TContractState> {
 pub mod MockExtension {
     use core::array::{ArrayTrait};
     use core::num::traits::{Zero};
-    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::util::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker};
     use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
     use ekubo::math::ticks::{min_sqrt_ratio};

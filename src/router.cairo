@@ -78,9 +78,7 @@ pub mod Router {
     use core::result::{ResultTrait};
     use core::traits::{Into};
     use ekubo::components::clear::{ClearImpl};
-    use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, handle_delta,
-    };
+    use ekubo::components::util::{call_core_with_callback, consume_callback_data, handle_delta};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
     use ekubo::math::muldiv::{muldiv};
     use ekubo::math::swap::{is_price_increasing};

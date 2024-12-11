@@ -107,8 +107,8 @@ pub mod Oracle {
     use core::num::traits::{Sqrt, WideMul, Zero};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{check_caller_is_core};
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use ekubo::components::util::{check_caller_is_core};
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
     };

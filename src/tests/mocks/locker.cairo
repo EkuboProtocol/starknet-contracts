@@ -43,10 +43,9 @@ pub mod CoreLocker {
     use core::array::ArrayTrait;
     use core::num::traits::{Zero};
     use core::option::{Option};
-    use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, handle_delta,
+    use ekubo::components::util::{
+        call_core_with_callback, consume_callback_data, handle_delta, serialize,
     };
-    use ekubo::components::util::{serialize};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::types::bounds::{Bounds};
     use ekubo::types::call_points::{CallPoints};

@@ -5,11 +5,10 @@ pub mod TWAMM {
     use core::option::{OptionTrait};
     use core::traits::{Into, TryInto};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{
-        call_core_with_callback, check_caller_is_core, consume_callback_data,
-    };
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{serialize};
+    use ekubo::components::util::{
+        call_core_with_callback, check_caller_is_core, consume_callback_data, serialize,
+    };
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
         UpdatePositionParameters,

@@ -20,7 +20,7 @@ pub trait IERC20Metadata<TContractState> {
 #[starknet::contract]
 pub mod TokenRegistry {
     use core::num::traits::{Zero};
-    use ekubo::components::shared_locker::{call_core_with_callback, consume_callback_data};
+    use ekubo::components::util::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
     use ekubo::math::bits::{msb};

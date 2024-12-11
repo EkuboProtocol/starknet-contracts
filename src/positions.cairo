@@ -6,11 +6,10 @@ pub mod Positions {
     use core::option::{Option, OptionTrait};
     use core::traits::{Into};
     use ekubo::components::owned::{Owned as owned_component};
-    use ekubo::components::shared_locker::{
-        call_core_with_callback, consume_callback_data, forward_lock,
-    };
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{serialize};
+    use ekubo::components::util::{
+        call_core_with_callback, consume_callback_data, forward_lock, serialize,
+    };
     use ekubo::extensions::limit_orders::{
         LimitOrders::{DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING},
     };
