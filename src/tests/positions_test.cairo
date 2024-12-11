@@ -16,7 +16,7 @@ use ekubo::interfaces::positions::{
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::positions::{Positions};
+use ekubo::positions::{Positions, Positions::{amount_to_limit_order_liquidity}};
 
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
@@ -234,6 +234,39 @@ fn test_deposit_liquidity_concentrated_unbalanced_in_range_price_higher() {
     assert(balance0 == u256 { low: 66674999, high: 0 }, 'balance0');
     assert(balance1 == Zero::zero(), 'balance1');
     assert(liquidity == 133350064582, 'liquidity');
+}
+
+#[test]
+fn test_amount_to_limit_order_liquidity_min_max_price_min_amount() {
+    let (token0, token1) = (contract_address_const::<1>(), contract_address_const::<2>());
+    assert_eq!(
+        amount_to_limit_order_liquidity(
+            order_key: LimitOrderKey { token0, token1, tick: i129 { mag: 88722688, sign: false } },
+            amount: 1,
+        ),
+        (288211573572042808969061, token0),
+    );
+    assert_eq!(
+        amount_to_limit_order_liquidity(
+            order_key: LimitOrderKey { token0, token1, tick: i129 { mag: 88722560, sign: false } },
+            amount: 1,
+        ),
+        (0, token1),
+    );
+    assert_eq!(
+        amount_to_limit_order_liquidity(
+            order_key: LimitOrderKey { token0, token1, tick: i129 { mag: 88722688, sign: true } },
+            amount: 1,
+        ),
+        (0, token0),
+    );
+    assert_eq!(
+        amount_to_limit_order_liquidity(
+            order_key: LimitOrderKey { token0, token1, tick: i129 { mag: 88722560, sign: true } },
+            amount: 1,
+        ),
+        (288174684869997138866519, token1),
+    );
 }
 
 #[test]

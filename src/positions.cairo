@@ -225,6 +225,29 @@ pub mod Positions {
         }
     }
 
+    pub(crate) fn amount_to_limit_order_liquidity(
+        order_key: LimitOrderKey, amount: u128,
+    ) -> (u128, ContractAddress) {
+        let sell_token = if (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
+            order_key.token0
+        } else {
+            order_key.token1
+        };
+
+        let sqrt_ratio_lower = tick_to_sqrt_ratio(order_key.tick);
+        let sqrt_ratio_upper = tick_to_sqrt_ratio(
+            order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
+        );
+
+        let liquidity = if sell_token == order_key.token0 {
+            max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
+        } else {
+            max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
+        };
+
+        (liquidity, sell_token)
+    }
+
     #[abi(embed_v0)]
     impl ILockerImpl of ILocker<ContractState> {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
@@ -988,8 +1011,18 @@ pub mod Positions {
             let (amount_sold, amount_bought) = self
                 .swap_to_limit_order_price(order_key, amount, recipient);
 
-            let mint_result: Option<(u64, u128)> = if amount_sold != amount {
-                Option::Some(self.mint_and_place_limit_order(order_key, amount - amount_sold))
+            let mint_result: Option<(u64, u128)> = if amount_sold.is_non_zero() {
+                let remaining = amount - amount_sold;
+                // Note: this calculation is repeated inside mint_and_place_limit_order
+                //  A refactoring could make this code more efficient, but we are prioritizing
+                //  avoiding calling this function in the case where creation of the limit order
+                //  will fail
+                let (liquidity, _) = amount_to_limit_order_liquidity(order_key, remaining);
+                if liquidity.is_non_zero() {
+                    Option::Some(self.mint_and_place_limit_order(order_key, remaining))
+                } else {
+                    Option::None
+                }
             } else {
                 Option::None
             };
@@ -1012,24 +1045,7 @@ pub mod Positions {
         ) -> u128 {
             self.check_authorization(id);
 
-            let sell_token = if (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
-                order_key.token0
-            } else {
-                order_key.token1
-            };
-
-            let bounds = Bounds {
-                lower: order_key.tick,
-                upper: order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
-            };
-            let sqrt_ratio_lower = tick_to_sqrt_ratio(bounds.lower);
-            let sqrt_ratio_upper = tick_to_sqrt_ratio(bounds.upper);
-
-            let liquidity = if sell_token == order_key.token0 {
-                max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
-            } else {
-                max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
-            };
+            let (liquidity, sell_token) = amount_to_limit_order_liquidity(order_key, amount);
 
             call_core_with_callback::<
                 LockCallbackData, (),
