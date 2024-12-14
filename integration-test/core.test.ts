@@ -28,14 +28,14 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x6e7ba99808336df6f8603f814a0007c7b9453698ecf46e8dd304e946e555653",
+      core: "0x124359ff75dd4f374cc9d01341f02e8c4029a04938e4cfd732b67ab998ced18",
       positions:
-        "0x4861c99d92b43c67d5d63db29234beea573a6ce2eea1aa047db37c8c73ccf0a",
+        "0x2567840da18adf3e275ac557a8999838b2afb21f7ccefd99c161ba6a205521d",
       router:
-        "0x113963db0af66a6ef8413937eae07870a7e942bc96c9528e4a940b283bd8546",
-      nft: "0x4842a16129efd6291debf8a02cb65e1cbf58a5478274db8ef6d92ac8605d5ba",
+        "0x5adfd95a9568b44fe36be89e771abaf4d510f611e23d18bca65666a10981263",
+      nft: "0x3c64eecf78636b51693be3fdf7b997760ee5a2905b67b8f48cd789d416530a2",
       twamm:
-        "0x48525fe09a59a02450ffb72682303a5dc1059e04b55fafe06632fdc40f53f0f",
+        "0x5b0656e9c18f0fa66cdc616d8cdc07d59e022745a1d786912b8ef608ae368bf",
       tokenClassHash:
         "0x1d7f0f241d31b078e270df7d28bf159246fdeaa6b83e5e622a6bcb233acc2e",
     });
