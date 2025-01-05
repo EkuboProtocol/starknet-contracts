@@ -1,11 +1,11 @@
 use core::option::{OptionTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher};
-use ekubo::tests::helper::{Deployer, DeployerTrait};
-use ekubo::tests::mock_erc20::{MockERC20IERC20ImplTrait};
-use ekubo::token_registry::{
+use ekubo::lens::token_registry::{
     ITokenRegistryDispatcherTrait,
     TokenRegistry::{FeltIntoByteArray, Registration, get_string_metadata, ten_pow},
 };
+use ekubo::tests::helper::{Deployer, DeployerTrait};
+use ekubo::tests::mock_erc20::{MockERC20IERC20ImplTrait};
 use starknet::{
     ContractAddress, get_contract_address, syscalls::{deploy_syscall}, testing::{pop_log},
 };

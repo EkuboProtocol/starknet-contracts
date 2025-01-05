@@ -1,12 +1,10 @@
 pub mod core;
 pub mod owned_nft;
 pub mod positions;
-pub mod price_fetcher;
 pub mod router;
 
 #[cfg(test)]
 pub(crate) mod tests;
-pub mod token_registry;
 
 pub mod extensions {
     pub mod limit_orders;
@@ -66,3 +64,7 @@ pub mod types {
     pub mod snapshot;
 }
 
+pub mod lens {
+    pub mod price_fetcher;
+    pub mod token_registry;
+}

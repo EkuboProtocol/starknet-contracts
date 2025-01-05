@@ -14,6 +14,7 @@ use ekubo::interfaces::core::{
 use ekubo::interfaces::erc721::{IERC721Dispatcher};
 use ekubo::interfaces::positions::{IPositionsDispatcher};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher};
+use ekubo::lens::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
 use ekubo::positions::{Positions};
 use ekubo::router::{IRouterDispatcher, Router};
@@ -23,14 +24,11 @@ use ekubo::tests::mocks::locker::{
 };
 use ekubo::tests::mocks::mock_extension::{IMockExtensionDispatcher, MockExtension};
 use ekubo::tests::mocks::mock_upgradeable::{MockUpgradeable};
-use ekubo::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
 use ekubo::types::bounds::{Bounds};
 use ekubo::types::call_points::{CallPoints};
 use ekubo::types::delta::{Delta};
-use ekubo::types::i129::i129;
-
-use ekubo::types::keys::PoolKey;
-
+use ekubo::types::i129::{i129};
+use ekubo::types::keys::{PoolKey};
 use starknet::{ContractAddress, contract_address_const, syscalls::{deploy_syscall}};
 
 pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
