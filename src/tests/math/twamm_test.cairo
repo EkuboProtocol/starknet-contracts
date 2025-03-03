@@ -1,8 +1,9 @@
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::math::{
+use ekubo::math::time::{to_duration};
+use ekubo::math::twamm::{
     calculate_amount_from_sale_rate, calculate_c, calculate_next_sqrt_ratio,
-    calculate_reward_amount, calculate_sale_rate, constants, time::{to_duration},
+    calculate_reward_amount, calculate_sale_rate, constants,
 };
 use ekubo::types::bounds::{max_bounds};
 use ekubo::types::i129::{i129};
@@ -209,7 +210,7 @@ mod TWAMMMathTest {
             time_elapsed: time_elapsed,
             fee: fee,
         );
-        assert_gt!(sqrt_ratio_next, 286363514177267035440548892163466107483369185);
+        assert_eq!(sqrt_ratio_next, 286548851173862825560992588551104808498771331);
 
         let token0_sold_amount = muldiv(
             token0_sale_rate.into(), time_elapsed.into(), two_pow_32, false,

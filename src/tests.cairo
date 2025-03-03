@@ -33,6 +33,7 @@ pub(crate) mod math {
     pub(crate) mod swap_test;
     pub(crate) mod ticks_test;
     pub(crate) mod time_test;
+    pub(crate) mod twamm_test;
 }
 
 pub(crate) mod types {
