@@ -20,9 +20,9 @@ use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
 use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
 use ekubo::math::ticks::{max_tick, min_tick};
 use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
-use ekubo::math::{
+use ekubo::math::time::{to_duration};
+use ekubo::math::twamm::{
     calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_sale_rate, constants,
-    time::{to_duration},
 };
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, SetupPoolResult, default_owner, update_position,
