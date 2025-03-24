@@ -1,6 +1,6 @@
-use core::num::traits::{Zero};
+use core::num::traits::Zero;
 use core::ops::{AddAssign, SubAssign};
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::i129;
 
 // From the perspective of the core contract, this represents the change in balances.
 // For example, swapping 100 token0 for 150 token1 would result in a Delta of { amount0: 100,

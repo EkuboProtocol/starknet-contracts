@@ -1,5 +1,5 @@
-use ekubo::types::i129::{i129};
-use starknet::{ContractAddress};
+use ekubo::types::i129::i129;
+use starknet::ContractAddress;
 
 #[derive(Copy, Drop, PartialEq, Serde, Debug)]
 pub enum PriceResult {
@@ -61,16 +61,14 @@ pub trait IPriceFetcher<TContractState> {
 #[starknet::contract]
 pub mod PriceFetcher {
     use core::cmp::{max, min};
-    use core::num::traits::{Zero};
-    use ekubo::extensions::oracle::{
-        IOracleDispatcher, IOracleDispatcherTrait, Oracle::{MAX_TICK_SPACING, tick_to_price_x128},
-    };
+    use core::num::traits::Zero;
+    use ekubo::extensions::oracle::Oracle::{MAX_TICK_SPACING, tick_to_price_x128};
+    use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::types::keys::{PoolKey};
-
+    use ekubo::types::keys::PoolKey;
+    use starknet::get_block_timestamp;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{get_block_timestamp};
     use super::{CandlestickPoint, ContractAddress, IPriceFetcher, PriceResult, i129};
 
 
@@ -193,7 +191,7 @@ pub mod PriceFetcher {
                         }
                     }
                 };
-            };
+            }
 
             result.span()
         }
@@ -295,7 +293,7 @@ pub mod PriceFetcher {
                             }
 
                             index += 1;
-                        };
+                        }
 
                         if let Option::Some(last) = last_point {
                             aggs.append(last);
@@ -316,7 +314,7 @@ pub mod PriceFetcher {
                         }
                     }
                 }
-            };
+            }
 
             result.span()
         }

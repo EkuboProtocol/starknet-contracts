@@ -1,9 +1,9 @@
-use core::num::traits::{Zero};
+use core::num::traits::Zero;
 use ekubo::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
-use ekubo::tests::store_packing_test::{assert_round_trip};
-use ekubo::types::i129::{i129};
-use ekubo::types::pool_price::{PoolPrice};
-use starknet::storage_access::{StorePacking};
+use ekubo::tests::store_packing_test::assert_round_trip;
+use ekubo::types::i129::i129;
+use ekubo::types::pool_price::PoolPrice;
+use starknet::storage_access::StorePacking;
 
 #[test]
 fn test_packing_round_trip_many_values() {

@@ -1,10 +1,10 @@
 use core::array::ArrayTrait;
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
-use core::traits::{Into};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
+use core::traits::Into;
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
-use ekubo::interfaces::erc20::{IERC20Dispatcher};
+use ekubo::interfaces::erc20::IERC20Dispatcher;
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::extensions::limit_orders::{
     GetOrderInfoResult as GetLimitOrderInfoResult, OrderKey as LimitOrderKey,
@@ -14,21 +14,19 @@ use ekubo::interfaces::positions::{
     GetTokenInfoRequest, IPositionsDispatcher, IPositionsDispatcherTrait,
 };
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-use ekubo::math::ticks::{tick_to_sqrt_ratio};
-use ekubo::positions::{Positions, Positions::{amount_to_limit_order_liquidity}};
-
+use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
+use ekubo::positions::Positions;
+use ekubo::positions::Positions::amount_to_limit_order_liquidity;
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
     SetupPoolResult, default_owner, swap,
 };
-
 use ekubo::tests::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
 };
 use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::i129::{i129};
-use ekubo::types::keys::{PoolKey};
+use ekubo::types::i129::i129;
+use ekubo::types::keys::PoolKey;
 use starknet::testing::{pop_log, set_contract_address};
 use starknet::{ClassHash, contract_address_const, get_contract_address};
 

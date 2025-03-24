@@ -1,9 +1,9 @@
 use ekubo::interfaces::core::{IExtension, SwapParameters, UpdatePositionParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129};
+use ekubo::types::delta::Delta;
+use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 #[derive(Copy, Drop, Serde)]
 pub enum Action {
@@ -41,16 +41,15 @@ pub trait ICoreLocker<TContractState> {
 #[starknet::contract]
 pub mod CoreLocker {
     use core::array::ArrayTrait;
-    use core::num::traits::{Zero};
-    use core::option::{Option};
+    use core::num::traits::Zero;
+    use core::option::Option;
     use ekubo::components::util::{
         call_core_with_callback, consume_callback_data, handle_delta, serialize,
     };
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::types::bounds::{Bounds};
-    use ekubo::types::call_points::{CallPoints};
-    use starknet::storage::StoragePointerReadAccess;
-    use starknet::storage::StoragePointerWriteAccess;
+    use ekubo::types::bounds::Bounds;
+    use ekubo::types::call_points::CallPoints;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{ContractAddress, contract_address_const, get_contract_address};
     use super::{
         Action, ActionResult, Delta, ICoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,

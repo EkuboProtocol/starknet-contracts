@@ -1,6 +1,6 @@
-use core::num::traits::{Zero};
+use core::num::traits::Zero;
 use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::types::delta::{Delta};
+use ekubo::types::delta::Delta;
 use ekubo::types::i129::{i129, i129Trait};
 
 // Returns the token0, token1 delta owed for a given change in liquidity

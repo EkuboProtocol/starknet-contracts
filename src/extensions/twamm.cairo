@@ -1,10 +1,10 @@
 #[starknet::contract]
 pub mod TWAMM {
     use core::cmp::{max, min};
-    use core::num::traits::{Zero};
-    use core::option::{OptionTrait};
+    use core::num::traits::Zero;
+    use core::option::OptionTrait;
     use core::traits::{Into, TryInto};
-    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::components::util::{
         call_core_with_callback, check_caller_is_core, consume_callback_data, serialize,
@@ -17,30 +17,28 @@ pub mod TWAMM {
         ForwardCallbackData, ITWAMM, OrderInfo, OrderKey, SaleRateState, StateKey,
     };
     use ekubo::math::bitmap::{Bitmap, BitmapTrait};
-    use ekubo::math::fee::{compute_fee};
-    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
+    use ekubo::math::fee::compute_fee;
+    use ekubo::math::ticks::constants::MAX_TICK_SPACING;
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use ekubo::math::time::{TIME_SPACING_SIZE, to_duration, validate_time};
+    use ekubo::math::twamm::constants::{
+        MAX_BOUNDS_MAX_SQRT_RATIO, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_USABLE_TICK_MAGNITUDE,
+    };
     use ekubo::math::twamm::{
         calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_reward_amount,
-        constants::{
-            MAX_BOUNDS_MAX_SQRT_RATIO, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_USABLE_TICK_MAGNITUDE,
-        },
     };
     use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::delta::{Delta};
+    use ekubo::types::call_points::CallPoints;
+    use ekubo::types::delta::Delta;
     use ekubo::types::fees_per_liquidity::{FeesPerLiquidity, to_fees_per_liquidity};
     use ekubo::types::i129::{AddDeltaTrait, i129};
     use ekubo::types::keys::{PoolKey, SavedBalanceKey};
     use starknet::storage::{
-        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess,
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     };
-    use starknet::storage::{StoragePath, StoragePathEntry};
-    use starknet::{
-        ContractAddress, get_block_timestamp, get_contract_address, storage_access::{StorePacking},
-    };
+    use starknet::storage_access::StorePacking;
+    use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
 
     #[derive(Drop, Copy, Serde, starknet::Store)]
     struct OrderState {
@@ -859,7 +857,7 @@ pub mod TWAMM {
                     }
 
                     last_virtual_order_time = next_virtual_order_time;
-                };
+                }
 
                 self
                     .emit(

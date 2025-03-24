@@ -1,4 +1,4 @@
-use starknet::{get_block_timestamp};
+use starknet::get_block_timestamp;
 
 #[starknet::interface]
 pub trait IExpires<TContractState> {

@@ -1,6 +1,6 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
-use core::traits::{Into};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
+use core::traits::Into;
 use ekubo::core::Core::{LoadedBalance, PoolInitialized, PositionUpdated, SavedBalance, Swapped};
 use ekubo::extensions::twamm::TWAMM::{
     OrderProceedsWithdrawn, OrderUpdated, VirtualOrdersExecuted, time_to_word_and_bit_index,
@@ -8,19 +8,17 @@ use ekubo::extensions::twamm::TWAMM::{
 };
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, SwapParameters};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-
 use ekubo::interfaces::extensions::twamm::{
     ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderInfo, OrderKey, SaleRateState, StateKey,
 };
 use ekubo::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-use ekubo::math::max_liquidity::{max_liquidity};
-use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0};
-use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
-use ekubo::math::ticks::{max_tick, min_tick};
-use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
-use ekubo::math::time::{to_duration};
+use ekubo::math::max_liquidity::max_liquidity;
+use ekubo::math::sqrt_ratio::next_sqrt_ratio_from_amount0;
+use ekubo::math::ticks::constants::MAX_TICK_SPACING;
+use ekubo::math::ticks::{max_tick, min_sqrt_ratio, min_tick, tick_to_sqrt_ratio};
+use ekubo::math::time::to_duration;
 use ekubo::math::twamm::{
     calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_sale_rate, constants,
 };
@@ -30,8 +28,8 @@ use ekubo::tests::helper::{
 use ekubo::tests::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use ekubo::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
 use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::i129::{i129};
-use ekubo::types::keys::{PoolKey};
+use ekubo::types::i129::i129;
+use ekubo::types::keys::PoolKey;
 use starknet::testing::{pop_log, set_block_timestamp, set_contract_address};
 use starknet::{ClassHash, ContractAddress, contract_address_const, get_contract_address};
 

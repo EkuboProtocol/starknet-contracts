@@ -1,4 +1,4 @@
-use core::traits::{Into};
+use core::traits::Into;
 use ekubo::types::call_points::{CallPoints, all_call_points};
 
 #[test]

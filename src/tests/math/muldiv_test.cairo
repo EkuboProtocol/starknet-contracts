@@ -1,5 +1,5 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
 use ekubo::math::muldiv::{div, muldiv};
 
 #[test]

@@ -7,12 +7,13 @@ pub trait IHasInterface<TContractState> {
 #[starknet::component]
 pub mod Upgradeable {
     use core::array::SpanTrait;
-    use core::num::traits::{Zero};
+    use core::num::traits::Zero;
     use core::result::ResultTrait;
-    use ekubo::components::owned::{Ownable};
-    use ekubo::interfaces::upgradeable::{IUpgradeable};
-    use starknet::{ClassHash, syscalls::{library_call_syscall, replace_class_syscall}};
-    use super::{IHasInterface};
+    use ekubo::components::owned::Ownable;
+    use ekubo::interfaces::upgradeable::IUpgradeable;
+    use starknet::ClassHash;
+    use starknet::syscalls::{library_call_syscall, replace_class_syscall};
+    use super::IHasInterface;
 
     #[storage]
     pub struct Storage {}

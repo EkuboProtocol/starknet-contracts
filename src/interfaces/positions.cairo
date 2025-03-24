@@ -1,8 +1,8 @@
 use ekubo::interfaces::extensions::limit_orders::{GetOrderInfoResult, OrderKey as LimitOrderKey};
 use ekubo::interfaces::extensions::twamm::{OrderInfo, OrderKey};
-use ekubo::types::bounds::{Bounds};
-use ekubo::types::keys::{PoolKey};
-use ekubo::types::pool_price::{PoolPrice};
+use ekubo::types::bounds::Bounds;
+use ekubo::types::keys::PoolKey;
+use ekubo::types::pool_price::PoolPrice;
 use starknet::{ClassHash, ContractAddress};
 
 #[derive(Copy, Drop, Serde, PartialEq)]

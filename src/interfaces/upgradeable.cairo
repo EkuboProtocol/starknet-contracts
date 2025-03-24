@@ -1,4 +1,4 @@
-use starknet::{ClassHash};
+use starknet::ClassHash;
 
 #[starknet::interface]
 pub trait IUpgradeable<TContractState> {

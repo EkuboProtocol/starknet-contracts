@@ -1,6 +1,6 @@
-use core::num::traits::{Zero};
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129};
+use core::num::traits::Zero;
+use ekubo::types::delta::Delta;
+use ekubo::types::i129::i129;
 
 #[test]
 fn test_delta_zeroable() {

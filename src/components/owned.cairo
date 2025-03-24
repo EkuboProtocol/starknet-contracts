@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IOwned<TContractState> {
@@ -18,8 +18,8 @@ pub trait Ownable<TContractState> {
 
 #[starknet::component]
 pub mod Owned {
+    use starknet::get_caller_address;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{get_caller_address};
     use super::{ContractAddress, IOwned, Ownable};
 
     #[storage]

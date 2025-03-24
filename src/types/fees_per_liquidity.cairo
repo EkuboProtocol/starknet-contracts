@@ -1,5 +1,5 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
 use core::traits::{Into, TryInto};
 
 #[derive(Copy, Drop, Serde, PartialEq, starknet::Store, Debug)]

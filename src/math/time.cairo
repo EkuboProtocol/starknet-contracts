@@ -1,6 +1,6 @@
-use core::num::traits::{Zero};
-use ekubo::math::bits::{msb};
-use ekubo::math::exp2::{exp2};
+use core::num::traits::Zero;
+use ekubo::math::bits::msb;
+use ekubo::math::exp2::exp2;
 
 pub(crate) const TIME_SPACING_SIZE: u64 = 16;
 

@@ -1,10 +1,10 @@
 #[starknet::contract]
 pub mod Core {
-    use core::array::{ArrayTrait};
-    use core::num::traits::{Zero};
-    use core::option::{Option};
-    use core::traits::{Into};
-    use ekubo::components::owned::{Owned as owned_component};
+    use core::array::ArrayTrait;
+    use core::num::traits::Zero;
+    use core::option::Option;
+    use core::traits::Into;
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::interfaces::core::{
         GetPositionWithFeesResult, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
@@ -22,25 +22,22 @@ pub mod Core {
         max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick, sqrt_ratio_to_tick, tick_to_sqrt_ratio,
     };
     use ekubo::types::bounds::{Bounds, BoundsTrait};
-    use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::delta::{Delta};
+    use ekubo::types::call_points::CallPoints;
+    use ekubo::types::delta::Delta;
     use ekubo::types::fees_per_liquidity::{
         FeesPerLiquidity, fees_per_liquidity_from_amount0, fees_per_liquidity_from_amount1,
         fees_per_liquidity_new,
     };
     use ekubo::types::i129::{AddDeltaTrait, i129, i129Trait};
     use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-    use ekubo::types::pool_price::{PoolPrice};
+    use ekubo::types::pool_price::PoolPrice;
     use ekubo::types::position::{Position, PositionTrait};
     use starknet::storage::{
-        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess,
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     };
-    use starknet::storage::{StoragePath, StoragePathEntry};
-    use starknet::{
-        ContractAddress, Store, get_caller_address, get_contract_address,
-        storage_access::{storage_base_address_from_felt252},
-    };
+    use starknet::storage_access::storage_base_address_from_felt252;
+    use starknet::{ContractAddress, Store, get_caller_address, get_contract_address};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -1012,7 +1009,7 @@ pub mod Core {
                     sqrt_ratio = swap_result.sqrt_ratio_next;
                     tick = sqrt_ratio_to_tick(sqrt_ratio);
                 };
-            };
+            }
 
             let delta = if (params.is_token1) {
                 Delta {

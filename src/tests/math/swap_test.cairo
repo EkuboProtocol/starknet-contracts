@@ -1,9 +1,9 @@
-use core::num::traits::{Zero};
-use ekubo::math::exp2::{exp2};
-use ekubo::math::mask::{mask};
+use core::num::traits::Zero;
+use ekubo::math::exp2::exp2;
+use ekubo::math::mask::mask;
 use ekubo::math::swap::{SwapResult, is_price_increasing, no_op_swap_result, swap_result};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::i129;
 
 #[test]
 fn test_is_price_increasing_cases() {

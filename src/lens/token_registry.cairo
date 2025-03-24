@@ -1,4 +1,4 @@
-use ekubo::interfaces::erc20::{IERC20Dispatcher};
+use ekubo::interfaces::erc20::IERC20Dispatcher;
 
 #[starknet::interface]
 pub trait ITokenRegistry<ContractState> {
@@ -19,16 +19,14 @@ pub trait IERC20Metadata<TContractState> {
 
 #[starknet::contract]
 pub mod TokenRegistry {
-    use core::num::traits::{Zero};
+    use core::num::traits::Zero;
     use ekubo::components::util::{call_core_with_callback, consume_callback_data};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::interfaces::erc20::{IERC20DispatcherTrait};
-    use ekubo::math::bits::{msb};
+    use ekubo::interfaces::erc20::IERC20DispatcherTrait;
+    use ekubo::math::bits::msb;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{
-        ContractAddress, get_caller_address, get_contract_address,
-        syscalls::{call_contract_syscall},
-    };
+    use starknet::syscalls::call_contract_syscall;
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use super::{
         IERC20Dispatcher, IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait, ITokenRegistry,
     };

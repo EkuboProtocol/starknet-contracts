@@ -1,8 +1,8 @@
 use core::array::{Array, ArrayTrait};
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
 use core::traits::{Into, TryInto};
-use ekubo::math::exp2::{exp2};
+use ekubo::math::exp2::exp2;
 
 // Convert a u64 number to a decimal string in a felt252
 pub fn to_decimal(mut x: u64) -> felt252 {
@@ -19,7 +19,7 @@ pub fn to_decimal(mut x: u64) -> felt252 {
         let (quotient, remainder) = DivRem::div_rem(x, TEN);
         code_points.append(0x30_u8 + remainder.try_into().expect('DIGIT'));
         x = quotient;
-    };
+    }
 
     let mut ix: u8 = 0_u8;
     let mut result: u256 = 0;
@@ -36,7 +36,7 @@ pub fn to_decimal(mut x: u64) -> felt252 {
         result += digit;
 
         ix += 1_u8;
-    };
+    }
 
     result.try_into().unwrap()
 }

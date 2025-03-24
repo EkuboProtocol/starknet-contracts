@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IOwnedNFT<TContractState> {
@@ -24,24 +24,24 @@ pub trait IOwnedNFT<TContractState> {
 #[starknet::contract]
 pub mod OwnedNFT {
     use core::array::{Array, ArrayTrait};
-    use core::num::traits::{Zero};
-    use core::option::{OptionTrait};
+    use core::num::traits::Zero;
+    use core::option::OptionTrait;
     use core::traits::{Into, TryInto};
-    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-
-    use ekubo::components::util::{serialize};
-    use ekubo::interfaces::erc721::{IERC721};
+    use ekubo::components::util::serialize;
+    use ekubo::interfaces::erc721::IERC721;
     use ekubo::interfaces::src5::{
         ERC165_ERC165_ID, ERC165_ERC721_ID, ERC165_ERC721_METADATA_ID, ISRC5, SRC5_ERC721_ID,
         SRC5_ERC721_METADATA_ID, SRC5_SRC5_ID,
     };
-    use ekubo::math::string::{to_decimal};
+    use ekubo::math::string::to_decimal;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
-    use starknet::{ClassHash, SyscallResultTrait, get_caller_address, syscalls::{deploy_syscall}};
+    use starknet::syscalls::deploy_syscall;
+    use starknet::{ClassHash, SyscallResultTrait, get_caller_address};
     use super::{ContractAddress, IOwnedNFT};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);

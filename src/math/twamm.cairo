@@ -1,7 +1,7 @@
 use core::num::traits::{Sqrt, Zero};
 use core::traits::{Into, TryInto};
-use ekubo::math::exp::{exp};
-use ekubo::math::fee::{compute_fee};
+use ekubo::math::exp::exp;
+use ekubo::math::fee::compute_fee;
 use ekubo::math::muldiv::{div, muldiv};
 use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 

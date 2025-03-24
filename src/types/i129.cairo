@@ -1,10 +1,10 @@
 use core::fmt::{Display, Error, Formatter};
 use core::hash::{Hash, HashStateTrait};
-use core::num::traits::{Zero};
+use core::num::traits::Zero;
 use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use core::option::{Option, OptionTrait};
 use core::traits::{Into, TryInto};
-use starknet::storage_access::{StorePacking};
+use starknet::storage_access::StorePacking;
 
 
 // Represents a signed integer in a 129 bit container, where the sign is 1 bit and the other 128

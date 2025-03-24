@@ -1,17 +1,17 @@
 #[starknet::contract]
 pub mod Positions {
     use core::array::{ArrayTrait, SpanTrait};
-    use core::cmp::{max};
-    use core::num::traits::{Zero};
+    use core::cmp::max;
+    use core::num::traits::Zero;
     use core::option::{Option, OptionTrait};
-    use core::traits::{Into};
-    use ekubo::components::owned::{Owned as owned_component};
+    use core::traits::Into;
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::components::util::{
         call_core_with_callback, consume_callback_data, forward_lock, serialize,
     };
-    use ekubo::extensions::limit_orders::{
-        LimitOrders::{DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING},
+    use ekubo::extensions::limit_orders::LimitOrders::{
+        DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING,
     };
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher, ILocker, SwapParameters,
@@ -32,21 +32,20 @@ pub mod Positions {
     };
     use ekubo::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
+    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
     use ekubo::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
     use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
-    use ekubo::math::time::{to_duration};
-    use ekubo::math::twamm::{calculate_sale_rate};
+    use ekubo::math::time::to_duration;
+    use ekubo::math::twamm::calculate_sale_rate;
     use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
     use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::delta::{Delta};
-    use ekubo::types::i129::{i129};
+    use ekubo::types::delta::Delta;
+    use ekubo::types::i129::i129;
     use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::types::pool_price::{PoolPrice};
-    use starknet::storage::StoragePointerReadAccess;
-    use starknet::storage::StoragePointerWriteAccess;
+    use ekubo::types::pool_price::PoolPrice;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{
         ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
     };
@@ -662,7 +661,7 @@ pub mod Positions {
             while let Option::Some(request) = params.pop_front() {
                 results
                     .append(self.get_token_info(*request.id, *request.pool_key, *request.bounds));
-            };
+            }
 
             results.span()
         }
@@ -709,7 +708,7 @@ pub mod Positions {
             while let Option::Some(request) = params.pop_front() {
                 let (id, order_key) = request;
                 results.append(self.get_order_info(*id, *order_key));
-            };
+            }
 
             results.span()
         }
@@ -1104,7 +1103,7 @@ pub mod Positions {
                             owner: this_address, salt: (*id).into(), order_key: *order_key,
                         },
                     );
-            };
+            }
 
             self.limit_orders.read().get_order_infos(requests.span())
         }

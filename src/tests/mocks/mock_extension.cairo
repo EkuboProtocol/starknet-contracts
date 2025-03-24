@@ -1,6 +1,6 @@
-use ekubo::types::call_points::{CallPoints};
-use ekubo::types::keys::{PoolKey};
-use starknet::{ContractAddress};
+use ekubo::types::call_points::CallPoints;
+use ekubo::types::keys::PoolKey;
+use starknet::ContractAddress;
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 pub struct ExtensionCalled {
@@ -23,21 +23,23 @@ pub trait IMockExtension<TContractState> {
 
 #[starknet::contract]
 pub mod MockExtension {
-    use core::array::{ArrayTrait};
-    use core::num::traits::{Zero};
+    use core::array::ArrayTrait;
+    use core::num::traits::Zero;
     use ekubo::components::util::{call_core_with_callback, consume_callback_data};
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker};
-    use ekubo::interfaces::core::{SwapParameters, UpdatePositionParameters};
-    use ekubo::math::ticks::{min_sqrt_ratio};
+    use ekubo::interfaces::core::{
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker, SwapParameters,
+        UpdatePositionParameters,
+    };
+    use ekubo::math::ticks::min_sqrt_ratio;
     use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::delta::{Delta};
+    use ekubo::types::delta::Delta;
     use ekubo::types::i129::i129;
-    use ekubo::types::keys::{PoolKey};
+    use ekubo::types::keys::PoolKey;
+    use starknet::get_caller_address;
     use starknet::storage::{
-        StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
-    use starknet::{get_caller_address, storage::{Map}};
     use super::{CallPoints, ContractAddress, ExtensionCalled, IMockExtension};
 
     #[storage]

@@ -1,4 +1,4 @@
-use ekubo::math::mask::{mask};
+use ekubo::math::mask::mask;
 
 #[test]
 fn test_mask_0() {

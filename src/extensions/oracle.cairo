@@ -1,5 +1,5 @@
-use ekubo::types::i129::{i129};
-use starknet::{ContractAddress};
+use ekubo::types::i129::i129;
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IOracle<TContractState> {
@@ -103,29 +103,27 @@ pub trait IOracle<TContractState> {
 
 #[starknet::contract]
 pub mod Oracle {
-    use core::cmp::{max};
+    use core::cmp::max;
     use core::num::traits::{Sqrt, WideMul, Zero};
-    use core::traits::{Into};
-    use ekubo::components::owned::{Owned as owned_component};
+    use core::traits::Into;
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{check_caller_is_core};
+    use ekubo::components::util::check_caller_is_core;
     use ekubo::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
     };
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::types::bounds::{Bounds};
-    use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::delta::{Delta};
-    use ekubo::types::i129::{i129};
-    use ekubo::types::keys::{PoolKey};
-    use ekubo::types::snapshot::{Snapshot};
+    use ekubo::math::ticks::tick_to_sqrt_ratio;
+    use ekubo::types::bounds::Bounds;
+    use ekubo::types::call_points::CallPoints;
+    use ekubo::types::delta::Delta;
+    use ekubo::types::i129::i129;
+    use ekubo::types::keys::PoolKey;
+    use ekubo::types::snapshot::Snapshot;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
-
     use starknet::{get_block_timestamp, get_contract_address};
-
     use super::{ContractAddress, IOracle};
 
     // Converts a tick to the price as a 128.128 number
@@ -395,7 +393,7 @@ pub mod Oracle {
                 while let Option::Some(t_quote) = t_quotes.pop_front() {
                     results.append(*t_quote + *t_bases.pop_front().unwrap());
                 };
-            };
+            }
 
             results.span()
         }
@@ -425,7 +423,7 @@ pub mod Oracle {
                 periods.append((start_time, start_time + interval_seconds.into()));
 
                 start_time += interval_seconds.into();
-            };
+            }
 
             self.get_average_tick_over_periods(base_token, quote_token, periods.span())
         }
@@ -453,7 +451,7 @@ pub mod Oracle {
                     sum += delta_mag * delta_mag;
                 }
                 previous = Option::Some(*next);
-            };
+            }
 
             let extrapolated = sum * extrapolated_to.into();
 
@@ -500,7 +498,7 @@ pub mod Oracle {
 
             while let Option::Some(next) = ticks.pop_front() {
                 converted.append(tick_to_price_x128(*next));
-            };
+            }
 
             converted.span()
         }

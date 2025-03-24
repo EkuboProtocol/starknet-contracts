@@ -1,4 +1,4 @@
-use core::num::traits::{Zero};
+use core::num::traits::Zero;
 
 // Computes and returns the index of the most significant bit in the given ratio, s.t. ratio >=
 // 2**mb(integer)

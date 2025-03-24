@@ -1,7 +1,7 @@
-use core::hash::{LegacyHash};
-use core::num::traits::{Zero};
+use core::hash::LegacyHash;
+use core::num::traits::Zero;
 use ekubo::math::ticks::{max_tick, min_tick};
-use ekubo::tests::types::keys_test::{check_hashes_differ};
+use ekubo::tests::types::keys_test::check_hashes_differ;
 use ekubo::types::bounds::{Bounds, BoundsTrait, max_bounds};
 use ekubo::types::i129::i129;
 

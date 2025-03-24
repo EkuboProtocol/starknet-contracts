@@ -1,8 +1,7 @@
-use core::num::traits::{Zero};
-use ekubo::types::i129::{i129};
-use ekubo::types::snapshot::{Snapshot};
-
-use starknet::{storage_access::{StorePacking}};
+use core::num::traits::Zero;
+use ekubo::types::i129::i129;
+use ekubo::types::snapshot::Snapshot;
+use starknet::storage_access::StorePacking;
 
 fn assert_round_trip<T, U, +StorePacking<T, U>, +PartialEq<T>, +Drop<T>, +Copy<T>>(value: T) {
     assert(StorePacking::<T, U>::unpack(StorePacking::<T, U>::pack(value)) == value, 'roundtrip');

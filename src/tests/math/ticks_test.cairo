@@ -1,5 +1,4 @@
-use core::num::traits::{Zero};
-
+use core::num::traits::Zero;
 use ekubo::math::exp2::exp2;
 use ekubo::math::ticks::{
     by_2_127, constants, log2, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,

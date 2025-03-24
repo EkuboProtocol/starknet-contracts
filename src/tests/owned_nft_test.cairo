@@ -1,13 +1,13 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
-use core::traits::{Into};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
+use core::traits::Into;
 use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
+use starknet::testing::{pop_log, set_contract_address};
 use starknet::{ClassHash, contract_address_const};
-use starknet::{testing::{pop_log, set_contract_address}};
 
 fn switch_to_controller() {
     set_contract_address(default_owner());

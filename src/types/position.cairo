@@ -1,7 +1,7 @@
-use core::num::traits::{Zero};
-use core::traits::{Into};
-use ekubo::math::muldiv::{muldiv};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
+use core::num::traits::Zero;
+use core::traits::Into;
+use ekubo::math::muldiv::muldiv;
+use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
 
 // Represents a liquidity position
 // Packed together in a single struct because whenever liquidity changes we typically change fees

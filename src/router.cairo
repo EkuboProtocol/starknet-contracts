@@ -1,7 +1,7 @@
-use ekubo::types::delta::{Delta};
-use ekubo::types::i129::{i129};
-use ekubo::types::keys::{PoolKey};
-use starknet::{ContractAddress};
+use ekubo::types::delta::Delta;
+use ekubo::types::i129::i129;
+use ekubo::types::keys::PoolKey;
+use starknet::ContractAddress;
 
 #[derive(Serde, Copy, Drop)]
 pub struct RouteNode {
@@ -74,22 +74,19 @@ pub mod Router {
     use core::array::{Array, ArrayTrait, SpanTrait};
     use core::cmp::{max, min};
     use core::num::traits::{Sqrt, Zero};
-    use core::option::{OptionTrait};
-    use core::result::{ResultTrait};
-    use core::traits::{Into};
-    use ekubo::components::clear::{ClearImpl};
+    use core::option::OptionTrait;
+    use core::result::ResultTrait;
+    use core::traits::Into;
+    use ekubo::components::clear::ClearImpl;
     use ekubo::components::util::{call_core_with_callback, consume_callback_data, handle_delta};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker, SwapParameters};
-    use ekubo::math::muldiv::{muldiv};
-    use ekubo::math::swap::{is_price_increasing};
+    use ekubo::math::muldiv::muldiv;
+    use ekubo::math::swap::is_price_increasing;
     use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, sqrt_ratio_to_tick};
-    use ekubo::types::i129::{i129};
-    use starknet::storage::StoragePointerReadAccess;
-    use starknet::storage::StoragePointerWriteAccess;
-    use starknet::syscalls::{call_contract_syscall};
-
-    use starknet::{get_contract_address};
-
+    use ekubo::types::i129::i129;
+    use starknet::get_contract_address;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::syscalls::call_contract_syscall;
     use super::{Delta, Depth, IRouter, PoolKey, RouteNode, Swap, TokenAmount};
 
     #[abi(embed_v0)]
@@ -190,7 +187,7 @@ pub mod Router {
                                         amount: -delta.amount1, token: node.pool_key.token1,
                                     }
                                 };
-                        };
+                        }
 
                         let recipient = get_contract_address();
 
@@ -202,7 +199,7 @@ pub mod Router {
                             handle_delta(core, token_amount.token, -token_amount.amount, recipient);
                             handle_delta(core, first.token, first.amount, recipient);
                         }
-                    };
+                    }
 
                     let mut serialized: Array<felt252> = array![];
 

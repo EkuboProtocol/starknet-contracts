@@ -1,6 +1,6 @@
-use core::option::{OptionTrait};
+use core::option::OptionTrait;
 use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
-use ekubo::math::ticks::{min_sqrt_ratio};
+use ekubo::math::ticks::min_sqrt_ratio;
 use ekubo::types::i129::i129;
 
 #[test]

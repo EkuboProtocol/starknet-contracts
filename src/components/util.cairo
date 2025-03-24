@@ -1,9 +1,9 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
 use core::serde::Serde;
 use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::i129;
 use starknet::{ContractAddress, get_caller_address};
 
 pub fn serialize<T, +Serde<T>>(t: @T) -> Array<felt252> {

@@ -1,16 +1,15 @@
-use core::array::{ArrayTrait};
-
-use core::num::traits::{Zero};
-use ekubo::interfaces::core::{ICoreDispatcherTrait};
-use ekubo::interfaces::positions::{IPositionsDispatcherTrait};
+use core::array::ArrayTrait;
+use core::num::traits::Zero;
+use ekubo::interfaces::core::ICoreDispatcherTrait;
+use ekubo::interfaces::positions::IPositionsDispatcherTrait;
 use ekubo::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
 use ekubo::router::{Depth, IRouterDispatcher, IRouterDispatcherTrait, RouteNode, Swap, TokenAmount};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
-use ekubo::tests::mock_erc20::{IMockERC20DispatcherTrait};
-use ekubo::types::bounds::{Bounds};
-use ekubo::types::i129::{i129};
-use ekubo::types::keys::{PoolKey};
-use starknet::testing::{set_contract_address};
+use ekubo::tests::mock_erc20::IMockERC20DispatcherTrait;
+use ekubo::types::bounds::Bounds;
+use ekubo::types::i129::i129;
+use ekubo::types::keys::PoolKey;
+use starknet::testing::set_contract_address;
 use starknet::{ContractAddress, contract_address_const};
 
 fn recipient() -> ContractAddress {

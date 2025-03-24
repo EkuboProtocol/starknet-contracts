@@ -1,10 +1,10 @@
-use core::hash::{LegacyHash};
-use core::num::traits::{Zero};
-use ekubo::math::ticks::{constants as tick_constants};
-use ekubo::types::bounds::{Bounds};
-use ekubo::types::i129::{i129};
+use core::hash::LegacyHash;
+use core::num::traits::Zero;
+use ekubo::math::ticks::constants as tick_constants;
+use ekubo::types::bounds::Bounds;
+use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-use starknet::{contract_address_const};
+use starknet::contract_address_const;
 
 pub fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
     let a = LegacyHash::hash(0, x);

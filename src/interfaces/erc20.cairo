@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 // A simplified interface for a fungible token standard.
 #[starknet::interface]

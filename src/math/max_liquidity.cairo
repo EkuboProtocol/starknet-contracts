@@ -1,5 +1,5 @@
-use core::num::traits::{Zero};
-use ekubo::math::muldiv::{muldiv};
+use core::num::traits::Zero;
+use ekubo::math::muldiv::muldiv;
 
 // Returns the max amount of liquidity that can be deposited based on amount of token0
 // This function is the inverse of the amount0_delta function

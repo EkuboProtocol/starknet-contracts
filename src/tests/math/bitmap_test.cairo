@@ -1,9 +1,9 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
 use ekubo::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
 };
-use ekubo::types::i129::{i129};
+use ekubo::types::i129::i129;
 
 #[test]
 fn test_zeroable() {
@@ -23,14 +23,14 @@ fn test_set_all_bits() {
         b = b.set_bit(i);
 
         i += 1;
-    };
+    }
 
     i = 0;
     while i != 251 {
         b = b.unset_bit(i);
 
         i += 1;
-    };
+    }
 
     assert(b.is_zero(), 'b.is_zero')
 }

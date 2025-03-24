@@ -1,10 +1,10 @@
 #[starknet::contract]
 pub mod LimitOrders {
-    use core::array::{ArrayTrait};
-    use core::num::traits::{Zero};
+    use core::array::ArrayTrait;
+    use core::num::traits::Zero;
     use core::traits::{Into, TryInto};
-    use ekubo::components::clear::{ClearImpl};
-    use ekubo::components::owned::{Owned as owned_component};
+    use ekubo::components::clear::ClearImpl;
+    use ekubo::components::owned::Owned as owned_component;
     use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use ekubo::components::util::{call_core_with_callback, consume_callback_data, serialize};
     use ekubo::interfaces::core::{
@@ -17,19 +17,19 @@ pub mod LimitOrders {
         PlaceOrderForwardCallbackData, PlaceOrderForwardCallbackResult, PoolState,
     };
     use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::liquidity::{liquidity_delta_to_amount_delta};
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
-    use ekubo::types::bounds::{Bounds};
-    use ekubo::types::call_points::{CallPoints};
-    use ekubo::types::delta::{Delta};
+    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
+    use ekubo::math::ticks::tick_to_sqrt_ratio;
+    use ekubo::types::bounds::Bounds;
+    use ekubo::types::call_points::CallPoints;
+    use ekubo::types::delta::Delta;
     use ekubo::types::i129::{i129, i129Trait};
-    use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::types::keys::{SavedBalanceKey};
+    use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
-    use starknet::{ContractAddress, get_contract_address, storage_access::{StorePacking}};
+    use starknet::storage_access::StorePacking;
+    use starknet::{ContractAddress, get_contract_address};
 
     impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
         fn pack(value: OrderState) -> felt252 {
@@ -375,7 +375,7 @@ pub mod LimitOrders {
 
                     if ((next_tick > tick_after_swap) == price_increasing) {
                         break ();
-                    };
+                    }
 
                     if (is_initialized
                         & ((next_tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_non_zero())) {
@@ -419,7 +419,7 @@ pub mod LimitOrders {
                         initialized_ticks_crossed += 1;
                         pool_initialized_ticks_crossed_entry
                             .write(next_tick, initialized_ticks_crossed);
-                    };
+                    }
 
                     tick_current =
                         if price_increasing {
@@ -427,7 +427,7 @@ pub mod LimitOrders {
                         } else {
                             next_tick - i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
                         };
-                };
+                }
 
                 if (save_amount.is_non_zero()) {
                     core
@@ -610,7 +610,7 @@ pub mod LimitOrders {
 
             while let Option::Some(request) = requests.pop_front() {
                 result.append(self._get_order_info(core, *request));
-            };
+            }
 
             result.span()
         }

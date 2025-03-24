@@ -1,6 +1,6 @@
 use core::num::traits::{WideMul, Zero};
-use core::traits::{Into};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
+use core::traits::Into;
+use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
 use ekubo::types::position::{Position, PositionTrait, multiply_and_get_limb1};
 
 // todo: fuzz with this

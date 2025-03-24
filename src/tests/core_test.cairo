@@ -1,26 +1,24 @@
-use core::num::traits::{Zero};
-use core::option::{OptionTrait};
-use core::traits::{TryInto};
-use ekubo::core::{Core};
-use ekubo::interfaces::core::{ICoreDispatcherTrait};
+use core::num::traits::Zero;
+use core::option::OptionTrait;
+use core::traits::TryInto;
+use ekubo::core::Core;
+use ekubo::interfaces::core::ICoreDispatcherTrait;
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::math::ticks::{
     constants as tick_constants, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
     tick_to_sqrt_ratio,
 };
-
 use ekubo::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner, swap,
     update_position,
 };
 use ekubo::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
-
 use ekubo::tests::mocks::locker::{
     Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
 use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::fees_per_liquidity::{FeesPerLiquidity};
-use ekubo::types::i129::{i129};
+use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
+use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use starknet::testing::{pop_log, set_contract_address};
 use starknet::{ContractAddress, contract_address_const};
@@ -31,9 +29,8 @@ const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
 mod owner_tests {
     use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-
-    use ekubo::positions::{Positions};
-    use starknet::class_hash::{ClassHash};
+    use ekubo::positions::Positions;
+    use starknet::class_hash::ClassHash;
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
         MockERC20, OptionTrait, TryInto, Zero, contract_address_const, default_owner, pop_log,
@@ -152,7 +149,7 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use ekubo::math::ticks::constants::{MAX_TICK_SPACING};
+    use ekubo::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
         Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero,
         contract_address_const, i129, pop_log, tick_to_sqrt_ratio,
@@ -704,7 +701,7 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use ekubo::math::ticks::{tick_to_sqrt_ratio};
+    use ekubo::math::ticks::tick_to_sqrt_ratio;
     use ekubo::tests::helper::{
         Deployer, DeployerTrait, accumulate_as_fees_inner, flash_borrow_inner,
         update_position_inner,
@@ -2210,7 +2207,7 @@ mod save_load_tests {
                 assert(balance_next == 1, 'balance_next');
             },
             _ => { assert(false, 'unexpected'); },
-        };
+        }
 
         assert(
             core

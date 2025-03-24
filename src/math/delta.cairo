@@ -1,6 +1,6 @@
 use core::num::traits::{WideMul, Zero};
-use core::option::{OptionTrait};
-use core::traits::{Into};
+use core::option::OptionTrait;
+use core::traits::Into;
 use ekubo::math::muldiv::{div, muldiv};
 
 // Compute the difference in amount of token0 between two ratios, rounded as specified
