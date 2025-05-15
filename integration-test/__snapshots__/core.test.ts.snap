@@ -1523,16 +1523,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 1000000000000000002n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2631,
-    "steps": 37998,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
@@ -1547,16 +1540,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 1000000000000000002n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2632,
-    "steps": 38004,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706675260n,
@@ -1571,16 +1557,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": -1000000000000000000n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 57,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 77,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2692,
-    "steps": 38760,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4826240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
@@ -1595,16 +1574,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": -1000000000000000000n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 57,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 77,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2692,
-    "steps": 38764,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4826240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829747992n,
@@ -1619,15 +1591,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 0n,
   },
   "execution_resources": {
-    "data_availability": {
-      "l1_data_gas": 128,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 53,
-    "poseidon_builtin_applications": 3,
-    "range_check_builtin_applications": 582,
-    "steps": 17230,
+    "l1_data_gas": 128,
+    "l1_gas": 0,
+    "l2_gas": 2044800,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1642,15 +1608,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 0n,
   },
   "execution_resources": {
-    "data_availability": {
-      "l1_data_gas": 128,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 53,
-    "poseidon_builtin_applications": 3,
-    "range_check_builtin_applications": 582,
-    "steps": 17221,
+    "l1_data_gas": 128,
+    "l1_gas": 0,
+    "l2_gas": 2044800,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431768211456n,
@@ -1701,16 +1661,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 10000n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2573,
-    "steps": 37784,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463463374607431771614279n,
@@ -1725,16 +1678,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": -999999999999999998n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 57,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 77,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2626,
-    "steps": 38552,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4826240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
@@ -1749,16 +1695,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": -999999999999999998n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 57,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 77,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2626,
-    "steps": 38556,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4826240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463123092240510829748333n,
@@ -1773,16 +1712,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 1000000000000000000n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2581,
-    "steps": 37830,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
@@ -1797,16 +1729,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 1000000000000000000n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2582,
-    "steps": 37836,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282366920938463803656974352706674919n,
@@ -1821,16 +1746,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": -79228156237163099530060194283n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 84,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 77,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2631,
-    "steps": 39100,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 5226240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282339960993932299601503360233022685n,
@@ -1845,16 +1763,9 @@ exports[`core > regular pool > 1e32 full range liquidity, starting at price 1, t
     "amount1": 79228162514264337593543950336n,
   },
   "execution_resources": {
-    "bitwise_builtin_applications": 28,
-    "data_availability": {
-      "l1_data_gas": 640,
-      "l1_gas": 0,
-    },
-    "ec_op_builtin_applications": 3,
-    "pedersen_builtin_applications": 76,
-    "poseidon_builtin_applications": 11,
-    "range_check_builtin_applications": 2583,
-    "steps": 37844,
+    "l1_data_gas": 640,
+    "l1_gas": 0,
+    "l2_gas": 4466240,
   },
   "liquidity_after": 1000000000000000000000000000000000000n,
   "sqrt_ratio_after": 340282393880885130614014402098783298475n,
@@ -2292,18 +2203,6 @@ exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%,
 }
 `;
 
-exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
 exports[`core > regular pool > no liquidity, starting at max, tick_spacing=0.6%, fee=0.3% > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
@@ -2395,18 +2294,6 @@ exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%,
 `;
 
 exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap -1000000000000000000 token1 skip 5 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token0 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at min, tick_spacing=0.6%, fee=0.3% > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }
@@ -2616,18 +2503,6 @@ exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0
 }
 `;
 
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token0 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 0 token1 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
 exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=0.6%, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
@@ -2724,18 +2599,6 @@ exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1
 }
 `;
 
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token0 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 0 token1 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
 exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=1, fee=max > swap 1 token1 limit 1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
@@ -2827,18 +2690,6 @@ exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=m
 `;
 
 exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap -1000000000000000000 token1 skip 5 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token0 1`] = `
-{
-  "revert_reason": "NOT_INITIALIZED",
-}
-`;
-
-exports[`core > regular pool > no liquidity, starting at price 1, tick_spacing=max, fee=max > swap 0 token1 1`] = `
 {
   "revert_reason": "NOT_INITIALIZED",
 }

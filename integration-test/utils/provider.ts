@@ -20,7 +20,7 @@ export async function setDevnetTime(time: number) {
 }
 
 const PREDECLARED_OZ_ACCOUNT_CLASS_HASH =
-  "0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f";
+  "0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564";
 
 export async function createAccount(): Promise<Account> {
   const privateKey = stark.randomAddress();
@@ -35,7 +35,7 @@ export async function createAccount(): Promise<Account> {
     starkKeyPub,
     PREDECLARED_OZ_ACCOUNT_CLASS_HASH,
     constructorCalldata,
-    0
+    0,
   );
 
   const account = new Account(provider, expectedAccountAddress, privateKey);
@@ -45,7 +45,7 @@ export async function createAccount(): Promise<Account> {
     headers: {
       "content-type": "application/json",
     },
-    body: `{"jsonrpc": "2.0","id": "1","method": "devnet_mint","params":{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"WEI"}}`,
+    body: `{"jsonrpc": "2.0","id": "1","method": "devnet_mint","params":{"address":"${account.address}","amount":10000000000000000000000000000,"unit":"FRI"}}`,
   });
 
   if (!response.ok) {
@@ -58,7 +58,7 @@ export async function createAccount(): Promise<Account> {
       constructorCalldata,
       addressSalt: starkKeyPub,
     },
-    { maxFee: 1_000_000_000_000_000_000n, nonce: 1n }
+    { maxFee: 1_000_000_000_000_000_000n, nonce: 1n },
   );
 
   await provider.waitForTransaction(transaction_hash, { retryInterval: 0 });

@@ -44,12 +44,12 @@ export async function setupContracts(expected?: {
   const deployer = new Account(
     provider,
     "0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691",
-    "0x0000000000000000000000000000000071d7bb07b9a64f6f78ac4c816aff4da9"
+    "0x0000000000000000000000000000000071d7bb07b9a64f6f78ac4c816aff4da9",
   );
 
   const simpleTokenContractDeclare = await deployer.declareIfNot({
-    contract: MockERC20Contract as any,
-    casm: MockERC20CASM as any,
+    contract: MockERC20Contract,
+    casm: MockERC20CASM,
   });
   const coreContractDeclare = await deployer.declareIfNot({
     contract: CoreCompiledContract as any,
@@ -110,7 +110,7 @@ export async function setupContracts(expected?: {
   const positions = new Contract(
     PositionsCompiledContract.abi,
     positionsAddress,
-    deployer
+    deployer,
   );
 
   await positions.invoke("set_twamm", [twammAddress]);
@@ -132,12 +132,12 @@ export async function setupContracts(expected?: {
 }
 
 export async function prepareContracts(
-  setup: Awaited<ReturnType<typeof setupContracts>>
+  setup: Awaited<ReturnType<typeof setupContracts>>,
 ) {
   const account = await createAccount();
   const getTxSettings = await getNextTransactionSettingsFunction(
     account,
-    "0x1"
+    "0x1",
   );
 
   const core = new Contract(CoreContract.abi, setup.core, account);
@@ -145,7 +145,7 @@ export async function prepareContracts(
   const positionsContract = new Contract(
     PositionsContract.abi,
     setup.positions,
-    account
+    account,
   );
   const router = new Contract(RouterContract.abi, setup.router, account);
   const twamm = new Contract(TWAMMCompiledContract.abi, setup.twamm, account);

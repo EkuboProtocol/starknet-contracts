@@ -1,4 +1,9 @@
-import { BlockTag, Call } from "starknet";
+import {
+  BlockTag,
+  Call,
+  RevertedTransactionReceiptResponse,
+  SuccessfulTransactionReceiptResponse,
+} from "starknet";
 import { POOL_CASES } from "./cases/poolCases";
 import { SWAP_CASES } from "./cases/swapCases";
 import { getAmountsForLiquidity } from "./utils/liquidityMath";
@@ -28,14 +33,14 @@ describe("core", () => {
 
   beforeAll(async () => {
     setup = await setupContracts({
-      core: "0x124359ff75dd4f374cc9d01341f02e8c4029a04938e4cfd732b67ab998ced18",
+      core: "0x4e20057d69276df926dbd94503406b4579b075190f090e6a4866761f0f5fade",
       positions:
-        "0x2567840da18adf3e275ac557a8999838b2afb21f7ccefd99c161ba6a205521d",
+        "0x4de6ad87b49d56de81e23a1b240e1af664e7e873ee501bf213978121f328807",
       router:
-        "0x5adfd95a9568b44fe36be89e771abaf4d510f611e23d18bca65666a10981263",
-      nft: "0x3c64eecf78636b51693be3fdf7b997760ee5a2905b67b8f48cd789d416530a2",
+        "0x2e570504e9e1914ad82f90b52676081f5ee9c1a88eacb26580342b5066dd335",
+      nft: "0x3157706145c3543025c23ada4f1334e219de0998b2f64721a2cb8104dfc908d",
       twamm:
-        "0x5b0656e9c18f0fa66cdc616d8cdc07d59e022745a1d786912b8ef608ae368bf",
+        "0x45190d3f9424e8e7e5818443ab0b492644dcdf01665c829f30ad67b19518a05",
       tokenClassHash:
         "0x1d7f0f241d31b078e270df7d28bf159246fdeaa6b83e5e622a6bcb233acc2e",
     });
@@ -98,11 +103,10 @@ describe("core", () => {
                         upper: toI129(bounds.upper),
                       },
                       liquidity,
-                    ]
+                    ],
                   ),
                 ],
-                [],
-                getTxSettings()
+                getTxSettings(),
               );
 
               txHashes.push(transaction_hash);
@@ -112,8 +116,8 @@ describe("core", () => {
               txHashes.map((txHash) =>
                 provider.waitForTransaction(txHash, {
                   retryInterval: 0,
-                })
-              )
+                }),
+              ),
             );
 
             const positionsMinted: { token_id: bigint; liquidity: bigint }[] =
@@ -121,13 +125,13 @@ describe("core", () => {
                 const Transfer = findMap(
                   nft.parseEvents(receipt),
                   ({ "ekubo::owned_nft::OwnedNFT::Transfer": Transfer }) =>
-                    Transfer
+                    Transfer,
                 );
 
                 const PositionUpdated = findMap(
                   core.parseEvents(receipt),
                   ({ "ekubo::core::Core::PositionUpdated": PositionUpdated }) =>
-                    PositionUpdated
+                    PositionUpdated,
                 );
 
                 return {
@@ -153,8 +157,7 @@ describe("core", () => {
                 token0.populate("transfer", [setup.router, remaining0]),
                 token1.populate("transfer", [setup.router, remaining1]),
               ],
-              [],
-              getTxSettings()
+              getTxSettings(),
             );
 
             let transaction_hash: string;
@@ -172,21 +175,23 @@ describe("core", () => {
                     token: swapCase.isToken1 ? token1.address : token0.address,
                   },
                 ],
-                getTxSettings()
+                getTxSettings(),
               ));
             } catch (error) {
               transaction_hash = error.transaction_hash;
               if (!transaction_hash) throw error;
             }
 
-            const swap_receipt = await provider.waitForTransaction(
+            const receipt = await provider.waitForTransaction(
               transaction_hash,
-              { retryInterval: 0 }
+              { retryInterval: 0 },
             );
 
-            switch (swap_receipt.execution_status) {
-              case "REVERTED": {
-                const revertReason = swap_receipt.revert_reason;
+            switch (receipt.statusReceipt) {
+              case "reverted": {
+                const revertReason = (
+                  receipt.value as RevertedTransactionReceiptResponse
+                ).revert_reason;
 
                 const hexErrorMessage =
                   /Failure reason: 0x([a-fA-F0-9]+)/g.exec(revertReason)?.[1];
@@ -194,22 +199,23 @@ describe("core", () => {
                 expect({
                   revert_reason: hexErrorMessage
                     ? Buffer.from(hexErrorMessage, "hex").toString("ascii")
-                    : /(RunResources has no remaining steps)/g.exec(
-                        revertReason
-                      )?.[1] ?? revertReason,
+                    : (/(RunResources has no remaining steps)/g.exec(
+                        revertReason,
+                      )?.[1] ?? revertReason),
                 }).toMatchSnapshot();
                 break;
               }
-              case "SUCCEEDED": {
-                const execution_resources = swap_receipt.execution_resources;
+              case "success": {
+                const execution_resources = (
+                  receipt.value as SuccessfulTransactionReceiptResponse
+                ).execution_resources;
+
                 if ("memory_holes" in execution_resources) {
                   delete execution_resources["memory_holes"];
                 }
 
                 const { sqrt_ratio_after, tick_after, liquidity_after, delta } =
-                  core.parseEvents(swap_receipt)[0][
-                    "ekubo::core::Core::Swapped"
-                  ];
+                  core.parseEvents(receipt)[0]["ekubo::core::Core::Swapped"];
 
                 const { amount0, amount1 } = delta as unknown as {
                   amount0: i129;
@@ -249,7 +255,7 @@ describe("core", () => {
                 (await positionsContract.call(
                   "get_token_info",
                   [token_id, poolKey, boundsArgument],
-                  { blockIdentifier: BlockTag.pending }
+                  { blockIdentifier: BlockTag.PENDING },
                 )) as unknown as {
                   liquidity: bigint;
                   amount0: bigint;
@@ -273,12 +279,12 @@ describe("core", () => {
                   0,
                   // collect_fees =
                   true,
-                ])
+                ]),
               );
             }
 
             // wait for all the withdrawals to be mined
-            await account.execute(withdrawalCalls, [], getTxSettings());
+            await account.execute(withdrawalCalls, getTxSettings());
 
             const [protocolFee0, protocolFee1, balance0, balance1] =
               await Promise.all([
@@ -349,7 +355,7 @@ describe("core", () => {
 
                       // starting tick
                       toI129(pool.startingTick),
-                    ]
+                    ],
                   );
 
                   const txHashes: string[] = [];
@@ -375,11 +381,10 @@ describe("core", () => {
                               upper: toI129(bounds.upper),
                             },
                             liquidity,
-                          ]
+                          ],
                         ),
                       ],
-                      [],
-                      getTxSettings()
+                      getTxSettings(),
                     );
 
                     txHashes.push(transaction_hash);
@@ -389,17 +394,17 @@ describe("core", () => {
                     txHashes.map((txHash) =>
                       provider.waitForTransaction(txHash, {
                         retryInterval: 0,
-                      })
-                    )
+                      }),
+                    ),
                   );
 
                   expect(
                     mintReceipts.every(
-                      (receipt) => receipt.execution_status === "SUCCEEDED"
+                      (receipt) => receipt.statusReceipt === "success",
                     ),
                     `mints did not succeed: ${mintReceipts
-                      .map((r) => r.revert_reason)
-                      .join("; ")}`
+                      .map((r) => r.value)
+                      .join("; ")}`,
                   ).toEqual(true);
 
                   const mintedPositionTokens = mintReceipts.map((receipt) => ({
@@ -410,20 +415,20 @@ describe("core", () => {
                           ({
                             "ekubo::core::Core::PositionUpdated":
                               PositionUpdated,
-                          }) => PositionUpdated
+                          }) => PositionUpdated,
                         ) as unknown as {
                           params: {
                             liquidity_delta: { mag: bigint; sign: boolean };
                           };
                         }
-                      ).params.liquidity_delta
+                      ).params.liquidity_delta,
                     ),
                     token_id: (
                       findMap(
                         nft.parseEvents(receipt),
                         ({
                           "ekubo::owned_nft::OwnedNFT::Transfer": Transfer,
-                        }) => Transfer
+                        }) => Transfer,
                       ) as {
                         from: bigint;
                         to: bigint;
@@ -474,12 +479,11 @@ describe("core", () => {
                                   startingTime + order.relativeTimes.end,
                               },
                               order.amount,
-                            ]
+                            ],
                           );
                         }),
                       ],
-                      [],
-                      getTxSettings()
+                      getTxSettings(),
                     );
 
                     const orderPlacementReceipt =
@@ -488,9 +492,9 @@ describe("core", () => {
                       });
 
                     expect(
-                      orderPlacementReceipt.execution_status,
-                      `order placement succeeded: ${orderPlacementReceipt.revert_reason}`
-                    ).toEqual("SUCCEEDED");
+                      orderPlacementReceipt.statusReceipt,
+                      `order placement succeeded: ${orderPlacementReceipt.value}`,
+                    ).toEqual("success");
 
                     mintedOrders = twamm
                       .parseEvents(orderPlacementReceipt)
@@ -498,7 +502,7 @@ describe("core", () => {
                         ({
                           "ekubo::extensions::twamm::TWAMM::OrderUpdated":
                             OrderUpdated,
-                        }) => OrderUpdated
+                        }) => OrderUpdated,
                       )
                       .filter((x) => !!x)
                       .map(({ salt, order_key, sale_rate_delta }: any) => ({
@@ -525,8 +529,7 @@ describe("core", () => {
                               },
                             ]),
                           ],
-                          [],
-                          getTxSettings()
+                          getTxSettings(),
                         );
 
                         const executeVirtualOrdersReceipt =
@@ -539,7 +542,7 @@ describe("core", () => {
                           ({
                             "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
-                          }) => VirtualOrdersExecuted
+                          }) => VirtualOrdersExecuted,
                         );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
@@ -547,11 +550,13 @@ describe("core", () => {
 
                         const Swapped = findMap(
                           core.parseEvents(executeVirtualOrdersReceipt),
-                          ({ "ekubo::core::Core::Swapped": Swapped }) => Swapped
+                          ({ "ekubo::core::Core::Swapped": Swapped }) =>
+                            Swapped,
                         );
 
-                        const executionResources =
-                          executeVirtualOrdersReceipt.execution_resources;
+                        const executionResources = (
+                          executeVirtualOrdersReceipt.value as SuccessfulTransactionReceiptResponse
+                        ).execution_resources;
                         if ("memory_holes" in executionResources) {
                           delete executionResources["memory_holes"];
                         }
@@ -570,7 +575,7 @@ describe("core", () => {
                           executedSwap,
                           executionResources,
                         }).toMatchSnapshot(
-                          `execute_virtual_orders after ${after} seconds`
+                          `execute_virtual_orders after ${after} seconds`,
                         );
                         break;
                       }
@@ -599,26 +604,25 @@ describe("core", () => {
                               },
                             ]),
                           ],
-                          [],
-                          getTxSettings()
+                          getTxSettings(),
                         );
 
                         const swap_receipt = await provider.waitForTransaction(
                           transaction_hash,
-                          { retryInterval: 0 }
+                          { retryInterval: 0 },
                         );
 
                         expect(
-                          swap_receipt.execution_status,
-                          "swap success"
-                        ).toEqual("SUCCEEDED");
+                          swap_receipt.statusReceipt,
+                          "swap success",
+                        ).toEqual("success");
 
                         const VirtualOrdersExecuted = findMap(
                           twamm.parseEvents(swap_receipt),
                           ({
                             "ekubo::extensions::twamm::TWAMM::VirtualOrdersExecuted":
                               VirtualOrdersExecuted,
-                          }) => VirtualOrdersExecuted
+                          }) => VirtualOrdersExecuted,
                         );
                         // the token0 and token1 change with each run
                         if (VirtualOrdersExecuted)
@@ -637,8 +641,9 @@ describe("core", () => {
                           };
                         });
 
-                        const executionResources =
-                          swap_receipt.execution_resources;
+                        const executionResources = (
+                          swap_receipt.value as SuccessfulTransactionReceiptResponse
+                        ).execution_resources;
                         if ("memory_holes" in executionResources) {
                           delete executionResources["memory_holes"];
                         }
@@ -672,22 +677,21 @@ describe("core", () => {
                             0,
                             // collect_fees =
                             true,
-                          ])
+                          ]),
                         ),
-                        [],
-                        getTxSettings()
+                        getTxSettings(),
                       );
 
                     const {
-                      execution_status: positionWithdrawalTransactionStatus,
-                      revert_reason,
+                      statusReceipt: positionWithdrawalTransactionStatus,
+                      value: withdrawalTransactionReceipt,
                     } = await account.waitForTransaction(
-                      withdrawalTransactionHash
+                      withdrawalTransactionHash,
                     );
                     expect(
                       positionWithdrawalTransactionStatus,
-                      `position withdrawal succeeded: ${revert_reason}`
-                    ).toEqual("SUCCEEDED");
+                      `position withdrawal succeeded: ${withdrawalTransactionReceipt}`,
+                    ).toEqual("success");
                   }
 
                   if (mintedOrders.length > 0) {
@@ -698,27 +702,26 @@ describe("core", () => {
                       mintedOrders.map(({ token_id, order_key }) =>
                         positionsContract.populate(
                           "withdraw_proceeds_from_sale_to_self",
-                          [token_id, order_key]
-                        )
+                          [token_id, order_key],
+                        ),
                       ),
-                      [],
-                      getTxSettings()
+                      getTxSettings(),
                     );
 
                     const withdrawProceedsReceipt =
                       await account.waitForTransaction(
-                        withdrawProceedsTransactionHash
+                        withdrawProceedsTransactionHash,
                       );
 
                     expect(
-                      withdrawProceedsReceipt.execution_status,
-                      `withdraw proceeds failed: ${withdrawProceedsReceipt.revert_reason}`
-                    ).toEqual("SUCCEEDED");
+                      withdrawProceedsReceipt.statusReceipt,
+                      `withdraw proceeds failed: ${withdrawProceedsReceipt.value}`,
+                    ).toEqual("success");
 
                     const Withdrawals = twamm
                       .parseEvents(withdrawProceedsReceipt)
                       .filter(
-                        ({ OrderProceedsWithdrawn }) => OrderProceedsWithdrawn
+                        ({ OrderProceedsWithdrawn }) => OrderProceedsWithdrawn,
                       );
 
                     const proceedsWithdrawn = Withdrawals.map((withdrawal) => {
@@ -732,7 +735,7 @@ describe("core", () => {
                     }).toMatchSnapshot();
                   }
                 },
-                300_000
+                300_000,
               );
             }
           });
