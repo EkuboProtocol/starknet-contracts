@@ -55,9 +55,44 @@ fn test_streamed_payment_start_in_past() {
             end_time: start + 15,
         );
     assert_eq!(streamed_payment.collect(id), 6);
+    assert_eq!(streamed_payment.collect(id), 0);
     set_block_timestamp(start + 10);
-    assert_eq!(streamed_payment.collect(id), 66);
+    assert_eq!(streamed_payment.collect(id), 60);
+    assert_eq!(streamed_payment.collect(id), 0);
     set_block_timestamp(start + 14);
-    assert_eq!(streamed_payment.collect(id), 3);
+    assert_eq!(streamed_payment.collect(id), 27);
+    assert_eq!(streamed_payment.collect(id), 0);
+    set_block_timestamp(start + 15);
+    assert_eq!(streamed_payment.collect(id), 7);
+    assert_eq!(streamed_payment.collect(id), 0);
+}
+
+
+#[test]
+fn test_streamed_payment_cancel_in_middle() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    let start = 100;
+    set_block_timestamp(start + 1);
+    token.approve(streamed_payment.contract_address, 100);
+    let id = streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: start,
+            end_time: start + 15,
+        );
+    assert_eq!(streamed_payment.collect(id), 6);
+    assert_eq!(streamed_payment.collect(id), 0);
+    set_block_timestamp(start + 10);
+    assert_eq!(streamed_payment.cancel(id), 34);
+    assert_eq!(token.balanceOf(recipient()), 66);
+    assert_eq!(streamed_payment.collect(id), 0);
+    set_block_timestamp(start + 14);
+    assert_eq!(streamed_payment.collect(id), 0);
+    set_block_timestamp(start + 15);
+    assert_eq!(streamed_payment.collect(id), 0);
 }
 

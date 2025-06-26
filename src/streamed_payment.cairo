@@ -5,10 +5,10 @@ pub struct PaymentStreamInfo {
     pub token_address: ContractAddress,
     pub owner: ContractAddress,
     pub recipient: ContractAddress,
-    pub amount_remaining: u128,
+    pub amount_total: u128,
+    pub amount_paid: u128,
     pub start_time: u64,
     pub end_time: u64,
-    pub seconds_paid: u64,
 }
 
 #[starknet::interface]
@@ -109,10 +109,10 @@ pub mod StreamedPayment {
                         token_address: token_address,
                         owner: owner,
                         recipient: recipient,
-                        amount_remaining: amount,
+                        amount_total: amount,
+                        amount_paid: 0,
                         start_time: start_time,
                         end_time: end_time,
-                        seconds_paid: 0,
                     },
                 );
 
@@ -143,27 +143,20 @@ pub mod StreamedPayment {
             let mut stream = stream_entry.read();
 
             let now = get_block_timestamp();
-            let (payment, seconds_paid): (u128, u64) = if (now < stream.start_time) {
-                (0, 0)
+            let payment: u128 = if now < stream.start_time {
+                0
             } else if now < stream.end_time {
-                let seconds_paid_next = now - stream.start_time;
-                let amount_remaining: u256 = stream.amount_remaining.into();
-                let remaining_duration = stream.end_time - stream.start_time - stream.seconds_paid;
+                let amount_owed: u256 = stream.amount_total.into()
+                    * (now - stream.start_time).into()
+                    / (stream.end_time - stream.start_time).into();
 
-                (
-                    ((amount_remaining * (seconds_paid_next - stream.seconds_paid).into())
-                        / remaining_duration.into())
-                        .try_into()
-                        .unwrap(),
-                    seconds_paid_next,
-                )
+                (amount_owed - stream.amount_paid.into()).try_into().unwrap()
             } else {
-                (stream.amount_remaining, stream.end_time - stream.start_time)
+                stream.amount_total - stream.amount_paid
             };
 
             if (payment.is_non_zero()) {
-                stream.amount_remaining = stream.amount_remaining - payment;
-                stream.seconds_paid = seconds_paid;
+                stream.amount_paid += payment;
 
                 stream_entry.write(stream);
 
@@ -186,11 +179,13 @@ pub mod StreamedPayment {
 
             assert(stream.owner == get_caller_address(), 'OWNER_ONLY');
 
-            let refund = stream.amount_remaining;
+            let refund = stream.amount_total - stream.amount_paid;
 
             if (refund.is_non_zero()) {
-                // zero out the amount remaining
-                stream.amount_remaining = 0;
+                // the total amount is now just the amount paid
+                stream.amount_total = stream.amount_paid;
+                // refund is only non zero iff block timestamp < end_time
+                stream.end_time = get_block_timestamp();
                 stream_entry.write(stream);
 
                 assert(
