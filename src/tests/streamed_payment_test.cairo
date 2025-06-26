@@ -1,6 +1,6 @@
 use ekubo::streamed_payment::IStreamedPaymentDispatcherTrait;
 use ekubo::tests::helper::{Deployer, DeployerTrait};
-use starknet::testing::set_block_timestamp;
+use starknet::testing::{set_block_timestamp, set_contract_address};
 use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
 use super::mock_erc20::MockERC20IERC20ImplTrait;
 
@@ -143,5 +143,46 @@ fn test_cancel_after_end() {
         );
     assert_eq!(streamed_payment.cancel(id), 0);
     assert_eq!(streamed_payment.collect(id), 0);
+}
+
+
+#[test]
+#[should_panic(expected: ('Only owner can cancel', 'ENTRYPOINT_FAILED'))]
+fn test_cancel_by_non_owner() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    let start = 100;
+    set_block_timestamp(start + 15);
+    token.approve(streamed_payment.contract_address, 100);
+    let id = streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: start,
+            end_time: start + 15,
+        );
+
+    set_contract_address(recipient());
+    assert_eq!(streamed_payment.cancel(id), 0);
+}
+
+
+#[test]
+#[should_panic(expected: ('End time < start time', 'ENTRYPOINT_FAILED'))]
+fn test_create_stream_end_time_gt_start_time() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    token.approve(streamed_payment.contract_address, 100);
+    streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: 3,
+            end_time: 1,
+        );
 }
 

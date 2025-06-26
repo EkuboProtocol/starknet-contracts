@@ -177,7 +177,7 @@ pub mod StreamedPayment {
             let stream_entry = self.streams.entry(id);
             let mut stream = stream_entry.read();
 
-            assert(stream.owner == get_caller_address(), 'OWNER_ONLY');
+            assert(stream.owner == get_caller_address(), 'Only owner can cancel');
 
             let refund = stream.amount_total - stream.amount_paid;
 
