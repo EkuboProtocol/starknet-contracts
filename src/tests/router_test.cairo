@@ -9,11 +9,11 @@ use ekubo::tests::mock_erc20::IMockERC20DispatcherTrait;
 use ekubo::types::bounds::Bounds;
 use ekubo::types::i129::i129;
 use ekubo::types::keys::PoolKey;
+use starknet::ContractAddress;
 use starknet::testing::set_contract_address;
-use starknet::{ContractAddress, contract_address_const};
 
 fn recipient() -> ContractAddress {
-    contract_address_const::<0x12345678>()
+    0x12345678.try_into().unwrap()
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
     core.initialize_pool(pool_key_a, Zero::zero());
     core.initialize_pool(pool_key_b, Zero::zero());
 
-    let caller = contract_address_const::<1>();
+    let caller = 1.try_into().unwrap();
     set_contract_address(caller);
 
     token0.increase_balance(positions.contract_address, 10000);

@@ -4,7 +4,7 @@ use ekubo::tests::helper::{Deployer, DeployerTrait};
 use ekubo::tests::mock_erc20::MockERC20::Transfer;
 use ekubo::tests::mock_erc20::MockERC20IERC20ImplTrait;
 use starknet::testing::pop_log;
-use starknet::{contract_address_const, get_contract_address};
+use starknet::{ContractAddress, get_contract_address};
 
 
 #[test]
@@ -13,15 +13,15 @@ fn test_constructor() {
 
     let erc20 = d
         .deploy_mock_token_with_balance(
-            contract_address_const::<1234>(), 0xffffffffffffffffffffffffffffffff,
+            1234.try_into().unwrap(), 0xffffffffffffffffffffffffffffffff,
         );
     assert(
-        erc20.balanceOf(contract_address_const::<1234>()) == 0xffffffffffffffffffffffffffffffff,
+        erc20.balanceOf(1234.try_into().unwrap()) == 0xffffffffffffffffffffffffffffffff,
         'balance of this',
     );
     let transfer: Transfer = pop_log(erc20.contract_address).unwrap();
     assert(transfer.from.is_zero(), 'transfer from');
-    assert(transfer.to == contract_address_const::<1234>(), 'transfer to');
+    assert(transfer.to == 1234.try_into().unwrap(), 'transfer to');
     assert(transfer.amount == 0xffffffffffffffffffffffffffffffff, 'transfer amount');
 }
 
@@ -32,7 +32,7 @@ fn test_transfer() {
         .deploy_mock_token_with_balance(get_contract_address(), 0xffffffffffffffffffffffffffffffff);
     pop_log::<Transfer>(erc20.contract_address).expect('CONSTRUCTOR');
 
-    let recipient = contract_address_const::<0x1234>();
+    let recipient: ContractAddress = 0x1234.try_into().unwrap();
     let amount = 1234_u256;
     assert(erc20.transfer(recipient, amount) == true, 'transfer');
     assert(

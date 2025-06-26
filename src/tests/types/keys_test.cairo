@@ -4,7 +4,6 @@ use ekubo::math::ticks::constants as tick_constants;
 use ekubo::types::bounds::Bounds;
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-use starknet::contract_address_const;
 
 pub fn check_hashes_differ<T, +LegacyHash<T>, +Copy<T>, +Drop<T>>(x: T, y: T) {
     let a = LegacyHash::hash(0, x);
@@ -25,11 +24,11 @@ fn test_pool_key_hash_differs_for_any_field_or_state_change() {
     };
 
     let mut other_token0 = base;
-    other_token0.token0 = contract_address_const::<1>();
+    other_token0.token0 = 1.try_into().unwrap();
     check_hashes_differ(base, other_token0);
 
     let mut other_token1 = base;
-    other_token1.token1 = contract_address_const::<1>();
+    other_token1.token1 = 1.try_into().unwrap();
     check_hashes_differ(base, other_token1);
 
     let mut other_fee = base;
@@ -41,7 +40,7 @@ fn test_pool_key_hash_differs_for_any_field_or_state_change() {
     check_hashes_differ(base, other_tick_spacing);
 
     let mut other_extension = base;
-    other_extension.extension = contract_address_const::<1>();
+    other_extension.extension = 1.try_into().unwrap();
     check_hashes_differ(base, other_extension);
 
     check_hashes_differ(other_token0, other_token1);
@@ -63,8 +62,8 @@ fn test_pool_key_hash_differs_for_any_field_or_state_change() {
 #[should_panic(expected: ('TOKEN_ORDER',))]
 fn test_pool_key_check_valid_order_wrong_order() {
     PoolKey {
-        token0: contract_address_const::<2>(),
-        token1: contract_address_const::<0>(),
+        token0: 2.try_into().unwrap(),
+        token1: 0.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: 1,
         extension: Zero::zero(),
@@ -76,8 +75,8 @@ fn test_pool_key_check_valid_order_wrong_order() {
 #[should_panic(expected: ('TOKEN_ORDER',))]
 fn test_pool_key_check_valid_order_same_token() {
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<1>(),
+        token0: 1.try_into().unwrap(),
+        token1: 1.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: 1,
         extension: Zero::zero(),
@@ -89,8 +88,8 @@ fn test_pool_key_check_valid_order_same_token() {
 #[should_panic(expected: ('TOKEN_NON_ZERO',))]
 fn test_pool_key_check_non_zero() {
     PoolKey {
-        token0: contract_address_const::<0>(),
-        token1: contract_address_const::<2>(),
+        token0: 0.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: 1,
         extension: Zero::zero(),
@@ -102,8 +101,8 @@ fn test_pool_key_check_non_zero() {
 #[should_panic(expected: ('TICK_SPACING',))]
 fn test_pool_key_check_tick_spacing_non_zero() {
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: Zero::zero(),
         extension: Zero::zero(),
@@ -115,8 +114,8 @@ fn test_pool_key_check_tick_spacing_non_zero() {
 #[should_panic(expected: ('TICK_SPACING',))]
 fn test_pool_key_check_tick_spacing_max() {
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING + 1,
         extension: Zero::zero(),
@@ -127,8 +126,8 @@ fn test_pool_key_check_tick_spacing_max() {
 #[test]
 fn test_pool_key_check_valid_is_valid() {
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: 1,
         extension: Zero::zero(),
@@ -136,8 +135,8 @@ fn test_pool_key_check_valid_is_valid() {
         .check_valid();
 
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: Zero::zero(),
         tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: Zero::zero(),
@@ -145,8 +144,8 @@ fn test_pool_key_check_valid_is_valid() {
         .check_valid();
 
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: 0xffffffffffffffffffffffffffffffff,
         tick_spacing: tick_constants::MAX_TICK_SPACING,
         extension: Zero::zero(),
@@ -154,11 +153,11 @@ fn test_pool_key_check_valid_is_valid() {
         .check_valid();
 
     PoolKey {
-        token0: contract_address_const::<1>(),
-        token1: contract_address_const::<2>(),
+        token0: 1.try_into().unwrap(),
+        token1: 2.try_into().unwrap(),
         fee: 0xffffffffffffffffffffffffffffffff,
         tick_spacing: tick_constants::MAX_TICK_SPACING,
-        extension: contract_address_const::<2>(),
+        extension: 2.try_into().unwrap(),
     }
         .check_valid();
 }
@@ -170,8 +169,8 @@ fn test_pool_key_hash() {
     >::hash(
         0,
         PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -182,11 +181,11 @@ fn test_pool_key_hash() {
     >::hash(
         0,
         PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
-            extension: contract_address_const::<3>(),
+            extension: 3.try_into().unwrap(),
         },
     );
     let hash_with_different_fee = LegacyHash::<
@@ -194,8 +193,8 @@ fn test_pool_key_hash() {
     >::hash(
         0,
         PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 1,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -206,8 +205,8 @@ fn test_pool_key_hash() {
     >::hash(
         0,
         PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 2,
             extension: Zero::zero(),
@@ -227,11 +226,11 @@ fn test_pool_key_hash_result() {
         >::hash(
             1234,
             PoolKey {
-                token0: contract_address_const::<1>(),
-                token1: contract_address_const::<2>(),
+                token0: 1.try_into().unwrap(),
+                token1: 2.try_into().unwrap(),
                 fee: 3,
                 tick_spacing: 4,
-                extension: contract_address_const::<5>(),
+                extension: 5.try_into().unwrap(),
             },
         ) == 0x2cfe2f704e1821da98a42a506dbd7fa4f356af4a491d2bd0901beedd4027db6,
         'hash',
@@ -246,11 +245,11 @@ fn test_pool_key_hash_result_reverse() {
         >::hash(
             4321,
             PoolKey {
-                token0: contract_address_const::<5>(),
-                token1: contract_address_const::<4>(),
+                token0: 5.try_into().unwrap(),
+                token1: 4.try_into().unwrap(),
                 fee: 32,
                 tick_spacing: 2,
-                extension: contract_address_const::<1>(),
+                extension: 1.try_into().unwrap(),
             },
         ) == 0x48442dcb25c83d8e9eab16c4d669e79407743073e9b76798ec54d528dd35aa2,
         'hash',
@@ -270,7 +269,7 @@ fn test_position_key_hash_differs_for_any_field_or_state_change() {
     other_salt.salt = 1;
 
     let mut other_owner = base;
-    other_owner.owner = contract_address_const::<1>();
+    other_owner.owner = 1.try_into().unwrap();
 
     let mut other_lower = base;
     other_lower.bounds.lower = i129 { mag: 1, sign: true };
@@ -301,7 +300,7 @@ fn test_position_key_hash() {
         0,
         PositionKey {
             salt: 0,
-            owner: contract_address_const::<1>(),
+            owner: 1.try_into().unwrap(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         },
     );
@@ -312,7 +311,7 @@ fn test_position_key_hash() {
         0,
         PositionKey {
             salt: 1,
-            owner: contract_address_const::<1>(),
+            owner: 1.try_into().unwrap(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         },
     );
@@ -323,7 +322,7 @@ fn test_position_key_hash() {
         1,
         PositionKey {
             salt: 1,
-            owner: contract_address_const::<1>(),
+            owner: 1.try_into().unwrap(),
             bounds: Bounds { lower: Zero::zero(), upper: Zero::zero() },
         },
     );
@@ -338,7 +337,7 @@ fn test_position_key_hash_result() {
             1234,
             PositionKey {
                 salt: 1,
-                owner: contract_address_const::<2>(),
+                owner: 2.try_into().unwrap(),
                 bounds: Bounds {
                     lower: i129 { mag: 3, sign: false }, upper: i129 { mag: 4, sign: false },
                 },
@@ -355,7 +354,7 @@ fn test_position_key_hash_result_reverse() {
             4321,
             PositionKey {
                 salt: 5,
-                owner: contract_address_const::<4>(),
+                owner: 4.try_into().unwrap(),
                 bounds: Bounds {
                     lower: i129 { mag: 2, sign: true }, upper: i129 { mag: 1, sign: true },
                 },
@@ -368,15 +367,15 @@ fn test_position_key_hash_result_reverse() {
 #[test]
 fn test_saved_balance_key_hash_differs() {
     let base = SavedBalanceKey {
-        owner: contract_address_const::<1>(), token: contract_address_const::<2>(), salt: 3,
+        owner: 1.try_into().unwrap(), token: 2.try_into().unwrap(), salt: 3,
     };
 
     let mut other_owner = base;
-    other_owner.owner = contract_address_const::<2>();
+    other_owner.owner = 2.try_into().unwrap();
     check_hashes_differ(base, other_owner);
 
     let mut other_token = base;
-    other_token.token = contract_address_const::<3>();
+    other_token.token = 3.try_into().unwrap();
     check_hashes_differ(base, other_token);
     check_hashes_differ(other_owner, other_token);
 
@@ -392,9 +391,7 @@ fn test_saved_balance_key_hash() {
     assert(
         LegacyHash::hash(
             1,
-            SavedBalanceKey {
-                owner: contract_address_const::<2>(), token: contract_address_const::<3>(), salt: 4,
-            },
+            SavedBalanceKey { owner: 2.try_into().unwrap(), token: 3.try_into().unwrap(), salt: 4 },
         ) == 0x4c1cec8ca0d266e102559432703b9807b75dae05048908f6dedcb29f125e2da,
         'hash',
     );
@@ -405,9 +402,7 @@ fn test_saved_balance_key_hash_reverse() {
     assert(
         LegacyHash::hash(
             4,
-            SavedBalanceKey {
-                owner: contract_address_const::<3>(), token: contract_address_const::<2>(), salt: 1,
-            },
+            SavedBalanceKey { owner: 3.try_into().unwrap(), token: 2.try_into().unwrap(), salt: 1 },
         ) == 0x1439c58e1c389a2ac51f8462ecc0a4ec7f812be1c04e3b82ce2af1c2cf959ef,
         'hash',
     );

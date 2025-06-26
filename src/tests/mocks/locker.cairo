@@ -50,7 +50,7 @@ pub mod CoreLocker {
     use ekubo::types::bounds::Bounds;
     use ekubo::types::call_points::CallPoints;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{ContractAddress, contract_address_const, get_contract_address};
+    use starknet::{ContractAddress, get_contract_address};
     use super::{
         Action, ActionResult, Delta, ICoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
         IERC20Dispatcher, IERC20DispatcherTrait, IExtension, PoolKey, SwapParameters,
@@ -308,13 +308,13 @@ pub mod CoreLocker {
                         core,
                         pool_key.token0,
                         i129 { mag: amount0, sign: false },
-                        contract_address_const::<0>(),
+                        0.try_into().unwrap(),
                     );
                     handle_delta(
                         core,
                         pool_key.token1,
                         i129 { mag: amount1, sign: false },
-                        contract_address_const::<0>(),
+                        0.try_into().unwrap(),
                     );
 
                     ActionResult::AccumulateAsFees

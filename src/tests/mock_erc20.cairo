@@ -51,7 +51,7 @@ pub mod MockERC20 {
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
-    use starknet::{ContractAddress, contract_address_const, get_caller_address};
+    use starknet::{ContractAddress, get_caller_address};
     use super::{IERC20StableMetadata, IMockERC20};
 
     #[storage]
@@ -100,7 +100,7 @@ pub mod MockERC20 {
         self
             .emit(
                 Transfer {
-                    from: contract_address_const::<0>(), to: owner, amount: starting_balance.into(),
+                    from: 0.try_into().unwrap(), to: owner, amount: starting_balance.into(),
                 },
             );
     }
