@@ -26,6 +26,12 @@ pub trait IStreamedPayment<TContractState> {
     // Returns info on an existing payment stream
     fn get_stream_info(self: @TContractState, id: u64) -> PaymentStreamInfo;
 
+    // Transfers ownership of a stream. Only callable by the current owner.
+    fn transfer_stream_ownership(ref self: TContractState, id: u64, new_owner: ContractAddress);
+
+    // Changes the recipient of the stream. Only callable by the stream owner or the recipient.
+    fn change_stream_recipient(ref self: TContractState, id: u64, new_recipient: ContractAddress);
+
     // Cancels a payment stream that has not ended yet
     fn cancel(ref self: TContractState, id: u64) -> u128;
 
@@ -38,8 +44,8 @@ pub mod StreamedPayment {
     use core::array::{Array, ArrayTrait};
     use core::num::traits::Zero;
     use starknet::storage::{
-        Map, StorageMapWriteAccess, StoragePathEntry, StoragePointerReadAccess,
-        StoragePointerWriteAccess,
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::{get_block_timestamp, get_caller_address, get_contract_address};
     use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
@@ -136,6 +142,32 @@ pub mod StreamedPayment {
             self.streams.entry(id).read()
         }
 
+
+        fn transfer_stream_ownership(ref self: ContractState, id: u64, new_owner: ContractAddress) {
+            let mut stream = self.streams.read(id);
+
+            assert(stream.owner == get_caller_address(), 'Only owner can transfer');
+
+            stream.owner = new_owner;
+
+            self.streams.write(id, stream);
+        }
+
+        fn change_stream_recipient(
+            ref self: ContractState, id: u64, new_recipient: ContractAddress,
+        ) {
+            let mut stream = self.streams.read(id);
+
+            let caller = get_caller_address();
+            assert(
+                stream.owner == caller || stream.recipient == caller,
+                'Only owner/caller can change',
+            );
+
+            stream.recipient = new_recipient;
+
+            self.streams.write(id, stream);
+        }
 
         // Collects any pending amount for the given payment stream
         fn collect(ref self: ContractState, id: u64) -> u128 {
