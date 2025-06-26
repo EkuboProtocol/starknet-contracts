@@ -36,6 +36,7 @@ pub trait IStreamedPayment<TContractState> {
 #[starknet::contract]
 pub mod StreamedPayment {
     use core::array::{Array, ArrayTrait};
+    use core::num::traits::Zero;
     use starknet::storage::{
         Map, StorageMapWriteAccess, StoragePathEntry, StoragePointerReadAccess,
         StoragePointerWriteAccess,
@@ -83,8 +84,11 @@ pub mod StreamedPayment {
                     },
                 );
 
-            IERC20Dispatcher { contract_address: token_address }
-                .transferFrom(owner, get_contract_address(), amount.into());
+            assert(
+                IERC20Dispatcher { contract_address: token_address }
+                    .transferFrom(owner, get_contract_address(), amount.into()),
+                'transferFrom failed',
+            );
 
             return id;
         }
@@ -110,8 +114,11 @@ pub mod StreamedPayment {
                 stream.amount_remaining = 0;
                 stream_entry.write(stream);
 
-                IERC20Dispatcher { contract_address: stream.token_address }
-                    .transfer(stream.owner, refund.into());
+                assert(
+                    IERC20Dispatcher { contract_address: stream.token_address }
+                        .transfer(stream.owner, refund.into()),
+                    'transfer failed',
+                );
             }
 
             refund
@@ -141,8 +148,7 @@ pub mod StreamedPayment {
                 (stream.amount_remaining, stream.end_time - stream.start_time)
             };
 
-            if (payment > 0) {
-                // if payment is not zero, this is a no-op
+            if (payment.is_non_zero()) {
                 stream.amount_remaining = stream.amount_remaining - payment;
                 stream.seconds_paid = seconds_paid;
 
