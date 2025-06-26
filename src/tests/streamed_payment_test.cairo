@@ -9,7 +9,7 @@ fn recipient() -> ContractAddress {
 }
 
 #[test]
-fn test_streamed_payment_create_payment_regular_flow() {
+fn test_create_payment_regular_flow() {
     let mut d: Deployer = Default::default();
     let streamed_payment = d.deploy_streamed_payment();
     let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
@@ -39,7 +39,7 @@ fn test_streamed_payment_create_payment_regular_flow() {
 }
 
 #[test]
-fn test_streamed_payment_start_in_past() {
+fn test_start_in_past() {
     let mut d: Deployer = Default::default();
     let streamed_payment = d.deploy_streamed_payment();
     let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
@@ -69,7 +69,7 @@ fn test_streamed_payment_start_in_past() {
 
 
 #[test]
-fn test_streamed_payment_cancel_in_middle() {
+fn test_cancel_in_middle() {
     let mut d: Deployer = Default::default();
     let streamed_payment = d.deploy_streamed_payment();
     let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
@@ -98,7 +98,7 @@ fn test_streamed_payment_cancel_in_middle() {
 
 
 #[test]
-fn test_streamed_payment_cancel_before_start() {
+fn test_cancel_before_start() {
     let mut d: Deployer = Default::default();
     let streamed_payment = d.deploy_streamed_payment();
     let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
@@ -121,6 +121,27 @@ fn test_streamed_payment_cancel_before_start() {
     set_block_timestamp(start + 14);
     assert_eq!(streamed_payment.collect(id), 0);
     set_block_timestamp(start + 15);
+    assert_eq!(streamed_payment.collect(id), 0);
+}
+
+
+#[test]
+fn test_cancel_after_end() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    let start = 100;
+    set_block_timestamp(start + 15);
+    token.approve(streamed_payment.contract_address, 100);
+    let id = streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: start,
+            end_time: start + 15,
+        );
+    assert_eq!(streamed_payment.cancel(id), 0);
     assert_eq!(streamed_payment.collect(id), 0);
 }
 
