@@ -109,7 +109,7 @@ pub mod StreamedPayment {
 
             let refund = stream.amount_remaining;
 
-            if (refund > 0) {
+            if (refund.is_non_zero()) {
                 // zero out the amount remaining
                 stream.amount_remaining = 0;
                 stream_entry.write(stream);
