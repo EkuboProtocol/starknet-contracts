@@ -1,9 +1,9 @@
 use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::tests::helper::{Deployer, DeployerTrait};
+use starknet::ContractAddress;
 use starknet::syscalls::deploy_syscall;
 use starknet::testing::set_contract_address;
-use starknet::{ContractAddress, contract_address_const};
 
 #[starknet::contract]
 mod TestContract {
@@ -27,7 +27,7 @@ fn setup() -> (IClearDispatcher, IERC20Dispatcher, ContractAddress) {
 
     let token = d.deploy_mock_token_with_balance(owner: test_contract, starting_balance: 100);
 
-    let caller = contract_address_const::<123456>();
+    let caller = 123456.try_into().unwrap();
     set_contract_address(caller);
 
     (
@@ -88,7 +88,7 @@ fn test_clear_minimum_fails_zero() {
 fn test_clear_minimum_to_recipient() {
     let (test_contract, erc20, _) = setup();
 
-    let recipient = contract_address_const::<1234567>();
+    let recipient = 1234567.try_into().unwrap();
 
     assert_eq!(erc20.balanceOf(recipient), 0);
     assert_eq!(erc20.balanceOf(test_contract.contract_address), 100);
@@ -102,7 +102,7 @@ fn test_clear_minimum_to_recipient() {
 fn test_clear_minimum_to_recipient_fails() {
     let (test_contract, erc20, _) = setup();
 
-    let recipient = contract_address_const::<1234567>();
+    let recipient = 1234567.try_into().unwrap();
 
     assert_eq!(erc20.balanceOf(recipient), 0);
     assert_eq!(erc20.balanceOf(test_contract.contract_address), 100);
@@ -116,7 +116,7 @@ fn test_clear_minimum_to_recipient_fails_zero_balance() {
 
     test_contract.clear(erc20);
 
-    let recipient = contract_address_const::<1234567>();
+    let recipient = 1234567.try_into().unwrap();
 
     assert_eq!(erc20.balanceOf(test_contract.contract_address), 0);
     test_contract.clear_minimum_to_recipient(erc20, 100, recipient);

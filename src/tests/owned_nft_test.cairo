@@ -6,8 +6,8 @@ use ekubo::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
+use starknet::ClassHash;
 use starknet::testing::{pop_log, set_contract_address};
-use starknet::{ClassHash, contract_address_const};
 
 fn switch_to_controller() {
     set_contract_address(default_owner());
@@ -125,8 +125,8 @@ fn test_nft_indexing_token_ids() {
 
     switch_to_controller();
 
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<9123456>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 9123456.try_into().unwrap();
 
     assert(nft.balanceOf(alice) == 0, 'balance start');
 
@@ -153,8 +153,8 @@ fn test_nft_indexing_token_ids_not_sorted() {
 
     switch_to_controller();
 
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<9123456>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 9123456.try_into().unwrap();
 
     controller.mint(alice);
     controller.mint(bob);
@@ -183,8 +183,8 @@ fn test_nft_indexing_token_ids_snake_case() {
 
     switch_to_controller();
 
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<9123456>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 9123456.try_into().unwrap();
 
     assert(nft.balance_of(alice) == 0, 'balance start');
     let token_id = controller.mint(alice);
@@ -212,8 +212,8 @@ fn test_burn_makes_token_non_transferrable() {
 
     switch_to_controller();
 
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<9123456>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 9123456.try_into().unwrap();
 
     let id = controller.mint(alice);
     set_contract_address(alice);
@@ -241,14 +241,12 @@ fn test_is_account_authorized() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<12345>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 12345.try_into().unwrap();
     let id = controller.mint(alice);
 
     assert(controller.is_account_authorized(id, alice), 'owner is authorized');
-    assert(
-        !controller.is_account_authorized(id, contract_address_const::<912344>()), 'random is not',
-    );
+    assert(!controller.is_account_authorized(id, 912344.try_into().unwrap()), 'random is not');
     assert(!controller.is_account_authorized(id, default_owner()), 'controller is not');
 
     set_contract_address(alice);
@@ -275,8 +273,8 @@ fn test_burn_makes_token_non_transferrable_error() {
 
     switch_to_controller();
 
-    let alice = contract_address_const::<912345>();
-    let bob = contract_address_const::<9123456>();
+    let alice = 912345.try_into().unwrap();
+    let bob = 9123456.try_into().unwrap();
 
     let id = controller.mint(alice);
     set_contract_address(alice);
@@ -295,8 +293,8 @@ fn test_burn_makes_token_non_transferrable_error() {
 fn test_nft_approve_fails_id_not_exists() {
     let mut d: Deployer = Default::default();
     let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
-    set_contract_address(contract_address_const::<1>());
-    nft.approve(contract_address_const::<2>(), 1);
+    set_contract_address(1.try_into().unwrap());
+    nft.approve(2.try_into().unwrap(), 1);
 }
 
 #[test]
@@ -305,13 +303,13 @@ fn test_nft_approve_succeeds_after_mint() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<1>());
+    set_contract_address(1.try_into().unwrap());
 
-    nft.approve(contract_address_const::<2>(), token_id.into());
-    assert(nft.getApproved(token_id.into()) == contract_address_const::<2>(), 'getApproved');
-    assert(nft.get_approved(token_id.into()) == contract_address_const::<2>(), 'get_approved');
+    nft.approve(2.try_into().unwrap(), token_id.into());
+    assert(nft.getApproved(token_id.into()) == 2.try_into().unwrap(), 'getApproved');
+    assert(nft.get_approved(token_id.into()) == 2.try_into().unwrap(), 'get_approved');
 }
 
 #[test]
@@ -320,18 +318,18 @@ fn test_nft_transfer_from() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<1>());
-    nft.approve(contract_address_const::<3>(), token_id.into());
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id.into());
+    set_contract_address(1.try_into().unwrap());
+    nft.approve(3.try_into().unwrap(), token_id.into());
+    nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 
-    assert(nft.balanceOf(contract_address_const::<1>()) == 0_u256, 'balanceOf(from)');
-    assert(nft.balance_of(contract_address_const::<1>()) == 0_u256, 'balance_of(from)');
-    assert(nft.balanceOf(contract_address_const::<2>()) == 1_u256, 'balanceOf(to)');
-    assert(nft.balance_of(contract_address_const::<2>()) == 1_u256, 'balance_of(to)');
-    assert(nft.ownerOf(token_id.into()) == contract_address_const::<2>(), 'ownerOf');
-    assert(nft.owner_of(token_id.into()) == contract_address_const::<2>(), 'owner_of');
+    assert(nft.balanceOf(1.try_into().unwrap()) == 0_u256, 'balanceOf(from)');
+    assert(nft.balance_of(1.try_into().unwrap()) == 0_u256, 'balance_of(from)');
+    assert(nft.balanceOf(2.try_into().unwrap()) == 1_u256, 'balanceOf(to)');
+    assert(nft.balance_of(2.try_into().unwrap()) == 1_u256, 'balance_of(to)');
+    assert(nft.ownerOf(token_id.into()) == 2.try_into().unwrap(), 'ownerOf');
+    assert(nft.owner_of(token_id.into()) == 2.try_into().unwrap(), 'owner_of');
     assert(nft.getApproved(token_id.into()).is_zero(), 'getApproved');
     assert(nft.get_approved(token_id.into()).is_zero(), 'get_approved');
 }
@@ -343,11 +341,11 @@ fn test_nft_transfer_from_fails_not_from_owner() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<2>());
+    set_contract_address(2.try_into().unwrap());
 
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id.into());
+    nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
 
 #[test]
@@ -356,13 +354,13 @@ fn test_nft_transfer_from_succeeds_from_approved() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<1>());
-    nft.approve(contract_address_const::<2>(), token_id.into());
+    set_contract_address(1.try_into().unwrap());
+    nft.approve(2.try_into().unwrap(), token_id.into());
 
-    set_contract_address(contract_address_const::<2>());
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id.into());
+    set_contract_address(2.try_into().unwrap());
+    nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
 
 #[test]
@@ -371,13 +369,13 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<1>());
-    nft.setApprovalForAll(contract_address_const::<2>(), true);
+    set_contract_address(1.try_into().unwrap());
+    nft.setApprovalForAll(2.try_into().unwrap(), true);
 
-    set_contract_address(contract_address_const::<2>());
-    nft.transferFrom(contract_address_const::<1>(), contract_address_const::<2>(), token_id.into());
+    set_contract_address(2.try_into().unwrap());
+    nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
 
 #[test]
@@ -447,10 +445,10 @@ fn test_nft_approve_only_owner_can_approve() {
     let (controller, nft) = deploy_default(ref d);
 
     switch_to_controller();
-    let token_id = controller.mint(contract_address_const::<1>());
+    let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(contract_address_const::<2>());
-    nft.approve(contract_address_const::<2>(), token_id.into());
+    set_contract_address(2.try_into().unwrap());
+    nft.approve(2.try_into().unwrap(), token_id.into());
 }
 
 #[test]
@@ -458,7 +456,7 @@ fn test_nft_balance_of() {
     let mut d: Deployer = Default::default();
     let (controller, nft) = deploy_default(ref d);
 
-    let recipient = contract_address_const::<2>();
+    let recipient = 2.try_into().unwrap();
     assert(nft.balanceOf(recipient).is_zero(), 'balance check');
 
     switch_to_controller();

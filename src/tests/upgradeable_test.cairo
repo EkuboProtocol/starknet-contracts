@@ -2,9 +2,8 @@ use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use ekubo::interfaces::upgradeable::IUpgradeableDispatcherTrait;
 use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
 use ekubo::tests::mocks::mock_upgradeable::MockUpgradeable;
-use starknet::class_hash::class_hash_const;
+use starknet::ClassHash;
 use starknet::testing::{pop_log, set_contract_address};
-use starknet::{ClassHash, contract_address_const};
 
 #[test]
 fn test_replace_class_hash() {
@@ -33,7 +32,7 @@ fn test_replace_class_hash_not_owner_after_transfer() {
     let owned = IOwnedDispatcher { contract_address: mock_upgradeable.contract_address };
     let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
     set_contract_address(default_owner());
-    owned.transfer_ownership(contract_address_const::<12345678>());
+    owned.transfer_ownership(12345678.try_into().unwrap());
     mock_upgradeable.replace_class_hash(class_hash);
 }
 
@@ -44,7 +43,7 @@ fn test_replace_class_hash_after_owner_change() {
     let owned = IOwnedDispatcher { contract_address: mock_upgradeable.contract_address };
     let class_hash: ClassHash = MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap();
     set_contract_address(default_owner());
-    let new_owner = contract_address_const::<12345678>();
+    let new_owner = 12345678.try_into().unwrap();
     owned.transfer_ownership(new_owner);
     set_contract_address(new_owner);
     mock_upgradeable.replace_class_hash(class_hash);
@@ -56,7 +55,7 @@ fn test_replace_zero_class_hash() {
     let mut d: Deployer = Default::default();
     let mock_upgradeable = d.deploy_mock_upgradeable();
     set_contract_address(default_owner());
-    mock_upgradeable.replace_class_hash(class_hash_const::<0>());
+    mock_upgradeable.replace_class_hash(0.try_into().unwrap());
 }
 
 #[test]
@@ -64,7 +63,7 @@ fn test_replace_zero_class_hash() {
 fn test_replace_non_zero_class_hash_not_owner() {
     let mut d: Deployer = Default::default();
     let mock_upgradeable = d.deploy_mock_upgradeable();
-    mock_upgradeable.replace_class_hash(class_hash_const::<1>());
+    mock_upgradeable.replace_class_hash(1.try_into().unwrap());
 }
 
 
@@ -74,6 +73,6 @@ fn test_replace_non_zero_class_hash_without_interface_id() {
     let mut d: Deployer = Default::default();
     let mock_upgradeable = d.deploy_mock_upgradeable();
     set_contract_address(default_owner());
-    mock_upgradeable.replace_class_hash(class_hash_const::<0xabcdef>());
+    mock_upgradeable.replace_class_hash(0xabcdef.try_into().unwrap());
 }
 

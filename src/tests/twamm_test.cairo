@@ -31,7 +31,7 @@ use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::i129::i129;
 use ekubo::types::keys::PoolKey;
 use starknet::testing::{pop_log, set_block_timestamp, set_contract_address};
-use starknet::{ClassHash, ContractAddress, contract_address_const, get_contract_address};
+use starknet::{ClassHash, ContractAddress, get_contract_address};
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
 const SIXTEEN_POW_ONE: u64 = 0x10;
@@ -87,8 +87,8 @@ mod UpgradableTest {
 mod BitmapTest {
     use super::{
         Deployer, DeployerTrait, ITWAMMDispatcherTrait, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO,
-        StateKey, contract_address_const, i129, place_order, set_block_timestamp, set_up_twamm,
-        time_to_word_and_bit_index, word_and_bit_index_to_time,
+        StateKey, i129, place_order, set_block_timestamp, set_up_twamm, time_to_word_and_bit_index,
+        word_and_bit_index_to_time,
     };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
@@ -127,7 +127,7 @@ mod BitmapTest {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = SIXTEEN_POW_THREE;
@@ -184,8 +184,8 @@ mod PoolTests {
     use super::{
         Bounds, Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
         IPositionsDispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait, MAX_TICK_SPACING,
-        PoolKey, TICKS_IN_ONE_PERCENT, Zero, contract_address_const, i129, max_bounds,
-        max_liquidity, set_contract_address, tick_to_sqrt_ratio, update_position,
+        PoolKey, TICKS_IN_ONE_PERCENT, Zero, i129, max_bounds, max_liquidity, set_contract_address,
+        tick_to_sqrt_ratio, update_position,
     };
 
     #[test]
@@ -248,7 +248,7 @@ mod PoolTests {
         let twamm = d.deploy_twamm(core);
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
-        let caller = contract_address_const::<42>();
+        let caller = 42.try_into().unwrap();
         set_contract_address(caller);
 
         let setup = d
@@ -297,7 +297,7 @@ mod PoolTests {
         let twamm = d.deploy_twamm(core);
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
-        let caller = contract_address_const::<42>();
+        let caller = 42.try_into().unwrap();
         set_contract_address(caller);
 
         let setup = d
@@ -343,8 +343,8 @@ mod PlaceOrdersCheckDeltaAndNet {
     use super::{
         Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, OrderUpdated,
         PoolKeyIntoStateKey, SIXTEEN_POW_TWO, StateKey, VirtualOrdersExecuted, calculate_sale_rate,
-        contract_address_const, i129, place_order, pop_log, set_block_timestamp,
-        set_contract_address, set_up_twamm, to_duration,
+        i129, place_order, pop_log, set_block_timestamp, set_contract_address, set_up_twamm,
+        to_duration,
     };
 
     #[test]
@@ -373,7 +373,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
@@ -447,7 +447,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
@@ -522,7 +522,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
@@ -596,7 +596,7 @@ mod PlaceOrdersCheckDeltaAndNet {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
         let order1_end_time = timestamp + duration;
@@ -647,8 +647,8 @@ mod PlaceOrdersCheckDeltaAndNet {
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
         Deployer, DeployerTrait, ITWAMMDispatcherTrait, OrderUpdated, PoolKeyIntoStateKey,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, VirtualOrdersExecuted, contract_address_const,
-        i129, place_order, pop_log, set_block_timestamp, set_up_twamm,
+        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, VirtualOrdersExecuted, i129, place_order,
+        pop_log, set_block_timestamp, set_up_twamm,
     };
 
     #[test]
@@ -677,7 +677,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let (_, _, order1_info) = place_order(
@@ -730,7 +730,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
@@ -781,7 +781,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 100_000 * 1000000000000000000;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
@@ -837,7 +837,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
         let timestamp = 1_000_000;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 10_000 * 1000000000000000000;
         let order1_end_time = timestamp + SIXTEEN_POW_ONE;
         place_order(positions, owner, setup.token0, setup.token1, fee, 0, order1_end_time, amount);
@@ -872,8 +872,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 mod CancelOrderTests {
     use super::{
         Deployer, DeployerTrait, IERC20Dispatcher, IERC20DispatcherTrait, IPositionsDispatcherTrait,
-        SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, contract_address_const, i129, place_order,
-        set_block_timestamp, set_contract_address, set_up_twamm,
+        SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, i129, place_order, set_block_timestamp,
+        set_contract_address, set_up_twamm,
     };
 
     #[test]
@@ -894,7 +894,7 @@ mod CancelOrderTests {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 1_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -933,7 +933,7 @@ mod CancelOrderTests {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 1_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -992,7 +992,7 @@ mod CancelOrderTests {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 1_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1029,7 +1029,7 @@ mod CancelOrderTests {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
         let amount = 1_000 * 1000000000000000000;
         let (order1_id, order1_key, order1_state) = place_order(
             positions,
@@ -1056,8 +1056,8 @@ mod PlaceOrdersAndUpdateSaleRate {
         IMockERC20DispatcherTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
         OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
         SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey, Swapped, VirtualOrdersExecuted,
-        calculate_amount_from_sale_rate, calculate_sale_rate, contract_address_const, i129,
-        place_order, pop_log, set_block_timestamp, set_contract_address, set_up_twamm, to_duration,
+        calculate_amount_from_sale_rate, calculate_sale_rate, i129, place_order, pop_log,
+        set_block_timestamp, set_contract_address, set_up_twamm, to_duration,
     };
 
     #[test]
@@ -1078,7 +1078,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
@@ -1114,7 +1114,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
@@ -1160,7 +1160,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let duration = 2 * SIXTEEN_POW_TWO;
@@ -1199,7 +1199,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1303,7 +1303,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1407,7 +1407,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1529,7 +1529,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1650,7 +1650,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1802,7 +1802,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1872,7 +1872,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let order1_start_time = timestamp + 2 * SIXTEEN_POW_TWO;
@@ -1924,8 +1924,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
         OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
         SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SaleRateState, SavedBalance, StateKey, Swapped,
-        VirtualOrdersExecuted, Zero, contract_address_const, i129, place_order, pop_log,
-        set_block_timestamp, set_contract_address, set_up_twamm,
+        VirtualOrdersExecuted, Zero, i129, place_order, pop_log, set_block_timestamp,
+        set_contract_address, set_up_twamm,
     };
 
     #[test]
@@ -1957,7 +1957,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
@@ -2104,7 +2104,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
@@ -2239,7 +2239,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
@@ -2385,7 +2385,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
 
-        let owner = contract_address_const::<42>();
+        let owner = 42.try_into().unwrap();
 
         let order1_end_time = timestamp + SIXTEEN_POW_THREE - SIXTEEN_POW_ONE;
         let amount = 10_000 * 1000000000000000000;
@@ -2498,9 +2498,9 @@ mod PlaceOrderOnBothSides {
         IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance, MAX_TICK_SPACING,
         OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
         SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey,
-        SwapParameters, Swapped, VirtualOrdersExecuted, contract_address_const,
-        get_contract_address, i129, liquidity_delta_to_amount_delta, max_bounds, max_liquidity,
-        min_sqrt_ratio, next_sqrt_ratio_from_amount0, place_order, pop_log, set_block_timestamp,
+        SwapParameters, Swapped, VirtualOrdersExecuted, get_contract_address, i129,
+        liquidity_delta_to_amount_delta, max_bounds, max_liquidity, min_sqrt_ratio,
+        next_sqrt_ratio_from_amount0, place_order, pop_log, set_block_timestamp,
         set_contract_address, set_up_twamm, tick_to_sqrt_ratio,
     };
 
@@ -2731,7 +2731,7 @@ mod PlaceOrderOnBothSides {
         let _event: PositionUpdated = pop_log(core.contract_address).unwrap();
 
         let owner0 = get_contract_address();
-        let owner1 = contract_address_const::<32>();
+        let owner1 = 32.try_into().unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp(timestamp);
@@ -4574,7 +4574,7 @@ fn set_up_twamm_pool(
     amount0: u128,
     amount1: u128,
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
-    let liquidity_provider = contract_address_const::<42>();
+    let liquidity_provider = 42.try_into().unwrap();
     set_contract_address(liquidity_provider);
 
     let bounds = max_bounds(MAX_TICK_SPACING);

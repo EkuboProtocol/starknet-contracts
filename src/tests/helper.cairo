@@ -29,8 +29,8 @@ use ekubo::types::call_points::CallPoints;
 use ekubo::types::delta::Delta;
 use ekubo::types::i129::i129;
 use ekubo::types::keys::PoolKey;
+use starknet::ContractAddress;
 use starknet::syscalls::deploy_syscall;
-use starknet::{ContractAddress, contract_address_const};
 
 pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
@@ -47,7 +47,7 @@ impl DefaultDeployer of core::traits::Default<Deployer> {
 
 
 pub fn default_owner() -> ContractAddress {
-    contract_address_const::<12121212121212>()
+    12121212121212.try_into().unwrap()
 }
 
 

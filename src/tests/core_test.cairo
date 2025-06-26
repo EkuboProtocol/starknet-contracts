@@ -20,8 +20,8 @@ use ekubo::types::bounds::{Bounds, max_bounds};
 use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
 use ekubo::types::i129::i129;
 use ekubo::types::keys::{PoolKey, SavedBalanceKey};
+use starknet::ContractAddress;
 use starknet::testing::{pop_log, set_contract_address};
-use starknet::{ContractAddress, contract_address_const};
 
 
 // floor(log base 1.000001 of 1.01)
@@ -33,8 +33,7 @@ mod owner_tests {
     use starknet::class_hash::ClassHash;
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        MockERC20, OptionTrait, TryInto, Zero, contract_address_const, default_owner, pop_log,
-        set_contract_address,
+        MockERC20, OptionTrait, TryInto, Zero, default_owner, pop_log, set_contract_address,
     };
 
 
@@ -43,7 +42,7 @@ mod owner_tests {
     fn test_replace_class_hash_cannot_be_called_by_non_owner() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        set_contract_address(contract_address_const::<1>());
+        set_contract_address(1.try_into().unwrap());
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
@@ -83,7 +82,7 @@ mod owner_tests {
         assert(owned.get_owner() == default_owner(), 'is default');
 
         set_contract_address(default_owner());
-        let new_owner = contract_address_const::<123456789>();
+        let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
         let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
@@ -102,7 +101,7 @@ mod owner_tests {
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
         set_contract_address(default_owner());
-        let new_owner = contract_address_const::<123456789>();
+        let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
@@ -115,7 +114,7 @@ mod owner_tests {
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
         set_contract_address(default_owner());
-        let new_owner = contract_address_const::<123456789>();
+        let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
         set_contract_address(new_owner);
 
@@ -151,8 +150,8 @@ mod owner_tests {
 mod initialize_pool_tests {
     use ekubo::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero,
-        contract_address_const, i129, pop_log, tick_to_sqrt_ratio,
+        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129, pop_log,
+        tick_to_sqrt_ratio,
     };
 
     #[test]
@@ -160,8 +159,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -194,8 +193,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<1>(),
+            token0: 1.try_into().unwrap(),
+            token1: 1.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -209,8 +208,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<2>(),
-            token1: contract_address_const::<1>(),
+            token0: 2.try_into().unwrap(),
+            token1: 1.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -226,7 +225,7 @@ mod initialize_pool_tests {
         let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: Zero::zero(),
-            token1: contract_address_const::<1>(),
+            token1: 1.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -240,8 +239,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 0,
             extension: Zero::zero(),
@@ -254,8 +253,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING,
             extension: Zero::zero(),
@@ -269,8 +268,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: MAX_TICK_SPACING + 1,
             extension: Zero::zero(),
@@ -284,8 +283,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: 0,
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -299,8 +298,8 @@ mod initialize_pool_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let pool_key = PoolKey {
-            token0: contract_address_const::<1>(),
-            token1: contract_address_const::<2>(),
+            token0: 1.try_into().unwrap(),
+            token1: 2.try_into().unwrap(),
             fee: Zero::zero(),
             tick_spacing: 1,
             extension: Zero::zero(),
@@ -330,8 +329,8 @@ mod initialize_pool_tests {
 mod initialized_ticks {
     use super::{
         Bounds, Deployer, DeployerTrait, FEE_ONE_PERCENT, ICoreDispatcherTrait,
-        IMockERC20DispatcherTrait, TICKS_IN_ONE_PERCENT, Zero, contract_address_const, i129,
-        max_tick, min_tick, tick_constants, update_position,
+        IMockERC20DispatcherTrait, TICKS_IN_ONE_PERCENT, Zero, i129, max_tick, min_tick,
+        tick_constants, update_position,
     };
 
     #[test]
@@ -552,7 +551,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 9, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         update_position(
             setup: setup,
@@ -561,7 +560,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 128, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         update_position(
             setup: setup,
@@ -570,7 +569,7 @@ mod initialized_ticks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT * 200, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         // -154, -128, -12, 9, 128, 200
 
@@ -710,8 +709,8 @@ mod locks {
         Action, ActionResult, Bounds, ContractAddress, FEE_ONE_PERCENT, FeesPerLiquidity,
         ICoreDispatcherTrait, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
         IMockERC20DispatcherTrait, PoolKey, SavedBalanceKey, TICKS_IN_ONE_PERCENT, Zero,
-        accumulate_as_fees, contract_address_const, i129, max_bounds, max_sqrt_ratio, max_tick,
-        min_sqrt_ratio, min_tick, swap, update_position,
+        accumulate_as_fees, i129, max_bounds, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
+        swap, update_position,
     };
 
     #[test]
@@ -726,7 +725,7 @@ mod locks {
                 extension: Zero::zero(),
             );
         // should fail because not locked at all
-        setup.core.pay(contract_address_const::<1>());
+        setup.core.pay(1.try_into().unwrap());
     }
 
     fn save_to_core(locker: ICoreLockerDispatcher, token: ContractAddress, amount: u128) {
@@ -734,9 +733,7 @@ mod locks {
             .call(
                 Action::SaveBalance(
                     (
-                        SavedBalanceKey {
-                            owner: contract_address_const::<0>(), token: token, salt: 0,
-                        },
+                        SavedBalanceKey { owner: 0.try_into().unwrap(), token: token, salt: 0 },
                         amount,
                     ),
                 ),
@@ -928,7 +925,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: Zero::zero(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         assert(
             setup
@@ -979,7 +976,7 @@ mod locks {
                 upper: i129 { mag: 12, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
     }
 
@@ -1010,7 +1007,7 @@ mod locks {
                 upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 100, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
     }
 
@@ -1041,7 +1038,7 @@ mod locks {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: Zero::zero(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         assert(delta.amount0 == Zero::zero(), 'amount0');
         assert(delta.amount1 == Zero::zero(), 'amount1');
@@ -1068,7 +1065,7 @@ mod locks {
                 lower: i129 { mag: 10, sign: true }, upper: i129 { mag: 10, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         assert(delta.amount0 == i129 { mag: 50, sign: false }, 'amount0');
@@ -1105,7 +1102,7 @@ mod locks {
                 lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         assert(setup.core.get_pool_liquidity(setup.pool_key) == 1, 'liquidity');
         assert(
@@ -1145,7 +1142,7 @@ mod locks {
                 lower: i129 { mag: 0, sign: false }, upper: i129 { mag: 1, sign: false },
             },
             liquidity_delta: i129 { mag: 1, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
         assert(core.get_pool_liquidity(pool_key) == 1, 'liquidity');
         assert(core.get_pool_fees_per_liquidity(pool_key).is_zero(), 'fees_per_liquidity');
@@ -1185,7 +1182,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         assert(delta.amount0 == i129 { mag: 4962643, sign: false }, 'amount0');
@@ -1214,7 +1211,7 @@ mod locks {
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         assert(delta.amount0 == i129 { mag: 1000000000, sign: false }, 'amount0');
@@ -1243,14 +1240,14 @@ mod locks {
             setup: setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = update_position(
             setup: setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 500000000, sign: true },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         assert(
@@ -1296,14 +1293,14 @@ mod locks {
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = update_position(
             setup,
             bounds: max_bounds(1),
             liquidity_delta: i129 { mag: 1000000000, sign: true },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         assert(
@@ -1343,7 +1340,7 @@ mod locks {
             amount: Zero::zero(), // input 0 token0, price decreasing
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1380,7 +1377,7 @@ mod locks {
             amount: i129 { mag: 1, sign: false },
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1415,7 +1412,7 @@ mod locks {
             amount: i129 { mag: 1, sign: false },
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1450,7 +1447,7 @@ mod locks {
             amount: i129 { mag: 1, sign: true },
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1485,7 +1482,7 @@ mod locks {
             amount: i129 { mag: 1, sign: true },
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1523,7 +1520,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = swap(
@@ -1531,7 +1528,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1583,7 +1580,7 @@ mod locks {
                 amount: i129 { mag: 1, sign: false },
                 is_token1: true,
                 sqrt_ratio_limit: 21175949444679574865522613902772161611,
-                recipient: contract_address_const::<42>(),
+                recipient: 42.try_into().unwrap(),
                 skip_ahead: 0,
             )
                 .is_zero(),
@@ -1594,7 +1591,7 @@ mod locks {
             setup,
             bounds: Bounds { lower: lower_tick, upper: upper_tick },
             liquidity_delta: i129 { mag: 717193642384, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let (price, liquidity) = (
@@ -1610,7 +1607,7 @@ mod locks {
             amount: i129 { mag: 9995000000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
         assert(delta.amount0 == i129 { mag: 9995000000, sign: false }, 'amount0');
@@ -1638,7 +1635,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = swap(
@@ -1646,7 +1643,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: false,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1693,7 +1690,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1705,7 +1702,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1750,7 +1747,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 100000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1762,7 +1759,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1805,7 +1802,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = swap(
@@ -1813,7 +1810,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: false },
             is_token1: true,
             sqrt_ratio_limit: max_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1859,7 +1856,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 1000000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let delta = swap(
@@ -1867,7 +1864,7 @@ mod locks {
             amount: i129 { mag: 1000, sign: true },
             is_token1: true,
             sqrt_ratio_limit: min_sqrt_ratio(),
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1912,7 +1909,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1924,7 +1921,7 @@ mod locks {
             amount: i129 { mag: 1000000, sign: false },
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -1970,7 +1967,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         let sqrt_ratio_limit = tick_to_sqrt_ratio(
@@ -1982,7 +1979,7 @@ mod locks {
             amount: i129 { mag: 10000000, sign: true },
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -2026,7 +2023,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // out of range liquidity in the direction of the price movement
@@ -2037,7 +2034,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // out of range liquidity in the OPPOSITE direction that cancels out the delta
@@ -2048,7 +2045,7 @@ mod locks {
                 upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // right above the tick price
@@ -2062,7 +2059,7 @@ mod locks {
             amount: i129 { mag: 100000000, sign: false },
             is_token1: false,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -2107,7 +2104,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // out of range liquidity in the OPPOSITE direction
@@ -2118,7 +2115,7 @@ mod locks {
                 upper: i129 { mag: TICKS_IN_ONE_PERCENT, sign: true },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // out of range liquidity in the direction
@@ -2129,7 +2126,7 @@ mod locks {
                 upper: i129 { mag: 2 * TICKS_IN_ONE_PERCENT, sign: false },
             },
             liquidity_delta: i129 { mag: 10000000, sign: false },
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
         );
 
         // right above the tick price
@@ -2143,7 +2140,7 @@ mod locks {
             amount: i129 { mag: 100000000, sign: false },
             is_token1: true,
             sqrt_ratio_limit: sqrt_ratio_limit,
-            recipient: contract_address_const::<42>(),
+            recipient: 42.try_into().unwrap(),
             skip_ahead: 0,
         );
 
@@ -2174,7 +2171,7 @@ mod save_load_tests {
     use ekubo::tests::mocks::locker::{Action, ActionResult};
     use super::{
         Deployer, DeployerTrait, ICoreDispatcherTrait, ICoreLockerDispatcherTrait,
-        IMockERC20DispatcherTrait, SavedBalanceKey, contract_address_const, set_contract_address,
+        IMockERC20DispatcherTrait, SavedBalanceKey, set_contract_address,
     };
 
     #[test]
@@ -2187,7 +2184,7 @@ mod save_load_tests {
         token.increase_balance(locker.contract_address, 1);
         let cache_key: felt252 = 5678;
 
-        set_contract_address(contract_address_const::<1234567>());
+        set_contract_address(1234567.try_into().unwrap());
 
         // important because it allows us to load
         let recipient = locker.contract_address;
