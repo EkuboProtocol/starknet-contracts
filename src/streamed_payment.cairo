@@ -46,6 +46,38 @@ pub mod StreamedPayment {
     use super::{ContractAddress, IStreamedPayment, PaymentStreamInfo};
 
 
+    #[derive(starknet::Event, Drop)]
+    pub struct StreamCreated {
+        pub id: u64,
+        pub token_address: ContractAddress,
+        pub owner: ContractAddress,
+        pub recipient: ContractAddress,
+        pub start_time: u64,
+        pub end_time: u64,
+        pub amount: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    pub struct PaymentCollected {
+        pub id: u64,
+        pub amount: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    pub struct StreamCanceled {
+        pub id: u64,
+        pub refund: u128,
+    }
+
+    #[derive(starknet::Event, Drop)]
+    #[event]
+    enum Event {
+        StreamCreated: StreamCreated,
+        PaymentCollected: PaymentCollected,
+        StreamCanceled: StreamCanceled,
+    }
+
+
     #[storage]
     struct Storage {
         pub next_id: u64,
@@ -90,11 +122,58 @@ pub mod StreamedPayment {
                 'transferFrom failed',
             );
 
+            self
+                .emit(
+                    StreamCreated {
+                        id, token_address, owner, recipient, start_time, end_time, amount,
+                    },
+                );
+
             return id;
         }
 
         fn get_stream_info(self: @ContractState, id: u64) -> PaymentStreamInfo {
             self.streams.entry(id).read()
+        }
+
+
+        // Collects any pending amount for the given payment stream
+        fn collect(ref self: ContractState, id: u64) -> u128 {
+            let stream_entry = self.streams.entry(id);
+            let mut stream = stream_entry.read();
+
+            let now = get_block_timestamp();
+            let (payment, seconds_paid): (u128, u64) = if (now < stream.start_time) {
+                (0, 0)
+            } else if now < stream.end_time {
+                let seconds_paid_next = now - stream.start_time;
+                let amount_remaining: u256 = stream.amount_remaining.into();
+                let remaining_duration = stream.end_time - stream.start_time - stream.seconds_paid;
+
+                (
+                    ((amount_remaining * (seconds_paid_next - stream.seconds_paid).into())
+                        / remaining_duration.into())
+                        .try_into()
+                        .unwrap(),
+                    seconds_paid_next,
+                )
+            } else {
+                (stream.amount_remaining, stream.end_time - stream.start_time)
+            };
+
+            if (payment.is_non_zero()) {
+                stream.amount_remaining = stream.amount_remaining - payment;
+                stream.seconds_paid = seconds_paid;
+
+                stream_entry.write(stream);
+
+                IERC20Dispatcher { contract_address: stream.token_address }
+                    .transfer(stream.recipient, payment.into());
+
+                self.emit(PaymentCollected { id, amount: payment });
+            }
+
+            payment
         }
 
         // Cancels a payment stream that has not ended yet
@@ -119,46 +198,11 @@ pub mod StreamedPayment {
                         .transfer(stream.owner, refund.into()),
                     'transfer failed',
                 );
+
+                self.emit(StreamCanceled { id, refund });
             }
 
             refund
-        }
-
-        // Collects any pending amount for the given payment stream
-        fn collect(ref self: ContractState, id: u64) -> u128 {
-            let stream_entry = self.streams.entry(id);
-            let mut stream = stream_entry.read();
-
-            let now = get_block_timestamp();
-            let (payment, seconds_paid): (u128, u64) = if (now < stream.start_time) {
-                (0, 0)
-            } else if now < stream.end_time {
-                let seconds_paid_next = now - stream.start_time;
-                let amount_remaining: u256 = stream.amount_remaining.into();
-                let payment_duration = stream.end_time - stream.start_time;
-
-                (
-                    ((amount_remaining * (seconds_paid_next - stream.seconds_paid).into())
-                        / payment_duration.into())
-                        .try_into()
-                        .unwrap(),
-                    seconds_paid_next,
-                )
-            } else {
-                (stream.amount_remaining, stream.end_time - stream.start_time)
-            };
-
-            if (payment.is_non_zero()) {
-                stream.amount_remaining = stream.amount_remaining - payment;
-                stream.seconds_paid = seconds_paid;
-
-                stream_entry.write(stream);
-
-                IERC20Dispatcher { contract_address: stream.token_address }
-                    .transfer(stream.recipient, payment.into());
-            }
-
-            payment
         }
     }
 }
