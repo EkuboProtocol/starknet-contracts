@@ -18,6 +18,7 @@ use ekubo::lens::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
 use ekubo::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
 use ekubo::positions::Positions;
 use ekubo::router::{IRouterDispatcher, Router};
+use ekubo::streamed_payment::{IStreamedPaymentDispatcher, StreamedPayment};
 use ekubo::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
 use ekubo::tests::mocks::locker::{
     Action, ActionResult, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
@@ -249,6 +250,18 @@ pub impl DeployerTraitImpl of DeployerTrait {
             .expect('token registry deploy');
 
         ITokenRegistryDispatcher { contract_address: address }
+    }
+
+    fn deploy_streamed_payment(ref self: Deployer) -> IStreamedPaymentDispatcher {
+        let (address, _) = deploy_syscall(
+            StreamedPayment::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            array![].span(),
+            true,
+        )
+            .expect('streamed payment deploy');
+
+        IStreamedPaymentDispatcher { contract_address: address }
     }
 
 
