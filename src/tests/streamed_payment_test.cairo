@@ -1,6 +1,6 @@
 use ekubo::streamed_payment::IStreamedPaymentDispatcherTrait;
 use ekubo::tests::helper::{Deployer, DeployerTrait};
-use starknet::testing::{set_block_timestamp, set_contract_address};
+use starknet::testing::{set_block_timestamp, set_caller_address, set_contract_address};
 use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
 use super::mock_erc20::MockERC20IERC20ImplTrait;
 
@@ -184,5 +184,50 @@ fn test_create_stream_end_time_gt_start_time() {
             start_time: 3,
             end_time: 1,
         );
+}
+
+
+#[test]
+fn test_stream_ownership_transfer() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    token.approve(streamed_payment.contract_address, 100);
+    let id = streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: 3,
+            end_time: 5,
+        );
+
+    assert_eq!(streamed_payment.get_stream_info(id).owner, get_contract_address());
+    let new_owner: ContractAddress = 0x4567.try_into().unwrap();
+    streamed_payment.transfer_stream_ownership(id, new_owner);
+    assert_eq!(streamed_payment.get_stream_info(id).owner, new_owner);
+}
+
+
+#[test]
+fn test_stream_recipient_transfer() {
+    let mut d: Deployer = Default::default();
+    let streamed_payment = d.deploy_streamed_payment();
+    let token = d.deploy_mock_token_with_balance(get_contract_address(), 1000);
+    token.approve(streamed_payment.contract_address, 100);
+    let id = streamed_payment
+        .create_stream(
+            token_address: token.contract_address,
+            amount: 100,
+            recipient: recipient(),
+            start_time: 3,
+            end_time: 5,
+        );
+
+    assert_eq!(streamed_payment.get_stream_info(id).recipient, recipient());
+    let new_recipient: ContractAddress = 0x8901.try_into().unwrap();
+    set_caller_address(recipient());
+    streamed_payment.change_stream_recipient(id, new_recipient);
+    assert_eq!(streamed_payment.get_stream_info(id).recipient, new_recipient);
 }
 
