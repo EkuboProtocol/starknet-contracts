@@ -161,7 +161,7 @@ pub mod StreamedPayment {
             let caller = get_caller_address();
             assert(
                 stream.owner == caller || stream.recipient == caller,
-                'Only owner/caller can change',
+                'Only owner/recipient can change',
             );
 
             stream.recipient = new_recipient;
