@@ -1,185 +1,192 @@
-// NOTE: These tests require mainnet forking with snforge_std and are not compatible with the
-// standard cairo-test runner. They have been commented out to allow the codebase to compile.
-// To run these tests, use: snforge test --fork-url <mainnet_rpc_url>
+use core::num::traits::Zero;
+use starknet::ContractAddress;
+use starknet::testing::set_contract_address;
+use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
+use crate::interfaces::core::ICoreDispatcherTrait;
+use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+use crate::interfaces::extensions::twamm::OrderKey;
+use crate::interfaces::positions::IPositionsDispatcherTrait;
+use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, default_owner};
+use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
+use crate::types::call_points::CallPoints;
+use crate::types::i129::i129;
 
-// use core::serde::Serde;
-// use crate::revenue_buybacks::{
-//     Config, IRevenueBuybacksDispatcher, IRevenueBuybacksDispatcherTrait,
-// };
-// use snforge_std::{
-//     CheatSpan, ContractClassTrait, DeclareResultTrait, cheat_caller_address, declare,
-//     start_cheat_block_timestamp_global, stop_cheat_caller_address,
-// };
-// use starknet::{ContractAddress, contract_address_const, get_block_timestamp};
-// use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-// use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-// use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-// use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-// use crate::interfaces::extensions::twamm::OrderKey;
-// use crate::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
-// use crate::interfaces::router::IRouterDispatcher;
-// use crate::tests::helper::{Deployer, DeployerTrait};
+fn example_config(buy_token: ContractAddress) -> Config {
+    Config {
+        buy_token,
+        min_delay: 0,
+        max_delay: 43200,
+        // 30 seconds
+        min_duration: 30,
+        // 7 days
+        max_duration: 604800,
+        // 30 bips
+        fee: 1020847100762815411640772995208708096,
+    }
+}
 
+#[test]
+fn test_deploy_and_setup() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
 
-// fn example_config() -> Config {
-//     Config {
-//         buy_token: ekubo_token().contract_address,
-//         min_delay: 0,
-//         max_delay: 43200,
-//         // 30 seconds
-//         min_duration: 30,
-//         // 7 days
-//         max_duration: 604800,
-//         // 30 bips
-//         fee: 1020847100762815411640772995208708096,
-//     }
-// }
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token1.contract_address);
 
-// // Deploys the revenue buybacks with the specified config or a default config and makes it the owner
-// // of ekubo core
-// fn setup(default_config: Option<Config>) -> IRevenueBuybacksDispatcher {
-//     let mut d: Deployer = Default::default();
-//     let core = d.deploy_core();
-//     let rb = deploy_revenue_buybacks(default_config);
-//     cheat_caller_address(core.contract_address, governor_address(), CheatSpan::Indefinite);
-//     IOwnedDispatcher { contract_address: core.contract_address }
-//         .transfer_ownership(rb.contract_address);
-//     stop_cheat_caller_address(core.contract_address);
-//     rb
-// }
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
-// fn advance_time(by: u64) -> u64 {
-//     let time = get_block_timestamp();
-//     let next = time + by;
-//     start_cheat_block_timestamp_global(next);
-//     next
-// }
+    // Verify basic setup
+    assert(rb.get_core() == core.contract_address, 'wrong core');
+    assert(rb.get_positions() == positions.contract_address, 'wrong positions');
 
-// #[test]
-// #[fork("mainnet")]
-// fn test_setup() {
-//     let rb = setup(default_config: Option::Some(example_config()));
-//     assert_eq!(
-//         IOwnedDispatcher { contract_address: rb.contract_address }.get_owner(), governor_address(),
-//     );
-//     assert_eq!(
-//         IOwnedDispatcher { contract_address: ekubo_core().contract_address }.get_owner(),
-//         rb.contract_address,
-//     );
-//     assert_eq!(rb.get_core(), ekubo_core().contract_address);
-//     assert_eq!(rb.get_positions(), positions().contract_address);
-//     // the owner of the minted positions token is the revenue buybacks contract
-//     assert_eq!(
-//         IERC721Dispatcher {
-//             contract_address: IPositionsDispatcher { contract_address: rb.get_positions() }
-//                 .get_nft_address(),
-//         }
-//             .owner_of(rb.get_token_id().into()),
-//         rb.contract_address,
-//     );
-//     // default config, so any address will do
-//     assert_eq!(rb.get_config(sell_token: contract_address_const::<0xdeadbeef>()), example_config());
-// }
+    // Verify the NFT was minted and owned by the contract
+    let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
+    assert(nft.owner_of(rb.get_token_id().into()) == rb.contract_address, 'wrong nft owner');
 
-// #[test]
-// #[fork("mainnet")]
-// fn test_eth_buybacks() {
-//     let rb = setup(default_config: Option::Some(example_config()));
-//     let start_time = (get_block_timestamp() / 16) * 16;
-//     let end_time = start_time + (16 * 8);
+    // Verify config
+    assert(rb.get_config(token0.contract_address) == config, 'wrong config');
+}
 
-//     let protocol_revenue_eth = ekubo_core().get_protocol_fees_collected(eth_token());
-//     rb.start_buybacks_all(sell_token: eth_token(), start_time: start_time, end_time: end_time);
+#[test]
+fn test_config_override() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
 
-//     let config = rb.get_config(eth_token());
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let default_config = example_config(token1.contract_address);
 
-//     let order_key = OrderKey {
-//         sell_token: eth_token(),
-//         buy_token: ekubo_token().contract_address,
-//         fee: config.fee,
-//         start_time,
-//         end_time,
-//     };
+    let rb = d
+        .deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(default_config));
 
-//     let order_info = positions().get_order_info(id: rb.get_token_id(), order_key: order_key);
+    // Set an override for token0
+    let override_config = Config {
+        buy_token: token1.contract_address,
+        min_delay: 100,
+        max_delay: 1000,
+        min_duration: 60,
+        max_duration: 3600,
+        fee: 500000000000000000000000000000000,
+    };
 
-//     // rounding error may not be sold
-//     assert_lt!(protocol_revenue_eth - order_info.remaining_sell_amount, 2);
-//     assert_eq!(order_info.purchased_amount, 0);
+    set_contract_address(default_owner());
+    rb.set_config_override(token0.contract_address, Option::Some(override_config));
 
-//     advance_time(end_time - get_block_timestamp());
+    // Verify override is used
+    assert(rb.get_config(token0.contract_address) == override_config, 'override not applied');
 
-//     let order_info_after = positions().get_order_info(id: rb.get_token_id(), order_key: order_key);
+    // Verify default is still used for other tokens
+    let token2 = d.deploy_mock_token();
+    assert(rb.get_config(token2.contract_address) == default_config, 'default not used');
+}
 
-//     assert_eq!(order_info_after.remaining_sell_amount, 0);
-//     assert_gt!(order_info_after.purchased_amount, 0);
+#[test]
+#[should_panic(expected: ('No config for token',))]
+fn test_no_config_panics() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
 
-//     let balance_before = ekubo_token().balanceOf(governor_address());
-//     rb.collect_proceeds_to_owner(order_key);
-//     let balance_after = ekubo_token().balanceOf(governor_address());
-//     assert_eq!(balance_after - balance_before, order_info_after.purchased_amount.into());
-// }
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::None);
 
-// #[test]
-// #[fork("mainnet")]
-// #[should_panic(expected: ('Invalid sell token',))]
-// fn test_same_token_buyback_fails() {
-//     let rb = setup(default_config: Option::Some(example_config()));
-//     let start_time = (get_block_timestamp() / 16) * 16;
-//     let end_time = start_time + (16 * 8);
+    let token = d.deploy_mock_token();
+    rb.get_config(token.contract_address);
+}
 
-//     rb
-//         .start_buybacks_all(
-//             sell_token: ekubo_token().contract_address, start_time: start_time, end_time: end_time,
-//         );
-// }
+#[test]
+#[should_panic(expected: ('Invalid sell token',))]
+fn test_same_token_buyback_fails() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+    let twamm = d.deploy_twamm(core);
 
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token0.contract_address);
 
-// #[test]
-// #[fork("mainnet")]
-// #[should_panic(expected: ('No config for token',))]
-// fn test_buyback_with_no_config() {
-//     let rb = setup(default_config: Option::None);
-//     rb.get_config(sell_token: eth_token());
-// }
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
+    // Transfer core ownership to rb
+    set_contract_address(default_owner());
+    IOwnedDispatcher { contract_address: core.contract_address }
+        .transfer_ownership(rb.contract_address);
 
-// #[test]
-// #[fork("mainnet")]
-// fn test_buyback_with_config_override() {
-//     let rb = setup(default_config: Option::None);
-//     cheat_caller_address(rb.contract_address, governor_address(), CheatSpan::Indefinite);
-//     rb
-//         .set_config_override(
-//             sell_token: eth_token(), config_override: Option::Some(example_config()),
-//         );
-//     stop_cheat_caller_address(rb.contract_address);
+    // Try to start buybacks with same token as buy_token
+    rb.start_buybacks(token0.contract_address, 1000, 0, 100);
+}
 
-//     assert_eq!(rb.get_config(sell_token: eth_token()), example_config());
+#[test]
+#[should_panic(expected: ('Invalid start or end time',))]
+fn test_invalid_time_range() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
 
-//     let start_time = (get_block_timestamp() / 16) * 16;
-//     let end_time = start_time + (16 * 8);
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token1.contract_address);
 
-//     rb.start_buybacks_all(sell_token: eth_token(), start_time: start_time, end_time: end_time);
-// }
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
+    // Transfer core ownership to rb
+    set_contract_address(default_owner());
+    IOwnedDispatcher { contract_address: core.contract_address }
+        .transfer_ownership(rb.contract_address);
 
-// #[test]
-// #[fork("mainnet")]
-// fn test_reclaim_core() {
-//     let rb = setup(default_config: Option::Some(example_config()));
+    // Try to start buybacks with end_time <= start_time
+    rb.start_buybacks(token0.contract_address, 1000, 100, 50);
+}
 
-//     cheat_caller_address(rb.contract_address, governor_address(), CheatSpan::Indefinite);
-//     rb.reclaim_core();
-//     stop_cheat_caller_address(rb.contract_address);
-//     assert_eq!(
-//         IOwnedDispatcher { contract_address: ekubo_core().contract_address }.get_owner(),
-//         governor_address(),
-//     );
-//     assert_eq!(
-//         IERC721Dispatcher { contract_address: positions().get_nft_address() }
-//             .ownerOf(rb.get_token_id().into()),
-//         rb.contract_address,
-//     );
-// }
+#[test]
+#[should_panic(expected: ('Duration too short',))]
+fn test_duration_too_short() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token1.contract_address);
+
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
+
+    // Transfer core ownership to rb
+    set_contract_address(default_owner());
+    IOwnedDispatcher { contract_address: core.contract_address }
+        .transfer_ownership(rb.contract_address);
+
+    // Try to start buybacks with duration < min_duration (30 seconds)
+    rb.start_buybacks(token0.contract_address, 1000, 0, 20);
+}
+
+#[test]
+fn test_reclaim_core() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+
+    let (token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token1.contract_address);
+
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
+
+    // Transfer core ownership to rb
+    set_contract_address(default_owner());
+    IOwnedDispatcher { contract_address: core.contract_address }
+        .transfer_ownership(rb.contract_address);
+
+    // Verify rb owns core
+    let core_owned = IOwnedDispatcher { contract_address: core.contract_address };
+    assert(core_owned.get_owner() == rb.contract_address, 'rb should own core');
+
+    // Reclaim core
+    rb.reclaim_core();
+
+    // Verify default_owner owns core again
+    assert(core_owned.get_owner() == default_owner(), 'owner should own core');
+
+    // Verify rb still owns the NFT
+    let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
+    assert(nft.owner_of(rb.get_token_id().into()) == rb.contract_address, 'rb should own nft');
+}
 

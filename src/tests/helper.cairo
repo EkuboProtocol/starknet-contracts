@@ -20,6 +20,7 @@ use crate::interfaces::upgradeable::IUpgradeableDispatcher;
 use crate::lens::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
 use crate::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
 use crate::positions::Positions;
+use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher, RevenueBuybacks};
 use crate::router::Router;
 use crate::streamed_payment::{IStreamedPaymentDispatcher, StreamedPayment};
 use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
@@ -263,6 +264,24 @@ pub impl DeployerTraitImpl of DeployerTrait {
             .expect('streamed payment deploy');
 
         IStreamedPaymentDispatcher { contract_address: address }
+    }
+
+    fn deploy_revenue_buybacks(
+        ref self: Deployer,
+        owner: ContractAddress,
+        core: ICoreDispatcher,
+        positions: IPositionsDispatcher,
+        default_config: Option<Config>,
+    ) -> IRevenueBuybacksDispatcher {
+        let (address, _) = deploy_syscall(
+            RevenueBuybacks::TEST_CLASS_HASH.try_into().unwrap(),
+            self.get_next_nonce(),
+            serialize(@(owner, core, positions, default_config)).span(),
+            true,
+        )
+            .expect('revenue buybacks deploy');
+
+        IRevenueBuybacksDispatcher { contract_address: address }
     }
 
 
