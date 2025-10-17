@@ -1,16 +1,10 @@
-use core::num::traits::Zero;
 use starknet::ContractAddress;
 use starknet::testing::set_contract_address;
 use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-use crate::interfaces::core::ICoreDispatcherTrait;
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use crate::interfaces::extensions::twamm::OrderKey;
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
 use crate::tests::helper::{Deployer, DeployerTrait, default_owner};
-use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
-use crate::types::call_points::CallPoints;
-use crate::types::i129::i129;
 
 fn example_config(buy_token: ContractAddress) -> Config {
     Config {
@@ -101,7 +95,6 @@ fn test_same_token_buyback_fails() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
     let positions = d.deploy_positions(core);
-    let twamm = d.deploy_twamm(core);
 
     let (token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token0.contract_address);
