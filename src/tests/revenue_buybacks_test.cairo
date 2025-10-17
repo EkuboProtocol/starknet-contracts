@@ -77,7 +77,7 @@ fn test_config_override() {
 }
 
 #[test]
-#[should_panic(expected: ('No config for token',))]
+#[should_panic(expected: ('No config for token', 'ENTRYPOINT_FAILED'))]
 fn test_no_config_panics() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -90,7 +90,7 @@ fn test_no_config_panics() {
 }
 
 #[test]
-#[should_panic(expected: ('Invalid sell token',))]
+#[should_panic(expected: ('Invalid sell token', 'ENTRYPOINT_FAILED'))]
 fn test_same_token_buyback_fails() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -111,7 +111,7 @@ fn test_same_token_buyback_fails() {
 }
 
 #[test]
-#[should_panic(expected: ('Invalid start or end time',))]
+#[should_panic(expected: ('Invalid start or end time', 'ENTRYPOINT_FAILED'))]
 fn test_invalid_time_range() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -132,7 +132,7 @@ fn test_invalid_time_range() {
 }
 
 #[test]
-#[should_panic(expected: ('Duration too short',))]
+#[should_panic(expected: ('Duration too short', 'ENTRYPOINT_FAILED'))]
 fn test_duration_too_short() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
