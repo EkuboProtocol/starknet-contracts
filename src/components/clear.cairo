@@ -1,6 +1,6 @@
 use core::num::traits::Zero;
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use starknet::{ContractAddress, get_caller_address, get_contract_address};
+use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 #[starknet::interface]
 pub trait IClear<TContractState> {

@@ -1,5 +1,5 @@
-use ekubo::math::ticks::{constants as tick_constants, max_tick, min_tick};
-use ekubo::types::i129::i129;
+use crate::math::ticks::{constants as tick_constants, max_tick, min_tick};
+use crate::types::i129::i129;
 
 // Tick bounds for a position
 #[derive(Copy, Drop, Serde, PartialEq, Hash)]

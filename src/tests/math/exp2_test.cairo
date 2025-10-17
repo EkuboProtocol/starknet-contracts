@@ -1,4 +1,4 @@
-use ekubo::math::exp2::exp2;
+use crate::math::exp2::exp2;
 
 #[test]
 fn test_exp2_0() {

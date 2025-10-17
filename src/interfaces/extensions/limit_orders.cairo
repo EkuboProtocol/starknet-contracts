@@ -1,5 +1,5 @@
-use ekubo::types::i129::i129;
 use starknet::ContractAddress;
+use crate::types::i129::i129;
 
 #[derive(Drop, Copy, Serde, Hash, PartialEq, Debug)]
 pub struct OrderKey {

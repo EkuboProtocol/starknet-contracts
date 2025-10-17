@@ -1,18 +1,18 @@
 use core::num::traits::Zero;
-use ekubo::interfaces::core::{
-    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
-};
-use ekubo::tests::helper::{Deployer, DeployerTrait, swap_inner, update_position_inner};
-use ekubo::tests::mocks::locker::ICoreLockerDispatcher;
-use ekubo::tests::mocks::mock_extension::{
-    ExtensionCalled, IMockExtensionDispatcher, IMockExtensionDispatcherTrait,
-};
-use ekubo::types::bounds::max_bounds;
-use ekubo::types::call_points::{CallPoints, all_call_points};
-use ekubo::types::i129::i129;
-use ekubo::types::keys::PoolKey;
 use starknet::get_contract_address;
 use starknet::testing::set_contract_address;
+use crate::interfaces::core::{
+    ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
+};
+use crate::tests::helper::{Deployer, DeployerTrait, swap_inner, update_position_inner};
+use crate::tests::mocks::locker::ICoreLockerDispatcher;
+use crate::tests::mocks::mock_extension::{
+    ExtensionCalled, IMockExtensionDispatcher, IMockExtensionDispatcherTrait,
+};
+use crate::types::bounds::max_bounds;
+use crate::types::call_points::{CallPoints, all_call_points};
+use crate::types::i129::i129;
+use crate::types::keys::PoolKey;
 
 fn setup(
     ref deployer: Deployer, fee: u128, tick_spacing: u128, call_points: CallPoints,

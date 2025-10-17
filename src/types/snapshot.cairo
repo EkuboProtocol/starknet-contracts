@@ -1,7 +1,7 @@
 use core::option::OptionTrait;
 use core::traits::{Into, TryInto};
-use ekubo::types::i129::i129;
 use starknet::storage_access::StorePacking;
+use crate::types::i129::i129;
 
 #[derive(Copy, Drop, PartialEq, Serde)]
 pub struct Snapshot {

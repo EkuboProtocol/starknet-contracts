@@ -1,9 +1,9 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
-use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::fee::{amount_before_fee, compute_fee};
-use ekubo::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
-use ekubo::types::i129::i129;
+use crate::math::delta::{amount0_delta, amount1_delta};
+use crate::math::fee::{amount_before_fee, compute_fee};
+use crate::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
+use crate::types::i129::i129;
 
 // consumed_amount is how much of the amount was used in this step, including the amount that was
 // paid to fees calculated_amount is how much of the other token is given

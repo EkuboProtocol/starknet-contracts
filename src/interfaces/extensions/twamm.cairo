@@ -1,6 +1,6 @@
-use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
-use ekubo::types::i129::i129;
 use starknet::ContractAddress;
+use crate::types::fees_per_liquidity::FeesPerLiquidity;
+use crate::types::i129::i129;
 
 #[derive(Drop, Copy, Serde, Hash, PartialEq, Debug)]
 pub struct OrderKey {

@@ -5,20 +5,24 @@ pub mod Positions {
     use core::num::traits::Zero;
     use core::option::{Option, OptionTrait};
     use core::traits::Into;
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::{
+        ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
+    };
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use crate::components::util::{
         call_core_with_callback, consume_callback_data, forward_lock, serialize,
     };
-    use ekubo::extensions::limit_orders::LimitOrders::{
+    use crate::extensions::limit_orders::LimitOrders::{
         DOUBLE_LIMIT_ORDER_TICK_SPACING, LIMIT_ORDER_TICK_SPACING,
     };
-    use ekubo::interfaces::core::{
+    use crate::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher, ILocker, SwapParameters,
         UpdatePositionParameters,
     };
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::interfaces::extensions::limit_orders::{
+    use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use crate::interfaces::extensions::limit_orders::{
         CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult,
         ForwardCallbackData as LimitOrderForwardCallbackData,
         GetOrderInfoRequest as GetLimitOrderInfoRequest,
@@ -26,29 +30,25 @@ pub mod Positions {
         ILimitOrdersDispatcherTrait, OrderKey as LimitOrderKey, PlaceOrderForwardCallbackData,
         PlaceOrderForwardCallbackResult,
     };
-    use ekubo::interfaces::extensions::twamm::{
+    use crate::interfaces::extensions::twamm::{
         CollectProceedsCallbackData, ForwardCallbackData, ITWAMMDispatcher, ITWAMMDispatcherTrait,
         OrderInfo, OrderKey, UpdateSaleRateCallbackData,
     };
-    use ekubo::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
-    use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-    use ekubo::math::max_liquidity::{
+    use crate::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
+    use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+    use crate::math::liquidity::liquidity_delta_to_amount_delta;
+    use crate::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
-    use ekubo::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
-    use ekubo::math::time::to_duration;
-    use ekubo::math::twamm::calculate_sale_rate;
-    use ekubo::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
-    use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::delta::Delta;
-    use ekubo::types::i129::i129;
-    use ekubo::types::keys::{PoolKey, PositionKey};
-    use ekubo::types::pool_price::PoolPrice;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use starknet::{
-        ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
-    };
+    use crate::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
+    use crate::math::time::to_duration;
+    use crate::math::twamm::calculate_sale_rate;
+    use crate::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
+    use crate::types::bounds::{Bounds, max_bounds};
+    use crate::types::delta::Delta;
+    use crate::types::i129::i129;
+    use crate::types::keys::{PoolKey, PositionKey};
+    use crate::types::pool_price::PoolPrice;
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -60,10 +60,10 @@ pub mod Positions {
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
+    impl Expires = crate::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -208,7 +208,7 @@ pub mod Positions {
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::positions::Positions");
+            return selector!("crate::positions::Positions");
         }
     }
 

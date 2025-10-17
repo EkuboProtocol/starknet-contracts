@@ -4,40 +4,40 @@ pub mod Core {
     use core::num::traits::Zero;
     use core::option::Option;
     use core::traits::Into;
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::interfaces::core::{
-        GetPositionWithFeesResult, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
-        IForwardeeDispatcher, IForwardeeDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait,
-        LockerState, SwapParameters, UpdatePositionParameters,
-    };
-    use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use ekubo::math::bitmap::{
-        Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
-    };
-    use ekubo::math::fee::{accumulate_fee_amount, compute_fee};
-    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-    use ekubo::math::swap::{is_price_increasing, swap_result};
-    use ekubo::math::ticks::{
-        max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick, sqrt_ratio_to_tick, tick_to_sqrt_ratio,
-    };
-    use ekubo::types::bounds::{Bounds, BoundsTrait};
-    use ekubo::types::call_points::CallPoints;
-    use ekubo::types::delta::Delta;
-    use ekubo::types::fees_per_liquidity::{
-        FeesPerLiquidity, fees_per_liquidity_from_amount0, fees_per_liquidity_from_amount1,
-        fees_per_liquidity_new,
-    };
-    use ekubo::types::i129::{AddDeltaTrait, i129, i129Trait};
-    use ekubo::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
-    use ekubo::types::pool_price::PoolPrice;
-    use ekubo::types::position::{Position, PositionTrait};
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::storage_access::storage_base_address_from_felt252;
     use starknet::{ContractAddress, Store, get_caller_address, get_contract_address};
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use crate::interfaces::core::{
+        GetPositionWithFeesResult, ICore, IExtensionDispatcher, IExtensionDispatcherTrait,
+        IForwardeeDispatcher, IForwardeeDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait,
+        LockerState, SwapParameters, UpdatePositionParameters,
+    };
+    use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use crate::math::bitmap::{
+        Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
+    };
+    use crate::math::fee::{accumulate_fee_amount, compute_fee};
+    use crate::math::liquidity::liquidity_delta_to_amount_delta;
+    use crate::math::swap::{is_price_increasing, swap_result};
+    use crate::math::ticks::{
+        max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick, sqrt_ratio_to_tick, tick_to_sqrt_ratio,
+    };
+    use crate::types::bounds::{Bounds, BoundsTrait};
+    use crate::types::call_points::CallPoints;
+    use crate::types::delta::Delta;
+    use crate::types::fees_per_liquidity::{
+        FeesPerLiquidity, fees_per_liquidity_from_amount0, fees_per_liquidity_from_amount1,
+        fees_per_liquidity_new,
+    };
+    use crate::types::i129::{AddDeltaTrait, i129, i129Trait};
+    use crate::types::keys::{PoolKey, PoolKeyTrait, PositionKey, SavedBalanceKey};
+    use crate::types::pool_price::PoolPrice;
+    use crate::types::position::{Position, PositionTrait};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -388,7 +388,7 @@ pub mod Core {
     #[abi(embed_v0)]
     impl CoreHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::core::Core");
+            return selector!("crate::core::Core");
         }
     }
 

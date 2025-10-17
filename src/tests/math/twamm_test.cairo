@@ -1,12 +1,12 @@
-use ekubo::math::ticks::constants::MAX_TICK_SPACING;
-use ekubo::math::ticks::tick_to_sqrt_ratio;
-use ekubo::math::time::to_duration;
-use ekubo::math::twamm::{
+use crate::math::ticks::constants::MAX_TICK_SPACING;
+use crate::math::ticks::tick_to_sqrt_ratio;
+use crate::math::time::to_duration;
+use crate::math::twamm::{
     calculate_amount_from_sale_rate, calculate_c, calculate_next_sqrt_ratio,
     calculate_reward_amount, calculate_sale_rate, constants,
 };
-use ekubo::types::bounds::max_bounds;
-use ekubo::types::i129::i129;
+use crate::types::bounds::max_bounds;
+use crate::types::i129::i129;
 
 
 const SIXTEEN_POW_ZERO: u64 = 0x1;
@@ -159,8 +159,8 @@ mod RewardRateTest {
 }
 
 mod TWAMMMathTest {
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::muldiv::muldiv;
+    use crate::math::delta::{amount0_delta, amount1_delta};
+    use crate::math::muldiv::muldiv;
     use super::{calculate_c, calculate_next_sqrt_ratio, constants};
 
 

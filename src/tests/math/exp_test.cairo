@@ -1,5 +1,5 @@
-use ekubo::math::exp::exp;
-use ekubo::math::twamm::constants;
+use crate::math::exp::exp;
+use crate::math::twamm::constants;
 
 #[test]
 fn test_exp() {

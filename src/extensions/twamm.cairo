@@ -4,41 +4,41 @@ pub mod TWAMM {
     use core::num::traits::Zero;
     use core::option::OptionTrait;
     use core::traits::{Into, TryInto};
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{
-        call_core_with_callback, check_caller_is_core, consume_callback_data, serialize,
-    };
-    use ekubo::interfaces::core::{
-        ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
-        UpdatePositionParameters,
-    };
-    use ekubo::interfaces::extensions::twamm::{
-        ForwardCallbackData, ITWAMM, OrderInfo, OrderKey, SaleRateState, StateKey,
-    };
-    use ekubo::math::bitmap::{Bitmap, BitmapTrait};
-    use ekubo::math::fee::compute_fee;
-    use ekubo::math::ticks::constants::MAX_TICK_SPACING;
-    use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
-    use ekubo::math::time::{TIME_SPACING_SIZE, to_duration, validate_time};
-    use ekubo::math::twamm::constants::{
-        MAX_BOUNDS_MAX_SQRT_RATIO, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_USABLE_TICK_MAGNITUDE,
-    };
-    use ekubo::math::twamm::{
-        calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_reward_amount,
-    };
-    use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::call_points::CallPoints;
-    use ekubo::types::delta::Delta;
-    use ekubo::types::fees_per_liquidity::{FeesPerLiquidity, to_fees_per_liquidity};
-    use ekubo::types::i129::{AddDeltaTrait, i129};
-    use ekubo::types::keys::{PoolKey, SavedBalanceKey};
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::storage_access::StorePacking;
     use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use crate::components::util::{
+        call_core_with_callback, check_caller_is_core, consume_callback_data, serialize,
+    };
+    use crate::interfaces::core::{
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
+        UpdatePositionParameters,
+    };
+    use crate::interfaces::extensions::twamm::{
+        ForwardCallbackData, ITWAMM, OrderInfo, OrderKey, SaleRateState, StateKey,
+    };
+    use crate::math::bitmap::{Bitmap, BitmapTrait};
+    use crate::math::fee::compute_fee;
+    use crate::math::ticks::constants::MAX_TICK_SPACING;
+    use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+    use crate::math::time::{TIME_SPACING_SIZE, to_duration, validate_time};
+    use crate::math::twamm::constants::{
+        MAX_BOUNDS_MAX_SQRT_RATIO, MAX_BOUNDS_MIN_SQRT_RATIO, MAX_USABLE_TICK_MAGNITUDE,
+    };
+    use crate::math::twamm::{
+        calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_reward_amount,
+    };
+    use crate::types::bounds::{Bounds, max_bounds};
+    use crate::types::call_points::CallPoints;
+    use crate::types::delta::Delta;
+    use crate::types::fees_per_liquidity::{FeesPerLiquidity, to_fees_per_liquidity};
+    use crate::types::i129::{AddDeltaTrait, i129};
+    use crate::types::keys::{PoolKey, SavedBalanceKey};
 
     #[derive(Drop, Copy, Serde, starknet::Store)]
     struct OrderState {
@@ -148,7 +148,7 @@ pub mod TWAMM {
     #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::extensions::twamm::TWAMM");
+            return selector!("crate::extensions::twamm::TWAMM");
         }
     }
 

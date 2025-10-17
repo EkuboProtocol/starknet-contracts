@@ -1,5 +1,5 @@
-use ekubo::math::delta::{amount0_delta, amount1_delta};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use crate::math::delta::{amount0_delta, amount1_delta};
+use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 
 #[test]
 fn test_amount0_delta_price_down() {

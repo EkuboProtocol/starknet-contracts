@@ -3,33 +3,33 @@ pub mod LimitOrders {
     use core::array::ArrayTrait;
     use core::num::traits::Zero;
     use core::traits::{Into, TryInto};
-    use ekubo::components::clear::ClearImpl;
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::{call_core_with_callback, consume_callback_data, serialize};
-    use ekubo::interfaces::core::{
-        ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
-        UpdatePositionParameters,
-    };
-    use ekubo::interfaces::extensions::limit_orders::{
-        CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult, ForwardCallbackData,
-        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
-        PlaceOrderForwardCallbackData, PlaceOrderForwardCallbackResult, PoolState,
-    };
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-    use ekubo::math::ticks::tick_to_sqrt_ratio;
-    use ekubo::types::bounds::Bounds;
-    use ekubo::types::call_points::CallPoints;
-    use ekubo::types::delta::Delta;
-    use ekubo::types::i129::{i129, i129Trait};
-    use ekubo::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::storage_access::StorePacking;
     use starknet::{ContractAddress, get_contract_address};
+    use crate::components::clear::ClearImpl;
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use crate::components::util::{call_core_with_callback, consume_callback_data, serialize};
+    use crate::interfaces::core::{
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
+        UpdatePositionParameters,
+    };
+    use crate::interfaces::extensions::limit_orders::{
+        CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult, ForwardCallbackData,
+        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
+        PlaceOrderForwardCallbackData, PlaceOrderForwardCallbackResult, PoolState,
+    };
+    use crate::math::delta::{amount0_delta, amount1_delta};
+    use crate::math::liquidity::liquidity_delta_to_amount_delta;
+    use crate::math::ticks::tick_to_sqrt_ratio;
+    use crate::types::bounds::Bounds;
+    use crate::types::call_points::CallPoints;
+    use crate::types::delta::Delta;
+    use crate::types::i129::{i129, i129Trait};
+    use crate::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
 
     impl OrderStateStorePacking of StorePacking<OrderState, felt252> {
         fn pack(value: OrderState) -> felt252 {
@@ -82,7 +82,7 @@ pub mod LimitOrders {
     pub const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 256;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -157,7 +157,7 @@ pub mod LimitOrders {
     #[abi(embed_v0)]
     impl LimitOrdersHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::extensions::limit_orders::LimitOrders");
+            return selector!("crate::extensions::limit_orders::LimitOrders");
         }
     }
 

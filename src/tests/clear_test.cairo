@@ -1,14 +1,14 @@
-use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::tests::helper::{Deployer, DeployerTrait};
 use starknet::ContractAddress;
 use starknet::syscalls::deploy_syscall;
 use starknet::testing::set_contract_address;
+use crate::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use crate::tests::helper::{Deployer, DeployerTrait};
 
 #[starknet::contract]
 mod TestContract {
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     #[storage]
     struct Storage {}

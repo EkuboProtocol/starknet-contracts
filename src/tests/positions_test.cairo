@@ -2,33 +2,33 @@ use core::array::ArrayTrait;
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::Into;
-use ekubo::components::clear::{IClearDispatcher, IClearDispatcherTrait};
-use ekubo::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
-use ekubo::interfaces::erc20::IERC20Dispatcher;
-use ekubo::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
-use ekubo::interfaces::extensions::limit_orders::{
+use starknet::testing::{pop_log, set_contract_address};
+use starknet::{ClassHash, get_contract_address};
+use crate::components::clear::{IClearDispatcher, IClearDispatcherTrait};
+use crate::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
+use crate::interfaces::erc20::IERC20Dispatcher;
+use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+use crate::interfaces::extensions::limit_orders::{
     GetOrderInfoResult as GetLimitOrderInfoResult, OrderKey as LimitOrderKey,
     OrderState as LimitOrderState,
 };
-use ekubo::interfaces::positions::{
+use crate::interfaces::positions::{
     GetTokenInfoRequest, IPositionsDispatcher, IPositionsDispatcherTrait,
 };
-use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
-use ekubo::positions::Positions;
-use ekubo::positions::Positions::amount_to_limit_order_liquidity;
-use ekubo::tests::helper::{
+use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
+use crate::positions::Positions;
+use crate::positions::Positions::amount_to_limit_order_liquidity;
+use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
     SetupPoolResult, default_owner, swap,
 };
-use ekubo::tests::mock_erc20::{
+use crate::tests::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
 };
-use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::i129::i129;
-use ekubo::types::keys::PoolKey;
-use starknet::testing::{pop_log, set_contract_address};
-use starknet::{ClassHash, get_contract_address};
+use crate::types::bounds::{Bounds, max_bounds};
+use crate::types::i129::i129;
+use crate::types::keys::PoolKey;
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
@@ -43,7 +43,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         );
     let positions = d.deploy_positions(setup.core);
 
-    pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(positions.contract_address)
+    pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address)
         .unwrap();
 
     let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
@@ -52,7 +52,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         positions.contract_address,
     )
         .unwrap();

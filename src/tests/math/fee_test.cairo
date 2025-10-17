@@ -1,4 +1,4 @@
-use ekubo::math::fee::{accumulate_fee_amount, amount_before_fee, compute_fee};
+use crate::math::fee::{accumulate_fee_amount, amount_before_fee, compute_fee};
 
 const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
 const FIFTY_PERCENT_FEE: u128 = 0x80000000000000000000000000000000;

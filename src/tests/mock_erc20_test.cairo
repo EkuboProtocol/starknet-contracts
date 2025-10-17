@@ -1,10 +1,10 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
-use ekubo::tests::helper::{Deployer, DeployerTrait};
-use ekubo::tests::mock_erc20::MockERC20::Transfer;
-use ekubo::tests::mock_erc20::MockERC20IERC20ImplTrait;
 use starknet::testing::pop_log;
 use starknet::{ContractAddress, get_contract_address};
+use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::mock_erc20::MockERC20::Transfer;
+use crate::tests::mock_erc20::MockERC20IERC20ImplTrait;
 
 
 #[test]

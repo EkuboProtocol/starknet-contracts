@@ -1,10 +1,10 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::{Into, TryInto};
-use ekubo::math::bits::{lsb, msb};
-use ekubo::math::exp2::exp2;
-use ekubo::math::mask::mask;
-use ekubo::types::i129::{i129, i129Trait};
+use crate::math::bits::{lsb, msb};
+use crate::math::exp2::exp2;
+use crate::math::mask::mask;
+use crate::types::i129::{i129, i129Trait};
 
 #[derive(Copy, Drop, starknet::Store, PartialEq)]
 pub struct Bitmap {

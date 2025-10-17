@@ -1,8 +1,8 @@
 use core::num::traits::Zero;
-use ekubo::math::liquidity::liquidity_delta_to_amount_delta;
-use ekubo::math::max_liquidity::{max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1};
-use ekubo::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
-use ekubo::types::i129::i129;
+use crate::math::liquidity::liquidity_delta_to_amount_delta;
+use crate::math::max_liquidity::{max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1};
+use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
+use crate::types::i129::i129;
 
 #[test]
 fn test_max_liquidity_for_token0_max_at_full_range() {

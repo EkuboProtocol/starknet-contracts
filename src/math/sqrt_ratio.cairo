@@ -1,7 +1,7 @@
 use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub, Zero};
 use core::option::Option;
-use ekubo::math::muldiv::muldiv;
-use ekubo::types::i129::i129;
+use crate::math::muldiv::muldiv;
+use crate::types::i129::i129;
 
 // Compute the next ratio from a delta amount0, always rounded towards starting price for input, and
 // away from starting price for output An empty option is returned on overflow/underflow which means

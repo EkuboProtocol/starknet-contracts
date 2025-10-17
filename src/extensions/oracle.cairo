@@ -1,5 +1,5 @@
-use ekubo::types::i129::i129;
 use starknet::ContractAddress;
+use crate::types::i129::i129;
 
 #[starknet::interface]
 pub trait IOracle<TContractState> {
@@ -106,24 +106,24 @@ pub mod Oracle {
     use core::cmp::max;
     use core::num::traits::{Sqrt, WideMul, Zero};
     use core::traits::Into;
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use ekubo::components::util::check_caller_is_core;
-    use ekubo::interfaces::core::{
-        ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
-    };
-    use ekubo::math::ticks::tick_to_sqrt_ratio;
-    use ekubo::types::bounds::Bounds;
-    use ekubo::types::call_points::CallPoints;
-    use ekubo::types::delta::Delta;
-    use ekubo::types::i129::i129;
-    use ekubo::types::keys::PoolKey;
-    use ekubo::types::snapshot::Snapshot;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePath, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::{get_block_timestamp, get_contract_address};
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
+    use crate::components::util::check_caller_is_core;
+    use crate::interfaces::core::{
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, SwapParameters, UpdatePositionParameters,
+    };
+    use crate::math::ticks::tick_to_sqrt_ratio;
+    use crate::types::bounds::Bounds;
+    use crate::types::call_points::CallPoints;
+    use crate::types::delta::Delta;
+    use crate::types::i129::i129;
+    use crate::types::keys::PoolKey;
+    use crate::types::snapshot::Snapshot;
     use super::{ContractAddress, IOracle};
 
     // Converts a tick to the price as a 128.128 number

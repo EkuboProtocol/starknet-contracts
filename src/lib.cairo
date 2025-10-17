@@ -1,6 +1,7 @@
 pub mod core;
 pub mod owned_nft;
 pub mod positions;
+pub mod revenue_buybacks;
 pub mod router;
 pub mod streamed_payment;
 
@@ -26,6 +27,7 @@ pub mod interfaces {
     pub mod erc20;
     pub mod erc721;
     pub mod positions;
+    pub mod router;
     pub mod src5;
     pub mod upgradeable;
     pub mod extensions {

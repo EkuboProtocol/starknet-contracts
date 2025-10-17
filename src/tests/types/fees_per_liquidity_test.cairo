@@ -1,5 +1,5 @@
 use core::num::traits::Zero;
-use ekubo::types::fees_per_liquidity::{
+use crate::types::fees_per_liquidity::{
     FeesPerLiquidity, fees_per_liquidity_new, to_fees_per_liquidity,
 };
 

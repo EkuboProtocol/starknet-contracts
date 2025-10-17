@@ -1,14 +1,14 @@
 use core::option::OptionTrait;
-use ekubo::interfaces::erc20::IERC20Dispatcher;
-use ekubo::lens::token_registry::ITokenRegistryDispatcherTrait;
-use ekubo::lens::token_registry::TokenRegistry::{
-    FeltIntoByteArray, Registration, get_string_metadata, ten_pow,
-};
-use ekubo::tests::helper::{Deployer, DeployerTrait};
-use ekubo::tests::mock_erc20::MockERC20IERC20ImplTrait;
 use starknet::syscalls::deploy_syscall;
 use starknet::testing::pop_log;
 use starknet::{ContractAddress, get_contract_address};
+use crate::interfaces::erc20::IERC20Dispatcher;
+use crate::lens::token_registry::ITokenRegistryDispatcherTrait;
+use crate::lens::token_registry::TokenRegistry::{
+    FeltIntoByteArray, Registration, get_string_metadata, ten_pow,
+};
+use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::mock_erc20::MockERC20IERC20ImplTrait;
 
 #[test]
 fn test_ten_pow() {

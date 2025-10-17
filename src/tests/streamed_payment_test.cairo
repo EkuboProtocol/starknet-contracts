@@ -1,7 +1,7 @@
-use ekubo::streamed_payment::IStreamedPaymentDispatcherTrait;
-use ekubo::tests::helper::{Deployer, DeployerTrait};
 use starknet::testing::{set_block_timestamp, set_contract_address};
 use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
+use crate::streamed_payment::IStreamedPaymentDispatcherTrait;
+use crate::tests::helper::{Deployer, DeployerTrait};
 use super::mock_erc20::MockERC20IERC20ImplTrait;
 
 fn recipient() -> ContractAddress {
