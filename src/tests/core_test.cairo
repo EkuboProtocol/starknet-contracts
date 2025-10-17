@@ -738,7 +738,7 @@ mod locks {
                     ),
                 ),
             ) {
-            ActionResult::SaveBalance => {},
+            ActionResult::SaveBalance(_) => {},
             _ => { assert(false, 'expected save'); },
         };
     }
