@@ -78,7 +78,7 @@ pub mod RevenueBuybacks {
         StoragePointerWriteAccess,
     };
     use crate::components::owned::{
-        IOwned, IOwnedDispatcher, IOwnedDispatcherTrait, Ownable, Owned as owned_component,
+        IOwnedDispatcher, IOwnedDispatcherTrait, Ownable, Owned as owned_component,
     };
     use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     use crate::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
