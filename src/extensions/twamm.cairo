@@ -148,7 +148,7 @@ pub mod TWAMM {
     #[abi(embed_v0)]
     impl TWAMMHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::extensions::twamm::TWAMM");
+            return selector!("ekubo::extensions::twamm::TWAMM");
         }
     }
 

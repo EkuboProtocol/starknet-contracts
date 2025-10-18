@@ -388,7 +388,7 @@ pub mod Core {
     #[abi(embed_v0)]
     impl CoreHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::core::Core");
+            return selector!("ekubo::core::Core");
         }
     }
 

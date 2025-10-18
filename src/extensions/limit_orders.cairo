@@ -157,7 +157,7 @@ pub mod LimitOrders {
     #[abi(embed_v0)]
     impl LimitOrdersHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::extensions::limit_orders::LimitOrders");
+            return selector!("ekubo::extensions::limit_orders::LimitOrders");
         }
     }
 

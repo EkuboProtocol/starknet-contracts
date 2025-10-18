@@ -160,7 +160,7 @@ pub mod OwnedNFT {
     #[abi(embed_v0)]
     impl OwnedNFTHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::owned_nft::OwnedNFT");
+            return selector!("ekubo::owned_nft::OwnedNFT");
         }
     }
 

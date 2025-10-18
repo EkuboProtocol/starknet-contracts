@@ -18,7 +18,7 @@ pub mod MockUpgradeable {
     #[abi(embed_v0)]
     impl MockUpgradeableHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::tests::mocks::mock_upgradeable::MockUpgradeable");
+            return selector!("ekubo::tests::mocks::mock_upgradeable::MockUpgradeable");
         }
     }
 
