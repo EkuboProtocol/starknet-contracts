@@ -14,10 +14,10 @@ fn test_replace_class_hash() {
     mock_upgradeable.replace_class_hash(class_hash);
 
     pop_log::<
-        ekubo::components::owned::Owned::OwnershipTransferred,
+        crate::components::owned::Owned::OwnershipTransferred,
     >(mock_upgradeable.contract_address)
         .unwrap();
-    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         mock_upgradeable.contract_address,
     )
         .unwrap();

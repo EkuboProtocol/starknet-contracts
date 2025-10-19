@@ -60,10 +60,10 @@ pub mod Positions {
     impl Upgradeable = upgradeable_component::UpgradeableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
+    impl Expires = crate::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -208,7 +208,7 @@ pub mod Positions {
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("ekubo::positions::Positions");
+            return selector!("crate::positions::Positions");
         }
     }
 

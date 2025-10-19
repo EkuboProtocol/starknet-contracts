@@ -43,7 +43,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         );
     let positions = d.deploy_positions(setup.core);
 
-    pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(positions.contract_address)
+    pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address)
         .unwrap();
 
     let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
@@ -52,7 +52,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
         positions.contract_address,
     )
         .unwrap();

@@ -1,7 +1,7 @@
 use core::num::traits::{OverflowingAdd, OverflowingMul, WideMul};
-use ekubo::math::bits::msb;
-use ekubo::math::exp2::exp2;
-use ekubo::types::i129::i129;
+use crate::math::bits::msb;
+use crate::math::exp2::exp2;
+use crate::types::i129::i129;
 
 pub mod constants {
     // price may not exceed 2**128 or 2**-128

@@ -65,7 +65,7 @@ mod UpgradableTest {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             twamm.contract_address,
         )
             .unwrap();
@@ -76,7 +76,7 @@ mod UpgradableTest {
         IUpgradeableDispatcher { contract_address: twamm.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
             twamm.contract_address,
         )
             .unwrap();
@@ -1178,7 +1178,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1282,7 +1282,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1386,7 +1386,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_increase_order_sale_rate_before_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1508,7 +1508,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_increase_order_sale_rate_before_order_starts_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1629,7 +1629,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_after_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1782,7 +1782,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1852,7 +1852,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -1935,7 +1935,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2083,7 +2083,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2217,7 +2217,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2364,7 +2364,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2510,7 +2510,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2712,7 +2712,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -2923,7 +2923,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3120,7 +3120,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3316,7 +3316,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3481,7 +3481,7 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3657,7 +3657,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3737,7 +3737,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3819,7 +3819,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3899,7 +3899,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -3979,7 +3979,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -4053,7 +4053,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -4135,7 +4135,7 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -4384,7 +4384,7 @@ mod PlaceOrderDurationTooLong {
     fn test_order_duration_too_long_positions() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -4525,7 +4525,7 @@ fn set_up_twamm(
     // this effectively registers the extension with core
     ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
-    let _event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+    let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
         twamm.contract_address,
     )
         .unwrap();

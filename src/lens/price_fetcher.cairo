@@ -1,5 +1,5 @@
-use ekubo::types::i129::i129;
 use starknet::ContractAddress;
+use crate::types::i129::i129;
 
 #[derive(Copy, Drop, PartialEq, Serde, Debug)]
 pub enum PriceResult {
@@ -62,13 +62,13 @@ pub trait IPriceFetcher<TContractState> {
 pub mod PriceFetcher {
     use core::cmp::{max, min};
     use core::num::traits::Zero;
-    use ekubo::extensions::oracle::Oracle::{MAX_TICK_SPACING, tick_to_price_x128};
-    use ekubo::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-    use ekubo::math::delta::{amount0_delta, amount1_delta};
-    use ekubo::types::keys::PoolKey;
     use starknet::get_block_timestamp;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use crate::extensions::oracle::Oracle::{MAX_TICK_SPACING, tick_to_price_x128};
+    use crate::extensions::oracle::{IOracleDispatcher, IOracleDispatcherTrait};
+    use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+    use crate::math::delta::{amount0_delta, amount1_delta};
+    use crate::types::keys::PoolKey;
     use super::{CandlestickPoint, ContractAddress, IPriceFetcher, PriceResult, i129};
 
 

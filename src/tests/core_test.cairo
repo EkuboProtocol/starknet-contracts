@@ -52,7 +52,7 @@ mod owner_tests {
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(core.contract_address)
+        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
             .unwrap();
 
         set_contract_address(default_owner());
@@ -60,7 +60,7 @@ mod owner_tests {
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: ekubo::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -73,7 +73,7 @@ mod owner_tests {
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
-        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -85,7 +85,7 @@ mod owner_tests {
         let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
-        let event: ekubo::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -179,9 +179,9 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        pop_log::<ekubo::components::owned::Owned::OwnershipTransferred>(core.contract_address)
+        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
             .unwrap();
-        let event: ekubo::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
+        let event: crate::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');

@@ -21,10 +21,10 @@ pub mod Router {
     use crate::types::keys::PoolKey;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl Expires = ekubo::components::expires::ExpiresImpl<ContractState>;
+    impl Expires = crate::components::expires::ExpiresImpl<ContractState>;
 
     #[storage]
     struct Storage {

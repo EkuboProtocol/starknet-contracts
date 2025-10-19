@@ -1,5 +1,5 @@
-use ekubo::math::muldiv::muldiv;
-use ekubo::math::ticks::unsafe_mul_shift;
+use crate::math::muldiv::muldiv;
+use crate::math::ticks::unsafe_mul_shift;
 
 // Computes e^x where x is a fixed point 64.64 number and the result is a fixed point 128.128 number
 pub fn exp(x: u128) -> u256 {
