@@ -82,7 +82,7 @@ pub mod LimitOrders {
     pub const DOUBLE_LIMIT_ORDER_TICK_SPACING: u128 = 256;
 
     #[abi(embed_v0)]
-    impl Clear = ekubo::components::clear::ClearImpl<ContractState>;
+    impl Clear = crate::components::clear::ClearImpl<ContractState>;
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
