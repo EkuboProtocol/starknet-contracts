@@ -1,10 +1,10 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::serde::Serde;
-use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::types::i129::i129;
 use starknet::{ContractAddress, get_caller_address};
+use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, IForwardeeDispatcher};
+use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use crate::types::i129::i129;
 
 pub fn serialize<T, +Serde<T>>(t: @T) -> Array<felt252> {
     let mut result: Array<felt252> = ArrayTrait::new();
