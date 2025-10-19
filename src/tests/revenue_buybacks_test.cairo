@@ -96,7 +96,7 @@ fn test_same_token_buyback_fails() {
     let core = d.deploy_core();
     let positions = d.deploy_positions(core);
 
-    let (token0, token1) = d.deploy_two_mock_tokens();
+    let (token0, _token1) = d.deploy_two_mock_tokens();
     let config = example_config(token0.contract_address);
 
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
@@ -158,7 +158,7 @@ fn test_reclaim_core() {
     let core = d.deploy_core();
     let positions = d.deploy_positions(core);
 
-    let (token0, token1) = d.deploy_two_mock_tokens();
+    let (_token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token1.contract_address);
 
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
