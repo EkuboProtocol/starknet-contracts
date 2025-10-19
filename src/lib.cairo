@@ -1,6 +1,7 @@
 pub mod core;
 pub mod owned_nft;
 pub mod positions;
+pub mod revenue_buybacks;
 pub mod router;
 pub mod streamed_payment;
 
