@@ -1,9 +1,9 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
-use ekubo::math::bitmap::{
+use crate::math::bitmap::{
     Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
 };
-use ekubo::types::i129::i129;
+use crate::types::i129::i129;
 
 #[test]
 fn test_zeroable() {

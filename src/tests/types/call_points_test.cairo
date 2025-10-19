@@ -1,5 +1,5 @@
 use core::traits::Into;
-use ekubo::types::call_points::{CallPoints, all_call_points};
+use crate::types::call_points::{CallPoints, all_call_points};
 
 #[test]
 fn test_default_call_points_into_u8() {

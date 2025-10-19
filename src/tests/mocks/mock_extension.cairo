@@ -1,6 +1,6 @@
-use ekubo::types::call_points::CallPoints;
-use ekubo::types::keys::PoolKey;
 use starknet::ContractAddress;
+use crate::types::call_points::CallPoints;
+use crate::types::keys::PoolKey;
 
 #[derive(Drop, Copy, Serde, starknet::Store)]
 pub struct ExtensionCalled {
@@ -25,21 +25,21 @@ pub trait IMockExtension<TContractState> {
 pub mod MockExtension {
     use core::array::ArrayTrait;
     use core::num::traits::Zero;
-    use ekubo::components::util::{call_core_with_callback, consume_callback_data};
-    use ekubo::interfaces::core::{
-        ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker, SwapParameters,
-        UpdatePositionParameters,
-    };
-    use ekubo::math::ticks::min_sqrt_ratio;
-    use ekubo::types::bounds::{Bounds, max_bounds};
-    use ekubo::types::delta::Delta;
-    use ekubo::types::i129::i129;
-    use ekubo::types::keys::PoolKey;
     use starknet::get_caller_address;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
+    use crate::components::util::{call_core_with_callback, consume_callback_data};
+    use crate::interfaces::core::{
+        ICoreDispatcher, ICoreDispatcherTrait, IExtension, ILocker, SwapParameters,
+        UpdatePositionParameters,
+    };
+    use crate::math::ticks::min_sqrt_ratio;
+    use crate::types::bounds::{Bounds, max_bounds};
+    use crate::types::delta::Delta;
+    use crate::types::i129::i129;
+    use crate::types::keys::PoolKey;
     use super::{CallPoints, ContractAddress, ExtensionCalled, IMockExtension};
 
     #[storage]

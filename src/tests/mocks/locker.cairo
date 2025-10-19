@@ -1,9 +1,9 @@
-use ekubo::interfaces::core::{IExtension, SwapParameters, UpdatePositionParameters};
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use ekubo::types::delta::Delta;
-use ekubo::types::i129::i129;
-use ekubo::types::keys::{PoolKey, SavedBalanceKey};
 use starknet::ContractAddress;
+use crate::interfaces::core::{IExtension, SwapParameters, UpdatePositionParameters};
+use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use crate::types::delta::Delta;
+use crate::types::i129::i129;
+use crate::types::keys::{PoolKey, SavedBalanceKey};
 
 #[derive(Copy, Drop, Serde)]
 pub enum Action {
@@ -43,14 +43,14 @@ pub mod CoreLocker {
     use core::array::ArrayTrait;
     use core::num::traits::Zero;
     use core::option::Option;
-    use ekubo::components::util::{
-        call_core_with_callback, consume_callback_data, handle_delta, serialize,
-    };
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
-    use ekubo::types::bounds::Bounds;
-    use ekubo::types::call_points::CallPoints;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{ContractAddress, get_contract_address};
+    use crate::components::util::{
+        call_core_with_callback, consume_callback_data, handle_delta, serialize,
+    };
+    use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
+    use crate::types::bounds::Bounds;
+    use crate::types::call_points::CallPoints;
     use super::{
         Action, ActionResult, Delta, ICoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
         IERC20Dispatcher, IERC20DispatcherTrait, IExtension, PoolKey, SwapParameters,

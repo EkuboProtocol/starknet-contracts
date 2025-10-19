@@ -1,9 +1,9 @@
-use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-use ekubo::interfaces::upgradeable::IUpgradeableDispatcherTrait;
-use ekubo::tests::helper::{Deployer, DeployerTrait, default_owner};
-use ekubo::tests::mocks::mock_upgradeable::MockUpgradeable;
 use starknet::ClassHash;
 use starknet::testing::{pop_log, set_contract_address};
+use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
+use crate::interfaces::upgradeable::IUpgradeableDispatcherTrait;
+use crate::tests::helper::{Deployer, DeployerTrait, default_owner};
+use crate::tests::mocks::mock_upgradeable::MockUpgradeable;
 
 #[test]
 fn test_replace_class_hash() {

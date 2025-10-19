@@ -1,9 +1,9 @@
 use core::hash::LegacyHash;
 use core::num::traits::Zero;
-use ekubo::tests::store_packing_test::assert_round_trip;
-use ekubo::tests::types::keys_test::check_hashes_differ;
-use ekubo::types::i129::{AddDeltaTrait, i129};
 use starknet::storage_access::StorePacking;
+use crate::tests::store_packing_test::assert_round_trip;
+use crate::tests::types::keys_test::check_hashes_differ;
+use crate::types::i129::{AddDeltaTrait, i129};
 
 #[test]
 fn test_legacy_hash_i129() {

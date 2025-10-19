@@ -1,8 +1,8 @@
 use core::option::OptionTrait;
 use core::traits::{Into, TryInto};
-use ekubo::math::ticks::{constants as tick_constants, max_sqrt_ratio, min_sqrt_ratio};
-use ekubo::types::i129::{i129, i129Trait};
 use starknet::storage_access::StorePacking;
+use crate::math::ticks::{constants as tick_constants, max_sqrt_ratio, min_sqrt_ratio};
+use crate::types::i129::{i129, i129Trait};
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 pub struct PoolPrice {

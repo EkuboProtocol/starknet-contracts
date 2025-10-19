@@ -1,6 +1,6 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
-use ekubo::math::muldiv::{div, muldiv};
+use crate::math::muldiv::{div, muldiv};
 
 #[test]
 fn test_muldiv_div_by_zero() {

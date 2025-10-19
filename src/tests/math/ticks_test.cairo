@@ -1,10 +1,10 @@
 use core::num::traits::Zero;
-use ekubo::math::exp2::exp2;
-use ekubo::math::ticks::{
+use crate::math::exp2::exp2;
+use crate::math::ticks::{
     by_2_127, constants, log2, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
     sqrt_ratio_to_tick, tick_to_sqrt_ratio,
 };
-use ekubo::types::i129::i129;
+use crate::types::i129::i129;
 
 #[test]
 fn zero_tick() {

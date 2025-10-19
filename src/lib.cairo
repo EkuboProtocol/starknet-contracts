@@ -26,6 +26,7 @@ pub mod interfaces {
     pub mod erc20;
     pub mod erc721;
     pub mod positions;
+    pub mod router;
     pub mod src5;
     pub mod upgradeable;
     pub mod extensions {

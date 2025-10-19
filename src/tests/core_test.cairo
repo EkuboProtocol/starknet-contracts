@@ -1,36 +1,36 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::TryInto;
-use ekubo::core::Core;
-use ekubo::interfaces::core::ICoreDispatcherTrait;
-use ekubo::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-use ekubo::math::ticks::{
+use starknet::ContractAddress;
+use starknet::testing::{pop_log, set_contract_address};
+use crate::core::Core;
+use crate::interfaces::core::ICoreDispatcherTrait;
+use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use crate::math::ticks::{
     constants as tick_constants, max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick,
     tick_to_sqrt_ratio,
 };
-use ekubo::tests::helper::{
+use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner, swap,
     update_position,
 };
-use ekubo::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
-use ekubo::tests::mocks::locker::{
+use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
+use crate::tests::mocks::locker::{
     Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use ekubo::types::bounds::{Bounds, max_bounds};
-use ekubo::types::fees_per_liquidity::FeesPerLiquidity;
-use ekubo::types::i129::i129;
-use ekubo::types::keys::{PoolKey, SavedBalanceKey};
-use starknet::ContractAddress;
-use starknet::testing::{pop_log, set_contract_address};
+use crate::types::bounds::{Bounds, max_bounds};
+use crate::types::fees_per_liquidity::FeesPerLiquidity;
+use crate::types::i129::i129;
+use crate::types::keys::{PoolKey, SavedBalanceKey};
 
 
 // floor(log base 1.000001 of 1.01)
 const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
 mod owner_tests {
-    use ekubo::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-    use ekubo::positions::Positions;
     use starknet::class_hash::ClassHash;
+    use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
+    use crate::positions::Positions;
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
         MockERC20, OptionTrait, TryInto, Zero, default_owner, pop_log, set_contract_address,
@@ -148,7 +148,7 @@ mod owner_tests {
 }
 
 mod initialize_pool_tests {
-    use ekubo::math::ticks::constants::MAX_TICK_SPACING;
+    use crate::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
         Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129, pop_log,
         tick_to_sqrt_ratio,
@@ -700,8 +700,8 @@ mod initialized_ticks {
 }
 
 mod locks {
-    use ekubo::math::ticks::tick_to_sqrt_ratio;
-    use ekubo::tests::helper::{
+    use crate::math::ticks::tick_to_sqrt_ratio;
+    use crate::tests::helper::{
         Deployer, DeployerTrait, accumulate_as_fees_inner, flash_borrow_inner,
         update_position_inner,
     };
@@ -2168,7 +2168,7 @@ mod locks {
 
 
 mod save_load_tests {
-    use ekubo::tests::mocks::locker::{Action, ActionResult};
+    use crate::tests::mocks::locker::{Action, ActionResult};
     use super::{
         Deployer, DeployerTrait, ICoreDispatcherTrait, ICoreLockerDispatcherTrait,
         IMockERC20DispatcherTrait, SavedBalanceKey, set_contract_address,

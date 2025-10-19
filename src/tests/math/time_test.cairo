@@ -1,4 +1,4 @@
-use ekubo::math::time::is_time_valid;
+use crate::math::time::is_time_valid;
 
 #[test]
 fn test_is_time_valid_past_or_close_time() {

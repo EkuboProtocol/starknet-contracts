@@ -1,5 +1,5 @@
-use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use starknet::ContractAddress;
+use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 #[starknet::interface]
 pub trait IMockERC20<TContractState> {
@@ -46,12 +46,12 @@ pub impl MockERC20IERC20Impl of MockERC20IERC20ImplTrait {
 pub mod MockERC20 {
     use core::num::traits::Zero;
     use core::traits::Into;
-    use ekubo::interfaces::erc20::IERC20;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
     use starknet::{ContractAddress, get_caller_address};
+    use crate::interfaces::erc20::IERC20;
     use super::{IERC20StableMetadata, IMockERC20};
 
     #[storage]

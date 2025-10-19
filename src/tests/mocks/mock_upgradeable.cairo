@@ -2,9 +2,9 @@
 // component, and does not have any other functionality.
 #[starknet::contract]
 pub mod MockUpgradeable {
-    use ekubo::components::owned::Owned as owned_component;
-    use ekubo::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use starknet::ContractAddress;
+    use crate::components::owned::Owned as owned_component;
+    use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]

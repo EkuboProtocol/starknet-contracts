@@ -1,4 +1,4 @@
-use ekubo::math::string::to_decimal;
+use crate::math::string::to_decimal;
 
 #[test]
 fn test_to_decimal() {
