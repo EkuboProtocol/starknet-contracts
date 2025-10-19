@@ -1,9 +1,9 @@
-use ekubo::interfaces::extensions::limit_orders::{GetOrderInfoResult, OrderKey as LimitOrderKey};
-use ekubo::interfaces::extensions::twamm::{OrderInfo, OrderKey};
-use ekubo::types::bounds::Bounds;
-use ekubo::types::keys::PoolKey;
-use ekubo::types::pool_price::PoolPrice;
 use starknet::{ClassHash, ContractAddress};
+use crate::interfaces::extensions::limit_orders::{GetOrderInfoResult, OrderKey as LimitOrderKey};
+use crate::interfaces::extensions::twamm::{OrderInfo, OrderKey};
+use crate::types::bounds::Bounds;
+use crate::types::keys::PoolKey;
+use crate::types::pool_price::PoolPrice;
 
 #[derive(Copy, Drop, Serde, PartialEq)]
 pub struct GetTokenInfoResult {
