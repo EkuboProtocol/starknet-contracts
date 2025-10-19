@@ -1,4 +1,3 @@
-use core::array::ArrayTrait;
 use core::num::traits::Zero;
 use starknet::ContractAddress;
 use starknet::testing::set_contract_address;
