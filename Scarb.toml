@@ -6,6 +6,8 @@ homepage = "https://ekubo.org"
 cairo-version = ">=2.12.2"
 edition = '2024_07'
 
+[lib]
+
 [dependencies]
 starknet = ">=2.12.2"
 
