@@ -14,6 +14,9 @@ pub(crate) mod token_registry_test;
 pub(crate) mod twamm_test;
 pub(crate) mod upgradeable_test;
 
+#[cfg(test)]
+pub(crate) mod liquidity_math_precision_issue_test;
+
 pub(crate) mod mocks {
     pub(crate) mod locker;
     pub(crate) mod mock_extension;
