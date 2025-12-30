@@ -173,10 +173,6 @@ pub mod Router {
                     Serde::serialize(@FUNCTION_DID_NOT_ERROR_FLAG, ref output);
                     Serde::serialize(@delta, ref output);
                     panic(output);
-
-                    // this isn't actually used, but we have to return it because panic is not
-                    // recognized as end of execution
-                    ArrayTrait::new().span()
                 },
                 CallbackParameters::GetMarketDepth((
                     pool_key, sqrt_ratio, percent_64x64,
@@ -295,10 +291,6 @@ pub mod Router {
 
                     Serde::serialize(@depth, ref output);
                     panic(output);
-
-                    // this isn't actually used, but we have to return it because panic is not
-                    // recognized as end of execution
-                    ArrayTrait::new().span()
                 },
             }
         }
