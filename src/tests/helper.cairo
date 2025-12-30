@@ -3,26 +3,30 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
+use snforge_std::{
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address_global,
+    start_cheat_block_timestamp_global, stop_cheat_caller_address_global,
+    stop_cheat_block_timestamp_global,
+};
 use starknet::ContractAddress;
 use crate::components::util::serialize;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, ILockerDispatcher, SwapParameters,
     UpdatePositionParameters,
 };
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use crate::interfaces::erc721::IERC721Dispatcher;
 use crate::interfaces::positions::IPositionsDispatcher;
 use crate::interfaces::router::IRouterDispatcher;
 use crate::interfaces::upgradeable::IUpgradeableDispatcher;
-use crate::lens::token_registry::{ITokenRegistryDispatcher};
+use crate::lens::token_registry::ITokenRegistryDispatcher;
 use crate::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher};
-use crate::streamed_payment::{IStreamedPaymentDispatcher};
+use crate::streamed_payment::IStreamedPaymentDispatcher;
 use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
 use crate::tests::mocks::locker::{
     Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use crate::tests::mocks::mock_extension::{IMockExtensionDispatcher};
+use crate::tests::mocks::mock_extension::IMockExtensionDispatcher;
 use crate::types::bounds::Bounds;
 use crate::types::call_points::CallPoints;
 use crate::types::delta::Delta;
@@ -45,6 +49,26 @@ impl DefaultDeployer of core::traits::Default<Deployer> {
 
 pub fn default_owner() -> ContractAddress {
     12121212121212.try_into().unwrap()
+}
+
+pub fn set_caller_address_global(caller: ContractAddress) {
+    // Reset any previous cheat caller before setting the new one.
+    stop_cheat_caller_address_global();
+    start_cheat_caller_address_global(caller);
+}
+
+pub fn stop_caller_address_global() {
+    stop_cheat_caller_address_global();
+}
+
+pub fn set_block_timestamp_global(block_timestamp: u64) {
+    // Reset any previous cheat timestamp before setting the new one.
+    stop_cheat_block_timestamp_global();
+    start_cheat_block_timestamp_global(block_timestamp);
+}
+
+pub fn stop_block_timestamp_global() {
+    stop_cheat_block_timestamp_global();
 }
 
 

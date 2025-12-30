@@ -1,13 +1,12 @@
 use core::num::traits::Zero;
 use starknet::ContractAddress;
-use starknet::testing::set_contract_address;
 use crate::interfaces::core::ICoreDispatcherTrait;
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::interfaces::router::{
     Depth, IRouterDispatcher, IRouterDispatcherTrait, RouteNode, Swap, TokenAmount,
 };
 use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
-use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, set_caller_address_global};
 use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 use crate::types::bounds::Bounds;
 use crate::types::i129::i129;
@@ -21,10 +20,6 @@ fn recipient() -> ContractAddress {
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
     ),
 )]
 fn test_router_quote_not_initialized_pool() {
@@ -137,7 +132,7 @@ fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
     core.initialize_pool(pool_key_b, Zero::zero());
 
     let caller = 1.try_into().unwrap();
-    set_contract_address(caller);
+    set_caller_address_global(caller);
 
     token0.increase_balance(positions.contract_address, 10000);
     token1.increase_balance(positions.contract_address, 10000);
@@ -329,10 +324,6 @@ fn test_router_quote_multihop_routes() {
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
     ),
 )]
 fn test_router_swap_not_initialized_pool() {

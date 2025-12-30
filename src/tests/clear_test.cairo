@@ -1,9 +1,8 @@
 use starknet::ContractAddress;
 use starknet::syscalls::deploy_syscall;
-use starknet::testing::set_contract_address;
 use crate::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, set_caller_address_global};
 
 #[starknet::contract]
 mod TestContract {
@@ -28,7 +27,7 @@ fn setup() -> (IClearDispatcher, IERC20Dispatcher, ContractAddress) {
     let token = d.deploy_mock_token_with_balance(owner: test_contract, starting_balance: 100);
 
     let caller = 123456.try_into().unwrap();
-    set_contract_address(caller);
+    set_caller_address_global(caller);
 
     (
         IClearDispatcher { contract_address: test_contract },
@@ -60,7 +59,7 @@ fn test_clear_minimum_success() {
 }
 
 #[test]
-#[should_panic(expected: ('CLEAR_AT_LEAST_MINIMUM', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'CLEAR_AT_LEAST_MINIMUM')]
 fn test_clear_minimum_fails_nonzero() {
     let (test_contract, erc20, caller) = setup();
 
@@ -72,7 +71,7 @@ fn test_clear_minimum_fails_nonzero() {
 }
 
 #[test]
-#[should_panic(expected: ('CLEAR_AT_LEAST_MINIMUM', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'CLEAR_AT_LEAST_MINIMUM')]
 fn test_clear_minimum_fails_zero() {
     let (test_contract, erc20, caller) = setup();
 
@@ -98,7 +97,7 @@ fn test_clear_minimum_to_recipient() {
 }
 
 #[test]
-#[should_panic(expected: ('CLEAR_AT_LEAST_MINIMUM', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'CLEAR_AT_LEAST_MINIMUM')]
 fn test_clear_minimum_to_recipient_fails() {
     let (test_contract, erc20, _) = setup();
 
@@ -110,7 +109,7 @@ fn test_clear_minimum_to_recipient_fails() {
 }
 
 #[test]
-#[should_panic(expected: ('CLEAR_AT_LEAST_MINIMUM', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'CLEAR_AT_LEAST_MINIMUM')]
 fn test_clear_minimum_to_recipient_fails_zero_balance() {
     let (test_contract, erc20, _) = setup();
 
@@ -121,4 +120,3 @@ fn test_clear_minimum_to_recipient_fails_zero_balance() {
     assert_eq!(erc20.balanceOf(test_contract.contract_address), 0);
     test_contract.clear_minimum_to_recipient(erc20, 100, recipient);
 }
-

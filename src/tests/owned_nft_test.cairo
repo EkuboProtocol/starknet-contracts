@@ -2,15 +2,15 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::Into;
 use starknet::ClassHash;
-use starknet::testing::{pop_log, set_contract_address};
+use starknet::testing::pop_log;
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use crate::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner};
+use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_global};
 
 fn switch_to_controller() {
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
 }
 
 fn deploy_default(ref d: Deployer) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
@@ -84,7 +84,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 
     let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
 
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     IUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 
@@ -100,7 +100,7 @@ fn test_set_metadata_callable_by_owner() {
     let mut d: Deployer = Default::default();
     let (owned_nft, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
 
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     owned_nft.set_metadata('new name', 'new symbol', 'new base');
     assert(nft.name() == 'new name', 'name');
     assert(nft.symbol() == 'new symbol', 'symbol');
@@ -133,7 +133,7 @@ fn test_nft_indexing_token_ids() {
     let token_id = controller.mint(alice);
 
     assert(nft.balanceOf(alice) == 1, 'balance after');
-    set_contract_address(alice);
+    set_caller_address_global(alice);
     nft.transferFrom(alice, bob, 1);
 
     assert(nft.balanceOf(alice) == 0, 'balance after transfer');
@@ -142,7 +142,7 @@ fn test_nft_indexing_token_ids() {
 
     switch_to_controller();
     controller.mint(alice);
-    set_contract_address(bob);
+    set_caller_address_global(bob);
     nft.transferFrom(bob, alice, token_id.into());
 }
 
@@ -165,9 +165,9 @@ fn test_nft_indexing_token_ids_not_sorted() {
     assert(nft.balanceOf(alice) == 3, 'balance alice');
     assert(nft.balanceOf(bob) == 2, 'balance bob');
 
-    set_contract_address(alice);
+    set_caller_address_global(alice);
     nft.transferFrom(alice, bob, id_3.into());
-    set_contract_address(bob);
+    set_caller_address_global(bob);
     nft.transferFrom(bob, alice, id_4.into());
 
     assert(nft.balanceOf(alice) == 3, 'balance alice after');
@@ -190,7 +190,7 @@ fn test_nft_indexing_token_ids_snake_case() {
     let token_id = controller.mint(alice);
 
     assert(nft.balance_of(alice) == 1, 'balance after');
-    set_contract_address(alice);
+    set_caller_address_global(alice);
     nft.transfer_from(alice, bob, token_id.into());
 
     assert(nft.balance_of(alice) == 0, 'balance after transfer');
@@ -198,7 +198,7 @@ fn test_nft_indexing_token_ids_snake_case() {
 
     switch_to_controller();
     controller.mint(alice);
-    set_contract_address(bob);
+    set_caller_address_global(bob);
     nft.transfer_from(bob, alice, token_id.into());
     assert(nft.balanceOf(alice) == 2, 'alice last');
     assert(nft.balanceOf(bob) == 0, 'bob last');
@@ -216,9 +216,9 @@ fn test_burn_makes_token_non_transferrable() {
     let bob = 9123456.try_into().unwrap();
 
     let id = controller.mint(alice);
-    set_contract_address(alice);
+    set_caller_address_global(alice);
     nft.approve(bob, id.into());
-    set_contract_address(bob);
+    set_caller_address_global(bob);
     nft.transfer_from(alice, bob, id.into());
 
     nft.approve(alice, id.into());
@@ -249,7 +249,7 @@ fn test_is_account_authorized() {
     assert(!controller.is_account_authorized(id, 912344.try_into().unwrap()), 'random is not');
     assert(!controller.is_account_authorized(id, default_owner()), 'controller is not');
 
-    set_contract_address(alice);
+    set_caller_address_global(alice);
     assert(!controller.is_account_authorized(id, bob), 'bob not auth');
     nft.approve(bob, id.into());
     assert(controller.is_account_authorized(id, bob), 'bob now auth');
@@ -265,7 +265,7 @@ fn test_is_account_authorized() {
 
 
 #[test]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'OWNER')]
 fn test_burn_makes_token_non_transferrable_error() {
     let mut d: Deployer = Default::default();
     let (controller, nft) = d
@@ -277,23 +277,23 @@ fn test_burn_makes_token_non_transferrable_error() {
     let bob = 9123456.try_into().unwrap();
 
     let id = controller.mint(alice);
-    set_contract_address(alice);
+    set_caller_address_global(alice);
 
     nft.approve(bob, id.into());
 
     switch_to_controller();
     controller.burn(id);
 
-    set_contract_address(bob);
+    set_caller_address_global(bob);
     nft.transfer_from(alice, bob, id.into());
 }
 
 #[test]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'OWNER')]
 fn test_nft_approve_fails_id_not_exists() {
     let mut d: Deployer = Default::default();
     let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
-    set_contract_address(1.try_into().unwrap());
+    set_caller_address_global(1.try_into().unwrap());
     nft.approve(2.try_into().unwrap(), 1);
 }
 
@@ -305,7 +305,7 @@ fn test_nft_approve_succeeds_after_mint() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(1.try_into().unwrap());
+    set_caller_address_global(1.try_into().unwrap());
 
     nft.approve(2.try_into().unwrap(), token_id.into());
     assert(nft.getApproved(token_id.into()) == 2.try_into().unwrap(), 'getApproved');
@@ -320,7 +320,7 @@ fn test_nft_transfer_from() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(1.try_into().unwrap());
+    set_caller_address_global(1.try_into().unwrap());
     nft.approve(3.try_into().unwrap(), token_id.into());
     nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 
@@ -335,7 +335,7 @@ fn test_nft_transfer_from() {
 }
 
 #[test]
-#[should_panic(expected: ('UNAUTHORIZED', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'UNAUTHORIZED')]
 fn test_nft_transfer_from_fails_not_from_owner() {
     let mut d: Deployer = Default::default();
     let (controller, nft) = deploy_default(ref d);
@@ -343,7 +343,7 @@ fn test_nft_transfer_from_fails_not_from_owner() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(2.try_into().unwrap());
+    set_caller_address_global(2.try_into().unwrap());
 
     nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
@@ -356,10 +356,10 @@ fn test_nft_transfer_from_succeeds_from_approved() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(1.try_into().unwrap());
+    set_caller_address_global(1.try_into().unwrap());
     nft.approve(2.try_into().unwrap(), token_id.into());
 
-    set_contract_address(2.try_into().unwrap());
+    set_caller_address_global(2.try_into().unwrap());
     nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
 
@@ -371,10 +371,10 @@ fn test_nft_transfer_from_succeeds_from_approved_for_all() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(1.try_into().unwrap());
+    set_caller_address_global(1.try_into().unwrap());
     nft.setApprovalForAll(2.try_into().unwrap(), true);
 
-    set_contract_address(2.try_into().unwrap());
+    set_caller_address_global(2.try_into().unwrap());
     nft.transferFrom(1.try_into().unwrap(), 2.try_into().unwrap(), token_id.into());
 }
 
@@ -421,7 +421,7 @@ fn test_nft_token_uri() {
 }
 
 #[test]
-#[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'INVALID_ID')]
 fn test_nft_token_uri_reverts_too_long() {
     let mut d: Deployer = Default::default();
     let (_, nft) = deploy_default(ref d);
@@ -430,7 +430,7 @@ fn test_nft_token_uri_reverts_too_long() {
 }
 
 #[test]
-#[should_panic(expected: ('INVALID_ID', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'INVALID_ID')]
 fn test_nft_token_uri_reverts_token_id_too_big() {
     let mut d: Deployer = Default::default();
     let (_, nft) = deploy_default(ref d);
@@ -439,7 +439,7 @@ fn test_nft_token_uri_reverts_token_id_too_big() {
 }
 
 #[test]
-#[should_panic(expected: ('OWNER', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'OWNER')]
 fn test_nft_approve_only_owner_can_approve() {
     let mut d: Deployer = Default::default();
     let (controller, nft) = deploy_default(ref d);
@@ -447,7 +447,7 @@ fn test_nft_approve_only_owner_can_approve() {
     switch_to_controller();
     let token_id = controller.mint(1.try_into().unwrap());
 
-    set_contract_address(2.try_into().unwrap());
+    set_caller_address_global(2.try_into().unwrap());
     nft.approve(2.try_into().unwrap(), token_id.into());
 }
 
@@ -466,4 +466,3 @@ fn test_nft_balance_of() {
     assert(nft.balanceOf(recipient) == 1_u256, 'balance check after');
     assert(nft.balance_of(recipient) == 1_u256, 'balance check after');
 }
-
