@@ -20,3 +20,4 @@ casm = true
 
 [dev-dependencies]
 cairo_test = ">=2.12.2"
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.48.0" }
