@@ -4,31 +4,25 @@ use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
 use starknet::ContractAddress;
-use starknet::syscalls::deploy_syscall;
 use crate::components::util::serialize;
-use crate::core::Core;
-use crate::extensions::limit_orders::LimitOrders;
-use crate::extensions::twamm::TWAMM;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, ILockerDispatcher, SwapParameters,
     UpdatePositionParameters,
 };
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use crate::interfaces::erc721::IERC721Dispatcher;
 use crate::interfaces::positions::IPositionsDispatcher;
 use crate::interfaces::router::IRouterDispatcher;
 use crate::interfaces::upgradeable::IUpgradeableDispatcher;
-use crate::lens::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
+use crate::lens::token_registry::{ITokenRegistryDispatcher};
 use crate::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
-use crate::positions::Positions;
-use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher, RevenueBuybacks};
-use crate::router::Router;
-use crate::streamed_payment::{IStreamedPaymentDispatcher, StreamedPayment};
-use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
+use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher};
+use crate::streamed_payment::{IStreamedPaymentDispatcher};
+use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
 use crate::tests::mocks::locker::{
-    Action, ActionResult, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+    Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use crate::tests::mocks::mock_extension::{IMockExtensionDispatcher, MockExtension};
-use crate::tests::mocks::mock_upgradeable::MockUpgradeable;
+use crate::tests::mocks::mock_extension::{IMockExtensionDispatcher};
 use crate::types::bounds::Bounds;
 use crate::types::call_points::CallPoints;
 use crate::types::delta::Delta;
@@ -78,12 +72,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
         name: felt252,
         symbol: felt252,
     ) -> IMockERC20Dispatcher {
-        let (address, _) = deploy_syscall(
-            MockERC20::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![owner.into(), starting_balance.into(), name, symbol].span(),
-            true,
-        )
+        let contract = declare("MockERC20").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@array![owner.into(), starting_balance.into(), name, symbol])
             .expect('token deploy failed');
         return IMockERC20Dispatcher { contract_address: address };
     }
@@ -106,13 +97,11 @@ pub impl DeployerTraitImpl of DeployerTrait {
         symbol: felt252,
         token_uri_base: felt252,
     ) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
-        let (address, _) = deploy_syscall(
-            OwnedNFT::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(owner, name, symbol, token_uri_base)).span(),
-            true,
-        )
+        let contract = declare("OwnedNFT").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(owner, name, symbol, token_uri_base)))
             .expect('nft deploy failed');
+
         return (
             IOwnedNFTDispatcher { contract_address: address },
             IERC721Dispatcher { contract_address: address },
@@ -134,12 +123,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_mock_extension(
         ref self: Deployer, core: ICoreDispatcher, call_points: CallPoints,
     ) -> IMockExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            MockExtension::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(core, call_points)).span(),
-            true,
-        )
+        let contract = declare("MockExtension").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(core, call_points)))
             .expect('mockext deploy failed');
 
         IMockExtensionDispatcher { contract_address: address }
@@ -147,38 +133,25 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_core(ref self: Deployer) -> ICoreDispatcher {
-        let (address, _) = deploy_syscall(
-            Core::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@default_owner()).span(),
-            true,
-        )
+        let contract = declare("Core").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@default_owner()))
             .expect('core deploy failed');
         return ICoreDispatcher { contract_address: address };
     }
 
 
     fn deploy_router(ref self: Deployer, core: ICoreDispatcher) -> IRouterDispatcher {
-        let (address, _) = deploy_syscall(
-            Router::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@core).span(),
-            true,
-        )
-            .expect('router deploy failed');
+        let contract = declare("Router").unwrap().contract_class();
+        let (address, _) = contract.deploy(@serialize(@core)).expect('router deploy failed');
 
         IRouterDispatcher { contract_address: address }
     }
 
 
     fn deploy_locker(ref self: Deployer, core: ICoreDispatcher) -> ICoreLockerDispatcher {
-        let (address, _) = deploy_syscall(
-            CoreLocker::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@core).span(),
-            true,
-        )
-            .expect('locker deploy failed');
+        let contract = declare("CoreLocker").unwrap().contract_class();
+        let (address, _) = contract.deploy(@serialize(@core)).expect('locker deploy failed');
 
         ICoreLockerDispatcher { contract_address: address }
     }
@@ -187,12 +160,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_positions_custom_uri(
         ref self: Deployer, core: ICoreDispatcher, token_uri_base: felt252,
     ) -> IPositionsDispatcher {
-        let (address, _) = deploy_syscall(
-            Positions::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base)).span(),
-            true,
-        )
+        let contract = declare("Positions").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base)))
             .expect('positions deploy failed');
 
         IPositionsDispatcher { contract_address: address }
@@ -204,24 +174,18 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_mock_upgradeable(ref self: Deployer) -> IUpgradeableDispatcher {
-        let (address, _) = deploy_syscall(
-            MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@default_owner()).span(),
-            true,
-        )
+        let contract = declare("MockUpgradeable").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@default_owner()))
             .expect('upgradeable deploy failed');
         return IUpgradeableDispatcher { contract_address: address };
     }
 
 
     fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core)).span(),
-            true,
-        )
+        let contract = declare("TWAMM").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core)))
             .expect('twamm deploy failed');
 
         IExtensionDispatcher { contract_address: address }
@@ -229,12 +193,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_limit_orders(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            LimitOrders::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core)).span(),
-            true,
-        )
+        let contract = declare("LimitOrders").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core)))
             .expect('limit_orders deploy failed');
 
         IExtensionDispatcher { contract_address: address }
@@ -243,25 +204,18 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_token_registry(
         ref self: Deployer, core: ICoreDispatcher,
     ) -> ITokenRegistryDispatcher {
-        let (address, _) = deploy_syscall(
-            TokenRegistry::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![core.contract_address.into()].span(),
-            true,
-        )
+        let contract = declare("TokenRegistry").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@array![core.contract_address.into()])
             .expect('token registry deploy');
 
         ITokenRegistryDispatcher { contract_address: address }
     }
 
     fn deploy_streamed_payment(ref self: Deployer) -> IStreamedPaymentDispatcher {
-        let (address, _) = deploy_syscall(
-            StreamedPayment::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![].span(),
-            true,
-        )
-            .expect('streamed payment deploy');
+        let contract = declare("StreamedPayment").unwrap().contract_class();
+
+        let (address, _) = contract.deploy(@array![]).expect('streamed payment deploy');
 
         IStreamedPaymentDispatcher { contract_address: address }
     }
@@ -273,12 +227,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
         positions: IPositionsDispatcher,
         default_config: Option<Config>,
     ) -> IRevenueBuybacksDispatcher {
-        let (address, _) = deploy_syscall(
-            RevenueBuybacks::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(owner, core, positions, default_config)).span(),
-            true,
-        )
+        let contract = declare("RevenueBuybacks").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(owner, core, positions, default_config)))
             .expect('revenue buybacks deploy');
 
         IRevenueBuybacksDispatcher { contract_address: address }

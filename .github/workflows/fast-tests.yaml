@@ -13,12 +13,15 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Setup Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-lock: ./Scarb.lock
 
-      - name: Test the code
-        run: |
-          scarb test
+      - name: Run tests
+        run: scarb test
