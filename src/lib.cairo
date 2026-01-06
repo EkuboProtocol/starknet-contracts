@@ -11,6 +11,7 @@ pub(crate) mod tests;
 pub mod extensions {
     pub mod limit_orders;
     pub mod oracle;
+    pub mod privacy;
     pub mod twamm;
 }
 
@@ -32,6 +33,7 @@ pub mod interfaces {
     pub mod upgradeable;
     pub mod extensions {
         pub mod limit_orders;
+        pub mod privacy;
         pub mod twamm;
     }
 }

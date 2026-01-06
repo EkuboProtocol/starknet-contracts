@@ -6,6 +6,7 @@ pub(crate) mod mock_erc20;
 pub(crate) mod mock_erc20_test;
 pub(crate) mod owned_nft_test;
 pub(crate) mod positions_test;
+pub(crate) mod privacy_extension_test;
 pub(crate) mod revenue_buybacks_test;
 pub(crate) mod router_test;
 pub(crate) mod store_packing_test;
