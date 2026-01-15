@@ -2,7 +2,6 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::TryInto;
 use starknet::ContractAddress;
-use starknet::testing::pop_log;
 use crate::core::Core;
 use crate::interfaces::core::ICoreDispatcherTrait;
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -13,6 +12,7 @@ use crate::math::ticks::{
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner,
     set_caller_address_global, swap, update_position, get_declared_class_hash,
+    event_logger, EventLoggerTrait, EventLogger,
 };
 use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
 use crate::tests::mocks::locker::{
@@ -32,8 +32,8 @@ mod owner_tests {
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        OptionTrait, TryInto, Zero, default_owner, pop_log, set_caller_address_global,
-        get_declared_class_hash,
+        OptionTrait, TryInto, Zero, default_owner, set_caller_address_global,
+        get_declared_class_hash, event_logger, EventLoggerTrait,
     };
 
 
@@ -51,16 +51,16 @@ mod owner_tests {
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
-        // Declare Core before any caller changes to ensure it persists
         let class_hash: ClassHash = get_declared_class_hash("Core");
+        let mut logger = event_logger();
         let core = d.deploy_core();
-        OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
+        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
 
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger.pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -70,10 +70,11 @@ mod owner_tests {
     #[test]
     fn test_transfer_ownership() {
         let mut d: Deployer = Default::default();
+        let mut logger = event_logger();
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
             core.contract_address,
         ));
         assert(event.old_owner.is_zero(), 'zero');
@@ -84,7 +85,7 @@ mod owner_tests {
         let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
             core.contract_address,
         ));
         assert(event.old_owner == default_owner(), 'old owner');
@@ -154,13 +155,14 @@ mod owner_tests {
 mod initialize_pool_tests {
     use crate::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129, pop_log,
-        tick_to_sqrt_ratio,
+        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129,
+        tick_to_sqrt_ratio, event_logger, EventLoggerTrait,
     };
 
     #[test]
     fn test_initialize_pool_works_uninitialized() {
         let mut d: Deployer = Default::default();
+        let mut logger = event_logger();
         let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: 1.try_into().unwrap(),
@@ -183,8 +185,8 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
-        let event: crate::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
+        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
+        let event: crate::core::Core::PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');

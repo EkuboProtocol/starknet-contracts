@@ -2,7 +2,6 @@ use core::array::ArrayTrait;
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::Into;
-use starknet::testing::pop_log;
 use starknet::{ClassHash, get_contract_address};
 use crate::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use crate::interfaces::core::{ICoreDispatcherTrait, ILockerDispatcher, ILockerDispatcherTrait};
@@ -22,6 +21,7 @@ use crate::positions::Positions::amount_to_limit_order_liquidity;
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
     SetupPoolResult, default_owner, set_caller_address_global, swap, get_declared_class_hash,
+    event_logger, EventLoggerTrait,
 };
 use crate::tests::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
@@ -33,10 +33,9 @@ use crate::types::keys::PoolKey;
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let mut d: Deployer = Default::default();
-    // Declare Core and Positions BEFORE any caller changes to ensure declarations persist
-    // Core is needed because setup_pool uses it, and Positions is needed for replace_class_hash
     let _ = get_declared_class_hash("Core");
     let class_hash: ClassHash = get_declared_class_hash("Positions");
+    let mut logger = event_logger();
 
     let setup = d
         .setup_pool(
@@ -47,13 +46,13 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         );
     let positions = d.deploy_positions(setup.core);
 
-    OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address));
+    OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address));
 
     set_caller_address_global(default_owner());
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(logger.pop_log(
         positions.contract_address,
     ));
     assert(event.new_class_hash == class_hash, 'event.class_hash');

@@ -2,12 +2,14 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::Into;
 use starknet::ClassHash;
-use starknet::testing::pop_log;
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use crate::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_global, get_declared_class_hash};
+use crate::tests::helper::{
+    Deployer, DeployerTrait, default_owner, set_caller_address_global, get_declared_class_hash,
+    event_logger, EventLoggerTrait,
+};
 
 fn switch_to_controller() {
     set_caller_address_global(default_owner());
@@ -79,16 +81,16 @@ fn test_nft_supports_interfaces() {
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let mut d: Deployer = Default::default();
-    let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
-    pop_log::<crate::components::owned::Owned::OwnershipTransferred>(nft.contract_address).unwrap();
-
     let class_hash: ClassHash = get_declared_class_hash("OwnedNFT");
+    let mut logger = event_logger();
+    let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
+    logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(nft.contract_address).unwrap();
 
     set_caller_address_global(default_owner());
     IUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(logger.pop_log(
         nft.contract_address,
     ));
     assert(event.new_class_hash == class_hash, 'event.class_hash');
