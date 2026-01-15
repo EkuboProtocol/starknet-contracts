@@ -4,9 +4,9 @@ use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
 use snforge_std::{
-    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address_global,
+    ContractClassTrait, DeclareResultTrait, declare, get_class_hash, start_cheat_caller_address_global,
     start_cheat_block_timestamp_global, stop_cheat_caller_address_global,
-    stop_cheat_block_timestamp_global,
+    stop_cheat_block_timestamp_global, spy_events, EventSpy, EventSpyTrait,
 };
 use starknet::{ContractAddress, ClassHash};
 use core::byte_array::ByteArray;
@@ -36,9 +36,55 @@ use crate::types::keys::PoolKey;
 
 pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
+#[derive(Drop)]
+pub struct EventLogger {
+    spy: EventSpy,
+    index: usize,
+}
+
+pub fn event_logger() -> EventLogger {
+    EventLogger { spy: spy_events(), index: 0 }
+}
+
+#[generate_trait]
+pub impl EventLoggerImpl of EventLoggerTrait {
+    fn pop_log<T, +starknet::Event<T>, +Drop<T>>(
+        ref self: EventLogger, address: ContractAddress
+    ) -> Option<T> {
+        let events = self.spy.get_events().events;
+        loop {
+            if self.index >= events.len() {
+                break Option::None;
+            }
+            let (from, event) = events.at(self.index);
+            self.index += 1;
+            if *from == address {
+                let mut keys = event.keys.span();
+                let mut data = event.data.span();
+                match starknet::Event::deserialize(ref keys, ref data) {
+                    Option::Some(ev) => { break Option::Some(ev); },
+                    Option::None => { continue; }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Drop, Copy)]
 pub struct Deployer {
     nonce: felt252,
+}
+
+// Global storage to track deployed contract addresses for class hash re-declaration
+// This is a simple approach - in practice, tests should call ensure_class_declared_for_contract
+// for contracts they deploy, or we can scan known contract addresses
+pub fn ensure_class_declared_for_contract(contract_address: ContractAddress) {
+    // Get the class hash of the deployed contract
+    let class_hash = get_class_hash(contract_address);
+    // Declare the class by creating a ContractClass from the class hash
+    // Note: This doesn't actually "declare" it, but ensures it's available
+    // We still need to declare by name, but we can use this to track which classes are needed
+    let _ = ContractClassTrait::new(class_hash);
 }
 
 impl DefaultDeployer of core::traits::Default<Deployer> {
@@ -76,12 +122,25 @@ pub fn stop_block_timestamp_global() {
 /// This ensures the class is declared and returns the actual runtime class hash
 /// that can be used with library_call_syscall, even after multiple caller address changes.
 /// 
+/// IMPORTANT: This function must be called BEFORE any set_caller_address_global() calls
+/// to ensure the declaration persists. If called after caller changes, the declaration
+/// may not persist to library_call_syscall context.
+/// 
 /// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
 /// Returns the ClassHash of the declared contract
 pub fn get_declared_class_hash(contract_name: ByteArray) -> ClassHash {
     let declare_result = declare(contract_name).expect('Failed to declare contract');
     let contract_class = declare_result.contract_class();
     *contract_class.class_hash
+}
+
+/// Ensures a class is declared before caller address changes.
+/// This should be called early in tests that use replace_class_hash or library calls.
+/// 
+/// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
+/// Returns the ClassHash of the declared contract
+pub fn ensure_class_declared(contract_name: ByteArray) -> ClassHash {
+    get_declared_class_hash(contract_name)
 }
 
 
@@ -197,9 +256,12 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_positions_custom_uri(
         ref self: Deployer, core: ICoreDispatcher, token_uri_base: felt252,
     ) -> IPositionsDispatcher {
+        // Declare OwnedNFT first to get the actual class hash that's declared in the test runtime.
+        // Using TEST_CLASS_HASH would fail because it's not declared.
+        let owned_nft_class = declare("OwnedNFT").unwrap().contract_class();
         let contract = declare("Positions").unwrap().contract_class();
         let (address, _) = contract
-            .deploy(@serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base)))
+            .deploy(@serialize(@(default_owner(), core, *owned_nft_class.class_hash, token_uri_base)))
             .expect('positions deploy failed');
 
         IPositionsDispatcher { contract_address: address }

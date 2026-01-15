@@ -33,6 +33,10 @@ use crate::types::keys::PoolKey;
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let mut d: Deployer = Default::default();
+    // Declare Core and Positions BEFORE any caller changes to ensure declarations persist
+    // Core is needed because setup_pool uses it, and Positions is needed for replace_class_hash
+    let _ = get_declared_class_hash("Core");
+    let class_hash: ClassHash = get_declared_class_hash("Positions");
 
     let setup = d
         .setup_pool(
@@ -46,8 +50,6 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address));
 
     set_caller_address_global(default_owner());
-    // Get the declared class hash after caller change to ensure it's available for library_call_syscall
-    let class_hash: ClassHash = get_declared_class_hash("Positions");
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
