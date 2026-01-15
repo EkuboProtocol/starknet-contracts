@@ -12,7 +12,7 @@ use crate::math::ticks::{
 };
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner,
-    set_caller_address_global, swap, update_position,
+    set_caller_address_global, swap, update_position, get_declared_class_hash,
 };
 use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
 use crate::tests::mocks::locker::{
@@ -30,10 +30,10 @@ const TICKS_IN_ONE_PERCENT: u128 = 9950;
 mod owner_tests {
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-    use crate::positions::Positions;
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        MockERC20, OptionTrait, TryInto, Zero, default_owner, pop_log, set_caller_address_global,
+        OptionTrait, TryInto, Zero, default_owner, pop_log, set_caller_address_global,
+        get_declared_class_hash,
     };
 
 
@@ -55,7 +55,7 @@ mod owner_tests {
         OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
 
         set_caller_address_global(default_owner());
-        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        let class_hash: ClassHash = get_declared_class_hash("Core");
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
@@ -107,6 +107,9 @@ mod owner_tests {
 
     #[test]
     fn test_transfer_ownership_then_replace_class_hash_succeeds() {
+        // After multiple set_caller_address_global() calls, we need to use the actual
+        // declared class hash from declare().contract_class().class_hash instead of
+        // TEST_CLASS_HASH to ensure library_call_syscall can find the declared class.
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
@@ -115,7 +118,8 @@ mod owner_tests {
         owned.transfer_ownership(new_owner);
         set_caller_address_global(new_owner);
 
-        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
+        // Re-declare Core class and use the actual declared class hash
+        let class_hash: ClassHash = get_declared_class_hash("Core");
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
     }
@@ -123,14 +127,15 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: 'MISSING_PRIMARY_INTERFACE_ID')]
     fn test_fails_upgrading_to_other_contract_without_interface_id() {
+        // MockERC20 is not upgradeable, first call succeeds, second fails
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         set_caller_address_global(default_owner());
-        // MockERC20 is not upgradeable, first call succeeds, second fails
+        let mock_erc20_class_hash: ClassHash = get_declared_class_hash("MockERC20");
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(mock_erc20_class_hash);
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(mock_erc20_class_hash);
     }
 
     #[test]
@@ -139,8 +144,9 @@ mod owner_tests {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         set_caller_address_global(default_owner());
+        let positions_class_hash: ClassHash = get_declared_class_hash("Positions");
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(Positions::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(positions_class_hash);
     }
 }
 

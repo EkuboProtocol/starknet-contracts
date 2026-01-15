@@ -7,7 +7,7 @@ use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::src5::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use crate::owned_nft::{IOwnedNFTDispatcher, IOwnedNFTDispatcherTrait, OwnedNFT};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_global};
+use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_global, get_declared_class_hash};
 
 fn switch_to_controller() {
     set_caller_address_global(default_owner());
@@ -82,7 +82,7 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     let (_, nft) = d.deploy_owned_nft(default_owner(), 'abcde', 'def', 'ipfs://abcdef/');
     pop_log::<crate::components::owned::Owned::OwnershipTransferred>(nft.contract_address).unwrap();
 
-    let class_hash: ClassHash = OwnedNFT::TEST_CLASS_HASH.try_into().unwrap();
+    let class_hash: ClassHash = get_declared_class_hash("OwnedNFT");
 
     set_caller_address_global(default_owner());
     IUpgradeableDispatcher { contract_address: nft.contract_address }

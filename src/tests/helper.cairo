@@ -8,7 +8,8 @@ use snforge_std::{
     start_cheat_block_timestamp_global, stop_cheat_caller_address_global,
     stop_cheat_block_timestamp_global,
 };
-use starknet::ContractAddress;
+use starknet::{ContractAddress, ClassHash};
+use core::byte_array::ByteArray;
 use crate::components::util::serialize;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, ILockerDispatcher, SwapParameters,
@@ -69,6 +70,18 @@ pub fn set_block_timestamp_global(block_timestamp: u64) {
 
 pub fn stop_block_timestamp_global() {
     stop_cheat_block_timestamp_global();
+}
+
+/// Gets the declared class hash for a contract.
+/// This ensures the class is declared and returns the actual runtime class hash
+/// that can be used with library_call_syscall, even after multiple caller address changes.
+/// 
+/// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
+/// Returns the ClassHash of the declared contract
+pub fn get_declared_class_hash(contract_name: ByteArray) -> ClassHash {
+    let declare_result = declare(contract_name).expect('Failed to declare contract');
+    let contract_class = declare_result.contract_class();
+    *contract_class.class_hash
 }
 
 

@@ -26,7 +26,7 @@ use crate::math::twamm::{
 };
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, SetupPoolResult, default_owner,
-    set_block_timestamp_global, set_caller_address_global, update_position,
+    set_block_timestamp_global, set_caller_address_global, update_position, get_declared_class_hash,
 };
 use crate::tests::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use crate::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
@@ -58,7 +58,7 @@ mod UpgradableTest {
     use crate::extensions::twamm::TWAMM;
     use super::{
         ClassHash, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        default_owner, pop_log, set_caller_address_global,
+        default_owner, pop_log, set_caller_address_global, get_declared_class_hash,
     };
 
     #[test]
@@ -71,7 +71,7 @@ mod UpgradableTest {
         )
             .unwrap();
 
-        let class_hash: ClassHash = TWAMM::TEST_CLASS_HASH.try_into().unwrap();
+        let class_hash: ClassHash = get_declared_class_hash("TWAMM");
 
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: twamm.contract_address }

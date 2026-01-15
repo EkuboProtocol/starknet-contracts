@@ -21,7 +21,7 @@ use crate::positions::Positions;
 use crate::positions::Positions::amount_to_limit_order_liquidity;
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
-    SetupPoolResult, default_owner, set_caller_address_global, swap,
+    SetupPoolResult, default_owner, set_caller_address_global, swap, get_declared_class_hash,
 };
 use crate::tests::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
@@ -45,9 +45,9 @@ fn test_replace_class_hash_can_be_called_by_owner() {
 
     OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address));
 
-    let class_hash: ClassHash = Positions::TEST_CLASS_HASH.try_into().unwrap();
-
     set_caller_address_global(default_owner());
+    // Get the declared class hash after caller change to ensure it's available for library_call_syscall
+    let class_hash: ClassHash = get_declared_class_hash("Positions");
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
