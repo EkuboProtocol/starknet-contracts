@@ -88,10 +88,9 @@ fn test_replace_class_hash_can_be_called_by_owner() {
     IUpgradeableDispatcher { contract_address: nft.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(pop_log(
         nft.contract_address,
-    )
-        .unwrap();
+    ));
     assert(event.new_class_hash == class_hash, 'event.class_hash');
 }
 

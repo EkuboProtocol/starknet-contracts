@@ -1,8 +1,11 @@
 use starknet::ContractAddress;
-use starknet::syscalls::deploy_syscall;
+use snforge_std::{
+    declare, start_cheat_caller_address, stop_cheat_caller_address, ContractClassTrait,
+    DeclareResultTrait,
+};
 use crate::components::clear::{IClearDispatcher, IClearDispatcherTrait};
 use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-use crate::tests::helper::{Deployer, DeployerTrait, set_caller_address_global};
+use crate::tests::helper::{Deployer, DeployerTrait};
 
 #[starknet::contract]
 mod TestContract {
@@ -16,18 +19,15 @@ mod TestContract {
 fn setup() -> (IClearDispatcher, IERC20Dispatcher, ContractAddress) {
     let mut d: Deployer = Default::default();
 
-    let (test_contract, _) = deploy_syscall(
-        TestContract::TEST_CLASS_HASH.try_into().unwrap(),
-        d.get_next_nonce(),
-        array![].span(),
-        true,
-    )
-        .unwrap();
+    let contract = declare("TestContract").unwrap().contract_class();
+    let (test_contract, _) = contract.deploy(@array![]).expect('test contract deploy failed');
 
     let token = d.deploy_mock_token_with_balance(owner: test_contract, starting_balance: 100);
 
     let caller = 123456.try_into().unwrap();
-    set_caller_address_global(caller);
+    // Only cheat the caller for the test contract so nested token calls keep the contract caller.
+    stop_cheat_caller_address(test_contract);
+    start_cheat_caller_address(test_contract, caller);
 
     (
         IClearDispatcher { contract_address: test_contract },

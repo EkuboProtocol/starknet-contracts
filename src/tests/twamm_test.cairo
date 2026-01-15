@@ -1164,10 +1164,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1268,10 +1267,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1372,10 +1370,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_increase_order_sale_rate_before_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1494,10 +1491,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_increase_order_sale_rate_before_order_starts_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1615,10 +1611,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_after_order_starts_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1768,10 +1763,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token0() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = FEE_ONE_PERCENT;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1838,10 +1832,9 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token1() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = FEE_ONE_PERCENT;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1921,10 +1914,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
 
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
@@ -2069,10 +2061,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2203,10 +2194,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2350,10 +2340,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2496,10 +2485,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2698,10 +2686,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2909,10 +2896,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 18420685, sign: false }; // ~ 100_000_000:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3106,10 +3092,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;
@@ -3302,10 +3287,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3467,10 +3451,9 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3643,10 +3626,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = bounds.lower;
         let (twamm, setup, positions) = set_up_twamm(
@@ -3723,10 +3705,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = min_tick();
         let (twamm, setup, positions) = set_up_twamm(
@@ -3805,10 +3786,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = bounds.upper;
         let (twamm, setup, positions) = set_up_twamm(
@@ -3885,10 +3865,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = max_tick();
         let (twamm, setup, positions) = set_up_twamm(
@@ -3965,10 +3944,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -4039,10 +4017,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -4121,10 +4098,9 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -4370,10 +4346,9 @@ mod PlaceOrderDurationTooLong {
     fn test_order_duration_too_long_positions() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;

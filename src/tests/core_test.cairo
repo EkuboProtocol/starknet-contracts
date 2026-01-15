@@ -52,8 +52,7 @@ mod owner_tests {
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
-        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
-            .unwrap();
+        OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
 
         set_caller_address_global(default_owner());
         let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
@@ -73,10 +72,9 @@ mod owner_tests {
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         assert(event.old_owner.is_zero(), 'zero');
         assert(event.new_owner == default_owner(), 'initial owner');
         assert(owned.get_owner() == default_owner(), 'is default');
@@ -85,10 +83,9 @@ mod owner_tests {
         let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         assert(event.old_owner == default_owner(), 'old owner');
         assert(event.new_owner == new_owner, 'new owner');
         assert(owned.get_owner() == new_owner, 'is new owner');
@@ -179,8 +176,7 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
-            .unwrap();
+        OptionTrait::unwrap(pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
         let event: crate::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
