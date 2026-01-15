@@ -4,9 +4,12 @@ use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
 use snforge_std::{
-    ContractClassTrait, DeclareResultTrait, declare, get_class_hash, start_cheat_caller_address_global,
-    start_cheat_block_timestamp_global, stop_cheat_caller_address_global,
-    stop_cheat_block_timestamp_global, spy_events, EventSpy, EventSpyTrait,
+    ContractClassTrait, DeclareResultTrait, declare, get_class_hash,
+    start_cheat_caller_address_global, stop_cheat_caller_address_global,
+    start_cheat_caller_address, stop_cheat_caller_address,
+    cheat_caller_address, CheatSpan,
+    start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global,
+    spy_events, EventSpy, EventSpyTrait,
 };
 use starknet::{ContractAddress, ClassHash};
 use core::byte_array::ByteArray;
@@ -106,6 +109,42 @@ pub fn set_caller_address_global(caller: ContractAddress) {
 
 pub fn stop_caller_address_global() {
     stop_cheat_caller_address_global();
+}
+
+/// Sets the caller address for calls TO a specific contract only.
+/// Unlike set_caller_address_global, this does NOT affect calls that the target
+/// contract makes to other contracts (i.e., internal contract-to-contract calls
+/// will use the real caller, not the cheated one).
+/// 
+/// Use this when you need to simulate a user calling a contract, but that contract
+/// needs to make internal calls to other contracts that check the real caller.
+pub fn set_caller_address(target_contract: ContractAddress, caller: ContractAddress) {
+    stop_cheat_caller_address(target_contract);
+    start_cheat_caller_address(target_contract, caller);
+}
+
+/// Stops the per-contract caller address cheat for the given contract.
+pub fn stop_caller_address(target_contract: ContractAddress) {
+    stop_cheat_caller_address(target_contract);
+}
+
+/// Sets the caller address for a specified number of calls to the target contract.
+/// This is useful when the target contract makes internal calls (callbacks) that should
+/// see the real caller, not the cheated one.
+/// 
+/// Use this when you need to simulate a user calling a contract that has lock/callback patterns
+/// (like Core -> Positions.locked callbacks).
+pub fn set_caller_address_for_calls(
+    target_contract: ContractAddress, caller: ContractAddress, num_calls: usize
+) {
+    let span: CheatSpan = CheatSpan::TargetCalls(num_calls.try_into().expect('num_calls must be > 0'));
+    cheat_caller_address(target_contract, caller, span);
+}
+
+/// Sets the caller address for a single call to the target contract.
+pub fn set_caller_address_once(target_contract: ContractAddress, caller: ContractAddress) {
+    let one: usize = 1;
+    set_caller_address_for_calls(target_contract, caller, one);
 }
 
 pub fn set_block_timestamp_global(block_timestamp: u64) {
