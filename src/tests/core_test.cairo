@@ -2168,8 +2168,6 @@ mod save_load_tests {
         token.increase_balance(locker.contract_address, 1);
         let cache_key: felt252 = 5678;
 
-        set_caller_address_global(1234567.try_into().unwrap());
-
         // important because it allows us to load
         let recipient = locker.contract_address;
 

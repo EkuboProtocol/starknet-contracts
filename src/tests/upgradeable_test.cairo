@@ -2,8 +2,8 @@ use starknet::ClassHash;
 use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use crate::interfaces::upgradeable::IUpgradeableDispatcherTrait;
 use crate::tests::helper::{
-    Deployer, DeployerTrait, default_owner, set_caller_address_global, get_declared_class_hash,
-    event_logger, EventLoggerTrait,
+    Deployer, DeployerTrait, default_owner, set_caller_address_global, set_caller_address_once,
+    get_declared_class_hash, event_logger, EventLoggerTrait,
 };
 use crate::tests::mocks::mock_upgradeable::MockUpgradeable;
 
@@ -68,6 +68,6 @@ fn test_replace_non_zero_class_hash_not_owner() {
 fn test_replace_non_zero_class_hash_without_interface_id() {
     let mut d: Deployer = Default::default();
     let mock_upgradeable = d.deploy_mock_upgradeable();
-    set_caller_address_global(default_owner());
+    set_caller_address_once(mock_upgradeable.contract_address, default_owner());
     mock_upgradeable.replace_class_hash(0xabcdef.try_into().unwrap());
 }
