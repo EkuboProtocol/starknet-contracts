@@ -128,6 +128,13 @@ pub fn stop_caller_address(target_contract: ContractAddress) {
     stop_cheat_caller_address(target_contract);
 }
 
+/// Helper function for tests that need to call positions/owned contracts.
+/// Stops any global caller address cheat and ensures the test caller is set correctly
+/// without affecting internal contract-to-contract calls.
+pub fn setup_test_caller_for_positions(caller: ContractAddress) {
+    stop_cheat_caller_address_global();
+}
+
 /// Sets the caller address for a specified number of calls to the target contract.
 /// This is useful when the target contract makes internal calls (callbacks) that should
 /// see the real caller, not the cheated one.
