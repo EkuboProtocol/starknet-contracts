@@ -229,7 +229,7 @@ mod PoolTests {
         Bounds, Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
         IPositionsDispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait, MAX_TICK_SPACING,
         PoolKey, TICKS_IN_ONE_PERCENT, Zero, i129, max_bounds, max_liquidity, set_caller_address_global,
-        tick_to_sqrt_ratio, update_position, event_logger, EventLoggerTrait};
+        set_caller_address_once, tick_to_sqrt_ratio, update_position, event_logger, EventLoggerTrait};
 
     #[test]
     #[should_panic(expected: 'TICK_SPACING')]
@@ -293,7 +293,6 @@ mod PoolTests {
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
         let caller = 42.try_into().unwrap();
-        set_caller_address_global(caller);
 
         let setup = d
             .setup_pool_with_core(
@@ -318,6 +317,7 @@ mod PoolTests {
             100_000_000,
         );
 
+        set_caller_address_once(positions.contract_address, caller);
         positions
             .mint_and_deposit(
                 pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity,
@@ -344,7 +344,6 @@ mod PoolTests {
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
 
         let caller = 42.try_into().unwrap();
-        set_caller_address_global(caller);
 
         let setup = d
             .setup_pool_with_core(
@@ -369,6 +368,8 @@ mod PoolTests {
             100_000_000,
         );
 
+        // Use per-call cheating to avoid affecting Core callbacks
+        set_caller_address_once(positions.contract_address, caller);
         positions
             .mint_and_deposit(
                 pool_key: setup.pool_key, bounds: bounds, min_liquidity: max_liquidity,
@@ -714,8 +715,10 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, OrderUpdated, PoolKeyIntoStateKey,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, VirtualOrdersExecuted, i129, place_order,  set_block_timestamp_global, set_up_twamm, event_logger, EventLoggerTrait};
+        Deployer, DeployerTrait, ITWAMMDispatcherTrait, OrderUpdated, PoolInitialized,
+        PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey,
+        VirtualOrdersExecuted, i129, place_order, set_block_timestamp_global, set_up_twamm,
+        event_logger, EventLoggerTrait};
 
     #[test]
     fn test_place_orders_0() {
@@ -732,6 +735,9 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
+            core.contract_address,
+        ));
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -743,7 +749,8 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        
+        let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
+        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
