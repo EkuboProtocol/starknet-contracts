@@ -273,7 +273,6 @@ fn test_amount_to_limit_order_liquidity_min_max_price_min_amount() {
 #[test]
 fn test_create_limit_order_token0() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -283,11 +282,14 @@ fn test_create_limit_order_token0() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token0.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     let (id, liquidity) = positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -301,6 +303,7 @@ fn test_create_limit_order_token0() {
     assert_eq!(id, 1);
     assert_eq!(liquidity, 1562550);
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .close_limit_order(
             id,
@@ -318,7 +321,6 @@ fn test_create_limit_order_token0() {
 #[test]
 fn test_create_limit_order_token1() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -328,11 +330,14 @@ fn test_create_limit_order_token1() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token1.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     let (id, liquidity) = positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -346,6 +351,7 @@ fn test_create_limit_order_token1() {
     assert_eq!(id, 1);
     assert_eq!(liquidity, 1562350);
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .close_limit_order(
             id,
@@ -363,7 +369,6 @@ fn test_create_limit_order_token1() {
 #[test]
 fn test_create_limit_order_token0_then_token1() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -373,11 +378,14 @@ fn test_create_limit_order_token0_then_token1() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token0.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -389,6 +397,7 @@ fn test_create_limit_order_token0_then_token1() {
         );
 
     setup.token1.increase_balance(positions.contract_address, 50);
+    set_caller_address_once(positions.contract_address, caller);
     let (amount_sold, amount_bought, mint_result) = positions
         .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
@@ -407,7 +416,6 @@ fn test_create_limit_order_token0_then_token1() {
 #[test]
 fn test_create_limit_order_token1_then_token0() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -417,11 +425,14 @@ fn test_create_limit_order_token1_then_token0() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token1.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -433,6 +444,7 @@ fn test_create_limit_order_token1_then_token0() {
         );
 
     setup.token0.increase_balance(positions.contract_address, 50);
+    set_caller_address_once(positions.contract_address, caller);
     let (amount_sold, amount_bought, mint_result) = positions
         .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
@@ -451,7 +463,6 @@ fn test_create_limit_order_token1_then_token0() {
 #[test]
 fn test_create_limit_order_token0_then_token1_fully_execute() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -461,11 +472,14 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token0.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -477,6 +491,7 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
         );
 
     setup.token1.increase_balance(positions.contract_address, 150);
+    set_caller_address_once(positions.contract_address, caller);
     let (amount_sold, amount_bought, mint_result) = positions
         .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
@@ -519,6 +534,7 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
             .span(),
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .close_limit_order(
             id,
@@ -536,7 +552,6 @@ fn test_create_limit_order_token0_then_token1_fully_execute() {
 #[test]
 fn test_create_limit_order_token1_then_token0_fully_execute() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -546,11 +561,14 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let limit_orders = d.deploy_limit_orders(setup.core);
     set_caller_address_global(default_owner());
     positions.set_limit_orders(limit_orders.contract_address);
+    stop_caller_address_global();
 
     setup.token1.increase_balance(positions.contract_address, 100);
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .mint_and_place_limit_order(
             LimitOrderKey {
@@ -562,6 +580,7 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
         );
 
     setup.token0.increase_balance(positions.contract_address, 150);
+    set_caller_address_once(positions.contract_address, caller);
     let (amount_sold, amount_bought, mint_result) = positions
         .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
             LimitOrderKey {
@@ -604,6 +623,7 @@ fn test_create_limit_order_token1_then_token0_fully_execute() {
             .span(),
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .close_limit_order(
             id,
@@ -808,7 +828,6 @@ fn test_deposit_then_withdraw_with_fees() {
 #[test]
 fn test_deposit_then_partial_withdraw_with_fees() {
     let caller = 12345678.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -818,13 +837,16 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let bounds = Bounds {
         lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
     };
+    set_caller_address_once(positions.contract_address, caller);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
+    set_caller_address_once(positions.contract_address, caller);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 
@@ -847,6 +869,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
         skip_ahead: 0,
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .withdraw(
             id: token_id,
@@ -883,6 +906,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(token_info.fees1 == 8, 'fees1');
 
     // withdraw 0 liquidity
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .withdraw_v2(
             id: token_id,
@@ -896,6 +920,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 0, 'fees not withdrawn');
     assert(amount1 == 0, 'fees not withdrawn');
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .collect_fees(id: token_id, pool_key: setup.pool_key, bounds: bounds);
 
@@ -914,6 +939,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
 
     // withdraw quarter
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .withdraw_v2(
             id: token_id,
@@ -939,6 +965,7 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     );
 
     // withdraw remainder
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .withdraw_v2(
             id: token_id,
@@ -1016,7 +1043,6 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
 #[test]
 fn test_deposit_liquidity_updates_tick_states_at_bounds() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1026,11 +1052,14 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_once(positions.contract_address, caller);
     positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
     let tick_lower_liquidity_delta = setup
@@ -1073,7 +1102,6 @@ fn test_deposit_liquidity_updates_tick_states_at_bounds() {
 #[test]
 fn test_deposit_swap_through_upper_tick_fees_accounting() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1083,11 +1111,14 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_once(positions.contract_address, caller);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
@@ -1124,7 +1155,6 @@ fn test_deposit_swap_through_upper_tick_fees_accounting() {
 #[test]
 fn test_deposit_swap_through_lower_tick_fees_accounting() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1134,11 +1164,14 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_once(positions.contract_address, caller);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
@@ -1175,7 +1208,6 @@ fn test_deposit_swap_through_lower_tick_fees_accounting() {
 #[test]
 fn test_deposit_swap_round_trip_accounting() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1185,11 +1217,14 @@ fn test_deposit_swap_round_trip_accounting() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
     let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_once(positions.contract_address, caller);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
 
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let liquidity = positions
         .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
@@ -1236,6 +1271,7 @@ fn test_deposit_swap_round_trip_accounting() {
     assert(info.fees0 == 203, 'fees0 after');
     assert(info.fees1 == 203, 'fees1 after');
 
+    set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .withdraw(
             id: token_id,
@@ -1293,10 +1329,11 @@ fn test_deposit_existing_position() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
 
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
 
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1307,6 +1344,7 @@ fn test_deposit_existing_position() {
 
     setup.token0.set_balance(positions.contract_address, 15000);
     setup.token1.set_balance(positions.contract_address, 30000);
+    set_caller_address_once(positions.contract_address, caller);
     positions.deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
 
     let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
@@ -1337,6 +1375,7 @@ fn test_deposit_existing_position() {
 
     setup.token0.set_balance(positions.contract_address, 15000);
     setup.token1.set_balance(positions.contract_address, 15000);
+    set_caller_address_once(positions.contract_address, caller);
     positions.deposit(id: p0.id, pool_key: setup.pool_key, bounds: p0.bounds, min_liquidity: 1);
 
     let info = positions.get_token_info(p0.id, setup.pool_key, p0.bounds);
@@ -1351,7 +1390,6 @@ fn test_deposit_existing_position() {
 #[test]
 fn test_deposit_swap_multiple_positions() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1361,6 +1399,8 @@ fn test_deposit_swap_multiple_positions() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1368,6 +1408,7 @@ fn test_deposit_swap_multiple_positions() {
         10000,
         10000,
     );
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p1 = create_position(
         setup,
         positions,
@@ -1375,6 +1416,7 @@ fn test_deposit_swap_multiple_positions() {
         10000,
         0,
     );
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p2 = create_position(
         setup,
         positions,
@@ -1445,10 +1487,11 @@ fn test_create_position_in_range_after_swap_no_fees() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
 
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
 
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1476,6 +1519,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         skip_ahead: 0,
     );
 
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p1 = create_position(
         setup,
         positions,
@@ -1483,6 +1527,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         5000,
         5000,
     );
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p2 = create_position(
         setup,
         positions,
@@ -1490,6 +1535,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
         0,
         5000,
     );
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p3 = create_position(
         setup,
         positions,
@@ -1552,7 +1598,6 @@ fn test_create_position_in_range_after_swap_no_fees() {
 )]
 fn test_withdraw_not_collected_fees_token1() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1562,6 +1607,8 @@ fn test_withdraw_not_collected_fees_token1() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1581,6 +1628,7 @@ fn test_withdraw_not_collected_fees_token1() {
         skip_ahead: 0,
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .withdraw_v2(
             id: p0.id,
@@ -1600,7 +1648,6 @@ fn test_withdraw_not_collected_fees_token1() {
 )]
 fn test_withdraw_not_collected_fees_token0() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1610,6 +1657,8 @@ fn test_withdraw_not_collected_fees_token0() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1629,6 +1678,7 @@ fn test_withdraw_not_collected_fees_token0() {
         skip_ahead: 0,
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .withdraw_v2(
             id: p0.id,
@@ -1644,7 +1694,6 @@ fn test_withdraw_not_collected_fees_token0() {
 #[test]
 fn test_withdraw_partial_leave_fees() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1655,6 +1704,8 @@ fn test_withdraw_partial_leave_fees() {
         );
     let mut d: Deployer = Default::default();
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(
         setup,
         positions,
@@ -1674,6 +1725,7 @@ fn test_withdraw_partial_leave_fees() {
         skip_ahead: 0,
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .withdraw_v2(
             id: p0.id,
@@ -1695,7 +1747,6 @@ fn test_withdraw_partial_leave_fees() {
 #[test]
 fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
     let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1706,8 +1757,10 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
             extension: Zero::zero(),
         );
     let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
 
     let ONE_E18 = 1000000000000000000;
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
     let p0 = create_position(setup, positions, max_bounds(5982), ONE_E18, ONE_E18);
 
     assert(p0.liquidity == ONE_E18, 'liquidity');
@@ -1721,6 +1774,7 @@ fn test_failure_case_integration_tests_amount_cannot_be_met_due_to_overflow() {
         skip_ahead: 0,
     );
 
+    set_caller_address_once(positions.contract_address, caller);
     positions
         .withdraw(
             id: p0.id,
