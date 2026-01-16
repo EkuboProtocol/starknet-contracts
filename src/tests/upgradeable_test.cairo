@@ -68,6 +68,8 @@ fn test_replace_non_zero_class_hash_not_owner() {
 fn test_replace_non_zero_class_hash_without_interface_id() {
     let mut d: Deployer = Default::default();
     let mock_upgradeable = d.deploy_mock_upgradeable();
+    // Use MockERC20 class which exists but doesn't have the required interface
+    let erc20_class_hash = get_declared_class_hash("MockERC20");
     set_caller_address_once(mock_upgradeable.contract_address, default_owner());
-    mock_upgradeable.replace_class_hash(0xabcdef.try_into().unwrap());
+    mock_upgradeable.replace_class_hash(erc20_class_hash);
 }
