@@ -994,8 +994,6 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
 #[test]
 fn test_deposit_withdraw_protocol_fee_then_deposit() {
-    let caller = 1.try_into().unwrap();
-    set_caller_address_global(caller);
     let mut d: Deployer = Default::default();
     let setup = d
         .setup_pool(
@@ -1027,14 +1025,13 @@ fn test_deposit_withdraw_protocol_fee_then_deposit() {
             min_token1: 0,
         );
 
-    let caller = get_contract_address();
-    set_caller_address_global(default_owner());
+    set_caller_address_once(setup.core.contract_address, default_owner());
     setup
         .core
         .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);
+    set_caller_address_once(setup.core.contract_address, default_owner());
     setup.core.withdraw_all_protocol_fees(recipient: recipient, token: setup.pool_key.token1);
 
-    set_caller_address_global(caller);
     setup.token0.increase_balance(positions.contract_address, 100000000);
     setup.token1.increase_balance(positions.contract_address, 100000000);
     positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
