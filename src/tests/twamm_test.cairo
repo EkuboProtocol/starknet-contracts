@@ -406,7 +406,6 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 
         let mut logger = event_logger();
-        let mut logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -419,7 +418,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -498,7 +497,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -578,7 +577,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -658,7 +657,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -744,7 +743,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -802,7 +801,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -858,7 +857,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = 1_000_000;
         set_block_timestamp_global(timestamp);
@@ -919,7 +918,7 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = 1_000_000;
         set_block_timestamp_global(timestamp);
@@ -980,7 +979,7 @@ mod CancelOrderTests {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1024,7 +1023,7 @@ mod CancelOrderTests {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1082,7 +1081,7 @@ mod CancelOrderTests {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1124,7 +1123,7 @@ mod CancelOrderTests {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1179,7 +1178,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1220,7 +1219,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1266,7 +1265,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1306,9 +1305,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1414,9 +1411,8 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1522,9 +1518,8 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1648,9 +1643,8 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1773,9 +1767,8 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+ 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_TWO;
@@ -1930,7 +1923,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2004,7 +1997,7 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+       
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2093,9 +2086,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+   
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2246,9 +2238,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2385,10 +2375,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+      
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2538,9 +2527,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+ 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2688,10 +2676,9 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -2894,9 +2881,8 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+     
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let owner0 = get_contract_address();
@@ -3109,10 +3095,9 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3307,9 +3292,8 @@ mod PlaceOrderOnBothSides {
             ref d, core, fee, initial_tick, amount0, amount1,
         );
 
-        let mut logger = event_logger();
+
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3510,10 +3494,9 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3679,9 +3662,8 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3858,9 +3840,8 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -3942,9 +3923,8 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4028,9 +4008,8 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4112,9 +4091,8 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4191,7 +4169,7 @@ mod MinMaxSqrtRatio {
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4269,7 +4247,7 @@ mod MinMaxSqrtRatio {
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
-        let mut logger = event_logger();
+        
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -4355,7 +4333,7 @@ mod MinMaxSqrtRatio {
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
 
-        let mut logger = event_logger();
+        
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -4447,7 +4425,7 @@ mod GetOrderInfo {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4610,9 +4588,8 @@ mod PlaceOrderDurationTooLong {
         let amount1 = 10_000_000 * 1000000000000000000;
         let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
 
-        let mut logger = event_logger();
+        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
-        let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
         let timestamp = SIXTEEN_POW_ONE;
@@ -4643,7 +4620,7 @@ mod PlaceOrderDurationTooLong {
         let amount1 = 10_000_000 * 1000000000000000000;
         let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
 
-        let mut logger = event_logger();
+        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4668,7 +4645,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
     let mut d: Deployer = Default::default();
 
 
-    let mut logger = event_logger();
+    
     let core = d.deploy_core();
     let fee = 0;
     let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
@@ -4676,7 +4653,7 @@ fn test_withdraw_and_get_info_after_order_ends() {
         ref d, core, fee, initial_tick, amount0: 10_000, amount1: 10_000,
     );
 
-    let mut logger = event_logger();
+    
 
     let timestamp = SIXTEEN_POW_ONE;
     set_block_timestamp_global(timestamp);
