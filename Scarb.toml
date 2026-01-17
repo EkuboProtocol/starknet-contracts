@@ -1,15 +1,15 @@
 [package]
 name = "ekubo"
 version = "0.1.0"
-description = "An AMM protocol built in Cairo featuring concentrated liquidity"
+description = "An AMM protocol built in Cairo featuring concentrated liquidity and extensions"
 homepage = "https://ekubo.org"
-cairo-version = ">=2.12.2"
+cairo-version = ">=2.15.0"
 edition = '2024_07'
 
 [lib]
 
 [dependencies]
-starknet = ">=2.12.2"
+starknet = ">=2.15.0"
 
 [tool.fmt]
 sort-module-level-items = true
@@ -19,4 +19,8 @@ allowed-libfuncs-list.name = "audited"
 casm = true
 
 [dev-dependencies]
-cairo_test = ">=2.12.2"
+cairo_test = ">=2.15.0"
+snforge_std = ">=0.54.1"
+
+[scripts]
+test = "snforge test"

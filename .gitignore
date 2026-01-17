@@ -9,3 +9,5 @@ node_modules/
 out/
 
 .codegpt
+
+.snfoundry_cache

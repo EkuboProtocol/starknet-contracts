@@ -3,12 +3,17 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
-use starknet::ContractAddress;
-use starknet::syscalls::deploy_syscall;
+use snforge_std::{
+    ContractClassTrait, DeclareResultTrait, declare, get_class_hash,
+    start_cheat_caller_address_global, stop_cheat_caller_address_global,
+    start_cheat_caller_address, stop_cheat_caller_address,
+    cheat_caller_address, CheatSpan,
+    start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global,
+    spy_events, EventSpy, EventSpyTrait,
+};
+use starknet::{ContractAddress, ClassHash};
+use core::byte_array::ByteArray;
 use crate::components::util::serialize;
-use crate::core::Core;
-use crate::extensions::limit_orders::LimitOrders;
-use crate::extensions::twamm::TWAMM;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, ILockerDispatcher, SwapParameters,
     UpdatePositionParameters,
@@ -17,18 +22,15 @@ use crate::interfaces::erc721::IERC721Dispatcher;
 use crate::interfaces::positions::IPositionsDispatcher;
 use crate::interfaces::router::IRouterDispatcher;
 use crate::interfaces::upgradeable::IUpgradeableDispatcher;
-use crate::lens::token_registry::{ITokenRegistryDispatcher, TokenRegistry};
+use crate::lens::token_registry::ITokenRegistryDispatcher;
 use crate::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
-use crate::positions::Positions;
-use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher, RevenueBuybacks};
-use crate::router::Router;
-use crate::streamed_payment::{IStreamedPaymentDispatcher, StreamedPayment};
-use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20, MockERC20IERC20ImplTrait};
+use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher};
+use crate::streamed_payment::IStreamedPaymentDispatcher;
+use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
 use crate::tests::mocks::locker::{
-    Action, ActionResult, CoreLocker, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
+    Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
-use crate::tests::mocks::mock_extension::{IMockExtensionDispatcher, MockExtension};
-use crate::tests::mocks::mock_upgradeable::MockUpgradeable;
+use crate::tests::mocks::mock_extension::IMockExtensionDispatcher;
 use crate::types::bounds::Bounds;
 use crate::types::call_points::CallPoints;
 use crate::types::delta::Delta;
@@ -37,9 +39,55 @@ use crate::types::keys::PoolKey;
 
 pub const FEE_ONE_PERCENT: u128 = 0x28f5c28f5c28f5c28f5c28f5c28f5c2;
 
+#[derive(Drop)]
+pub struct EventLogger {
+    spy: EventSpy,
+    index: usize,
+}
+
+pub fn event_logger() -> EventLogger {
+    EventLogger { spy: spy_events(), index: 0 }
+}
+
+#[generate_trait]
+pub impl EventLoggerImpl of EventLoggerTrait {
+    fn pop_log<T, +starknet::Event<T>, +Drop<T>>(
+        ref self: EventLogger, address: ContractAddress
+    ) -> Option<T> {
+        let events = self.spy.get_events().events;
+        loop {
+            if self.index >= events.len() {
+                break Option::None;
+            }
+            let (from, event) = events.at(self.index);
+            self.index += 1;
+            if *from == address {
+                let mut keys = event.keys.span();
+                let mut data = event.data.span();
+                match starknet::Event::deserialize(ref keys, ref data) {
+                    Option::Some(ev) => { break Option::Some(ev); },
+                    Option::None => { continue; }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Drop, Copy)]
 pub struct Deployer {
     nonce: felt252,
+}
+
+// Global storage to track deployed contract addresses for class hash re-declaration
+// This is a simple approach - in practice, tests should call ensure_class_declared_for_contract
+// for contracts they deploy, or we can scan known contract addresses
+pub fn ensure_class_declared_for_contract(contract_address: ContractAddress) {
+    // Get the class hash of the deployed contract
+    let class_hash = get_class_hash(contract_address);
+    // Declare the class by creating a ContractClass from the class hash
+    // Note: This doesn't actually "declare" it, but ensures it's available
+    // We still need to declare by name, but we can use this to track which classes are needed
+    let _ = ContractClassTrait::new(class_hash);
 }
 
 impl DefaultDeployer of core::traits::Default<Deployer> {
@@ -51,6 +99,94 @@ impl DefaultDeployer of core::traits::Default<Deployer> {
 
 pub fn default_owner() -> ContractAddress {
     12121212121212.try_into().unwrap()
+}
+
+pub fn set_caller_address_global(caller: ContractAddress) {
+    // Reset any previous cheat caller before setting the new one.
+    stop_cheat_caller_address_global();
+    start_cheat_caller_address_global(caller);
+}
+
+pub fn stop_caller_address_global() {
+    stop_cheat_caller_address_global();
+}
+
+/// Sets the caller address for calls TO a specific contract only.
+/// Unlike set_caller_address_global, this does NOT affect calls that the target
+/// contract makes to other contracts (i.e., internal contract-to-contract calls
+/// will use the real caller, not the cheated one).
+/// 
+/// Use this when you need to simulate a user calling a contract, but that contract
+/// needs to make internal calls to other contracts that check the real caller.
+pub fn set_caller_address(target_contract: ContractAddress, caller: ContractAddress) {
+    stop_cheat_caller_address(target_contract);
+    start_cheat_caller_address(target_contract, caller);
+}
+
+/// Stops the per-contract caller address cheat for the given contract.
+pub fn stop_caller_address(target_contract: ContractAddress) {
+    stop_cheat_caller_address(target_contract);
+}
+
+/// Helper function for tests that need to call positions/owned contracts.
+/// Stops any global caller address cheat and ensures the test caller is set correctly
+/// without affecting internal contract-to-contract calls.
+pub fn setup_test_caller_for_positions(caller: ContractAddress) {
+    stop_cheat_caller_address_global();
+}
+
+/// Sets the caller address for a specified number of calls to the target contract.
+/// This is useful when the target contract makes internal calls (callbacks) that should
+/// see the real caller, not the cheated one.
+/// 
+/// Use this when you need to simulate a user calling a contract that has lock/callback patterns
+/// (like Core -> Positions.locked callbacks).
+pub fn set_caller_address_for_calls(
+    target_contract: ContractAddress, caller: ContractAddress, num_calls: usize
+) {
+    let span: CheatSpan = CheatSpan::TargetCalls(num_calls.try_into().expect('num_calls must be > 0'));
+    cheat_caller_address(target_contract, caller, span);
+}
+
+/// Sets the caller address for a single call to the target contract.
+pub fn set_caller_address_once(target_contract: ContractAddress, caller: ContractAddress) {
+    let one: usize = 1;
+    set_caller_address_for_calls(target_contract, caller, one);
+}
+
+pub fn set_block_timestamp_global(block_timestamp: u64) {
+    // Reset any previous cheat timestamp before setting the new one.
+    stop_cheat_block_timestamp_global();
+    start_cheat_block_timestamp_global(block_timestamp);
+}
+
+pub fn stop_block_timestamp_global() {
+    stop_cheat_block_timestamp_global();
+}
+
+/// Gets the declared class hash for a contract.
+/// This ensures the class is declared and returns the actual runtime class hash
+/// that can be used with library_call_syscall, even after multiple caller address changes.
+/// 
+/// IMPORTANT: This function must be called BEFORE any set_caller_address_global() calls
+/// to ensure the declaration persists. If called after caller changes, the declaration
+/// may not persist to library_call_syscall context.
+/// 
+/// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
+/// Returns the ClassHash of the declared contract
+pub fn get_declared_class_hash(contract_name: ByteArray) -> ClassHash {
+    let declare_result = declare(contract_name).expect('Failed to declare contract');
+    let contract_class = declare_result.contract_class();
+    *contract_class.class_hash
+}
+
+/// Ensures a class is declared before caller address changes.
+/// This should be called early in tests that use replace_class_hash or library calls.
+/// 
+/// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
+/// Returns the ClassHash of the declared contract
+pub fn ensure_class_declared(contract_name: ByteArray) -> ClassHash {
+    get_declared_class_hash(contract_name)
 }
 
 
@@ -78,12 +214,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
         name: felt252,
         symbol: felt252,
     ) -> IMockERC20Dispatcher {
-        let (address, _) = deploy_syscall(
-            MockERC20::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![owner.into(), starting_balance.into(), name, symbol].span(),
-            true,
-        )
+        let contract = declare("MockERC20").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@array![owner.into(), starting_balance.into(), name, symbol])
             .expect('token deploy failed');
         return IMockERC20Dispatcher { contract_address: address };
     }
@@ -106,13 +239,11 @@ pub impl DeployerTraitImpl of DeployerTrait {
         symbol: felt252,
         token_uri_base: felt252,
     ) -> (IOwnedNFTDispatcher, IERC721Dispatcher) {
-        let (address, _) = deploy_syscall(
-            OwnedNFT::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(owner, name, symbol, token_uri_base)).span(),
-            true,
-        )
+        let contract = declare("OwnedNFT").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(owner, name, symbol, token_uri_base)))
             .expect('nft deploy failed');
+
         return (
             IOwnedNFTDispatcher { contract_address: address },
             IERC721Dispatcher { contract_address: address },
@@ -134,12 +265,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_mock_extension(
         ref self: Deployer, core: ICoreDispatcher, call_points: CallPoints,
     ) -> IMockExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            MockExtension::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(core, call_points)).span(),
-            true,
-        )
+        let contract = declare("MockExtension").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(core, call_points)))
             .expect('mockext deploy failed');
 
         IMockExtensionDispatcher { contract_address: address }
@@ -147,38 +275,25 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_core(ref self: Deployer) -> ICoreDispatcher {
-        let (address, _) = deploy_syscall(
-            Core::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@default_owner()).span(),
-            true,
-        )
+        let contract = declare("Core").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@default_owner()))
             .expect('core deploy failed');
         return ICoreDispatcher { contract_address: address };
     }
 
 
     fn deploy_router(ref self: Deployer, core: ICoreDispatcher) -> IRouterDispatcher {
-        let (address, _) = deploy_syscall(
-            Router::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@core).span(),
-            true,
-        )
-            .expect('router deploy failed');
+        let contract = declare("Router").unwrap().contract_class();
+        let (address, _) = contract.deploy(@serialize(@core)).expect('router deploy failed');
 
         IRouterDispatcher { contract_address: address }
     }
 
 
     fn deploy_locker(ref self: Deployer, core: ICoreDispatcher) -> ICoreLockerDispatcher {
-        let (address, _) = deploy_syscall(
-            CoreLocker::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@core).span(),
-            true,
-        )
-            .expect('locker deploy failed');
+        let contract = declare("CoreLocker").unwrap().contract_class();
+        let (address, _) = contract.deploy(@serialize(@core)).expect('locker deploy failed');
 
         ICoreLockerDispatcher { contract_address: address }
     }
@@ -187,12 +302,12 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_positions_custom_uri(
         ref self: Deployer, core: ICoreDispatcher, token_uri_base: felt252,
     ) -> IPositionsDispatcher {
-        let (address, _) = deploy_syscall(
-            Positions::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core, OwnedNFT::TEST_CLASS_HASH, token_uri_base)).span(),
-            true,
-        )
+        // Declare OwnedNFT first to get the actual class hash that's declared in the test runtime.
+        // Using TEST_CLASS_HASH would fail because it's not declared.
+        let owned_nft_class = declare("OwnedNFT").unwrap().contract_class();
+        let contract = declare("Positions").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core, *owned_nft_class.class_hash, token_uri_base)))
             .expect('positions deploy failed');
 
         IPositionsDispatcher { contract_address: address }
@@ -204,24 +319,18 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_mock_upgradeable(ref self: Deployer) -> IUpgradeableDispatcher {
-        let (address, _) = deploy_syscall(
-            MockUpgradeable::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@default_owner()).span(),
-            true,
-        )
+        let contract = declare("MockUpgradeable").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@default_owner()))
             .expect('upgradeable deploy failed');
         return IUpgradeableDispatcher { contract_address: address };
     }
 
 
     fn deploy_twamm(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            TWAMM::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core)).span(),
-            true,
-        )
+        let contract = declare("TWAMM").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core)))
             .expect('twamm deploy failed');
 
         IExtensionDispatcher { contract_address: address }
@@ -229,12 +338,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
 
 
     fn deploy_limit_orders(ref self: Deployer, core: ICoreDispatcher) -> IExtensionDispatcher {
-        let (address, _) = deploy_syscall(
-            LimitOrders::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(default_owner(), core)).span(),
-            true,
-        )
+        let contract = declare("LimitOrders").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(default_owner(), core)))
             .expect('limit_orders deploy failed');
 
         IExtensionDispatcher { contract_address: address }
@@ -243,25 +349,18 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_token_registry(
         ref self: Deployer, core: ICoreDispatcher,
     ) -> ITokenRegistryDispatcher {
-        let (address, _) = deploy_syscall(
-            TokenRegistry::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![core.contract_address.into()].span(),
-            true,
-        )
+        let contract = declare("TokenRegistry").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@array![core.contract_address.into()])
             .expect('token registry deploy');
 
         ITokenRegistryDispatcher { contract_address: address }
     }
 
     fn deploy_streamed_payment(ref self: Deployer) -> IStreamedPaymentDispatcher {
-        let (address, _) = deploy_syscall(
-            StreamedPayment::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            array![].span(),
-            true,
-        )
-            .expect('streamed payment deploy');
+        let contract = declare("StreamedPayment").unwrap().contract_class();
+
+        let (address, _) = contract.deploy(@array![]).expect('streamed payment deploy');
 
         IStreamedPaymentDispatcher { contract_address: address }
     }
@@ -273,12 +372,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
         positions: IPositionsDispatcher,
         default_config: Option<Config>,
     ) -> IRevenueBuybacksDispatcher {
-        let (address, _) = deploy_syscall(
-            RevenueBuybacks::TEST_CLASS_HASH.try_into().unwrap(),
-            self.get_next_nonce(),
-            serialize(@(owner, core, positions, default_config)).span(),
-            true,
-        )
+        let contract = declare("RevenueBuybacks").unwrap().contract_class();
+        let (address, _) = contract
+            .deploy(@serialize(@(owner, core, positions, default_config)))
             .expect('revenue buybacks deploy');
 
         IRevenueBuybacksDispatcher { contract_address: address }

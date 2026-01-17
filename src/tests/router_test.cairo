@@ -1,13 +1,15 @@
 use core::num::traits::Zero;
 use starknet::ContractAddress;
-use starknet::testing::set_contract_address;
 use crate::interfaces::core::ICoreDispatcherTrait;
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::interfaces::router::{
     Depth, IRouterDispatcher, IRouterDispatcherTrait, RouteNode, Swap, TokenAmount,
 };
 use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
-use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::helper::{
+    Deployer, DeployerTrait, set_caller_address_global, set_caller_address_once,
+    stop_caller_address_global,
+};
 use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 use crate::types::bounds::Bounds;
 use crate::types::i129::i129;
@@ -21,10 +23,6 @@ fn recipient() -> ContractAddress {
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
     ),
 )]
 fn test_router_quote_not_initialized_pool() {
@@ -99,9 +97,11 @@ fn test_router_quote_initialized_pool_no_liquidity() {
 
 
 fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
+    let caller = 1.try_into().unwrap();
     let core = d.deploy_core();
     let router = d.deploy_router(core);
     let positions = d.deploy_positions(core);
+    stop_caller_address_global();
     let (tokenA, tokenB) = (d.deploy_two_mock_tokens());
     let tokenC = d.deploy_mock_token();
 
@@ -136,18 +136,19 @@ fn setup_for_routing(ref d: Deployer) -> (IRouterDispatcher, PoolKey, PoolKey) {
     core.initialize_pool(pool_key_a, Zero::zero());
     core.initialize_pool(pool_key_b, Zero::zero());
 
-    let caller = 1.try_into().unwrap();
-    set_contract_address(caller);
-
     token0.increase_balance(positions.contract_address, 10000);
     token1.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let _token_id_a = positions.mint(pool_key: pool_key_a, bounds: bounds);
+    set_caller_address_once(positions.contract_address, caller);
     let _deposited_liquidity_a = positions
         .deposit_last(pool_key: pool_key_a, bounds: bounds, min_liquidity: 0);
 
     token1.increase_balance(positions.contract_address, 10000);
     token2.increase_balance(positions.contract_address, 10000);
+    set_caller_address_once(positions.contract_address, caller);
     let _token_id_b = positions.mint(pool_key: pool_key_b, bounds: bounds);
+    set_caller_address_once(positions.contract_address, caller);
     let _deposited_liquidity_b = positions
         .deposit_last(pool_key: pool_key_b, bounds: bounds, min_liquidity: 0);
 
@@ -329,10 +330,6 @@ fn test_router_quote_multihop_routes() {
 #[should_panic(
     expected: (
         'NOT_INITIALIZED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
-        'ENTRYPOINT_FAILED',
     ),
 )]
 fn test_router_swap_not_initialized_pool() {

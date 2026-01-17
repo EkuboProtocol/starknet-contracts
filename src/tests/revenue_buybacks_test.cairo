@@ -1,10 +1,12 @@
 use starknet::ContractAddress;
-use starknet::testing::set_contract_address;
 use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner};
+use crate::tests::helper::{
+    Deployer, DeployerTrait, default_owner, set_caller_address_global, stop_caller_address_global,
+    set_caller_address_once
+};
 
 fn example_config(buy_token: ContractAddress) -> Config {
     Config {
@@ -65,7 +67,7 @@ fn test_config_override() {
         fee: 500000000000000000000000000000000,
     };
 
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     rb.set_config_override(token0.contract_address, Option::Some(override_config));
 
     // Verify override is used
@@ -77,7 +79,7 @@ fn test_config_override() {
 }
 
 #[test]
-#[should_panic(expected: ('No config for token', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'No config for token')]
 fn test_no_config_panics() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -90,7 +92,7 @@ fn test_no_config_panics() {
 }
 
 #[test]
-#[should_panic(expected: ('Invalid sell token', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'Invalid sell token')]
 fn test_same_token_buyback_fails() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -102,7 +104,7 @@ fn test_same_token_buyback_fails() {
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
     // Transfer core ownership to rb
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: core.contract_address }
         .transfer_ownership(rb.contract_address);
 
@@ -111,7 +113,7 @@ fn test_same_token_buyback_fails() {
 }
 
 #[test]
-#[should_panic(expected: ('Invalid start or end time', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'Invalid start or end time')]
 fn test_invalid_time_range() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -123,7 +125,7 @@ fn test_invalid_time_range() {
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
     // Transfer core ownership to rb
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: core.contract_address }
         .transfer_ownership(rb.contract_address);
 
@@ -132,7 +134,7 @@ fn test_invalid_time_range() {
 }
 
 #[test]
-#[should_panic(expected: ('Duration too short', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'Duration too short')]
 fn test_duration_too_short() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -144,7 +146,7 @@ fn test_duration_too_short() {
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
     // Transfer core ownership to rb
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: core.contract_address }
         .transfer_ownership(rb.contract_address);
 
@@ -164,15 +166,17 @@ fn test_reclaim_core() {
     let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
 
     // Transfer core ownership to rb
-    set_contract_address(default_owner());
+    set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: core.contract_address }
         .transfer_ownership(rb.contract_address);
+    stop_caller_address_global();
 
     // Verify rb owns core
     let core_owned = IOwnedDispatcher { contract_address: core.contract_address };
     assert(core_owned.get_owner() == rb.contract_address, 'rb should own core');
 
     // Reclaim core
+    set_caller_address_once(rb.contract_address, default_owner());
     rb.reclaim_core();
 
     // Verify default_owner owns core again
@@ -182,4 +186,3 @@ fn test_reclaim_core() {
     let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
     assert(nft.owner_of(rb.get_token_id().into()) == rb.contract_address, 'rb should own nft');
 }
-
