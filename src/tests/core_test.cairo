@@ -2,7 +2,6 @@ use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::traits::TryInto;
 use starknet::ContractAddress;
-use starknet::testing::pop_log;
 use crate::core::Core;
 use crate::interfaces::core::ICoreDispatcherTrait;
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -12,7 +11,8 @@ use crate::math::ticks::{
 };
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner,
-    set_caller_address_global, swap, update_position,
+    set_caller_address_global, swap, update_position, get_declared_class_hash,
+    event_logger, EventLoggerTrait, EventLogger,
 };
 use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
 use crate::tests::mocks::locker::{
@@ -30,10 +30,10 @@ const TICKS_IN_ONE_PERCENT: u128 = 9950;
 mod owner_tests {
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
-    use crate::positions::Positions;
     use super::{
         Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        MockERC20, OptionTrait, TryInto, Zero, default_owner, pop_log, set_caller_address_global,
+        OptionTrait, TryInto, Zero, default_owner, set_caller_address_global,
+        get_declared_class_hash, event_logger, EventLoggerTrait,
     };
 
 
@@ -51,16 +51,16 @@ mod owner_tests {
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
+        let class_hash: ClassHash = get_declared_class_hash("Core");
+        let mut logger = event_logger();
         let core = d.deploy_core();
-        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
-            .unwrap();
+        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
 
         set_caller_address_global(default_owner());
-        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = pop_log(
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger.pop_log(
             core.contract_address,
         )
             .unwrap();
@@ -70,13 +70,13 @@ mod owner_tests {
     #[test]
     fn test_transfer_ownership() {
         let mut d: Deployer = Default::default();
+        let mut logger = event_logger();
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         assert(event.old_owner.is_zero(), 'zero');
         assert(event.new_owner == default_owner(), 'initial owner');
         assert(owned.get_owner() == default_owner(), 'is default');
@@ -85,10 +85,9 @@ mod owner_tests {
         let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = pop_log(
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
             core.contract_address,
-        )
-            .unwrap();
+        ));
         assert(event.old_owner == default_owner(), 'old owner');
         assert(event.new_owner == new_owner, 'new owner');
         assert(owned.get_owner() == new_owner, 'is new owner');
@@ -110,7 +109,10 @@ mod owner_tests {
 
     #[test]
     fn test_transfer_ownership_then_replace_class_hash_succeeds() {
+        // Declare Core BEFORE any caller changes to ensure the declaration persists
+        // across multiple set_caller_address_global() calls
         let mut d: Deployer = Default::default();
+        let class_hash: ClassHash = get_declared_class_hash("Core");
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
         set_caller_address_global(default_owner());
@@ -118,7 +120,6 @@ mod owner_tests {
         owned.transfer_ownership(new_owner);
         set_caller_address_global(new_owner);
 
-        let class_hash: ClassHash = Core::TEST_CLASS_HASH.try_into().unwrap();
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
     }
@@ -126,37 +127,42 @@ mod owner_tests {
     #[test]
     #[should_panic(expected: 'MISSING_PRIMARY_INTERFACE_ID')]
     fn test_fails_upgrading_to_other_contract_without_interface_id() {
+        // MockERC20 is not upgradeable, first call succeeds, second fails
+        // Declare MockERC20 before caller changes
         let mut d: Deployer = Default::default();
+        let mock_erc20_class_hash: ClassHash = get_declared_class_hash("MockERC20");
         let core = d.deploy_core();
         set_caller_address_global(default_owner());
-        // MockERC20 is not upgradeable, first call succeeds, second fails
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(mock_erc20_class_hash);
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(MockERC20::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(mock_erc20_class_hash);
     }
 
     #[test]
     #[should_panic(expected: 'UPGRADEABLE_ID_MISMATCH')]
     fn test_fails_upgrading_to_other_contract() {
+        // Declare Positions before caller changes
         let mut d: Deployer = Default::default();
+        let positions_class_hash: ClassHash = get_declared_class_hash("Positions");
         let core = d.deploy_core();
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
-            .replace_class_hash(Positions::TEST_CLASS_HASH.try_into().unwrap());
+            .replace_class_hash(positions_class_hash);
     }
 }
 
 mod initialize_pool_tests {
     use crate::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129, pop_log,
-        tick_to_sqrt_ratio,
+        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129,
+        tick_to_sqrt_ratio, event_logger, EventLoggerTrait,
     };
 
     #[test]
     fn test_initialize_pool_works_uninitialized() {
         let mut d: Deployer = Default::default();
+        let mut logger = event_logger();
         let core = d.deploy_core();
         let pool_key = PoolKey {
             token0: 1.try_into().unwrap(),
@@ -179,9 +185,8 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address)
-            .unwrap();
-        let event: crate::core::Core::PoolInitialized = pop_log(core.contract_address).unwrap();
+        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
+        let event: crate::core::Core::PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');
@@ -2162,8 +2167,6 @@ mod save_load_tests {
 
         token.increase_balance(locker.contract_address, 1);
         let cache_key: felt252 = 5678;
-
-        set_caller_address_global(1234567.try_into().unwrap());
 
         // important because it allows us to load
         let recipient = locker.contract_address;

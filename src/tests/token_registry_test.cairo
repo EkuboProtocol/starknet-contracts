@@ -1,13 +1,12 @@
 use core::option::OptionTrait;
-use starknet::syscalls::deploy_syscall;
-use starknet::testing::pop_log;
+use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 use starknet::{ContractAddress, get_contract_address};
 use crate::interfaces::erc20::IERC20Dispatcher;
 use crate::lens::token_registry::ITokenRegistryDispatcherTrait;
 use crate::lens::token_registry::TokenRegistry::{
     FeltIntoByteArray, Registration, get_string_metadata, ten_pow,
 };
-use crate::tests::helper::{Deployer, DeployerTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, event_logger, EventLoggerTrait};
 use crate::tests::mock_erc20::MockERC20IERC20ImplTrait;
 
 #[test]
@@ -62,10 +61,8 @@ fn deploy_test_target(a: felt252, b: ByteArray) -> ContractAddress {
     Serde::serialize(@a, ref args);
     Serde::serialize(@b, ref args);
 
-    let (address, _) = deploy_syscall(
-        TestTarget::TEST_CLASS_HASH.try_into().unwrap(), 0, args.span(), true,
-    )
-        .expect('test target deploy');
+    let contract = declare("TestTarget").unwrap().contract_class();
+    let (address, _) = contract.deploy(@args).expect('test target deploy');
 
     address
 }
@@ -101,6 +98,7 @@ fn test_get_string_metadata() {
 #[test]
 fn test_register() {
     let mut d: Deployer = Default::default();
+    let mut logger = event_logger();
 
     let core = d.deploy_core();
     let erc20 = d
@@ -110,7 +108,7 @@ fn test_register() {
     erc20.transfer(registry.contract_address, 1_000_000_000_000_000_000);
     assert_eq!(erc20.balanceOf(registry.contract_address), 1_000_000_000_000_000_000_u256);
     registry.register_token(IERC20Dispatcher { contract_address: erc20.contract_address });
-    let registration: Registration = pop_log(registry.contract_address).unwrap();
+    let registration: Registration = OptionTrait::unwrap(logger.pop_log(registry.contract_address));
     assert_eq!(
         registration,
         Registration {

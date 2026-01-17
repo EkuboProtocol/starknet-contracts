@@ -2,6 +2,7 @@ use starknet::{ContractAddress, get_block_timestamp, get_contract_address};
 use crate::streamed_payment::IStreamedPaymentDispatcherTrait;
 use crate::tests::helper::{
     Deployer, DeployerTrait, set_block_timestamp_global, set_caller_address_global,
+    set_caller_address_once,
 };
 use super::mock_erc20::MockERC20IERC20ImplTrait;
 
@@ -165,7 +166,7 @@ fn test_cancel_by_non_owner() {
             end_time: start + 15,
         );
 
-    set_caller_address_global(recipient());
+    set_caller_address_once(streamed_payment.contract_address, recipient());
     assert_eq!(streamed_payment.cancel(id), 0);
 }
 

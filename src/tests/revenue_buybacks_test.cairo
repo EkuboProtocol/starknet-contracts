@@ -3,7 +3,10 @@ use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_global};
+use crate::tests::helper::{
+    Deployer, DeployerTrait, default_owner, set_caller_address_global, stop_caller_address_global,
+    set_caller_address_once
+};
 
 fn example_config(buy_token: ContractAddress) -> Config {
     Config {
@@ -166,12 +169,14 @@ fn test_reclaim_core() {
     set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: core.contract_address }
         .transfer_ownership(rb.contract_address);
+    stop_caller_address_global();
 
     // Verify rb owns core
     let core_owned = IOwnedDispatcher { contract_address: core.contract_address };
     assert(core_owned.get_owner() == rb.contract_address, 'rb should own core');
 
     // Reclaim core
+    set_caller_address_once(rb.contract_address, default_owner());
     rb.reclaim_core();
 
     // Verify default_owner owns core again
