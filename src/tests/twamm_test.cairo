@@ -1897,6 +1897,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(token0_end_sale_rate_delta, i129 { mag: expected_sale_rate / 2, sign: true });
 
         // withdraw proceeds (same transaction)
+        set_caller_address_once(positions.contract_address, owner);
         let amount_withdrawn = positions
             .withdraw_proceeds_from_sale_to(
                 order1_id, order1_key, recipient: twamm.contract_address,
