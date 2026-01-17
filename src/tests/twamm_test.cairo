@@ -1804,9 +1804,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let sale_rate_state: SaleRateState = twamm
             .get_sale_rate_and_last_virtual_order_time(state_key);
@@ -1845,8 +1845,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(sale_rate_state.last_virtual_order_time, timestamp);
 
         // virtual orders are executed
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
@@ -1854,10 +1857,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // price 2:1
         // time window    = 256 sec
@@ -2116,9 +2115,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // no trades have been executed
         assert_eq!(reward_rate, Zero::zero());
 
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // halfway through the order duration
         let execution_timestamp = timestamp + 2040;
@@ -2134,18 +2133,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // price 2:1
         // time window    = 2,040 sec
@@ -2181,19 +2179,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 1.9996:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2267,9 +2263,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // no trades have been executed
         assert_eq!(reward_rate.value1, 0x0);
 
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // halfway through the order duration
         let execution_timestamp = timestamp + 2040;
@@ -2282,19 +2278,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2322,19 +2316,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 1.9996:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2406,9 +2398,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // no trades have been executed
         assert_eq!(reward_rate.value0, 0x0);
 
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // halfway through the order duration
         let execution_timestamp = timestamp + 2040;
@@ -2424,19 +2416,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, order1_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order1_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2474,19 +2464,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2.0002:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2557,9 +2545,9 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // no trades have been executed
         assert_eq!(reward_rate.value0, 0x0);
 
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // halfway through the order duration
         let execution_timestamp = timestamp + 2040;
@@ -2572,19 +2560,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, order1_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order1_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2612,19 +2598,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2.0002:1
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2659,7 +2643,7 @@ mod PlaceOrderOnBothSides {
         SwapParameters, Swapped, VirtualOrdersExecuted, get_contract_address, i129,
         liquidity_delta_to_amount_delta, max_bounds, max_liquidity, min_sqrt_ratio,
         next_sqrt_ratio_from_amount0, place_order,  set_block_timestamp_global,
-        set_caller_address_global, set_up_twamm, tick_to_sqrt_ratio, event_logger, EventLoggerTrait};
+        set_caller_address_global, set_caller_address_once, set_up_twamm, tick_to_sqrt_ratio, event_logger, EventLoggerTrait};
 
     #[test]
     fn test_place_orders_0() {
@@ -2705,9 +2689,9 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let (order2_id, order2_key, order2_info) = place_order(
             positions,
@@ -2719,8 +2703,8 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
@@ -2741,19 +2725,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order2_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order2_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1 (sqrt_ratio ~= 1.414213)
         // time window           = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2807,19 +2789,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 1.999798971:1 (sqrt_ratio ~= 1.414142)
         // time window           = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -2946,8 +2926,11 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order3_info.sale_rate + order4_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
@@ -2960,11 +2943,6 @@ mod PlaceOrderOnBothSides {
             virtual_orders_executed_event.token1_sale_rate,
             order3_info.sale_rate + order4_info.sale_rate,
         );
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1 (sqrt_ratio ~= 1.414213)
         // time window           = 2,040 sec
         // token0 sale-rate      = (5,000 / 4,080) + (5,000 / 4,080) ~= 2.4509803921 per sec
@@ -2997,19 +2975,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, 0);
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, 0);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, 0);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 1.999798971:1 (sqrt_ratio ~= 1.414142)
         // time window           = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803921 per sec
@@ -3035,7 +3011,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(reward_rate.value1, 646436826018820399037308779763206);
 
         // Withdraw proceeds for order1
-        set_caller_address_global(owner0);
+        set_caller_address_once(positions.contract_address, owner0);
         positions.withdraw_proceeds_from_sale_to_self(order1_id, order1_key);
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
@@ -3046,7 +3022,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9998994896890281902354);
 
         // Withdraw proceeds for order2
-        set_caller_address_global(owner1);
+        set_caller_address_once(positions.contract_address, owner1);
         positions.withdraw_proceeds_from_sale_to_self(order2_id, order2_key);
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
@@ -3057,7 +3033,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 9998994896890281902354);
 
         // Withdraw proceeds for order3
-        set_caller_address_global(owner0);
+        set_caller_address_once(positions.contract_address, owner0);
         positions.withdraw_proceeds_from_sale_to_self(order3_id, order3_key);
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
@@ -3068,7 +3044,7 @@ mod PlaceOrderOnBothSides {
         assert_eq!(event.amount, 2500251309367428138952);
 
         // Withdraw proceeds for order4
-        set_caller_address_global(owner1);
+        set_caller_address_once(positions.contract_address, owner1);
         positions.withdraw_proceeds_from_sale_to_self(order4_id, order4_key);
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
@@ -3124,9 +3100,9 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let amount = 1_000_000 * 1000000000000000000;
         let (order2_id, order2_key, order2_info) = place_order(
@@ -3139,8 +3115,8 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
@@ -3155,19 +3131,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order2_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order2_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 100_000_000:1 (sqrt_ratio ~= 9999.97522858)
         // time window           = 2,040 sec
         // token0 sale-rate      = 1 / 4,080 ~= 0.0002450980392 per sec
@@ -3223,6 +3197,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+            .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
@@ -3248,9 +3224,6 @@ mod PlaceOrderOnBothSides {
         let reward_rate = twamm.get_reward_rate(state_key);
         assert_eq!(reward_rate.value0, 7442596134135909449644066);
         assert_eq!(reward_rate.value1, 16297524176447550573952502577853100130768);
-
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
-            .unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
@@ -3321,9 +3294,9 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let amount = 10_000 * 1000000000000000000;
         let (order2_id, order2_key, order2_info) = place_order(
@@ -3336,8 +3309,8 @@ mod PlaceOrderOnBothSides {
             order2_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
@@ -3352,19 +3325,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order2_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order2_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 0.5:1 (sqrt_ratio ~= 0.707106)
         // token0 time window    = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -3424,8 +3395,6 @@ mod PlaceOrderOnBothSides {
         // check second swap
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         // price 0.501062076:1 (sqrt_ratio ~= 0.707857)
         // token0 time window    = 256 sec (difference between order1 and order2 end times)
@@ -3440,6 +3409,8 @@ mod PlaceOrderOnBothSides {
 
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
@@ -3523,9 +3494,9 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let (order2_id, order2_key, order2_info) = place_order(
             positions,
@@ -3537,8 +3508,8 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
@@ -3577,19 +3548,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order2_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order2_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1 (sqrt_ratio ~= 1.414213)
         // time window           = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
@@ -3690,9 +3659,9 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let (order2_id, order2_key, order2_info) = place_order(
             positions,
@@ -3704,8 +3673,8 @@ mod PlaceOrderOnBothSides {
             order_end_time,
             amount,
         );
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         let state_key: StateKey = setup.pool_key.into();
 
@@ -3725,6 +3694,9 @@ mod PlaceOrderOnBothSides {
         let amount_delta = 1 * 1000000000000000000;
         setup.token0.increase_balance(positions.contract_address, amount_delta);
         setup.token1.increase_balance(positions.contract_address, amount_delta);
+        // Position #1 is owned by liquidity_provider (42), need to cheat caller
+        set_caller_address_once(positions.contract_address, 42.try_into().unwrap());
+        set_caller_address_once(positions.contract_address, 42.try_into().unwrap());
         positions.deposit(1, setup.pool_key, bounds, 0);
 
         let sale_rate_state: SaleRateState = twamm
@@ -3733,19 +3705,17 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.token1_sale_rate, order2_info.sale_rate);
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
+        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
         let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
             .unwrap();
+        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
+        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
 
         assert_eq!(virtual_orders_executed_event.key.token0, state_key.token0);
         assert_eq!(virtual_orders_executed_event.key.token1, state_key.token1);
         assert_eq!(virtual_orders_executed_event.key.fee, state_key.fee);
         assert_eq!(virtual_orders_executed_event.token0_sale_rate, order1_info.sale_rate);
         assert_eq!(virtual_orders_executed_event.token1_sale_rate, order2_info.sale_rate);
-
-        let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
-        let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
-
         // price 2:1 (sqrt_ratio ~= 1.414213)
         // time window           = 2,040 sec
         // token0 sale-rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
