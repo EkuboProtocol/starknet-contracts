@@ -1054,6 +1054,7 @@ mod CancelOrderTests {
             .balanceOf(owner);
 
         // Per-call cheating for positions methods with callbacks
+        set_caller_address_once(positions.contract_address, owner);
         let amount_refunded = positions
             .decrease_sale_rate_to_self(order1_id, order1_key, order1_state.sale_rate);
 
