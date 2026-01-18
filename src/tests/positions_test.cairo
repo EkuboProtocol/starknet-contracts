@@ -16,13 +16,12 @@ use crate::interfaces::positions::{
 };
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
-use crate::positions::Positions;
 use crate::positions::Positions::amount_to_limit_order_liquidity;
 use crate::tests::helper::{
-    Deployer, DeployerTrait, FEE_ONE_PERCENT, IPositionsDispatcherIntoILockerDispatcher,
-    SetupPoolResult, default_owner, set_caller_address_global, stop_caller_address_global, set_caller_address,
-    stop_caller_address, set_caller_address_once, set_caller_address_for_calls, swap, get_declared_class_hash,
-    event_logger, EventLoggerTrait,
+    Deployer, DeployerTrait, EventLoggerTrait, FEE_ONE_PERCENT,
+    IPositionsDispatcherIntoILockerDispatcher, SetupPoolResult, default_owner, event_logger,
+    get_declared_class_hash, set_caller_address_for_calls, set_caller_address_global,
+    set_caller_address_once, stop_caller_address_global, swap,
 };
 use crate::tests::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait,
@@ -47,15 +46,20 @@ fn test_replace_class_hash_can_be_called_by_owner() {
         );
     let positions = d.deploy_positions(setup.core);
 
-    OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(positions.contract_address));
+    OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::components::owned::Owned::OwnershipTransferred,
+            >(positions.contract_address),
+    );
 
     set_caller_address_global(default_owner());
     IUpgradeableDispatcher { contract_address: positions.contract_address }
         .replace_class_hash(class_hash);
 
-    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(logger.pop_log(
-        positions.contract_address,
-    ));
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = OptionTrait::unwrap(
+        logger.pop_log(positions.contract_address),
+    );
     assert(event.new_class_hash == class_hash, 'event.class_hash');
 }
 
@@ -102,9 +106,7 @@ fn test_locked_cannot_be_called_directly() {
 }
 
 #[test]
-#[should_panic(
-    expected: 'MIN_LIQUIDITY',
-)]
+#[should_panic(expected: 'MIN_LIQUIDITY')]
 fn test_deposit_fails_min_liquidity() {
     let mut d: Deployer = Default::default();
     let setup = d
@@ -881,19 +883,17 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             collect_fees: false,
         );
 
-    assert(amount0 == 49500489, 'amount0 less 1%');
-    assert(amount1 == 49499508, 'amount1 less 1%');
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == amount0
-            .into(),
-        'balance0',
+    assert_eq!(amount0, 50000494, "amount0");
+    assert_eq!(amount1, 49999504, "amount1");
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
+        amount0.into(),
+        "balance0",
     );
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == amount1
-            .into(),
-        'balance1',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
+        amount1.into(),
+        "balance1",
     );
 
     // fees are not withdrawn with the principal
@@ -927,15 +927,15 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 17, 'fees0 withdrawn');
     assert(amount1 == 7, 'fees1 withdrawn');
 
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 17),
-        'balance0',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
+        (50000494 + 17),
+        "balance0",
     );
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 7),
-        'balance1',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
+        (49999504 + 7),
+        "balance1",
     );
 
     // withdraw quarter
@@ -950,18 +950,18 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token1: 0,
         );
 
-    assert(amount0 == 24750244, 'quarter');
-    assert(amount1 == 24749754, 'quarter');
+    assert_eq!(amount0, 25000247, "quarter0");
+    assert_eq!(amount1, 24999752, "quarter1");
 
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 17 + 24750244),
-        'balance0',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
+        (50000494 + 17 + 25000247),
+        "balance0",
     );
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 7 + 24749754),
-        'balance1',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
+        (49999504 + 7 + 24999752),
+        "balance1",
     );
 
     // withdraw remainder
@@ -976,65 +976,19 @@ fn test_deposit_then_partial_withdraw_with_fees() {
             min_token1: 0,
         );
 
-    assert(amount0 == 24750244, 'remainder');
-    assert(amount1 == 24749754, 'remainder');
+    assert_eq!(amount0, 25000247, "remainder0");
+    assert_eq!(amount1, 24999752, "remainder1");
 
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }
-            .balanceOf(caller) == (49500489 + 17 + 24750244 + amount0.into()),
-        'balance0',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
+        (50000494 + 17 + 25000247 + amount0.into()),
+        "balance0",
     );
-    assert(
-        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }
-            .balanceOf(caller) == (49499508 + 7 + 24749754 + amount1.into()),
-        'balance1',
+    assert_eq!(
+        IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
+        (49999504 + 7 + 24999752 + amount1.into()),
+        "balance1",
     );
-}
-
-
-#[test]
-fn test_deposit_withdraw_protocol_fee_then_deposit() {
-    let mut d: Deployer = Default::default();
-    let setup = d
-        .setup_pool(
-            fee: FEE_ONE_PERCENT,
-            tick_spacing: 1,
-            initial_tick: Zero::zero(),
-            extension: Zero::zero(),
-        );
-    let positions = d.deploy_positions(setup.core);
-    let bounds = Bounds {
-        lower: i129 { mag: 1000, sign: true }, upper: i129 { mag: 1000, sign: false },
-    };
-    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
-
-    let recipient = 80085.try_into().unwrap();
-
-    setup.token0.increase_balance(positions.contract_address, 100000000);
-    setup.token1.increase_balance(positions.contract_address, 100000000);
-    let liquidity = positions
-        .deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
-
-    positions
-        .withdraw_v2(
-            id: token_id,
-            pool_key: setup.pool_key,
-            bounds: bounds,
-            liquidity: liquidity,
-            min_token0: 0,
-            min_token1: 0,
-        );
-
-    set_caller_address_once(setup.core.contract_address, default_owner());
-    setup
-        .core
-        .withdraw_protocol_fees(recipient: recipient, token: setup.pool_key.token0, amount: 1);
-    set_caller_address_once(setup.core.contract_address, default_owner());
-    setup.core.withdraw_all_protocol_fees(recipient: recipient, token: setup.pool_key.token1);
-
-    setup.token0.increase_balance(positions.contract_address, 100000000);
-    setup.token1.increase_balance(positions.contract_address, 100000000);
-    positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 100);
 }
 
 #[test]
@@ -1588,11 +1542,7 @@ fn test_create_position_in_range_after_swap_no_fees() {
 }
 
 #[test]
-#[should_panic(
-    expected: (
-        'MUST_COLLECT_FEES',
-    ),
-)]
+#[should_panic(expected: ('MUST_COLLECT_FEES',))]
 fn test_withdraw_not_collected_fees_token1() {
     let caller = 1.try_into().unwrap();
     let mut d: Deployer = Default::default();
@@ -1638,11 +1588,7 @@ fn test_withdraw_not_collected_fees_token1() {
 }
 
 #[test]
-#[should_panic(
-    expected: (
-        'MUST_COLLECT_FEES',
-    ),
-)]
+#[should_panic(expected: ('MUST_COLLECT_FEES',))]
 fn test_withdraw_not_collected_fees_token0() {
     let caller = 1.try_into().unwrap();
     let mut d: Deployer = Default::default();

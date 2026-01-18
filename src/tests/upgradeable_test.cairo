@@ -2,10 +2,9 @@ use starknet::ClassHash;
 use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use crate::interfaces::upgradeable::IUpgradeableDispatcherTrait;
 use crate::tests::helper::{
-    Deployer, DeployerTrait, default_owner, set_caller_address_global, set_caller_address_once,
-    get_declared_class_hash, event_logger, EventLoggerTrait,
+    Deployer, DeployerTrait, EventLoggerTrait, default_owner, event_logger, get_declared_class_hash,
+    set_caller_address_global, set_caller_address_once,
 };
-use crate::tests::mocks::mock_upgradeable::MockUpgradeable;
 
 #[test]
 fn test_replace_class_hash() {
@@ -16,8 +15,14 @@ fn test_replace_class_hash() {
     set_caller_address_global(default_owner());
     mock_upgradeable.replace_class_hash(class_hash);
 
-    logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(mock_upgradeable.contract_address).unwrap();
-    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger.pop_log(mock_upgradeable.contract_address).unwrap();
+    logger
+        .pop_log::<
+            crate::components::owned::Owned::OwnershipTransferred,
+        >(mock_upgradeable.contract_address)
+        .unwrap();
+    let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger
+        .pop_log(mock_upgradeable.contract_address)
+        .unwrap();
     assert(event.new_class_hash == class_hash, 'event.class_hash');
 }
 

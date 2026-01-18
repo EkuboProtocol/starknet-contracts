@@ -1,12 +1,12 @@
 use core::option::OptionTrait;
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::{ContractAddress, get_contract_address};
 use crate::interfaces::erc20::IERC20Dispatcher;
 use crate::lens::token_registry::ITokenRegistryDispatcherTrait;
 use crate::lens::token_registry::TokenRegistry::{
     FeltIntoByteArray, Registration, get_string_metadata, ten_pow,
 };
-use crate::tests::helper::{Deployer, DeployerTrait, event_logger, EventLoggerTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, EventLoggerTrait, event_logger};
 use crate::tests::mock_erc20::MockERC20IERC20ImplTrait;
 
 #[test]

@@ -141,7 +141,7 @@ pub trait IExtension<TContractState> {
 
 #[starknet::interface]
 pub trait ICore<TContractState> {
-    // Get the amount of withdrawal fees collected for the protocol
+    // Get the amount of protocol fees collected
     fn get_protocol_fees_collected(self: @TContractState, token: ContractAddress) -> u128;
 
     // Get the state of the locker with the given ID

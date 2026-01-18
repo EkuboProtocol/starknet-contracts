@@ -10,11 +10,10 @@ use crate::math::ticks::{
     tick_to_sqrt_ratio,
 };
 use crate::tests::helper::{
-    Deployer, DeployerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner,
-    set_caller_address_global, swap, update_position, get_declared_class_hash,
-    event_logger, EventLoggerTrait, EventLogger,
+    Deployer, DeployerTrait, EventLoggerTrait, FEE_ONE_PERCENT, accumulate_as_fees, default_owner,
+    event_logger, get_declared_class_hash, set_caller_address_global, swap, update_position,
 };
-use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20};
+use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 use crate::tests::mocks::locker::{
     Action, ActionResult, ICoreLockerDispatcher, ICoreLockerDispatcherTrait,
 };
@@ -31,9 +30,9 @@ mod owner_tests {
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
     use super::{
-        Core, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        OptionTrait, TryInto, Zero, default_owner, set_caller_address_global,
-        get_declared_class_hash, event_logger, EventLoggerTrait,
+        Core, Deployer, DeployerTrait, EventLoggerTrait, IUpgradeableDispatcher,
+        IUpgradeableDispatcherTrait, OptionTrait, TryInto, Zero, default_owner, event_logger,
+        get_declared_class_hash, set_caller_address_global,
     };
 
 
@@ -54,15 +53,19 @@ mod owner_tests {
         let class_hash: ClassHash = get_declared_class_hash("Core");
         let mut logger = event_logger();
         let core = d.deploy_core();
-        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
+        OptionTrait::unwrap(
+            logger
+                .pop_log::<
+                    crate::components::owned::Owned::OwnershipTransferred,
+                >(core.contract_address),
+        );
 
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger.pop_log(
-            core.contract_address,
-        )
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger
+            .pop_log(core.contract_address)
             .unwrap();
         assert(event.new_class_hash == class_hash, 'event.class_hash');
     }
@@ -74,9 +77,9 @@ mod owner_tests {
         let core = d.deploy_core();
         let owned = IOwnedDispatcher { contract_address: core.contract_address };
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         assert(event.old_owner.is_zero(), 'zero');
         assert(event.new_owner == default_owner(), 'initial owner');
         assert(owned.get_owner() == default_owner(), 'is default');
@@ -85,9 +88,9 @@ mod owner_tests {
         let new_owner = 123456789.try_into().unwrap();
         owned.transfer_ownership(new_owner);
 
-        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         assert(event.old_owner == default_owner(), 'old owner');
         assert(event.new_owner == new_owner, 'new owner');
         assert(owned.get_owner() == new_owner, 'is new owner');
@@ -155,8 +158,8 @@ mod owner_tests {
 mod initialize_pool_tests {
     use crate::math::ticks::constants::MAX_TICK_SPACING;
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero, i129,
-        tick_to_sqrt_ratio, event_logger, EventLoggerTrait,
+        Deployer, DeployerTrait, EventLoggerTrait, ICoreDispatcherTrait, OptionTrait, PoolKey, Zero,
+        event_logger, i129, tick_to_sqrt_ratio,
     };
 
     #[test]
@@ -185,8 +188,15 @@ mod initialize_pool_tests {
         assert(liquidity.is_zero(), 'tick');
         assert(fees_per_liquidity.is_zero(), 'fpl');
 
-        OptionTrait::unwrap(logger.pop_log::<crate::components::owned::Owned::OwnershipTransferred>(core.contract_address));
-        let event: crate::core::Core::PoolInitialized = logger.pop_log(core.contract_address).unwrap();
+        OptionTrait::unwrap(
+            logger
+                .pop_log::<
+                    crate::components::owned::Owned::OwnershipTransferred,
+                >(core.contract_address),
+        );
+        let event: crate::core::Core::PoolInitialized = logger
+            .pop_log(core.contract_address)
+            .unwrap();
         assert(event.pool_key == pool_key, 'event.pool_key');
         assert(event.initial_tick == i129 { mag: 1000, sign: true }, 'event.initial_tick');
         assert(event.sqrt_ratio == tick_to_sqrt_ratio(event.initial_tick), 'event.sqrt_ratio');
@@ -822,11 +832,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'INSUFFICIENT_BALANCE',
-        ),
-    )]
+    #[should_panic(expected: ('INSUFFICIENT_BALANCE',))]
     fn test_flash_borrow_more_than_core_balance() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
@@ -873,11 +879,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'INVALID_LOCKER_ID',
-        ),
-    )]
+    #[should_panic(expected: ('INVALID_LOCKER_ID',))]
     fn test_assert_locker_id_call_wrong() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -891,11 +893,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'RL_INVALID_LOCKER_ID',
-        ),
-    )]
+    #[should_panic(expected: ('RL_INVALID_LOCKER_ID',))]
     fn test_relock_call_fails_invalid_id() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -950,11 +948,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'BOUNDS_TICK_SPACING',
-        ),
-    )]
+    #[should_panic(expected: ('BOUNDS_TICK_SPACING',))]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_lower() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -977,11 +971,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'BOUNDS_TICK_SPACING',
-        ),
-    )]
+    #[should_panic(expected: ('BOUNDS_TICK_SPACING',))]
     fn test_small_amount_liquidity_add_tick_spacing_not_divisible_upper() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -1005,11 +995,7 @@ mod locks {
 
 
     #[test]
-    #[should_panic(
-        expected: (
-            'BOUNDS_TICK_SPACING',
-        ),
-    )]
+    #[should_panic(expected: ('BOUNDS_TICK_SPACING',))]
     fn test_small_amount_liquidity_add_no_tokens() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -1061,11 +1047,7 @@ mod locks {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'NOT_EXTENSION',
-        ),
-    )]
+    #[should_panic(expected: ('NOT_EXTENSION',))]
     fn test_accumulate_fees_per_liquidity_not_extension() {
         let mut d: Deployer = Default::default();
         let setup = d
@@ -1251,8 +1233,8 @@ mod locks {
             'ticks initialized',
         );
 
-        assert(delta.amount0 == i129 { mag: 494999999, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 494999999, sign: true }, 'amount1_delta');
+        assert_eq!(delta.amount0, i129 { mag: 499999999, sign: true }, "amount0");
+        assert_eq!(delta.amount1, i129 { mag: 499999999, sign: true }, "amount1");
     }
 
     #[test]
@@ -1304,8 +1286,8 @@ mod locks {
             'ticks initialized',
         );
 
-        assert(delta.amount0 == i129 { mag: 989999999, sign: true }, 'amount0');
-        assert(delta.amount1 == i129 { mag: 989999999, sign: true }, 'amount1_delta');
+        assert_eq!(delta.amount0, i129 { mag: 999999999, sign: true }, "amount0");
+        assert_eq!(delta.amount1, i129 { mag: 999999999, sign: true }, "amount1");
     }
 
     #[test]
@@ -2155,7 +2137,7 @@ mod save_load_tests {
     use crate::tests::mocks::locker::{Action, ActionResult};
     use super::{
         Deployer, DeployerTrait, ICoreDispatcherTrait, ICoreLockerDispatcherTrait,
-        IMockERC20DispatcherTrait, SavedBalanceKey, set_caller_address_global,
+        IMockERC20DispatcherTrait, SavedBalanceKey,
     };
 
     #[test]

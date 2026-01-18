@@ -24,10 +24,9 @@ use crate::math::twamm::{
     calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, calculate_sale_rate, constants,
 };
 use crate::tests::helper::{
-    Deployer, DeployerTrait, FEE_ONE_PERCENT, SetupPoolResult, default_owner,
-    set_block_timestamp_global, set_caller_address_global, set_caller_address,
-    set_caller_address_once, stop_caller_address_global, update_position,
-    get_declared_class_hash, event_logger, EventLoggerTrait,
+    Deployer, DeployerTrait, EventLogger, EventLoggerTrait, FEE_ONE_PERCENT, SetupPoolResult,
+    default_owner, event_logger, get_declared_class_hash, set_block_timestamp_global,
+    set_caller_address_global, set_caller_address_once, stop_caller_address_global, update_position,
 };
 use crate::tests::mock_erc20::{IMockERC20Dispatcher, IMockERC20DispatcherTrait};
 use crate::tests::mocks::locker::{Action, ICoreLockerDispatcherTrait};
@@ -60,7 +59,7 @@ impl PoolKeyIntoStateKey of Into<PoolKey, StateKey> {
 fn test_debug_positions_set_twamm() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
-    
+
     set_block_timestamp_global(1);
     let twamm = d.deploy_twamm(core);
     ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
@@ -75,54 +74,50 @@ fn test_debug_positions_set_twamm() {
     let positions = d.deploy_positions(setup.core);
     set_caller_address_global(default_owner());
     positions.set_twamm(twamm.contract_address);
-    
+
     // Stop global cheat before using single-call cheat
     stop_caller_address_global();
-    
+
     // Use single-call cheating - only affects direct call, not callbacks from Core
     let liquidity_provider: ContractAddress = 42.try_into().unwrap();
-    
+
     let bounds = max_bounds(MAX_TICK_SPACING);
     setup.token0.increase_balance(positions.contract_address, 1000000000000000000);
     setup.token1.increase_balance(positions.contract_address, 1000000000000000000);
-    
+
     set_caller_address_once(positions.contract_address, liquidity_provider);
-    positions.mint_and_deposit_and_clear_both(
-        pool_key: setup.pool_key,
-        bounds: bounds,
-        min_liquidity: 1000,
-    );
+    positions
+        .mint_and_deposit_and_clear_both(
+            pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1000,
+        );
 }
 
 mod UpgradableTest {
-    use crate::extensions::twamm::TWAMM;
     use super::{
-        ClassHash, Deployer, DeployerTrait, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        default_owner, set_caller_address_global, get_declared_class_hash,
-        event_logger, EventLoggerTrait};
+        ClassHash, Deployer, DeployerTrait, EventLogger, EventLoggerTrait, IUpgradeableDispatcher,
+        IUpgradeableDispatcherTrait, OptionTrait, default_owner, event_logger,
+        get_declared_class_hash, set_caller_address_global,
+    };
 
     #[test]
     fn test_replace_class_hash_can_be_called_by_owner() {
         let mut d: Deployer = Default::default();
-
-        let mut logger = event_logger();
         let class_hash: ClassHash = get_declared_class_hash("TWAMM");
-        let mut logger = event_logger();
+        let mut logger: EventLogger = event_logger();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
-        let _event: crate::components::owned::Owned::OwnershipTransferred = logger.pop_log(
-            twamm.contract_address,
-        )
-            .unwrap();
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
 
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: twamm.contract_address }
             .replace_class_hash(class_hash);
 
-        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced = logger.pop_log(
-            twamm.contract_address,
-        )
-            .unwrap();
+        let event: crate::components::upgradeable::Upgradeable::ClassHashReplaced =
+            OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
         assert(event.new_class_hash == class_hash, 'event.class_hash');
     }
 }
@@ -130,8 +125,9 @@ mod UpgradableTest {
 mod BitmapTest {
     use super::{
         Deployer, DeployerTrait, ITWAMMDispatcherTrait, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO,
-        StateKey, i129, place_order, set_block_timestamp_global, set_up_twamm, time_to_word_and_bit_index,
-        word_and_bit_index_to_time, event_logger, EventLoggerTrait};
+        StateKey, event_logger, i129, place_order, set_block_timestamp_global, set_up_twamm,
+        time_to_word_and_bit_index, word_and_bit_index_to_time,
+    };
 
     fn assert_case_time(time: u64, location: (u128, u8)) {
         let (word, bit) = time_to_word_and_bit_index(time);
@@ -166,7 +162,7 @@ mod BitmapTest {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -228,15 +224,16 @@ mod PoolTests {
     use super::{
         Bounds, Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
         IPositionsDispatcherTrait, ITWAMMDispatcher, ITWAMMDispatcherTrait, MAX_TICK_SPACING,
-        PoolKey, TICKS_IN_ONE_PERCENT, Zero, i129, max_bounds, max_liquidity, set_caller_address_global,
-        set_caller_address_once, tick_to_sqrt_ratio, update_position, event_logger, EventLoggerTrait};
+        PoolKey, TICKS_IN_ONE_PERCENT, Zero, event_logger, i129, max_bounds, max_liquidity,
+        set_caller_address_once, tick_to_sqrt_ratio, update_position,
+    };
 
     #[test]
     #[should_panic(expected: 'TICK_SPACING')]
     fn test_before_initialize_pool_invalid_tick_spacing() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
         let (token0, token1) = d.deploy_two_mock_tokens();
@@ -259,7 +256,7 @@ mod PoolTests {
     fn test_before_initialize_pool_valid_tick_spacing() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
         let (token0, token1) = d.deploy_two_mock_tokens();
@@ -279,15 +276,11 @@ mod PoolTests {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'BOUNDS',
-        ),
-    )]
+    #[should_panic(expected: ('BOUNDS',))]
     fn test_before_update_position_invalid_bounds() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
@@ -338,7 +331,7 @@ mod PoolTests {
     fn test_before_update_position_valid_bounds() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let twamm = d.deploy_twamm(core);
         ITWAMMDispatcher { contract_address: twamm.contract_address }.update_call_points();
@@ -388,10 +381,11 @@ mod PoolTests {
 
 mod PlaceOrdersCheckDeltaAndNet {
     use super::{
-        Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, OrderUpdated,
-        PoolKeyIntoStateKey, SIXTEEN_POW_TWO, StateKey, VirtualOrdersExecuted, calculate_sale_rate,
-        i129, place_order, set_block_timestamp_global, set_caller_address_global, set_up_twamm,
-        to_duration, event_logger, EventLoggerTrait, stop_caller_address_global, set_caller_address_once};
+        Deployer, DeployerTrait, EventLogger, EventLoggerTrait, IPositionsDispatcherTrait,
+        ITWAMMDispatcherTrait, OptionTrait, OrderUpdated, PoolKeyIntoStateKey, SIXTEEN_POW_TWO,
+        StateKey, VirtualOrdersExecuted, calculate_sale_rate, event_logger, i129, place_order,
+        set_block_timestamp_global, set_caller_address_once, set_up_twamm, to_duration,
+    };
 
     #[test]
     fn test_place_orders_0() {
@@ -405,8 +399,7 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let mut d: Deployer = Default::default();
 
-
-        let mut logger = event_logger();
+        let mut logger: EventLogger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -418,8 +411,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -436,8 +427,10 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: VirtualOrdersExecuted = OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
+        let _event: OrderUpdated = OptionTrait::unwrap(logger.pop_log(twamm.contract_address));
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net);
@@ -455,7 +448,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount,
         );
 
-        let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: OrderUpdated = OptionTrait::unwrap(logger.pop_log(twamm.contract_address));
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
@@ -463,7 +456,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         set_block_timestamp_global(order2_end_time + 1);
         twamm.execute_virtual_orders(state_key);
 
-        let event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
+        let event: VirtualOrdersExecuted = OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
 
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
@@ -484,8 +479,7 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let mut d: Deployer = Default::default();
 
-
-        let mut logger = event_logger();
+        let mut logger: EventLogger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -497,8 +491,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -515,8 +507,10 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let state_key: StateKey = setup.pool_key.into();
 
-        let _event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
-        let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: VirtualOrdersExecuted = OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
+        let _event: OrderUpdated = OptionTrait::unwrap(logger.pop_log(twamm.contract_address));
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net);
@@ -534,7 +528,7 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount,
         );
 
-        let _event: OrderUpdated = logger.pop_log(twamm.contract_address).unwrap();
+        let _event: OrderUpdated = OptionTrait::unwrap(logger.pop_log(twamm.contract_address));
 
         let sale_rate_net = twamm.get_sale_rate_net(state_key, order1_end_time);
         assert_eq!(sale_rate_net, expected_sale_rate_net * 2);
@@ -542,7 +536,9 @@ mod PlaceOrdersCheckDeltaAndNet {
         set_block_timestamp_global(order2_end_time + 1);
         twamm.execute_virtual_orders(state_key);
 
-        let event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address).unwrap();
+        let event: VirtualOrdersExecuted = OptionTrait::unwrap(
+            logger.pop_log(twamm.contract_address),
+        );
 
         assert_eq!(event.key.token0, state_key.token0);
         assert_eq!(event.key.token1, state_key.token1);
@@ -564,8 +560,7 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let mut d: Deployer = Default::default();
 
-
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -577,8 +572,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -644,8 +637,7 @@ mod PlaceOrdersCheckDeltaAndNet {
 
         let mut d: Deployer = Default::default();
 
-
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -657,8 +649,6 @@ mod PlaceOrdersCheckDeltaAndNet {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -715,10 +705,11 @@ mod PlaceOrdersCheckDeltaAndNet {
 
 mod PlaceOrderAndCheckExecutionTimesAndRates {
     use super::{
-        Deployer, DeployerTrait, ITWAMMDispatcherTrait, OrderUpdated, PoolInitialized,
-        PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey,
-        VirtualOrdersExecuted, i129, place_order, set_block_timestamp_global, set_up_twamm,
-        event_logger, EventLoggerTrait};
+        Deployer, DeployerTrait, EventLoggerTrait, ITWAMMDispatcherTrait, OrderUpdated,
+        PoolInitialized, PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE,
+        StateKey, VirtualOrdersExecuted, event_logger, i129, place_order,
+        set_block_timestamp_global, set_up_twamm,
+    };
 
     #[test]
     fn test_place_orders_0() {
@@ -732,12 +723,11 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -794,7 +784,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
@@ -807,8 +796,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -850,7 +837,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
@@ -863,8 +849,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = 1_000_000;
         set_block_timestamp_global(timestamp);
@@ -911,7 +895,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
@@ -924,8 +907,6 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = 1_000_000;
         set_block_timestamp_global(timestamp);
@@ -965,15 +946,15 @@ mod PlaceOrderAndCheckExecutionTimesAndRates {
 mod CancelOrderTests {
     use super::{
         Deployer, DeployerTrait, IERC20Dispatcher, IERC20DispatcherTrait, IPositionsDispatcherTrait,
-        SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, i129, place_order, set_block_timestamp_global,
-        set_caller_address_global, set_up_twamm, event_logger, EventLoggerTrait,
-        stop_caller_address_global, set_caller_address_once};
+        SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, event_logger, i129, place_order,
+        set_block_timestamp_global, set_caller_address_once, set_up_twamm,
+    };
 
     #[test]
     fn test_place_order_and_cancel_after_end_time_is_no_op() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -985,8 +966,6 @@ mod CancelOrderTests {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1017,7 +996,7 @@ mod CancelOrderTests {
     fn test_place_order_and_cancel_before_order_execution() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1029,8 +1008,6 @@ mod CancelOrderTests {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1068,15 +1045,11 @@ mod CancelOrderTests {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'MUST_WITHDRAW_PROCEEDS',
-        ),
-    )]
+    #[should_panic(expected: ('MUST_WITHDRAW_PROCEEDS',))]
     fn test_place_order_and_cancel_during_order_execution_without_withdrawing_proceeds() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1088,8 +1061,6 @@ mod CancelOrderTests {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1118,7 +1089,7 @@ mod CancelOrderTests {
     fn test_place_order_and_cancel_before_full_order_execution() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1130,8 +1101,6 @@ mod CancelOrderTests {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1161,19 +1130,20 @@ mod CancelOrderTests {
 
 mod PlaceOrdersAndUpdateSaleRate {
     use super::{
-        Deployer, DeployerTrait, FEE_ONE_PERCENT, IERC20Dispatcher, IERC20DispatcherTrait,
-        IMockERC20DispatcherTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
-        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
-        SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey, Swapped, VirtualOrdersExecuted,
-        calculate_amount_from_sale_rate, calculate_sale_rate, i129, place_order, 
-        set_block_timestamp_global, set_caller_address_global, set_up_twamm, to_duration, event_logger, EventLoggerTrait,
-        stop_caller_address_global, set_caller_address_once};
+        Deployer, DeployerTrait, EventLoggerTrait, FEE_ONE_PERCENT, IERC20Dispatcher,
+        IERC20DispatcherTrait, IMockERC20DispatcherTrait, IPositionsDispatcherTrait,
+        ITWAMMDispatcherTrait, LoadedBalance, OrderProceedsWithdrawn, OrderUpdated, PoolInitialized,
+        PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_TWO, SaleRateState, SavedBalance,
+        StateKey, Swapped, VirtualOrdersExecuted, calculate_amount_from_sale_rate,
+        calculate_sale_rate, event_logger, i129, place_order, set_block_timestamp_global,
+        set_caller_address_once, set_up_twamm, to_duration,
+    };
 
     #[test]
     fn test_update_at_order_expiry_is_no_op() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1185,8 +1155,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1214,7 +1182,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     fn test_update_after_order_expiry_is_no_op() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1226,8 +1194,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1252,15 +1218,11 @@ mod PlaceOrdersAndUpdateSaleRate {
     }
 
     #[test]
-    #[should_panic(
-        expected: (
-            'ADD_DELTA',
-        ),
-    )]
+    #[should_panic(expected: ('ADD_DELTA',))]
     fn test_update_invalid_sale_rate() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
@@ -1272,8 +1234,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_TWO;
         set_block_timestamp_global(timestamp);
@@ -1299,9 +1259,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1370,8 +1330,6 @@ mod PlaceOrdersAndUpdateSaleRate {
         set_caller_address_once(positions.contract_address, owner);
         positions.decrease_sale_rate_to_self(order1_id, order1_key, order1_info.sale_rate / 2);
 
-        
-
         let event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
         assert_eq!(event.key.token, setup.token0.contract_address);
@@ -1407,9 +1365,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1421,7 +1379,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -1515,9 +1472,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1529,7 +1486,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -1641,9 +1597,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1655,7 +1611,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -1766,9 +1721,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1780,7 +1735,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
- 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -1851,7 +1805,8 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // virtual orders are executed
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -1922,9 +1877,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = FEE_ONE_PERCENT;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -1935,7 +1890,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -1996,9 +1950,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = FEE_ONE_PERCENT;
         let initial_tick = i129 { mag: 693147, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
@@ -2010,7 +1964,6 @@ mod PlaceOrdersAndUpdateSaleRate {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-       
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2067,12 +2020,12 @@ mod PlaceOrdersAndUpdateSaleRate {
 
 mod PlaceOrderOnOneSideAndWithdrawProceeds {
     use super::{
-        Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
-        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SaleRateState, SavedBalance, StateKey, Swapped,
-        VirtualOrdersExecuted, Zero, i129, place_order, set_block_timestamp_global,
-        set_caller_address_global, set_up_twamm, event_logger, EventLoggerTrait,
-        stop_caller_address_global, set_caller_address_once};
+        Deployer, DeployerTrait, EventLoggerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait,
+        LoadedBalance, OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey,
+        PositionUpdated, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SaleRateState, SavedBalance, StateKey,
+        Swapped, VirtualOrdersExecuted, Zero, event_logger, i129, place_order,
+        set_block_timestamp_global, set_caller_address_once, set_up_twamm,
+    };
 
     #[test]
     fn test_place_orders_0() {
@@ -2081,12 +2034,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
 
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
@@ -2099,7 +2051,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-   
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2140,7 +2091,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2186,7 +2138,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2231,12 +2184,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2285,7 +2237,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2323,7 +2276,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2364,12 +2318,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2380,8 +2333,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-      
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -2423,7 +2374,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2471,7 +2423,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2512,12 +2465,11 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2529,7 +2481,6 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
- 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2567,7 +2518,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2605,7 +2557,8 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         assert_eq!(sale_rate_state.last_virtual_order_time, order1_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2642,14 +2595,15 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
 
 mod PlaceOrderOnBothSides {
     use super::{
-        Action, Deployer, DeployerTrait, ICoreLockerDispatcherTrait, IMockERC20DispatcherTrait,
-        IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance, MAX_TICK_SPACING,
-        OrderProceedsWithdrawn, OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated,
-        SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO, SaleRateState, SavedBalance, StateKey,
-        SwapParameters, Swapped, VirtualOrdersExecuted, get_contract_address, i129,
-        liquidity_delta_to_amount_delta, max_bounds, max_liquidity, min_sqrt_ratio,
-        next_sqrt_ratio_from_amount0, place_order,  set_block_timestamp_global,
-        set_caller_address_global, set_caller_address_once, set_up_twamm, tick_to_sqrt_ratio, event_logger, EventLoggerTrait};
+        Action, Deployer, DeployerTrait, EventLoggerTrait, ICoreLockerDispatcherTrait,
+        IMockERC20DispatcherTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, LoadedBalance,
+        MAX_TICK_SPACING, OrderProceedsWithdrawn, OrderUpdated, PoolInitialized,
+        PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, SIXTEEN_POW_TWO,
+        SaleRateState, SavedBalance, StateKey, SwapParameters, Swapped, VirtualOrdersExecuted,
+        event_logger, get_contract_address, i129, liquidity_delta_to_amount_delta, max_bounds,
+        max_liquidity, min_sqrt_ratio, next_sqrt_ratio_from_amount0, place_order,
+        set_block_timestamp_global, set_caller_address_once, set_up_twamm, tick_to_sqrt_ratio,
+    };
 
     #[test]
     fn test_place_orders_0() {
@@ -2657,12 +2611,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2673,8 +2626,6 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -2732,7 +2683,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2796,7 +2748,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2858,12 +2811,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -2875,7 +2827,6 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-     
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -2933,7 +2884,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -2982,7 +2934,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3068,12 +3021,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 18420685, sign: false }; // ~ 100_000_000:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3084,8 +3036,6 @@ mod PlaceOrderOnBothSides {
             amount0: 2 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -3138,7 +3088,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3203,7 +3154,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, order_end_time + 1);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3265,12 +3217,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;
@@ -3278,7 +3229,6 @@ mod PlaceOrderOnBothSides {
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0, amount1,
         );
-
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -3332,7 +3282,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3413,7 +3364,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(swapped_event.delta.amount1.sign, true);
         assert_eq!(swapped_event.delta.amount1.mag, 314372145178424505739);
 
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3462,12 +3414,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3478,8 +3429,6 @@ mod PlaceOrderOnBothSides {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -3555,7 +3504,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3628,12 +3578,11 @@ mod PlaceOrderOnBothSides {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
         let (twamm, setup, positions) = set_up_twamm(
@@ -3645,7 +3594,6 @@ mod PlaceOrderOnBothSides {
             amount1: 100_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -3712,7 +3660,8 @@ mod PlaceOrderOnBothSides {
         assert_eq!(sale_rate_state.last_virtual_order_time, execution_timestamp);
 
         let swapped_event: Swapped = logger.pop_log(core.contract_address).unwrap();
-        let virtual_orders_executed_event: VirtualOrdersExecuted = logger.pop_log(twamm.contract_address)
+        let virtual_orders_executed_event: VirtualOrdersExecuted = logger
+            .pop_log(twamm.contract_address)
             .unwrap();
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let _event: SavedBalance = logger.pop_log(core.contract_address).unwrap();
@@ -3791,13 +3740,14 @@ mod PlaceOrderOnBothSides {
 
 mod MinMaxSqrtRatio {
     use super::{
-        Deployer, DeployerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
+        Deployer, DeployerTrait, EventLoggerTrait, ICoreDispatcherTrait, IMockERC20DispatcherTrait,
         IPositionsDispatcherTrait, ITWAMMDispatcherTrait, MAX_TICK_SPACING, OrderProceedsWithdrawn,
         OrderUpdated, PoolInitialized, PoolKeyIntoStateKey, PositionUpdated, SIXTEEN_POW_ONE,
         SaleRateState, SavedBalance, StateKey, Swapped, VirtualOrdersExecuted,
-        calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, constants, get_contract_address,
-        i129, max_bounds, max_tick, min_tick, place_order,  set_block_timestamp_global,
-        set_up_twamm, event_logger, EventLoggerTrait};
+        calculate_amount_from_sale_rate, calculate_next_sqrt_ratio, constants, event_logger,
+        get_contract_address, i129, max_bounds, max_tick, min_tick, place_order,
+        set_block_timestamp_global, set_up_twamm,
+    };
 
     #[test]
     fn test_place_orders_lower_bound_tick() {
@@ -3807,12 +3757,11 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = bounds.lower;
         let (twamm, setup, positions) = set_up_twamm(
@@ -3824,7 +3773,6 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -3890,12 +3838,11 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = min_tick();
         let (twamm, setup, positions) = set_up_twamm(
@@ -3907,7 +3854,6 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -3975,12 +3921,11 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = bounds.upper;
         let (twamm, setup, positions) = set_up_twamm(
@@ -3992,7 +3937,6 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -4058,12 +4002,11 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = max_tick();
         let (twamm, setup, positions) = set_up_twamm(
@@ -4075,7 +4018,6 @@ mod MinMaxSqrtRatio {
             amount1: 10_000_000_000_000 * 1000000000000000000,
         );
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -4141,19 +4083,16 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4219,19 +4158,16 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
-
-        
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -4305,19 +4241,16 @@ mod MinMaxSqrtRatio {
 
         let mut d: Deployer = Default::default();
 
-
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 0, sign: false };
         let (twamm, setup, positions) = set_up_twamm(
             ref d, core, fee, initial_tick, amount0: 0, amount1: 0,
         );
-
-        
 
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
@@ -4386,8 +4319,9 @@ mod MinMaxSqrtRatio {
 mod GetOrderInfo {
     use super::{
         Deployer, DeployerTrait, IPositionsDispatcherTrait, ITWAMMDispatcherTrait, OrderInfo,
-        PoolKeyIntoStateKey, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, get_contract_address,
-        i129, place_order, set_block_timestamp_global, set_up_twamm, event_logger, EventLoggerTrait};
+        PoolKeyIntoStateKey, SIXTEEN_POW_ONE, SIXTEEN_POW_THREE, StateKey, event_logger,
+        get_contract_address, i129, place_order, set_block_timestamp_global, set_up_twamm,
+    };
 
     #[test]
     fn test_place_orders_and_get_order_info() {
@@ -4395,8 +4329,7 @@ mod GetOrderInfo {
 
         let mut d: Deployer = Default::default();
 
-
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
@@ -4408,8 +4341,6 @@ mod GetOrderInfo {
             amount0: 100_000_000 * 1000000000000000000,
             amount1: 100_000_000 * 1000000000000000000,
         );
-
-        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4553,8 +4484,10 @@ mod GetOrderInfo {
 
 mod PlaceOrderDurationTooLong {
     use super::{
-        Deployer, DeployerTrait, PoolInitialized, PositionUpdated, SIXTEEN_POW_ONE,
-        get_contract_address, i129, place_order,  set_block_timestamp_global, set_up_twamm, event_logger, EventLoggerTrait};
+        Deployer, DeployerTrait, EventLoggerTrait, PoolInitialized, PositionUpdated,
+        SIXTEEN_POW_ONE, event_logger, get_contract_address, i129, place_order,
+        set_block_timestamp_global, set_up_twamm,
+    };
 
     #[test]
     #[should_panic(expected: 'DURATION_EXCEEDS_MAX_U32')]
@@ -4563,16 +4496,15 @@ mod PlaceOrderDurationTooLong {
 
         let mut logger = event_logger();
         let core = d.deploy_core();
-        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(logger.pop_log(
-            core.contract_address,
-        ));
+        let _event: crate::components::owned::Owned::OwnershipTransferred = OptionTrait::unwrap(
+            logger.pop_log(core.contract_address),
+        );
         let fee = 0;
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;
         let amount1 = 10_000_000 * 1000000000000000000;
         let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
 
-        
         let _event: PoolInitialized = logger.pop_log(core.contract_address).unwrap();
         let _event: PositionUpdated = logger.pop_log(core.contract_address).unwrap();
 
@@ -4596,15 +4528,13 @@ mod PlaceOrderDurationTooLong {
     fn test_order_duration_too_long_twamm() {
         let mut d: Deployer = Default::default();
 
-        let mut logger = event_logger();
+        let mut _logger = event_logger();
         let core = d.deploy_core();
         let fee = 0;
         let initial_tick = i129 { mag: 693148, sign: true }; // ~ 0.5:1 price
         let amount0 = 10_000_000 * 1000000000000000000;
         let amount1 = 10_000_000 * 1000000000000000000;
         let (_, setup, positions) = set_up_twamm(ref d, core, fee, initial_tick, amount0, amount1);
-
-        
 
         let timestamp = SIXTEEN_POW_ONE;
         set_block_timestamp_global(timestamp);
@@ -4628,16 +4558,12 @@ fn test_withdraw_and_get_info_after_order_ends() {
 
     let mut d: Deployer = Default::default();
 
-
-    
     let core = d.deploy_core();
     let fee = 0;
     let initial_tick = i129 { mag: 693147, sign: false }; // ~ 2:1 price
     let (twamm, setup, positions) = set_up_twamm(
         ref d, core, fee, initial_tick, amount0: 10_000, amount1: 10_000,
     );
-
-    
 
     let timestamp = SIXTEEN_POW_ONE;
     set_block_timestamp_global(timestamp);
@@ -4751,7 +4677,7 @@ fn set_up_twamm_pool(
 ) -> (ITWAMMDispatcher, SetupPoolResult, IPositionsDispatcher) {
     // Stop any global caller cheat before using single-call cheat
     stop_caller_address_global();
-    
+
     let liquidity_provider = 42.try_into().unwrap();
 
     let bounds = max_bounds(MAX_TICK_SPACING);
@@ -4765,7 +4691,7 @@ fn set_up_twamm_pool(
 
     setup.token0.increase_balance(positions.contract_address, amount0);
     setup.token1.increase_balance(positions.contract_address, amount1);
-    
+
     // Use single-call cheating to avoid affecting callbacks (Core -> Positions.locked)
     set_caller_address_once(positions.contract_address, liquidity_provider);
     positions
@@ -4803,7 +4729,7 @@ fn place_order(
 
     // Use single-call cheating to avoid affecting internal calls (Positions -> Core -> Positions)
     let (id, sale_rate) = if (owner != current_contract_address) {
-        stop_caller_address_global();  // Stop any global cheat first
+        stop_caller_address_global(); // Stop any global cheat first
         set_caller_address_once(positions.contract_address, owner);
         let result = positions.mint_and_increase_sell_amount(order_key, amount);
         result

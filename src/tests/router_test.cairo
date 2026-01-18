@@ -7,8 +7,7 @@ use crate::interfaces::router::{
 };
 use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, min_tick};
 use crate::tests::helper::{
-    Deployer, DeployerTrait, set_caller_address_global, set_caller_address_once,
-    stop_caller_address_global,
+    Deployer, DeployerTrait, set_caller_address_once, stop_caller_address_global,
 };
 use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 use crate::types::bounds::Bounds;
@@ -20,11 +19,7 @@ fn recipient() -> ContractAddress {
 }
 
 #[test]
-#[should_panic(
-    expected: (
-        'NOT_INITIALIZED',
-    ),
-)]
+#[should_panic(expected: ('NOT_INITIALIZED',))]
 fn test_router_quote_not_initialized_pool() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
@@ -327,11 +322,7 @@ fn test_router_quote_multihop_routes() {
 
 
 #[test]
-#[should_panic(
-    expected: (
-        'NOT_INITIALIZED',
-    ),
-)]
+#[should_panic(expected: ('NOT_INITIALIZED',))]
 fn test_router_swap_not_initialized_pool() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
