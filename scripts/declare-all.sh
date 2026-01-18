@@ -27,7 +27,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Ensure network is valid
-if [ "$NETWORK" != "sepolia" -a "$NETWORK" != "mainnet" -a "$NETWORK" != "goerli-1" ]; then
+if [ "$NETWORK" != "sepolia" -a "$NETWORK" != "mainnet" ]; then
     echo "Invalid network: $NETWORK"
     print_usage_and_exit
 fi
@@ -36,8 +36,8 @@ fi
 scarb build
 
 declare_class_hash() {
-    local class_name=$1
-    starkli declare --watch --network "$NETWORK" --keystore-password "$STARKNET_KEYSTORE_PASSWORD" --casm-file  "target/dev/ekubo_${class_name}.compiled_contract_class.json" "target/dev/ekubo_${class_name}.contract_class.json"
+    # expects that there is an account set up named by the given network
+    sncast --account $NETWORK --wait declare --network "$NETWORK" --contract-name $1
 }
 
 echo "Declaring Core"

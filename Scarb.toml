@@ -20,7 +20,7 @@ casm = true
 
 [dev-dependencies]
 cairo_test = ">=2.15.0"
-snforge_std = ">=0.54.1"
+snforge_std = ">=0.55.0"
 
 [scripts]
 test = "snforge test"
