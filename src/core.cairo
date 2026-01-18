@@ -854,7 +854,7 @@ pub mod Core {
                 if (amount0_fee.is_non_zero() || amount1_fee.is_non_zero()) {
                     self
                         .emit(
-                            ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta }
+                            ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta },
                         );
                 }
             }
