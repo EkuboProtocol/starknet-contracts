@@ -141,8 +141,11 @@ pub trait IExtension<TContractState> {
 
 #[starknet::interface]
 pub trait ICore<TContractState> {
-    // Get the amount of withdrawal fees collected for the protocol
+    // Get the amount of protocol fees collected
     fn get_protocol_fees_collected(self: @TContractState, token: ContractAddress) -> u128;
+
+    // Get the protocol fee applied to collected swap fees
+    fn get_core_protocol_fee(self: @TContractState) -> u128;
 
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TContractState, id: u32) -> LockerState;
@@ -211,6 +214,9 @@ pub trait ICore<TContractState> {
     fn withdraw_protocol_fees(
         ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128,
     );
+
+    // Sets the protocol fee applied to collected swap fees (only the owner can call this function)
+    fn set_core_protocol_fee(ref self: TContractState, fee: u128);
 
     // Locks the core contract, allowing other functions to be called that require locking.
     // The lock callback is called with the input data, and the returned array is passed through to

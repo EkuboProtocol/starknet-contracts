@@ -4,8 +4,8 @@ use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
 use crate::interfaces::positions::IPositionsDispatcherTrait;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
 use crate::tests::helper::{
-    Deployer, DeployerTrait, default_owner, set_caller_address_global, stop_caller_address_global,
-    set_caller_address_once
+    Deployer, DeployerTrait, default_owner, set_caller_address_global, set_caller_address_once,
+    stop_caller_address_global,
 };
 
 fn example_config(buy_token: ContractAddress) -> Config {

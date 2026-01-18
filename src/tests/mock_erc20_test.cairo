@@ -1,7 +1,7 @@
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use starknet::{ContractAddress, get_contract_address};
-use crate::tests::helper::{Deployer, DeployerTrait, event_logger, EventLoggerTrait};
+use crate::tests::helper::{Deployer, DeployerTrait, EventLoggerTrait, event_logger};
 use crate::tests::mock_erc20::MockERC20::Transfer;
 use crate::tests::mock_erc20::MockERC20IERC20ImplTrait;
 

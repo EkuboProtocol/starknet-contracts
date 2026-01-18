@@ -1,18 +1,16 @@
+use core::byte_array::ByteArray;
 use core::integer::u256;
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::{Into, TryInto};
 use snforge_std::{
-    ContractClassTrait, DeclareResultTrait, declare, get_class_hash,
-    start_cheat_caller_address_global, stop_cheat_caller_address_global,
-    start_cheat_caller_address, stop_cheat_caller_address,
-    cheat_caller_address, CheatSpan,
-    start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global,
-    spy_events, EventSpy, EventSpyTrait,
+    CheatSpan, ContractClassTrait, DeclareResultTrait, EventSpy, EventSpyTrait,
+    cheat_caller_address, declare, get_class_hash, spy_events, start_cheat_block_timestamp_global,
+    start_cheat_caller_address, start_cheat_caller_address_global,
+    stop_cheat_block_timestamp_global, stop_cheat_caller_address, stop_cheat_caller_address_global,
 };
-use starknet::{ContractAddress, ClassHash};
-use core::byte_array::ByteArray;
+use starknet::{ClassHash, ContractAddress};
 use crate::components::util::serialize;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, ILockerDispatcher, SwapParameters,
@@ -23,7 +21,7 @@ use crate::interfaces::positions::IPositionsDispatcher;
 use crate::interfaces::router::IRouterDispatcher;
 use crate::interfaces::upgradeable::IUpgradeableDispatcher;
 use crate::lens::token_registry::ITokenRegistryDispatcher;
-use crate::owned_nft::{IOwnedNFTDispatcher, OwnedNFT};
+use crate::owned_nft::IOwnedNFTDispatcher;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcher};
 use crate::streamed_payment::IStreamedPaymentDispatcher;
 use crate::tests::mock_erc20::{IMockERC20Dispatcher, MockERC20IERC20ImplTrait};
@@ -52,7 +50,7 @@ pub fn event_logger() -> EventLogger {
 #[generate_trait]
 pub impl EventLoggerImpl of EventLoggerTrait {
     fn pop_log<T, +starknet::Event<T>, +Drop<T>>(
-        ref self: EventLogger, address: ContractAddress
+        ref self: EventLogger, address: ContractAddress,
     ) -> Option<T> {
         let events = self.spy.get_events().events;
         loop {
@@ -66,7 +64,7 @@ pub impl EventLoggerImpl of EventLoggerTrait {
                 let mut data = event.data.span();
                 match starknet::Event::deserialize(ref keys, ref data) {
                     Option::Some(ev) => { break Option::Some(ev); },
-                    Option::None => { continue; }
+                    Option::None => { continue; },
                 }
             }
         }
@@ -115,7 +113,7 @@ pub fn stop_caller_address_global() {
 /// Unlike set_caller_address_global, this does NOT affect calls that the target
 /// contract makes to other contracts (i.e., internal contract-to-contract calls
 /// will use the real caller, not the cheated one).
-/// 
+///
 /// Use this when you need to simulate a user calling a contract, but that contract
 /// needs to make internal calls to other contracts that check the real caller.
 pub fn set_caller_address(target_contract: ContractAddress, caller: ContractAddress) {
@@ -138,13 +136,15 @@ pub fn setup_test_caller_for_positions(caller: ContractAddress) {
 /// Sets the caller address for a specified number of calls to the target contract.
 /// This is useful when the target contract makes internal calls (callbacks) that should
 /// see the real caller, not the cheated one.
-/// 
+///
 /// Use this when you need to simulate a user calling a contract that has lock/callback patterns
 /// (like Core -> Positions.locked callbacks).
 pub fn set_caller_address_for_calls(
-    target_contract: ContractAddress, caller: ContractAddress, num_calls: usize
+    target_contract: ContractAddress, caller: ContractAddress, num_calls: usize,
 ) {
-    let span: CheatSpan = CheatSpan::TargetCalls(num_calls.try_into().expect('num_calls must be > 0'));
+    let span: CheatSpan = CheatSpan::TargetCalls(
+        num_calls.try_into().expect('num_calls must be > 0'),
+    );
     cheat_caller_address(target_contract, caller, span);
 }
 
@@ -167,11 +167,11 @@ pub fn stop_block_timestamp_global() {
 /// Gets the declared class hash for a contract.
 /// This ensures the class is declared and returns the actual runtime class hash
 /// that can be used with library_call_syscall, even after multiple caller address changes.
-/// 
+///
 /// IMPORTANT: This function must be called BEFORE any set_caller_address_global() calls
 /// to ensure the declaration persists. If called after caller changes, the declaration
 /// may not persist to library_call_syscall context.
-/// 
+///
 /// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
 /// Returns the ClassHash of the declared contract
 pub fn get_declared_class_hash(contract_name: ByteArray) -> ClassHash {
@@ -182,7 +182,7 @@ pub fn get_declared_class_hash(contract_name: ByteArray) -> ClassHash {
 
 /// Ensures a class is declared before caller address changes.
 /// This should be called early in tests that use replace_class_hash or library calls.
-/// 
+///
 /// `contract_name` - Name of the contract to declare (e.g., "Core", "Positions", "MockERC20")
 /// Returns the ClassHash of the declared contract
 pub fn ensure_class_declared(contract_name: ByteArray) -> ClassHash {
@@ -307,7 +307,9 @@ pub impl DeployerTraitImpl of DeployerTrait {
         let owned_nft_class = declare("OwnedNFT").unwrap().contract_class();
         let contract = declare("Positions").unwrap().contract_class();
         let (address, _) = contract
-            .deploy(@serialize(@(default_owner(), core, *owned_nft_class.class_hash, token_uri_base)))
+            .deploy(
+                @serialize(@(default_owner(), core, *owned_nft_class.class_hash, token_uri_base)),
+            )
             .expect('positions deploy failed');
 
         IPositionsDispatcher { contract_address: address }
