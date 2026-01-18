@@ -21,6 +21,7 @@ pub mod Core {
     use crate::math::bitmap::{
         Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
     };
+    use crate::math::fee::{accumulate_fee_amount, compute_fee};
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
     use crate::math::swap::{is_price_increasing, swap_result};
     use crate::math::ticks::{
@@ -51,6 +52,8 @@ pub mod Core {
     pub struct Storage {
         // protocol fees collected, controlled by the owner
         pub protocol_fees_collected: Map<ContractAddress, u128>,
+        // protocol fee applied to collected swap fees (0.128 fixed point)
+        pub core_protocol_fee: u128,
         // transient state of the lockers, which always starts and ends at zero
         pub lock_count: u32,
         pub locker_token_deltas: Map<(u32, ContractAddress), i129>,
@@ -397,6 +400,10 @@ pub mod Core {
             self.protocol_fees_collected.read(token)
         }
 
+        fn get_core_protocol_fee(self: @ContractState) -> u128 {
+            self.core_protocol_fee.read()
+        }
+
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.get_locker_address(id);
             let nonzero_delta_count = self.get_nonzero_delta_count(id);
@@ -506,6 +513,11 @@ pub mod Core {
                 'TOKEN_TRANSFER_FAILED',
             );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
+        }
+
+        fn set_core_protocol_fee(ref self: ContractState, fee: u128) {
+            self.require_owner();
+            self.core_protocol_fee.write(fee);
         }
 
         fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {
@@ -802,10 +814,45 @@ pub mod Core {
                     },
                 );
 
-            let delta = Delta {
+            let mut delta = Delta {
                 amount0: i129 { mag: result.fees0, sign: true },
                 amount1: i129 { mag: result.fees1, sign: true },
             };
+
+            let core_protocol_fee = self.core_protocol_fee.read();
+            let amount0_fee = compute_fee(result.fees0, core_protocol_fee);
+            let amount1_fee = compute_fee(result.fees1, core_protocol_fee);
+
+            let protocol_fee_delta = Delta {
+                amount0: i129 { mag: amount0_fee, sign: true },
+                amount1: i129 { mag: amount1_fee, sign: true },
+            };
+
+            if (amount0_fee.is_non_zero()) {
+                self
+                    .protocol_fees_collected
+                    .write(
+                        pool_key.token0,
+                        accumulate_fee_amount(
+                            self.protocol_fees_collected.read(pool_key.token0), amount0_fee,
+                        ),
+                    );
+            }
+            if (amount1_fee.is_non_zero()) {
+                self
+                    .protocol_fees_collected
+                    .write(
+                        pool_key.token1,
+                        accumulate_fee_amount(
+                            self.protocol_fees_collected.read(pool_key.token1), amount1_fee,
+                        ),
+                    );
+            }
+
+            delta -= protocol_fee_delta;
+            if (amount0_fee.is_non_zero() | amount1_fee.is_non_zero()) {
+                self.emit(ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta });
+            }
 
             self.account_pool_delta(id, pool_key, delta);
 
