@@ -718,7 +718,7 @@ pub mod Core {
             );
 
             // compute the amount deltas due to the liquidity delta
-            let mut delta = liquidity_delta_to_amount_delta(
+            let delta = liquidity_delta_to_amount_delta(
                 price.sqrt_ratio, params.liquidity_delta, sqrt_ratio_lower, sqrt_ratio_upper,
             );
 
@@ -820,38 +820,43 @@ pub mod Core {
             };
 
             let core_protocol_fee = self.core_protocol_fee.read();
-            let amount0_fee = compute_fee(result.fees0, core_protocol_fee);
-            let amount1_fee = compute_fee(result.fees1, core_protocol_fee);
+            if core_protocol_fee.is_non_zero() {
+                let amount0_fee = compute_fee(result.fees0, core_protocol_fee);
+                let amount1_fee = compute_fee(result.fees1, core_protocol_fee);
 
-            let protocol_fee_delta = Delta {
-                amount0: i129 { mag: amount0_fee, sign: true },
-                amount1: i129 { mag: amount1_fee, sign: true },
-            };
+                let protocol_fee_delta = Delta {
+                    amount0: i129 { mag: amount0_fee, sign: true },
+                    amount1: i129 { mag: amount1_fee, sign: true },
+                };
 
-            if (amount0_fee.is_non_zero()) {
-                self
-                    .protocol_fees_collected
-                    .write(
-                        pool_key.token0,
-                        accumulate_fee_amount(
-                            self.protocol_fees_collected.read(pool_key.token0), amount0_fee,
-                        ),
-                    );
-            }
-            if (amount1_fee.is_non_zero()) {
-                self
-                    .protocol_fees_collected
-                    .write(
-                        pool_key.token1,
-                        accumulate_fee_amount(
-                            self.protocol_fees_collected.read(pool_key.token1), amount1_fee,
-                        ),
-                    );
-            }
+                if (amount0_fee.is_non_zero()) {
+                    self
+                        .protocol_fees_collected
+                        .write(
+                            pool_key.token0,
+                            accumulate_fee_amount(
+                                self.protocol_fees_collected.read(pool_key.token0), amount0_fee,
+                            ),
+                        );
+                }
+                if (amount1_fee.is_non_zero()) {
+                    self
+                        .protocol_fees_collected
+                        .write(
+                            pool_key.token1,
+                            accumulate_fee_amount(
+                                self.protocol_fees_collected.read(pool_key.token1), amount1_fee,
+                            ),
+                        );
+                }
 
-            delta -= protocol_fee_delta;
-            if (amount0_fee.is_non_zero() | amount1_fee.is_non_zero()) {
-                self.emit(ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta });
+                delta -= protocol_fee_delta;
+                if (amount0_fee.is_non_zero() || amount1_fee.is_non_zero()) {
+                    self
+                        .emit(
+                            ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta }
+                        );
+                }
             }
 
             self.account_pool_delta(id, pool_key, delta);
