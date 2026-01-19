@@ -208,7 +208,7 @@ pub mod Positions {
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
         fn get_primary_interface_id(self: @ContractState) -> felt252 {
-            return selector!("crate::positions::Positions");
+            return selector!("ekubo::positions::Positions");
         }
     }
 
