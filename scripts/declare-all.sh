@@ -2,7 +2,7 @@
 
 # Function to print usage and exit
 print_usage_and_exit() {
-    echo "Usage: $0 --network {sepolia,goerli-1,mainnet}"
+    echo "Usage: $0 --network {sepolia,mainnet}"
     exit 1
 }
 
@@ -41,31 +41,21 @@ declare_class_hash() {
 }
 
 echo "Declaring Core"
-CORE_CLASS_HASH=$(declare_class_hash Core)
+declare_class_hash Core
 echo "Declaring Positions"
-POSITIONS_CLASS_HASH=$(declare_class_hash Positions)
+declare_class_hash Positions
 echo "Declaring NFT"
-NFT_CLASS_HASH=$(declare_class_hash OwnedNFT)
+declare_class_hash OwnedNFT
 echo "Declaring TWAMM"
-TWAMM_CLASS_HASH=$(declare_class_hash TWAMM)
+declare_class_hash TWAMM
 echo "Declaring LimitOrders"
-LIMIT_ORDERS_CLASS_HASH=$(declare_class_hash LimitOrders)
+declare_class_hash LimitOrders
 echo "Declaring Oracle"
-ORACLE_CLASS_HASH=$(declare_class_hash Oracle)
+declare_class_hash Oracle
 
 echo "Declaring Router"
-ROUTER_CLASS_HASH=$(declare_class_hash Router)
+declare_class_hash Router
 
 # echo "Declaring TokenRegistry"
-# TOKEN_REGISTRY_CLASS_HASH=$(declare_class_hash TokenRegistry)
-
-echo "Declared Core @ $CORE_CLASS_HASH"
-echo "Declared Positions @ $POSITIONS_CLASS_HASH"
-echo "Declared NFT @ $NFT_CLASS_HASH"
-echo "Declared TWAMM @ $TWAMM_CLASS_HASH"
-echo "Declared LimitOrders @ $LIMIT_ORDERS_CLASS_HASH"
-echo "Declared Oracle @ $ORACLE_CLASS_HASH"
-
-echo "Declared Router @ $ROUTER_CLASS_HASH"
-# echo "Declared token registry @ $TOKEN_REGISTRY_CLASS_HASH"
+# declare_class_hash TokenRegistry
 
