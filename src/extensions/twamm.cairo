@@ -23,7 +23,6 @@ pub mod TWAMM {
         ForwardCallbackData, ITWAMM, OrderInfo, OrderKey, SaleRateState, StateKey,
     };
     use crate::math::bitmap::{Bitmap, BitmapTrait};
-    use crate::math::fee::compute_fee;
     use crate::math::ticks::constants::MAX_TICK_SPACING;
     use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
     use crate::math::time::{TIME_SPACING_SIZE, to_duration, validate_time};
@@ -484,28 +483,8 @@ pub mod TWAMM {
                     let token = data.order_key.sell_token;
 
                     if (data.sale_rate_delta.sign) {
-                        // if decreasing sale rate, pay fee and withdraw funds
-                        let pool_key: PoolKey = state_key.into();
-
+                        // if decreasing sale rate, withdraw funds
                         core.load(token: token, salt: 0, amount: amount_delta);
-
-                        if (core.get_pool_liquidity(pool_key).is_non_zero()) {
-                            let fee_amount = compute_fee(amount_delta, state_key.fee);
-
-                            let (amount0, amount1) = if (data
-                                .order_key
-                                .sell_token > data
-                                .order_key
-                                .buy_token) {
-                                (0, fee_amount)
-                            } else {
-                                (fee_amount, 0)
-                            };
-
-                            core.accumulate_as_fees(pool_key, amount0, amount1);
-
-                            amount_delta -= fee_amount;
-                        }
                     } else {
                         core
                             .save(

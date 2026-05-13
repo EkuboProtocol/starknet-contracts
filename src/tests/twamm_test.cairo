@@ -1872,7 +1872,7 @@ mod PlaceOrdersAndUpdateSaleRate {
     }
 
     #[test]
-    fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token0() {
+    fn test_decrease_order_sale_rate_before_order_starts_token0_without_fee() {
         let mut d: Deployer = Default::default();
 
         let mut logger = event_logger();
@@ -1940,12 +1940,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         }
             .balanceOf(owner);
 
-        // pays 1% fee of 5000
-        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+        assert_eq!(token_balance_after - token_balance_before, 5000000000000000000000);
     }
 
     #[test]
-    fn test_decrease_order_sale_rate_before_order_starts_and_pay_fee_token1() {
+    fn test_decrease_order_sale_rate_before_order_starts_token1_without_fee() {
         let mut d: Deployer = Default::default();
 
         let mut logger = event_logger();
@@ -2013,8 +2012,7 @@ mod PlaceOrdersAndUpdateSaleRate {
         }
             .balanceOf(owner);
 
-        // pays 1% fee of 5000
-        assert_eq!(token_balance_after - token_balance_before, 4950000000000000000000);
+        assert_eq!(token_balance_after - token_balance_before, 5000000000000000000000);
     }
 }
 
