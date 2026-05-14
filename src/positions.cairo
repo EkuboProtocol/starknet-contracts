@@ -837,9 +837,9 @@ pub mod Positions {
             min_token1: u128,
             collect_fees: bool,
         ) -> (u128, u128) {
-            self.check_authorization(id);
+            let (_, caller) = self.check_authorization(id);
             let (fees0, fees1) = if collect_fees {
-                self.collect_fees_to(id, pool_key, bounds, get_contract_address())
+                self.collect_fees_to(id, pool_key, bounds, caller)
             } else {
                 (0, 0)
             };
