@@ -31,6 +31,8 @@ use crate::types::bounds::{Bounds, max_bounds};
 use crate::types::i129::i129;
 use crate::types::keys::{PoolKey, SavedBalanceKey};
 
+const POSITIONS_PROTOCOL_FEE: u128 = 68056473384187692692674921486353642291_u128; // 20% in 0.128
+
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
     let mut d: Deployer = Default::default();
@@ -925,17 +927,20 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     let (amount0, amount1) = positions
         .collect_fees(id: token_id, pool_key: setup.pool_key, bounds: bounds);
 
-    assert(amount0 == 17, 'fees0 withdrawn');
-    assert(amount1 == 7, 'fees1 withdrawn');
+    let expected_fees0 = 13;
+    let expected_fees1 = 5;
+
+    assert(amount0 == expected_fees0, 'fees0 withdrawn');
+    assert(amount1 == expected_fees1, 'fees1 withdrawn');
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17),
+        (50000494_u256 + expected_fees0.into()),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7),
+        (49999504_u256 + expected_fees1.into()),
         "balance1",
     );
 
@@ -956,12 +961,12 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17 + 25000247),
+        (50000494_u256 + expected_fees0.into() + 25000247),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7 + 24999752),
+        (49999504_u256 + expected_fees1.into() + 24999752),
         "balance1",
     );
 
@@ -982,12 +987,12 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17 + 25000247 + amount0.into()),
+        (50000494_u256 + expected_fees0.into() + 25000247 + amount0.into()),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7 + 24999752 + amount1.into()),
+        (49999504_u256 + expected_fees1.into() + 24999752 + amount1.into()),
         "balance1",
     );
 }
@@ -1235,8 +1240,11 @@ fn test_deposit_swap_round_trip_accounting() {
             collect_fees: true,
         );
 
-    assert(amount0 == 203, 'amount0 withdrawn');
-    assert(amount1 == 203, 'amount1 withdrawn');
+    let expected_fees0 = info.fees0 - compute_fee(info.fees0, POSITIONS_PROTOCOL_FEE);
+    let expected_fees1 = info.fees1 - compute_fee(info.fees1, POSITIONS_PROTOCOL_FEE);
+
+    assert(amount0 == expected_fees0, 'amount0 withdrawn');
+    assert(amount1 == expected_fees1, 'amount1 withdrawn');
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
@@ -1264,8 +1272,6 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
     positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
-
-    let positions_protocol_fee = 68056473384187692692674921486353642291_u128;
 
     setup.token0.increase_balance(setup.locker.contract_address, 99999999);
     setup.token1.increase_balance(setup.locker.contract_address, 99999999);
@@ -1295,8 +1301,8 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     );
 
     let info = positions.get_token_info(token_id, setup.pool_key, bounds);
-    let protocol_fee0 = compute_fee(info.fees0, positions_protocol_fee);
-    let protocol_fee1 = compute_fee(info.fees1, positions_protocol_fee);
+    let protocol_fee0 = compute_fee(info.fees0, POSITIONS_PROTOCOL_FEE);
+    let protocol_fee1 = compute_fee(info.fees1, POSITIONS_PROTOCOL_FEE);
 
     set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
