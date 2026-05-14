@@ -151,6 +151,36 @@ fn test_set_call_points_emits_extension_call_points_set_event() {
     assert(event.call_points == all_call_points(), 'event.call_points');
 }
 
+#[test]
+fn test_set_call_points_does_not_emit_event_when_unchanged() {
+    let mut deployer: Deployer = Default::default();
+    let mut logger = event_logger();
+    let core = deployer.deploy_core();
+    let extension = deployer.deploy_mock_extension(core, all_call_points());
+
+    OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::components::owned::Owned::OwnershipTransferred,
+            >(core.contract_address),
+    );
+    OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::core::Core::ExtensionCallPointsSet,
+            >(core.contract_address),
+    );
+    extension.change_call_points(all_call_points());
+    assert(
+        logger
+            .pop_log::<
+                crate::core::Core::ExtensionCallPointsSet,
+            >(core.contract_address)
+            .is_none(),
+        'event',
+    );
+}
+
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
     assert(call.token0 == pool_key.token0, 'token0 matches');
     assert(call.token1 == pool_key.token1, 'token1 matches');

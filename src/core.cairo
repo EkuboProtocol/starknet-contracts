@@ -1110,8 +1110,11 @@ pub mod Core {
         fn set_call_points(ref self: ContractState, call_points: CallPoints) {
             assert(call_points != Default::default(), 'INVALID_CALL_POINTS');
             let extension = get_caller_address();
+            let existing_call_points = self.extension_call_points.read(extension);
             self.extension_call_points.write(extension, call_points);
-            self.emit(ExtensionCallPointsSet { extension, call_points });
+            if existing_call_points != call_points {
+                self.emit(ExtensionCallPointsSet { extension, call_points });
+            }
         }
 
         // Returns the call points for the given extension.
