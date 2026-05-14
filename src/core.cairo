@@ -152,6 +152,12 @@ pub mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
+    pub struct ExtensionRegistered {
+        pub extension: ContractAddress,
+        pub call_points: CallPoints,
+    }
+
+    #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
         #[flat]
@@ -166,6 +172,7 @@ pub mod Core {
         SavedBalance: SavedBalance,
         LoadedBalance: LoadedBalance,
         FeesAccumulated: FeesAccumulated,
+        ExtensionRegistered: ExtensionRegistered,
     }
 
     #[generate_trait]
@@ -1102,7 +1109,9 @@ pub mod Core {
 
         fn set_call_points(ref self: ContractState, call_points: CallPoints) {
             assert(call_points != Default::default(), 'INVALID_CALL_POINTS');
-            self.extension_call_points.write(get_caller_address(), call_points);
+            let extension = get_caller_address();
+            self.extension_call_points.write(extension, call_points);
+            self.emit(ExtensionRegistered { extension, call_points });
         }
 
         // Returns the call points for the given extension.
