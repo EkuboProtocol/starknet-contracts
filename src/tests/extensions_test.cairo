@@ -177,7 +177,7 @@ fn test_set_call_points_does_not_emit_event_when_unchanged() {
                 crate::core::Core::ExtensionCallPointsSet,
             >(core.contract_address)
             .is_none(),
-        'event',
+        'event should not be emitted',
     );
 }
 
