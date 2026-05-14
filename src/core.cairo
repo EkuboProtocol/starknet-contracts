@@ -51,7 +51,7 @@ pub mod Core {
     pub struct Storage {
         // protocol fees collected, controlled by the owner
         pub protocol_fees_collected: Map<ContractAddress, u128>,
-        // protocol fee applied to collected swap fees (0.128 fixed point)
+        // legacy no-op protocol fee slot kept for backward storage compatibility
         pub core_protocol_fee: u128,
         // transient state of the lockers, which always starts and ends at zero
         pub lock_count: u32,
@@ -89,13 +89,6 @@ pub mod Core {
         pub recipient: ContractAddress,
         pub token: ContractAddress,
         pub amount: u128,
-    }
-
-    #[derive(starknet::Event, Drop)]
-    pub struct ProtocolFeesPaid {
-        pub pool_key: PoolKey,
-        pub position_key: PositionKey,
-        pub delta: Delta,
     }
 
     #[derive(starknet::Event, Drop)]
@@ -156,7 +149,6 @@ pub mod Core {
         #[flat]
         UpgradeableEvent: upgradeable_component::Event,
         OwnedEvent: owned_component::Event,
-        ProtocolFeesPaid: ProtocolFeesPaid,
         ProtocolFeesWithdrawn: ProtocolFeesWithdrawn,
         PoolInitialized: PoolInitialized,
         PositionUpdated: PositionUpdated,
@@ -399,10 +391,6 @@ pub mod Core {
             self.protocol_fees_collected.read(token)
         }
 
-        fn get_core_protocol_fee(self: @ContractState) -> u128 {
-            self.core_protocol_fee.read()
-        }
-
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.get_locker_address(id);
             let nonzero_delta_count = self.get_nonzero_delta_count(id);
@@ -512,11 +500,6 @@ pub mod Core {
                 'TOKEN_TRANSFER_FAILED',
             );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
-        }
-
-        fn set_core_protocol_fee(ref self: ContractState, fee: u128) {
-            self.require_owner();
-            self.core_protocol_fee.write(fee);
         }
 
         fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {

@@ -146,7 +146,6 @@ pub mod Positions {
         salt: felt252,
         bounds: Bounds,
         recipient: ContractAddress,
-        collect_protocol_fees: bool,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -216,6 +215,7 @@ pub mod Positions {
     }
 
     const PROTOCOL_FEES_SALT: felt252 = 'PROTOCOL_FEES';
+    const PROTOCOL_FEE: u128 = 68056473384187692692674921486353642291_u128; // 20% in 0.128
 
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
@@ -241,14 +241,11 @@ pub mod Positions {
             pool_key: PoolKey,
             bounds: Bounds,
             recipient: ContractAddress,
-            collect_protocol_fees: bool,
         ) -> (u128, u128) {
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectFees(
-                    CollectFeesCallbackData {
-                        bounds, pool_key, salt: id.into(), recipient, collect_protocol_fees,
-                    },
+                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient },
                 ),
             );
 
@@ -368,39 +365,33 @@ pub mod Positions {
                 LockCallbackData::CollectFees(data) => {
                     let mut delta = core.collect_fees(data.pool_key, data.salt, data.bounds);
 
-                    if data.collect_protocol_fees {
-                        let core_protocol_fee = core.get_core_protocol_fee();
+                    let protocol_fee0 = compute_fee(delta.amount0.mag, PROTOCOL_FEE);
+                    let protocol_fee1 = compute_fee(delta.amount1.mag, PROTOCOL_FEE);
 
-                        if core_protocol_fee.is_non_zero() {
-                            let protocol_fee0 = compute_fee(delta.amount0.mag, core_protocol_fee);
-                            let protocol_fee1 = compute_fee(delta.amount1.mag, core_protocol_fee);
+                    if protocol_fee0.is_non_zero() {
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(),
+                                    token: data.pool_key.token0,
+                                    salt: PROTOCOL_FEES_SALT,
+                                },
+                                protocol_fee0,
+                            );
+                        delta.amount0.mag -= protocol_fee0;
+                    }
 
-                            if protocol_fee0.is_non_zero() {
-                                core
-                                    .save(
-                                        SavedBalanceKey {
-                                            owner: get_contract_address(),
-                                            token: data.pool_key.token0,
-                                            salt: PROTOCOL_FEES_SALT,
-                                        },
-                                        protocol_fee0,
-                                    );
-                                delta.amount0.mag -= protocol_fee0;
-                            }
-
-                            if protocol_fee1.is_non_zero() {
-                                core
-                                    .save(
-                                        SavedBalanceKey {
-                                            owner: get_contract_address(),
-                                            token: data.pool_key.token1,
-                                            salt: PROTOCOL_FEES_SALT,
-                                        },
-                                        protocol_fee1,
-                                    );
-                                delta.amount1.mag -= protocol_fee1;
-                            }
-                        }
+                    if protocol_fee1.is_non_zero() {
+                        core
+                            .save(
+                                SavedBalanceKey {
+                                    owner: get_contract_address(),
+                                    token: data.pool_key.token1,
+                                    salt: PROTOCOL_FEES_SALT,
+                                },
+                                protocol_fee1,
+                            );
+                        delta.amount1.mag -= protocol_fee1;
                     }
 
                     if delta.amount0.is_non_zero() {
@@ -848,7 +839,7 @@ pub mod Positions {
         ) -> (u128, u128) {
             self.check_authorization(id);
             let (fees0, fees1) = if collect_fees {
-                self.collect_fees_to(id, pool_key, bounds, get_caller_address(), true)
+                self.collect_fees_to(id, pool_key, bounds, get_contract_address())
             } else {
                 (0, 0)
             };
@@ -895,7 +886,7 @@ pub mod Positions {
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> (u128, u128) {
             let (_, caller) = self.check_authorization(id);
-            self.collect_fees_to(id, pool_key, bounds, caller, false)
+            self.collect_fees_to(id, pool_key, bounds, caller)
         }
 
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {

@@ -1265,10 +1265,7 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     setup.token1.increase_balance(positions.contract_address, 10000);
     positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    let core_protocol_fee = 170141183460469231731687303715884105728_u128;
-    set_caller_address_global(default_owner());
-    setup.core.set_core_protocol_fee(core_protocol_fee);
-    stop_caller_address_global();
+    let positions_protocol_fee = 68056473384187692692674921486353642291_u128;
 
     setup.token0.increase_balance(setup.locker.contract_address, 99999999);
     setup.token1.increase_balance(setup.locker.contract_address, 99999999);
@@ -1298,8 +1295,8 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     );
 
     let info = positions.get_token_info(token_id, setup.pool_key, bounds);
-    let protocol_fee0 = compute_fee(info.fees0, core_protocol_fee);
-    let protocol_fee1 = compute_fee(info.fees1, core_protocol_fee);
+    let protocol_fee0 = compute_fee(info.fees0, positions_protocol_fee);
+    let protocol_fee1 = compute_fee(info.fees1, positions_protocol_fee);
 
     set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
