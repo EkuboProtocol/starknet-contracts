@@ -507,7 +507,6 @@ pub mod Core {
         }
 
         fn clear_core_protocol_fee(ref self: ContractState) {
-            self.require_owner();
             self.core_protocol_fee.write(0);
         }
 

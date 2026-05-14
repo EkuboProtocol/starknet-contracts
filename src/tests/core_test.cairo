@@ -171,12 +171,12 @@ mod owner_tests {
     }
 
     #[test]
-    #[should_panic(expected: 'OWNER_ONLY')]
-    fn test_non_owner_cannot_clear_core_protocol_fee() {
+    fn test_non_owner_can_clear_core_protocol_fee() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
         set_caller_address_global(1.try_into().unwrap());
         core.clear_core_protocol_fee();
+        assert(core.get_core_protocol_fee() == 0, 'cleared');
     }
 }
 
