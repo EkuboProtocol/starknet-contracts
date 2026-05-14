@@ -176,15 +176,13 @@ pub mod RevenueBuybacks {
                 );
             }
 
-            let positions = self.positions.read();
+            let positions_dispatcher = self.positions.read();
             let token_id = self.token_id.read();
-            self
-                .positions
-                .read()
+            positions_dispatcher
                 .withdraw_protocol_fees(
-                    recipient: positions.contract_address, token: sell_token, amount: amount,
+                    recipient: positions_dispatcher.contract_address, token: sell_token, amount: amount,
                 );
-            positions
+            positions_dispatcher
                 .increase_sell_amount(
                     token_id,
                     OrderKey {

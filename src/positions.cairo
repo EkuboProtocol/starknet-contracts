@@ -804,32 +804,30 @@ pub mod Positions {
 
             let mut protocol_fees0 = 0;
             let mut protocol_fees1 = 0;
-            if collect_fees {
-                let core_protocol_fee = self.core.read().get_core_protocol_fee();
-                if core_protocol_fee.is_non_zero() {
-                    protocol_fees0 = compute_fee(fees0, core_protocol_fee);
-                    protocol_fees1 = compute_fee(fees1, core_protocol_fee);
+            let core_protocol_fee = self.core.read().get_core_protocol_fee();
+            if core_protocol_fee.is_non_zero() {
+                protocol_fees0 = compute_fee(fees0, core_protocol_fee);
+                protocol_fees1 = compute_fee(fees1, core_protocol_fee);
 
-                    if protocol_fees0.is_non_zero() {
-                        self
-                            .protocol_fees_collected
-                            .write(
-                                pool_key.token0,
-                                accumulate_fee_amount(
-                                    self.protocol_fees_collected.read(pool_key.token0), protocol_fees0,
-                                ),
-                            );
-                    }
-                    if protocol_fees1.is_non_zero() {
-                        self
-                            .protocol_fees_collected
-                            .write(
-                                pool_key.token1,
-                                accumulate_fee_amount(
-                                    self.protocol_fees_collected.read(pool_key.token1), protocol_fees1,
-                                ),
-                            );
-                    }
+                if protocol_fees0.is_non_zero() {
+                    self
+                        .protocol_fees_collected
+                        .write(
+                            pool_key.token0,
+                            accumulate_fee_amount(
+                                self.protocol_fees_collected.read(pool_key.token0), protocol_fees0,
+                            ),
+                        );
+                }
+                if protocol_fees1.is_non_zero() {
+                    self
+                        .protocol_fees_collected
+                        .write(
+                            pool_key.token1,
+                            accumulate_fee_amount(
+                                self.protocol_fees_collected.read(pool_key.token1), protocol_fees1,
+                            ),
+                        );
                 }
             }
 
