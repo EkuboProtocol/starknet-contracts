@@ -509,9 +509,9 @@ pub mod Oracle {
                 .read()
                 .set_call_points(
                     CallPoints {
-                        // to record the starting timestamp
-                        before_initialize_pool: true,
-                        after_initialize_pool: false,
+                        before_initialize_pool: false,
+                        // to record the starting timestamp after the pool is initialized
+                        after_initialize_pool: true,
                         // in order to record the price at the end of the last block
                         before_swap: true,
                         after_swap: false,
@@ -534,6 +534,12 @@ pub mod Oracle {
     #[abi(embed_v0)]
     impl OracleExtension of IExtension<ContractState> {
         fn before_initialize_pool(
+            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
+        ) {
+            assert(false, 'Call point not used');
+        }
+
+        fn after_initialize_pool(
             ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
         ) {
             self.check_caller_is_core();
@@ -559,12 +565,6 @@ pub mod Oracle {
                         token0: pool_key.token0, token1: pool_key.token1, index: 0, snapshot,
                     },
                 )
-        }
-
-        fn after_initialize_pool(
-            ref self: ContractState, caller: ContractAddress, pool_key: PoolKey, initial_tick: i129,
-        ) {
-            assert(false, 'Call point not used');
         }
 
         fn before_swap(
