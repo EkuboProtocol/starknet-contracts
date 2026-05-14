@@ -132,7 +132,7 @@ fn test_change_call_points_random_call_points() {
 }
 
 #[test]
-fn test_set_call_points_emits_extension_registered_event() {
+fn test_set_call_points_emits_extension_call_points_set_event() {
     let mut deployer: Deployer = Default::default();
     let mut logger = event_logger();
     let core = deployer.deploy_core();
@@ -144,7 +144,9 @@ fn test_set_call_points_emits_extension_registered_event() {
                 crate::components::owned::Owned::OwnershipTransferred,
             >(core.contract_address),
     );
-    let event: crate::core::Core::ExtensionRegistered = logger.pop_log(core.contract_address).unwrap();
+    let event: crate::core::Core::ExtensionCallPointsSet = logger
+        .pop_log(core.contract_address)
+        .unwrap();
     assert(event.extension == extension.contract_address, 'event.extension');
     assert(event.call_points == all_call_points(), 'event.call_points');
 }

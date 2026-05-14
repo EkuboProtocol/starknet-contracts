@@ -152,7 +152,7 @@ pub mod Core {
     }
 
     #[derive(starknet::Event, Drop)]
-    pub struct ExtensionRegistered {
+    pub struct ExtensionCallPointsSet {
         pub extension: ContractAddress,
         pub call_points: CallPoints,
     }
@@ -172,7 +172,7 @@ pub mod Core {
         SavedBalance: SavedBalance,
         LoadedBalance: LoadedBalance,
         FeesAccumulated: FeesAccumulated,
-        ExtensionRegistered: ExtensionRegistered,
+        ExtensionCallPointsSet: ExtensionCallPointsSet,
     }
 
     #[generate_trait]
@@ -1111,7 +1111,7 @@ pub mod Core {
             assert(call_points != Default::default(), 'INVALID_CALL_POINTS');
             let extension = get_caller_address();
             self.extension_call_points.write(extension, call_points);
-            self.emit(ExtensionRegistered { extension, call_points });
+            self.emit(ExtensionCallPointsSet { extension, call_points });
         }
 
         // Returns the call points for the given extension.
