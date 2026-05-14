@@ -164,12 +164,14 @@ fn test_set_call_points_does_not_emit_event_when_unchanged() {
                 crate::components::owned::Owned::OwnershipTransferred,
             >(core.contract_address),
     );
-    OptionTrait::unwrap(
+    let initial_event = OptionTrait::unwrap(
         logger
             .pop_log::<
                 crate::core::Core::ExtensionCallPointsSet,
             >(core.contract_address),
     );
+    assert(initial_event.extension == extension.contract_address, 'event.extension');
+    assert(initial_event.call_points == all_call_points(), 'event.call_points');
     extension.change_call_points(all_call_points());
     assert(
         logger
