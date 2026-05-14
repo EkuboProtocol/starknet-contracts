@@ -29,7 +29,7 @@ use crate::tests::mock_erc20::{
 };
 use crate::types::bounds::{Bounds, max_bounds};
 use crate::types::i129::i129;
-use crate::types::keys::PoolKey;
+use crate::types::keys::{PoolKey, SavedBalanceKey};
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
@@ -1320,6 +1320,30 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     );
     assert(
         positions.get_protocol_fees_collected(setup.pool_key.token1) == protocol_fee1, 'positions fee1',
+    );
+    assert(
+        setup
+            .core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: positions.contract_address,
+                    token: setup.pool_key.token0,
+                    salt: 'PROTOCOL_FEES',
+                },
+            ) == protocol_fee0,
+        'saved fee0',
+    );
+    assert(
+        setup
+            .core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: positions.contract_address,
+                    token: setup.pool_key.token1,
+                    salt: 'PROTOCOL_FEES',
+                },
+            ) == protocol_fee1,
+        'saved fee1',
     );
     assert(setup.core.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'core fee0');
     assert(setup.core.get_protocol_fees_collected(setup.pool_key.token1) == 0, 'core fee1');

@@ -5,10 +5,7 @@ pub mod Positions {
     use core::num::traits::Zero;
     use core::option::{Option, OptionTrait};
     use core::traits::Into;
-    use starknet::storage::{
-        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess,
-    };
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{
         ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
     };
@@ -40,7 +37,7 @@ pub mod Positions {
     use crate::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
-    use crate::math::fee::{accumulate_fee_amount, compute_fee};
+    use crate::math::fee::compute_fee;
     use crate::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
@@ -51,7 +48,7 @@ pub mod Positions {
     use crate::types::bounds::{Bounds, max_bounds};
     use crate::types::delta::Delta;
     use crate::types::i129::i129;
-    use crate::types::keys::{PoolKey, PositionKey};
+    use crate::types::keys::{PoolKey, PositionKey, SavedBalanceKey};
     use crate::types::pool_price::PoolPrice;
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
@@ -75,7 +72,6 @@ pub mod Positions {
         nft: IOwnedNFTDispatcher,
         twamm: ITWAMMDispatcher,
         limit_orders: ILimitOrdersDispatcher,
-        protocol_fees_collected: Map<ContractAddress, u128>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -150,6 +146,14 @@ pub mod Positions {
         salt: felt252,
         bounds: Bounds,
         recipient: ContractAddress,
+        collect_protocol_fees: bool,
+    }
+
+    #[derive(Serde, Copy, Drop)]
+    struct WithdrawProtocolFeesCallbackData {
+        token: ContractAddress,
+        amount: u128,
+        recipient: ContractAddress,
     }
 
     #[derive(Serde, Copy, Drop)]
@@ -201,6 +205,7 @@ pub mod Positions {
         Deposit: DepositCallbackData,
         Withdraw: WithdrawCallbackData,
         CollectFees: CollectFeesCallbackData,
+        WithdrawProtocolFees: WithdrawProtocolFeesCallbackData,
         GetPoolPrice: PoolKey,
         IncreaseSaleRate: IncreaseSaleRateCallbackData,
         DecreaseSaleRate: DecreaseSaleRateCallbackData,
@@ -209,6 +214,8 @@ pub mod Positions {
         MoveToLimitOrderPrice: MoveToLimitOrderPriceCallbackData,
         CloseOrder: CloseOrderCallbackData,
     }
+
+    const PROTOCOL_FEES_SALT: felt252 = 'PROTOCOL_FEES';
 
     #[abi(embed_v0)]
     impl PositionsHasInterface of IHasInterface<ContractState> {
@@ -234,12 +241,13 @@ pub mod Positions {
             pool_key: PoolKey,
             bounds: Bounds,
             recipient: ContractAddress,
+            collect_protocol_fees: bool,
         ) -> (u128, u128) {
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectFees(
                     CollectFeesCallbackData {
-                        bounds, pool_key, salt: id.into(), recipient,
+                        bounds, pool_key, salt: id.into(), recipient, collect_protocol_fees,
                     },
                 ),
             );
@@ -358,7 +366,42 @@ pub mod Positions {
                     serialize(@delta).span()
                 },
                 LockCallbackData::CollectFees(data) => {
-                    let delta = core.collect_fees(data.pool_key, data.salt, data.bounds);
+                    let mut delta = core.collect_fees(data.pool_key, data.salt, data.bounds);
+
+                    if data.collect_protocol_fees {
+                        let core_protocol_fee = core.get_core_protocol_fee();
+
+                        if core_protocol_fee.is_non_zero() {
+                            let protocol_fee0 = compute_fee(delta.amount0.mag, core_protocol_fee);
+                            let protocol_fee1 = compute_fee(delta.amount1.mag, core_protocol_fee);
+
+                            if protocol_fee0.is_non_zero() {
+                                core
+                                    .save(
+                                        SavedBalanceKey {
+                                            owner: get_contract_address(),
+                                            token: data.pool_key.token0,
+                                            salt: PROTOCOL_FEES_SALT,
+                                        },
+                                        protocol_fee0,
+                                    );
+                                delta.amount0.mag -= protocol_fee0;
+                            }
+
+                            if protocol_fee1.is_non_zero() {
+                                core
+                                    .save(
+                                        SavedBalanceKey {
+                                            owner: get_contract_address(),
+                                            token: data.pool_key.token1,
+                                            salt: PROTOCOL_FEES_SALT,
+                                        },
+                                        protocol_fee1,
+                                    );
+                                delta.amount1.mag -= protocol_fee1;
+                            }
+                        }
+                    }
 
                     if delta.amount0.is_non_zero() {
                         core.withdraw(data.pool_key.token0, data.recipient, delta.amount0.mag);
@@ -369,6 +412,14 @@ pub mod Positions {
                     }
 
                     serialize(@delta).span()
+                },
+                LockCallbackData::WithdrawProtocolFees(data) => {
+                    if data.amount.is_non_zero() {
+                        core.load(data.token, PROTOCOL_FEES_SALT, data.amount);
+                        core.withdraw(data.token, data.recipient, data.amount);
+                    }
+
+                    serialize(@()).span()
                 },
                 LockCallbackData::GetPoolPrice(pool_key) => {
                     let price_before = core.get_pool_price(pool_key);
@@ -795,59 +846,12 @@ pub mod Positions {
             min_token1: u128,
             collect_fees: bool,
         ) -> (u128, u128) {
-            let (_, caller) = self.check_authorization(id);
+            self.check_authorization(id);
             let (fees0, fees1) = if collect_fees {
-                self.collect_fees_to(id, pool_key, bounds, get_contract_address())
+                self.collect_fees_to(id, pool_key, bounds, get_caller_address(), true)
             } else {
                 (0, 0)
             };
-
-            let mut protocol_fees0 = 0;
-            let mut protocol_fees1 = 0;
-            let core_protocol_fee = self.core.read().get_core_protocol_fee();
-            if core_protocol_fee.is_non_zero() {
-                protocol_fees0 = compute_fee(fees0, core_protocol_fee);
-                protocol_fees1 = compute_fee(fees1, core_protocol_fee);
-
-                if protocol_fees0.is_non_zero() {
-                    self
-                        .protocol_fees_collected
-                        .write(
-                            pool_key.token0,
-                            accumulate_fee_amount(
-                                self.protocol_fees_collected.read(pool_key.token0), protocol_fees0,
-                            ),
-                        );
-                }
-                if protocol_fees1.is_non_zero() {
-                    self
-                        .protocol_fees_collected
-                        .write(
-                            pool_key.token1,
-                            accumulate_fee_amount(
-                                self.protocol_fees_collected.read(pool_key.token1), protocol_fees1,
-                            ),
-                        );
-                }
-            }
-
-            let fees0_after_protocol_fee = fees0 - protocol_fees0;
-            let fees1_after_protocol_fee = fees1 - protocol_fees1;
-
-            if fees0_after_protocol_fee.is_non_zero() {
-                assert(
-                    IERC20Dispatcher { contract_address: pool_key.token0 }
-                        .transfer(caller, fees0_after_protocol_fee.into()),
-                    'TOKEN_TRANSFER_FAILED',
-                );
-            }
-            if fees1_after_protocol_fee.is_non_zero() {
-                assert(
-                    IERC20Dispatcher { contract_address: pool_key.token1 }
-                        .transfer(caller, fees1_after_protocol_fee.into()),
-                    'TOKEN_TRANSFER_FAILED',
-                );
-            }
 
             let (principal0, principal1) = if liquidity.is_non_zero() {
                 self.withdraw_v2(id, pool_key, bounds, liquidity, min_token0, min_token1)
@@ -855,7 +859,7 @@ pub mod Positions {
                 (0, 0)
             };
 
-            (principal0 + fees0_after_protocol_fee, principal1 + fees1_after_protocol_fee)
+            (principal0 + fees0, principal1 + fees1)
         }
 
         fn withdraw_v2(
@@ -891,11 +895,18 @@ pub mod Positions {
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> (u128, u128) {
             let (_, caller) = self.check_authorization(id);
-            self.collect_fees_to(id, pool_key, bounds, caller)
+            self.collect_fees_to(id, pool_key, bounds, caller, false)
         }
 
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
-            self.protocol_fees_collected.read(token)
+            self
+                .core
+                .read()
+                .get_saved_balance(
+                    SavedBalanceKey {
+                        owner: get_contract_address(), token, salt: PROTOCOL_FEES_SALT,
+                    },
+                )
         }
 
         fn withdraw_all_protocol_fees(
@@ -913,12 +924,13 @@ pub mod Positions {
             amount: u128,
         ) {
             self.require_owner();
-            let collected: u128 = self.protocol_fees_collected.read(token);
-            self.protocol_fees_collected.write(token, collected - amount);
-
-            assert(
-                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into()),
-                'TOKEN_TRANSFER_FAILED',
+            call_core_with_callback::<
+                LockCallbackData, (),
+            >(
+                self.core.read(),
+                @LockCallbackData::WithdrawProtocolFees(
+                    WithdrawProtocolFeesCallbackData { token, amount, recipient },
+                ),
             );
         }
 
