@@ -21,7 +21,6 @@ pub mod Core {
     use crate::math::bitmap::{
         Bitmap, BitmapTrait, tick_to_word_and_bit_index, word_and_bit_index_to_tick,
     };
-    use crate::math::fee::{accumulate_fee_amount, compute_fee};
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
     use crate::math::swap::{is_price_increasing, swap_result};
     use crate::math::ticks::{
@@ -814,50 +813,10 @@ pub mod Core {
                     },
                 );
 
-            let mut delta = Delta {
+            let delta = Delta {
                 amount0: i129 { mag: result.fees0, sign: true },
                 amount1: i129 { mag: result.fees1, sign: true },
             };
-
-            let core_protocol_fee = self.core_protocol_fee.read();
-            if core_protocol_fee.is_non_zero() {
-                let amount0_fee = compute_fee(result.fees0, core_protocol_fee);
-                let amount1_fee = compute_fee(result.fees1, core_protocol_fee);
-
-                let protocol_fee_delta = Delta {
-                    amount0: i129 { mag: amount0_fee, sign: true },
-                    amount1: i129 { mag: amount1_fee, sign: true },
-                };
-
-                if (amount0_fee.is_non_zero()) {
-                    self
-                        .protocol_fees_collected
-                        .write(
-                            pool_key.token0,
-                            accumulate_fee_amount(
-                                self.protocol_fees_collected.read(pool_key.token0), amount0_fee,
-                            ),
-                        );
-                }
-                if (amount1_fee.is_non_zero()) {
-                    self
-                        .protocol_fees_collected
-                        .write(
-                            pool_key.token1,
-                            accumulate_fee_amount(
-                                self.protocol_fees_collected.read(pool_key.token1), amount1_fee,
-                            ),
-                        );
-                }
-
-                delta -= protocol_fee_delta;
-                if (amount0_fee.is_non_zero() || amount1_fee.is_non_zero()) {
-                    self
-                        .emit(
-                            ProtocolFeesPaid { pool_key, position_key, delta: protocol_fee_delta },
-                        );
-                }
-            }
 
             self.account_pool_delta(id, pool_key, delta);
 

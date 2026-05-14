@@ -5,7 +5,10 @@ pub mod Positions {
     use core::num::traits::Zero;
     use core::option::{Option, OptionTrait};
     use core::traits::Into;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
     use starknet::{
         ClassHash, ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
     };
@@ -37,6 +40,7 @@ pub mod Positions {
     use crate::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
+    use crate::math::fee::{accumulate_fee_amount, compute_fee};
     use crate::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
@@ -71,6 +75,7 @@ pub mod Positions {
         nft: IOwnedNFTDispatcher,
         twamm: ITWAMMDispatcher,
         limit_orders: ILimitOrdersDispatcher,
+        protocol_fees_collected: Map<ContractAddress, u128>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
         #[substorage(v0)]
@@ -221,6 +226,25 @@ pub mod Positions {
             let caller = get_caller_address();
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
             (nft, caller)
+        }
+
+        fn collect_fees_to(
+            ref self: ContractState,
+            id: u64,
+            pool_key: PoolKey,
+            bounds: Bounds,
+            recipient: ContractAddress,
+        ) -> (u128, u128) {
+            let delta: Delta = call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::CollectFees(
+                    CollectFeesCallbackData {
+                        bounds, pool_key, salt: id.into(), recipient,
+                    },
+                ),
+            );
+
+            (delta.amount0.mag, delta.amount1.mag)
         }
     }
 
@@ -771,11 +795,61 @@ pub mod Positions {
             min_token1: u128,
             collect_fees: bool,
         ) -> (u128, u128) {
+            let (_, caller) = self.check_authorization(id);
             let (fees0, fees1) = if collect_fees {
-                self.collect_fees(id, pool_key, bounds)
+                self.collect_fees_to(id, pool_key, bounds, get_contract_address())
             } else {
                 (0, 0)
             };
+
+            let mut protocol_fees0 = 0;
+            let mut protocol_fees1 = 0;
+            if collect_fees {
+                let core_protocol_fee = self.core.read().get_core_protocol_fee();
+                if core_protocol_fee.is_non_zero() {
+                    protocol_fees0 = compute_fee(fees0, core_protocol_fee);
+                    protocol_fees1 = compute_fee(fees1, core_protocol_fee);
+
+                    if protocol_fees0.is_non_zero() {
+                        self
+                            .protocol_fees_collected
+                            .write(
+                                pool_key.token0,
+                                accumulate_fee_amount(
+                                    self.protocol_fees_collected.read(pool_key.token0), protocol_fees0,
+                                ),
+                            );
+                    }
+                    if protocol_fees1.is_non_zero() {
+                        self
+                            .protocol_fees_collected
+                            .write(
+                                pool_key.token1,
+                                accumulate_fee_amount(
+                                    self.protocol_fees_collected.read(pool_key.token1), protocol_fees1,
+                                ),
+                            );
+                    }
+                }
+            }
+
+            let fees0_after_protocol_fee = fees0 - protocol_fees0;
+            let fees1_after_protocol_fee = fees1 - protocol_fees1;
+
+            if fees0_after_protocol_fee.is_non_zero() {
+                assert(
+                    IERC20Dispatcher { contract_address: pool_key.token0 }
+                        .transfer(caller, fees0_after_protocol_fee.into()),
+                    'TOKEN_TRANSFER_FAILED',
+                );
+            }
+            if fees1_after_protocol_fee.is_non_zero() {
+                assert(
+                    IERC20Dispatcher { contract_address: pool_key.token1 }
+                        .transfer(caller, fees1_after_protocol_fee.into()),
+                    'TOKEN_TRANSFER_FAILED',
+                );
+            }
 
             let (principal0, principal1) = if liquidity.is_non_zero() {
                 self.withdraw_v2(id, pool_key, bounds, liquidity, min_token0, min_token1)
@@ -783,7 +857,7 @@ pub mod Positions {
                 (0, 0)
             };
 
-            (principal0 + fees0, principal1 + fees1)
+            (principal0 + fees0_after_protocol_fee, principal1 + fees1_after_protocol_fee)
         }
 
         fn withdraw_v2(
@@ -819,17 +893,35 @@ pub mod Positions {
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> (u128, u128) {
             let (_, caller) = self.check_authorization(id);
+            self.collect_fees_to(id, pool_key, bounds, caller)
+        }
 
-            let delta: Delta = call_core_with_callback(
-                self.core.read(),
-                @LockCallbackData::CollectFees(
-                    CollectFeesCallbackData {
-                        bounds, pool_key, salt: id.into(), recipient: caller,
-                    },
-                ),
+        fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
+            self.protocol_fees_collected.read(token)
+        }
+
+        fn withdraw_all_protocol_fees(
+            ref self: ContractState, recipient: ContractAddress, token: ContractAddress,
+        ) -> u128 {
+            let amount_collected = self.get_protocol_fees_collected(token);
+            self.withdraw_protocol_fees(recipient, token, amount_collected);
+            amount_collected
+        }
+
+        fn withdraw_protocol_fees(
+            ref self: ContractState,
+            recipient: ContractAddress,
+            token: ContractAddress,
+            amount: u128,
+        ) {
+            self.require_owner();
+            let collected: u128 = self.protocol_fees_collected.read(token);
+            self.protocol_fees_collected.write(token, collected - amount);
+
+            assert(
+                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount.into()),
+                'TOKEN_TRANSFER_FAILED',
             );
-
-            (delta.amount0.mag, delta.amount1.mag)
         }
 
         fn deposit_last(

@@ -15,6 +15,7 @@ use crate::interfaces::positions::{
     GetTokenInfoRequest, IPositionsDispatcher, IPositionsDispatcherTrait,
 };
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use crate::math::fee::compute_fee;
 use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::positions::Positions::amount_to_limit_order_liquidity;
 use crate::tests::helper::{
@@ -1242,6 +1243,94 @@ fn test_deposit_swap_round_trip_accounting() {
     assert(info.amount1 == 9999, 'amount1 after');
     assert(info.fees0 == 0, 'fees0 withdrawn');
     assert(info.fees1 == 0, 'fees1 withdrawn');
+}
+
+#[test]
+fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
+    let caller = 1.try_into().unwrap();
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    let core_protocol_fee = 170141183460469231731687303715884105728_u128;
+    set_caller_address_global(default_owner());
+    setup.core.set_core_protocol_fee(core_protocol_fee);
+    stop_caller_address_global();
+
+    setup.token0.increase_balance(setup.locker.contract_address, 99999999);
+    setup.token1.increase_balance(setup.locker.contract_address, 99999999);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+
+    let info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let protocol_fee0 = compute_fee(info.fees0, core_protocol_fee);
+    let protocol_fee1 = compute_fee(info.fees1, core_protocol_fee);
+
+    set_caller_address_once(positions.contract_address, caller);
+    let (amount0, amount1) = positions
+        .withdraw(
+            id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: 0,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: true,
+        );
+
+    assert(amount0 == info.fees0 - protocol_fee0, 'amount0');
+    assert(amount1 == info.fees1 - protocol_fee1, 'amount1');
+    assert(
+        positions.get_protocol_fees_collected(setup.pool_key.token0) == protocol_fee0, 'positions fee0',
+    );
+    assert(
+        positions.get_protocol_fees_collected(setup.pool_key.token1) == protocol_fee1, 'positions fee1',
+    );
+    assert(setup.core.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'core fee0');
+    assert(setup.core.get_protocol_fees_collected(setup.pool_key.token1) == 0, 'core fee1');
+
+    set_caller_address_once(positions.contract_address, default_owner());
+    let withdrawn = positions
+        .withdraw_all_protocol_fees(
+            recipient: default_owner(), token: setup.pool_key.token0,
+        );
+    assert(withdrawn == protocol_fee0, 'withdrawn');
+    assert(positions.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'withdrawn fee0');
 }
 
 #[derive(Copy, Drop)]

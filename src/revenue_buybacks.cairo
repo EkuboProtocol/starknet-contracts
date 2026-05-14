@@ -22,7 +22,7 @@ pub struct Config {
 
 #[starknet::interface]
 pub trait IRevenueBuybacks<TContractState> {
-    // Returns the core contract from which the revenue is withdrawn
+    // Returns the core contract used by the positions contract
     fn get_core(self: @TContractState) -> ContractAddress;
 
     // Returns the positions contract that is used by this contract to implement the buybacks
@@ -35,7 +35,7 @@ pub trait IRevenueBuybacks<TContractState> {
     // Returns the configuration for the given sell token
     fn get_config(self: @TContractState, sell_token: ContractAddress) -> Config;
 
-    // Withdraws the specified amount of revenue from the core contract and begins a sale of the
+    // Withdraws the specified amount of revenue from the positions contract and begins a sale of the
     // token for the specified start and end time.
     fn start_buybacks(
         ref self: TContractState,
@@ -80,7 +80,7 @@ pub mod RevenueBuybacks {
     use crate::components::owned::{
         IOwnedDispatcher, IOwnedDispatcherTrait, Ownable, Owned as owned_component,
     };
-    use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+    use crate::interfaces::core::ICoreDispatcher;
     use crate::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
     use super::{Config, ContractAddress, IRevenueBuybacks, OrderKey};
 
@@ -179,7 +179,7 @@ pub mod RevenueBuybacks {
             let positions = self.positions.read();
             let token_id = self.token_id.read();
             self
-                .core
+                .positions
                 .read()
                 .withdraw_protocol_fees(
                     recipient: positions.contract_address, token: sell_token, amount: amount,
@@ -204,7 +204,7 @@ pub mod RevenueBuybacks {
             self
                 .start_buybacks(
                     sell_token,
-                    self.core.read().get_protocol_fees_collected(sell_token),
+                    self.positions.read().get_protocol_fees_collected(sell_token),
                     start_time,
                     end_time,
                 );
