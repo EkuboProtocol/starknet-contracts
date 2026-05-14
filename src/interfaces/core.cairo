@@ -144,6 +144,9 @@ pub trait ICore<TContractState> {
     // Get the amount of protocol fees collected
     fn get_protocol_fees_collected(self: @TContractState, token: ContractAddress) -> u128;
 
+    // Legacy getter for the old core protocol fee config value. Always returns 0 after upgrade.
+    fn get_core_protocol_fee(self: @TContractState) -> u128;
+
     // Get the state of the locker with the given ID
     fn get_locker_state(self: @TContractState, id: u32) -> LockerState;
 
@@ -211,6 +214,9 @@ pub trait ICore<TContractState> {
     fn withdraw_protocol_fees(
         ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128,
     );
+
+    // Clears the legacy core protocol fee storage slot (only owner).
+    fn clear_core_protocol_fee(ref self: TContractState);
 
     // Locks the core contract, allowing other functions to be called that require locking.
     // The lock callback is called with the input data, and the returned array is passed through to

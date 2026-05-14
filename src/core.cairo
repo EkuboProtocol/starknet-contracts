@@ -391,6 +391,10 @@ pub mod Core {
             self.protocol_fees_collected.read(token)
         }
 
+        fn get_core_protocol_fee(self: @ContractState) -> u128 {
+            0
+        }
+
         fn get_locker_state(self: @ContractState, id: u32) -> LockerState {
             let address = self.get_locker_address(id);
             let nonzero_delta_count = self.get_nonzero_delta_count(id);
@@ -500,6 +504,11 @@ pub mod Core {
                 'TOKEN_TRANSFER_FAILED',
             );
             self.emit(ProtocolFeesWithdrawn { recipient, token, amount });
+        }
+
+        fn clear_core_protocol_fee(ref self: ContractState) {
+            self.require_owner();
+            self.core_protocol_fee.write(0);
         }
 
         fn lock(ref self: ContractState, data: Span<felt252>) -> Span<felt252> {

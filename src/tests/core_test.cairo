@@ -30,7 +30,7 @@ mod owner_tests {
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
     use super::{
-        Core, Deployer, DeployerTrait, EventLoggerTrait, IUpgradeableDispatcher,
+        Core, Deployer, DeployerTrait, EventLoggerTrait, ICoreDispatcherTrait, IUpgradeableDispatcher,
         IUpgradeableDispatcherTrait, OptionTrait, TryInto, Zero, default_owner, event_logger,
         get_declared_class_hash, set_caller_address_global,
     };
@@ -152,6 +152,31 @@ mod owner_tests {
         set_caller_address_global(default_owner());
         IUpgradeableDispatcher { contract_address: core.contract_address }
             .replace_class_hash(positions_class_hash);
+    }
+
+    #[test]
+    fn test_get_core_protocol_fee_always_zero() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        assert(core.get_core_protocol_fee() == 0, 'core_protocol_fee');
+    }
+
+    #[test]
+    fn test_owner_can_clear_core_protocol_fee() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        set_caller_address_global(default_owner());
+        core.clear_core_protocol_fee();
+        assert(core.get_core_protocol_fee() == 0, 'cleared');
+    }
+
+    #[test]
+    #[should_panic(expected: 'OWNER_ONLY')]
+    fn test_non_owner_cannot_clear_core_protocol_fee() {
+        let mut d: Deployer = Default::default();
+        let core = d.deploy_core();
+        set_caller_address_global(1.try_into().unwrap());
+        core.clear_core_protocol_fee();
     }
 }
 

@@ -923,12 +923,15 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 0, 'fees not withdrawn');
     assert(amount1 == 0, 'fees not withdrawn');
 
+    let fees_before_collect = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let expected_fees0 = fees_before_collect.fees0
+        - compute_fee(fees_before_collect.fees0, POSITIONS_PROTOCOL_FEE);
+    let expected_fees1 = fees_before_collect.fees1
+        - compute_fee(fees_before_collect.fees1, POSITIONS_PROTOCOL_FEE);
+
     set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .collect_fees(id: token_id, pool_key: setup.pool_key, bounds: bounds);
-
-    let expected_fees0 = 13;
-    let expected_fees1 = 5;
 
     assert(amount0 == expected_fees0, 'fees0 withdrawn');
     assert(amount1 == expected_fees1, 'fees1 withdrawn');
