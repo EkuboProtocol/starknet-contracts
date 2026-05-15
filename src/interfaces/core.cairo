@@ -215,7 +215,7 @@ pub trait ICore<TContractState> {
         ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128,
     );
 
-    // Clears the legacy core protocol fee storage slot (only owner).
+    // Clears the legacy core protocol fee storage slot.
     fn clear_core_protocol_fee(ref self: TContractState);
 
     // Locks the core contract, allowing other functions to be called that require locking.

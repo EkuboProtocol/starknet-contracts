@@ -27,6 +27,7 @@ use crate::types::keys::{PoolKey, SavedBalanceKey};
 const TICKS_IN_ONE_PERCENT: u128 = 9950;
 
 mod owner_tests {
+    use snforge_std::{load, store};
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
     use super::{
@@ -165,9 +166,12 @@ mod owner_tests {
     fn test_owner_can_clear_core_protocol_fee() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
+        let core_protocol_fee_slot = selector!("core_protocol_fee");
+        store(core.contract_address, core_protocol_fee_slot, array![123].span());
+        assert(*load(core.contract_address, core_protocol_fee_slot, 1).at(0) == 123, 'set');
         set_caller_address_global(default_owner());
         core.clear_core_protocol_fee();
-        assert(core.get_core_protocol_fee() == 0, 'cleared');
+        assert(*load(core.contract_address, core_protocol_fee_slot, 1).at(0) == 0, 'cleared');
     }
 
     #[test]

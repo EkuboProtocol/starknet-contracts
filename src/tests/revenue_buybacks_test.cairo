@@ -186,3 +186,27 @@ fn test_reclaim_core() {
     let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
     assert(nft.owner_of(rb.get_token_id().into()) == rb.contract_address, 'rb should own nft');
 }
+
+#[test]
+fn test_reclaim_positions() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let positions = d.deploy_positions(core);
+
+    let (_token0, token1) = d.deploy_two_mock_tokens();
+    let config = example_config(token1.contract_address);
+
+    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
+
+    set_caller_address_global(default_owner());
+    IOwnedDispatcher { contract_address: positions.contract_address }
+        .transfer_ownership(rb.contract_address);
+    stop_caller_address_global();
+
+    let positions_owned = IOwnedDispatcher { contract_address: positions.contract_address };
+    assert(positions_owned.get_owner() == rb.contract_address, 'rb should own positions');
+
+    set_caller_address_once(rb.contract_address, default_owner());
+    rb.reclaim_positions();
+    assert(positions_owned.get_owner() == default_owner(), 'owner should own positions');
+}

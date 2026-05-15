@@ -63,6 +63,9 @@ pub trait IRevenueBuybacks<TContractState> {
 
     // Takes ownership of core back from this contract. Only callable by the owner.
     fn reclaim_core(ref self: TContractState);
+
+    // Takes ownership of positions back from this contract. Only callable by the owner.
+    fn reclaim_positions(ref self: TContractState);
 }
 
 #[starknet::contract]
@@ -232,6 +235,13 @@ pub mod RevenueBuybacks {
             self.require_owner();
             let owner = self.get_owner();
             IOwnedDispatcher { contract_address: self.core.read().contract_address }
+                .transfer_ownership(owner);
+        }
+
+        fn reclaim_positions(ref self: ContractState) {
+            self.require_owner();
+            let owner = self.get_owner();
+            IOwnedDispatcher { contract_address: self.positions.read().contract_address }
                 .transfer_ownership(owner);
         }
     }
