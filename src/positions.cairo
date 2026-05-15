@@ -235,22 +235,6 @@ pub mod Positions {
             (nft, caller)
         }
 
-        fn collect_fees_to(
-            ref self: ContractState,
-            id: u64,
-            pool_key: PoolKey,
-            bounds: Bounds,
-            recipient: ContractAddress,
-        ) -> (u128, u128) {
-            let delta: Delta = call_core_with_callback(
-                self.core.read(),
-                @LockCallbackData::CollectFees(
-                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient },
-                ),
-            );
-
-            (delta.amount0.mag, delta.amount1.mag)
-        }
     }
 
     pub(crate) fn amount_to_limit_order_liquidity(
@@ -885,7 +869,13 @@ pub mod Positions {
             ref self: ContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
         ) -> (u128, u128) {
             let (_, caller) = self.check_authorization(id);
-            self.collect_fees_to(id, pool_key, bounds, caller)
+            let delta: Delta = call_core_with_callback(
+                self.core.read(),
+                @LockCallbackData::CollectFees(
+                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient: caller },
+                ),
+            );
+            (delta.amount0.mag, delta.amount1.mag)
         }
 
         fn get_protocol_fees_collected(self: @ContractState, token: ContractAddress) -> u128 {
