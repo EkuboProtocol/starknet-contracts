@@ -30,6 +30,10 @@ fn example_config(buy_token: ContractAddress) -> Config {
     }
 }
 
+const MINT_AND_DEPOSIT_CALLS: usize = 2;
+const LARGE_SWAP_BALANCE: u128 = 99999999;
+const BUYBACK_END_TIME: u64 = 112;
+
 #[test]
 fn test_deploy_and_setup() {
     let mut d: Deployer = Default::default();
@@ -241,14 +245,16 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
 
     let caller = 1.try_into().unwrap();
     let bounds = max_bounds(MAX_TICK_SPACING);
-    set_caller_address_for_calls(positions.contract_address, caller, 2);
+    set_caller_address_for_calls(
+        positions.contract_address, caller, MINT_AND_DEPOSIT_CALLS,
+    );
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
     positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
 
-    setup.token0.increase_balance(setup.locker.contract_address, 99999999);
-    setup.token1.increase_balance(setup.locker.contract_address, 99999999);
+    setup.token0.increase_balance(setup.locker.contract_address, LARGE_SWAP_BALANCE);
+    setup.token1.increase_balance(setup.locker.contract_address, LARGE_SWAP_BALANCE);
     swap(
         setup: setup,
         amount: i129 { mag: 100000, sign: false },
@@ -290,7 +296,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
         buy_token: setup.pool_key.token1,
         fee: example_config(setup.pool_key.token1).fee,
         start_time: 0,
-        end_time: 112,
+        end_time: BUYBACK_END_TIME,
     };
 
     let rb = d
@@ -307,7 +313,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
     stop_caller_address_global();
 
     let before_order_info = positions.get_order_info(rb.get_token_id(), order_key);
-    rb.start_buybacks_all(setup.pool_key.token0, 0, 112);
+    rb.start_buybacks_all(setup.pool_key.token0, 0, BUYBACK_END_TIME);
 
     assert(positions.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'fees withdrawn');
     assert(core.get_saved_balance(saved_balance_key) == 0, 'saved withdrawn');
