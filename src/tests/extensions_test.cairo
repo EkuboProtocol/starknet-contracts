@@ -1,10 +1,12 @@
 use core::num::traits::Zero;
+use core::option::OptionTrait;
 use starknet::get_contract_address;
 use crate::interfaces::core::{
     ICoreDispatcher, ICoreDispatcherTrait, IExtensionDispatcher, IExtensionDispatcherTrait,
 };
 use crate::tests::helper::{
-    Deployer, DeployerTrait, set_caller_address_global, swap_inner, update_position_inner,
+    Deployer, DeployerTrait, EventLoggerTrait, event_logger, set_caller_address_global, swap_inner,
+    update_position_inner,
 };
 use crate::tests::mocks::locker::ICoreLockerDispatcher;
 use crate::tests::mocks::mock_extension::{
@@ -127,6 +129,58 @@ fn test_change_call_points_random_call_points() {
     assert_eq!(core.get_call_points(mock_extension.contract_address), before);
     mock_extension.change_call_points(after);
     assert_eq!(core.get_call_points(mock_extension.contract_address), after);
+}
+
+#[test]
+fn test_set_call_points_emits_extension_call_points_set_event() {
+    let mut deployer: Deployer = Default::default();
+    let mut logger = event_logger();
+    let core = deployer.deploy_core();
+    let extension = deployer.deploy_mock_extension(core, all_call_points());
+
+    OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::components::owned::Owned::OwnershipTransferred,
+            >(core.contract_address),
+    );
+    let event: crate::core::Core::ExtensionCallPointsSet = logger
+        .pop_log(core.contract_address)
+        .unwrap();
+    assert(event.extension == extension.contract_address, 'event.extension');
+    assert(event.call_points == all_call_points(), 'event.call_points');
+}
+
+#[test]
+fn test_set_call_points_does_not_emit_event_when_unchanged() {
+    let mut deployer: Deployer = Default::default();
+    let mut logger = event_logger();
+    let core = deployer.deploy_core();
+    let extension = deployer.deploy_mock_extension(core, all_call_points());
+
+    OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::components::owned::Owned::OwnershipTransferred,
+            >(core.contract_address),
+    );
+    let initial_event = OptionTrait::unwrap(
+        logger
+            .pop_log::<
+                crate::core::Core::ExtensionCallPointsSet,
+            >(core.contract_address),
+    );
+    assert(initial_event.extension == extension.contract_address, 'event.extension');
+    assert(initial_event.call_points == all_call_points(), 'event.call_points');
+    extension.change_call_points(all_call_points());
+    assert(
+        logger
+            .pop_log::<
+                crate::core::Core::ExtensionCallPointsSet,
+            >(core.contract_address)
+            .is_none(),
+        'event should not be emitted',
+    );
 }
 
 fn check_matches_pool_key(call: ExtensionCalled, pool_key: PoolKey) {
