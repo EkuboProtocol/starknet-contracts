@@ -178,9 +178,12 @@ mod owner_tests {
     fn test_non_owner_can_clear_core_protocol_fee() {
         let mut d: Deployer = Default::default();
         let core = d.deploy_core();
+        let core_protocol_fee_slot = selector!("core_protocol_fee");
+        store(core.contract_address, core_protocol_fee_slot, array![123].span());
+        assert(*load(core.contract_address, core_protocol_fee_slot, 1).at(0) == 123, 'set');
         set_caller_address_global(1.try_into().unwrap());
         core.clear_core_protocol_fee();
-        assert(core.get_core_protocol_fee() == 0, 'cleared');
+        assert(*load(core.contract_address, core_protocol_fee_slot, 1).at(0) == 0, 'cleared');
     }
 }
 
