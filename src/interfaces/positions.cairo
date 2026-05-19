@@ -145,6 +145,19 @@ pub trait IPositions<TContractState> {
         ref self: TContractState, id: u64, pool_key: PoolKey, bounds: Bounds,
     ) -> (u128, u128);
 
+    // Get the amount of protocol fees collected by the positions contract for a token.
+    fn get_protocol_fees_collected(self: @TContractState, token: ContractAddress) -> u128;
+
+    // Withdraw all protocol fees for a token to the recipient. Only callable by the owner.
+    fn withdraw_all_protocol_fees(
+        ref self: TContractState, recipient: ContractAddress, token: ContractAddress,
+    ) -> u128;
+
+    // Withdraw protocol fees for a token to the recipient. Only callable by the owner.
+    fn withdraw_protocol_fees(
+        ref self: TContractState, recipient: ContractAddress, token: ContractAddress, amount: u128,
+    );
+
     // Withdraw liquidity from a specific token ID to the caller and optionally also collect fees.
     // Must be called by an operator, approved address or the owner.
     // Deprecated: you should call withdraw_v2 instead, and call collect fees separately

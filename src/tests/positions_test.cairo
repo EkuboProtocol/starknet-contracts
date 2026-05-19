@@ -15,6 +15,7 @@ use crate::interfaces::positions::{
     GetTokenInfoRequest, IPositionsDispatcher, IPositionsDispatcherTrait,
 };
 use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+use crate::math::fee::compute_fee;
 use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::positions::Positions::amount_to_limit_order_liquidity;
 use crate::tests::helper::{
@@ -28,7 +29,9 @@ use crate::tests::mock_erc20::{
 };
 use crate::types::bounds::{Bounds, max_bounds};
 use crate::types::i129::i129;
-use crate::types::keys::PoolKey;
+use crate::types::keys::{PoolKey, SavedBalanceKey};
+
+const POSITIONS_PROTOCOL_FEE: u128 = 68056473384187692692674921486353642291_u128; // 20% in 0.128
 
 #[test]
 fn test_replace_class_hash_can_be_called_by_owner() {
@@ -920,21 +923,27 @@ fn test_deposit_then_partial_withdraw_with_fees() {
     assert(amount0 == 0, 'fees not withdrawn');
     assert(amount1 == 0, 'fees not withdrawn');
 
+    let fees_before_collect = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let expected_fees0 = fees_before_collect.fees0
+        - compute_fee(fees_before_collect.fees0, POSITIONS_PROTOCOL_FEE);
+    let expected_fees1 = fees_before_collect.fees1
+        - compute_fee(fees_before_collect.fees1, POSITIONS_PROTOCOL_FEE);
+
     set_caller_address_once(positions.contract_address, caller);
     let (amount0, amount1) = positions
         .collect_fees(id: token_id, pool_key: setup.pool_key, bounds: bounds);
 
-    assert(amount0 == 17, 'fees0 withdrawn');
-    assert(amount1 == 7, 'fees1 withdrawn');
+    assert(amount0 == expected_fees0, 'fees0 withdrawn');
+    assert(amount1 == expected_fees1, 'fees1 withdrawn');
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17),
+        (50000494_u256 + expected_fees0.into()),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7),
+        (49999504_u256 + expected_fees1.into()),
         "balance1",
     );
 
@@ -955,12 +964,12 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17 + 25000247),
+        (50000494_u256 + expected_fees0.into() + 25000247),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7 + 24999752),
+        (49999504_u256 + expected_fees1.into() + 24999752),
         "balance1",
     );
 
@@ -981,12 +990,12 @@ fn test_deposit_then_partial_withdraw_with_fees() {
 
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token0 }.balanceOf(caller),
-        (50000494 + 17 + 25000247 + amount0.into()),
+        (50000494_u256 + expected_fees0.into() + 25000247 + amount0.into()),
         "balance0",
     );
     assert_eq!(
         IMockERC20Dispatcher { contract_address: setup.pool_key.token1 }.balanceOf(caller),
-        (49999504 + 7 + 24999752 + amount1.into()),
+        (49999504_u256 + expected_fees1.into() + 24999752 + amount1.into()),
         "balance1",
     );
 }
@@ -1234,14 +1243,124 @@ fn test_deposit_swap_round_trip_accounting() {
             collect_fees: true,
         );
 
-    assert(amount0 == 203, 'amount0 withdrawn');
-    assert(amount1 == 203, 'amount1 withdrawn');
+    let expected_fees0 = info.fees0 - compute_fee(info.fees0, POSITIONS_PROTOCOL_FEE);
+    let expected_fees1 = info.fees1 - compute_fee(info.fees1, POSITIONS_PROTOCOL_FEE);
+
+    assert(amount0 == expected_fees0, 'amount0 withdrawn');
+    assert(amount1 == expected_fees1, 'amount1 withdrawn');
     info = positions.get_token_info(token_id, setup.pool_key, bounds);
     assert(info.liquidity == liquidity, 'liquidity after');
     assert(info.amount0 == 9999, 'amount0 after');
     assert(info.amount1 == 9999, 'amount1 after');
     assert(info.fees0 == 0, 'fees0 withdrawn');
     assert(info.fees1 == 0, 'fees1 withdrawn');
+}
+
+#[test]
+fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
+    let caller = 1.try_into().unwrap();
+    let mut d: Deployer = Default::default();
+    let setup = d
+        .setup_pool(
+            fee: FEE_ONE_PERCENT,
+            tick_spacing: 1,
+            initial_tick: Zero::zero(),
+            extension: Zero::zero(),
+        );
+    let positions = d.deploy_positions(setup.core);
+    stop_caller_address_global();
+    let bounds = Bounds { lower: i129 { mag: 1, sign: true }, upper: i129 { mag: 1, sign: false } };
+    set_caller_address_for_calls(positions.contract_address, caller, 2);
+    let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
+    setup.token0.increase_balance(positions.contract_address, 10000);
+    setup.token1.increase_balance(positions.contract_address, 10000);
+    positions.deposit_last(pool_key: setup.pool_key, bounds: bounds, min_liquidity: 1);
+
+    setup.token0.increase_balance(setup.locker.contract_address, 99999999);
+    setup.token1.increase_balance(setup.locker.contract_address, 99999999);
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: false }),
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: false,
+        sqrt_ratio_limit: tick_to_sqrt_ratio(i129 { mag: 2, sign: true }),
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+    swap(
+        setup: setup,
+        amount: i129 { mag: 100000, sign: false },
+        is_token1: true,
+        sqrt_ratio_limit: 0x100000000000000000000000000000000_u256,
+        recipient: Zero::zero(),
+        skip_ahead: 0,
+    );
+
+    let info = positions.get_token_info(token_id, setup.pool_key, bounds);
+    let protocol_fee0 = compute_fee(info.fees0, POSITIONS_PROTOCOL_FEE);
+    let protocol_fee1 = compute_fee(info.fees1, POSITIONS_PROTOCOL_FEE);
+
+    set_caller_address_once(positions.contract_address, caller);
+    let (amount0, amount1) = positions
+        .withdraw(
+            id: token_id,
+            pool_key: setup.pool_key,
+            bounds: bounds,
+            liquidity: 0,
+            min_token0: 0,
+            min_token1: 0,
+            collect_fees: true,
+        );
+
+    assert(amount0 == info.fees0 - protocol_fee0, 'amount0');
+    assert(amount1 == info.fees1 - protocol_fee1, 'amount1');
+    assert(
+        positions.get_protocol_fees_collected(setup.pool_key.token0) == protocol_fee0, 'positions fee0',
+    );
+    assert(
+        positions.get_protocol_fees_collected(setup.pool_key.token1) == protocol_fee1, 'positions fee1',
+    );
+    assert(
+        setup
+            .core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: positions.contract_address,
+                    token: setup.pool_key.token0,
+                    salt: 'PROTOCOL_FEES',
+                },
+            ) == protocol_fee0,
+        'saved fee0',
+    );
+    assert(
+        setup
+            .core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: positions.contract_address,
+                    token: setup.pool_key.token1,
+                    salt: 'PROTOCOL_FEES',
+                },
+            ) == protocol_fee1,
+        'saved fee1',
+    );
+    assert(setup.core.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'core fee0');
+    assert(setup.core.get_protocol_fees_collected(setup.pool_key.token1) == 0, 'core fee1');
+
+    set_caller_address_once(positions.contract_address, default_owner());
+    let withdrawn = positions
+        .withdraw_all_protocol_fees(
+            recipient: default_owner(), token: setup.pool_key.token0,
+        );
+    assert(withdrawn == protocol_fee0, 'withdrawn');
+    assert(positions.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'withdrawn fee0');
 }
 
 #[derive(Copy, Drop)]
