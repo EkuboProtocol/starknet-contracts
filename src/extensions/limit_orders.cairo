@@ -12,7 +12,9 @@ pub mod LimitOrders {
     use crate::components::clear::ClearImpl;
     use crate::components::owned::Owned as owned_component;
     use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
-    use crate::components::util::{call_core_with_callback, consume_callback_data, serialize};
+    use crate::components::util::{
+        check_caller_is_core, call_core_with_callback, consume_callback_data, serialize
+    };
     use crate::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,
         UpdatePositionParameters,
@@ -194,7 +196,7 @@ pub mod LimitOrders {
             delta: Delta,
         ) {
             let core = self.core.read();
-
+            check_caller_is_core(core);
             call_core_with_callback::<(PoolKey, u128), ()>(core, @(pool_key, params.skip_ahead));
         }
 
