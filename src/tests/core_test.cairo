@@ -31,9 +31,9 @@ mod owner_tests {
     use starknet::class_hash::ClassHash;
     use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
     use super::{
-        Core, Deployer, DeployerTrait, EventLoggerTrait, ICoreDispatcherTrait, IUpgradeableDispatcher,
-        IUpgradeableDispatcherTrait, OptionTrait, TryInto, Zero, default_owner, event_logger,
-        get_declared_class_hash, set_caller_address_global,
+        Core, Deployer, DeployerTrait, EventLoggerTrait, ICoreDispatcherTrait,
+        IUpgradeableDispatcher, IUpgradeableDispatcherTrait, OptionTrait, TryInto, Zero,
+        default_owner, event_logger, get_declared_class_hash, set_caller_address_global,
     };
 
 

@@ -35,8 +35,8 @@ pub trait IRevenueBuybacks<TContractState> {
     // Returns the configuration for the given sell token
     fn get_config(self: @TContractState, sell_token: ContractAddress) -> Config;
 
-    // Withdraws the specified amount of revenue from the positions contract and begins a sale of the
-    // token for the specified start and end time.
+    // Withdraws the specified amount of revenue from the positions contract and begins a sale of
+    // the token for the specified start and end time.
     fn start_buybacks(
         ref self: TContractState,
         sell_token: ContractAddress,
@@ -183,7 +183,9 @@ pub mod RevenueBuybacks {
             let token_id = self.token_id.read();
             positions_dispatcher
                 .withdraw_protocol_fees(
-                    recipient: positions_dispatcher.contract_address, token: sell_token, amount: amount,
+                    recipient: positions_dispatcher.contract_address,
+                    token: sell_token,
+                    amount: amount,
                 );
             positions_dispatcher
                 .increase_sell_amount(

@@ -36,8 +36,8 @@ pub mod Positions {
     };
     use crate::interfaces::positions::{GetTokenInfoRequest, GetTokenInfoResult, IPositions};
     use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
-    use crate::math::liquidity::liquidity_delta_to_amount_delta;
     use crate::math::fee::compute_fee;
+    use crate::math::liquidity::liquidity_delta_to_amount_delta;
     use crate::math::max_liquidity::{
         max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
     };
@@ -234,7 +234,6 @@ pub mod Positions {
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
             (nft, caller)
         }
-
     }
 
     pub(crate) fn amount_to_limit_order_liquidity(
@@ -872,7 +871,9 @@ pub mod Positions {
             let delta: Delta = call_core_with_callback(
                 self.core.read(),
                 @LockCallbackData::CollectFees(
-                    CollectFeesCallbackData { bounds, pool_key, salt: id.into(), recipient: caller },
+                    CollectFeesCallbackData {
+                        bounds, pool_key, salt: id.into(), recipient: caller,
+                    },
                 ),
             );
             (delta.amount0.mag, delta.amount1.mag)

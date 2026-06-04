@@ -1322,10 +1322,12 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
     assert(amount0 == info.fees0 - protocol_fee0, 'amount0');
     assert(amount1 == info.fees1 - protocol_fee1, 'amount1');
     assert(
-        positions.get_protocol_fees_collected(setup.pool_key.token0) == protocol_fee0, 'positions fee0',
+        positions.get_protocol_fees_collected(setup.pool_key.token0) == protocol_fee0,
+        'positions fee0',
     );
     assert(
-        positions.get_protocol_fees_collected(setup.pool_key.token1) == protocol_fee1, 'positions fee1',
+        positions.get_protocol_fees_collected(setup.pool_key.token1) == protocol_fee1,
+        'positions fee1',
     );
     assert(
         setup
@@ -1356,9 +1358,7 @@ fn test_withdraw_collect_fees_takes_protocol_fee_into_positions() {
 
     set_caller_address_once(positions.contract_address, default_owner());
     let withdrawn = positions
-        .withdraw_all_protocol_fees(
-            recipient: default_owner(), token: setup.pool_key.token0,
-        );
+        .withdraw_all_protocol_fees(recipient: default_owner(), token: setup.pool_key.token0);
     assert(withdrawn == protocol_fee0, 'withdrawn');
     assert(positions.get_protocol_fees_collected(setup.pool_key.token0) == 0, 'withdrawn fee0');
 }

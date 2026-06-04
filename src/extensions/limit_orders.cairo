@@ -13,7 +13,7 @@ pub mod LimitOrders {
     use crate::components::owned::Owned as owned_component;
     use crate::components::upgradeable::{IHasInterface, Upgradeable as upgradeable_component};
     use crate::components::util::{
-        check_caller_is_core, call_core_with_callback, consume_callback_data, serialize
+        call_core_with_callback, check_caller_is_core, consume_callback_data, serialize,
     };
     use crate::interfaces::core::{
         ICoreDispatcher, ICoreDispatcherTrait, IExtension, IForwardee, ILocker, SwapParameters,

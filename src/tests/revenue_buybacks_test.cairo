@@ -2,19 +2,20 @@ use core::num::traits::Zero;
 use starknet::ContractAddress;
 use crate::components::owned::{IOwnedDispatcher, IOwnedDispatcherTrait};
 use crate::interfaces::core::ICoreDispatcherTrait;
-use crate::interfaces::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey};
 use crate::interfaces::erc721::{IERC721Dispatcher, IERC721DispatcherTrait};
+use crate::interfaces::extensions::twamm::{ITWAMMDispatcher, ITWAMMDispatcherTrait, OrderKey};
 use crate::interfaces::positions::IPositionsDispatcherTrait;
-use crate::math::ticks::{constants::MAX_TICK_SPACING, tick_to_sqrt_ratio};
+use crate::math::ticks::constants::MAX_TICK_SPACING;
+use crate::math::ticks::tick_to_sqrt_ratio;
 use crate::revenue_buybacks::{Config, IRevenueBuybacksDispatcherTrait};
 use crate::tests::helper::{
     Deployer, DeployerTrait, FEE_ONE_PERCENT, default_owner, set_caller_address_for_calls,
     set_caller_address_global, set_caller_address_once, stop_caller_address_global, swap,
 };
+use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 use crate::types::bounds::max_bounds;
 use crate::types::i129::i129;
 use crate::types::keys::SavedBalanceKey;
-use crate::tests::mock_erc20::IMockERC20DispatcherTrait;
 
 fn example_config(buy_token: ContractAddress) -> Config {
     Config {
@@ -245,9 +246,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
 
     let caller = 1.try_into().unwrap();
     let bounds = max_bounds(MAX_TICK_SPACING);
-    set_caller_address_for_calls(
-        positions.contract_address, caller, MINT_AND_DEPOSIT_CALLS,
-    );
+    set_caller_address_for_calls(positions.contract_address, caller, MINT_AND_DEPOSIT_CALLS);
     let token_id = positions.mint(pool_key: setup.pool_key, bounds: bounds);
     setup.token0.increase_balance(positions.contract_address, 10000);
     setup.token1.increase_balance(positions.contract_address, 10000);
@@ -286,9 +285,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
     assert(seeded_protocol_fees > 0, 'seeded');
 
     let saved_balance_key = SavedBalanceKey {
-        owner: positions.contract_address,
-        token: setup.pool_key.token0,
-        salt: 'PROTOCOL_FEES',
+        owner: positions.contract_address, token: setup.pool_key.token0, salt: 'PROTOCOL_FEES',
     };
     assert(core.get_saved_balance(saved_balance_key) == seeded_protocol_fees, 'saved before');
     let order_key = OrderKey {
@@ -301,10 +298,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
 
     let rb = d
         .deploy_revenue_buybacks(
-            default_owner(),
-            core,
-            positions,
-            Option::Some(example_config(setup.pool_key.token1)),
+            default_owner(), core, positions, Option::Some(example_config(setup.pool_key.token1)),
         );
 
     set_caller_address_global(default_owner());
