@@ -12,6 +12,8 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      FUZZER_RUNS: ${{ vars.FUZZER_RUNS || '1024' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,4 +26,4 @@ jobs:
           scarb-lock: ./Scarb.lock
 
       - name: Run tests
-        run: scarb test
+        run: snforge test --fuzzer-runs "$FUZZER_RUNS"

@@ -2,6 +2,17 @@ use crate::math::exp::exp;
 use crate::math::twamm::constants;
 
 #[test]
+#[fuzzer]
+fn fuzz_exp_is_at_least_one_and_monotonic(seed: u128) {
+    let max_input = 88 * constants::X64_u128;
+    let x = seed % max_input;
+    let value = exp(x);
+
+    assert(value >= constants::X128, 'exp >= one');
+    assert(exp(x + 1) >= value, 'exp monotonic');
+}
+
+#[test]
 fn test_exp() {
     // e^0 = 1
     assert_eq!(exp(0), 0x100000000000000000000000000000000);

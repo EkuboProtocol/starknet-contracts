@@ -1,6 +1,55 @@
 use crate::math::delta::{amount0_delta, amount1_delta};
 use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
 
+fn bounded_sqrt_ratio(seed: u256) -> u256 {
+    min_sqrt_ratio() + (seed % (max_sqrt_ratio() - min_sqrt_ratio() + 1_u256))
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_amount0_delta_symmetry_and_rounding(
+    sqrt_ratio_a_seed: u256, sqrt_ratio_b_seed: u256, liquidity_seed: u64,
+) {
+    let sqrt_ratio_a = bounded_sqrt_ratio(sqrt_ratio_a_seed);
+    let sqrt_ratio_b = bounded_sqrt_ratio(sqrt_ratio_b_seed);
+    let liquidity: u128 = liquidity_seed.into();
+
+    let down = amount0_delta(sqrt_ratio_a, sqrt_ratio_b, liquidity, false);
+    let up = amount0_delta(sqrt_ratio_a, sqrt_ratio_b, liquidity, true);
+
+    assert_eq!(down, amount0_delta(sqrt_ratio_b, sqrt_ratio_a, liquidity, false));
+    assert_eq!(up, amount0_delta(sqrt_ratio_b, sqrt_ratio_a, liquidity, true));
+    assert(down <= up, 'rounding order');
+    assert(up - down <= 1, 'rounding error');
+    if (liquidity == 0) | (sqrt_ratio_a == sqrt_ratio_b) {
+        assert_eq!(down, 0);
+        assert_eq!(up, 0);
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_amount1_delta_symmetry_and_rounding(
+    sqrt_ratio_a_seed: u256, sqrt_ratio_b_seed: u256, liquidity_seed: u64,
+) {
+    // Restricting liquidity to u64 keeps the full supported price range representable in u128.
+    let sqrt_ratio_a = bounded_sqrt_ratio(sqrt_ratio_a_seed);
+    let sqrt_ratio_b = bounded_sqrt_ratio(sqrt_ratio_b_seed);
+    let liquidity: u128 = liquidity_seed.into();
+
+    let down = amount1_delta(sqrt_ratio_a, sqrt_ratio_b, liquidity, false);
+    let up = amount1_delta(sqrt_ratio_a, sqrt_ratio_b, liquidity, true);
+
+    assert_eq!(down, amount1_delta(sqrt_ratio_b, sqrt_ratio_a, liquidity, false));
+    assert_eq!(up, amount1_delta(sqrt_ratio_b, sqrt_ratio_a, liquidity, true));
+    assert(down <= up, 'rounding order');
+    assert(up - down <= 1, 'rounding error');
+    if (liquidity == 0) | (sqrt_ratio_a == sqrt_ratio_b) {
+        assert_eq!(down, 0);
+        assert_eq!(up, 0);
+    }
+}
+
 #[test]
 fn test_amount0_delta_price_down() {
     let delta = amount0_delta(

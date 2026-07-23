@@ -3,6 +3,31 @@ use core::option::OptionTrait;
 use crate::math::muldiv::{div, muldiv};
 
 #[test]
+#[fuzzer]
+fn fuzz_muldiv_matches_u256_arithmetic(x: u128, y: u128, denominator_seed: u128) {
+    let denominator = if denominator_seed == 0 {
+        1
+    } else {
+        denominator_seed
+    };
+    let numerator: u256 = x.into() * y.into();
+    let expected_down = numerator / denominator.into();
+    let expected_up = expected_down
+        + if (numerator % denominator.into()).is_zero() {
+            0_u256
+        } else {
+            1_u256
+        };
+
+    assert_eq!(muldiv(x.into(), y.into(), denominator.into(), false).unwrap(), expected_down);
+    assert_eq!(muldiv(x.into(), y.into(), denominator.into(), true).unwrap(), expected_up);
+    assert_eq!(
+        muldiv(x.into(), y.into(), denominator.into(), false),
+        muldiv(y.into(), x.into(), denominator.into(), false),
+    );
+}
+
+#[test]
 fn test_muldiv_div_by_zero() {
     assert(
         muldiv(

@@ -1,6 +1,6 @@
 use core::num::traits::{OverflowingSub, Zero};
 use core::option::OptionTrait;
-use crate::math::delta::amount0_delta;
+use crate::math::delta::{amount0_delta, amount1_delta};
 use crate::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
 use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::types::i129::i129;
@@ -29,8 +29,33 @@ fn assert_token0_exact_input_ratio_is_minimal(
     next_ratio
 }
 
+fn assert_token1_exact_input_ratio_is_maximal(
+    sqrt_ratio: u256, liquidity: u128, amount: u128,
+) -> u256 {
+    let next_ratio = next_sqrt_ratio_from_amount1(
+        sqrt_ratio, liquidity, i129 { mag: amount, sign: false },
+    )
+        .unwrap();
+
+    assert(next_ratio >= sqrt_ratio, 'price does not decrease');
+    assert(
+        amount1_delta(sqrt_ratio, next_ratio, liquidity, true) <= amount, 'next ratio fits input',
+    );
+
+    if next_ratio != (u256 {
+        low: 0xffffffffffffffffffffffffffffffff, high: 0xffffffffffffffffffffffffffffffff,
+    }) {
+        assert(
+            amount1_delta(sqrt_ratio, next_ratio + 1_u256, liquidity, true) > amount,
+            'next higher ratio exceeds input',
+        );
+    }
+
+    next_ratio
+}
+
 #[test]
-#[fuzzer(runs: 256)]
+#[fuzzer]
 fn fuzz_next_sqrt_ratio_from_amount0_exact_input_is_minimal(
     sqrt_ratio_seed: u256, liquidity_seed: u64, amount: u128,
 ) {
@@ -53,7 +78,7 @@ fn fuzz_next_sqrt_ratio_from_amount0_exact_input_is_minimal(
 }
 
 #[test]
-#[fuzzer(runs: 128)]
+#[fuzzer]
 fn fuzz_next_sqrt_ratio_from_amount0_high_price_small_input(
     ratio_offset: u128, liquidity_seed: u64, amount_seed: u8,
 ) {
@@ -66,7 +91,7 @@ fn fuzz_next_sqrt_ratio_from_amount0_high_price_small_input(
 }
 
 #[test]
-#[fuzzer(runs: 128)]
+#[fuzzer]
 fn fuzz_next_sqrt_ratio_from_amount0_across_u256_denominator(
     ratio_offset: u128, liquidity_seed: u128,
 ) {
@@ -102,6 +127,101 @@ fn fuzz_next_sqrt_ratio_from_amount0_across_u256_denominator(
         sqrt_ratio, liquidity, crossing_amount,
     );
     assert(ratio_at <= ratio_before, 'boundary is monotonic');
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_next_sqrt_ratio_from_amount1_exact_input_is_maximal(
+    sqrt_ratio_seed: u256, liquidity_seed: u64, amount: u64,
+) {
+    let ratio_span = max_sqrt_ratio() - min_sqrt_ratio() + 1_u256;
+    let sqrt_ratio = min_sqrt_ratio() + (sqrt_ratio_seed % ratio_span);
+    let liquidity: u128 = if liquidity_seed == 0 {
+        1
+    } else {
+        liquidity_seed.into()
+    };
+
+    let next_ratio = assert_token1_exact_input_ratio_is_maximal(
+        sqrt_ratio, liquidity, amount.into(),
+    );
+
+    if amount != 0xffffffffffffffff {
+        let next_ratio_more_input = assert_token1_exact_input_ratio_is_maximal(
+            sqrt_ratio, liquidity, (amount + 1).into(),
+        );
+        assert(next_ratio_more_input >= next_ratio, 'input is monotonic');
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_next_sqrt_ratio_from_amount0_exact_output_covers_requested_amount(
+    sqrt_ratio_seed: u256, liquidity_seed: u64, amount_seed: u128,
+) {
+    let sqrt_ratio = min_sqrt_ratio()
+        + (sqrt_ratio_seed % (max_sqrt_ratio() - min_sqrt_ratio() + 1_u256));
+    let liquidity: u128 = if liquidity_seed == 0 {
+        1
+    } else {
+        liquidity_seed.into()
+    };
+    let available = amount0_delta(sqrt_ratio, max_sqrt_ratio(), liquidity, false);
+    let amount = if available == 0 {
+        0
+    } else {
+        amount_seed % available
+    };
+    let result = next_sqrt_ratio_from_amount0(
+        sqrt_ratio, liquidity, i129 { mag: amount, sign: true },
+    );
+
+    if amount == 0 {
+        assert_eq!(result.unwrap(), sqrt_ratio);
+    } else {
+        let next_ratio = result.unwrap();
+        assert(next_ratio > sqrt_ratio, 'price increases');
+        assert(amount0_delta(sqrt_ratio, next_ratio, liquidity, false) >= amount, 'output covered');
+        assert(
+            amount0_delta(sqrt_ratio, next_ratio - 1_u256, liquidity, false) < amount,
+            'movement is minimal',
+        );
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_next_sqrt_ratio_from_amount1_exact_output_covers_requested_amount(
+    sqrt_ratio_seed: u256, liquidity_seed: u64, amount_seed: u128,
+) {
+    let sqrt_ratio = min_sqrt_ratio()
+        + (sqrt_ratio_seed % (max_sqrt_ratio() - min_sqrt_ratio() + 1_u256));
+    let liquidity: u128 = if liquidity_seed == 0 {
+        1
+    } else {
+        liquidity_seed.into()
+    };
+    let available = amount1_delta(min_sqrt_ratio(), sqrt_ratio, liquidity, false);
+    let amount = if available == 0 {
+        0
+    } else {
+        amount_seed % available
+    };
+    let result = next_sqrt_ratio_from_amount1(
+        sqrt_ratio, liquidity, i129 { mag: amount, sign: true },
+    );
+
+    if amount == 0 {
+        assert_eq!(result.unwrap(), sqrt_ratio);
+    } else {
+        let next_ratio = result.unwrap();
+        assert(next_ratio < sqrt_ratio, 'price decreases');
+        assert(amount1_delta(next_ratio, sqrt_ratio, liquidity, false) >= amount, 'output covered');
+        assert(
+            amount1_delta(next_ratio + 1_u256, sqrt_ratio, liquidity, false) < amount,
+            'movement is minimal',
+        );
+    }
 }
 
 #[test]

@@ -1,5 +1,27 @@
 use crate::math::exp2::exp2;
 
+fn reference_exp2(n: u8) -> u128 {
+    let mut result = 1;
+    let mut i = 0;
+    while i < n {
+        result *= 2;
+        i += 1;
+    }
+    result
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_exp2_matches_shift_and_is_monotonic(seed: u8) {
+    let n = seed % 128;
+    let result = crate::math::exp2::exp2(n);
+
+    assert_eq!(result, reference_exp2(n));
+    if n < 127 {
+        assert_eq!(crate::math::exp2::exp2(n + 1), result * 2);
+    }
+}
+
 #[test]
 fn test_exp2_0() {
     assert(exp2(0) == 0x1, '2**0');
@@ -57,4 +79,3 @@ fn test_exp2_129() {
 fn test_exp2_255() {
     exp2(255);
 }
-
