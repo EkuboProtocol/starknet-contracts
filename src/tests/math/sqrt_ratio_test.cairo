@@ -1,7 +1,108 @@
+use core::num::traits::{OverflowingSub, Zero};
 use core::option::OptionTrait;
+use crate::math::delta::amount0_delta;
 use crate::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
-use crate::math::ticks::{max_tick, min_sqrt_ratio, tick_to_sqrt_ratio};
+use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::types::i129::i129;
+
+fn assert_token0_exact_input_ratio_is_minimal(
+    sqrt_ratio: u256, liquidity: u128, amount: u128,
+) -> u256 {
+    let next_ratio = next_sqrt_ratio_from_amount0(
+        sqrt_ratio, liquidity, i129 { mag: amount, sign: false },
+    )
+        .unwrap();
+
+    assert(next_ratio.is_non_zero(), 'next ratio is nonzero');
+    assert(next_ratio <= sqrt_ratio, 'price does not increase');
+    assert(
+        amount0_delta(next_ratio, sqrt_ratio, liquidity, true) <= amount, 'next ratio fits input',
+    );
+
+    if next_ratio > 1_u256 {
+        assert(
+            amount0_delta(next_ratio - 1_u256, sqrt_ratio, liquidity, true) > amount,
+            'next lower ratio exceeds input',
+        );
+    }
+
+    next_ratio
+}
+
+#[test]
+#[fuzzer(runs: 256)]
+fn fuzz_next_sqrt_ratio_from_amount0_exact_input_is_minimal(
+    sqrt_ratio_seed: u256, liquidity_seed: u64, amount: u128,
+) {
+    let ratio_span = max_sqrt_ratio() - min_sqrt_ratio() + 1_u256;
+    let sqrt_ratio = min_sqrt_ratio() + (sqrt_ratio_seed % ratio_span);
+    let liquidity = if liquidity_seed == 0 {
+        1
+    } else {
+        liquidity_seed.into()
+    };
+
+    let next_ratio = assert_token0_exact_input_ratio_is_minimal(sqrt_ratio, liquidity, amount);
+
+    if amount != 0xffffffffffffffffffffffffffffffff {
+        let next_ratio_more_input = assert_token0_exact_input_ratio_is_minimal(
+            sqrt_ratio, liquidity, amount + 1,
+        );
+        assert(next_ratio_more_input <= next_ratio, 'input is monotonic');
+    }
+}
+
+#[test]
+#[fuzzer(runs: 128)]
+fn fuzz_next_sqrt_ratio_from_amount0_high_price_small_input(
+    ratio_offset: u128, liquidity_seed: u64, amount_seed: u8,
+) {
+    // This is the regime where flooring (liquidity << 128) / sqrt_ratio loses all precision.
+    let sqrt_ratio = max_sqrt_ratio() - u256 { low: ratio_offset, high: 0 };
+    let liquidity: u128 = liquidity_seed.into() + 1;
+    let amount: u128 = (amount_seed % 16).into() + 1;
+
+    assert_token0_exact_input_ratio_is_minimal(sqrt_ratio, liquidity, amount);
+}
+
+#[test]
+#[fuzzer(runs: 128)]
+fn fuzz_next_sqrt_ratio_from_amount0_across_u256_denominator(
+    ratio_offset: u128, liquidity_seed: u128,
+) {
+    // Keep the price near its supported maximum, where amount * sqrt_ratio crosses 256 bits.
+    let sqrt_ratio = max_sqrt_ratio() - u256 { low: ratio_offset, high: 0 };
+    let liquidity = if liquidity_seed == 0 {
+        1
+    } else {
+        liquidity_seed
+    };
+    let numerator1 = u256 { low: 0, high: liquidity };
+
+    // Since numerator1 is nonzero, wrapping subtraction yields 2**256 - numerator1.
+    let (distance_to_u256_boundary, underflow) = OverflowingSub::overflowing_sub(
+        0_u256, numerator1,
+    );
+    assert(underflow, 'boundary distance wraps');
+    let (quotient, remainder) = DivRem::div_rem(
+        distance_to_u256_boundary, sqrt_ratio.try_into().unwrap(),
+    );
+    assert(quotient.high.is_zero(), 'boundary amount fits u128');
+    let crossing_amount = quotient.low + if remainder.is_zero() {
+        0
+    } else {
+        1
+    };
+    assert(crossing_amount.is_non_zero(), 'boundary amount is nonzero');
+
+    let ratio_before = assert_token0_exact_input_ratio_is_minimal(
+        sqrt_ratio, liquidity, crossing_amount - 1,
+    );
+    let ratio_at = assert_token0_exact_input_ratio_is_minimal(
+        sqrt_ratio, liquidity, crossing_amount,
+    );
+    assert(ratio_at <= ratio_before, 'boundary is monotonic');
+}
 
 #[test]
 fn test_next_sqrt_ratio_from_amount0_add_price_goes_down() {
