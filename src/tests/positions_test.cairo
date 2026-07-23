@@ -461,7 +461,7 @@ fn test_create_limit_order_token1_then_token0() {
         );
 
     assert_eq!(amount_sold, 50);
-    assert_eq!(amount_bought, 49);
+    assert_eq!(amount_bought, 50);
     assert_eq!(mint_result, Option::None);
 }
 

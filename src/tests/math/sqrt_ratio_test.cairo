@@ -1,6 +1,6 @@
 use core::option::OptionTrait;
 use crate::math::sqrt_ratio::{next_sqrt_ratio_from_amount0, next_sqrt_ratio_from_amount1};
-use crate::math::ticks::min_sqrt_ratio;
+use crate::math::ticks::{max_tick, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::types::i129::i129;
 
 #[test]
@@ -11,6 +11,42 @@ fn test_next_sqrt_ratio_from_amount0_add_price_goes_down() {
     )
         .unwrap();
     assert(next_ratio == u256 { low: 339942424496442021441932674757011200256, high: 0 }, 'price');
+}
+
+#[test]
+fn test_next_sqrt_ratio_from_amount0_exact_input_high_price_full_precision() {
+    let sqrt_ratio = tick_to_sqrt_ratio(max_tick() - i129 { mag: 1, sign: false });
+    let next_ratio = next_sqrt_ratio_from_amount0(
+        sqrt_ratio, 0x8000000000000000, i129 { mag: 1, sign: false },
+    )
+        .unwrap();
+
+    assert(
+        next_ratio == 2092366731423230380742239773058784341020777786053236834275,
+        'full precision ratio',
+    );
+}
+
+#[test]
+fn test_next_sqrt_ratio_from_amount0_exact_input_wide_denominator() {
+    let next_ratio = next_sqrt_ratio_from_amount0(
+        2664380729359047878130455396782445615002136682488425930791,
+        42531265332720989308560689227437612046,
+        i129 { mag: 7478763362817280620612385270656745576, sign: false },
+    )
+        .unwrap();
+
+    assert(next_ratio == 1935164803785000531764469386445244376423, 'wide denominator ratio');
+}
+
+#[test]
+fn test_next_sqrt_ratio_from_amount0_exact_input_rounds_towards_current_price() {
+    let next_ratio = next_sqrt_ratio_from_amount0(
+        0x100000000000000000000000000000000, 100, i129 { mag: 100, sign: false },
+    )
+        .unwrap();
+
+    assert(next_ratio == 0x80000000000000000000000000000000, 'exact ratio');
 }
 
 #[test]

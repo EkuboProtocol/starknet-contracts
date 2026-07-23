@@ -2,7 +2,7 @@ use core::num::traits::Zero;
 use crate::math::exp2::exp2;
 use crate::math::mask::mask;
 use crate::math::swap::{SwapResult, is_price_increasing, no_op_swap_result, swap_result};
-use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio};
+use crate::math::ticks::{max_sqrt_ratio, max_tick, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::types::i129::i129;
 
 #[test]
@@ -616,11 +616,33 @@ fn test_swap_min_amount_token0_very_high_price() {
             fee: 0,
         ) == SwapResult {
             consumed_amount: i129 { mag: 1, sign: false },
-            sqrt_ratio_next: u256 { low: 0, high: 0x186a0 },
+            sqrt_ratio_next: 34028236692093661878853089260786211618685032,
             calculated_amount: 0x1869ff9f1cba38f7ef8d0,
             fee_amount: 0x0,
         },
         'result',
+    );
+}
+
+#[test]
+fn test_swap_token0_exact_input_high_price_uses_full_precision_output() {
+    let result = swap_result(
+        sqrt_ratio: tick_to_sqrt_ratio(max_tick() - i129 { mag: 1, sign: false }),
+        liquidity: 0x8000000000000000,
+        sqrt_ratio_limit: min_sqrt_ratio(),
+        amount: i129 { mag: 1, sign: false },
+        is_token1: false,
+        fee: 0,
+    );
+
+    assert(
+        result == SwapResult {
+            consumed_amount: i129 { mag: 1, sign: false },
+            sqrt_ratio_next: 2092366731423230380742239773058784341020777786053236834275,
+            calculated_amount: 113427344248215141431086464908842577688,
+            fee_amount: 0,
+        },
+        'full precision output',
     );
 }
 
@@ -775,7 +797,7 @@ fn test_swap_result_example_usdc_wbtc() {
     assert(
         result == SwapResult {
             consumed_amount: i129 { mag: 9995000000, sign: false },
-            sqrt_ratio_next: u256 { low: 0xfead0f195a1008a61a0a6a34c2b5410, high: 0 },
+            sqrt_ratio_next: 21157655283161936065779867370177055141,
             calculated_amount: 38557555,
             fee_amount: 29985001,
         },
@@ -933,4 +955,3 @@ fn test_exact_input_swap_max_fee_token1() {
         'result',
     );
 }
-
