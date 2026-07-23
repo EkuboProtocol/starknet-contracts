@@ -1,4 +1,5 @@
 use core::num::traits::Zero;
+use crate::math::delta::amount0_delta;
 use crate::math::liquidity::liquidity_delta_to_amount_delta;
 use crate::math::max_liquidity::{max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1};
 use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
@@ -9,7 +10,7 @@ fn test_max_liquidity_for_token0_max_at_full_range() {
     let result = max_liquidity_for_token0(
         min_sqrt_ratio(), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff,
     );
-    assert_eq!(result, 18446748437148339060);
+    assert_eq!(result, 18446748437148339061);
 }
 
 #[test]
@@ -26,6 +27,24 @@ fn test_max_liquidity_for_token0_max_upper_half_range() {
         min_sqrt_ratio(), tick_to_sqrt_ratio(Zero::zero()), 0xffffffffffffffffffffffffffffffff,
     );
     assert(result == 18446748437148339062, 'max at half range');
+}
+
+#[test]
+fn test_max_liquidity_for_token0_preserves_fractional_q128_product() {
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: 88368108, sign: true });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: 88367980, sign: true });
+    let amount = 1_000_000_000_000_000_000;
+
+    let result = max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount);
+
+    assert_eq!(result, 1011);
+    assert(
+        amount0_delta(sqrt_ratio_lower, sqrt_ratio_upper, result, true) <= amount, 'amount fits',
+    );
+    assert(
+        amount0_delta(sqrt_ratio_lower, sqrt_ratio_upper, result + 1, true) > amount,
+        'liquidity is maximal',
+    );
 }
 
 #[test]
