@@ -48,8 +48,7 @@ pub struct GetOrderInfoResult {
     pub amount1: u128,
 }
 
-// One of the enum options that can be passed through to `Core#forward` to create a new limit order
-// with a given key and liquidity
+// Deprecated callback data retained so legacy placement calls can fail with an explicit error.
 #[derive(Drop, Copy, Serde)]
 pub struct PlaceOrderForwardCallbackData {
     pub salt: felt252,
@@ -72,7 +71,7 @@ pub enum ForwardCallbackData {
     CloseOrder: CloseOrderForwardCallbackData,
 }
 
-// Returns the amount of {token0,token1} that must be paid to cover the order
+// Deprecated placement result retained for interface compatibility.
 pub type PlaceOrderForwardCallbackResult = u128;
 // The amount of token0 and token1 received for closing the order
 pub type CloseOrderForwardCallbackResult = (u128, u128);
