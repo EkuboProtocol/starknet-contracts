@@ -1,4 +1,32 @@
-use crate::math::time::is_time_valid;
+use crate::math::time::{TIME_SPACING_SIZE, is_time_valid};
+
+#[test]
+#[fuzzer]
+fn fuzz_past_and_near_times_are_aligned_to_base_spacing(now: u64, time_seed: u64) {
+    let now = now % (0xffffffffffffffff - TIME_SPACING_SIZE);
+    let time = if time_seed <= now {
+        time_seed
+    } else {
+        now + (time_seed % (TIME_SPACING_SIZE + 1))
+    };
+
+    assert_eq!(is_time_valid(now, time), (time % TIME_SPACING_SIZE) == 0);
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_time_validity_is_stable_within_step_window(now_seed: u32, exponent_seed: u8) {
+    // For future distances in [16**k, 16**(k+1)), the required step is 16**k.
+    let exponent = (exponent_seed % 6) + 1;
+    let step: u64 = crate::math::exp2::exp2(4 * exponent).try_into().unwrap();
+    let now: u64 = now_seed.into();
+    let time = ((now + step) / step) * step;
+
+    assert(is_time_valid(now, time), 'aligned time valid');
+    if time > (now + TIME_SPACING_SIZE) {
+        assert(!is_time_valid(now, time + 1), 'unaligned time invalid');
+    }
+}
 
 #[test]
 fn test_is_time_valid_past_or_close_time() {

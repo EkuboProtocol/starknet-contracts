@@ -4,6 +4,29 @@ const MAX_FEE: u128 = 0xffffffffffffffffffffffffffffffff;
 const FIFTY_PERCENT_FEE: u128 = 0x80000000000000000000000000000000;
 
 #[test]
+#[fuzzer]
+fn fuzz_compute_fee_is_bounded_and_monotonic(amount: u128, fee: u128) {
+    let computed = compute_fee(amount, fee);
+    assert(computed <= amount, 'fee <= amount');
+
+    if fee != MAX_FEE {
+        assert(computed <= compute_fee(amount, fee + 1), 'fee monotonic');
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_amount_before_fee_round_trip(after_fee_seed: u64, fee_seed: u128) {
+    // At most 50% ensures the gross amount for any u64 seed always fits u128.
+    let fee = fee_seed % (FIFTY_PERCENT_FEE + 1);
+    let after_fee: u128 = after_fee_seed.into();
+    let before_fee = amount_before_fee(after_fee, fee);
+
+    assert(before_fee >= after_fee, 'gross >= net');
+    assert_eq!(before_fee - compute_fee(before_fee, fee), after_fee);
+}
+
+#[test]
 fn test_compute_fee() {
     assert(compute_fee(1000, MAX_FEE) == 1000, 'max fee');
     assert(compute_fee(MAX_FEE, MAX_FEE) == MAX_FEE, 'max fee max amount');

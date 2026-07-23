@@ -6,6 +6,68 @@ use crate::math::ticks::{max_sqrt_ratio, min_sqrt_ratio, tick_to_sqrt_ratio};
 use crate::types::i129::i129;
 
 #[test]
+#[fuzzer]
+fn fuzz_max_liquidity_amounts_fit(
+    current_ratio_seed: u256,
+    lower_tick_seed: u32,
+    width_seed: u32,
+    amount0_seed: u64,
+    amount1_seed: u64,
+) {
+    // Positive ticks in a bounded range keep adjacent-tick liquidity representable while still
+    // exercising prices below, inside, and above the position.
+    let lower_tick: u128 = (lower_tick_seed % 1_000_000).into();
+    let upper_tick = lower_tick + (width_seed % 1_000_000).into() + 1;
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: lower_tick, sign: false });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: upper_tick, sign: false });
+    let sqrt_ratio = min_sqrt_ratio()
+        + (current_ratio_seed % (max_sqrt_ratio() - min_sqrt_ratio() + 1_u256));
+    let amount0: u128 = amount0_seed.into();
+    let amount1: u128 = amount1_seed.into();
+
+    let liquidity = max_liquidity(sqrt_ratio, sqrt_ratio_lower, sqrt_ratio_upper, amount0, amount1);
+    let delta = liquidity_delta_to_amount_delta(
+        sqrt_ratio, i129 { mag: liquidity, sign: false }, sqrt_ratio_lower, sqrt_ratio_upper,
+    );
+
+    assert(delta.amount0.mag <= amount0, 'amount0 fits');
+    assert(delta.amount1.mag <= amount1, 'amount1 fits');
+    assert(!delta.amount0.sign, 'amount0 positive');
+    assert(!delta.amount1.sign, 'amount1 positive');
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_liquidity_delta_sign_and_rounding(
+    current_ratio_seed: u256, lower_tick_seed: u32, width_seed: u32, liquidity_seed: u64,
+) {
+    let lower_tick: u128 = (lower_tick_seed % 1_000_000).into();
+    let upper_tick = lower_tick + (width_seed % 1_000_000).into() + 1;
+    let sqrt_ratio_lower = tick_to_sqrt_ratio(i129 { mag: lower_tick, sign: false });
+    let sqrt_ratio_upper = tick_to_sqrt_ratio(i129 { mag: upper_tick, sign: false });
+    let sqrt_ratio = min_sqrt_ratio()
+        + (current_ratio_seed % (max_sqrt_ratio() - min_sqrt_ratio() + 1_u256));
+    let liquidity: u128 = liquidity_seed.into();
+
+    let deposit = liquidity_delta_to_amount_delta(
+        sqrt_ratio, i129 { mag: liquidity, sign: false }, sqrt_ratio_lower, sqrt_ratio_upper,
+    );
+    let withdrawal = liquidity_delta_to_amount_delta(
+        sqrt_ratio, i129 { mag: liquidity, sign: true }, sqrt_ratio_lower, sqrt_ratio_upper,
+    );
+
+    assert(withdrawal.amount0.mag <= deposit.amount0.mag, 'amount0 rounding');
+    assert(withdrawal.amount1.mag <= deposit.amount1.mag, 'amount1 rounding');
+    assert(deposit.amount0.mag - withdrawal.amount0.mag <= 1, 'amount0 error');
+    assert(deposit.amount1.mag - withdrawal.amount1.mag <= 1, 'amount1 error');
+    if liquidity != 0 {
+        assert(!deposit.amount0.sign & !deposit.amount1.sign, 'deposit sign');
+        assert(withdrawal.amount0.sign | withdrawal.amount0.is_zero(), 'withdraw amount0 sign');
+        assert(withdrawal.amount1.sign | withdrawal.amount1.is_zero(), 'withdraw amount1 sign');
+    }
+}
+
+#[test]
 fn test_max_liquidity_for_token0_max_at_full_range() {
     let result = max_liquidity_for_token0(
         min_sqrt_ratio(), max_sqrt_ratio(), 0xffffffffffffffffffffffffffffffff,

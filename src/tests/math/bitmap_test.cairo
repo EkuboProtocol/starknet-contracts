@@ -5,6 +5,72 @@ use crate::math::bitmap::{
 };
 use crate::types::i129::i129;
 
+fn bit_is_set(value: u256, index: u8) -> bool {
+    if index < 128 {
+        (value.low & crate::math::exp2::exp2(index)).is_non_zero()
+    } else {
+        (value.high & crate::math::exp2::exp2(index - 128)).is_non_zero()
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_bitmap_search_matches_linear_reference(value: felt252, index_seed: u8) {
+    let bitmap = Bitmap { value };
+    let value_u256: u256 = value.into();
+    let index = index_seed % 251;
+
+    let mut expected_next = Option::None(());
+    let mut i = 0;
+    while i <= index {
+        if bit_is_set(value_u256, i) {
+            expected_next = Option::Some(i);
+        }
+        i += 1;
+    }
+
+    let mut expected_prev = Option::None(());
+    i = index;
+    while i < 251 {
+        if bit_is_set(value_u256, i) {
+            expected_prev = Option::Some(i);
+            break;
+        }
+        i += 1;
+    }
+
+    assert_eq!(bitmap.next_set_bit(index), expected_next);
+    assert_eq!(bitmap.prev_set_bit(index), expected_prev);
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_set_unset_bit_round_trip(index_seed: u8) {
+    let index = index_seed % 251;
+    let empty: Bitmap = Zero::zero();
+    let set = empty.set_bit(index);
+
+    assert(set.is_non_zero(), 'bit set');
+    assert_eq!(set.next_set_bit(index), Option::Some(index));
+    assert_eq!(set.prev_set_bit(index), Option::Some(index));
+    assert(set.unset_bit(index) == empty, 'round trip');
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_tick_word_and_bit_round_trip(
+    tick_magnitude_seed: u128, sign: bool, tick_spacing_seed: u32,
+) {
+    let tick_spacing: u128 = (tick_spacing_seed % 354892).into() + 1;
+    let tick = i129 { mag: tick_magnitude_seed % 88722884, sign };
+    let (word, bit) = tick_to_word_and_bit_index(tick, tick_spacing);
+    let mapped_tick = word_and_bit_index_to_tick((word, bit), tick_spacing);
+
+    assert(mapped_tick <= tick, 'mapped tick <= input');
+    assert(tick - mapped_tick < i129 { mag: tick_spacing, sign: false }, 'within spacing');
+    assert_eq!(tick_to_word_and_bit_index(mapped_tick, tick_spacing), (word, bit));
+}
+
 #[test]
 fn test_zeroable() {
     let b: Bitmap = Zero::zero();
