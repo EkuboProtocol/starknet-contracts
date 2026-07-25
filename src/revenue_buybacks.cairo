@@ -22,9 +22,6 @@ pub struct Config {
 
 #[starknet::interface]
 pub trait IRevenueBuybacks<TContractState> {
-    // Returns the core contract used by the positions contract
-    fn get_core(self: @TContractState) -> ContractAddress;
-
     // Returns the positions contract that is used by this contract to implement the buybacks
     fn get_positions(self: @TContractState) -> ContractAddress;
 
@@ -61,9 +58,6 @@ pub trait IRevenueBuybacks<TContractState> {
         ref self: TContractState, sell_token: ContractAddress, config_override: Option<Config>,
     );
 
-    // Takes ownership of core back from this contract. Only callable by the owner.
-    fn reclaim_core(ref self: TContractState);
-
     // Takes ownership of positions back from this contract. Only callable by the owner.
     fn reclaim_positions(ref self: TContractState);
 }
@@ -82,7 +76,6 @@ pub mod RevenueBuybacks {
     use crate::components::owned::{
         IOwnedDispatcher, IOwnedDispatcherTrait, Ownable, Owned as owned_component,
     };
-    use crate::interfaces::core::ICoreDispatcher;
     use crate::interfaces::positions::{IPositionsDispatcher, IPositionsDispatcherTrait};
     use super::{Config, ContractAddress, IRevenueBuybacks, OrderKey};
 
@@ -93,7 +86,6 @@ pub mod RevenueBuybacks {
 
     #[storage]
     struct Storage {
-        core: ICoreDispatcher,
         positions: IPositionsDispatcher,
         default_config: Option<Config>,
         config_overrides: Map<ContractAddress, Option<Config>>,
@@ -108,12 +100,10 @@ pub mod RevenueBuybacks {
     fn constructor(
         ref self: ContractState,
         owner: ContractAddress,
-        core: ICoreDispatcher,
         positions: IPositionsDispatcher,
         default_config: Option<Config>,
     ) {
         self.initialize_owned(owner);
-        self.core.write(core);
         self.positions.write(positions);
         self.default_config.write(default_config);
         self.token_id.write(positions.mint_v2(Zero::zero()));
@@ -127,10 +117,6 @@ pub mod RevenueBuybacks {
 
     #[abi(embed_v0)]
     impl RevenueBuybacksImpl of IRevenueBuybacks<ContractState> {
-        fn get_core(self: @ContractState) -> ContractAddress {
-            self.core.read().contract_address
-        }
-
         fn get_positions(self: @ContractState) -> ContractAddress {
             self.positions.read().contract_address
         }
@@ -230,13 +216,6 @@ pub mod RevenueBuybacks {
         ) {
             self.require_owner();
             self.config_overrides.write(sell_token, config_override);
-        }
-
-        fn reclaim_core(ref self: ContractState) {
-            self.require_owner();
-            let owner = self.get_owner();
-            IOwnedDispatcher { contract_address: self.core.read().contract_address }
-                .transfer_ownership(owner);
         }
 
         fn reclaim_positions(ref self: ContractState) {

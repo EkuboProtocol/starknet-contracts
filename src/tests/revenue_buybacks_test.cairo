@@ -44,10 +44,9 @@ fn test_deploy_and_setup() {
     let (token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token1.contract_address);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(config));
 
     // Verify basic setup
-    assert(rb.get_core() == core.contract_address, 'wrong core');
     assert(rb.get_positions() == positions.contract_address, 'wrong positions');
 
     // Verify the NFT was minted and owned by the contract
@@ -67,8 +66,7 @@ fn test_config_override() {
     let (token0, token1) = d.deploy_two_mock_tokens();
     let default_config = example_config(token1.contract_address);
 
-    let rb = d
-        .deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(default_config));
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(default_config));
 
     // Set an override for token0
     let override_config = Config {
@@ -98,7 +96,7 @@ fn test_no_config_panics() {
     let core = d.deploy_core();
     let positions = d.deploy_positions(core);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::None);
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::None);
 
     let token = d.deploy_mock_token();
     rb.get_config(token.contract_address);
@@ -114,12 +112,7 @@ fn test_same_token_buyback_fails() {
     let (token0, _token1) = d.deploy_two_mock_tokens();
     let config = example_config(token0.contract_address);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
-
-    // Transfer core ownership to rb
-    set_caller_address_global(default_owner());
-    IOwnedDispatcher { contract_address: core.contract_address }
-        .transfer_ownership(rb.contract_address);
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(config));
 
     // Try to start buybacks with same token as buy_token
     rb.start_buybacks(token0.contract_address, 1000, 0, 100);
@@ -135,12 +128,7 @@ fn test_invalid_time_range() {
     let (token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token1.contract_address);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
-
-    // Transfer core ownership to rb
-    set_caller_address_global(default_owner());
-    IOwnedDispatcher { contract_address: core.contract_address }
-        .transfer_ownership(rb.contract_address);
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(config));
 
     // Try to start buybacks with end_time <= start_time
     rb.start_buybacks(token0.contract_address, 1000, 100, 50);
@@ -156,48 +144,10 @@ fn test_duration_too_short() {
     let (token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token1.contract_address);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
-
-    // Transfer core ownership to rb
-    set_caller_address_global(default_owner());
-    IOwnedDispatcher { contract_address: core.contract_address }
-        .transfer_ownership(rb.contract_address);
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(config));
 
     // Try to start buybacks with duration < min_duration (30 seconds)
     rb.start_buybacks(token0.contract_address, 1000, 0, 20);
-}
-
-#[test]
-fn test_reclaim_core() {
-    let mut d: Deployer = Default::default();
-    let core = d.deploy_core();
-    let positions = d.deploy_positions(core);
-
-    let (_token0, token1) = d.deploy_two_mock_tokens();
-    let config = example_config(token1.contract_address);
-
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
-
-    // Transfer core ownership to rb
-    set_caller_address_global(default_owner());
-    IOwnedDispatcher { contract_address: core.contract_address }
-        .transfer_ownership(rb.contract_address);
-    stop_caller_address_global();
-
-    // Verify rb owns core
-    let core_owned = IOwnedDispatcher { contract_address: core.contract_address };
-    assert(core_owned.get_owner() == rb.contract_address, 'rb should own core');
-
-    // Reclaim core
-    set_caller_address_once(rb.contract_address, default_owner());
-    rb.reclaim_core();
-
-    // Verify default_owner owns core again
-    assert(core_owned.get_owner() == default_owner(), 'owner should own core');
-
-    // Verify rb still owns the NFT
-    let nft = IERC721Dispatcher { contract_address: positions.get_nft_address() };
-    assert(nft.owner_of(rb.get_token_id().into()) == rb.contract_address, 'rb should own nft');
 }
 
 #[test]
@@ -209,7 +159,7 @@ fn test_reclaim_positions() {
     let (_token0, token1) = d.deploy_two_mock_tokens();
     let config = example_config(token1.contract_address);
 
-    let rb = d.deploy_revenue_buybacks(default_owner(), core, positions, Option::Some(config));
+    let rb = d.deploy_revenue_buybacks(default_owner(), positions, Option::Some(config));
 
     set_caller_address_global(default_owner());
     IOwnedDispatcher { contract_address: positions.contract_address }
@@ -298,7 +248,7 @@ fn test_start_buybacks_all_withdraws_seeded_protocol_fees_and_increases_sale() {
 
     let rb = d
         .deploy_revenue_buybacks(
-            default_owner(), core, positions, Option::Some(example_config(setup.pool_key.token1)),
+            default_owner(), positions, Option::Some(example_config(setup.pool_key.token1)),
         );
 
     set_caller_address_global(default_owner());

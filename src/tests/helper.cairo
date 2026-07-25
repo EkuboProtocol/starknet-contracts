@@ -370,13 +370,12 @@ pub impl DeployerTraitImpl of DeployerTrait {
     fn deploy_revenue_buybacks(
         ref self: Deployer,
         owner: ContractAddress,
-        core: ICoreDispatcher,
         positions: IPositionsDispatcher,
         default_config: Option<Config>,
     ) -> IRevenueBuybacksDispatcher {
         let contract = declare("RevenueBuybacks").unwrap().contract_class();
         let (address, _) = contract
-            .deploy(@serialize(@(owner, core, positions, default_config)))
+            .deploy(@serialize(@(owner, positions, default_config)))
             .expect('revenue buybacks deploy');
 
         IRevenueBuybacksDispatcher { contract_address: address }
