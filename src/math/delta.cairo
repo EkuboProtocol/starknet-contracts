@@ -62,4 +62,3 @@ pub fn amount1_delta(
         result.limb1
     }
 }
-

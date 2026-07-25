@@ -1,6 +1,5 @@
 #[starknet::contract]
 pub mod Core {
-    use core::array::ArrayTrait;
     use core::num::traits::Zero;
     use core::option::Option;
     use core::traits::Into;

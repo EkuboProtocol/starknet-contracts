@@ -66,4 +66,3 @@ impl PoolPriceStorePacking of StorePacking<PoolPrice, felt252> {
         PoolPrice { sqrt_ratio, tick }
     }
 }
-

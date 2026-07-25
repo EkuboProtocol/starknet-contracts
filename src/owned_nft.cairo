@@ -23,7 +23,7 @@ pub trait IOwnedNFT<TContractState> {
 
 #[starknet::contract]
 pub mod OwnedNFT {
-    use core::array::{Array, ArrayTrait};
+    use core::array::Array;
     use core::num::traits::Zero;
     use core::option::OptionTrait;
     use core::traits::{Into, TryInto};

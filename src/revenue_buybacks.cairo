@@ -70,7 +70,6 @@ pub trait IRevenueBuybacks<TContractState> {
 
 #[starknet::contract]
 pub mod RevenueBuybacks {
-    use core::array::ArrayTrait;
     use core::cmp::max;
     use core::num::traits::Zero;
     use core::option::OptionTrait;

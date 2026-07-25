@@ -40,9 +40,7 @@ pub trait ICoreLocker<TContractState> {
 
 #[starknet::contract]
 pub mod CoreLocker {
-    use core::array::ArrayTrait;
     use core::num::traits::Zero;
-    use core::option::Option;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::{ContractAddress, get_contract_address};
     use crate::components::util::{

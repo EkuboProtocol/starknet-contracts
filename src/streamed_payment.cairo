@@ -41,7 +41,6 @@ pub trait IStreamedPayment<TContractState> {
 
 #[starknet::contract]
 pub mod StreamedPayment {
-    use core::array::{Array, ArrayTrait};
     use core::num::traits::Zero;
     use starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
