@@ -21,8 +21,7 @@ pub mod LimitOrders {
     };
     use crate::interfaces::extensions::limit_orders::{
         CloseOrderForwardCallbackData, CloseOrderForwardCallbackResult, ForwardCallbackData,
-        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState,
-        PlaceOrderForwardCallbackData, PlaceOrderForwardCallbackResult, PoolState,
+        GetOrderInfoRequest, GetOrderInfoResult, ILimitOrders, OrderKey, OrderState, PoolState,
     };
     use crate::math::delta::{amount0_delta, amount1_delta};
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
@@ -463,74 +462,9 @@ pub mod LimitOrders {
             let core = self.core.read();
 
             match consume_callback_data::<ForwardCallbackData>(core, data) {
-                ForwardCallbackData::PlaceOrder(params) => {
-                    let PlaceOrderForwardCallbackData { salt, order_key, liquidity } = params;
-
-                    assert(liquidity > 0, 'Liquidity must be non-zero');
-
-                    let is_selling_token1 = (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING)
-                        .is_non_zero();
-
-                    let state_entry = self.pools.entry((order_key.token0, order_key.token1));
-                    let order_entry = self.orders.entry((original_locker, salt, order_key));
-
-                    assert(order_entry.read().liquidity.is_zero(), 'Order already exists');
-
-                    let mut pool_state = state_entry.read();
-
-                    // the ticks crossed is zero IFF the pool is not initialized
-                    if (pool_state.initialized_ticks_crossed.is_zero()) {
-                        let initial_tick = if is_selling_token1 {
-                            order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false }
-                        } else {
-                            order_key.tick
-                        };
-
-                        pool_state =
-                            PoolState { initialized_ticks_crossed: 1, last_tick: initial_tick };
-
-                        state_entry.write(pool_state);
-                        core.initialize_pool(order_key.get_pool_key(), initial_tick);
-                    }
-
-                    order_entry
-                        .write(
-                            OrderState {
-                                initialized_ticks_crossed_snapshot: pool_state
-                                    .initialized_ticks_crossed,
-                                liquidity,
-                            },
-                        );
-
-                    let delta = core
-                        .update_position(
-                            pool_key: order_key.get_pool_key(),
-                            params: UpdatePositionParameters {
-                                // all the positions have the same salt
-                                salt: 0,
-                                bounds: order_key.get_bounds(),
-                                liquidity_delta: i129 { mag: liquidity, sign: false },
-                            },
-                        );
-
-                    let amount = if is_selling_token1 {
-                        assert(delta.amount0.is_zero(), 'Tick wrong side selling token1');
-                        delta.amount1.mag
-                    } else {
-                        assert(delta.amount1.is_zero(), 'Tick wrong side selling token0');
-                        delta.amount0.mag
-                    };
-
-                    self
-                        .emit(
-                            OrderPlaced {
-                                owner: original_locker, salt, order_key, liquidity, amount,
-                            },
-                        );
-
-                    let result: PlaceOrderForwardCallbackResult = amount;
-
-                    serialize(@result).span()
+                ForwardCallbackData::PlaceOrder(_) => {
+                    // Keep decoding legacy callbacks, but do not permit any new order state.
+                    panic!("Limit orders deprecated");
                 },
                 ForwardCallbackData::CloseOrder(params) => {
                     let CloseOrderForwardCallbackData { salt, order_key } = params;
