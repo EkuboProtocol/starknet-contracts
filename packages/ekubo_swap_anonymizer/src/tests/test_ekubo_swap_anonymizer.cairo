@@ -1,4 +1,5 @@
 use core::num::traits::Zero;
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use ekubo::types::keys::PoolKey;
 use ekubo_swap_anonymizer::ekubo_swap_anonymizer::{
     IEkuboSwapAnonymizerDispatcher, IEkuboSwapAnonymizerDispatcherTrait,
@@ -13,7 +14,10 @@ use ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::{
     MockERC20DispatcherTrait,
 };
 use privacy::objects::OpenNoteDeposit;
-use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+use snforge_std::{
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
+    stop_cheat_caller_address,
+};
 use starknet::ContractAddress;
 
 const AMOUNT: u128 = 100;
@@ -131,6 +135,48 @@ fn single_hop_swap() {
     assert(input.balance_of(anonymizer).is_zero(), 'INPUT_RETAINED');
     assert(input.balance_of(router).is_zero(), 'ROUTER_INPUT_RETAINED');
     assert(output.balance_of(anonymizer) == AMOUNT.into(), 'OUTPUT_NOT_RECEIVED');
+}
+
+#[test]
+fn approves_only_received_output_for_privacy_caller() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    let privacy_caller: ContractAddress = 0x123.try_into().unwrap();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+
+    start_cheat_caller_address(anonymizer, privacy_caller);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+    stop_cheat_caller_address(anonymizer);
+
+    assert((*deposits.at(0)).amount == AMOUNT, 'INVALID_OUTPUT_AMOUNT');
+    assert(
+        output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'INVALID_OUTPUT_ALLOWANCE',
+    );
+
+    start_cheat_caller_address(output.contract_address, privacy_caller);
+    assert(
+        IERC20Dispatcher { contract_address: output.contract_address }
+            .transferFrom(anonymizer, privacy_caller, AMOUNT.into()),
+        'PRIVACY_POOL_PULL_FAILED',
+    );
+    stop_cheat_caller_address(output.contract_address);
+    assert(output.allowance(anonymizer, privacy_caller).is_zero(), 'ALLOWANCE_NOT_CONSUMED');
+    assert(output.balance_of(privacy_caller) == AMOUNT.into(), 'PRIVACY_POOL_OUTPUT_MISSING');
 }
 
 #[test]
@@ -289,5 +335,34 @@ fn rejects_partial_fill_and_slippage() {
             (AMOUNT + 1).into(),
         ),
         'CLEAR_MINIMUM_NOT_MET',
+    );
+}
+
+#[test]
+fn rejects_zero_output() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    IMockEkuboAMMControlDispatcher { contract_address: router }
+        .set_swap_behavior(SwapBehavior::Noop);
+
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::ZERO_OUT_AMOUNT,
     );
 }

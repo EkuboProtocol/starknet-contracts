@@ -1,0 +1,56 @@
+name: STRK20 Anonymizer
+
+on:
+  push:
+    branches:
+      - main
+      - strk20-swap-anonymizer
+    paths:
+      - ".github/workflows/anonymizer-tests.yaml"
+      - "packages/ekubo_swap_anonymizer/**"
+      - "src/**"
+      - "Scarb.toml"
+      - "Scarb.lock"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/anonymizer-tests.yaml"
+      - "packages/ekubo_swap_anonymizer/**"
+      - "src/**"
+      - "Scarb.toml"
+      - "Scarb.lock"
+
+jobs:
+  test:
+    name: Build and test anonymizer
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ekubo_swap_anonymizer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-lock: packages/ekubo_swap_anonymizer/Scarb.lock
+
+      - name: Build release artifacts
+        run: scarb --profile release build
+
+      - name: Run anonymizer tests
+        run: snforge test
+
+      - name: Record artifact checksums
+        run: sha256sum target/release/*.json > target/release/SHA256SUMS
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ekubo-swap-anonymizer-release
+          path: packages/ekubo_swap_anonymizer/target/release
+          if-no-files-found: error

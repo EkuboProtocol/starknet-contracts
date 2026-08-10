@@ -22,6 +22,10 @@ casm-add-pythonic-hints = true
 [[test]]
 name = "ekubo_swap_anonymizer_unittest"
 build-external-contracts = [
+    "ekubo::core::Core",
+    "ekubo::owned_nft::OwnedNFT",
+    "ekubo::positions::Positions",
+    "ekubo::router::Router",
     "ekubo_swap_anonymizer::test_utils_contracts::mock_ekubo_amm::MockEkuboAMM",
     "ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::MockERC20",
 ]

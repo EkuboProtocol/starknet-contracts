@@ -24,6 +24,7 @@ pub mod errors {
     pub const IN_TOKEN_NOT_CLEARED: felt252 = 'IN_TOKEN_NOT_CLEARED';
     pub const RECEIVED_AMOUNT_OVERFLOW: felt252 = 'RECEIVED_AMOUNT_OVERFLOW';
     pub const ZERO_OUT_AMOUNT: felt252 = 'ZERO_OUT_AMOUNT';
+    pub const MINIMUM_NOT_RECEIVED: felt252 = 'MINIMUM_NOT_RECEIVED';
     pub const TOKEN_APPROVE_FAILED: felt252 = 'TOKEN_APPROVE_FAILED';
 }
 
@@ -154,6 +155,10 @@ pub mod EkuboSwapAnonymizer {
                 .try_into()
                 .expect(errors::RECEIVED_AMOUNT_OVERFLOW);
             assert(out_amount.is_non_zero(), errors::ZERO_OUT_AMOUNT);
+            // `clear_minimum` checks the router's balance before transferring. Check the
+            // amount actually received as well so transfer-tax or otherwise non-standard
+            // tokens cannot bypass the user's minimum output.
+            assert(out_amount.into() >= minimum_received, errors::MINIMUM_NOT_RECEIVED);
             assert(
                 out_erc20.approve(spender: privacy_addr, amount: out_amount.into()),
                 errors::TOKEN_APPROVE_FAILED,
