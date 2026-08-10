@@ -1,0 +1,36 @@
+[package]
+name = "ekubo_swap_anonymizer"
+version = "0.1.0"
+cairo-version = "2.17.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.17.0"
+ekubo = { path = "../.." }
+privacy = { git = "https://github.com/starkware-libs/starknet-privacy", rev = "3dfe66fe2b59d7b95709ec719547fa88b8ef63f9" }
+
+[dev-dependencies]
+snforge_std = "0.59.0"
+
+[lib]
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+casm-add-pythonic-hints = true
+
+[[test]]
+name = "ekubo_swap_anonymizer_unittest"
+build-external-contracts = [
+    "ekubo_swap_anonymizer::test_utils_contracts::mock_ekubo_amm::MockEkuboAMM",
+    "ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::MockERC20",
+]
+
+[features]
+test_utils = []
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]
+
+[scripts]
+test = "snforge test"
