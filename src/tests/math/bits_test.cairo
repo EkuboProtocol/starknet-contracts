@@ -1,4 +1,36 @@
 use crate::math::bits::{lsb, msb};
+use crate::math::exp2::exp2;
+
+#[test]
+#[fuzzer]
+fn fuzz_msb_bounds(value_seed: u128) {
+    let value = if value_seed == 0 {
+        1
+    } else {
+        value_seed
+    };
+    let index = msb(value);
+
+    assert(exp2(index) <= value, 'msb lower bound');
+    if index < 127 {
+        assert(value < exp2(index + 1), 'msb upper bound');
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_lsb_identifies_lowest_set_bit(value_seed: u128) {
+    let value = if value_seed == 0 {
+        1
+    } else {
+        value_seed
+    };
+    let index = lsb(value);
+    let bit = exp2(index);
+
+    assert((value & bit) == bit, 'lsb is set');
+    assert((value & (bit - 1)) == 0, 'lower bits clear');
+}
 
 #[test]
 #[should_panic(expected: ('MSB_NONZERO',))]
@@ -102,4 +134,3 @@ fn lsb_max() {
     let res = lsb(0xffffffffffffffffffffffffffffffff);
     assert(res == 0, 'lsb of max u128');
 }
-

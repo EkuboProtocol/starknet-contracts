@@ -222,4 +222,3 @@ fn exp_inner(x: u128) -> u256 {
 
     ratio
 }
-

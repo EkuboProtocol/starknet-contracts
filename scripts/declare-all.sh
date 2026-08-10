@@ -1,61 +1,97 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to print usage and exit
-print_usage_and_exit() {
-    echo "Usage: $0 --network {sepolia,mainnet}"
-    exit 1
+set -euo pipefail
+
+print_usage() {
+    echo "Usage: $0 --network {sepolia,mainnet} [--url RPC_URL] [--dry-run]"
+    echo "RPC_URL may also be provided through STARKNET_RPC_URL."
 }
 
-# Ensure there are exactly two arguments
-if [ "$#" -ne 2 ]; then
-    print_usage_and_exit
-fi
+NETWORK=""
+RPC_URL="${STARKNET_RPC_URL:-}"
+DRY_RUN=false
 
-# Parse the arguments
 while [[ "$#" -gt 0 ]]; do
-    case $1 in
+    case "$1" in
         --network)
+            [[ "$#" -ge 2 ]] || {
+                print_usage
+                exit 1
+            }
             NETWORK="$2"
+            shift 2
+            ;;
+        --url)
+            [[ "$#" -ge 2 ]] || {
+                print_usage
+                exit 1
+            }
+            RPC_URL="$2"
+            shift 2
+            ;;
+        --dry-run)
+            DRY_RUN=true
             shift
             ;;
         *)
-            echo "Unknown parameter passed: $1"
-            print_usage_and_exit
+            echo "Unknown parameter: $1" >&2
+            print_usage
+            exit 1
             ;;
     esac
-    shift
 done
 
-# Ensure network is valid
-if [ "$NETWORK" != "sepolia" -a "$NETWORK" != "mainnet" ]; then
-    echo "Invalid network: $NETWORK"
-    print_usage_and_exit
+if [[ "$NETWORK" != "sepolia" && "$NETWORK" != "mainnet" ]]; then
+    echo "Invalid network: ${NETWORK:-<unset>}" >&2
+    print_usage
+    exit 1
 fi
 
+NETWORK_ARGS=(--network "$NETWORK")
+if [[ -n "$RPC_URL" ]]; then
+    NETWORK_ARGS=(--url "$RPC_URL")
+fi
 
-scarb build
+scarb --release build
 
 declare_class_hash() {
-    # expects that there is an account set up named by the given network
-    sncast --account $NETWORK --wait declare --network "$NETWORK" --contract-name $1
+    local contract_name="$1"
+    echo "Declaring $contract_name"
+    # Expects an sncast account named after the network.
+    if [[ "$DRY_RUN" == true ]]; then
+        sncast \
+            --account "$NETWORK" \
+            --scarb-profile release \
+            --wait \
+            declare \
+            "${NETWORK_ARGS[@]}" \
+            --contract-name "$contract_name" \
+            --dry-run
+    else
+        sncast \
+            --account "$NETWORK" \
+            --scarb-profile release \
+            --wait \
+            declare \
+            "${NETWORK_ARGS[@]}" \
+            --contract-name "$contract_name"
+    fi
 }
 
-echo "Declaring Core"
-declare_class_hash Core
-echo "Declaring Positions"
-declare_class_hash Positions
-echo "Declaring NFT"
-declare_class_hash OwnedNFT
-echo "Declaring TWAMM"
-declare_class_hash TWAMM
-echo "Declaring LimitOrders"
-declare_class_hash LimitOrders
-echo "Declaring Oracle"
-declare_class_hash Oracle
+CONTRACTS=(
+    Core
+    Positions
+    OwnedNFT
+    TWAMM
+    LimitOrders
+    Oracle
+    Router
+    TokenRegistry
+    PriceFetcher
+    RevenueBuybacks
+    StreamedPayment
+)
 
-echo "Declaring Router"
-declare_class_hash Router
-
-# echo "Declaring TokenRegistry"
-# declare_class_hash TokenRegistry
-
+for contract_name in "${CONTRACTS[@]}"; do
+    declare_class_hash "$contract_name"
+done

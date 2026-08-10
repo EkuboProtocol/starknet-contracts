@@ -19,6 +19,87 @@ const SIXTEEN_POW_SIX: u64 = 0x1000000;
 const SIXTEEN_POW_SEVEN: u64 = 0x10000000;
 const SIXTEEN_POW_EIGHT: u64 = 0x100000000; // 2**32
 
+#[test]
+#[fuzzer]
+fn fuzz_calculate_sale_rate_matches_fixed_point_division(amount_seed: u64, duration_seed: u32) {
+    let amount: u128 = amount_seed.into();
+    let duration = if duration_seed == 0 {
+        1
+    } else {
+        duration_seed
+    };
+    let expected: u128 = ((amount.into() * constants::X32_u256) / duration.into())
+        .try_into()
+        .unwrap();
+
+    assert_eq!(calculate_sale_rate(amount, duration), expected);
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_amount_from_sale_rate_rounding(sale_rate_seed: u64, duration: u32) {
+    let sale_rate: u128 = sale_rate_seed.into();
+    let down = calculate_amount_from_sale_rate(sale_rate, duration, false);
+    let up = calculate_amount_from_sale_rate(sale_rate, duration, true);
+
+    assert(down <= up, 'rounding order');
+    assert(up - down <= 1, 'rounding error');
+    assert(down * constants::X32_u128 <= sale_rate * duration.into(), 'floor lower bound');
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_calculate_c_is_bounded_and_symmetric(
+    sqrt_ratio_a_seed: u128, sqrt_ratio_b_seed: u128, round_up: bool,
+) {
+    let sqrt_ratio_a: u256 = sqrt_ratio_a_seed.into();
+    let sqrt_ratio_b: u256 = sqrt_ratio_b_seed.into();
+    let (c_ab, sign_ab) = calculate_c(sqrt_ratio_a, sqrt_ratio_b, round_up);
+    let (c_ba, sign_ba) = calculate_c(sqrt_ratio_b, sqrt_ratio_a, round_up);
+
+    assert(c_ab <= constants::X128, 'c bounded');
+    assert_eq!(c_ab, c_ba);
+    if sqrt_ratio_a != sqrt_ratio_b {
+        assert_eq!(sign_ab, !sign_ba);
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_next_sqrt_ratio_stays_between_price_and_sale_ratio(
+    sqrt_ratio_seed: u256,
+    liquidity_seed: u64,
+    token0_seed: u64,
+    token1_seed: u64,
+    time_elapsed: u16,
+    fee: u128,
+) {
+    let sqrt_ratio = crate::math::ticks::min_sqrt_ratio()
+        + (sqrt_ratio_seed % (crate::math::ticks::max_sqrt_ratio()
+            - crate::math::ticks::min_sqrt_ratio()));
+    let token0_sale_rate: u128 = token0_seed.into() + 1;
+    let token1_sale_rate: u128 = token1_seed.into() + 1;
+    let sqrt_sale_ratio = calculate_next_sqrt_ratio(
+        sqrt_ratio, 0, token0_sale_rate, token1_sale_rate, 0, fee,
+    );
+    let next = calculate_next_sqrt_ratio(
+        sqrt_ratio,
+        liquidity_seed.into(),
+        token0_sale_rate,
+        token1_sale_rate,
+        time_elapsed.into(),
+        fee,
+    );
+
+    if sqrt_sale_ratio >= sqrt_ratio {
+        assert(next >= sqrt_ratio, 'moves up from price');
+        assert(next <= sqrt_sale_ratio, 'moves towards sale ratio');
+    } else {
+        assert(next <= sqrt_ratio, 'moves down from price');
+        assert(next >= sqrt_sale_ratio, 'moves towards sale ratio');
+    }
+}
+
 
 mod SaleRateTest {
     use super::{

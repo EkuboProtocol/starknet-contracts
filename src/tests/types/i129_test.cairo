@@ -6,6 +6,30 @@ use crate::tests::types::keys_test::check_hashes_differ;
 use crate::types::i129::{AddDeltaTrait, i129};
 
 #[test]
+#[fuzzer]
+fn fuzz_add_delta_matches_unsigned_arithmetic(liquidity: u128, magnitude_seed: u128, sign: bool) {
+    let max = 0xffffffffffffffffffffffffffffffff_u128;
+    let available = if sign {
+        liquidity
+    } else {
+        max - liquidity
+    };
+    let magnitude = if available == max {
+        magnitude_seed
+    } else {
+        magnitude_seed % (available + 1)
+    };
+    let result = liquidity.add(i129 { mag: magnitude, sign });
+    let expected = if sign {
+        liquidity - magnitude
+    } else {
+        liquidity + magnitude
+    };
+
+    assert_eq!(result, expected);
+}
+
+#[test]
 fn test_legacy_hash_i129() {
     check_hashes_differ(i129 { mag: 0, sign: false }, i129 { mag: 1, sign: false });
     check_hashes_differ(i129 { mag: 1, sign: true }, i129 { mag: 1, sign: false });

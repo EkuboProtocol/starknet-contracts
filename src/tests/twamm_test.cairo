@@ -1822,11 +1822,11 @@ mod PlaceOrdersAndUpdateSaleRate {
         // time window    = 256 sec
         // sale rate      = 10,000 / 256 ~= 39.0625 per sec
         // sold amount   ~= 128 * 39.0625 ~= 5,000 tokens
-        // bought amount ~= 9,9989.94829713355494903 tokens
+        // bought amount ~= 9,998.994829713355494904 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 5000000000000000000000);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 9998994829713355494903);
+        assert_eq!(swapped_event.delta.amount1.mag, 9998994829713355494904);
 
         let event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         assert_eq!(event.key.owner, twamm.contract_address);
@@ -1866,9 +1866,9 @@ mod PlaceOrdersAndUpdateSaleRate {
 
         // amount  = updated reward_rate * updated sale_rate
         //         = 511.948535281 * 19.53125
-        //        ~= 9,998.994829713355494901 tokens
-        assert_eq!(event.amount, 9998994829713355494901);
-        assert_eq!(amount_withdrawn, 9998994829713355494901);
+        //        ~= 9,998.994829713355494902 tokens
+        assert_eq!(event.amount, 9998994829713355494902);
+        assert_eq!(amount_withdrawn, 9998994829713355494902);
     }
 
     #[test]
@@ -2105,24 +2105,24 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
-        // bought amount ~= 9,998.994829713355494901 tokens
+        // bought amount ~= 9,998.994829713355494902 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 0x10f0cf064dd591fffff);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 0x21e0bedb4ade006d5f5);
+        assert_eq!(swapped_event.delta.amount1.mag, 0x21e0bedb4ade006d5f6);
 
-        // reward rate  = 9,998.994829713355494901 / 2.4509803922
+        // reward rate  = 9,998.994829713355494902 / 2.4509803922
         //               ~= 4,079.5898895263671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
-        assert_eq!(reward_rate.value1, 0xfef970310b8b749c2bcbffcbb3e);
+        assert_eq!(reward_rate.value1, 0xfef970310b8b749c2c446b67740);
 
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
 
         // amount  = reward_rate * sale_rate
         //         = 4,079.5898895263671875 * 2.4509803922
-        //        ~= 9,998.994827270507812499 tokens
-        assert_eq!(event.amount, 0x21e0bedb4ade006d5f4);
+        //        ~= 9,998.994827270507812501 tokens
+        assert_eq!(event.amount, 0x21e0bedb4ade006d5f5);
 
         // withdraw the remaining proceeds after order expires
 
@@ -2151,17 +2151,17 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
-        // bought amount ~= 9,996.995431680968690346 tokens
+        // bought amount ~= 9,996.995431680968690348 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 0x10f0cf064dd591fffff);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aaa);
+        assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aac);
 
-        // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
+        // reward rate  = prev_rewards_rate + (9,996.995431680968690348 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
-        assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dc39bced5bf);
+        assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dda2ffc09c5);
 
         // withdraw proceeds
         // Per-call cheating for positions methods with callbacks
@@ -2172,7 +2172,7 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // amount  = reward_rate * sale_rate
         //         = 4,078.774136054 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
-        assert_eq!(event.amount, 0x21df02e6ac312ff0aa9);
+        assert_eq!(event.amount, 0x21df02e6ac312ff0aab);
     }
 
     #[test]
@@ -2250,16 +2250,16 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,040 * 2.4509803922 ~= 5,000 tokens
-        // bought amount ~= 9,998.994829713355494901 tokens
+        // bought amount ~= 9,998.994829713355494902 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 0x10f0cf064dd591fffff);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 0x21e0bedb4ade006d5f5);
+        assert_eq!(swapped_event.delta.amount1.mag, 0x21e0bedb4ade006d5f6);
 
-        // reward rate  = 9998.994829713355494901 / 2.4509803922
+        // reward rate  = 9998.994829713355494902 / 2.4509803922
         //               ~= 4079.5898895263671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
-        assert_eq!(reward_rate.value1, 0xfef970310b8b749c2bcbffcbb3e);
+        assert_eq!(reward_rate.value1, 0xfef970310b8b749c2c446b67740);
 
         set_block_timestamp_global(order1_end_time + 1);
         // withdraw proceeds
@@ -2289,24 +2289,24 @@ mod PlaceOrderOnOneSideAndWithdrawProceeds {
         // time window    = 2,040 sec
         // sale rate      = 10,000 / 4,080 ~= 2.4509803922 per sec
         // sold amount   ~= 2,048 * 2.4509803922 = 5,000 tokens
-        // bought amount ~= 9,996.995431680968690346 tokens
+        // bought amount ~= 9,996.995431680968690348 tokens
         assert_eq!(swapped_event.delta.amount0.sign, false);
         assert_eq!(swapped_event.delta.amount0.mag, 0x10f0cf064dd591fffff);
         assert_eq!(swapped_event.delta.amount1.sign, true);
-        assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aaa);
+        assert_eq!(swapped_event.delta.amount1.mag, 0x21df02e6ac312ff0aac);
 
-        // reward rate  = prev_rewards_rate + (9,996.995431680968690346 / 2.4509803922)
+        // reward rate  = prev_rewards_rate + (9,996.995431680968690348 / 2.4509803922)
         //               ~= 4,079.5898895263671875 + 4,078.774136054
         //               ~= 8,158.364013671875 (then scaled by 2**96)
         let reward_rate = twamm.get_reward_rate(state_key);
-        assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dc39bced5bf);
+        assert_eq!(reward_rate.value1, 0x1fde5d30d9b7d4955dda2ffc09c5);
 
         let _event: LoadedBalance = logger.pop_log(core.contract_address).unwrap();
         let event: OrderProceedsWithdrawn = logger.pop_log(twamm.contract_address).unwrap();
         // amount  = reward_rate * sale_rate
         //         = 8,158.364013671875 * 2.4509803922
         //        ~= 9,996.9954316808 tokens
-        assert_eq!(event.amount, 0x43bfc1c1f70f305e09e);
+        assert_eq!(event.amount, 0x43bfc1c1f70f305e0a1);
     }
 
     #[test]

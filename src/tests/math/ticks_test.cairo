@@ -6,6 +6,65 @@ use crate::math::ticks::{
 };
 use crate::types::i129::i129;
 
+fn fuzz_tick(magnitude_seed: u128, sign: bool) -> i129 {
+    i129 { mag: magnitude_seed % (constants::MAX_TICK_MAGNITUDE + 1), sign }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_tick_to_sqrt_ratio_is_valid_and_invertible(magnitude_seed: u128, sign: bool) {
+    let tick = fuzz_tick(magnitude_seed, sign);
+    let sqrt_ratio = tick_to_sqrt_ratio(tick);
+
+    assert(sqrt_ratio >= min_sqrt_ratio(), 'ratio >= min');
+    assert(sqrt_ratio <= max_sqrt_ratio(), 'ratio <= max');
+
+    // sqrt_ratio_to_tick accepts [min, max), while max_tick maps exactly to max.
+    if tick != max_tick() {
+        assert_eq!(sqrt_ratio_to_tick(sqrt_ratio), tick);
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_tick_to_sqrt_ratio_is_strictly_increasing(magnitude_seed: u128, sign: bool) {
+    let tick = fuzz_tick(magnitude_seed, sign);
+    if tick != max_tick() {
+        let next_tick = tick + i129 { mag: 1, sign: false };
+        assert(tick_to_sqrt_ratio(tick) < tick_to_sqrt_ratio(next_tick), 'strictly increasing');
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_sqrt_ratio_to_tick_bounds(seed: u256) {
+    let sqrt_ratio = min_sqrt_ratio() + (seed % (max_sqrt_ratio() - min_sqrt_ratio()));
+    let tick = sqrt_ratio_to_tick(sqrt_ratio);
+    let lower = tick_to_sqrt_ratio(tick);
+
+    assert(lower <= sqrt_ratio, 'lower tick bound');
+    if tick != max_tick() {
+        assert(
+            sqrt_ratio < tick_to_sqrt_ratio(tick + i129 { mag: 1, sign: false }),
+            'upper tick bound',
+        );
+    }
+}
+
+#[test]
+#[fuzzer]
+fn fuzz_tick_inverse_around_boundary(magnitude_seed: u128, sign: bool) {
+    let tick = fuzz_tick(magnitude_seed, sign);
+    let sqrt_ratio = tick_to_sqrt_ratio(tick);
+
+    if tick != max_tick() {
+        assert_eq!(sqrt_ratio_to_tick(sqrt_ratio + 1_u256), tick);
+    }
+    if tick != min_tick() {
+        assert_eq!(sqrt_ratio_to_tick(sqrt_ratio - 1_u256), tick - i129 { mag: 1, sign: false });
+    }
+}
+
 #[test]
 fn zero_tick() {
     let sqrt_ratio = tick_to_sqrt_ratio(Zero::zero());
