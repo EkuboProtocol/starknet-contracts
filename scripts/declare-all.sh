@@ -83,6 +83,7 @@ CONTRACTS=(
     Positions
     OwnedNFT
     TWAMM
+    TWAMMRefund
     LimitOrders
     Oracle
     Router
