@@ -212,6 +212,55 @@ fn test_twamm_still_works_after_the_round_trip() {
     assert(info.sale_rate > 0, 'sale rate');
 }
 
+// The proposal pays several orders in one call, so exercise a multi-entry array that splits one
+// token across two recipients -- the same shape as the mainnet payload.
+#[test]
+fn test_refund_pays_multiple_recipients_in_one_call() {
+    let (
+        _d,
+        core,
+        twamm,
+        _positions,
+        token0,
+        _token1,
+        seller,
+        _order_key,
+        _token_id,
+        refund_class,
+        _twamm_class,
+    ) =
+        strand_funds();
+
+    let upgradeable = IUpgradeableDispatcher { contract_address: twamm.contract_address };
+    set_caller_address_once(twamm.contract_address, default_owner());
+    upgradeable.replace_class_hash(refund_class);
+
+    let other: ContractAddress = 0x1234.try_into().unwrap();
+    let first: u128 = SELL_AMOUNT / 4;
+    let second: u128 = SELL_AMOUNT / 4;
+
+    let token0_erc20 = IERC20Dispatcher { contract_address: token0.contract_address };
+    let seller_before = token0_erc20.balanceOf(seller);
+    let other_before = token0_erc20.balanceOf(other);
+
+    set_caller_address_once(twamm.contract_address, default_owner());
+    ITWAMMRefundDispatcher { contract_address: twamm.contract_address }
+        .refund(
+            array![
+                Refund { token: token0.contract_address, recipient: seller, amount: first },
+                Refund { token: token0.contract_address, recipient: other, amount: second },
+            ],
+        );
+
+    assert(token0_erc20.balanceOf(seller) == seller_before + first.into(), 'seller');
+    assert(token0_erc20.balanceOf(other) == other_before + second.into(), 'other');
+
+    let saved_key = SavedBalanceKey {
+        owner: twamm.contract_address, token: token0.contract_address, salt: 0,
+    };
+    assert(core.get_saved_balance(saved_key) == SELL_AMOUNT - first - second, 'remainder');
+}
+
 #[test]
 #[should_panic(expected: 'OWNER_ONLY')]
 fn test_refund_is_owner_only() {
