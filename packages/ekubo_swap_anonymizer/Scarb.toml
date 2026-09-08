@@ -28,6 +28,7 @@ build-external-contracts = [
     "ekubo::router::Router",
     "ekubo_swap_anonymizer::test_utils_contracts::mock_ekubo_amm::MockEkuboAMM",
     "ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::MockERC20",
+    "ekubo_swap_anonymizer::test_utils_contracts::mock_reentrant_erc20::MockReentrantERC20",
 ]
 
 [features]

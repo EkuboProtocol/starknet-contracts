@@ -148,16 +148,34 @@ pub mod EkuboSwapAnonymizer {
             assert(in_token_remaining.is_zero(), errors::IN_TOKEN_NOT_CLEARED);
 
             let balance_before = out_erc20.balanceOf(account: self_addr);
-            clear.clear_minimum(token: out_erc20, minimum: minimum_received);
+            let cleared = clear.clear_minimum(token: out_erc20, minimum: minimum_received);
             let balance_after = out_erc20.balanceOf(account: self_addr);
 
-            let out_amount: u128 = (balance_after - balance_before)
+            // Credit the smaller of what the Router says it sent and what the
+            // balance actually grew by.
+            //
+            // The growth alone is not safe: `clear_minimum` moves the output
+            // token by calling `transfer` on it, so a token with a hook can
+            // re-enter here, run a second swap into this same contract, and
+            // have those proceeds counted inside this invocation's window --
+            // leaving both callers approved for more than the contract holds.
+            // `cleared` is read from the Router before that transfer, so
+            // re-entrancy cannot inflate it.
+            //
+            // The Router's figure alone is not safe either, which is why the
+            // growth is still measured: a transfer-tax token delivers less than
+            // `clear_minimum` checked for, and taking the minimum keeps that
+            // shortfall from passing the user's slippage bound.
+            let received = if (balance_after - balance_before) < cleared {
+                balance_after - balance_before
+            } else {
+                cleared
+            };
+
+            let out_amount: u128 = received
                 .try_into()
                 .expect(errors::RECEIVED_AMOUNT_OVERFLOW);
             assert(out_amount.is_non_zero(), errors::ZERO_OUT_AMOUNT);
-            // `clear_minimum` checks the router's balance before transferring. Check the
-            // amount actually received as well so transfer-tax or otherwise non-standard
-            // tokens cannot bypass the user's minimum output.
             assert(out_amount.into() >= minimum_received, errors::MINIMUM_NOT_RECEIVED);
             assert(
                 out_erc20.approve(spender: privacy_addr, amount: out_amount.into()),

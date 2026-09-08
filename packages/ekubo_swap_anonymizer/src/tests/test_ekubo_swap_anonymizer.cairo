@@ -13,10 +13,13 @@ use ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::{
     IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20DispatcherImpl,
     MockERC20DispatcherTrait,
 };
+use ekubo_swap_anonymizer::test_utils_contracts::mock_reentrant_erc20::{
+    IMockReentrantERC20Dispatcher, IMockReentrantERC20DispatcherTrait,
+};
 use privacy::objects::OpenNoteDeposit;
 use snforge_std::{
     ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
-    stop_cheat_caller_address,
+    stop_cheat_caller_address, test_address,
 };
 use starknet::ContractAddress;
 
@@ -365,4 +368,99 @@ fn rejects_zero_output() {
         ),
         errors::ZERO_OUT_AMOUNT,
     );
+}
+
+#[test]
+fn donated_output_is_not_credited() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    let privacy_caller: ContractAddress = 0x123.try_into().unwrap();
+
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    // Sitting on the contract before this invocation: another integrator's
+    // stranded output, or a deliberate donation meant to inflate the note.
+    output.mint(anonymizer, AMOUNT);
+
+    start_cheat_caller_address(anonymizer, privacy_caller);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+    stop_cheat_caller_address(anonymizer);
+
+    // Only this invocation's proceeds are credited, and only they are approved.
+    assert((*deposits.at(0)).amount == AMOUNT, 'DONATION_CREDITED');
+    assert(
+        output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'DONATION_APPROVED',
+    );
+    assert(output.balance_of(anonymizer) == (AMOUNT * 2).into(), 'UNEXPECTED_BALANCE');
+}
+
+#[test]
+fn reentrant_output_token_cannot_over_approve() {
+    let anonymizer = deploy_anonymizer();
+    let outer_router = deploy_router();
+    let inner_router = deploy_router();
+    let input = deploy_token();
+    let output = IMockReentrantERC20Dispatcher {
+        contract_address: deploy_contract("MockReentrantERC20"),
+    };
+    // No caller cheat here on purpose: it would also apply to the nested call,
+    // collapsing both invocations onto one spender and hiding the double count.
+    let privacy_caller: ContractAddress = test_address();
+
+    // Enough input for both the outer invocation and the re-entrant one.
+    input.mint(anonymizer, AMOUNT * 2);
+    output.mint(outer_router, AMOUNT);
+    // The nested call needs its own router, because `clear_minimum` drains the
+    // outer one before the hook fires.
+    output.mint(inner_router, AMOUNT);
+
+    output.arm(anonymizer, inner_router, input.contract_address, AMOUNT, 0);
+
+    let deposits = invoke(
+        anonymizer,
+        outer_router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+
+    assert(output.did_reenter(), 'DID_NOT_REENTER');
+
+    // Whatever the two invocations each claim, the contract can never approve
+    // more of the output token than it actually holds -- otherwise one caller's
+    // note is payable only by stealing another's.
+    let outer_credited: u256 = (*deposits.at(0)).amount.into();
+    let outer_allowance = IERC20Dispatcher { contract_address: output.contract_address }
+        .allowance(anonymizer, privacy_caller);
+    let inner_allowance = IERC20Dispatcher { contract_address: output.contract_address }
+        .allowance(anonymizer, output.contract_address);
+    let held = IERC20Dispatcher { contract_address: output.contract_address }
+        .balanceOf(anonymizer);
+
+    assert(outer_allowance == outer_credited, 'ALLOWANCE_MISMATCH');
+    // Each invocation is credited exactly its own proceeds: without the bound
+    // on `cleared` the outer call counts the nested one's output too.
+    assert(outer_credited == AMOUNT.into(), 'OUTER_OVER_CREDITED');
+    assert(inner_allowance == AMOUNT.into(), 'INNER_MISCREDITED');
+    assert(outer_allowance + inner_allowance <= held, 'OVER_APPROVED');
 }
