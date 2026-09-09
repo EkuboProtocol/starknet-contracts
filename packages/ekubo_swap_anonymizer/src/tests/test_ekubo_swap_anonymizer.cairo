@@ -576,3 +576,148 @@ fn credits_only_output_actually_received() {
         'TRANSFER_FEE_APPROVED',
     );
 }
+
+#[test]
+fn rejects_checked_split_sum_overflow() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    let maximum = 0xffffffffffffffffffffffffffffffff_u128;
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            maximum,
+            array![
+                PrivateSwap { input_amount: maximum, route: array![node(input, output)] },
+                PrivateSwap { input_amount: 1, route: array![node(input, output)] },
+            ],
+            0,
+        ),
+        'u128_add Overflow',
+    );
+}
+
+#[test]
+fn rejects_output_above_open_note_capacity() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, 0xffffffffffffffffffffffffffffffff);
+    output.mint(router, 1);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::RECEIVED_AMOUNT_OVERFLOW,
+    );
+    assert(input.balance_of(anonymizer) == AMOUNT.into(), 'OVERFLOW_INPUT_LOST');
+    assert(output.balance_of(anonymizer).is_zero(), 'OVERFLOW_OUTPUT_RETAINED');
+    assert(output.allowance(anonymizer, test_address()).is_zero(), 'OVERFLOW_APPROVAL');
+}
+
+#[test]
+fn rejects_false_token_calls_atomically() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    input.set_failures(true, false);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            1,
+        ),
+        errors::TOKEN_TRANSFER_FAILED,
+    );
+    input.set_failures(false, false);
+    output.set_failures(false, true);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            1,
+        ),
+        errors::TOKEN_APPROVE_FAILED,
+    );
+    assert(input.balance_of(anonymizer) == AMOUNT.into(), 'FAILED_CALL_INPUT_LOST');
+    assert(input.balance_of(router).is_zero(), 'FAILED_CALL_INPUT_RETAINED');
+    assert(output.balance_of(router) == AMOUNT.into(), 'FAILED_CALL_OUTPUT_LOST');
+    assert(output.balance_of(anonymizer).is_zero(), 'FAILED_CALL_OUTPUT_RETAINED');
+}
+
+#[test]
+#[fuzzer(runs: 64)]
+fn split_accounting_preserves_router_donations(amount: u128, donation: u128) {
+    if amount < 2 {
+        return;
+    }
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, amount);
+    input.mint(router, donation);
+    output.mint(router, amount);
+    let deposits = IEkuboSwapAnonymizerDispatcher { contract_address: anonymizer }
+        .privacy_invoke(
+            router,
+            input.contract_address,
+            output.contract_address,
+            amount,
+            array![
+                PrivateSwap {
+                    input_amount: amount / 2,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+                PrivateSwap {
+                    input_amount: amount - amount / 2,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            amount.into(),
+            'FUZZ_NOTE',
+        );
+    assert((*deposits.at(0)).amount == amount, 'WRONG_FUZZ_OUTPUT');
+    assert(input.balance_of(router) == donation.into(), 'ROUTER_DONATION_CHANGED');
+    assert(input.balance_of(anonymizer).is_zero(), 'FUZZ_INPUT_RETAINED');
+    assert(output.balance_of(anonymizer) == amount.into(), 'FUZZ_OUTPUT_MISMATCH');
+    assert(output.allowance(anonymizer, test_address()) == amount.into(), 'FUZZ_ALLOWANCE');
+}

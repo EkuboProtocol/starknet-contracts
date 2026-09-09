@@ -135,6 +135,7 @@ pub mod EkuboSwapAnonymizer {
             let in_erc20 = IERC20Dispatcher { contract_address: in_token };
             let out_erc20 = IERC20Dispatcher { contract_address: out_token };
 
+            let router_input_before = in_erc20.balanceOf(account: router_addr);
             assert(
                 in_erc20.transfer(recipient: router_addr, amount: in_amount.into()),
                 errors::TOKEN_TRANSFER_FAILED,
@@ -144,8 +145,13 @@ pub mod EkuboSwapAnonymizer {
                 .multi_multihop_swap(swaps: router_swaps);
 
             let clear = IClearDispatcher { contract_address: router_addr };
-            let in_token_remaining = clear.clear(token: in_erc20);
-            assert(in_token_remaining.is_zero(), errors::IN_TOKEN_NOT_CLEARED);
+            // The shared Router may hold permissionless donations. Exact-input
+            // settlement must consume this invocation's input, independently of
+            // that pre-existing balance. Leave donations on the Router.
+            assert(
+                in_erc20.balanceOf(account: router_addr) == router_input_before,
+                errors::IN_TOKEN_NOT_CLEARED,
+            );
 
             let balance_before = out_erc20.balanceOf(account: self_addr);
             let cleared = clear.clear_minimum(token: out_erc20, minimum: minimum_received);
