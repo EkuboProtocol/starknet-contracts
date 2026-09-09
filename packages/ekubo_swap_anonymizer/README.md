@@ -28,13 +28,14 @@ contain several hops.
 - Every Router node uses `sqrt_ratio_limit = 0`, and any input left on the Router causes a revert.
 - The Router's aggregate output and the amount actually received by this contract must both satisfy
   `minimum_received`.
-- The returned open-note deposit contains only the output balance increase from this invocation.
+- The returned open-note deposit is bounded by both the Router clear amount and the output balance increase, preventing nested calls from inflating the credited amount.
 
 ## Build and test
 
 From this directory:
 
 ```sh
+python3 scripts/fetch-dependencies.py
 scarb --profile release build
 snforge test
 ```
@@ -42,3 +43,5 @@ snforge test
 The release process must record the source commit, privacy dependency revision, Cairo/Scarb
 versions, Sierra class hash and compiled class hash. The deployed class hash must be reproduced from
 the audited commit before either the Sepolia or mainnet address is added to the interface.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the verified mainnet address, reproducible class hashes, and toolchain.

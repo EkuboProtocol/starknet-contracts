@@ -33,11 +33,19 @@ jobs:
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
+        with:
+          starknet-foundry-version: "0.62.1"
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-lock: packages/ekubo_swap_anonymizer/Scarb.lock
+          scarb-version: "2.20.0"
+
+      - name: Fetch dependencies without concurrent Git checkouts
+        run: python3 scripts/fetch-dependencies.py
+
+      - name: Check formatting
+        run: scarb fmt --check
 
       - name: Build release artifacts
         run: scarb --profile release build

@@ -172,9 +172,7 @@ pub mod EkuboSwapAnonymizer {
                 cleared
             };
 
-            let out_amount: u128 = received
-                .try_into()
-                .expect(errors::RECEIVED_AMOUNT_OVERFLOW);
+            let out_amount: u128 = received.try_into().expect(errors::RECEIVED_AMOUNT_OVERFLOW);
             assert(out_amount.is_non_zero(), errors::ZERO_OUT_AMOUNT);
             assert(out_amount.into() >= minimum_received, errors::MINIMUM_NOT_RECEIVED);
             assert(

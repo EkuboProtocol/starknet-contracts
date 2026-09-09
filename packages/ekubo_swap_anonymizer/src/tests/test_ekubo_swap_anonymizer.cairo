@@ -402,9 +402,7 @@ fn donated_output_is_not_credited() {
 
     // Only this invocation's proceeds are credited, and only they are approved.
     assert((*deposits.at(0)).amount == AMOUNT, 'DONATION_CREDITED');
-    assert(
-        output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'DONATION_APPROVED',
-    );
+    assert(output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'DONATION_APPROVED');
     assert(output.balance_of(anonymizer) == (AMOUNT * 2).into(), 'UNEXPECTED_BALANCE');
 }
 
@@ -454,8 +452,7 @@ fn reentrant_output_token_cannot_over_approve() {
         .allowance(anonymizer, privacy_caller);
     let inner_allowance = IERC20Dispatcher { contract_address: output.contract_address }
         .allowance(anonymizer, output.contract_address);
-    let held = IERC20Dispatcher { contract_address: output.contract_address }
-        .balanceOf(anonymizer);
+    let held = IERC20Dispatcher { contract_address: output.contract_address }.balanceOf(anonymizer);
 
     assert(outer_allowance == outer_credited, 'ALLOWANCE_MISMATCH');
     // Each invocation is credited exactly its own proceeds: without the bound
@@ -463,4 +460,119 @@ fn reentrant_output_token_cannot_over_approve() {
     assert(outer_credited == AMOUNT.into(), 'OUTER_OVER_CREDITED');
     assert(inner_allowance == AMOUNT.into(), 'INNER_MISCREDITED');
     assert(outer_allowance + inner_allowance <= held, 'OVER_APPROVED');
+}
+
+#[test]
+fn rejects_zero_addresses_and_amount() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    assert_felt_error(
+        safe_invoke(anonymizer, Zero::zero(), input, output, AMOUNT, array![], 0),
+        errors::ZERO_ROUTER,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, Zero::zero(), output, AMOUNT, array![], 0),
+        errors::ZERO_IN_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, Zero::zero(), AMOUNT, array![], 0),
+        errors::ZERO_OUT_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, input, AMOUNT, array![], 0), errors::SAME_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, output, 0, array![], 0), errors::ZERO_IN_AMOUNT,
+    );
+}
+
+#[test]
+fn rejects_zero_splits_and_empty_routes() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            AMOUNT,
+            array![PrivateSwap { input_amount: 0, route: array![node(input, output)] }],
+            0,
+        ),
+        errors::ZERO_SPLIT_AMOUNT,
+    );
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            AMOUNT,
+            array![PrivateSwap { input_amount: AMOUNT, route: array![] }],
+            0,
+        ),
+        errors::EMPTY_ROUTE,
+    );
+}
+
+#[test]
+fn rejects_output_transfer_shortfall() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    output.set_transfer_fee(1);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            AMOUNT.into(),
+        ),
+        errors::MINIMUM_NOT_RECEIVED,
+    );
+}
+
+#[test]
+fn credits_only_output_actually_received() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    output.set_transfer_fee(1);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        (AMOUNT - 1).into(),
+    );
+    assert((*deposits.at(0)).amount == AMOUNT - 1, 'TRANSFER_FEE_CREDITED');
+    assert(
+        output.allowance(anonymizer, test_address()) == (AMOUNT - 1).into(),
+        'TRANSFER_FEE_APPROVED',
+    );
 }

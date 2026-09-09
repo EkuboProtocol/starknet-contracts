@@ -4,6 +4,7 @@ use starknet::ContractAddress;
 #[starknet::interface]
 pub trait IMockERC20<T> {
     fn mint(ref self: T, recipient: ContractAddress, amount: u128);
+    fn set_transfer_fee(ref self: T, fee: u128);
 }
 
 #[generate_trait]
@@ -35,6 +36,7 @@ pub mod MockERC20 {
         balances: Map<ContractAddress, u128>,
         allowances: Map<(ContractAddress, ContractAddress), u128>,
         total_supply: u128,
+        transfer_fee: u128,
     }
 
     #[constructor]
@@ -48,7 +50,12 @@ pub mod MockERC20 {
             let sender_balance = self.balances.read(sender);
             assert(sender_balance >= amount.low, 'INSUFFICIENT_BALANCE');
             self.balances.write(sender, sender_balance - amount.low);
-            self.balances.write(recipient, self.balances.read(recipient) + amount.low);
+            self
+                .balances
+                .write(
+                    recipient,
+                    self.balances.read(recipient) + amount.low - self.transfer_fee.read(),
+                );
             true
         }
 
@@ -89,6 +96,9 @@ pub mod MockERC20 {
 
     #[abi(embed_v0)]
     impl MockERC20Impl of IMockERC20<ContractState> {
+        fn set_transfer_fee(ref self: ContractState, fee: u128) {
+            self.transfer_fee.write(fee);
+        }
         fn mint(ref self: ContractState, recipient: ContractAddress, amount: u128) {
             self.balances.write(recipient, self.balances.read(recipient) + amount);
             self.total_supply.write(self.total_supply.read() + amount);
