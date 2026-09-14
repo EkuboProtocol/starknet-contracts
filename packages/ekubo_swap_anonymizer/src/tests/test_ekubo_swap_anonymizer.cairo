@@ -1,0 +1,723 @@
+use core::num::traits::Zero;
+use ekubo::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+use ekubo::types::keys::PoolKey;
+use ekubo_swap_anonymizer::ekubo_swap_anonymizer::{
+    IEkuboSwapAnonymizerDispatcher, IEkuboSwapAnonymizerDispatcherTrait,
+    IEkuboSwapAnonymizerSafeDispatcher, IEkuboSwapAnonymizerSafeDispatcherTrait, PrivateRouteNode,
+    PrivateSwap, errors,
+};
+use ekubo_swap_anonymizer::test_utils_contracts::mock_ekubo_amm::{
+    IMockEkuboAMMControlDispatcher, IMockEkuboAMMControlDispatcherTrait, SwapBehavior,
+};
+use ekubo_swap_anonymizer::test_utils_contracts::mock_erc20::{
+    IMockERC20Dispatcher, IMockERC20DispatcherTrait, MockERC20DispatcherImpl,
+    MockERC20DispatcherTrait,
+};
+use ekubo_swap_anonymizer::test_utils_contracts::mock_reentrant_erc20::{
+    IMockReentrantERC20Dispatcher, IMockReentrantERC20DispatcherTrait,
+};
+use privacy::objects::OpenNoteDeposit;
+use snforge_std::{
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
+    stop_cheat_caller_address, test_address,
+};
+use starknet::ContractAddress;
+
+const AMOUNT: u128 = 100;
+
+fn deploy_contract(name: ByteArray) -> ContractAddress {
+    let class = declare(name).unwrap().contract_class();
+    let (address, _) = class.deploy(@array![]).unwrap();
+    address
+}
+
+fn deploy_anonymizer() -> ContractAddress {
+    deploy_contract("EkuboSwapAnonymizer")
+}
+
+fn deploy_router() -> ContractAddress {
+    deploy_contract("MockEkuboAMM")
+}
+
+fn deploy_token() -> IMockERC20Dispatcher {
+    IMockERC20Dispatcher { contract_address: deploy_contract("MockERC20") }
+}
+
+fn pool_key(token_a: ContractAddress, token_b: ContractAddress) -> PoolKey {
+    let (token0, token1) = if token_a < token_b {
+        (token_a, token_b)
+    } else {
+        (token_b, token_a)
+    };
+    PoolKey { token0, token1, fee: 0, tick_spacing: 1, extension: Zero::zero() }
+}
+
+fn node(token_a: ContractAddress, token_b: ContractAddress) -> PrivateRouteNode {
+    PrivateRouteNode { pool_key: pool_key(token_a, token_b), skip_ahead: 0 }
+}
+
+fn invoke(
+    anonymizer: ContractAddress,
+    router: ContractAddress,
+    in_token: ContractAddress,
+    out_token: ContractAddress,
+    swaps: Array<PrivateSwap>,
+    minimum_received: u256,
+) -> Span<OpenNoteDeposit> {
+    IEkuboSwapAnonymizerDispatcher { contract_address: anonymizer }
+        .privacy_invoke(
+            router_addr: router,
+            :in_token,
+            :out_token,
+            in_amount: AMOUNT,
+            :swaps,
+            :minimum_received,
+            note_id: 'NOTE',
+        )
+}
+
+#[feature("safe_dispatcher")]
+fn safe_invoke(
+    anonymizer: ContractAddress,
+    router: ContractAddress,
+    in_token: ContractAddress,
+    out_token: ContractAddress,
+    in_amount: u128,
+    swaps: Array<PrivateSwap>,
+    minimum_received: u256,
+) -> Result<Span<OpenNoteDeposit>, Array<felt252>> {
+    IEkuboSwapAnonymizerSafeDispatcher { contract_address: anonymizer }
+        .privacy_invoke(
+            router_addr: router,
+            :in_token,
+            :out_token,
+            :in_amount,
+            :swaps,
+            :minimum_received,
+            note_id: 'NOTE',
+        )
+}
+
+fn assert_felt_error<T, +Drop<T>>(result: Result<T, Array<felt252>>, expected: felt252) {
+    let error = result.unwrap_err();
+    assert(*error.at(0) == expected, 'UNEXPECTED_ERROR');
+}
+
+#[test]
+fn single_hop_swap() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+
+    assert(
+        *deposits
+            .at(
+                0,
+            ) == OpenNoteDeposit {
+                note_id: 'NOTE', token: output.contract_address, amount: AMOUNT,
+            },
+        'INVALID_DEPOSIT',
+    );
+    assert(input.balance_of(anonymizer).is_zero(), 'INPUT_RETAINED');
+    assert(input.balance_of(router).is_zero(), 'ROUTER_INPUT_RETAINED');
+    assert(output.balance_of(anonymizer) == AMOUNT.into(), 'OUTPUT_NOT_RECEIVED');
+}
+
+#[test]
+fn approves_only_received_output_for_privacy_caller() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    let privacy_caller: ContractAddress = 0x123.try_into().unwrap();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+
+    start_cheat_caller_address(anonymizer, privacy_caller);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+    stop_cheat_caller_address(anonymizer);
+
+    assert((*deposits.at(0)).amount == AMOUNT, 'INVALID_OUTPUT_AMOUNT');
+    assert(
+        output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'INVALID_OUTPUT_ALLOWANCE',
+    );
+
+    start_cheat_caller_address(output.contract_address, privacy_caller);
+    assert(
+        IERC20Dispatcher { contract_address: output.contract_address }
+            .transferFrom(anonymizer, privacy_caller, AMOUNT.into()),
+        'PRIVACY_POOL_PULL_FAILED',
+    );
+    stop_cheat_caller_address(output.contract_address);
+    assert(output.allowance(anonymizer, privacy_caller).is_zero(), 'ALLOWANCE_NOT_CONSUMED');
+    assert(output.balance_of(privacy_caller) == AMOUNT.into(), 'PRIVACY_POOL_OUTPUT_MISSING');
+}
+
+#[test]
+fn multihop_split_swap() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let middle_a = deploy_token();
+    let middle_b = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: 60,
+                route: array![
+                    node(input.contract_address, middle_a.contract_address),
+                    node(middle_a.contract_address, output.contract_address),
+                ],
+            },
+            PrivateSwap {
+                input_amount: 40,
+                route: array![
+                    node(input.contract_address, middle_b.contract_address),
+                    node(middle_b.contract_address, output.contract_address),
+                ],
+            },
+        ],
+        AMOUNT.into(),
+    );
+
+    assert(deposits.len() == 1, 'INVALID_DEPOSIT_COUNT');
+    assert((*deposits.at(0)).amount == AMOUNT, 'INVALID_OUTPUT_AMOUNT');
+    assert(input.balance_of(router).is_zero(), 'ROUTER_INPUT_RETAINED');
+}
+
+#[test]
+fn rejects_invalid_routes_and_split_totals() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let middle = deploy_token();
+    let output = deploy_token();
+
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![],
+            0,
+        ),
+        errors::EMPTY_SWAPS,
+    );
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT - 1,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::SPLIT_AMOUNT_MISMATCH,
+    );
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(middle.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::ROUTE_TOKEN_MISMATCH,
+    );
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, middle.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::ROUTE_OUTPUT_MISMATCH,
+    );
+}
+
+#[test]
+fn rejects_partial_fill_and_slippage() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    let route = array![node(input.contract_address, output.contract_address)];
+
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    IMockEkuboAMMControlDispatcher { contract_address: router }
+        .set_swap_behavior(SwapBehavior::PartialSwap);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![PrivateSwap { input_amount: AMOUNT, route }],
+            0,
+        ),
+        errors::IN_TOKEN_NOT_CLEARED,
+    );
+
+    IMockEkuboAMMControlDispatcher { contract_address: router }
+        .set_swap_behavior(SwapBehavior::Normal);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            (AMOUNT + 1).into(),
+        ),
+        'CLEAR_MINIMUM_NOT_MET',
+    );
+}
+
+#[test]
+fn rejects_zero_output() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    IMockEkuboAMMControlDispatcher { contract_address: router }
+        .set_swap_behavior(SwapBehavior::Noop);
+
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::ZERO_OUT_AMOUNT,
+    );
+}
+
+#[test]
+fn donated_output_is_not_credited() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    let privacy_caller: ContractAddress = 0x123.try_into().unwrap();
+
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    // Sitting on the contract before this invocation: another integrator's
+    // stranded output, or a deliberate donation meant to inflate the note.
+    output.mint(anonymizer, AMOUNT);
+
+    start_cheat_caller_address(anonymizer, privacy_caller);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+    stop_cheat_caller_address(anonymizer);
+
+    // Only this invocation's proceeds are credited, and only they are approved.
+    assert((*deposits.at(0)).amount == AMOUNT, 'DONATION_CREDITED');
+    assert(output.allowance(anonymizer, privacy_caller) == AMOUNT.into(), 'DONATION_APPROVED');
+    assert(output.balance_of(anonymizer) == (AMOUNT * 2).into(), 'UNEXPECTED_BALANCE');
+}
+
+#[test]
+fn reentrant_output_token_cannot_over_approve() {
+    let anonymizer = deploy_anonymizer();
+    let outer_router = deploy_router();
+    let inner_router = deploy_router();
+    let input = deploy_token();
+    let output = IMockReentrantERC20Dispatcher {
+        contract_address: deploy_contract("MockReentrantERC20"),
+    };
+    // No caller cheat here on purpose: it would also apply to the nested call,
+    // collapsing both invocations onto one spender and hiding the double count.
+    let privacy_caller: ContractAddress = test_address();
+
+    // Enough input for both the outer invocation and the re-entrant one.
+    input.mint(anonymizer, AMOUNT * 2);
+    output.mint(outer_router, AMOUNT);
+    // The nested call needs its own router, because `clear_minimum` drains the
+    // outer one before the hook fires.
+    output.mint(inner_router, AMOUNT);
+
+    output.arm(anonymizer, inner_router, input.contract_address, AMOUNT, 0);
+
+    let deposits = invoke(
+        anonymizer,
+        outer_router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        AMOUNT.into(),
+    );
+
+    assert(output.did_reenter(), 'DID_NOT_REENTER');
+
+    // Whatever the two invocations each claim, the contract can never approve
+    // more of the output token than it actually holds -- otherwise one caller's
+    // note is payable only by stealing another's.
+    let outer_credited: u256 = (*deposits.at(0)).amount.into();
+    let outer_allowance = IERC20Dispatcher { contract_address: output.contract_address }
+        .allowance(anonymizer, privacy_caller);
+    let inner_allowance = IERC20Dispatcher { contract_address: output.contract_address }
+        .allowance(anonymizer, output.contract_address);
+    let held = IERC20Dispatcher { contract_address: output.contract_address }.balanceOf(anonymizer);
+
+    assert(outer_allowance == outer_credited, 'ALLOWANCE_MISMATCH');
+    // Each invocation is credited exactly its own proceeds: without the bound
+    // on `cleared` the outer call counts the nested one's output too.
+    assert(outer_credited == AMOUNT.into(), 'OUTER_OVER_CREDITED');
+    assert(inner_allowance == AMOUNT.into(), 'INNER_MISCREDITED');
+    assert(outer_allowance + inner_allowance <= held, 'OVER_APPROVED');
+}
+
+#[test]
+fn rejects_zero_addresses_and_amount() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    assert_felt_error(
+        safe_invoke(anonymizer, Zero::zero(), input, output, AMOUNT, array![], 0),
+        errors::ZERO_ROUTER,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, Zero::zero(), output, AMOUNT, array![], 0),
+        errors::ZERO_IN_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, Zero::zero(), AMOUNT, array![], 0),
+        errors::ZERO_OUT_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, input, AMOUNT, array![], 0), errors::SAME_TOKEN,
+    );
+    assert_felt_error(
+        safe_invoke(anonymizer, router, input, output, 0, array![], 0), errors::ZERO_IN_AMOUNT,
+    );
+}
+
+#[test]
+fn rejects_zero_splits_and_empty_routes() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            AMOUNT,
+            array![PrivateSwap { input_amount: 0, route: array![node(input, output)] }],
+            0,
+        ),
+        errors::ZERO_SPLIT_AMOUNT,
+    );
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            AMOUNT,
+            array![PrivateSwap { input_amount: AMOUNT, route: array![] }],
+            0,
+        ),
+        errors::EMPTY_ROUTE,
+    );
+}
+
+#[test]
+fn rejects_output_transfer_shortfall() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    output.set_transfer_fee(1);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            AMOUNT.into(),
+        ),
+        errors::MINIMUM_NOT_RECEIVED,
+    );
+}
+
+#[test]
+fn credits_only_output_actually_received() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    output.set_transfer_fee(1);
+    let deposits = invoke(
+        anonymizer,
+        router,
+        input.contract_address,
+        output.contract_address,
+        array![
+            PrivateSwap {
+                input_amount: AMOUNT,
+                route: array![node(input.contract_address, output.contract_address)],
+            },
+        ],
+        (AMOUNT - 1).into(),
+    );
+    assert((*deposits.at(0)).amount == AMOUNT - 1, 'TRANSFER_FEE_CREDITED');
+    assert(
+        output.allowance(anonymizer, test_address()) == (AMOUNT - 1).into(),
+        'TRANSFER_FEE_APPROVED',
+    );
+}
+
+#[test]
+fn rejects_checked_split_sum_overflow() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token().contract_address;
+    let output = deploy_token().contract_address;
+    let maximum = 0xffffffffffffffffffffffffffffffff_u128;
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input,
+            output,
+            maximum,
+            array![
+                PrivateSwap { input_amount: maximum, route: array![node(input, output)] },
+                PrivateSwap { input_amount: 1, route: array![node(input, output)] },
+            ],
+            0,
+        ),
+        'u128_add Overflow',
+    );
+}
+
+#[test]
+fn rejects_output_above_open_note_capacity() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, 0xffffffffffffffffffffffffffffffff);
+    output.mint(router, 1);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            0,
+        ),
+        errors::RECEIVED_AMOUNT_OVERFLOW,
+    );
+    assert(input.balance_of(anonymizer) == AMOUNT.into(), 'OVERFLOW_INPUT_LOST');
+    assert(output.balance_of(anonymizer).is_zero(), 'OVERFLOW_OUTPUT_RETAINED');
+    assert(output.allowance(anonymizer, test_address()).is_zero(), 'OVERFLOW_APPROVAL');
+}
+
+#[test]
+fn rejects_false_token_calls_atomically() {
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, AMOUNT);
+    output.mint(router, AMOUNT);
+    input.set_failures(true, false);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            1,
+        ),
+        errors::TOKEN_TRANSFER_FAILED,
+    );
+    input.set_failures(false, false);
+    output.set_failures(false, true);
+    assert_felt_error(
+        safe_invoke(
+            anonymizer,
+            router,
+            input.contract_address,
+            output.contract_address,
+            AMOUNT,
+            array![
+                PrivateSwap {
+                    input_amount: AMOUNT,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            1,
+        ),
+        errors::TOKEN_APPROVE_FAILED,
+    );
+    assert(input.balance_of(anonymizer) == AMOUNT.into(), 'FAILED_CALL_INPUT_LOST');
+    assert(input.balance_of(router).is_zero(), 'FAILED_CALL_INPUT_RETAINED');
+    assert(output.balance_of(router) == AMOUNT.into(), 'FAILED_CALL_OUTPUT_LOST');
+    assert(output.balance_of(anonymizer).is_zero(), 'FAILED_CALL_OUTPUT_RETAINED');
+}
+
+#[test]
+#[fuzzer(runs: 64)]
+fn split_accounting_preserves_router_donations(amount: u128, donation: u128) {
+    if amount < 2 {
+        return;
+    }
+    let anonymizer = deploy_anonymizer();
+    let router = deploy_router();
+    let input = deploy_token();
+    let output = deploy_token();
+    input.mint(anonymizer, amount);
+    input.mint(router, donation);
+    output.mint(router, amount);
+    let deposits = IEkuboSwapAnonymizerDispatcher { contract_address: anonymizer }
+        .privacy_invoke(
+            router,
+            input.contract_address,
+            output.contract_address,
+            amount,
+            array![
+                PrivateSwap {
+                    input_amount: amount / 2,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+                PrivateSwap {
+                    input_amount: amount - amount / 2,
+                    route: array![node(input.contract_address, output.contract_address)],
+                },
+            ],
+            amount.into(),
+            'FUZZ_NOTE',
+        );
+    assert((*deposits.at(0)).amount == amount, 'WRONG_FUZZ_OUTPUT');
+    assert(input.balance_of(router) == donation.into(), 'ROUTER_DONATION_CHANGED');
+    assert(input.balance_of(anonymizer).is_zero(), 'FUZZ_INPUT_RETAINED');
+    assert(output.balance_of(anonymizer) == amount.into(), 'FUZZ_OUTPUT_MISMATCH');
+    assert(output.allowance(anonymizer, test_address()) == amount.into(), 'FUZZ_ALLOWANCE');
+}
