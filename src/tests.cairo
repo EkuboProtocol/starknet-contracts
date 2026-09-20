@@ -11,6 +11,7 @@ pub(crate) mod router_test;
 pub(crate) mod store_packing_test;
 pub(crate) mod streamed_payment_test;
 pub(crate) mod token_registry_test;
+pub(crate) mod twamm_refund_test;
 pub(crate) mod twamm_test;
 pub(crate) mod upgradeable_test;
 
