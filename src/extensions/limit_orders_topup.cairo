@@ -1,26 +1,13 @@
 use starknet::ContractAddress;
 
-// A single payment into the limit-orders extension's saved balance in Core.
-#[derive(Serde, Drop, Copy, PartialEq, Debug)]
-pub struct TopUp {
-    // The token to pay into Core and credit to the extension's saved balance.
-    pub token: ContractAddress,
-    // The exact amount to top up.
-    pub amount: u128,
-}
-
 #[starknet::interface]
 pub trait ILimitOrdersTopUp<TContractState> {
-    // Pays the given amounts into the limit-orders extension's saved balances in Core, crediting
-    // `SavedBalanceKey { owner: <limit-orders extension>, token, salt: 0 }` for each entry.
-    // Owner only. This contract must already hold at least `amount` of each token; fund it with
-    // plain ERC20 transfers before calling.
-    fn top_up(ref self: TContractState, top_ups: Array<TopUp>);
-    // Returns tokens held by this contract, e.g. an overfunded remainder, to the recipient.
-    // Owner only.
-    fn rescue(
-        ref self: TContractState, token: ContractAddress, recipient: ContractAddress, amount: u256,
-    );
+    // Pays this contract's full balance of each listed token into the limit-orders extension's
+    // saved balances in Core, crediting
+    // `SavedBalanceKey { owner: <limit-orders extension>, token, salt: 0 }` for each one.
+    // Owner only. Fund this contract with plain ERC20 transfers before calling; tokens with a
+    // zero balance are skipped.
+    fn top_up(ref self: TContractState, tokens: Array<ContractAddress>);
     // The Core contract this contract locks when topping up.
     fn get_core(self: @TContractState) -> ContractAddress;
     // The limit-orders extension whose saved balances are credited.
@@ -39,27 +26,28 @@ pub trait ILimitOrdersTopUp<TContractState> {
 // - EKUBO:  `15381290500925225319523` (18 decimals)
 // - ETH:    `457141578614531148` (18 decimals)
 //
-// This contract lets the owner pay those exact shortfalls back into Core. Because order execution
-// is now self-funding (the fixed extension only saves proceeds that a real swap paid in), funding
-// each pool with exactly its shortfall makes pool == outstanding liability, and every affected
-// order can then be closed normally, in any order, with no surplus left exposed.
+// This contract lets the owner pay those shortfalls back into Core. Because order execution is now
+// self-funding (the fixed extension only saves proceeds that a real swap paid in), funding each
+// pool with exactly its shortfall makes pool == outstanding liability, and every affected order
+// can then be closed normally, in any order, with no surplus left exposed. Transfer exactly the
+// shortfall amounts and nothing else; whatever balance is here at call time is swept in full.
 //
 // Unlike TWAMMRefund, this contract does NOT replace the extension: `Core.save` takes an explicit
 // key, so a standalone locker can credit the extension's balance. No extension upgrade is needed;
 // declare this class, deploy it, transfer the three shortfall amounts to it, and call `top_up`.
 //
-// It reads no limit-orders state and writes none. Overfunding is possible by mistake, so any
-// leftover balance can be pulled back out with the owner-only `rescue`.
+// It reads no limit-orders state and writes none.
 #[starknet::contract]
 pub mod LimitOrdersTopUp {
     use core::num::traits::Zero;
+    use starknet::get_contract_address;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use crate::components::owned::{Ownable, Owned as owned_component};
     use crate::components::util::{call_core_with_callback, consume_callback_data, serialize};
     use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait, ILocker};
     use crate::interfaces::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use crate::types::keys::SavedBalanceKey;
-    use super::{ContractAddress, ILimitOrdersTopUp, TopUp};
+    use super::{ContractAddress, ILimitOrdersTopUp};
 
     component!(path: owned_component, storage: owned, event: OwnedEvent);
     #[abi(embed_v0)]
@@ -103,22 +91,9 @@ pub mod LimitOrdersTopUp {
 
     #[abi(embed_v0)]
     impl LimitOrdersTopUpImpl of ILimitOrdersTopUp<ContractState> {
-        fn top_up(ref self: ContractState, top_ups: Array<TopUp>) {
+        fn top_up(ref self: ContractState, tokens: Array<ContractAddress>) {
             self.require_owner();
-            call_core_with_callback::<Array<TopUp>, ()>(self.core.read(), @top_ups)
-        }
-
-        fn rescue(
-            ref self: ContractState,
-            token: ContractAddress,
-            recipient: ContractAddress,
-            amount: u256,
-        ) {
-            self.require_owner();
-            assert(
-                IERC20Dispatcher { contract_address: token }.transfer(recipient, amount),
-                'RESCUE_TRANSFER_FAILED',
-            );
+            call_core_with_callback::<Array<ContractAddress>, ()>(self.core.read(), @tokens)
         }
 
         fn get_core(self: @ContractState) -> ContractAddress {
@@ -135,31 +110,27 @@ pub mod LimitOrdersTopUp {
         fn locked(ref self: ContractState, id: u32, data: Span<felt252>) -> Span<felt252> {
             let core = self.core.read();
             let limit_orders = self.limit_orders.read();
-            let top_ups = consume_callback_data::<Array<TopUp>>(core, data);
+            let tokens = consume_callback_data::<Array<ContractAddress>>(core, data);
 
-            for top_up in top_ups {
-                if (top_up.amount.is_non_zero()) {
-                    // `pay` pulls the full allowance, so approve exactly this entry's amount.
-                    // Approve-then-pay per entry keeps the lock balanced even if a token is
-                    // listed more than once in the batch.
+            for token in tokens {
+                let balance = IERC20Dispatcher { contract_address: token }
+                    .balanceOf(get_contract_address());
+                // Core's `pay` would reject anything above u128 anyway; fail loudly here.
+                assert(balance.high.is_zero(), 'BALANCE_TOO_LARGE');
+                let amount = balance.low;
+
+                if (amount.is_non_zero()) {
+                    // `pay` pulls the full allowance, so approve exactly the swept balance.
                     assert(
-                        IERC20Dispatcher { contract_address: top_up.token }
-                            .approve(core.contract_address, top_up.amount.into()),
+                        IERC20Dispatcher { contract_address: token }
+                            .approve(core.contract_address, balance),
                         'APPROVE_FAILED',
                     );
-                    core.pay(top_up.token);
+                    core.pay(token);
                     let saved_balance_next = core
-                        .save(
-                            SavedBalanceKey { owner: limit_orders, token: top_up.token, salt: 0 },
-                            top_up.amount,
-                        );
+                        .save(SavedBalanceKey { owner: limit_orders, token, salt: 0 }, amount);
 
-                    self
-                        .emit(
-                            ToppedUp {
-                                token: top_up.token, amount: top_up.amount, saved_balance_next,
-                            },
-                        );
+                    self.emit(ToppedUp { token, amount, saved_balance_next });
                 }
             }
 

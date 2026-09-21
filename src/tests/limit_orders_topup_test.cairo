@@ -4,7 +4,7 @@ use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::ContractAddress;
 use crate::components::util::serialize;
 use crate::extensions::limit_orders_topup::{
-    ILimitOrdersTopUpDispatcher, ILimitOrdersTopUpDispatcherTrait, TopUp,
+    ILimitOrdersTopUpDispatcher, ILimitOrdersTopUpDispatcherTrait,
 };
 use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_once};
@@ -27,7 +27,7 @@ fn deploy_topup(
 }
 
 #[test]
-fn test_top_up_credits_extension_saved_balances() {
+fn test_top_up_sweeps_full_balances_into_extension_pools() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
     let limit_orders = d.deploy_limit_orders(core);
@@ -43,13 +43,7 @@ fn test_top_up_credits_extension_saved_balances() {
     token1.increase_balance(topup.contract_address, ETH_SHORTFALL);
 
     set_caller_address_once(topup.contract_address, default_owner());
-    topup
-        .top_up(
-            array![
-                TopUp { token: token0.contract_address, amount: USDC_SHORTFALL },
-                TopUp { token: token1.contract_address, amount: ETH_SHORTFALL },
-            ],
-        );
+    topup.top_up(array![token0.contract_address, token1.contract_address]);
 
     // Each pool is credited with exactly its shortfall...
     assert(
@@ -89,50 +83,23 @@ fn test_top_up_non_owner_reverts() {
     let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
     token.increase_balance(topup.contract_address, 100);
 
-    topup.top_up(array![TopUp { token: token.contract_address, amount: 100 }]);
+    // No caller cheat: the caller is not the owner, so this must revert.
+    topup.top_up(array![token.contract_address]);
 }
 
 #[test]
-fn test_rescue_returns_overfunded_remainder() {
-    let mut d: Deployer = Default::default();
-    let core = d.deploy_core();
-    let limit_orders = d.deploy_limit_orders(core);
-    let token = d.deploy_mock_token();
-
-    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
-
-    // Overfund by 1 wei on purpose.
-    token.increase_balance(topup.contract_address, USDC_SHORTFALL + 1);
-
-    set_caller_address_once(topup.contract_address, default_owner());
-    topup.top_up(array![TopUp { token: token.contract_address, amount: USDC_SHORTFALL }]);
-
-    let recipient: ContractAddress = 999999.try_into().unwrap();
-    set_caller_address_once(topup.contract_address, default_owner());
-    topup.rescue(token.contract_address, recipient, 1);
-
-    assert(token.balanceOf(recipient) == 1.into(), 'rescue failed');
-    assert(token.balanceOf(topup.contract_address).is_zero(), 'remainder left');
-}
-
-#[test]
-fn test_top_up_skips_zero_amounts() {
+fn test_top_up_skips_zero_balances() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
     let limit_orders = d.deploy_limit_orders(core);
     let (token0, token1) = d.deploy_two_mock_tokens();
 
     let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
+    // Only token1 is funded; token0's zero balance must be skipped, not reverted on.
     token1.increase_balance(topup.contract_address, 50);
 
     set_caller_address_once(topup.contract_address, default_owner());
-    topup
-        .top_up(
-            array![
-                TopUp { token: token0.contract_address, amount: 0 },
-                TopUp { token: token1.contract_address, amount: 50 },
-            ],
-        );
+    topup.top_up(array![token0.contract_address, token1.contract_address]);
 
     assert(
         core
@@ -144,4 +111,44 @@ fn test_top_up_skips_zero_amounts() {
         'token1 pool not funded',
     );
     assert(token1.balanceOf(core.contract_address) == 50.into(), 'core missing token1');
+    assert(
+        core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: limit_orders.contract_address, token: token0.contract_address, salt: 0,
+                },
+            )
+            .is_zero(),
+        'token0 pool touched',
+    );
+}
+
+#[test]
+fn test_top_up_sweeps_partial_top_up_and_can_be_called_again() {
+    let mut d: Deployer = Default::default();
+    let core = d.deploy_core();
+    let limit_orders = d.deploy_limit_orders(core);
+    let token = d.deploy_mock_token();
+
+    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
+
+    // A first installment, then the rest: each call sweeps whatever is there.
+    token.increase_balance(topup.contract_address, 40);
+    set_caller_address_once(topup.contract_address, default_owner());
+    topup.top_up(array![token.contract_address]);
+
+    token.increase_balance(topup.contract_address, 60);
+    set_caller_address_once(topup.contract_address, default_owner());
+    topup.top_up(array![token.contract_address]);
+
+    assert(
+        core
+            .get_saved_balance(
+                SavedBalanceKey {
+                    owner: limit_orders.contract_address, token: token.contract_address, salt: 0,
+                },
+            ) == 100,
+        'pool not fully funded',
+    );
+    assert(token.balanceOf(core.contract_address) == 100.into(), 'core missing tokens');
 }
