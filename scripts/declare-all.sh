@@ -84,6 +84,7 @@ CONTRACTS=(
     OwnedNFT
     TWAMM
     LimitOrders
+    LimitOrdersTopUp
     Oracle
     Router
     TokenRegistry
