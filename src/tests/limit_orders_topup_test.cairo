@@ -1,5 +1,4 @@
 use core::num::traits::Zero;
-use core::traits::TryInto;
 use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::ContractAddress;
 use crate::components::util::serialize;
@@ -7,7 +6,7 @@ use crate::extensions::limit_orders_topup::{
     ILimitOrdersTopUpDispatcher, ILimitOrdersTopUpDispatcherTrait,
 };
 use crate::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-use crate::tests::helper::{Deployer, DeployerTrait, default_owner, set_caller_address_once};
+use crate::tests::helper::{Deployer, DeployerTrait};
 use crate::tests::mock_erc20::{IMockERC20DispatcherTrait, MockERC20IERC20ImplTrait};
 use crate::types::keys::SavedBalanceKey;
 
@@ -17,11 +16,11 @@ const USDC_SHORTFALL: u128 = 47123330423;
 const ETH_SHORTFALL: u128 = 457141578614531148;
 
 fn deploy_topup(
-    owner: ContractAddress, core: ICoreDispatcher, limit_orders: ContractAddress,
+    core: ICoreDispatcher, limit_orders: ContractAddress,
 ) -> ILimitOrdersTopUpDispatcher {
     let contract = declare("LimitOrdersTopUp").unwrap().contract_class();
     let (address, _) = contract
-        .deploy(@serialize(@(owner, core, limit_orders)))
+        .deploy(@serialize(@(core, limit_orders)))
         .expect('topup deploy failed');
     ILimitOrdersTopUpDispatcher { contract_address: address }
 }
@@ -33,7 +32,7 @@ fn test_top_up_sweeps_full_balances_into_extension_pools() {
     let limit_orders = d.deploy_limit_orders(core);
     let (token0, token1) = d.deploy_two_mock_tokens();
 
-    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
+    let topup = deploy_topup(core, limit_orders.contract_address);
 
     assert(topup.get_core() == core.contract_address, 'wrong core');
     assert(topup.get_limit_orders() == limit_orders.contract_address, 'wrong extension');
@@ -42,7 +41,7 @@ fn test_top_up_sweeps_full_balances_into_extension_pools() {
     token0.increase_balance(topup.contract_address, USDC_SHORTFALL);
     token1.increase_balance(topup.contract_address, ETH_SHORTFALL);
 
-    set_caller_address_once(topup.contract_address, default_owner());
+    // Permissionless: the caller is just the test contract, no owner cheat needed.
     topup.top_up(array![token0.contract_address, token1.contract_address]);
 
     // Each pool is credited with exactly its shortfall...
@@ -73,32 +72,16 @@ fn test_top_up_sweeps_full_balances_into_extension_pools() {
 }
 
 #[test]
-#[should_panic(expected: 'OWNER_ONLY')]
-fn test_top_up_non_owner_reverts() {
-    let mut d: Deployer = Default::default();
-    let core = d.deploy_core();
-    let limit_orders = d.deploy_limit_orders(core);
-    let token = d.deploy_mock_token();
-
-    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
-    token.increase_balance(topup.contract_address, 100);
-
-    // No caller cheat: the caller is not the owner, so this must revert.
-    topup.top_up(array![token.contract_address]);
-}
-
-#[test]
 fn test_top_up_skips_zero_balances() {
     let mut d: Deployer = Default::default();
     let core = d.deploy_core();
     let limit_orders = d.deploy_limit_orders(core);
     let (token0, token1) = d.deploy_two_mock_tokens();
 
-    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
+    let topup = deploy_topup(core, limit_orders.contract_address);
     // Only token1 is funded; token0's zero balance must be skipped, not reverted on.
     token1.increase_balance(topup.contract_address, 50);
 
-    set_caller_address_once(topup.contract_address, default_owner());
     topup.top_up(array![token0.contract_address, token1.contract_address]);
 
     assert(
@@ -130,15 +113,13 @@ fn test_top_up_sweeps_partial_top_up_and_can_be_called_again() {
     let limit_orders = d.deploy_limit_orders(core);
     let token = d.deploy_mock_token();
 
-    let topup = deploy_topup(default_owner(), core, limit_orders.contract_address);
+    let topup = deploy_topup(core, limit_orders.contract_address);
 
     // A first installment, then the rest: each call sweeps whatever is there.
     token.increase_balance(topup.contract_address, 40);
-    set_caller_address_once(topup.contract_address, default_owner());
     topup.top_up(array![token.contract_address]);
 
     token.increase_balance(topup.contract_address, 60);
-    set_caller_address_once(topup.contract_address, default_owner());
     topup.top_up(array![token.contract_address]);
 
     assert(
