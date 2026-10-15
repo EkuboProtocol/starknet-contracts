@@ -10,6 +10,7 @@ pub(crate) mod tests;
 
 pub mod extensions {
     pub mod limit_orders;
+    pub mod limit_orders_topup;
     pub mod oracle;
     pub mod twamm;
 }
