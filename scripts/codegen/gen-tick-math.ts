@@ -19,7 +19,6 @@ function genTickMath({
     console.log(`// number of iterations = ${numIterations}`)
     console.log(`// denominator = 1<<${fixedPointRadix}`)
 
-
     console.log('let mut ratio = 0x100000000000000000000000000000000_u256;')
 
     for (let i = 0; i < numIterations; i++) {
@@ -47,23 +46,9 @@ function genTickMath({
 `)
 }
 
-// we want tick size such that x^(2^32) = 2**64
-// that number squared represents the size of tick in price (not sqrt price)
-
 // we want it to fit in an i32, and support prices from 2**128 to 2**-128, 
 // meaning any price for 2 tokens with total supply of 2**128
 const MAX_NUM_TICKS = (2n ** 23n) - 1n
-// in other words, we want tickSize ** MAX_NUM_TICKS = 2**64, since we use sqrt ratios
-// take log base tickSize of both sides:
-// 2 ** 31 = log base x of 2**64
-// 2 ** 31 / 64 = log base x of 2
-// 2 ** 31 / 2**6 = log base x of 2
-// 2 ** 25 = log base x of 2
-// plug into wolfram
-// https://www.wolframalpha.com/input?i=2+**+25+%3D+log+base+x+of+2
-// x≈1.000000020657395950533543979520644024581777736970617015154729024967859069134592989763610673641979837435397245782267746869952775385202910986830121
-
-// ^ scrapped this, too expensive to compute log
 
 genTickMath({
     // 1/100th of a bips, ie a pips
