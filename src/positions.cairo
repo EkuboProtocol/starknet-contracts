@@ -27,8 +27,7 @@ pub mod Positions {
         ForwardCallbackData as LimitOrderForwardCallbackData,
         GetOrderInfoRequest as GetLimitOrderInfoRequest,
         GetOrderInfoResult as GetLimitOrderInfoResult, ILimitOrdersDispatcher,
-        ILimitOrdersDispatcherTrait, OrderKey as LimitOrderKey, PlaceOrderForwardCallbackData,
-        PlaceOrderForwardCallbackResult,
+        ILimitOrdersDispatcherTrait, OrderKey as LimitOrderKey,
     };
     use crate::interfaces::extensions::twamm::{
         CollectProceedsCallbackData, ForwardCallbackData, ITWAMMDispatcher, ITWAMMDispatcherTrait,
@@ -38,9 +37,7 @@ pub mod Positions {
     use crate::interfaces::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use crate::math::fee::compute_fee;
     use crate::math::liquidity::liquidity_delta_to_amount_delta;
-    use crate::math::max_liquidity::{
-        max_liquidity, max_liquidity_for_token0, max_liquidity_for_token1,
-    };
+    use crate::math::max_liquidity::max_liquidity;
     use crate::math::ticks::{min_sqrt_ratio, tick_to_sqrt_ratio};
     use crate::math::time::to_duration;
     use crate::math::twamm::calculate_sale_rate;
@@ -185,14 +182,6 @@ pub mod Positions {
     }
 
     #[derive(Serde, Copy, Drop)]
-    struct PlaceOrderCallbackData {
-        salt: felt252,
-        order_key: LimitOrderKey,
-        liquidity: u128,
-        sell_token: ContractAddress,
-    }
-
-    #[derive(Serde, Copy, Drop)]
     struct CloseOrderCallbackData {
         salt: felt252,
         order_key: LimitOrderKey,
@@ -209,7 +198,6 @@ pub mod Positions {
         IncreaseSaleRate: IncreaseSaleRateCallbackData,
         DecreaseSaleRate: DecreaseSaleRateCallbackData,
         CollectOrderProceeds: CollectOrderProceedsCallbackData,
-        PlaceOrder: PlaceOrderCallbackData,
         MoveToLimitOrderPrice: MoveToLimitOrderPriceCallbackData,
         CloseOrder: CloseOrderCallbackData,
     }
@@ -234,29 +222,6 @@ pub mod Positions {
             assert(nft.is_account_authorized(id, caller), 'UNAUTHORIZED');
             (nft, caller)
         }
-    }
-
-    pub(crate) fn amount_to_limit_order_liquidity(
-        order_key: LimitOrderKey, amount: u128,
-    ) -> (u128, ContractAddress) {
-        let sell_token = if (order_key.tick.mag % DOUBLE_LIMIT_ORDER_TICK_SPACING).is_zero() {
-            order_key.token0
-        } else {
-            order_key.token1
-        };
-
-        let sqrt_ratio_lower = tick_to_sqrt_ratio(order_key.tick);
-        let sqrt_ratio_upper = tick_to_sqrt_ratio(
-            order_key.tick + i129 { mag: LIMIT_ORDER_TICK_SPACING, sign: false },
-        );
-
-        let liquidity = if sell_token == order_key.token0 {
-            max_liquidity_for_token0(sqrt_ratio_lower, sqrt_ratio_upper, amount)
-        } else {
-            max_liquidity_for_token1(sqrt_ratio_lower, sqrt_ratio_upper, amount)
-        };
-
-        (liquidity, sell_token)
     }
 
     #[abi(embed_v0)]
@@ -492,27 +457,6 @@ pub mod Positions {
                         );
 
                     serialize(@proceeds_amount).span()
-                },
-                LockCallbackData::PlaceOrder(data) => {
-                    let limit_orders = self.limit_orders.read();
-
-                    let amount: PlaceOrderForwardCallbackResult = forward_lock(
-                        core,
-                        IForwardeeDispatcher { contract_address: limit_orders.contract_address },
-                        @LimitOrderForwardCallbackData::PlaceOrder(
-                            PlaceOrderForwardCallbackData {
-                                salt: data.salt,
-                                order_key: data.order_key,
-                                liquidity: data.liquidity,
-                            },
-                        ),
-                    );
-
-                    let token = IERC20Dispatcher { contract_address: data.sell_token };
-                    token.approve(core.contract_address, amount.into());
-                    core.pay(data.sell_token);
-
-                    array![].span()
                 },
                 LockCallbackData::CloseOrder(data) => {
                     let limit_orders = self.limit_orders.read();
@@ -1082,76 +1026,6 @@ pub mod Positions {
                     MoveToLimitOrderPriceCallbackData { order_key, amount, recipient },
                 ),
             )
-        }
-
-        fn swap_to_limit_order_price_and_maybe_mint_and_place_limit_order_to(
-            ref self: ContractState,
-            order_key: LimitOrderKey,
-            amount: u128,
-            recipient: ContractAddress,
-        ) -> (u128, u128, Option<(u64, u128)>) {
-            let (amount_sold, amount_bought) = self
-                .swap_to_limit_order_price(order_key, amount, recipient);
-
-            let mint_result: Option<(u64, u128)> = if amount != amount_sold {
-                self.maybe_mint_and_place_limit_order(order_key, amount - amount_sold)
-            } else {
-                Option::None
-            };
-
-            (amount_sold, amount_bought, mint_result)
-        }
-
-
-        fn swap_to_limit_order_price_and_maybe_mint_and_place_limit_order(
-            ref self: ContractState, order_key: LimitOrderKey, amount: u128,
-        ) -> (u128, u128, Option<(u64, u128)>) {
-            self
-                .swap_to_limit_order_price_and_maybe_mint_and_place_limit_order_to(
-                    order_key, amount, recipient: get_caller_address(),
-                )
-        }
-
-        fn place_limit_order(
-            ref self: ContractState, id: u64, order_key: LimitOrderKey, amount: u128,
-        ) -> u128 {
-            self.check_authorization(id);
-
-            let (liquidity, sell_token) = amount_to_limit_order_liquidity(order_key, amount);
-
-            call_core_with_callback::<
-                LockCallbackData, (),
-            >(
-                self.core.read(),
-                @LockCallbackData::PlaceOrder(
-                    PlaceOrderCallbackData { salt: id.into(), order_key, liquidity, sell_token },
-                ),
-            );
-
-            liquidity
-        }
-
-        fn maybe_mint_and_place_limit_order(
-            ref self: ContractState, order_key: LimitOrderKey, amount: u128,
-        ) -> Option<(u64, u128)> {
-            // Note: this calculation is repeated inside place_limit_order
-            //  A refactoring could make this code more efficient, but we are prioritizing
-            //  avoiding calling this function in the case where creation of the limit order
-            //  will fail
-            let (liquidity, _) = amount_to_limit_order_liquidity(order_key, amount);
-            if liquidity.is_non_zero() {
-                let id = self.mint_v2(Zero::zero());
-                let liquidity = self.place_limit_order(id, order_key, amount);
-                Option::Some((id, liquidity))
-            } else {
-                Option::None
-            }
-        }
-
-        fn mint_and_place_limit_order(
-            ref self: ContractState, order_key: LimitOrderKey, amount: u128,
-        ) -> (u64, u128) {
-            self.maybe_mint_and_place_limit_order(order_key, amount).expect('Insufficient amount')
         }
 
         fn close_limit_order(
