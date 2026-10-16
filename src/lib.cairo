@@ -12,6 +12,7 @@ pub mod extensions {
     pub mod limit_orders;
     pub mod oracle;
     pub mod twamm;
+    pub mod twamm_refund;
 }
 
 pub mod components {
